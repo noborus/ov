@@ -16,46 +16,51 @@ type root struct {
 	parent *views.Application
 	main   *views.CellView
 	model  *model
+	status *views.SimpleStyledTextBar
+	title  *views.TextBar
 	views.Panel
 }
 
-func (m *root) HandleEvent(ev tcell.Event) bool {
+func (root *root) HandleEvent(ev tcell.Event) bool {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case tcell.KeyEscape:
-			m.parent.Quit()
+			root.parent.Quit()
 			return true
 		case tcell.KeyEnter:
-			m.model.y++
-			m.updateKeys()
+			root.model.y++
+			root.updateKeys()
 			return true
 		case tcell.KeyRune:
 			switch ev.Rune() {
 			case 'Q', 'q':
-				m.parent.Quit()
+				root.parent.Quit()
 				return true
 			case 'S', 's':
-				m.model.y = m.model.y + 10000
-				m.updateKeys()
+				root.model.y = root.model.y + 10000
+				root.updateKeys()
 				return true
 			case 'V', 'v':
-				m.model.y = m.model.y + 10
-				m.updateKeys()
+				root.model.y = root.model.y + 10
+				root.updateKeys()
 				return true
 			case 'P', 'p':
-				m.model.y = m.model.y - 1
-				m.updateKeys()
+				root.model.y = root.model.y - 1
+				root.updateKeys()
 				return true
 			case 'H', 'h':
-				m.model.hide = true
-				m.updateKeys()
+				root.SetTitle(root.title)
+				root.updateKeys()
 				return true
 			case 'E', 'e':
-				m.model.enab = true
+				root.SetStatus(root.status)
+				root.model.enab = true
 				return true
 			case 'D', 'd':
-				m.model.enab = false
+				root.RemoveWidget(root.title)
+				root.RemoveWidget(root.status)
+				root.model.enab = false
 				return true
 			}
 		}
@@ -169,16 +174,11 @@ func (m *model) SetCell(r io.Reader) {
 }
 
 func main() {
-	file, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	root := &root{}
 	app := &views.Application{}
 	app.SetStyle(tcell.StyleDefault)
-	root.parent = app
 
+	root.parent = app
 	root.main = views.NewCellView()
 	m := &model{}
 	root.main.SetModel(m)
@@ -186,6 +186,24 @@ func main() {
 	root.main.SetStyle(tcell.StyleDefault)
 	root.Panel.SetContent(root.main)
 
+	status := views.NewSimpleStyledTextBar()
+	status.SetStyle(tcell.StyleDefault.
+		Background(tcell.ColorBlue).
+		Foreground(tcell.ColorYellow))
+	status.SetCenter("Status bar")
+	root.status = status
+
+	title := views.NewTextBar()
+	title.SetStyle(tcell.StyleDefault.
+		Background(tcell.ColorTeal).
+		Foreground(tcell.ColorWhite))
+	title.SetCenter("Title", tcell.StyleDefault)
+	root.title = title
+
+	file, err := os.Open(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
 	go m.SetCell(file)
 
 	app.SetRootWidget(root)
