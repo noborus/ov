@@ -1,22 +1,13 @@
 package zpager
 
 import (
-	"bufio"
-	"bytes"
-	"compress/bzip2"
-	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-	"github.com/klauspost/compress/zstd"
 	"github.com/mattn/go-runewidth"
-	"github.com/pierrec/lz4"
-	"github.com/ulikunitz/xz"
 )
 
 type root struct {
@@ -26,72 +17,6 @@ type root struct {
 	status *views.SimpleStyledTextBar
 	title  *views.TextBar
 	views.Panel
-}
-
-func (root *root) HandleEvent(ev tcell.Event) bool {
-	switch ev := ev.(type) {
-	case *tcell.EventKey:
-		switch ev.Key() {
-		case tcell.KeyEscape:
-			root.parent.Quit()
-			return true
-		case tcell.KeyEnter:
-			root.model.y++
-			root.updateKeys()
-			return true
-		case tcell.KeyLeft:
-			root.model.x--
-			root.updateKeys()
-			return true
-		case tcell.KeyRight:
-			root.model.x++
-			root.updateKeys()
-			return true
-		case tcell.KeyDown:
-			root.model.y++
-			root.updateKeys()
-			return true
-		case tcell.KeyUp:
-			root.model.y--
-			root.updateKeys()
-			return true
-		case tcell.KeyRune:
-			switch ev.Rune() {
-			case 'Q', 'q':
-				root.parent.Quit()
-				return true
-			case 'S', 's':
-				root.model.y = root.model.y + 10000
-				root.updateKeys()
-				return true
-			case 'V', 'v':
-				root.model.y = root.model.y + 10
-				root.updateKeys()
-				return true
-			case 'N', 'n':
-				root.model.y = root.model.y + 1
-				root.updateKeys()
-				return true
-			case 'P', 'p':
-				root.model.y = root.model.y - 1
-				root.updateKeys()
-				return true
-			case 'H', 'h':
-				root.SetTitle(root.title)
-				root.updateKeys()
-				return true
-			case 'E', 'e':
-				root.status.SetCenter(fmt.Sprintf("y:%d", root.model.y))
-				root.SetStatus(root.status)
-				return true
-			case 'D', 'd':
-				root.RemoveWidget(root.title)
-				root.RemoveWidget(root.status)
-				return true
-			}
-		}
-	}
-	return true
 }
 
 type model struct {
@@ -104,7 +29,7 @@ type model struct {
 	line     int
 	lineRune []rune
 	loc      string
-	block    [][]byte
+	block    []string
 }
 
 func (m *model) GetBounds() (int, int) {
@@ -144,16 +69,8 @@ func (m *model) SetCursor(x int, y int) {
 	m.limitCursor()
 }
 
-func (m *root) updateKeys() {
-	mm := m.model
-	_, by := mm.GetBounds()
-	if mm.y >= len(mm.block) {
-		mm.y = len(mm.block) - by
-	}
-	if mm.x >= 200 {
-		mm.x = mm.endx
-	}
-	m.parent.Update()
+func (root *root) updateKeys() {
+	root.parent.Update()
 }
 
 func setLineRune(str string) []rune {
@@ -186,7 +103,7 @@ func (m *model) GetCell(vx, vy int) (rune, tcell.Style, []rune, int) {
 	}
 
 	if y != m.line {
-		m.lineRune = setLineRune(string(m.block[y]))
+		m.lineRune = setLineRune(m.block[y])
 		m.line = y
 	}
 	if x >= len(m.lineRune) {
@@ -196,17 +113,6 @@ func (m *model) GetCell(vx, vy int) (rune, tcell.Style, []rune, int) {
 	return m.lineRune[x], tcell.StyleDefault, nil, 1
 }
 
-func (m *model) SetCell(r io.Reader) {
-	m.block = make([][]byte, 0)
-	m.line = -1
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		b0 := scanner.Bytes()
-		b1 := make([]byte, len(b0))
-		copy(b1, b0)
-		m.block = append(m.block, b1)
-	}
-}
 func newRoot() *root {
 	root := &root{}
 
@@ -233,54 +139,16 @@ func newRoot() *root {
 	return root
 }
 
-func uncompressedReader(reader io.Reader) io.ReadCloser {
-	var err error
-	buf := [7]byte{}
-	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
-	if err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return ioutil.NopCloser(bytes.NewReader(buf[:n]))
-		}
-		return ioutil.NopCloser(bytes.NewReader(nil))
-	}
-
-	rd := io.MultiReader(bytes.NewReader(buf[:n]), reader)
-	var r io.ReadCloser
-	switch {
-	case bytes.Equal(buf[:3], []byte{0x1f, 0x8b, 0x8}):
-		r, err = gzip.NewReader(rd)
-	case bytes.Equal(buf[:3], []byte{0x42, 0x5A, 0x68}):
-		r = ioutil.NopCloser(bzip2.NewReader(rd))
-	case bytes.Equal(buf[:4], []byte{0x28, 0xb5, 0x2f, 0xfd}):
-		var zr *zstd.Decoder
-		zr, err = zstd.NewReader(rd)
-		r = ioutil.NopCloser(zr)
-	case bytes.Equal(buf[:4], []byte{0x04, 0x22, 0x4d, 0x18}):
-		r = ioutil.NopCloser(lz4.NewReader(rd))
-	case bytes.Equal(buf[:7], []byte{0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x0, 0x0}):
-		var zr *xz.Reader
-		zr, err = xz.NewReader(rd)
-		r = ioutil.NopCloser(zr)
-	}
-	if err != nil || r == nil {
-		r = ioutil.NopCloser(rd)
-	}
-	return r
-}
-
-func Run() {
+func Run(reader io.Reader) {
 	root := newRoot()
 	app := &views.Application{}
 	root.parent = app
 	app.SetStyle(tcell.StyleDefault)
 	app.SetRootWidget(root)
 
-	file, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-	r := uncompressedReader(file)
-	go root.model.SetCell(r)
+	root.model.block = make([]string, 0)
+	r := uncompressedReader(reader)
+	go ReadAll(&root.model.block, r)
 	defer r.Close()
 
 	if e := app.Run(); e != nil {
