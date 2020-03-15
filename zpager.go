@@ -2,14 +2,21 @@ package zpager
 
 import (
 	"bufio"
+	"bytes"
+	"compress/bzip2"
+	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+	"github.com/klauspost/compress/zstd"
 	"github.com/mattn/go-runewidth"
+	"github.com/pierrec/lz4"
+	"github.com/ulikunitz/xz"
 )
 
 type root struct {
@@ -174,17 +181,19 @@ func (m *model) GetCell(vx, vy int) (rune, tcell.Style, []rune, int) {
 	if m.x > 0 {
 		x = m.x + vx
 	}
-	if x < 0 || y < 0 || y >= len(m.block) || x >= len(m.block[y]) {
+	if x < 0 || y < 0 || y >= len(m.block) {
 		return 0, tcell.StyleDefault, nil, 1
 	}
+
 	if y != m.line {
 		m.lineRune = setLineRune(string(m.block[y]))
 		m.line = y
 	}
-	if x < len(m.lineRune) {
-		return m.lineRune[x], tcell.StyleDefault, nil, 1
+	if x >= len(m.lineRune) {
+		return 0, tcell.StyleDefault, nil, 1
 	}
-	return 0, tcell.StyleDefault, nil, 1
+
+	return m.lineRune[x], tcell.StyleDefault, nil, 1
 }
 
 func (m *model) SetCell(r io.Reader) {
@@ -198,13 +207,9 @@ func (m *model) SetCell(r io.Reader) {
 		m.block = append(m.block, b1)
 	}
 }
-
-func Run() {
+func newRoot() *root {
 	root := &root{}
-	app := &views.Application{}
-	app.SetStyle(tcell.StyleDefault)
 
-	root.parent = app
 	root.main = views.NewCellView()
 	m := &model{}
 	root.main.SetModel(m)
@@ -225,17 +230,61 @@ func Run() {
 		Foreground(tcell.ColorWhite))
 	title.SetCenter("Title", tcell.StyleDefault)
 	root.title = title
+	return root
+}
+
+func uncompressedReader(reader io.Reader) io.ReadCloser {
+	var err error
+	buf := [7]byte{}
+	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return ioutil.NopCloser(bytes.NewReader(buf[:n]))
+		}
+		return ioutil.NopCloser(bytes.NewReader(nil))
+	}
+
+	rd := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+	var r io.ReadCloser
+	switch {
+	case bytes.Equal(buf[:3], []byte{0x1f, 0x8b, 0x8}):
+		r, err = gzip.NewReader(rd)
+	case bytes.Equal(buf[:3], []byte{0x42, 0x5A, 0x68}):
+		r = ioutil.NopCloser(bzip2.NewReader(rd))
+	case bytes.Equal(buf[:4], []byte{0x28, 0xb5, 0x2f, 0xfd}):
+		var zr *zstd.Decoder
+		zr, err = zstd.NewReader(rd)
+		r = ioutil.NopCloser(zr)
+	case bytes.Equal(buf[:4], []byte{0x04, 0x22, 0x4d, 0x18}):
+		r = ioutil.NopCloser(lz4.NewReader(rd))
+	case bytes.Equal(buf[:7], []byte{0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x0, 0x0}):
+		var zr *xz.Reader
+		zr, err = xz.NewReader(rd)
+		r = ioutil.NopCloser(zr)
+	}
+	if err != nil || r == nil {
+		r = ioutil.NopCloser(rd)
+	}
+	return r
+}
+
+func Run() {
+	root := newRoot()
+	app := &views.Application{}
+	root.parent = app
+	app.SetStyle(tcell.StyleDefault)
+	app.SetRootWidget(root)
 
 	file, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-	go m.SetCell(file)
+	r := uncompressedReader(file)
+	go root.model.SetCell(r)
+	defer r.Close()
 
-	app.SetRootWidget(root)
 	if e := app.Run(); e != nil {
 		fmt.Fprintln(os.Stderr, e.Error())
 		os.Exit(1)
 	}
-
 }
