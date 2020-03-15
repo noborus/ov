@@ -1,4 +1,4 @@
-package main
+package zpager
 
 import (
 	"bufio"
@@ -32,6 +32,22 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			root.model.y++
 			root.updateKeys()
 			return true
+		case tcell.KeyLeft:
+			root.model.x--
+			root.updateKeys()
+			return true
+		case tcell.KeyRight:
+			root.model.x++
+			root.updateKeys()
+			return true
+		case tcell.KeyDown:
+			root.model.y++
+			root.updateKeys()
+			return true
+		case tcell.KeyUp:
+			root.model.y--
+			root.updateKeys()
+			return true
 		case tcell.KeyRune:
 			switch ev.Rune() {
 			case 'Q', 'q':
@@ -45,6 +61,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.model.y = root.model.y + 10
 				root.updateKeys()
 				return true
+			case 'N', 'n':
+				root.model.y = root.model.y + 1
+				root.updateKeys()
+				return true
 			case 'P', 'p':
 				root.model.y = root.model.y - 1
 				root.updateKeys()
@@ -54,13 +74,12 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.updateKeys()
 				return true
 			case 'E', 'e':
+				root.status.SetCenter(fmt.Sprintf("y:%d", root.model.y))
 				root.SetStatus(root.status)
-				root.model.enab = true
 				return true
 			case 'D', 'd':
 				root.RemoveWidget(root.title)
 				root.RemoveWidget(root.status)
-				root.model.enab = false
 				return true
 			}
 		}
@@ -124,6 +143,9 @@ func (m *root) updateKeys() {
 	if mm.y >= len(mm.block) {
 		mm.y = len(mm.block) - by
 	}
+	if mm.x >= 200 {
+		mm.x = mm.endx
+	}
 	m.parent.Update()
 }
 
@@ -143,10 +165,14 @@ func setLineRune(str string) []rune {
 	return lineRune
 }
 
-func (m *model) GetCell(x, vy int) (rune, tcell.Style, []rune, int) {
+func (m *model) GetCell(vx, vy int) (rune, tcell.Style, []rune, int) {
 	y := vy
+	x := vx
 	if m.y > 0 {
 		y = m.y + vy
+	}
+	if m.x > 0 {
+		x = m.x + vx
 	}
 	if x < 0 || y < 0 || y >= len(m.block) || x >= len(m.block[y]) {
 		return 0, tcell.StyleDefault, nil, 1
@@ -173,7 +199,7 @@ func (m *model) SetCell(r io.Reader) {
 	}
 }
 
-func main() {
+func Run() {
 	root := &root{}
 	app := &views.Application{}
 	app.SetStyle(tcell.StyleDefault)
@@ -211,4 +237,5 @@ func main() {
 		fmt.Fprintln(os.Stderr, e.Error())
 		os.Exit(1)
 	}
+
 }
