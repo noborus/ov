@@ -1,7 +1,6 @@
 package zpager
 
 import (
-	"bufio"
 	"bytes"
 	"compress/bzip2"
 	"compress/gzip"
@@ -46,12 +45,4 @@ func uncompressedReader(reader io.Reader) io.ReadCloser {
 		r = ioutil.NopCloser(rd)
 	}
 	return r
-}
-
-func ReadAll(block *[]string, r io.Reader) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		b0 := scanner.Text()
-		*block = append(*block, b0)
-	}
 }

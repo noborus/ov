@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -30,19 +29,19 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "zpager",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		file, err := os.Open(args[0])
-		if err != nil {
-			log.Fatal(err)
+	Short: "Pager for various compressed files",
+	Long: `Pager(such as more/less) for various compressed files.
+You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if Ver {
+			fmt.Printf("mdtsql version %s rev:%s\n", Version, Revision)
+			return nil
 		}
-		zpager.Run(file)
+		m := zpager.NewModel()
+		m.TabWidth = TabWidth
+		m.WrapMode = Wrap
+		return zpager.Run(m, args)
 	},
 }
 
@@ -64,6 +63,15 @@ func Execute(version string, revision string) {
 	}
 }
 
+// Ver is version information.
+var Ver bool
+
+// Wrap is Wrap mode.
+var Wrap bool
+
+// Tab width.
+var TabWidth int
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -71,10 +79,13 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.zpager.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
+	rootCmd.PersistentFlags().BoolVarP(&Wrap, "wrap", "w", true, "wrap mode")
+	rootCmd.PersistentFlags().IntVarP(&TabWidth, "tab-width", "x", 8, "Tab width")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.

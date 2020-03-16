@@ -6,153 +6,218 @@ import (
 	"os"
 
 	"github.com/gdamore/tcell"
-	"github.com/gdamore/tcell/views"
 	"github.com/mattn/go-runewidth"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type root struct {
-	parent *views.Application
-	main   *views.CellView
-	model  *model
-	status *views.SimpleStyledTextBar
-	title  *views.TextBar
-	views.Panel
+	model     *Model
+	statusPos int
+	fileName  string
+	mode      Mode
+	input     string
+	tcell.Screen
 }
 
-type model struct {
-	x        int
-	y        int
-	endx     int
-	endy     int
-	hide     bool
-	enab     bool
-	line     int
-	lineRune []rune
-	loc      string
-	block    []string
-}
+type Mode int
 
-func (m *model) GetBounds() (int, int) {
-	return m.endx, m.endy
-}
+const (
+	normal Mode = iota
+	search
+	previous
+	goline
+)
 
-func (m *model) MoveCursor(offx, offy int) {
-	m.x += offx
-	m.y += offy
-	m.limitCursor()
-}
-
-func (m *model) limitCursor() {
-	if m.x < 0 {
-		m.x = 0
+func (root *root) PrepareView() {
+	m := root.model
+	screen := root.Screen
+	m.vWidth, m.vHight = screen.Size()
+	m.vHight--
+	root.statusPos = m.vHight
+	m.vView = make([][]content, m.vHight)
+	for y := 0; y < m.vHight; y++ {
+		m.vView[y] = make([]content, m.vWidth)
 	}
-	if m.x > m.endx-1 {
-		m.x = m.endx - 1
+}
+
+func (root *root) Draw() {
+	m := root.model
+	screen := root.Screen
+	if len(m.text) == 0 || len(m.vView) == 0 {
+		root.statusDraw()
+		root.Show()
+		return
+	}
+
+	space := content{
+		mainc: ' ',
+		combc: nil,
+		width: 1,
+	}
+	for y := 0; y < m.vHight; y++ {
+		for x := 0; x < m.vWidth; x++ {
+			m.vView[y][x] = space
+		}
+	}
+
+	if m.y+m.vHight > len(m.text) {
+		m.y = len(m.text) - m.vHight
 	}
 	if m.y < 0 {
 		m.y = 0
 	}
-	if m.y > m.endy-1 {
-		m.y = m.endy - 1
+
+	searchWord := ""
+	if root.mode == normal {
+		searchWord = root.input
 	}
-	m.loc = fmt.Sprintf("Cursor is %d,%d", m.x, m.y)
-}
 
-func (m *model) GetCursor() (int, int, bool, bool) {
-	return m.x, m.y, m.enab, !m.hide
-}
+	if m.WrapMode {
+		m.wrapContent(searchWord)
+	} else {
+		m.noWrapContent(searchWord)
+	}
 
-func (m *model) SetCursor(x int, y int) {
-	m.x = x
-	m.y = y
-
-	m.limitCursor()
-}
-
-func (root *root) updateKeys() {
-	root.parent.Update()
-}
-
-func setLineRune(str string) []rune {
-	var lineRune []rune
-	for _, runeValue := range str {
-		switch runewidth.RuneWidth(runeValue) {
-		case 0:
-			lineRune = append(lineRune, rune(' '))
-		case 1:
-			lineRune = append(lineRune, runeValue)
-		case 2:
-			lineRune = append(lineRune, runeValue)
-			lineRune = append(lineRune, rune(' '))
+	for y := 0; y < m.vHight; y++ {
+		for x := 0; x < m.vWidth; x++ {
+			content := m.vView[y][x]
+			style := tcell.StyleDefault
+			if content.highlight {
+				style = style.Reverse(true)
+			}
+			screen.SetContent(x, y, content.mainc, content.combc, style)
 		}
 	}
-	return lineRune
+	root.statusDraw()
+	root.Show()
 }
 
-func (m *model) GetCell(vx, vy int) (rune, tcell.Style, []rune, int) {
-	y := vy
-	x := vx
-	if m.y > 0 {
-		y = m.y + vy
+func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
+	screen := root.Screen
+	for x, content := range contents {
+		screen.SetContent(vx+x, vy, content.mainc, content.combc, style)
 	}
-	if m.x > 0 {
-		x = m.x + vx
-	}
-	if x < 0 || y < 0 || y >= len(m.block) {
-		return 0, tcell.StyleDefault, nil, 1
-	}
-
-	if y != m.line {
-		m.lineRune = setLineRune(m.block[y])
-		m.line = y
-	}
-	if x >= len(m.lineRune) {
-		return 0, tcell.StyleDefault, nil, 1
-	}
-
-	return m.lineRune[x], tcell.StyleDefault, nil, 1
 }
 
-func newRoot() *root {
+func (root *root) statusDraw() {
+	screen := root.Screen
+	style := tcell.StyleDefault
+	next := "..."
+	if root.model.eof {
+		next = ""
+	}
+	for x := 0; x < root.model.vWidth; x++ {
+		screen.SetContent(x, root.statusPos, 0, nil, style)
+	}
+
+	leftStatus := fmt.Sprintf("%s:", root.fileName)
+	leftStyle := style.Reverse(true)
+	switch root.mode {
+	case search:
+		leftStatus = "/" + root.input
+		leftStyle = style
+	case previous:
+		leftStatus = "?" + root.input
+		leftStyle = style
+	case goline:
+		leftStatus = ":" + root.input
+		leftStyle = style
+	}
+	leftContents := strToContent(leftStatus, "", root.model.TabWidth)
+	root.setContentString(0, root.statusPos, leftContents, leftStyle)
+
+	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
+
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.y, root.model.endY, next)
+	rightContents := strToContent(rightStatus, "", root.model.TabWidth)
+	root.setContentString(root.model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
+
+}
+
+type eventAppQuit struct {
+	tcell.EventTime
+}
+
+func (root *root) Quit() {
+	ev := &eventAppQuit{}
+	ev.SetEventNow()
+	go func() { root.Screen.PostEventWait(ev) }()
+}
+
+func (root *root) Resize() {
+	root.Sync()
+}
+
+func (root *root) Sync() {
+	root.PrepareView()
+	root.Draw()
+}
+
+func (root *root) Run() {
+	screen := root.Screen
+
+loop:
+	for {
+		root.Draw()
+		ev := screen.PollEvent()
+		switch ev := ev.(type) {
+		case *eventAppQuit:
+			break loop
+		case *tcell.EventKey:
+			root.HandleEvent(ev)
+		case *tcell.EventResize:
+			root.Resize()
+		}
+	}
+}
+
+func Run(m *Model, args []string) error {
+	var reader io.Reader
+	fileName := ""
+	if len(args) == 0 {
+		if terminal.IsTerminal(0) {
+			return fmt.Errorf("Missing filename")
+		}
+		fileName = "(STDIN)"
+		reader = uncompressedReader(os.Stdin)
+	} else if len(args) == 1 {
+		fileName = args[0]
+		r, err := os.Open(fileName)
+		if err != nil {
+			return err
+		}
+		reader = uncompressedReader(r)
+	} else {
+		readers := make([]io.Reader, 0)
+		for _, fileName := range args {
+			r, err := os.Open(fileName)
+			if err != nil {
+				return err
+			}
+			readers = append(readers, uncompressedReader(r))
+			reader = io.MultiReader(readers...)
+		}
+	}
+	m.ReadAll(reader)
+
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		return err
+	}
+	err = screen.Init()
+	if err != nil {
+		return err
+	}
+	defer screen.Fini()
+
 	root := &root{}
-
-	root.main = views.NewCellView()
-	m := &model{}
-	root.main.SetModel(m)
+	root.Screen = screen
+	root.fileName = fileName
 	root.model = m
-	root.main.SetStyle(tcell.StyleDefault)
-	root.Panel.SetContent(root.main)
 
-	status := views.NewSimpleStyledTextBar()
-	status.SetStyle(tcell.StyleDefault.
-		Background(tcell.ColorBlue).
-		Foreground(tcell.ColorYellow))
-	status.SetCenter("Status bar")
-	root.status = status
+	screen.Clear()
+	root.Sync()
+	root.Run()
 
-	title := views.NewTextBar()
-	title.SetStyle(tcell.StyleDefault.
-		Background(tcell.ColorTeal).
-		Foreground(tcell.ColorWhite))
-	title.SetCenter("Title", tcell.StyleDefault)
-	root.title = title
-	return root
-}
-
-func Run(reader io.Reader) {
-	root := newRoot()
-	app := &views.Application{}
-	root.parent = app
-	app.SetStyle(tcell.StyleDefault)
-	app.SetRootWidget(root)
-
-	root.model.block = make([]string, 0)
-	r := uncompressedReader(reader)
-	go ReadAll(&root.model.block, r)
-	defer r.Close()
-
-	if e := app.Run(); e != nil {
-		fmt.Fprintln(os.Stderr, e.Error())
-		os.Exit(1)
-	}
+	return nil
 }
