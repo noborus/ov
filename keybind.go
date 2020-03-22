@@ -40,6 +40,14 @@ func (root *root) goLine() {
 	root.input = ""
 }
 
+func (root *root) headerLen() {
+	line, _ := strconv.Atoi(root.input)
+	if line >= 0 && line <= root.model.vHight-1 {
+		root.model.HeaderLen = line
+	}
+	root.input = ""
+}
+
 func (root *root) search() {
 	for y := root.model.y; y < root.model.endY; y++ {
 		if strings.Contains(root.model.text[y], root.input) {
@@ -66,6 +74,8 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 		return root.inputEvent(ev, root.previous)
 	case goline:
 		return root.inputEvent(ev, root.goLine)
+	case headerLen:
+		return root.inputEvent(ev, root.headerLen)
 	}
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
@@ -134,6 +144,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.input = ""
 				root.keyGoLine()
 				return true
+			case 'H':
+				root.input = ""
+				root.keyHeader()
+				return true
 			}
 		}
 	}
@@ -191,9 +205,15 @@ func (root *root) keyWrap() {
 func (root *root) keySearch() {
 	root.mode = search
 }
+
 func (root *root) keyPrevious() {
 	root.mode = previous
 }
+
 func (root *root) keyGoLine() {
 	root.mode = goline
+}
+
+func (root *root) keyHeader() {
+	root.mode = headerLen
 }

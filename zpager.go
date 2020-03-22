@@ -26,6 +26,7 @@ const (
 	search
 	previous
 	goline
+	headerLen
 )
 
 func (root *root) PrepareView() {
@@ -71,7 +72,7 @@ func (root *root) Draw() {
 	if root.mode == normal {
 		searchWord = root.input
 	}
-
+	m.header = m.text[:m.HeaderLen]
 	if m.WrapMode {
 		m.wrapContent(searchWord)
 	} else {
@@ -120,7 +121,10 @@ func (root *root) statusDraw() {
 		leftStatus = "?" + root.input
 		leftStyle = style
 	case goline:
-		leftStatus = ":" + root.input
+		leftStatus = "Goto line:" + root.input
+		leftStyle = style
+	case headerLen:
+		leftStatus = "Header length:" + root.input
 		leftStyle = style
 	}
 	leftContents := strToContent(leftStatus, "", root.model.TabWidth)

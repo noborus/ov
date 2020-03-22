@@ -10,14 +10,16 @@ import (
 )
 
 type Model struct {
-	TabWidth int
-	WrapMode bool
+	TabWidth  int
+	WrapMode  bool
+	HeaderLen int
 
 	x      int
 	y      int
 	endY   int
 	eof    bool
 	text   []string
+	header []string
 	vSize  int
 	vWidth int
 	vHight int
@@ -33,8 +35,9 @@ type content struct {
 
 func NewModel() *Model {
 	return &Model{
-		text:  make([]string, 0),
-		vSize: 1000,
+		text:   make([]string, 0),
+		header: make([]string, 0),
+		vSize:  1000,
 	}
 }
 
@@ -68,9 +71,22 @@ func (m *Model) noWrapContent(subStr string) {
 		lX = -10
 		m.x = -10
 	}
+	headerLen := len(m.header)
 	contents := make([][]content, 0, m.vHight)
 	maxX := 0
-	for y := 0; y < m.vHight; y++ {
+
+	// header
+	if headerLen > 0 {
+		for y := 0; y < headerLen; y++ {
+			content := strToContent(m.text[y], subStr, m.TabWidth)
+			if len(content) > maxX {
+				maxX = len(content)
+			}
+			contents = append(contents, content)
+		}
+	}
+	// body
+	for y := headerLen; y < m.vHight; y++ {
 		if lY+y >= len(m.text) {
 			break
 		}
@@ -103,8 +119,60 @@ func (m *Model) wrapContent(subStr string) {
 		lY = 0
 	}
 	lX := 0
+	headerLen := len(m.header)
+
 	y := 0
 	x := 0
+	hY := 0
+	// header
+	if headerLen > 0 {
+		for {
+			contents := strToContent(m.text[hY], subStr, m.TabWidth)
+			lX = m.x
+			for {
+				if lX < 0 {
+					x++
+					lX++
+					continue
+				}
+				if len(contents) == 0 {
+					break
+				}
+				m.vView[y][x] = contents[lX]
+				x++
+				// Wrap
+				if x >= m.vWidth {
+					x = 0
+					y++
+					if y >= m.vHight {
+						return
+					}
+				}
+				lX++
+				// EOL
+				if lX >= len(contents) {
+					x = 0
+					break
+				}
+			}
+			y++
+			// Reach the bottom
+			if y >= m.vHight {
+				return
+			}
+			hY++
+			// EOF
+			if hY >= len(m.text) {
+				return
+			}
+			if hY >= headerLen {
+				break
+			}
+		}
+	}
+	// body
+	x = 0
+	lY = lY + headerLen
 	for {
 		contents := strToContent(m.text[lY], subStr, m.TabWidth)
 		lX = m.x
@@ -197,8 +265,7 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 			c.highlight = hlFlag
 			contents = append(contents, c)
 			contents = append(contents, defaultContent)
-			n++
-			n++
+			n += 2
 		}
 	}
 	return contents

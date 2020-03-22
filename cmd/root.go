@@ -41,6 +41,7 @@ You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
 		m := zpager.NewModel()
 		m.TabWidth = TabWidth
 		m.WrapMode = Wrap
+		m.HeaderLen = HeaderLen
 		return zpager.Run(m, args)
 	},
 }
@@ -72,6 +73,9 @@ var Wrap bool
 // Tab width.
 var TabWidth int
 
+// Header.
+var HeaderLen int
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -82,7 +86,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&Wrap, "wrap", "w", true, "wrap mode")
 	rootCmd.PersistentFlags().IntVarP(&TabWidth, "tab-width", "x", 8, "Tab width")
-
+	rootCmd.PersistentFlags().IntVarP(&HeaderLen, "header", "H", 0, "Header")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
