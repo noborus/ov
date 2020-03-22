@@ -35,7 +35,7 @@ You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if Ver {
-			fmt.Printf("mdtsql version %s rev:%s\n", Version, Revision)
+			fmt.Printf("zpager version %s rev:%s\n", Version, Revision)
 			return nil
 		}
 		m := zpager.NewModel()
