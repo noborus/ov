@@ -226,7 +226,6 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 	}
 
 	hlFlag := false
-	zwj := false
 	n := 0
 	for _, runeValue := range str {
 		c := defaultContent
@@ -247,27 +246,14 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 				contents = append(contents, c)
 			}
 			continue
-		case '\u200d':
-			zwj = true
-			if len(contents) > 0 {
-				contents[len(contents)-1].combc = append(contents[len(contents)-1].combc, runeValue)
-			}
-			continue
-		}
-		if zwj {
-			if len(contents) > 0 {
-				contents[len(contents)-1].combc = append(contents[len(contents)-1].combc, runeValue)
-			}
-			zwj = false
-			continue
 		}
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
-			c.mainc = rune(' ')
-			c.width = 1
-			c.highlight = hlFlag
-			contents = append(contents, c)
-			n++
+			if len(contents) > 0 {
+				c2 := contents[len(contents)-1]
+				c2.combc = append(c2.combc, runeValue)
+				contents[len(contents)-1] = c2
+			}
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
