@@ -218,7 +218,6 @@ func (m *Model) wrapContent(subStr string) {
 func strToContent(line string, subStr string, tabWidth int) []content {
 	var contents []content
 	str := strings.ReplaceAll(line, subStr, "\n"+subStr+"\n")
-	hlFlag := false
 	defaultContent := content{
 		mainc:     0,
 		combc:     []rune{},
@@ -226,17 +225,20 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 		highlight: false,
 	}
 
+	hlFlag := false
+	zwj := false
 	n := 0
 	for _, runeValue := range str {
 		c := defaultContent
-		if runeValue == '\n' {
+		switch runeValue {
+		case '\n':
 			if !hlFlag {
 				hlFlag = true
 			} else {
 				hlFlag = false
 			}
 			continue
-		} else if runeValue == '\t' {
+		case '\t':
 			tabStop := tabWidth - (n % tabWidth)
 			c.mainc = rune(' ')
 			c.width = 1
@@ -244,6 +246,19 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 			for i := 0; i < tabStop; i++ {
 				contents = append(contents, c)
 			}
+			continue
+		case '\u200d':
+			zwj = true
+			if len(contents) > 0 {
+				contents[len(contents)-1].combc = append(contents[len(contents)-1].combc, runeValue)
+			}
+			continue
+		}
+		if zwj {
+			if len(contents) > 0 {
+				contents[len(contents)-1].combc = append(contents[len(contents)-1].combc, runeValue)
+			}
+			zwj = false
 			continue
 		}
 		switch runewidth.RuneWidth(runeValue) {
