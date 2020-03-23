@@ -118,7 +118,11 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			return true
 		case tcell.KeyRune:
 			switch ev.Rune() {
-			case 'Q', 'q':
+			case 'q':
+				root.Quit()
+				return true
+			case 'Q':
+				root.model.PostWrite = true
 				root.Quit()
 				return true
 			case 'W', 'w':

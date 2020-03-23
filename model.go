@@ -13,6 +13,7 @@ type Model struct {
 	TabWidth  int
 	WrapMode  bool
 	HeaderLen int
+	PostWrite bool
 
 	x      int
 	y      int
@@ -172,7 +173,7 @@ func (m *Model) wrapContent(subStr string) {
 	}
 	// body
 	x = 0
-	lY = lY + headerLen
+	lY += headerLen
 	for {
 		contents := strToContent(m.text[lY], subStr, m.TabWidth)
 		lX = m.x

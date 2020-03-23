@@ -111,21 +111,20 @@ func (root *root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	leftStatus := fmt.Sprintf("%s:", root.fileName)
-	leftStyle := style.Reverse(true)
+	leftStatus := ""
+	leftStyle := style
 	switch root.mode {
 	case search:
 		leftStatus = "/" + root.input
-		leftStyle = style
 	case previous:
 		leftStatus = "?" + root.input
-		leftStyle = style
 	case goline:
 		leftStatus = "Goto line:" + root.input
-		leftStyle = style
 	case headerLen:
 		leftStatus = "Header length:" + root.input
-		leftStyle = style
+	default:
+		leftStatus = fmt.Sprintf("%s:", root.fileName)
+		leftStyle = style.Reverse(true)
 	}
 	leftContents := strToContent(leftStatus, "", root.model.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
@@ -178,20 +177,21 @@ loop:
 func Run(m *Model, args []string) error {
 	var reader io.Reader
 	fileName := ""
-	if len(args) == 0 {
+	switch len(args) {
+	case 0:
 		if terminal.IsTerminal(0) {
-			return fmt.Errorf("Missing filename")
+			return fmt.Errorf("missing filename")
 		}
 		fileName = "(STDIN)"
 		reader = uncompressedReader(os.Stdin)
-	} else if len(args) == 1 {
+	case 1:
 		fileName = args[0]
 		r, err := os.Open(fileName)
 		if err != nil {
 			return err
 		}
 		reader = uncompressedReader(r)
-	} else {
+	default:
 		readers := make([]io.Reader, 0)
 		for _, fileName := range args {
 			r, err := os.Open(fileName)
@@ -212,12 +212,23 @@ func Run(m *Model, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer screen.Fini()
 
 	root := &root{}
 	root.Screen = screen
 	root.fileName = fileName
 	root.model = m
+
+	defer func() {
+		root.Screen.Fini()
+		if root.model.PostWrite {
+			for i := 0; i < len(m.text); i++ {
+				if i > m.vHight-1 {
+					break
+				}
+				fmt.Println(m.text[m.y+i])
+			}
+		}
+	}()
 
 	screen.Clear()
 	root.Sync()

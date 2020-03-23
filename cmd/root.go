@@ -42,6 +42,7 @@ You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
 		m.TabWidth = TabWidth
 		m.WrapMode = Wrap
 		m.HeaderLen = HeaderLen
+		m.PostWrite = PostWrite
 		return zpager.Run(m, args)
 	},
 }
@@ -70,11 +71,14 @@ var Ver bool
 // Wrap is Wrap mode.
 var Wrap bool
 
-// Tab width.
+// TabWidth is tab stop num.
 var TabWidth int
 
-// Header.
+// HeaderLen is number of header rows to fix.
 var HeaderLen int
+
+// PostWrite writes the current screen on exit.
+var PostWrite bool
 
 func init() {
 	cobra.OnInitialize(initConfig)
@@ -87,6 +91,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Wrap, "wrap", "w", true, "wrap mode")
 	rootCmd.PersistentFlags().IntVarP(&TabWidth, "tab-width", "x", 8, "Tab width")
 	rootCmd.PersistentFlags().IntVarP(&HeaderLen, "header", "H", 0, "Header")
+	rootCmd.PersistentFlags().BoolVarP(&PostWrite, "noinit", "X", false, "Output the current screen when exiting")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
