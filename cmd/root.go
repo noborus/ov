@@ -1,17 +1,3 @@
-// Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
@@ -45,9 +31,9 @@ var config Config
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "zpager",
-	Short: "Pager for various compressed files",
-	Long: `Pager(such as more/less) for various compressed files.
-You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
+	Short: "Feature rich pager",
+	Long: `Feature rich pager(such as more/less).
+It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if Ver {
@@ -59,7 +45,6 @@ You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
 		m.WrapMode = config.Wrap
 		m.HeaderLen = config.Header
 		m.PostWrite = config.NoInit
-		fmt.Printf("%#v\n", config)
 		return zpager.Run(m, args)
 	},
 }
@@ -92,7 +77,10 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
 	rootCmd.PersistentFlags().BoolVarP(&config.NoInit, "no-init", "X", false, "Output the current screen when exiting")
 
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
+	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
+	viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
+	viper.BindPFlag("NoInit", rootCmd.PersistentFlags().Lookup("no-init"))
 }
 
 // initConfig reads in config file and ENV variables if set.
