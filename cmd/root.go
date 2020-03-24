@@ -26,6 +26,22 @@ import (
 
 var cfgFile string
 
+// Ver is version information.
+var Ver bool
+
+type Config struct {
+	// Wrap is Wrap mode.
+	Wrap bool
+	// TabWidth is tab stop num.
+	TabWidth int
+	// HeaderLen is number of header rows to be fixed.
+	Header int
+	// NoInit writes the current screen on exit.
+	NoInit bool
+}
+
+var config Config
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "zpager",
@@ -39,10 +55,11 @@ You can view files that are compressed in gzip, bzip 2, zstd, lz 4, and xz.
 			return nil
 		}
 		m := zpager.NewModel()
-		m.TabWidth = TabWidth
-		m.WrapMode = Wrap
-		m.HeaderLen = HeaderLen
-		m.PostWrite = PostWrite
+		m.TabWidth = config.TabWidth
+		m.WrapMode = config.Wrap
+		m.HeaderLen = config.Header
+		m.PostWrite = config.NoInit
+		fmt.Printf("%#v\n", config)
 		return zpager.Run(m, args)
 	},
 }
@@ -65,36 +82,17 @@ func Execute(version string, revision string) {
 	}
 }
 
-// Ver is version information.
-var Ver bool
-
-// Wrap is Wrap mode.
-var Wrap bool
-
-// TabWidth is tab stop num.
-var TabWidth int
-
-// HeaderLen is number of header rows to fix.
-var HeaderLen int
-
-// PostWrite writes the current screen on exit.
-var PostWrite bool
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.zpager.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
-	rootCmd.PersistentFlags().BoolVarP(&Wrap, "wrap", "w", true, "wrap mode")
-	rootCmd.PersistentFlags().IntVarP(&TabWidth, "tab-width", "x", 8, "Tab width")
-	rootCmd.PersistentFlags().IntVarP(&HeaderLen, "header", "H", 0, "Header")
-	rootCmd.PersistentFlags().BoolVarP(&PostWrite, "noinit", "X", false, "Output the current screen when exiting")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
+	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
+	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
+	rootCmd.PersistentFlags().BoolVarP(&config.NoInit, "no-init", "X", false, "Output the current screen when exiting")
+
+	viper.BindPFlags(rootCmd.PersistentFlags())
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -120,5 +118,10 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+
+	if err := viper.Unmarshal(&config); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
