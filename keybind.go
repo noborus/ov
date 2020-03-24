@@ -93,11 +93,20 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			root.keyEnd()
 			return true
 		case tcell.KeyLeft:
-			root.keyLeft()
-			return true
+			if ev.Modifiers()&tcell.ModCtrl > 0 {
+				root.keyHfLeft()
+				return true
+			} else {
+				root.keyLeft()
+				return true
+			}
 		case tcell.KeyRight:
-			root.keyRight()
-			return true
+			if ev.Modifiers()&tcell.ModCtrl > 0 {
+				root.keyHfRight()
+			} else {
+				root.keyRight()
+				return true
+			}
 		case tcell.KeyDown, tcell.KeyCtrlN:
 			root.keyDown()
 			return true
@@ -186,15 +195,41 @@ func (root *root) keyDown() {
 }
 
 func (root *root) keyLeft() {
-	if !root.model.WrapMode {
-		root.model.x--
+	if root.model.WrapMode {
+		return
+	}
+	root.model.x--
+}
+
+func (root *root) keyHfLeft() {
+	if root.model.WrapMode {
+		return
+	}
+	moveSize := (root.model.vWidth / 2)
+	if root.model.x > 0 && (root.model.x-moveSize) < 0 {
+		root.model.x = 0
+	} else {
+		root.model.x -= moveSize
 	}
 }
 
 func (root *root) keyRight() {
-	if !root.model.WrapMode {
-		root.model.x++
+	if root.model.WrapMode {
+		return
 	}
+	root.model.x++
+}
+
+func (root *root) keyHfRight() {
+	if root.model.WrapMode {
+		return
+	}
+	if root.model.x < 0 {
+		root.model.x = 0
+	} else {
+		root.model.x += (root.model.vWidth / 2)
+	}
+
 }
 
 func (root *root) keyWrap() {

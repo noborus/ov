@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -28,10 +29,10 @@ type Model struct {
 }
 
 type content struct {
-	mainc     rune
-	combc     []rune
-	width     int
-	highlight bool
+	width int
+	style tcell.Style
+	mainc rune
+	combc []rune
 }
 
 func NewModel() *Model {
@@ -220,29 +221,33 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 	var contents []content
 	str := strings.ReplaceAll(line, subStr, "\n"+subStr+"\n")
 	defaultContent := content{
-		mainc:     0,
-		combc:     []rune{},
-		width:     0,
-		highlight: false,
+		mainc: 0,
+		combc: []rune{},
+		width: 0,
+		style: tcell.StyleDefault,
 	}
 
-	hlFlag := false
+	defaultStyle := tcell.StyleDefault
+	highlightStyle := tcell.StyleDefault.Reverse(true)
+	style := defaultStyle
 	n := 0
+	hlFlag := false
 	for _, runeValue := range str {
 		c := defaultContent
 		switch runeValue {
 		case '\n':
 			if !hlFlag {
-				hlFlag = true
-			} else {
 				hlFlag = false
+			} else {
+				hlFlag = true
+				style = highlightStyle
 			}
 			continue
 		case '\t':
 			tabStop := tabWidth - (n % tabWidth)
 			c.mainc = rune(' ')
 			c.width = 1
-			c.highlight = hlFlag
+			c.style = style
 			for i := 0; i < tabStop; i++ {
 				contents = append(contents, c)
 			}
@@ -258,13 +263,13 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
-			c.highlight = hlFlag
+			c.style = style
 			contents = append(contents, c)
 			n++
 		case 2:
 			c.mainc = runeValue
 			c.width = 2
-			c.highlight = hlFlag
+			c.style = style
 			contents = append(contents, c)
 			contents = append(contents, defaultContent)
 			n += 2

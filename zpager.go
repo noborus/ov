@@ -82,11 +82,7 @@ func (root *root) Draw() {
 	for y := 0; y < m.vHight; y++ {
 		for x := 0; x < m.vWidth; x++ {
 			content := m.vView[y][x]
-			style := tcell.StyleDefault
-			if content.highlight {
-				style = style.Reverse(true)
-			}
-			screen.SetContent(x, y, content.mainc, content.combc, style)
+			screen.SetContent(x, y, content.mainc, content.combc, content.style)
 		}
 	}
 	root.statusDraw()
@@ -134,7 +130,6 @@ func (root *root) statusDraw() {
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.y, root.model.endY, next)
 	rightContents := strToContent(rightStatus, "", root.model.TabWidth)
 	root.setContentString(root.model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
-
 }
 
 type eventAppQuit struct {

@@ -3,6 +3,8 @@ package zpager
 import (
 	"reflect"
 	"testing"
+
+	"github.com/gdamore/tcell"
 )
 
 func Test_strToContent(t *testing.T) {
@@ -20,54 +22,54 @@ func Test_strToContent(t *testing.T) {
 			name: "test1",
 			args: args{line: "1", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('1'), combc: []rune{}, width: 1},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: []rune{}},
 			},
 		},
 		{
 			name: "testASCII",
 			args: args{line: "abc", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('a'), combc: []rune{}, width: 1},
-				{mainc: rune('b'), combc: []rune{}, width: 1},
-				{mainc: rune('c'), combc: []rune{}, width: 1},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: []rune{}},
 			},
 		},
 		{
 			name: "testHiragana",
 			args: args{line: "あ", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('あ'), combc: []rune{}, width: 2},
-				{mainc: 0, combc: []rune{}, width: 0},
+				{width: 2, style: tcell.StyleDefault, mainc: rune('あ'), combc: []rune{}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: []rune{}},
 			},
 		},
 		{
 			name: "testKANJI",
 			args: args{line: "漢", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('漢'), combc: []rune{}, width: 2},
-				{mainc: 0, combc: []rune{}, width: 0},
+				{width: 2, style: tcell.StyleDefault, mainc: rune('漢'), combc: []rune{}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: []rune{}},
 			},
 		},
 		{
 			name: "testMIX",
 			args: args{line: "abc漢", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('a'), combc: []rune{}, width: 1},
-				{mainc: rune('b'), combc: []rune{}, width: 1},
-				{mainc: rune('c'), combc: []rune{}, width: 1},
-				{mainc: rune('漢'), combc: []rune{}, width: 2},
-				{mainc: 0, combc: []rune{}, width: 0},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: []rune{}},
+				{width: 2, style: tcell.StyleDefault, mainc: rune('漢'), combc: []rune{}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: []rune{}},
 			},
 		},
 		{
 			name: "testTab",
 			args: args{line: "a\tb", subStr: "", tabWidth: 4},
 			want: []content{
-				{mainc: rune('a'), combc: []rune{}, width: 1},
-				{mainc: rune(' '), combc: []rune{}, width: 1},
-				{mainc: rune(' '), combc: []rune{}, width: 1},
-				{mainc: rune(' '), combc: []rune{}, width: 1},
-				{mainc: rune('b'), combc: []rune{}, width: 1},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: []rune{}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: []rune{}},
 			},
 		},
 	}
