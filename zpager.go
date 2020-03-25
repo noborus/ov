@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
 	"golang.org/x/crypto/ssh/terminal"
@@ -26,7 +27,7 @@ const (
 	search
 	previous
 	goline
-	headerLen
+	header
 )
 
 func (root *root) PrepareView() {
@@ -116,19 +117,19 @@ func (root *root) statusDraw() {
 		leftStatus = "?" + root.input
 	case goline:
 		leftStatus = "Goto line:" + root.input
-	case headerLen:
+	case header:
 		leftStatus = "Header length:" + root.input
 	default:
 		leftStatus = fmt.Sprintf("%s:", root.fileName)
 		leftStyle = style.Reverse(true)
 	}
-	leftContents := strToContent(leftStatus, "", root.model.TabWidth)
+	leftContents := strToContent(leftStatus, root.model.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
 
 	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
 
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.y, root.model.endY, next)
-	rightContents := strToContent(rightStatus, "", root.model.TabWidth)
+	rightContents := strToContent(rightStatus, root.model.TabWidth)
 	root.setContentString(root.model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 }
 
@@ -170,6 +171,15 @@ loop:
 }
 
 func Run(m *Model, args []string) error {
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: 1e7,     // number of keys to track frequency of (10M).
+		MaxCost:     1 << 30, // maximum cost of cache (1GB).
+		BufferItems: 64,      // number of keys per Get buffer.
+	})
+	if err != nil {
+		return err
+	}
+	m.cache = cache
 	var reader io.Reader
 	fileName := ""
 	switch len(args) {

@@ -74,7 +74,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 		return root.inputEvent(ev, root.previous)
 	case goline:
 		return root.inputEvent(ev, root.goLine)
-	case headerLen:
+	case header:
 		return root.inputEvent(ev, root.headerLen)
 	}
 	switch ev := ev.(type) {
@@ -254,5 +254,5 @@ func (root *root) keyGoLine() {
 }
 
 func (root *root) keyHeader() {
-	root.mode = headerLen
+	root.mode = header
 }

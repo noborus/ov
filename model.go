@@ -3,9 +3,9 @@ package zpager
 import (
 	"bufio"
 	"io"
-	"strings"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
 )
@@ -26,6 +26,7 @@ type Model struct {
 	vWidth int
 	vHight int
 	vView  [][]content
+	cache  *ristretto.Cache
 }
 
 type content struct {
@@ -80,7 +81,7 @@ func (m *Model) noWrapContent(subStr string) {
 	// header
 	if headerLen > 0 {
 		for y := 0; y < headerLen; y++ {
-			content := strToContent(m.text[y], subStr, m.TabWidth)
+			content := m.getContents(y)
 			if len(content) > maxX {
 				maxX = len(content)
 			}
@@ -92,7 +93,7 @@ func (m *Model) noWrapContent(subStr string) {
 		if lY+y >= len(m.text) {
 			break
 		}
-		content := strToContent(m.text[lY+y], subStr, m.TabWidth)
+		content := m.getContents(lY + y)
 		if len(content) > maxX {
 			maxX = len(content)
 		}
@@ -129,7 +130,7 @@ func (m *Model) wrapContent(subStr string) {
 	// header
 	if headerLen > 0 {
 		for {
-			contents := strToContent(m.text[hY], subStr, m.TabWidth)
+			contents := m.getContents(lY)
 			lX = m.x
 			for {
 				if lX < 0 {
@@ -176,7 +177,7 @@ func (m *Model) wrapContent(subStr string) {
 	x = 0
 	lY += headerLen
 	for {
-		contents := strToContent(m.text[lY], subStr, m.TabWidth)
+		contents := m.getContents(lY)
 		lX = m.x
 		for {
 			if lX < 0 {
@@ -217,9 +218,23 @@ func (m *Model) wrapContent(subStr string) {
 	}
 }
 
-func strToContent(line string, subStr string, tabWidth int) []content {
+func (m *Model) getContents(lineNum int) []content {
 	var contents []content
-	str := strings.ReplaceAll(line, subStr, "\n"+subStr+"\n")
+	value, found := m.cache.Get(lineNum)
+	if found {
+		var ok bool
+		if contents, ok = value.([]content); !ok {
+			return nil
+		}
+	} else {
+		contents = strToContent(m.text[lineNum], m.TabWidth)
+		m.cache.Set(lineNum, contents, 1)
+	}
+	return contents
+}
+
+func strToContent(line string, tabWidth int) []content {
+	var contents []content
 	defaultContent := content{
 		mainc: 0,
 		combc: []rune{},
@@ -228,20 +243,12 @@ func strToContent(line string, subStr string, tabWidth int) []content {
 	}
 
 	defaultStyle := tcell.StyleDefault
-	highlightStyle := tcell.StyleDefault.Reverse(true)
 	style := defaultStyle
 	n := 0
-	hlFlag := false
-	for _, runeValue := range str {
+	for _, runeValue := range line {
 		c := defaultContent
 		switch runeValue {
 		case '\n':
-			if !hlFlag {
-				hlFlag = false
-			} else {
-				hlFlag = true
-				style = highlightStyle
-			}
 			continue
 		case '\t':
 			tabStop := tabWidth - (n % tabWidth)

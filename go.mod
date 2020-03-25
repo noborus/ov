@@ -3,6 +3,7 @@ module github.com/noborus/zpager
 go 1.14
 
 require (
+	github.com/dgraph-io/ristretto v0.0.2
 	github.com/frankban/quicktest v1.8.1 // indirect
 	github.com/gdamore/tcell v1.3.0
 	github.com/klauspost/compress v1.10.3
