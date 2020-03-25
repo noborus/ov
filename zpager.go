@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
@@ -34,18 +35,13 @@ func (root *root) PrepareView() {
 	m := root.model
 	screen := root.Screen
 	m.vWidth, m.vHight = screen.Size()
-	m.vHight--
-	root.statusPos = m.vHight
-	m.vView = make([][]content, m.vHight)
-	for y := 0; y < m.vHight; y++ {
-		m.vView[y] = make([]content, m.vWidth)
-	}
+	root.statusPos = m.vHight - 1
 }
 
 func (root *root) Draw() {
 	m := root.model
 	screen := root.Screen
-	if len(m.text) == 0 || len(m.vView) == 0 {
+	if len(m.text) == 0 || m.vHight == 0 {
 		root.statusDraw()
 		root.Show()
 		return
@@ -58,7 +54,7 @@ func (root *root) Draw() {
 	}
 	for y := 0; y < m.vHight; y++ {
 		for x := 0; x < m.vWidth; x++ {
-			m.vView[y][x] = space
+			screen.SetContent(x, y, space.mainc, space.combc, space.style)
 		}
 	}
 
@@ -73,21 +69,101 @@ func (root *root) Draw() {
 	if root.mode == normal {
 		searchWord = root.input
 	}
-	m.header = m.text[:m.HeaderLen]
-	if m.WrapMode {
-		m.wrapContent(searchWord)
-	} else {
-		m.noWrapContent(searchWord)
-	}
-
+	var contents []content
+	lY := m.y
+	lX := 0
+	wX := 0
 	for y := 0; y < m.vHight; y++ {
-		for x := 0; x < m.vWidth; x++ {
-			content := m.vView[y][x]
-			screen.SetContent(x, y, content.mainc, content.combc, content.style)
+		if m.HeaderLen > lY-m.y {
+			contents = m.getContents(lY - m.y)
+		} else {
+			contents = m.getContents(lY)
+		}
+		if len(contents) == 0 {
+			lY++
+			continue
+		}
+
+		doHighlight(&contents, searchWord)
+
+		if m.WrapMode {
+			for {
+				if lX+wX >= len(contents) {
+					// EOL
+					lX = 0
+					wX = 0
+					lY++
+					break
+				}
+				if wX > m.vWidth {
+					// next line
+					lX += wX
+					wX = 0
+					break
+				}
+				content := contents[lX+wX]
+				screen.SetContent(wX, y, content.mainc, content.combc, content.style)
+				wX++
+			}
+		} else {
+			lX = m.x
+			if lX < -10 {
+				lX = -10
+			}
+			for x := 0; x < m.vWidth; x++ {
+				if lX+x < 0 {
+					continue
+				}
+				if lX+x >= len(contents) {
+					break
+				}
+				content := contents[lX+x]
+				screen.SetContent(x, y, content.mainc, content.combc, content.style)
+			}
+			lY++
 		}
 	}
 	root.statusDraw()
 	root.Show()
+}
+
+func doHighlight(cp *[]content, searchWord string) {
+	contents := *cp
+	if searchWord == "" {
+		for n := range contents {
+			contents[n].style = contents[n].style.Reverse(false)
+		}
+		return
+	}
+	line := make([]rune, 0)
+	cIndex := make(map[int]int)
+	for n := range contents {
+		if contents[n].width > 0 {
+			cIndex[len(string(line))] = n
+			line = append(line, contents[n].mainc)
+		}
+	}
+	s := string(line)
+	for i := strings.Index(s, searchWord); i >= 0; {
+		start := cIndex[i]
+		end := cIndex[i+len(searchWord)]
+		for ci := start; ci < end; ci++ {
+			contents[ci].style = contents[ci].style.Reverse(true)
+		}
+		j := strings.Index(s[i+1:], searchWord)
+		if j >= 0 {
+			i += j + 1
+		} else {
+			break
+		}
+	}
+	/*
+		start := cIndex[index]
+		end := cIndex[index+len(searchWord)]
+		for i := start; i < end; i++ {
+			contents[i].style = contents[i].style.Reverse(true)
+		}
+	*/
 }
 
 func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
