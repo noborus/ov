@@ -75,8 +75,11 @@ func (root *root) Draw() {
 	for y := 0; y < m.vHight; y++ {
 		if lY < m.HeaderLen {
 			contents = m.getContents(lY)
+			for n := range contents {
+				contents[n].style = contents[n].style.Bold(true)
+			}
 		} else {
-			contents = m.getContents(m.y + lY - m.HeaderLen)
+			contents = m.getContents(lY + m.y)
 		}
 		if len(contents) == 0 {
 			lY++
