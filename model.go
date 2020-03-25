@@ -68,6 +68,9 @@ func (m *Model) ReadAll(r io.Reader) {
 
 func (m *Model) getContents(lineNum int) []content {
 	var contents []content
+	if lineNum >= len(m.text) {
+		return nil
+	}
 	value, found := m.cache.Get(lineNum)
 	if found {
 		var ok bool
@@ -100,12 +103,11 @@ func strToContent(line string, tabWidth int) []content {
 			continue
 		case '\t':
 			tabStop := tabWidth - (n % tabWidth)
-			c.mainc = rune('\t')
-			c.width = tabWidth
+			c.mainc = rune(' ')
+			c.width = 1
 			c.style = style
-			contents = append(contents, c)
-			for i := 0; i < tabStop-1; i++ {
-				contents = append(contents, defaultContent)
+			for i := 0; i < tabStop; i++ {
+				contents = append(contents, c)
 			}
 			continue
 		}

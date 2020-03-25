@@ -51,7 +51,7 @@ func (root *root) headerLen() {
 func (root *root) search() {
 	for y := root.model.y; y < root.model.endY; y++ {
 		if strings.Contains(root.model.text[y], root.input) {
-			root.model.y = y - root.model.HeaderLen
+			root.model.y = y
 			break
 		}
 	}
@@ -60,7 +60,7 @@ func (root *root) search() {
 func (root *root) previous() {
 	for y := root.model.y; y >= 0; y-- {
 		if strings.Contains(root.model.text[y], root.input) {
-			root.model.y = y - root.model.HeaderLen
+			root.model.y = y
 			break
 		}
 	}

@@ -70,14 +70,13 @@ func (root *root) Draw() {
 		searchWord = root.input
 	}
 	var contents []content
-	lY := m.y
+	lY := 0
 	lX := 0
-	wX := 0
 	for y := 0; y < m.vHight; y++ {
-		if m.HeaderLen > lY-m.y {
-			contents = m.getContents(lY - m.y)
-		} else {
+		if lY < m.HeaderLen {
 			contents = m.getContents(lY)
+		} else {
+			contents = m.getContents(m.y + lY - m.HeaderLen)
 		}
 		if len(contents) == 0 {
 			lY++
@@ -87,6 +86,7 @@ func (root *root) Draw() {
 		doHighlight(&contents, searchWord)
 
 		if m.WrapMode {
+			wX := 0
 			for {
 				if lX+wX >= len(contents) {
 					// EOL
@@ -106,10 +106,12 @@ func (root *root) Draw() {
 				wX++
 			}
 		} else {
+			// noWrap
 			lX = m.x
 			if lX < -10 {
 				lX = -10
 			}
+
 			for x := 0; x < m.vWidth; x++ {
 				if lX+x < 0 {
 					continue
@@ -127,23 +129,32 @@ func (root *root) Draw() {
 	root.Show()
 }
 
-func doHighlight(cp *[]content, searchWord string) {
-	contents := *cp
-	if searchWord == "" {
-		for n := range contents {
-			contents[n].style = contents[n].style.Reverse(false)
-		}
-		return
-	}
-	line := make([]rune, 0)
+func contentsToStr(contents []content) (string, map[int]int) {
+	buf := make([]rune, 0)
 	cIndex := make(map[int]int)
+	byteLen := 0
 	for n := range contents {
 		if contents[n].width > 0 {
-			cIndex[len(string(line))] = n
-			line = append(line, contents[n].mainc)
+			cIndex[byteLen] = n
+			buf = append(buf, contents[n].mainc)
+			b := string(contents[n].mainc)
+			byteLen += len(b)
 		}
 	}
-	s := string(line)
+	s := string(buf)
+	cIndex[len(s)] = len(contents)
+	return s, cIndex
+}
+
+func doHighlight(cp *[]content, searchWord string) {
+	contents := *cp
+	for n := range contents {
+		contents[n].style = contents[n].style.Reverse(false)
+	}
+	if searchWord == "" {
+		return
+	}
+	s, cIndex := contentsToStr(contents)
 	for i := strings.Index(s, searchWord); i >= 0; {
 		start := cIndex[i]
 		end := cIndex[i+len(searchWord)]
@@ -157,13 +168,6 @@ func doHighlight(cp *[]content, searchWord string) {
 			break
 		}
 	}
-	/*
-		start := cIndex[index]
-		end := cIndex[index+len(searchWord)]
-		for i := start; i < end; i++ {
-			contents[i].style = contents[i].style.Reverse(true)
-		}
-	*/
 }
 
 func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
