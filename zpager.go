@@ -59,12 +59,12 @@ func (root *root) Draw() {
 		}
 	}
 
-	if m.y < 0 {
-		m.y = 0
-	}
 	maxY := len(m.buffer) - m.vHight + 1
 	if m.y > maxY {
 		m.y = maxY
+	}
+	if m.y < 0 {
+		m.y = 0
 	}
 
 	searchWord := ""
