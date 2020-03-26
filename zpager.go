@@ -1,3 +1,4 @@
+// Package zpager provides a pager for terminals.
 package zpager
 
 import (
@@ -41,7 +42,7 @@ func (root *root) PrepareView() {
 func (root *root) Draw() {
 	m := root.model
 	screen := root.Screen
-	if len(m.text) == 0 || m.vHight == 0 {
+	if len(m.buffer) == 0 || m.vHight == 0 {
 		root.statusDraw()
 		root.Show()
 		return
@@ -58,11 +59,12 @@ func (root *root) Draw() {
 		}
 	}
 
-	if m.y+m.vHight > len(m.text) {
-		m.y = len(m.text) - m.vHight
-	}
 	if m.y < 0 {
 		m.y = 0
+	}
+	maxY := len(m.buffer) - m.vHight + 1
+	if m.y > maxY {
+		m.y = maxY
 	}
 
 	searchWord := ""
@@ -86,7 +88,7 @@ func (root *root) Draw() {
 			continue
 		}
 
-		doHighlight(&contents, searchWord)
+		doReverse(&contents, searchWord)
 
 		if m.WrapMode {
 			wX := 0
@@ -149,7 +151,7 @@ func contentsToStr(contents []content) (string, map[int]int) {
 	return s, cIndex
 }
 
-func doHighlight(cp *[]content, searchWord string) {
+func doReverse(cp *[]content, searchWord string) {
 	contents := *cp
 	for n := range contents {
 		contents[n].style = contents[n].style.Reverse(false)
@@ -206,13 +208,13 @@ func (root *root) statusDraw() {
 		leftStatus = fmt.Sprintf("%s:", root.fileName)
 		leftStyle = style.Reverse(true)
 	}
-	leftContents := strToContent(leftStatus, root.model.TabWidth)
+	leftContents := strToContents(leftStatus, root.model.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
 
 	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
 
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.y, root.model.endY, next)
-	rightContents := strToContent(rightStatus, root.model.TabWidth)
+	rightContents := strToContents(rightStatus, root.model.TabWidth)
 	root.setContentString(root.model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 }
 
@@ -309,11 +311,11 @@ func Run(m *Model, args []string) error {
 	defer func() {
 		root.Screen.Fini()
 		if root.model.PostWrite {
-			for i := 0; i < len(m.text); i++ {
+			for i := 0; i < len(m.buffer); i++ {
 				if i > m.vHight-1 {
 					break
 				}
-				fmt.Println(m.text[m.y+i])
+				fmt.Println(m.buffer[m.y+i])
 			}
 		}
 	}()

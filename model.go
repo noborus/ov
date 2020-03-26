@@ -20,8 +20,8 @@ type Model struct {
 	y      int
 	endY   int
 	eof    bool
-	text   []string
 	header []string
+	buffer []string
 	vSize  int
 	vWidth int
 	vHight int
@@ -37,7 +37,7 @@ type content struct {
 
 func NewModel() *Model {
 	return &Model{
-		text:   make([]string, 0),
+		buffer: make([]string, 0),
 		header: make([]string, 0),
 		vSize:  1000,
 	}
@@ -49,7 +49,7 @@ func (m *Model) ReadAll(r io.Reader) {
 	go func() {
 		defer close(ch)
 		for scanner.Scan() {
-			m.text = append(m.text, scanner.Text())
+			m.buffer = append(m.buffer, scanner.Text())
 			m.endY++
 			if m.endY == m.vSize {
 				ch <- struct{}{}
@@ -68,7 +68,7 @@ func (m *Model) ReadAll(r io.Reader) {
 
 func (m *Model) getContents(lineNum int) []content {
 	var contents []content
-	if lineNum >= len(m.text) {
+	if lineNum >= len(m.buffer) {
 		return nil
 	}
 	value, found := m.cache.Get(lineNum)
@@ -78,13 +78,13 @@ func (m *Model) getContents(lineNum int) []content {
 			return nil
 		}
 	} else {
-		contents = strToContent(m.text[lineNum], m.TabWidth)
+		contents = strToContents(m.buffer[lineNum], m.TabWidth)
 		m.cache.Set(lineNum, contents, 1)
 	}
 	return contents
 }
 
-func strToContent(line string, tabWidth int) []content {
+func strToContents(line string, tabWidth int) []content {
 	var contents []content
 	defaultContent := content{
 		mainc: 0,

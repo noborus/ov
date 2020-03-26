@@ -22,8 +22,8 @@ type Config struct {
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
-	// NoInit writes the current screen on exit.
-	NoInit bool
+	// PostWrite writes the current screen on exit.
+	PostWrite bool
 }
 
 var config Config
@@ -44,7 +44,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		m.TabWidth = config.TabWidth
 		m.WrapMode = config.Wrap
 		m.HeaderLen = config.Header
-		m.PostWrite = config.NoInit
+		m.PostWrite = config.PostWrite
 		return zpager.Run(m, args)
 	},
 }
@@ -75,12 +75,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
-	rootCmd.PersistentFlags().BoolVarP(&config.NoInit, "no-init", "X", false, "Output the current screen when exiting")
+	rootCmd.PersistentFlags().BoolVarP(&config.PostWrite, "post-write", "X", false, "Output the current screen when exiting")
 
 	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 	viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
-	viper.BindPFlag("NoInit", rootCmd.PersistentFlags().Lookup("no-init"))
+	viper.BindPFlag("PostWrite", rootCmd.PersistentFlags().Lookup("post-write"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -105,7 +105,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
 	if err := viper.Unmarshal(&config); err != nil {
