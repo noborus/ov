@@ -100,13 +100,13 @@ func (root *root) Draw() {
 					lY++
 					break
 				}
-				if wX > m.vWidth {
+				content := contents[lX+wX]
+				if wX+content.width > m.vWidth {
 					// next line
 					lX += wX
 					wX = 0
 					break
 				}
-				content := contents[lX+wX]
 				screen.SetContent(wX, y, content.mainc, content.combc, content.style)
 				wX++
 			}
