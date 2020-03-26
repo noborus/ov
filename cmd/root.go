@@ -5,7 +5,7 @@ import (
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/noborus/zpager"
+	"github.com/noborus/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,22 +30,22 @@ var config Config
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "zpager",
-	Short: "Feature rich pager",
-	Long: `Feature rich pager(such as more/less).
+	Use:   "ov",
+	Short: "Oviewer is a feature rich pager",
+	Long: `Oviewer is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if Ver {
-			fmt.Printf("zpager version %s rev:%s\n", Version, Revision)
+			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
 		}
-		m := zpager.NewModel()
+		m := oviewer.NewModel()
 		m.TabWidth = config.TabWidth
 		m.WrapMode = config.Wrap
 		m.HeaderLen = config.Header
 		m.PostWrite = config.PostWrite
-		return zpager.Run(m, args)
+		return oviewer.Run(m, args)
 	},
 }
 
@@ -70,7 +70,7 @@ func Execute(version string, revision string) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.zpager.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oviewer.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
@@ -96,9 +96,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".zpager" (without extension).
+		// Search config in home directory with name ".oviewer" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".zpager")
+		viper.SetConfigName(".oviewer")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

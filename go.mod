@@ -1,4 +1,4 @@
-module github.com/noborus/zpager
+module github.com/noborus/oviewer
 
 go 1.14
 

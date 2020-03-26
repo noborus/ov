@@ -1,6 +1,6 @@
 package main
 
-import "github.com/noborus/zpager/cmd"
+import "github.com/noborus/oviewer/cmd"
 
 var Version = "v0.0.1"
 

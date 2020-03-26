@@ -1,5 +1,5 @@
-// Package zpager provides a pager for terminals.
-package zpager
+// Package oviewer provides a pager for terminals.
+package oviewer
 
 import (
 	"fmt"

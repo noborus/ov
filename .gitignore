@@ -4,7 +4,7 @@
 *.so
 *.dylib
 .vscode
-/zpager
+/ov
 
 # Test binary, build with `go test -c`
 *.test

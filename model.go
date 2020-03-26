@@ -1,4 +1,4 @@
-package zpager
+package oviewer
 
 import (
 	"bufio"
