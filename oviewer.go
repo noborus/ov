@@ -59,9 +59,8 @@ func (root *root) Draw() {
 		}
 	}
 
-	maxY := len(m.buffer) - m.vHight + 1
-	if m.y > maxY {
-		m.y = maxY
+	if m.y > root.model.endY-1 {
+		m.y = root.model.endY - 1
 	}
 	if m.y < 0 {
 		m.y = 0
@@ -73,7 +72,7 @@ func (root *root) Draw() {
 	}
 	var contents []content
 	lY := 0
-	lX := 0
+	lX := m.yy * m.vWidth
 	for y := 0; y < m.vHight; y++ {
 		if lY < m.HeaderLen {
 			contents = m.getContents(lY)

@@ -18,6 +18,7 @@ type Model struct {
 
 	x      int
 	y      int
+	yy     int
 	endY   int
 	eof    bool
 	header []string

@@ -36,8 +36,8 @@ func (root *root) goLine() {
 	if err != nil {
 		return
 	}
-	root.model.y = line
 	root.input = ""
+	root.moveNum(line)
 }
 
 func (root *root) headerLen() {
@@ -51,7 +51,7 @@ func (root *root) headerLen() {
 func (root *root) search() {
 	for y := root.model.y; y < root.model.endY; y++ {
 		if strings.Contains(root.model.buffer[y], root.input) {
-			root.model.y = y
+			root.moveNum(y)
 			break
 		}
 	}
@@ -60,7 +60,7 @@ func (root *root) search() {
 func (root *root) previous() {
 	for y := root.model.y; y >= 0; y-- {
 		if strings.Contains(root.model.buffer[y], root.input) {
-			root.model.y = y
+			root.moveNum(y)
 			break
 		}
 	}
