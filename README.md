@@ -2,10 +2,15 @@
 
 Oviewer is a feature rich pager.
 
+* Better support for unicode and wide width.
+* Support for compressed files (gzip, bzip2, zstd, lz4, xz).
+* Header row can be fixed.
+* Dynamic wrap / nowrap switchable.
+
 ## install
 
 ```console
-go get -u github.com/noborus/Oviewer...
+go get -u github.com/noborus/oviewer...
 ```
 
 ## Usage
