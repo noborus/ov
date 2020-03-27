@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
@@ -238,6 +240,13 @@ func (root *root) Sync() {
 
 func (root *root) Run() {
 	screen := root.Screen
+
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
+	go func() {
+		<-c
+		root.Quit()
+	}()
 
 loop:
 	for {
