@@ -61,8 +61,24 @@ func (root *root) Draw() {
 		}
 	}
 
-	if m.y > root.model.endY-1 {
-		m.y = root.model.endY - 1
+	pageLen := m.vHight - (m.HeaderLen + 1)
+	if m.WrapMode && ((m.y + m.vHight) > m.endY) {
+		pageLen = 0
+		ll := 0
+		for {
+			ll += 1 + (len(m.getContents(m.endY-ll)) / m.vWidth)
+			if ll > m.vHight {
+				break
+			}
+			pageLen++
+		}
+		pageLen--
+		for y := 0; y < m.HeaderLen; y++ {
+			pageLen -= (len(m.getContents(y)) / m.vWidth)
+		}
+	}
+	if m.y > m.endY-pageLen {
+		m.y = m.endY - pageLen
 	}
 	if m.y < 0 {
 		m.y = 0
@@ -72,67 +88,84 @@ func (root *root) Draw() {
 	if root.mode == normal {
 		searchWord = root.input
 	}
-	var contents []content
+
 	lY := 0
-	lX := m.yy * m.vWidth
-	for y := 0; y < m.vHight; y++ {
-		if lY < m.HeaderLen {
-			contents = m.getContents(lY)
-			for n := range contents {
-				contents[n].style = contents[n].style.Bold(true)
-			}
-		} else {
-			contents = m.getContents(lY + m.y)
-		}
+	lX := 0
+	headerY := 0
+	for lY < m.HeaderLen {
+		contents := m.getContents(lY)
 		if len(contents) == 0 {
 			lY++
 			continue
 		}
-
-		doReverse(&contents, searchWord)
-
+		for n := range contents {
+			contents[n].style = contents[n].style.Bold(true)
+		}
 		if m.WrapMode {
-			wX := 0
-			for {
-				if lX+wX >= len(contents) {
-					// EOL
-					lX = 0
-					wX = 0
-					lY++
-					break
-				}
-				content := contents[lX+wX]
-				if wX+content.width > m.vWidth {
-					// next line
-					lX += wX
-					wX = 0
-					break
-				}
-				screen.SetContent(wX, y, content.mainc, content.combc, content.style)
-				wX++
-			}
+			lX, lY = root.wrapContents(headerY, lX, lY, contents)
 		} else {
-			// noWrap
-			lX = m.x
-			if lX < -10 {
-				lX = -10
-			}
+			lX, lY = root.noWrapContents(headerY, m.x, lY, contents)
+		}
+		headerY++
+	}
 
-			for x := 0; x < m.vWidth; x++ {
-				if lX+x < 0 {
-					continue
-				}
-				if lX+x >= len(contents) {
-					break
-				}
-				content := contents[lX+x]
-				screen.SetContent(x, y, content.mainc, content.combc, content.style)
-			}
+	lX = m.yy * m.vWidth
+	for y := headerY; y < m.vHight; y++ {
+		contents := m.getContents(lY + m.y)
+		if len(contents) == 0 {
 			lY++
+			continue
+		}
+		doReverse(&contents, searchWord)
+		if m.WrapMode {
+			lX, lY = root.wrapContents(y, lX, lY, contents)
+		} else {
+			lX, lY = root.noWrapContents(y, m.x, lY, contents)
 		}
 	}
 	root.statusDraw()
+	//debug := fmt.Sprintf("header=%v headerY:%v v-Y:%v pageLen:%v\n", m.HeaderLen, headerY, m.vHight-headerY, pageLen)
+	//root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
 	root.Show()
+}
+
+func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+	wX := 0
+	for {
+		if lX+wX >= len(contents) {
+			// EOL
+			lX = 0
+			lY++
+			break
+		}
+		content := contents[lX+wX]
+		if wX+content.width > root.model.vWidth {
+			// next line
+			lX += wX
+			break
+		}
+		root.Screen.SetContent(wX, y, content.mainc, content.combc, content.style)
+		wX++
+	}
+	return lX, lY
+}
+
+func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+	if lX < -10 {
+		lX = -10
+	}
+	for x := 0; x < root.model.vWidth; x++ {
+		if lX+x < 0 {
+			continue
+		}
+		if lX+x >= len(contents) {
+			break
+		}
+		content := contents[lX+x]
+		root.Screen.SetContent(x, y, content.mainc, content.combc, content.style)
+	}
+	lY++
+	return lX, lY
 }
 
 func contentsToStr(contents []content) (string, map[int]int) {
@@ -319,8 +352,8 @@ func Run(m *Model, args []string) error {
 	defer func() {
 		root.Screen.Fini()
 		if root.model.PostWrite {
-			for i := 0; i < len(m.buffer); i++ {
-				if i > m.vHight-1 {
+			for i := 0; i < m.vHight; i++ {
+				if m.y+i >= len(m.buffer) {
 					break
 				}
 				fmt.Println(m.buffer[m.y+i])

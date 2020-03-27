@@ -69,7 +69,7 @@ func (m *Model) ReadAll(r io.Reader) {
 
 func (m *Model) getContents(lineNum int) []content {
 	var contents []content
-	if lineNum >= len(m.buffer) {
+	if lineNum < 0 || lineNum >= len(m.buffer) {
 		return nil
 	}
 	value, found := m.cache.Get(lineNum)

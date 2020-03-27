@@ -42,10 +42,10 @@ func (root *root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.model.getContents(root.model.y)
+	contents := root.model.getContents(root.model.y + root.model.HeaderLen)
 	if len(contents) < root.model.vWidth || root.model.yy <= 0 {
 		if (root.model.y) >= 1 {
-			pre := root.model.getContents(root.model.y - 1)
+			pre := root.model.getContents(root.model.y + root.model.HeaderLen - 1)
 			yyLen := len(pre) / (root.model.vWidth + 1)
 			root.model.yy = yyLen
 		}
@@ -62,7 +62,7 @@ func (root *root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.model.getContents(root.model.y)
+	contents := root.model.getContents(root.model.y + root.model.HeaderLen)
 	if len(contents) < (root.model.vWidth * (root.model.yy + 1)) {
 		root.model.yy = 0
 		root.model.y++
