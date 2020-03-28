@@ -28,6 +28,7 @@ Usage:
 
 Flags:
       --config string   config file (default is $HOME/.oviewer.yaml)
+      --debug           Debug mode
   -H, --header int      number of header rows to fix
   -h, --help            help for ov
   -X, --post-write      Output the current screen when exiting
@@ -35,3 +36,41 @@ Flags:
   -v, --version         display version information
   -w, --wrap            wrap mode (default true)
 ```
+
+## Keyboard bindings
+
+* <kbd>q</kbd>,<kbd>Esc</kbd> - quit
+* <kbd>Q</kbd> - output screen and quit
+
+### Move
+
+* <kbd>HOME</kbd> - go to begin of line
+* <kbd>END</kbd> - go to end of line
+* <kbd>KEY_UP</kbd> - backward by one line
+* <kbd>KEY_DOWN</kbd>, <kbd>Enter</kbd> - forward by one line
+* <kbd>PgUP</kbd>, <kbd>Ctrl</kbd>+<kbd>b</kbd> - backward by page
+* <kbd>PgDn</kbd>, <kbd>Ctrl</kbd>+<kbd>v</kbd> - forward by page
+* <kbd>Ctrl</kbd>+<kbd>d</kbd> - forward a half page
+* <kbd>Ctrl</kbd>+<kbd>u</kbd> - backward a half page
+
+* <kbd>KEY_LEFT</kbd> - scroll to left
+* <kbd>KEY_RIGHT</kbd> - scroll to right
+
+* <kbd>Ctrl</kbd>+<kbd>KEY_LEFT</kbd> - scroll to left page
+* <kbd>Ctrl</kbd>+<kbd>KEY_RIGHT</kbd> - scroll to right page
+
+### Mode
+
+* <kbd>w</kbd> - wrap/nowrap toogle
+
+### Input Mode
+
+* <kbd>/</kbd> - forward search mode
+* <kbd>?</kbd> - previous search mode
+* <kbd>H</kbd> - number of header lines
+* <kbd>g</kbd> - number of go to line
+
+### Key after search input mode
+
+* <kbd>n</kbd> - for next match
+* <kbd>N</kbd> - for next match in reverse direction
