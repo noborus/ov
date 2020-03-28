@@ -11,7 +11,7 @@ func (root *root) moveEnd() {
 }
 
 func (root *root) moveNum(num int) {
-	root.model.y = num
+	root.model.y = num - root.model.HeaderLen
 	root.model.yy = 0
 }
 
@@ -106,5 +106,4 @@ func (root *root) moveHfRight() {
 	} else {
 		root.model.x += (root.model.vWidth / 2)
 	}
-
 }

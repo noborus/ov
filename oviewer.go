@@ -16,11 +16,15 @@ import (
 )
 
 type root struct {
-	model     *Model
-	statusPos int
-	fileName  string
-	mode      Mode
-	input     string
+	model         *Model
+	wrapHeaderLen int
+	statusPos     int
+	fileName      string
+	mode          Mode
+	input         string
+
+	minStartPos int
+
 	tcell.Screen
 }
 
@@ -38,6 +42,7 @@ func (root *root) PrepareView() {
 	m := root.model
 	screen := root.Screen
 	m.vWidth, m.vHight = screen.Size()
+	root.setWrapHeaderLen()
 	root.statusPos = m.vHight - 1
 }
 
@@ -91,7 +96,7 @@ func (root *root) Draw() {
 
 	lY := 0
 	lX := 0
-	headerY := 0
+	hy := 0
 	for lY < m.HeaderLen {
 		contents := m.getContents(lY)
 		if len(contents) == 0 {
@@ -102,15 +107,15 @@ func (root *root) Draw() {
 			contents[n].style = contents[n].style.Bold(true)
 		}
 		if m.WrapMode {
-			lX, lY = root.wrapContents(headerY, lX, lY, contents)
+			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
-			lX, lY = root.noWrapContents(headerY, m.x, lY, contents)
+			lX, lY = root.noWrapContents(hy, m.x, lY, contents)
 		}
-		headerY++
+		hy++
 	}
 
 	lX = m.yy * m.vWidth
-	for y := headerY; y < m.vHight; y++ {
+	for y := root.HeaderLen(); y < m.vHight; y++ {
 		contents := m.getContents(lY + m.y)
 		if len(contents) == 0 {
 			lY++
@@ -124,8 +129,8 @@ func (root *root) Draw() {
 		}
 	}
 	root.statusDraw()
-	//debug := fmt.Sprintf("header=%v headerY:%v v-Y:%v pageLen:%v\n", m.HeaderLen, headerY, m.vHight-headerY, pageLen)
-	//root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
+	debug := fmt.Sprintf("m.y:%v header:%v wrapHeaderLen:%v\n", m.y, m.HeaderLen, root.wrapHeaderLen)
+	root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
 	root.Show()
 }
 
@@ -151,8 +156,8 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX in
 }
 
 func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
-	if lX < -10 {
-		lX = -10
+	if lX < root.minStartPos {
+		lX = root.minStartPos
 	}
 	for x := 0; x < root.model.vWidth; x++ {
 		if lX+x < 0 {
@@ -166,6 +171,21 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 	}
 	lY++
 	return lX, lY
+}
+
+func (root *root) setWrapHeaderLen() {
+	m := root.model
+	root.wrapHeaderLen = 0
+	for y := 0; y < m.HeaderLen; y++ {
+		root.wrapHeaderLen += 1 + (len(m.getContents(y)) / m.vWidth)
+	}
+}
+
+func (root *root) HeaderLen() int {
+	if root.model.WrapMode {
+		return root.wrapHeaderLen
+	}
+	return root.model.HeaderLen
 }
 
 func contentsToStr(contents []content) (string, map[int]int) {
@@ -348,7 +368,7 @@ func Run(m *Model, args []string) error {
 	root.Screen = screen
 	root.fileName = fileName
 	root.model = m
-
+	root.minStartPos = -10
 	defer func() {
 		root.Screen.Fini()
 		if root.model.PostWrite {

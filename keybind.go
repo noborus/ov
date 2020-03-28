@@ -44,26 +44,43 @@ func (root *root) headerLen() {
 	line, _ := strconv.Atoi(root.input)
 	if line >= 0 && line <= root.model.vHight-1 {
 		root.model.HeaderLen = line
+		root.setWrapHeaderLen()
 	}
 	root.input = ""
 }
 
-func (root *root) search() {
-	for y := root.model.y; y < root.model.endY; y++ {
+func (root *root) _search(startY int) {
+	for y := startY; y < root.model.endY; y++ {
 		if strings.Contains(root.model.buffer[y], root.input) {
 			root.moveNum(y)
 			break
+		}
+	}
+}
+
+func (root *root) search() {
+	root._search(root.model.y)
+}
+
+func (root *root) nextSearch() {
+	root._search(root.model.y + root.model.HeaderLen + 1)
+}
+
+func (root *root) _previous(startY int) {
+	for y := startY; y >= 0; y-- {
+		if strings.Contains(root.model.buffer[y], root.input) {
+			root.moveNum(y)
+			return
 		}
 	}
 }
 
 func (root *root) previous() {
-	for y := root.model.y; y >= 0; y-- {
-		if strings.Contains(root.model.buffer[y], root.input) {
-			root.moveNum(y)
-			break
-		}
-	}
+	root._previous(root.model.y)
+}
+
+func (root *root) previousSearch() {
+	root._previous(root.model.y + root.model.HeaderLen - 1)
 }
 
 func (root *root) HandleEvent(ev tcell.Event) bool {
@@ -96,10 +113,9 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			if ev.Modifiers()&tcell.ModCtrl > 0 {
 				root.moveHfLeft()
 				return true
-			} else {
-				root.moveLeft()
-				return true
 			}
+			root.moveLeft()
+			return true
 		case tcell.KeyRight:
 			if ev.Modifiers()&tcell.ModCtrl > 0 {
 				root.moveHfRight()
@@ -146,12 +162,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.keySearch()
 				return true
 			case 'n':
-				root.model.y++
-				root.search()
+				root.nextSearch()
 				return true
 			case 'N':
-				root.model.y--
-				root.previous()
+				root.previousSearch()
 				return true
 			case 'g':
 				root.input = ""
@@ -174,6 +188,7 @@ func (root *root) keyWrap() {
 		root.model.WrapMode = true
 		root.model.x = 0
 	}
+	root.setWrapHeaderLen()
 }
 
 func (root *root) keySearch() {
