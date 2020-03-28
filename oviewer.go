@@ -18,6 +18,7 @@ import (
 type root struct {
 	model         *Model
 	wrapHeaderLen int
+	bottomPos     int
 	statusPos     int
 	fileName      string
 	mode          Mode
@@ -66,27 +67,12 @@ func (root *root) Draw() {
 		}
 	}
 
-	pageLen := m.vHight - (m.HeaderLen + 1)
-	if m.WrapMode && ((m.y + m.vHight) > m.endY) {
-		pageLen = 0
-		ll := 0
-		for {
-			ll += 1 + (len(m.getContents(m.endY-ll)) / m.vWidth)
-			if ll > m.vHight {
-				break
-			}
-			pageLen++
-		}
-		pageLen--
-		for y := 0; y < m.HeaderLen; y++ {
-			pageLen -= (len(m.getContents(y)) / m.vWidth)
-		}
+	bottom := root.bottomLineNum(m.endY) - m.HeaderLen
+	if m.lineNum > bottom+1 {
+		m.lineNum = bottom + 1
 	}
-	if m.y > m.endY-pageLen {
-		m.y = m.endY - pageLen
-	}
-	if m.y < 0 {
-		m.y = 0
+	if m.lineNum < 0 {
+		m.lineNum = 0
 	}
 
 	searchWord := ""
@@ -116,7 +102,7 @@ func (root *root) Draw() {
 
 	lX = m.yy * m.vWidth
 	for y := root.HeaderLen(); y < m.vHight; y++ {
-		contents := m.getContents(lY + m.y)
+		contents := m.getContents(m.lineNum + lY)
 		if len(contents) == 0 {
 			lY++
 			continue
@@ -128,9 +114,10 @@ func (root *root) Draw() {
 			lX, lY = root.noWrapContents(y, m.x, lY, contents)
 		}
 	}
+	root.bottomPos = m.lineNum + lY - 1
 	root.statusDraw()
-	debug := fmt.Sprintf("m.y:%v header:%v wrapHeaderLen:%v\n", m.y, m.HeaderLen, root.wrapHeaderLen)
-	root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
+	//debug := fmt.Sprintf("m.y:%v header:%v bottom:%v\n", m.lineNum, m.HeaderLen, bottom)
+	//root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
 	root.Show()
 }
 
@@ -186,6 +173,23 @@ func (root *root) HeaderLen() int {
 		return root.wrapHeaderLen
 	}
 	return root.model.HeaderLen
+}
+
+func (root *root) bottomLineNum(num int) int {
+	m := root.model
+	if !m.WrapMode {
+		if num <= m.vHight {
+			return 0
+		}
+		return num - (m.vHight - root.model.HeaderLen) + 1
+	}
+
+	for y := m.vHight - root.wrapHeaderLen; y > 0; {
+		y -= 1 + (len(m.getContents(num)) / m.vWidth)
+		num--
+	}
+	num++
+	return num
 }
 
 func contentsToStr(contents []content) (string, map[int]int) {
@@ -267,7 +271,7 @@ func (root *root) statusDraw() {
 
 	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
 
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.y, root.model.endY, next)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.model.lineNum, root.model.endY, next)
 	rightContents := strToContents(rightStatus, root.model.TabWidth)
 	root.setContentString(root.model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 }
@@ -373,10 +377,10 @@ func Run(m *Model, args []string) error {
 		root.Screen.Fini()
 		if root.model.PostWrite {
 			for i := 0; i < m.vHight; i++ {
-				if m.y+i >= len(m.buffer) {
+				if m.lineNum+i >= len(m.buffer) {
 					break
 				}
-				fmt.Println(m.buffer[m.y+i])
+				fmt.Println(m.buffer[m.lineNum+i])
 			}
 		}
 	}()

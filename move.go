@@ -1,55 +1,55 @@
 package oviewer
 
 func (root *root) moveTop() {
-	root.model.y = 0
+	root.model.lineNum = 0
 	root.model.yy = 0
 }
 
 func (root *root) moveEnd() {
-	root.model.y = root.model.endY - 1
-	root.model.yy = 0
+	root.moveBottomNum(root.model.endY)
 }
 
 func (root *root) moveNum(num int) {
-	root.model.y = num - root.model.HeaderLen
+	root.model.lineNum = num - root.model.HeaderLen
 	root.model.yy = 0
+}
+
+func (root *root) moveBottomNum(num int) {
+	n := root.bottomLineNum(num) + 1
+	root.moveNum(n)
 }
 
 func (root *root) movePgUp() {
-	root.model.y -= root.model.vHight
-	root.model.yy = 0
+	root.moveNum(root.model.lineNum - (root.bottomPos - root.model.lineNum))
 }
 
 func (root *root) movePgDn() {
-	root.model.y += root.model.vHight
-	root.model.yy = 0
+	root.moveNum(root.bottomPos)
 }
 
 func (root *root) moveHfUp() {
-	root.model.y -= (root.model.vHight / 2)
-	root.model.yy = 0
+	root.moveNum(root.model.lineNum - ((root.bottomPos - root.model.lineNum) / 2))
 }
 
 func (root *root) moveHfDn() {
-	root.model.y += (root.model.vHight / 2)
-	root.model.yy = 0
+	root.moveNum(root.model.lineNum + ((root.bottomPos - root.model.lineNum) / 2))
 }
 
 func (root *root) moveUp() {
 	if !root.model.WrapMode {
 		root.model.yy = 0
-		root.model.y--
+		root.model.lineNum--
 		return
 	}
 	// WrapMode
-	contents := root.model.getContents(root.model.y + root.model.HeaderLen)
+	contents := root.model.getContents(root.model.lineNum + root.model.HeaderLen)
 	if len(contents) < root.model.vWidth || root.model.yy <= 0 {
-		if (root.model.y) >= 1 {
-			pre := root.model.getContents(root.model.y + root.model.HeaderLen - 1)
+		if (root.model.lineNum) >= 1 {
+			pre := root.model.getContents(root.model.lineNum + root.model.HeaderLen - 1)
 			yyLen := len(pre) / (root.model.vWidth + 1)
 			root.model.yy = yyLen
 		}
-		root.model.y--
+		root.model.lineNum--
 		return
 	}
 	root.model.yy--
@@ -58,14 +58,14 @@ func (root *root) moveUp() {
 func (root *root) moveDown() {
 	if !root.model.WrapMode {
 		root.model.yy = 0
-		root.model.y++
+		root.model.lineNum++
 		return
 	}
 	// WrapMode
-	contents := root.model.getContents(root.model.y + root.model.HeaderLen)
+	contents := root.model.getContents(root.model.lineNum + root.model.HeaderLen)
 	if len(contents) < (root.model.vWidth * (root.model.yy + 1)) {
 		root.model.yy = 0
-		root.model.y++
+		root.model.lineNum++
 		return
 	}
 	root.model.yy++

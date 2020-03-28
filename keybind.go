@@ -59,11 +59,11 @@ func (root *root) _search(startY int) {
 }
 
 func (root *root) search() {
-	root._search(root.model.y)
+	root._search(root.model.lineNum)
 }
 
 func (root *root) nextSearch() {
-	root._search(root.model.y + root.model.HeaderLen + 1)
+	root._search(root.model.lineNum + root.model.HeaderLen + 1)
 }
 
 func (root *root) _previous(startY int) {
@@ -76,11 +76,11 @@ func (root *root) _previous(startY int) {
 }
 
 func (root *root) previous() {
-	root._previous(root.model.y)
+	root._previous(root.model.lineNum)
 }
 
 func (root *root) previousSearch() {
-	root._previous(root.model.y + root.model.HeaderLen - 1)
+	root._previous(root.model.lineNum + root.model.HeaderLen - 1)
 }
 
 func (root *root) HandleEvent(ev tcell.Event) bool {

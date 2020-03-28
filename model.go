@@ -16,17 +16,17 @@ type Model struct {
 	HeaderLen int
 	PostWrite bool
 
-	x      int
-	y      int
-	yy     int
-	endY   int
-	eof    bool
-	header []string
-	buffer []string
-	vSize  int
-	vWidth int
-	vHight int
-	cache  *ristretto.Cache
+	x       int
+	lineNum int
+	yy      int
+	endY    int
+	eof     bool
+	header  []string
+	buffer  []string
+	vSize   int
+	vWidth  int
+	vHight  int
+	cache   *ristretto.Cache
 }
 
 type content struct {
