@@ -37,7 +37,7 @@ Flags:
   -w, --wrap            wrap mode (default true)
 ```
 
-## Keyboard bindings
+## Key bindings
 
 * <kbd>q</kbd>,<kbd>Esc</kbd> - quit
 * <kbd>Q</kbd> - output screen and quit
