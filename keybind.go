@@ -42,16 +42,16 @@ func (root *root) goLine() {
 
 func (root *root) headerLen() {
 	line, _ := strconv.Atoi(root.input)
-	if line >= 0 && line <= root.model.vHight-1 {
-		root.model.HeaderLen = line
+	if line >= 0 && line <= root.Model.vHight-1 {
+		root.Model.HeaderLen = line
 		root.setWrapHeaderLen()
 	}
 	root.input = ""
 }
 
 func (root *root) _search(startY int) {
-	for y := startY; y < root.model.endY; y++ {
-		if strings.Contains(root.model.buffer[y], root.input) {
+	for y := startY; y < root.Model.endY; y++ {
+		if strings.Contains(root.Model.buffer[y], root.input) {
 			root.moveNum(y)
 			break
 		}
@@ -59,16 +59,16 @@ func (root *root) _search(startY int) {
 }
 
 func (root *root) search() {
-	root._search(root.model.lineNum)
+	root._search(root.Model.lineNum)
 }
 
 func (root *root) nextSearch() {
-	root._search(root.model.lineNum + root.model.HeaderLen + 1)
+	root._search(root.Model.lineNum + root.Model.HeaderLen + 1)
 }
 
 func (root *root) _previous(startY int) {
 	for y := startY; y >= 0; y-- {
-		if strings.Contains(root.model.buffer[y], root.input) {
+		if strings.Contains(root.Model.buffer[y], root.input) {
 			root.moveNum(y)
 			return
 		}
@@ -76,11 +76,11 @@ func (root *root) _previous(startY int) {
 }
 
 func (root *root) previous() {
-	root._previous(root.model.lineNum)
+	root._previous(root.Model.lineNum)
 }
 
 func (root *root) previousSearch() {
-	root._previous(root.model.lineNum + root.model.HeaderLen - 1)
+	root._previous(root.Model.lineNum + root.Model.HeaderLen - 1)
 }
 
 func (root *root) HandleEvent(ev tcell.Event) bool {
@@ -147,7 +147,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.Quit()
 				return true
 			case 'Q':
-				root.model.PostWrite = true
+				root.Model.PostWrite = true
 				root.Quit()
 				return true
 			case 'W', 'w':
@@ -182,11 +182,11 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 }
 
 func (root *root) keyWrap() {
-	if root.model.WrapMode {
-		root.model.WrapMode = false
+	if root.Model.WrapMode {
+		root.Model.WrapMode = false
 	} else {
-		root.model.WrapMode = true
-		root.model.x = 0
+		root.Model.WrapMode = true
+		root.Model.x = 0
 	}
 	root.setWrapHeaderLen()
 }

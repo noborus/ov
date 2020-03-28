@@ -24,6 +24,8 @@ type Config struct {
 	Header int
 	// PostWrite writes the current screen on exit.
 	PostWrite bool
+	// Debug is enable debug display.
+	Debug bool
 }
 
 var config Config
@@ -40,12 +42,16 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
 		}
-		m := oviewer.NewModel()
+
+		oviewer.Debug = config.Debug
+		root := oviewer.New()
+		m := root.Model
 		m.TabWidth = config.TabWidth
 		m.WrapMode = config.Wrap
 		m.HeaderLen = config.Header
 		m.PostWrite = config.PostWrite
-		return oviewer.Run(m, args)
+
+		return root.Run(args)
 	},
 }
 
@@ -76,6 +82,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
 	rootCmd.PersistentFlags().BoolVarP(&config.PostWrite, "post-write", "X", false, "Output the current screen when exiting")
+	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 
 	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
