@@ -1,6 +1,8 @@
 # Oviewer
 
-Oviewer is a feature rich pager.
+Oviewer is a feature rich terminal pager.
+
+## feature
 
 * Better support for unicode and wide width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
@@ -20,6 +22,15 @@ The command name of Oviewer is `ov`.
 Oviewer supports open file name or standard input.
 
 ```console
+$ ov filename
+```
+
+```console
+$ cat filename|ov
+```
+
+```console
+$ ov --help
 Oviewer is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
@@ -35,6 +46,23 @@ Flags:
   -x, --tab-width int   tab stop (default 8)
   -v, --version         display version information
   -w, --wrap            wrap mode (default true)
+```
+
+### psql
+
+~/.psqlrc
+
+```filename:~/.psqlrc
+\setenv PAGER 'ov -H2'
+```
+
+### mysql
+
+~/.my.cnf
+
+```filename:~/.my.cnf
+[client]
+pager=ov -H3
 ```
 
 ## Key bindings
@@ -61,7 +89,7 @@ Flags:
 
 ### Mode
 
-* <kbd>w</kbd> - wrap/nowrap toogle
+* <kbd>w</kbd> - wrap/nowrap toggle
 
 ### Input Mode
 
