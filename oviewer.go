@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/dgraph-io/ristretto"
@@ -95,30 +94,6 @@ func contentsToStr(contents []content) (string, map[int]int) {
 	s := string(buf)
 	cIndex[len(s)] = len(contents)
 	return s, cIndex
-}
-
-func doReverse(cp *[]content, searchWord string) {
-	contents := *cp
-	for n := range contents {
-		contents[n].style = contents[n].style.Reverse(false)
-	}
-	if searchWord == "" {
-		return
-	}
-	s, cIndex := contentsToStr(contents)
-	for i := strings.Index(s, searchWord); i >= 0; {
-		start := cIndex[i]
-		end := cIndex[i+len(searchWord)]
-		for ci := start; ci < end; ci++ {
-			contents[ci].style = contents[ci].style.Reverse(true)
-		}
-		j := strings.Index(s[i+1:], searchWord)
-		if j >= 0 {
-			i += j + 1
-		} else {
-			break
-		}
-	}
 }
 
 func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {

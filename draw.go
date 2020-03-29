@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
@@ -40,6 +41,7 @@ func (root *root) Draw() {
 		searchWord = root.input
 	}
 
+	// Header
 	lY := 0
 	lX := 0
 	hy := 0
@@ -60,10 +62,17 @@ func (root *root) Draw() {
 		hy++
 	}
 
+	// Body
 	lX = m.yy * m.vWidth
 	for y := root.HeaderLen(); y < m.vHight; y++ {
 		contents := m.getContents(m.lineNum + lY)
+		if contents == nil {
+			// EOF
+			contents = strToContents("~", 0)
+			contents[0].style = contents[0].style.Foreground(tcell.ColorGray)
+		}
 		if len(contents) == 0 {
+			// blank line
 			lY++
 			continue
 		}
@@ -125,6 +134,30 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 	}
 	lY++
 	return lX, lY
+}
+
+func doReverse(cp *[]content, searchWord string) {
+	contents := *cp
+	for n := range contents {
+		contents[n].style = contents[n].style.Normal()
+	}
+	if searchWord == "" {
+		return
+	}
+	s, cIndex := contentsToStr(contents)
+	for i := strings.Index(s, searchWord); i >= 0; {
+		start := cIndex[i]
+		end := cIndex[i+len(searchWord)]
+		for ci := start; ci < end; ci++ {
+			contents[ci].style = contents[ci].style.Reverse(true)
+		}
+		j := strings.Index(s[i+1:], searchWord)
+		if j >= 0 {
+			i += j + 1
+		} else {
+			break
+		}
+	}
 }
 
 func (root *root) statusDraw() {
