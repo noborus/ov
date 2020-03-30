@@ -22,11 +22,11 @@ The command name of Oviewer is `ov`.
 Oviewer supports open file name or standard input.
 
 ```console
-$ ov filename
+ov filename
 ```
 
 ```console
-$ cat filename|ov
+cat filename|ov
 ```
 
 ```console
