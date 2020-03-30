@@ -11,10 +11,11 @@ require (
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pierrec/lz4 v2.4.1+incompatible
-	github.com/spf13/cobra v0.0.6
+	github.com/spf13/cobra v0.0.7
 	github.com/spf13/viper v1.6.2
+	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/ulikunitz/xz v0.5.7
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+	golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775 // indirect
 	golang.org/x/text v0.3.2 // indirect
 )
