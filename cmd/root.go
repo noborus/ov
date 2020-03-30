@@ -53,8 +53,14 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		m.WrapMode = config.Wrap
 		m.HeaderLen = config.Header
 		m.PostWrite = config.PostWrite
-
-		return root.Run(args)
+		err := root.Run(args)
+		if err != nil {
+			return err
+		}
+		if m.PostWrite {
+			root.PostWrite()
+		}
+		return nil
 	},
 }
 
@@ -71,7 +77,6 @@ func Execute(version string, revision string) {
 	Version = version
 	Revision = revision
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }

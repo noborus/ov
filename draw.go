@@ -12,6 +12,7 @@ func (root *root) Draw() {
 	m := root.Model
 	screen := root.Screen
 	if len(m.buffer) == 0 || m.vHight == 0 {
+		m.lineNum = 0
 		root.statusDraw()
 		root.Show()
 		return
@@ -91,7 +92,7 @@ func (root *root) Draw() {
 
 	root.statusDraw()
 	if Debug {
-		debug := fmt.Sprintf("m.y:%v header:%v bpts:%v bottom:%v\n", m.lineNum, m.HeaderLen, root.bottomPos, bottom)
+		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", m.HeaderLen, root.HeaderLen(), m.lineNum, root.bottomPos)
 		root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
 	}
 	root.Show()
@@ -194,4 +195,11 @@ func (root *root) statusDraw() {
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endY, next)
 	rightContents := strToContents(rightStatus, root.Model.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
+}
+
+func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
+	screen := root.Screen
+	for x, content := range contents {
+		screen.SetContent(vx+x, vy, content.mainc, content.combc, style)
+	}
 }

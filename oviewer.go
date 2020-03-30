@@ -47,19 +47,19 @@ func (root *root) PrepareView() {
 	root.statusPos = m.vHight - 1
 }
 
+func (root *root) HeaderLen() int {
+	if root.Model.WrapMode {
+		return root.wrapHeaderLen
+	}
+	return root.Model.HeaderLen
+}
+
 func (root *root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < m.HeaderLen; y++ {
 		root.wrapHeaderLen += 1 + (len(m.getContents(y)) / m.vWidth)
 	}
-}
-
-func (root *root) HeaderLen() int {
-	if root.Model.WrapMode {
-		return root.wrapHeaderLen
-	}
-	return root.Model.HeaderLen
 }
 
 func (root *root) bottomLineNum(num int) int {
@@ -77,30 +77,6 @@ func (root *root) bottomLineNum(num int) int {
 	}
 	num++
 	return num
-}
-
-func contentsToStr(contents []content) (string, map[int]int) {
-	buf := make([]rune, 0)
-	cIndex := make(map[int]int)
-	byteLen := 0
-	for n := range contents {
-		if contents[n].width > 0 {
-			cIndex[byteLen] = n
-			buf = append(buf, contents[n].mainc)
-			b := string(contents[n].mainc)
-			byteLen += len(b)
-		}
-	}
-	s := string(buf)
-	cIndex[len(s)] = len(contents)
-	return s, cIndex
-}
-
-func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
-	screen := root.Screen
-	for x, content := range contents {
-		screen.SetContent(vx+x, vy, content.mainc, content.combc, style)
-	}
 }
 
 type eventAppQuit struct {
@@ -122,6 +98,7 @@ func (root *root) Sync() {
 	root.Draw()
 }
 
+// main is manages and executes events in the main routine.
 func (root *root) main() {
 	screen := root.Screen
 
@@ -147,6 +124,8 @@ loop:
 	}
 }
 
+// Run is reads the file(or stdin) and starts
+// the terminal pager.
 func (root *root) Run(args []string) error {
 	m := root.Model
 	cache, err := ristretto.NewCache(&ristretto.Config{
@@ -186,7 +165,10 @@ func (root *root) Run(args []string) error {
 			reader = io.MultiReader(readers...)
 		}
 	}
-	m.ReadAll(reader)
+	err = m.ReadAll(reader)
+	if err != nil {
+		return err
+	}
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
@@ -200,18 +182,7 @@ func (root *root) Run(args []string) error {
 	root.Screen = screen
 	root.fileName = fileName
 	root.Model = m
-	root.minStartPos = -10
-	defer func() {
-		root.Screen.Fini()
-		if root.Model.PostWrite {
-			for i := 0; i < m.vHight; i++ {
-				if m.lineNum+i >= len(m.buffer) {
-					break
-				}
-				fmt.Println(m.buffer[m.lineNum+i])
-			}
-		}
-	}()
+	defer root.Screen.Fini()
 
 	screen.Clear()
 	root.Sync()
@@ -220,9 +191,22 @@ func (root *root) Run(args []string) error {
 	return nil
 }
 
+func (root *root) PostWrite() {
+	m := root.Model
+	for i := 0; i < m.vHight; i++ {
+		if m.lineNum+i >= len(m.buffer) {
+			break
+		}
+		fmt.Println(m.buffer[m.lineNum+i])
+	}
+}
+
+// New returns the entire structure of oviewer.
 func New() *root {
 	root := &root{}
 	root.Model = NewModel()
+
+	root.minStartPos = -10
 
 	return root
 }

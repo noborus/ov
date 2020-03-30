@@ -16,17 +16,17 @@ type Model struct {
 	HeaderLen int
 	PostWrite bool
 
-	x       int
-	lineNum int
-	yy      int
-	endY    int
-	eof     bool
-	header  []string
-	buffer  []string
-	vSize   int
-	vWidth  int
-	vHight  int
-	cache   *ristretto.Cache
+	x          int
+	lineNum    int
+	yy         int
+	endY       int
+	eof        bool
+	header     []string
+	buffer     []string
+	beforeSize int
+	vWidth     int
+	vHight     int
+	cache      *ristretto.Cache
 }
 
 type content struct {
@@ -38,13 +38,13 @@ type content struct {
 
 func NewModel() *Model {
 	return &Model{
-		buffer: make([]string, 0),
-		header: make([]string, 0),
-		vSize:  1000,
+		buffer:     make([]string, 0),
+		header:     make([]string, 0),
+		beforeSize: 1000,
 	}
 }
 
-func (m *Model) ReadAll(r io.Reader) {
+func (m *Model) ReadAll(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	ch := make(chan struct{})
 	go func() {
@@ -52,18 +52,22 @@ func (m *Model) ReadAll(r io.Reader) {
 		for scanner.Scan() {
 			m.buffer = append(m.buffer, scanner.Text())
 			m.endY++
-			if m.endY == m.vSize {
+			if m.endY == m.beforeSize {
 				ch <- struct{}{}
 			}
+		}
+		if err := scanner.Err(); err != nil {
+			m.eof = false
+			return
 		}
 		m.eof = true
 	}()
 
 	select {
 	case <-ch:
-		return
+		return nil
 	case <-time.After(500 * time.Millisecond):
-		return
+		return nil
 	}
 }
 
@@ -85,25 +89,26 @@ func (m *Model) getContents(lineNum int) []content {
 	return contents
 }
 
+// strToContents converts a single-line string into a content array.
 func strToContents(line string, tabWidth int) []content {
-	var contents []content
+	contents := []content{}
+	defaultStyle := tcell.StyleDefault
 	defaultContent := content{
 		mainc: 0,
 		combc: []rune{},
 		width: 0,
-		style: tcell.StyleDefault,
+		style: defaultStyle,
 	}
 
-	defaultStyle := tcell.StyleDefault
 	style := defaultStyle
-	n := 0
+	x := 0
 	for _, runeValue := range line {
 		c := defaultContent
 		switch runeValue {
 		case '\n':
 			continue
 		case '\t':
-			tabStop := tabWidth - (n % tabWidth)
+			tabStop := tabWidth - (x % tabWidth)
 			c.mainc = rune(' ')
 			c.width = 1
 			c.style = style
@@ -124,15 +129,33 @@ func strToContents(line string, tabWidth int) []content {
 			c.width = 1
 			c.style = style
 			contents = append(contents, c)
-			n++
+			x++
 		case 2:
 			c.mainc = runeValue
 			c.width = 2
 			c.style = style
 			contents = append(contents, c)
 			contents = append(contents, defaultContent)
-			n += 2
+			x += 2
 		}
 	}
 	return contents
+}
+
+// contentsToStr converts a content array into a single-line string.
+func contentsToStr(contents []content) (string, map[int]int) {
+	buf := make([]rune, 0)
+	cIndex := make(map[int]int)
+	byteLen := 0
+	for n := range contents {
+		if contents[n].width > 0 {
+			cIndex[byteLen] = n
+			buf = append(buf, contents[n].mainc)
+			b := string(contents[n].mainc)
+			byteLen += len(b)
+		}
+	}
+	s := string(buf)
+	cIndex[len(s)] = len(contents)
+	return s, cIndex
 }

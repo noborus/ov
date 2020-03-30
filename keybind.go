@@ -7,82 +7,6 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
-	switch ev := ev.(type) {
-	case *tcell.EventKey:
-		switch ev.Key() {
-		case tcell.KeyEscape:
-			root.mode = normal
-			return true
-		case tcell.KeyEnter:
-			fn()
-			root.mode = normal
-			return true
-		case tcell.KeyBackspace, tcell.KeyBackspace2:
-			if len(root.input) > 0 {
-				r := []rune(root.input)
-				root.input = string(r[:len(r)-1])
-			}
-			return true
-		case tcell.KeyRune:
-			root.input += string(ev.Rune())
-		}
-	}
-	return true
-}
-
-func (root *root) goLine() {
-	line, err := strconv.Atoi(root.input)
-	if err != nil {
-		return
-	}
-	root.input = ""
-	root.moveNum(line)
-}
-
-func (root *root) headerLen() {
-	line, _ := strconv.Atoi(root.input)
-	if line >= 0 && line <= root.Model.vHight-1 {
-		root.Model.HeaderLen = line
-		root.setWrapHeaderLen()
-	}
-	root.input = ""
-}
-
-func (root *root) _search(startY int) {
-	for y := startY; y < root.Model.endY; y++ {
-		if strings.Contains(root.Model.buffer[y], root.input) {
-			root.moveNum(y)
-			break
-		}
-	}
-}
-
-func (root *root) search() {
-	root._search(root.Model.lineNum)
-}
-
-func (root *root) nextSearch() {
-	root._search(root.Model.lineNum + root.Model.HeaderLen + 1)
-}
-
-func (root *root) _previous(startY int) {
-	for y := startY; y >= 0; y-- {
-		if strings.Contains(root.Model.buffer[y], root.input) {
-			root.moveNum(y)
-			return
-		}
-	}
-}
-
-func (root *root) previous() {
-	root._previous(root.Model.lineNum)
-}
-
-func (root *root) previousSearch() {
-	root._previous(root.Model.lineNum + root.Model.HeaderLen - 1)
-}
-
 func (root *root) HandleEvent(ev tcell.Event) bool {
 	switch root.mode {
 	case search:
@@ -92,7 +16,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 	case goline:
 		return root.inputEvent(ev, root.goLine)
 	case header:
-		return root.inputEvent(ev, root.headerLen)
+		return root.inputEvent(ev, root.setHeader)
 	}
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
@@ -205,4 +129,80 @@ func (root *root) keyGoLine() {
 
 func (root *root) keyHeader() {
 	root.mode = header
+}
+
+func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
+	switch ev := ev.(type) {
+	case *tcell.EventKey:
+		switch ev.Key() {
+		case tcell.KeyEscape:
+			root.mode = normal
+			return true
+		case tcell.KeyEnter:
+			fn()
+			root.mode = normal
+			return true
+		case tcell.KeyBackspace, tcell.KeyBackspace2:
+			if len(root.input) > 0 {
+				r := []rune(root.input)
+				root.input = string(r[:len(r)-1])
+			}
+			return true
+		case tcell.KeyRune:
+			root.input += string(ev.Rune())
+		}
+	}
+	return true
+}
+
+func (root *root) goLine() {
+	lineNum, err := strconv.Atoi(root.input)
+	if err != nil {
+		return
+	}
+	root.input = ""
+	root.moveNum(lineNum + root.Model.HeaderLen)
+}
+
+func (root *root) setHeader() {
+	line, _ := strconv.Atoi(root.input)
+	if line >= 0 && line <= root.Model.vHight-1 {
+		root.Model.HeaderLen = line
+		root.setWrapHeaderLen()
+	}
+	root.input = ""
+}
+
+func (root *root) _search(startY int) {
+	for y := startY; y < root.Model.endY; y++ {
+		if strings.Contains(root.Model.buffer[y], root.input) {
+			root.moveNum(y)
+			break
+		}
+	}
+}
+
+func (root *root) search() {
+	root._search(root.Model.lineNum)
+}
+
+func (root *root) nextSearch() {
+	root._search(root.Model.lineNum + root.Model.HeaderLen + 1)
+}
+
+func (root *root) _previous(startY int) {
+	for y := startY; y >= 0; y-- {
+		if strings.Contains(root.Model.buffer[y], root.input) {
+			root.moveNum(y)
+			return
+		}
+	}
+}
+
+func (root *root) previous() {
+	root._previous(root.Model.lineNum)
+}
+
+func (root *root) previousSearch() {
+	root._previous(root.Model.lineNum + root.Model.HeaderLen - 1)
 }
