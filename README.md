@@ -50,19 +50,31 @@ Flags:
 
 ### psql
 
-~/.psqlrc
+Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
+
+```sh
+export PSQL_PAGER="ov -w=f -H2"
+```
+
+You can also write in `~/.psqlrc` in previous versions.
 
 ```filename:~/.psqlrc
-\setenv PAGER 'ov -H2'
+\setenv PAGER 'ov -w=f -H2'
 ```
 
 ### mysql
 
-~/.my.cnf
+Use the --pager option with the mysql client.
+
+```console
+mysql --pager="ov -w=f -H3"
+```
+
+You can also write in `~/.my.cnf`.
 
 ```filename:~/.my.cnf
 [client]
-pager=ov -H3
+pager=ov -w=f -H3
 ```
 
 ## Key bindings
