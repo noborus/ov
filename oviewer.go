@@ -21,6 +21,7 @@ type root struct {
 	fileName      string
 	mode          Mode
 	input         string
+	message       string
 
 	minStartPos int
 
@@ -101,14 +102,6 @@ func (root *root) Sync() {
 // main is manages and executes events in the main routine.
 func (root *root) main() {
 	screen := root.Screen
-
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
-	go func() {
-		<-c
-		root.Quit()
-	}()
-
 loop:
 	for {
 		root.Draw()
@@ -154,6 +147,7 @@ func (root *root) Run(args []string) error {
 			return err
 		}
 		reader = uncompressedReader(r)
+		defer r.Close()
 	default:
 		readers := make([]io.Reader, 0)
 		for _, fileName := range args {
@@ -163,6 +157,7 @@ func (root *root) Run(args []string) error {
 			}
 			readers = append(readers, uncompressedReader(r))
 			reader = io.MultiReader(readers...)
+			defer r.Close()
 		}
 	}
 	err = m.ReadAll(reader)
@@ -186,6 +181,15 @@ func (root *root) Run(args []string) error {
 
 	screen.Clear()
 	root.Sync()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
+	go func() {
+		<-c
+		root.Screen.Fini()
+		os.Exit(1)
+	}()
+
 	root.main()
 
 	return nil
