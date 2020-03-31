@@ -6,11 +6,11 @@ func (root *root) moveTop() {
 }
 
 func (root *root) moveEnd() {
-	root.moveBottomNum(root.Model.endY)
+	root.moveBottomNum(root.Model.endNum)
 }
 
 func (root *root) moveNum(num int) {
-	root.Model.lineNum = num - root.Model.HeaderLen
+	root.Model.lineNum = num - root.Header
 	root.Model.yy = 0
 }
 
@@ -36,16 +36,16 @@ func (root *root) moveHfDn() {
 }
 
 func (root *root) moveUp() {
-	if !root.Model.WrapMode {
+	if !root.WrapMode {
 		root.Model.yy = 0
 		root.Model.lineNum--
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.Model.lineNum + root.Model.HeaderLen)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < root.Model.vWidth || root.Model.yy <= 0 {
 		if (root.Model.lineNum) >= 1 {
-			pre := root.Model.getContents(root.Model.lineNum + root.Model.HeaderLen - 1)
+			pre := root.Model.getContents(root.Model.lineNum+root.Header-1, root.TabWidth)
 			yyLen := len(pre) / (root.Model.vWidth + 1)
 			root.Model.yy = yyLen
 		}
@@ -56,13 +56,13 @@ func (root *root) moveUp() {
 }
 
 func (root *root) moveDown() {
-	if !root.Model.WrapMode {
+	if !root.WrapMode {
 		root.Model.yy = 0
 		root.Model.lineNum++
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.Model.lineNum + root.Model.HeaderLen)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < (root.Model.vWidth * (root.Model.yy + 1)) {
 		root.Model.yy = 0
 		root.Model.lineNum++
@@ -72,21 +72,21 @@ func (root *root) moveDown() {
 }
 
 func (root *root) moveLeft() {
-	if root.Model.WrapMode {
+	if root.WrapMode {
 		return
 	}
 	root.Model.x--
 }
 
 func (root *root) moveRight() {
-	if root.Model.WrapMode {
+	if root.WrapMode {
 		return
 	}
 	root.Model.x++
 }
 
 func (root *root) moveHfLeft() {
-	if root.Model.WrapMode {
+	if root.WrapMode {
 		return
 	}
 	moveSize := (root.Model.vWidth / 2)
@@ -98,7 +98,7 @@ func (root *root) moveHfLeft() {
 }
 
 func (root *root) moveHfRight() {
-	if root.Model.WrapMode {
+	if root.WrapMode {
 		return
 	}
 	if root.Model.x < 0 {

@@ -22,8 +22,8 @@ type Config struct {
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
-	// PostWrite writes the current screen on exit.
-	PostWrite bool
+	// AfterWrite writes the current screen on exit.
+	AfterWrite bool
 	// Debug is enable debug display.
 	Debug bool
 }
@@ -47,18 +47,19 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Println("Using config file:", viper.ConfigFileUsed())
 		}
 		oviewer.Debug = config.Debug
+
 		root := oviewer.New()
-		m := root.Model
-		m.TabWidth = config.TabWidth
-		m.WrapMode = config.Wrap
-		m.HeaderLen = config.Header
-		m.PostWrite = config.PostWrite
+		root.Header = config.Header
+		root.TabWidth = config.TabWidth
+		root.WrapMode = config.Wrap
+		root.AfterWrite = config.AfterWrite
+
 		err := root.Run(args)
 		if err != nil {
 			return err
 		}
-		if m.PostWrite {
-			root.PostWrite()
+		if root.AfterWrite {
+			root.WriteOriginal()
 		}
 		return nil
 	},
@@ -89,13 +90,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
-	rootCmd.PersistentFlags().BoolVarP(&config.PostWrite, "post-write", "X", false, "Output the current screen when exiting")
+	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 
 	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 	viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
-	viper.BindPFlag("PostWrite", rootCmd.PersistentFlags().Lookup("post-write"))
+	viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
 }
 
 // initConfig reads in config file and ENV variables if set.

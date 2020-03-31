@@ -29,7 +29,7 @@ func (root *root) Draw() {
 		}
 	}
 
-	bottom := root.bottomLineNum(m.endY) - m.HeaderLen
+	bottom := root.bottomLineNum(m.endNum) - root.Header
 	if m.lineNum > bottom+1 {
 		m.lineNum = bottom + 1
 	}
@@ -46,8 +46,8 @@ func (root *root) Draw() {
 	lY := 0
 	lX := 0
 	hy := 0
-	for lY < m.HeaderLen {
-		contents := m.getContents(lY)
+	for lY < root.Header {
+		contents := m.getContents(lY, root.TabWidth)
 		if len(contents) == 0 {
 			lY++
 			continue
@@ -55,7 +55,7 @@ func (root *root) Draw() {
 		for n := range contents {
 			contents[n].style = contents[n].style.Bold(true)
 		}
-		if m.WrapMode {
+		if root.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(hy, m.x, lY, contents)
@@ -66,7 +66,7 @@ func (root *root) Draw() {
 	// Body
 	lX = m.yy * m.vWidth
 	for y := root.HeaderLen(); y < m.vHight; y++ {
-		contents := m.getContents(m.lineNum + lY)
+		contents := m.getContents(m.lineNum+lY, root.TabWidth)
 		if contents == nil {
 			// EOF
 			contents = strToContents("~", 0)
@@ -78,7 +78,7 @@ func (root *root) Draw() {
 			continue
 		}
 		doReverse(&contents, searchWord)
-		if m.WrapMode {
+		if root.WrapMode {
 			lX, lY = root.wrapContents(y, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(y, m.x, lY, contents)
@@ -92,7 +92,7 @@ func (root *root) Draw() {
 
 	root.statusDraw()
 	if Debug {
-		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", m.HeaderLen, root.HeaderLen(), m.lineNum, root.bottomPos)
+		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), m.lineNum, root.bottomPos)
 		root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
 	}
 	root.Show()
@@ -171,7 +171,6 @@ func (root *root) statusDraw() {
 	for x := 0; x < root.Model.vWidth; x++ {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
-
 	leftStatus := ""
 	leftStyle := style
 	switch root.mode {
@@ -184,16 +183,16 @@ func (root *root) statusDraw() {
 	case header:
 		leftStatus = "Header length:" + root.input
 	default:
-		leftStatus = fmt.Sprintf("%s:", root.fileName)
+		leftStatus = fmt.Sprintf("%s:%s", root.fileName, root.message)
 		leftStyle = style.Reverse(true)
 	}
-	leftContents := strToContents(leftStatus, root.Model.TabWidth)
+	leftContents := strToContents(leftStatus, root.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
 
 	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
 
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endY, next)
-	rightContents := strToContents(rightStatus, root.Model.TabWidth)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endNum, next)
+	rightContents := strToContents(rightStatus, root.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 }
 

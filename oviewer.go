@@ -14,6 +14,11 @@ import (
 )
 
 type root struct {
+	Header     int
+	TabWidth   int
+	AfterWrite bool
+	WrapMode   bool
+
 	Model         *Model
 	wrapHeaderLen int
 	bottomPos     int
@@ -49,31 +54,31 @@ func (root *root) PrepareView() {
 }
 
 func (root *root) HeaderLen() int {
-	if root.Model.WrapMode {
+	if root.WrapMode {
 		return root.wrapHeaderLen
 	}
-	return root.Model.HeaderLen
+	return root.Header
 }
 
 func (root *root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
-	for y := 0; y < m.HeaderLen; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y)) / m.vWidth)
+	for y := 0; y < root.Header; y++ {
+		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
 	}
 }
 
 func (root *root) bottomLineNum(num int) int {
 	m := root.Model
-	if !m.WrapMode {
+	if !root.WrapMode {
 		if num <= m.vHight {
 			return 0
 		}
-		return num - (m.vHight - root.Model.HeaderLen) + 1
+		return num - (m.vHight - root.Header) + 1
 	}
 
 	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num)) / m.vWidth)
+		y -= 1 + (len(m.getContents(num, root.TabWidth)) / m.vWidth)
 		num--
 	}
 	num++
@@ -195,7 +200,8 @@ func (root *root) Run(args []string) error {
 	return nil
 }
 
-func (root *root) PostWrite() {
+// WriteOriginal writes to the original terminal.
+func (root *root) WriteOriginal() {
 	m := root.Model
 	for i := 0; i < m.vHight; i++ {
 		if m.lineNum+i >= len(m.buffer) {

@@ -10,16 +10,13 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// The Model structure contains the values
+// for the logical screen.
 type Model struct {
-	TabWidth  int
-	WrapMode  bool
-	HeaderLen int
-	PostWrite bool
-
 	x          int
 	lineNum    int
 	yy         int
-	endY       int
+	endNum     int
 	eof        bool
 	header     []string
 	buffer     []string
@@ -29,13 +26,7 @@ type Model struct {
 	cache      *ristretto.Cache
 }
 
-type content struct {
-	width int
-	style tcell.Style
-	mainc rune
-	combc []rune
-}
-
+//NewModel returns Model.
 func NewModel() *Model {
 	return &Model{
 		buffer:     make([]string, 0),
@@ -44,6 +35,9 @@ func NewModel() *Model {
 	}
 }
 
+// ReadAll reads all from the reader to the buffer.
+// It returns if beforeSize is accumulated in buffer
+// before the end of read.
 func (m *Model) ReadAll(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	ch := make(chan struct{})
@@ -51,8 +45,8 @@ func (m *Model) ReadAll(r io.Reader) error {
 		defer close(ch)
 		for scanner.Scan() {
 			m.buffer = append(m.buffer, scanner.Text())
-			m.endY++
-			if m.endY == m.beforeSize {
+			m.endNum++
+			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
 			}
 		}
@@ -71,7 +65,16 @@ func (m *Model) ReadAll(r io.Reader) error {
 	}
 }
 
-func (m *Model) getContents(lineNum int) []content {
+// content represents one character on the terminal.
+type content struct {
+	width int
+	style tcell.Style
+	mainc rune
+	combc []rune
+}
+
+// getContents returns one row of contents from buffer.
+func (m *Model) getContents(lineNum int, tabWidth int) []content {
 	var contents []content
 	if lineNum < 0 || lineNum >= len(m.buffer) {
 		return nil
@@ -83,7 +86,7 @@ func (m *Model) getContents(lineNum int) []content {
 			return nil
 		}
 	} else {
-		contents = strToContents(m.buffer[lineNum], m.TabWidth)
+		contents = strToContents(m.buffer[lineNum], tabWidth)
 		m.cache.Set(lineNum, contents, 1)
 	}
 	return contents

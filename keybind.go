@@ -2,26 +2,27 @@ package oviewer
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/gdamore/tcell"
 )
 
 func (root *root) HandleEvent(ev tcell.Event) bool {
+	root.message = ""
 	switch root.mode {
 	case search:
-		return root.inputEvent(ev, root.search)
+		return root.inputEvent(ev, root.Search)
 	case previous:
-		return root.inputEvent(ev, root.previous)
+		return root.inputEvent(ev, root.BackSearch)
 	case goline:
-		return root.inputEvent(ev, root.goLine)
+		return root.inputEvent(ev, root.GoLine)
 	case header:
-		return root.inputEvent(ev, root.setHeader)
+		return root.inputEvent(ev, root.SetHeader)
 	}
+
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
-		case tcell.KeyEscape:
+		case tcell.KeyEscape, tcell.KeyCtrlC:
 			root.Quit()
 			return true
 		case tcell.KeyEnter:
@@ -71,7 +72,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.Quit()
 				return true
 			case 'Q':
-				root.Model.PostWrite = true
+				root.AfterWrite = true
 				root.Quit()
 				return true
 			case 'W', 'w':
@@ -86,10 +87,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.keySearch()
 				return true
 			case 'n':
-				root.nextSearch()
+				root.NextSearch()
 				return true
 			case 'N':
-				root.previousSearch()
+				root.NextBackSearch()
 				return true
 			case 'g':
 				root.input = ""
@@ -106,10 +107,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 }
 
 func (root *root) keyWrap() {
-	if root.Model.WrapMode {
-		root.Model.WrapMode = false
+	if root.WrapMode {
+		root.WrapMode = false
 	} else {
-		root.Model.WrapMode = true
+		root.WrapMode = true
 		root.Model.x = 0
 	}
 	root.setWrapHeaderLen()
@@ -155,54 +156,44 @@ func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
 	return true
 }
 
-func (root *root) goLine() {
+func (root *root) GoLine() {
 	lineNum, err := strconv.Atoi(root.input)
 	if err != nil {
 		return
 	}
 	root.input = ""
-	root.moveNum(lineNum + root.Model.HeaderLen)
+	root.moveNum(lineNum + root.Header)
 }
 
-func (root *root) setHeader() {
+func (root *root) SetHeader() {
 	line, _ := strconv.Atoi(root.input)
 	if line >= 0 && line <= root.Model.vHight-1 {
-		root.Model.HeaderLen = line
+		root.Header = line
 		root.setWrapHeaderLen()
 	}
 	root.input = ""
 }
 
-func (root *root) _search(startY int) {
-	for y := startY; y < root.Model.endY; y++ {
-		if strings.Contains(root.Model.buffer[y], root.input) {
-			root.moveNum(y)
-			break
-		}
+func (root *root) Search() {
+	root.postSearch(root.search(root.Model.lineNum))
+}
+
+func (root *root) NextSearch() {
+	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
+}
+
+func (root *root) BackSearch() {
+	root.postSearch(root.backSearch(root.Model.lineNum))
+}
+
+func (root *root) NextBackSearch() {
+	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
+}
+
+func (root *root) postSearch(lineNum int, err error) {
+	if err != nil {
+		root.message = err.Error()
+		return
 	}
-}
-
-func (root *root) search() {
-	root._search(root.Model.lineNum)
-}
-
-func (root *root) nextSearch() {
-	root._search(root.Model.lineNum + root.Model.HeaderLen + 1)
-}
-
-func (root *root) _previous(startY int) {
-	for y := startY; y >= 0; y-- {
-		if strings.Contains(root.Model.buffer[y], root.input) {
-			root.moveNum(y)
-			return
-		}
-	}
-}
-
-func (root *root) previous() {
-	root._previous(root.Model.lineNum)
-}
-
-func (root *root) previousSearch() {
-	root._previous(root.Model.lineNum + root.Model.HeaderLen - 1)
+	root.moveNum(lineNum)
 }
