@@ -181,7 +181,6 @@ func (root *root) Run(args []string) error {
 
 	root.Screen = screen
 	root.fileName = fileName
-	root.Model = m
 	defer root.Screen.Fini()
 
 	screen.Clear()
@@ -203,7 +202,7 @@ func (root *root) Run(args []string) error {
 // WriteOriginal writes to the original terminal.
 func (root *root) WriteOriginal() {
 	m := root.Model
-	for i := 0; i < m.vHight; i++ {
+	for i := 0; i < m.vHight-1; i++ {
 		if m.lineNum+i >= len(m.buffer) {
 			break
 		}
