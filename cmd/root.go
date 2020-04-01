@@ -24,6 +24,8 @@ type Config struct {
 	Header int
 	// AfterWrite writes the current screen on exit.
 	AfterWrite bool
+	// QuiteSmall Quit if the output fits on one screen.
+	QuitSmall bool
 	// Debug is enable debug display.
 	Debug bool
 }
@@ -57,6 +59,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.TabWidth = config.TabWidth
 		root.WrapMode = config.Wrap
 		root.AfterWrite = config.AfterWrite
+		root.QuitSmall = config.QuitSmall
 
 		err = root.Run(args)
 		if err != nil {
@@ -95,12 +98,14 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
 	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
+	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "Quit if the output fits on one screen")
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 
 	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 	viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
 	viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
+	viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 }
 
 // initConfig reads in config file and ENV variables if set.

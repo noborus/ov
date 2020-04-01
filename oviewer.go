@@ -18,6 +18,7 @@ type root struct {
 	TabWidth   int
 	AfterWrite bool
 	WrapMode   bool
+	QuitSmall  bool
 
 	Model         *Model
 	wrapHeaderLen int
@@ -194,9 +195,28 @@ func (root *root) Run(args []string) error {
 		os.Exit(1)
 	}()
 
-	root.main()
+	// Exit if fits on screen
+	if root.QuitSmall && root.contentsSmall() {
+		root.AfterWrite = true
+		return nil
+	}
 
+	root.main()
 	return nil
+}
+
+func (root *root) contentsSmall() bool {
+	root.PrepareView()
+	m := root.Model
+	hight := 0
+	for y := 0; y < m.endNum; y++ {
+		hight += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
+		if hight > m.vHight {
+			return false
+		}
+	}
+	fmt.Println(hight)
+	return true
 }
 
 // WriteOriginal writes to the original terminal.
