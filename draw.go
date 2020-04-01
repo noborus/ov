@@ -22,6 +22,7 @@ func (root *root) Draw() {
 		mainc: ' ',
 		combc: nil,
 		width: 1,
+		style: tcell.StyleDefault.Normal(),
 	}
 	for y := 0; y < m.vHight; y++ {
 		for x := 0; x < m.vWidth; x++ {
@@ -91,10 +92,6 @@ func (root *root) Draw() {
 	}
 
 	root.statusDraw()
-	if Debug {
-		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), m.lineNum, root.bottomPos)
-		root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
-	}
 	root.Show()
 }
 
@@ -139,9 +136,6 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 
 func doReverse(cp *[]content, searchWord string) {
 	contents := *cp
-	for n := range contents {
-		contents[n].style = contents[n].style.Normal()
-	}
 	if searchWord == "" {
 		return
 	}
@@ -194,6 +188,10 @@ func (root *root) statusDraw() {
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endNum, next)
 	rightContents := strToContents(rightStatus, root.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
+	if Debug {
+		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
+		root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
+	}
 }
 
 func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {

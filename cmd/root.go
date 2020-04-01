@@ -47,6 +47,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Println("Using config file:", viper.ConfigFileUsed())
 		}
 		oviewer.Debug = config.Debug
+		err := os.Setenv("TCELL_TRUECOLOR", "disable")
+		if err != nil {
+			return err
+		}
 
 		root := oviewer.New()
 		root.Header = config.Header
@@ -54,7 +58,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.WrapMode = config.Wrap
 		root.AfterWrite = config.AfterWrite
 
-		err := root.Run(args)
+		err = root.Run(args)
 		if err != nil {
 			return err
 		}
