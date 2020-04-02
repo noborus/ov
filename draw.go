@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
@@ -78,7 +77,7 @@ func (root *root) Draw() {
 			lY++
 			continue
 		}
-		doReverse(&contents, searchWord)
+		searchContents(&contents, searchWord, root.CaseSensitive)
 		if root.WrapMode {
 			lX, lY = root.wrapContents(y, lX, lY, contents)
 		} else {
@@ -134,27 +133,6 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 	return lX, lY
 }
 
-func doReverse(cp *[]content, searchWord string) {
-	contents := *cp
-	if searchWord == "" {
-		return
-	}
-	s, cIndex := contentsToStr(contents)
-	for i := strings.Index(s, searchWord); i >= 0; {
-		start := cIndex[i]
-		end := cIndex[i+len(searchWord)]
-		for ci := start; ci < end; ci++ {
-			contents[ci].style = contents[ci].style.Reverse(true)
-		}
-		j := strings.Index(s[i+1:], searchWord)
-		if j >= 0 {
-			i += j + 1
-		} else {
-			break
-		}
-	}
-}
-
 func (root *root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
@@ -166,12 +144,16 @@ func (root *root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 	leftStatus := ""
+	caseSensitive := ""
+	if root.CaseSensitive {
+		caseSensitive = "(Aa)"
+	}
 	leftStyle := style
 	switch root.mode {
 	case search:
-		leftStatus = "/" + root.input
+		leftStatus = caseSensitive + "/" + root.input
 	case previous:
-		leftStatus = "?" + root.input
+		leftStatus = caseSensitive + "?" + root.input
 	case goline:
 		leftStatus = "Goto line:" + root.input
 	case header:

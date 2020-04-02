@@ -302,21 +302,3 @@ func strToContents(line string, tabWidth int) []content {
 	}
 	return contents
 }
-
-// contentsToStr converts a content array into a single-line string.
-func contentsToStr(contents []content) (string, map[int]int) {
-	buf := make([]rune, 0)
-	cIndex := make(map[int]int)
-	byteLen := 0
-	for n := range contents {
-		if contents[n].width > 0 {
-			cIndex[byteLen] = n
-			buf = append(buf, contents[n].mainc)
-			b := string(contents[n].mainc)
-			byteLen += len(b)
-		}
-	}
-	s := string(buf)
-	cIndex[len(s)] = len(contents)
-	return s, cIndex
-}

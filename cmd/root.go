@@ -26,6 +26,8 @@ type Config struct {
 	AfterWrite bool
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
+	// CaseSensitive is case-sensitive if true
+	CaseSensitive bool
 	// Debug is enable debug display.
 	Debug bool
 }
@@ -60,6 +62,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.WrapMode = config.Wrap
 		root.AfterWrite = config.AfterWrite
 		root.QuitSmall = config.QuitSmall
+		root.CaseSensitive = config.CaseSensitive
 
 		err = root.Run(args)
 		if err != nil {
@@ -99,6 +102,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
 	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
 	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "Quit if the output fits on one screen")
+	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive")
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 
 	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))

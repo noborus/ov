@@ -138,17 +138,16 @@ func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
 		switch ev.Key() {
 		case tcell.KeyEscape:
 			root.mode = normal
-			return true
 		case tcell.KeyEnter:
 			fn()
 			root.mode = normal
-			return true
 		case tcell.KeyBackspace, tcell.KeyBackspace2:
 			if len(root.input) > 0 {
 				r := []rune(root.input)
 				root.input = string(r[:len(r)-1])
 			}
-			return true
+		case tcell.KeyCtrlI:
+			root.CaseSensitive = !root.CaseSensitive
 		case tcell.KeyRune:
 			root.input += string(ev.Rune())
 		}

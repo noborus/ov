@@ -14,11 +14,12 @@ import (
 )
 
 type root struct {
-	Header     int
-	TabWidth   int
-	AfterWrite bool
-	WrapMode   bool
-	QuitSmall  bool
+	Header        int
+	TabWidth      int
+	AfterWrite    bool
+	WrapMode      bool
+	QuitSmall     bool
+	CaseSensitive bool
 
 	Model         *Model
 	wrapHeaderLen int
