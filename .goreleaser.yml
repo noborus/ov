@@ -1,0 +1,12 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/ov/main.go
+    binary: ov
+    ldflags:
+      - -X main.Version={{.Version}}
+      - -X main.Revision={{.ShortCommit}}
+archive:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  format: zip
