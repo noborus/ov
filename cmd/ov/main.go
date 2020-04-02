@@ -2,10 +2,11 @@ package main
 
 import "github.com/noborus/oviewer/cmd"
 
-var Version = "v0.0.1"
+// Version set "git describe --tags --abbrev=0"
+var Version string
 
 // Revision set "git rev-parse --short HEAD"
-var Revision = "HEAD"
+var Revision string
 
 func main() {
 	cmd.Execute(Version, Revision)
