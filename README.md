@@ -38,14 +38,16 @@ Usage:
   ov [flags]
 
 Flags:
-      --config string   config file (default is $HOME/.oviewer.yaml)
-      --debug           Debug mode
-  -H, --header int      number of header rows to fix
-  -h, --help            help for ov
-  -X, --post-write      Output the current screen when exiting
-  -x, --tab-width int   tab stop (default 8)
-  -v, --version         display version information
-  -w, --wrap            wrap mode (default true)
+  -i, --case-sensitive       case-sensitive
+      --config string        config file (default is $HOME/.oviewer.yaml)
+      --debug                Debug mode
+  -X, --exit-write           Output the current screen when exiting
+  -H, --header int           number of header rows to fix
+  -h, --help                 help for ov
+  -F, --quit-if-one-screen   Quit if the output fits on one screen
+  -x, --tab-width int        tab stop (default 8)
+  -v, --version              display version information
+  -w, --wrap                 wrap mode (default true)
 ```
 
 ### psql
@@ -53,13 +55,13 @@ Flags:
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
 
 ```sh
-export PSQL_PAGER="ov -w=f -H2"
+export PSQL_PAGER="ov -w=f -H2 -F"
 ```
 
 You can also write in `~/.psqlrc` in previous versions.
 
 ```filename:~/.psqlrc
-\setenv PAGER 'ov -w=f -H2'
+\setenv PAGER 'ov -w=f -H2 -F'
 ```
 
 ### mysql
@@ -67,14 +69,14 @@ You can also write in `~/.psqlrc` in previous versions.
 Use the --pager option with the mysql client.
 
 ```console
-mysql --pager="ov -w=f -H3"
+mysql --pager="ov -w=f -H3 -F"
 ```
 
 You can also write in `~/.my.cnf`.
 
 ```filename:~/.my.cnf
 [client]
-pager=ov -w=f -H3
+pager=ov -w=f -H3 -F
 ```
 
 ## Key bindings
@@ -109,6 +111,10 @@ pager=ov -w=f -H3
 * <kbd>?</kbd> - previous search mode
 * <kbd>H</kbd> - number of header lines
 * <kbd>g</kbd> - number of go to line
+
+## Keys in search mode
+
+* <kbd>Ctrl</kbd>+<kbd>i</kbd> - case-sensitive/insensitive toggle
 
 ### Key after search input mode
 
