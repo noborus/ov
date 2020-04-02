@@ -7,6 +7,7 @@ builds:
     ldflags:
       - -X main.Version={{.Version}}
       - -X main.Revision={{.ShortCommit}}
-archive:
-  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  format: zip
+archives:
+  -
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: zip
