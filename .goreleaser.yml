@@ -7,6 +7,19 @@ builds:
     ldflags:
       - -X main.Version={{.Version}}
       - -X main.Revision={{.ShortCommit}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+      - freebsd
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+
 archives:
   -
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
