@@ -112,7 +112,7 @@ pager=ov -w=f -H3 -F
 * <kbd>H</kbd> - number of header lines
 * <kbd>g</kbd> - number of go to line
 
-## Keys in search mode
+### Keys in search mode
 
 * <kbd>Ctrl</kbd>+<kbd>i</kbd> - case-sensitive/insensitive toggle
 
