@@ -20,6 +20,7 @@ type root struct {
 	WrapMode      bool
 	QuitSmall     bool
 	CaseSensitive bool
+	AlternateRows bool
 
 	Model         *Model
 	wrapHeaderLen int
@@ -31,6 +32,9 @@ type root struct {
 	message       string
 
 	minStartPos int
+
+	HeaderStyle    tcell.Style
+	ColorAlternate tcell.Color
 
 	tcell.Screen
 }
@@ -237,6 +241,8 @@ func New() *root {
 	root.Model = NewModel()
 
 	root.minStartPos = -10
+	root.HeaderStyle = tcell.StyleDefault.Bold(true)
+	root.ColorAlternate = tcell.Color237
 
 	return root
 }

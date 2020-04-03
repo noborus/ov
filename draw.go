@@ -91,11 +91,16 @@ func (root *root) Draw() {
 	root.Show()
 }
 
-func (root *root) wrapContents(y int, lX int, lY int, contents []content, emphasis bool) (rX int, rY int) {
+func (root *root) wrapContents(y int, lX int, lY int, contents []content, headerFlag bool) (rX int, rY int) {
 	wX := 0
 	for {
 		if lX+wX >= len(contents) {
 			// EOL
+			if root.AlternateRows && !headerFlag && (root.Model.lineNum+lY)%2 == 1 {
+				for x := wX; x < root.Model.vWidth; x++ {
+					root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault.Background(root.ColorAlternate))
+				}
+			}
 			lX = 0
 			lY++
 			break
@@ -107,8 +112,12 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content, emphas
 			break
 		}
 		style := content.style
-		if emphasis {
-			style = style.Bold(true)
+		if headerFlag {
+			style = root.HeaderStyle
+		} else {
+			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
+				style = style.Background(root.ColorAlternate)
+			}
 		}
 		root.Screen.SetContent(wX, y, content.mainc, content.combc, style)
 		wX++
@@ -116,7 +125,7 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content, emphas
 	return lX, lY
 }
 
-func (root *root) noWrapContents(y int, lX int, lY int, contents []content, emphasis bool) (rX int, rY int) {
+func (root *root) noWrapContents(y int, lX int, lY int, contents []content, headerFlag bool) (rX int, rY int) {
 	if lX < root.minStartPos {
 		lX = root.minStartPos
 	}
@@ -125,12 +134,21 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content, emph
 			continue
 		}
 		if lX+x >= len(contents) {
+			if root.AlternateRows && !headerFlag && (root.Model.lineNum+lY)%2 == 1 {
+				for ; x < root.Model.vWidth; x++ {
+					root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault.Background(root.ColorAlternate))
+				}
+			}
 			break
 		}
 		content := contents[lX+x]
 		style := content.style
-		if emphasis {
-			style = style.Bold(true)
+		if headerFlag {
+			style = root.HeaderStyle
+		} else {
+			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
+				style = style.Background(root.ColorAlternate)
+			}
 		}
 		root.Screen.SetContent(x, y, content.mainc, content.combc, style)
 	}
