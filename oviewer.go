@@ -47,6 +47,7 @@ const (
 
 var Debug bool
 
+// PrepareView prepares when the screen size is changed.
 func (root *root) PrepareView() {
 	m := root.Model
 	screen := root.Screen
@@ -186,8 +187,6 @@ func (root *root) Run(args []string) error {
 	defer root.Screen.Fini()
 
 	screen.Clear()
-	root.Sync()
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	go func() {
@@ -196,6 +195,7 @@ func (root *root) Run(args []string) error {
 		os.Exit(1)
 	}()
 
+	root.Sync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.contentsSmall() {
 		root.AfterWrite = true
