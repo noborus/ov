@@ -10,7 +10,7 @@ func (root *root) moveEnd() {
 }
 
 func (root *root) moveNum(num int) {
-	root.Model.lineNum = num - root.Header
+	root.Model.lineNum = num
 	root.Model.yy = 0
 }
 
@@ -19,20 +19,24 @@ func (root *root) moveBottomNum(num int) {
 	root.moveNum(n)
 }
 
+func (root *root) realHightNum() int {
+	return root.bottomPos - (root.Model.lineNum + root.Header)
+}
+
 func (root *root) movePgUp() {
-	root.moveNum(root.Model.lineNum - (root.bottomPos - root.Model.lineNum))
+	root.moveNum(root.Model.lineNum - root.realHightNum())
 }
 
 func (root *root) movePgDn() {
-	root.moveNum(root.bottomPos)
+	root.moveNum(root.bottomPos - root.Header)
 }
 
 func (root *root) moveHfUp() {
-	root.moveNum(root.Model.lineNum - ((root.bottomPos - root.Model.lineNum) / 2))
+	root.moveNum(root.Model.lineNum - (root.realHightNum() / 2))
 }
 
 func (root *root) moveHfDn() {
-	root.moveNum(root.Model.lineNum + ((root.bottomPos - root.Model.lineNum) / 2))
+	root.moveNum(root.Model.lineNum + (root.realHightNum() / 2))
 }
 
 func (root *root) moveUp() {

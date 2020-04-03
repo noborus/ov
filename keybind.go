@@ -161,7 +161,7 @@ func (root *root) GoLine() {
 		return
 	}
 	root.input = ""
-	root.moveNum(lineNum + root.Header)
+	root.moveNum(lineNum - root.Header)
 }
 
 func (root *root) SetHeader() {
