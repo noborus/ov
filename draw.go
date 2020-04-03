@@ -52,13 +52,10 @@ func (root *root) Draw() {
 			lY++
 			continue
 		}
-		for n := range contents {
-			contents[n].style = contents[n].style.Bold(true)
-		}
 		if root.WrapMode {
-			lX, lY = root.wrapContents(hy, lX, lY, contents)
+			lX, lY = root.wrapContents(hy, lX, lY, contents, true)
 		} else {
-			lX, lY = root.noWrapContents(hy, m.x, lY, contents)
+			lX, lY = root.noWrapContents(hy, m.x, lY, contents, true)
 		}
 		hy++
 	}
@@ -79,9 +76,9 @@ func (root *root) Draw() {
 		}
 		searchContents(&contents, searchWord, root.CaseSensitive)
 		if root.WrapMode {
-			lX, lY = root.wrapContents(y, lX, lY, contents)
+			lX, lY = root.wrapContents(y, lX, lY, contents, false)
 		} else {
-			lX, lY = root.noWrapContents(y, m.x, lY, contents)
+			lX, lY = root.noWrapContents(y, m.x, lY, contents, false)
 		}
 	}
 	if lY > 0 {
@@ -94,7 +91,7 @@ func (root *root) Draw() {
 	root.Show()
 }
 
-func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+func (root *root) wrapContents(y int, lX int, lY int, contents []content, emphasis bool) (rX int, rY int) {
 	wX := 0
 	for {
 		if lX+wX >= len(contents) {
@@ -109,13 +106,17 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX in
 			lX += wX
 			break
 		}
-		root.Screen.SetContent(wX, y, content.mainc, content.combc, content.style)
+		style := content.style
+		if emphasis {
+			style = style.Bold(true)
+		}
+		root.Screen.SetContent(wX, y, content.mainc, content.combc, style)
 		wX++
 	}
 	return lX, lY
 }
 
-func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+func (root *root) noWrapContents(y int, lX int, lY int, contents []content, emphasis bool) (rX int, rY int) {
 	if lX < root.minStartPos {
 		lX = root.minStartPos
 	}
@@ -127,7 +128,11 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 			break
 		}
 		content := contents[lX+x]
-		root.Screen.SetContent(x, y, content.mainc, content.combc, content.style)
+		style := content.style
+		if emphasis {
+			style = style.Bold(true)
+		}
+		root.Screen.SetContent(x, y, content.mainc, content.combc, style)
 	}
 	lY++
 	return lX, lY
