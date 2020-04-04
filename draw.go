@@ -66,12 +66,7 @@ func (root *root) Draw() {
 		contents := m.getContents(m.lineNum+lY, root.TabWidth)
 		if contents == nil {
 			// EOF
-			contents = strToContents("~", 0)
-			contents[0].style = contents[0].style.Foreground(tcell.ColorGray)
-		}
-		if len(contents) == 0 {
-			// blank line
-			lY++
+			root.Screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
 		searchContents(&contents, searchWord, root.CaseSensitive)
