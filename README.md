@@ -2,12 +2,15 @@
 
 Oviewer is a feature rich terminal pager.
 
+![ov.png](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov.png)
+
 ## feature
 
 * Better support for unicode and wide width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
-* Header row can be fixed.
+* Header rows can be fixed.
 * Dynamic wrap / nowrap switchable.
+* Background color to alternate rows.
 
 ## install
 
@@ -38,30 +41,43 @@ Usage:
   ov [flags]
 
 Flags:
-  -i, --case-sensitive       case-sensitive
+  -C, --alternate-rows       color to alternate rows
+  -i, --case-sensitive       case-sensitive in search
       --config string        config file (default is $HOME/.oviewer.yaml)
-      --debug                Debug mode
-  -X, --exit-write           Output the current screen when exiting
+      --debug                debug mode
+  -X, --exit-write           output the current screen when exiting
   -H, --header int           number of header rows to fix
   -h, --help                 help for ov
-  -F, --quit-if-one-screen   Quit if the output fits on one screen
-  -x, --tab-width int        tab stop (default 8)
+  -F, --quit-if-one-screen   quit if the output fits on one screen
+  -x, --tab-width int        tab stop width (default 8)
   -v, --version              display version information
   -w, --wrap                 wrap mode (default true)
 ```
+
+### wrap/nowrap toggle (<kbd>w</kbd>)
+
+![wrap/nowrap](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-wrap.gif)
+
+### color to alternate rows enable/disable toggle (<kbd>C</kbd>)
+
+![color enable/disable](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-color.gif)
+
+### number of header (<kbd>H</kbd>)
+
+![header](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-header.gif)
 
 ### psql
 
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
 
 ```sh
-export PSQL_PAGER="ov -w=f -H2 -F"
+export PSQL_PAGER="ov -w=f -H2 -F -C"
 ```
 
 You can also write in `~/.psqlrc` in previous versions.
 
 ```filename:~/.psqlrc
-\setenv PAGER 'ov -w=f -H2 -F'
+\setenv PAGER 'ov -w=f -H2 -F -C'
 ```
 
 ### mysql
@@ -69,14 +85,14 @@ You can also write in `~/.psqlrc` in previous versions.
 Use the --pager option with the mysql client.
 
 ```console
-mysql --pager="ov -w=f -H3 -F"
+mysql --pager="ov -w=f -H3 -F -C"
 ```
 
 You can also write in `~/.my.cnf`.
 
 ```filename:~/.my.cnf
 [client]
-pager=ov -w=f -H3 -F
+pager=ov -w=f -H3 -F -C
 ```
 
 ## Key bindings
@@ -104,6 +120,7 @@ pager=ov -w=f -H3 -F
 ### Mode
 
 * <kbd>w</kbd> - wrap/nowrap toggle
+* <kbd>C</kbd> - color to alternate rows enable/disable toggle
 
 ### Input Mode
 
