@@ -205,5 +205,5 @@ func (root *root) postSearch(lineNum int, err error) {
 		root.message = err.Error()
 		return
 	}
-	root.moveNum(lineNum)
+	root.moveNum(lineNum - root.Header)
 }
