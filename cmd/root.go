@@ -104,25 +104,25 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 
-	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
+	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 
 	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
+	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "output the current screen when exiting")
 	_ = viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "Quit if the output fits on one screen")
+	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "quit if the output fits on one screen")
 	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive")
+	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.AlternateRows, "alternate-rows", "C", false, "Color to alternate rows")
+	rootCmd.PersistentFlags().BoolVarP(&config.AlternateRows, "alternate-rows", "C", false, "color to alternate rows")
 	_ = viper.BindPFlag("AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
+	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "debug mode")
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -24,11 +24,19 @@ func (root *root) realHightNum() int {
 }
 
 func (root *root) movePgUp() {
-	root.moveNum(root.Model.lineNum - root.realHightNum())
+	n := root.Model.lineNum - root.realHightNum()
+	if n >= root.Model.lineNum {
+		n = root.Model.lineNum - 1
+	}
+	root.moveNum(n)
 }
 
 func (root *root) movePgDn() {
-	root.moveNum(root.bottomPos - root.Header)
+	n := root.bottomPos - root.Header
+	if n <= root.Model.lineNum {
+		n = root.Model.lineNum + 1
+	}
+	root.moveNum(n)
 }
 
 func (root *root) moveHfUp() {
