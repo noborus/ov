@@ -28,6 +28,8 @@ type Config struct {
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true
 	CaseSensitive bool
+	// Color to alternate rows
+	AlternateRows bool
 	// Debug is enable debug display.
 	Debug bool
 }
@@ -63,6 +65,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.AfterWrite = config.AfterWrite
 		root.QuitSmall = config.QuitSmall
 		root.CaseSensitive = config.CaseSensitive
+		root.AlternateRows = config.AlternateRows
 
 		err = root.Run(args)
 		if err != nil {
@@ -97,19 +100,29 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oviewer.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
-	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
-	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
-	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
-	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
-	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "Quit if the output fits on one screen")
-	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive")
-	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 
-	viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
-	viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
-	viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
-	viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
-	viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
+	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
+	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
+
+	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop")
+	_ = viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
+
+	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
+	_ = viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "Output the current screen when exiting")
+	_ = viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.QuitSmall, "quit-if-one-screen", "F", false, "Quit if the output fits on one screen")
+	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive")
+	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.AlternateRows, "alternate-rows", "C", false, "Color to alternate rows")
+	_ = viper.BindPFlag("AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "Debug mode")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -133,7 +146,7 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	viper.ReadInConfig()
+	_ = viper.ReadInConfig()
 
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Println(err)

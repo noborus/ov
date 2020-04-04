@@ -100,6 +100,9 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.input = ""
 				root.keyHeader()
 				return true
+			case 'C':
+				root.keyAlternateRows()
+				return true
 			}
 		}
 	}
@@ -114,6 +117,14 @@ func (root *root) keyWrap() {
 		root.Model.x = 0
 	}
 	root.setWrapHeaderLen()
+}
+
+func (root *root) keyAlternateRows() {
+	if root.AlternateRows {
+		root.AlternateRows = false
+	} else {
+		root.AlternateRows = true
+	}
 }
 
 func (root *root) keySearch() {
@@ -161,7 +172,7 @@ func (root *root) GoLine() {
 		return
 	}
 	root.input = ""
-	root.moveNum(lineNum + root.Header)
+	root.moveNum(lineNum - root.Header)
 }
 
 func (root *root) SetHeader() {

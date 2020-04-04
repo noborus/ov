@@ -20,6 +20,7 @@ type root struct {
 	WrapMode      bool
 	QuitSmall     bool
 	CaseSensitive bool
+	AlternateRows bool
 
 	Model         *Model
 	wrapHeaderLen int
@@ -31,6 +32,9 @@ type root struct {
 	message       string
 
 	minStartPos int
+
+	HeaderStyle    tcell.Style
+	ColorAlternate tcell.Color
 
 	tcell.Screen
 }
@@ -47,6 +51,7 @@ const (
 
 var Debug bool
 
+// PrepareView prepares when the screen size is changed.
 func (root *root) PrepareView() {
 	m := root.Model
 	screen := root.Screen
@@ -186,8 +191,6 @@ func (root *root) Run(args []string) error {
 	defer root.Screen.Fini()
 
 	screen.Clear()
-	root.Sync()
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	go func() {
@@ -196,6 +199,7 @@ func (root *root) Run(args []string) error {
 		os.Exit(1)
 	}()
 
+	root.Sync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.contentsSmall() {
 		root.AfterWrite = true
@@ -237,6 +241,8 @@ func New() *root {
 	root.Model = NewModel()
 
 	root.minStartPos = -10
+	root.HeaderStyle = tcell.StyleDefault.Bold(true)
+	root.ColorAlternate = tcell.Color237
 
 	return root
 }
