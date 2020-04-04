@@ -1,13 +1,10 @@
 package oviewer
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
@@ -36,36 +33,6 @@ func NewModel() *Model {
 		buffer:     make([]string, 0),
 		header:     make([]string, 0),
 		beforeSize: 1000,
-	}
-}
-
-// ReadAll reads all from the reader to the buffer.
-// It returns if beforeSize is accumulated in buffer
-// before the end of read.
-func (m *Model) ReadAll(r io.Reader) error {
-	scanner := bufio.NewScanner(r)
-	ch := make(chan struct{})
-	go func() {
-		defer close(ch)
-		for scanner.Scan() {
-			m.buffer = append(m.buffer, scanner.Text())
-			m.endNum++
-			if m.endNum == m.beforeSize {
-				ch <- struct{}{}
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			m.eof = false
-			return
-		}
-		m.eof = true
-	}()
-
-	select {
-	case <-ch:
-		return nil
-	case <-time.After(500 * time.Millisecond):
-		return nil
 	}
 }
 

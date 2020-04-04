@@ -1,11 +1,14 @@
 package oviewer
 
 import (
+	"bufio"
 	"bytes"
 	"compress/bzip2"
 	"compress/gzip"
 	"io"
 	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/pierrec/lz4"
@@ -45,4 +48,38 @@ func uncompressedReader(reader io.Reader) io.ReadCloser {
 		r = ioutil.NopCloser(rd)
 	}
 	return r
+}
+
+// ReadAll reads all from the reader to the buffer.
+// It returns if beforeSize is accumulated in buffer
+// before the end of read.
+func (m *Model) ReadAll(r io.Reader) error {
+	reader := bufio.NewReader(r)
+	ch := make(chan struct{})
+	go func() {
+		defer close(ch)
+		for {
+			buf, err := reader.ReadString('\n')
+			if err != nil {
+				if err == io.EOF || err == io.ErrClosedPipe {
+					break
+				}
+				m.eof = false
+				return
+			}
+			m.buffer = append(m.buffer, strings.TrimRight(buf, "\n"))
+			m.endNum++
+			if m.endNum == m.beforeSize {
+				ch <- struct{}{}
+			}
+		}
+		m.eof = true
+	}()
+
+	select {
+	case <-ch:
+		return nil
+	case <-time.After(500 * time.Millisecond):
+		return nil
+	}
 }
