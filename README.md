@@ -1,5 +1,8 @@
 # Oviewer
 
+[![Actions Status](https://github.com/noborus/oviewer/workflows/Go/badge.svg)](https://github.com/noborus/oviewer/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/noborus/oviewer)](https://goreportcard.com/report/github.com/noborus/oviewer)
+
 Oviewer is a feature rich terminal pager.
 
 ![ov.png](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov.png)
