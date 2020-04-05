@@ -7,7 +7,6 @@ import (
 	"compress/gzip"
 	"io"
 	"io/ioutil"
-	"strings"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -57,9 +56,11 @@ func (m *Model) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	ch := make(chan struct{})
 	go func() {
+		var buf bytes.Buffer
 		defer close(ch)
 		for {
-			buf, err := reader.ReadString('\n')
+			l, isPrefix, err := reader.ReadLine()
+			buf.Write(l)
 			if err != nil {
 				if err == io.EOF || err == io.ErrClosedPipe {
 					break
@@ -67,7 +68,11 @@ func (m *Model) ReadAll(r io.Reader) error {
 				m.eof = false
 				return
 			}
-			m.buffer = append(m.buffer, strings.TrimRight(buf, "\n"))
+			if isPrefix {
+				continue
+			}
+			m.buffer = append(m.buffer, buf.String())
+			buf.Reset()
 			m.endNum++
 			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
