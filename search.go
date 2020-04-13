@@ -31,8 +31,7 @@ func (root *root) contains(s, substr string) bool {
 }
 
 // Search for searchWord from contents and reverse.
-func searchContents(cp *[]content, searchWord string, CaseSensitive bool) {
-	contents := *cp
+func searchContents(contents []content, searchWord string, CaseSensitive bool) {
 	if searchWord == "" {
 		for n := range contents {
 			contents[n].style = contents[n].style.Reverse(false)

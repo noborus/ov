@@ -52,10 +52,11 @@ func (root *root) Draw() {
 			lY++
 			continue
 		}
+		root.headerStyle(contents)
 		if root.WrapMode {
-			lX, lY = root.wrapContents(hy, lX, lY, contents, true)
+			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
-			lX, lY = root.noWrapContents(hy, m.x, lY, contents, true)
+			lX, lY = root.noWrapContents(hy, m.x, lY, contents)
 		}
 		hy++
 	}
@@ -69,13 +70,24 @@ func (root *root) Draw() {
 			root.Screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
-		searchContents(&contents, searchWord, root.CaseSensitive)
+
+		if searchWord != "" {
+			searchContents(contents, searchWord, root.CaseSensitive)
+		}
+
+		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
+			for n := range contents {
+				contents[n].style = contents[n].style.Background(root.ColorAlternate)
+			}
+		}
+
 		if root.WrapMode {
-			lX, lY = root.wrapContents(y, lX, lY, contents, false)
+			lX, lY = root.wrapContents(y, lX, lY, contents)
 		} else {
-			lX, lY = root.noWrapContents(y, m.x, lY, contents, false)
+			lX, lY = root.noWrapContents(y, m.x, lY, contents)
 		}
 	}
+
 	if lY > 0 {
 		root.bottomPos = m.lineNum + lY - 1
 	} else {
@@ -86,16 +98,11 @@ func (root *root) Draw() {
 	root.Show()
 }
 
-func (root *root) wrapContents(y int, lX int, lY int, contents []content, headerFlag bool) (rX int, rY int) {
+func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
 	wX := 0
 	for {
 		if lX+wX >= len(contents) {
 			// EOL
-			if root.AlternateRows && !headerFlag && (root.Model.lineNum+lY)%2 == 1 {
-				for x := wX; x < root.Model.vWidth; x++ {
-					root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault.Background(root.ColorAlternate))
-				}
-			}
 			lX = 0
 			lY++
 			break
@@ -107,20 +114,13 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content, header
 			break
 		}
 		style := content.style
-		if headerFlag {
-			style = root.HeaderStyle
-		} else {
-			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
-				style = style.Background(root.ColorAlternate)
-			}
-		}
 		root.Screen.SetContent(wX, y, content.mainc, content.combc, style)
 		wX++
 	}
 	return lX, lY
 }
 
-func (root *root) noWrapContents(y int, lX int, lY int, contents []content, headerFlag bool) (rX int, rY int) {
+func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
 	if lX < root.minStartPos {
 		lX = root.minStartPos
 	}
@@ -129,26 +129,20 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content, head
 			continue
 		}
 		if lX+x >= len(contents) {
-			if root.AlternateRows && !headerFlag && (root.Model.lineNum+lY)%2 == 1 {
-				for ; x < root.Model.vWidth; x++ {
-					root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault.Background(root.ColorAlternate))
-				}
-			}
 			break
 		}
 		content := contents[lX+x]
 		style := content.style
-		if headerFlag {
-			style = root.HeaderStyle
-		} else {
-			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
-				style = style.Background(root.ColorAlternate)
-			}
-		}
 		root.Screen.SetContent(x, y, content.mainc, content.combc, style)
 	}
 	lY++
 	return lX, lY
+}
+
+func (root *root) headerStyle(contents []content) {
+	for i := 0; i < len(contents); i++ {
+		contents[i].style = root.HeaderStyle
+	}
 }
 
 func (root *root) statusDraw() {
@@ -189,8 +183,9 @@ func (root *root) statusDraw() {
 	rightContents := strToContents(rightStatus, root.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 	if Debug {
-		debug := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
-		root.setContentString(30, root.statusPos, strToContents(debug, 0), tcell.StyleDefault)
+		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
+		c := strToContents(debugMsg, 0)
+		root.setContentString(30, root.statusPos, c, tcell.StyleDefault)
 	}
 }
 
