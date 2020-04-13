@@ -44,23 +44,44 @@ type content struct {
 	combc []rune
 }
 
-// getContents returns one row of contents from buffer.
-func (m *Model) getContents(lineNum int, tabWidth int) []content {
-	var contents []content
+type lineContents struct {
+	contents []content
+	cMap     map[int]int
+}
+
+// getLine returns one line from buffer.
+func (m *Model) getLine(lineNum int) string {
 	if lineNum < 0 || lineNum >= len(m.buffer) {
+		return ""
+	}
+	return m.buffer[lineNum]
+}
+
+// getContents returns one line of contents from buffer.
+func (m *Model) getContents(lineNum int, tabWidth int) []content {
+	lc, err := m.lineToContents(lineNum, tabWidth)
+	if err != nil {
 		return nil
+	}
+	return lc.contents
+}
+
+func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
+	var lc lineContents
+	if lineNum < 0 || lineNum >= len(m.buffer) {
+		return lc, fmt.Errorf("out of range")
 	}
 	value, found := m.cache.Get(lineNum)
 	if found {
 		var ok bool
-		if contents, ok = value.([]content); !ok {
-			return nil
+		if lc, ok = value.(lineContents); !ok {
+			return lc, fmt.Errorf("fatal error not lineContents")
 		}
 	} else {
-		contents = strToContents(m.buffer[lineNum], tabWidth)
-		m.cache.Set(lineNum, contents, 1)
+		lc.contents, lc.cMap = parseString(m.buffer[lineNum], tabWidth)
+		m.cache.Set(lineNum, lc, 1)
 	}
-	return contents
+	return lc, nil
 }
 
 // The states of the ANSI escape code parser.
@@ -175,6 +196,11 @@ FieldLoop:
 
 // strToContents converts a single-line string into a content array.
 func strToContents(line string, tabWidth int) []content {
+	contents, _ := parseString(line, tabWidth)
+	return contents
+}
+
+func parseString(line string, tabWidth int) ([]content, map[int]int) {
 	contents := []content{}
 	defaultStyle := tcell.StyleDefault
 	defaultContent := content{
@@ -188,8 +214,10 @@ func strToContents(line string, tabWidth int) []content {
 	csiParameter := new(bytes.Buffer)
 	style := defaultStyle
 	x := 0
-	for _, runeValue := range line {
+	runeContents := make(map[int]int)
+	for n, runeValue := range line {
 		c := defaultContent
+		runeContents[n] = len(contents)
 
 		switch state {
 		case ansiEscape:
@@ -267,5 +295,6 @@ func strToContents(line string, tabWidth int) []content {
 			x += 2
 		}
 	}
-	return contents
+	runeContents[len(string(line))] = len(contents)
+	return contents, runeContents
 }

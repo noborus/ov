@@ -30,24 +30,18 @@ func (root *root) contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
 
-// Search for searchWord from contents and reverse.
-func searchContents(contents []content, searchWord string, CaseSensitive bool) {
-	if searchWord == "" {
-		for n := range contents {
-			contents[n].style = contents[n].style.Reverse(false)
-		}
-		return
-	}
-	s, cIndex := contentsToStr(contents)
+func searchHighlight(line string, lc lineContents, searchWord string, CaseSensitive bool) {
+	s := line
 	if !CaseSensitive {
 		s = strings.ToLower(s)
 		searchWord = strings.ToLower(searchWord)
 	}
+
 	for i := strings.Index(s, searchWord); i >= 0; {
-		start := cIndex[i]
-		end := cIndex[i+len(searchWord)]
+		start := lc.cMap[i]
+		end := lc.cMap[i+len(searchWord)]
 		for ci := start; ci < end; ci++ {
-			contents[ci].style = contents[ci].style.Reverse(true)
+			lc.contents[ci].style = lc.contents[ci].style.Reverse(true)
 		}
 		j := strings.Index(s[i+1:], searchWord)
 		if j >= 0 {
@@ -56,24 +50,4 @@ func searchContents(contents []content, searchWord string, CaseSensitive bool) {
 			break
 		}
 	}
-}
-
-// contentsToStr converts a content array into a single-line string.
-// Returns a character string.
-// Also return the position of characters and the position of contents in map.
-func contentsToStr(contents []content) (string, map[int]int) {
-	buf := make([]rune, 0)
-	cIndex := make(map[int]int)
-	byteLen := 0
-	for n := range contents {
-		if contents[n].width > 0 {
-			cIndex[byteLen] = n
-			buf = append(buf, contents[n].mainc)
-			b := string(contents[n].mainc)
-			byteLen += len(b)
-		}
-	}
-	s := string(buf)
-	cIndex[len(s)] = len(contents)
-	return s, cIndex
 }

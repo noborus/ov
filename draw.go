@@ -64,17 +64,22 @@ func (root *root) Draw() {
 	// Body
 	lX = m.yy * m.vWidth
 	for y := root.HeaderLen(); y < m.vHight; y++ {
-		contents := m.getContents(m.lineNum+lY, root.TabWidth)
-		if contents == nil {
+		lc, err := m.lineToContents(m.lineNum+lY, root.TabWidth)
+		if err != nil {
 			// EOF
 			root.Screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
-
+		line := m.getLine(m.lineNum + lY)
 		if searchWord != "" {
-			searchContents(contents, searchWord, root.CaseSensitive)
+			searchHighlight(line, lc, searchWord, root.CaseSensitive)
+		} else {
+			for n := range lc.contents {
+				lc.contents[n].style = lc.contents[n].style.Reverse(false)
+			}
 		}
 
+		contents := lc.contents
 		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
 			for n := range contents {
 				contents[n].style = contents[n].style.Background(root.ColorAlternate)
