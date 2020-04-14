@@ -17,6 +17,8 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 		return root.inputEvent(ev, root.GoLine)
 	case header:
 		return root.inputEvent(ev, root.SetHeader)
+	case delimiter:
+		return root.inputEvent(ev, root.SetDelimiter)
 	}
 
 	switch ev := ev.(type) {
@@ -39,15 +41,26 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.moveHfLeft()
 				return true
 			}
-			root.moveLeft()
+			if root.delimiter == "" {
+				root.moveLeft()
+				return true
+			}
+			if root.columnNum > 0 {
+				root.columnNum--
+				root.Model.x = root.columnModeX()
+			}
 			return true
 		case tcell.KeyRight:
 			if ev.Modifiers()&tcell.ModCtrl > 0 {
 				root.moveHfRight()
-			} else {
-				root.moveRight()
 				return true
 			}
+			if root.delimiter == "" {
+				root.moveRight()
+			}
+			root.columnNum++
+			root.Model.x = root.columnModeX()
+			return true
 		case tcell.KeyDown, tcell.KeyCtrlN:
 			root.moveDown()
 			return true
@@ -81,6 +94,10 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			case '?':
 				root.input = ""
 				root.keyPrevious()
+				return true
+			case 'd':
+				root.input = ""
+				root.keyDelimiter()
 				return true
 			case '/':
 				root.input = ""
@@ -129,6 +146,10 @@ func (root *root) keyAlternateRows() {
 
 func (root *root) keySearch() {
 	root.mode = search
+}
+
+func (root *root) keyDelimiter() {
+	root.mode = delimiter
 }
 
 func (root *root) keyPrevious() {
@@ -181,6 +202,11 @@ func (root *root) SetHeader() {
 		root.Header = line
 		root.setWrapHeaderLen()
 	}
+	root.input = ""
+}
+
+func (root *root) SetDelimiter() {
+	root.delimiter = root.input
 	root.input = ""
 }
 

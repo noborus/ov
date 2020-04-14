@@ -29,6 +29,8 @@ type root struct {
 	fileName      string
 	mode          Mode
 	input         string
+	delimiter     string
+	columnNum     int
 	message       string
 
 	minStartPos int
@@ -47,6 +49,7 @@ const (
 	previous
 	goline
 	header
+	delimiter
 )
 
 var Debug bool
@@ -243,6 +246,7 @@ func New() *root {
 	root.minStartPos = -10
 	root.HeaderStyle = tcell.StyleDefault.Bold(true)
 	root.ColorAlternate = tcell.Color237
-
+	root.delimiter = ""
+	root.columnNum = 0
 	return root
 }

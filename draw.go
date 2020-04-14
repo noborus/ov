@@ -47,12 +47,22 @@ func (root *root) Draw() {
 	lX := 0
 	hy := 0
 	for lY < root.Header {
-		contents := m.getContents(lY, root.TabWidth)
-		if len(contents) == 0 {
-			lY++
+		line := m.getLine(lY)
+		lc, err := m.lineToContents(lY, root.TabWidth)
+		if err != nil {
+			// EOF
 			continue
 		}
+		contents := lc.contents
 		root.headerStyle(contents)
+		if root.delimiter != "" {
+			s, e := rangePosition(line, root.delimiter, root.columnNum)
+			start := lc.cMap[s]
+			end := lc.cMap[e]
+			for n := start; n < end; n++ {
+				lc.contents[n].style = lc.contents[n].style.Reverse(true)
+			}
+		}
 		if root.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
@@ -78,7 +88,14 @@ func (root *root) Draw() {
 				lc.contents[n].style = lc.contents[n].style.Reverse(false)
 			}
 		}
-
+		if root.delimiter != "" {
+			s, e := rangePosition(line, root.delimiter, root.columnNum)
+			start := lc.cMap[s]
+			end := lc.cMap[e]
+			for n := start; n < end; n++ {
+				lc.contents[n].style = lc.contents[n].style.Reverse(true)
+			}
+		}
 		contents := lc.contents
 		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
 			for n := range contents {
@@ -150,6 +167,21 @@ func (root *root) headerStyle(contents []content) {
 	}
 }
 
+func (root *root) columnModeX() int {
+	m := root.Model
+	line := m.getLine(root.Header + 2)
+	s, e := rangePosition(line, root.delimiter, root.columnNum)
+	if s < 0 || e < 0 {
+		root.columnNum = 0
+		s, _ = rangePosition(line, root.delimiter, root.columnNum)
+	}
+	lc, err := m.lineToContents(root.Header+2, root.TabWidth)
+	if err != nil {
+		return 0
+	}
+	return lc.cMap[s]
+}
+
 func (root *root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
@@ -175,6 +207,8 @@ func (root *root) statusDraw() {
 		leftStatus = "Goto line:" + root.input
 	case header:
 		leftStatus = "Header length:" + root.input
+	case delimiter:
+		leftStatus = "Delimiter:" + root.input
 	default:
 		leftStatus = fmt.Sprintf("%s:%s", root.fileName, root.message)
 		leftStyle = style.Reverse(true)
