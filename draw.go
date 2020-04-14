@@ -36,7 +36,7 @@ func (root *root) Draw() {
 	if m.lineNum < 0 {
 		m.lineNum = 0
 	}
-
+	_, bg, _ := tcell.StyleDefault.Decompose()
 	searchWord := ""
 	if root.mode == normal {
 		searchWord = root.input
@@ -55,8 +55,8 @@ func (root *root) Draw() {
 		}
 		contents := lc.contents
 		root.headerStyle(contents)
-		if root.delimiter != "" {
-			s, e := rangePosition(line, root.delimiter, root.columnNum)
+		if root.ColumnMode {
+			s, e := rangePosition(line, root.ColumnDelimiter, root.columnNum)
 			start := lc.cMap[s]
 			end := lc.cMap[e]
 			for n := start; n < end; n++ {
@@ -88,18 +88,24 @@ func (root *root) Draw() {
 				lc.contents[n].style = lc.contents[n].style.Reverse(false)
 			}
 		}
-		if root.delimiter != "" {
-			s, e := rangePosition(line, root.delimiter, root.columnNum)
+
+		if root.ColumnMode {
+			s, e := rangePosition(line, root.ColumnDelimiter, root.columnNum)
 			start := lc.cMap[s]
 			end := lc.cMap[e]
 			for n := start; n < end; n++ {
 				lc.contents[n].style = lc.contents[n].style.Reverse(true)
 			}
 		}
+
 		contents := lc.contents
 		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
 			for n := range contents {
 				contents[n].style = contents[n].style.Background(root.ColorAlternate)
+			}
+		} else {
+			for n := range contents {
+				contents[n].style = contents[n].style.Background(bg)
 			}
 		}
 
@@ -170,10 +176,10 @@ func (root *root) headerStyle(contents []content) {
 func (root *root) columnModeX() int {
 	m := root.Model
 	line := m.getLine(root.Header + 2)
-	s, e := rangePosition(line, root.delimiter, root.columnNum)
+	s, e := rangePosition(line, root.ColumnDelimiter, root.columnNum)
 	if s < 0 || e < 0 {
 		root.columnNum = 0
-		s, _ = rangePosition(line, root.delimiter, root.columnNum)
+		s, _ = rangePosition(line, root.ColumnDelimiter, root.columnNum)
 	}
 	lc, err := m.lineToContents(root.Header+2, root.TabWidth)
 	if err != nil {

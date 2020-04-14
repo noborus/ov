@@ -21,17 +21,18 @@ type root struct {
 	QuitSmall     bool
 	CaseSensitive bool
 	AlternateRows bool
+	ColumnMode    bool
 
-	Model         *Model
-	wrapHeaderLen int
-	bottomPos     int
-	statusPos     int
-	fileName      string
-	mode          Mode
-	input         string
-	delimiter     string
-	columnNum     int
-	message       string
+	Model           *Model
+	wrapHeaderLen   int
+	bottomPos       int
+	statusPos       int
+	fileName        string
+	mode            Mode
+	input           string
+	ColumnDelimiter string
+	columnNum       int
+	message         string
 
 	minStartPos int
 
@@ -246,7 +247,7 @@ func New() *root {
 	root.minStartPos = -10
 	root.HeaderStyle = tcell.StyleDefault.Bold(true)
 	root.ColorAlternate = tcell.Color237
-	root.delimiter = ""
+	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	return root
 }

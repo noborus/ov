@@ -41,7 +41,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.moveHfLeft()
 				return true
 			}
-			if root.delimiter == "" {
+			if root.ColumnDelimiter == "" {
 				root.moveLeft()
 				return true
 			}
@@ -55,7 +55,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.moveHfRight()
 				return true
 			}
-			if root.delimiter == "" {
+			if root.ColumnDelimiter == "" {
 				root.moveRight()
 			}
 			root.columnNum++
@@ -94,6 +94,9 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 			case '?':
 				root.input = ""
 				root.keyPrevious()
+				return true
+			case 'c':
+				root.keyColumnMode()
 				return true
 			case 'd':
 				root.input = ""
@@ -134,6 +137,14 @@ func (root *root) keyWrap() {
 		root.Model.x = 0
 	}
 	root.setWrapHeaderLen()
+}
+
+func (root *root) keyColumnMode() {
+	if root.ColumnMode {
+		root.ColumnMode = false
+	} else {
+		root.ColumnMode = true
+	}
 }
 
 func (root *root) keyAlternateRows() {
@@ -206,7 +217,7 @@ func (root *root) SetHeader() {
 }
 
 func (root *root) SetDelimiter() {
-	root.delimiter = root.input
+	root.ColumnDelimiter = root.input
 	root.input = ""
 }
 
