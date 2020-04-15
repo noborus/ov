@@ -84,6 +84,13 @@ func (root *root) moveDown() {
 }
 
 func (root *root) moveLeft() {
+	if root.ColumnMode {
+		if root.columnNum > 0 {
+			root.columnNum--
+			root.Model.x = root.columnModeX()
+		}
+		return
+	}
 	if root.WrapMode {
 		return
 	}
@@ -91,10 +98,30 @@ func (root *root) moveLeft() {
 }
 
 func (root *root) moveRight() {
+	if root.ColumnMode {
+		root.columnNum++
+		root.Model.x = root.columnModeX()
+		return
+	}
 	if root.WrapMode {
 		return
 	}
 	root.Model.x++
+}
+
+func (root *root) columnModeX() int {
+	m := root.Model
+	line := m.getLine(root.Header + 2)
+	r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+	if r.start < 0 || r.end < 0 {
+		root.columnNum = 0
+		r = rangePosition(line, root.ColumnDelimiter, root.columnNum)
+	}
+	lc, err := m.lineToContents(root.Header+2, root.TabWidth)
+	if err != nil {
+		return 0
+	}
+	return lc.cMap[r.start]
 }
 
 func (root *root) moveHfLeft() {

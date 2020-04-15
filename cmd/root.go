@@ -30,6 +30,10 @@ type Config struct {
 	CaseSensitive bool
 	// Color to alternate rows
 	AlternateRows bool
+	// Column mode
+	ColumnMode bool
+	// Column Delimiter
+	ColumnDelimiter string
 	// Debug is enable debug display.
 	Debug bool
 }
@@ -66,6 +70,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.QuitSmall = config.QuitSmall
 		root.CaseSensitive = config.CaseSensitive
 		root.AlternateRows = config.AlternateRows
+		root.ColumnMode = config.ColumnMode
+		root.ColumnDelimiter = config.ColumnDelimiter
 
 		err = root.Run(args)
 		if err != nil {
@@ -121,6 +127,12 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&config.AlternateRows, "alternate-rows", "C", false, "color to alternate rows")
 	_ = viper.BindPFlag("AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.ColumnMode, "column-mode", "c", false, "column mode")
+	_ = viper.BindPFlag("ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
+
+	rootCmd.PersistentFlags().StringVarP(&config.ColumnDelimiter, "column-delimiter", "d", ",", "column delimiter")
+	_ = viper.BindPFlag("ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "debug mode")
 }

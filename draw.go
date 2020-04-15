@@ -37,6 +37,7 @@ func (root *root) Draw() {
 		m.lineNum = 0
 	}
 
+	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 	searchWord := ""
 	if root.mode == normal {
 		searchWord = root.input
@@ -47,12 +48,21 @@ func (root *root) Draw() {
 	lX := 0
 	hy := 0
 	for lY < root.Header {
-		contents := m.getContents(lY, root.TabWidth)
-		if len(contents) == 0 {
-			lY++
+		line := m.getLine(lY)
+		lc, err := m.lineToContents(lY, root.TabWidth)
+		if err != nil {
+			// EOF
 			continue
 		}
+		contents := lc.contents
 		root.headerStyle(contents)
+
+		// column highlight
+		if root.ColumnMode {
+			r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+			reverseContents(lc, r)
+		}
+
 		if root.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
@@ -64,27 +74,45 @@ func (root *root) Draw() {
 	// Body
 	lX = m.yy * m.vWidth
 	for y := root.HeaderLen(); y < m.vHight; y++ {
-		contents := m.getContents(m.lineNum+lY, root.TabWidth)
-		if contents == nil {
+		lc, err := m.lineToContents(m.lineNum+lY, root.TabWidth)
+		if err != nil {
 			// EOF
 			root.Screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
 
-		if searchWord != "" {
-			searchContents(contents, searchWord, root.CaseSensitive)
+		line := m.getLine(m.lineNum + lY)
+		for n := range lc.contents {
+			lc.contents[n].style = lc.contents[n].style.Normal()
 		}
 
+		bgColor := normalBgColor
+		// alternate background color
 		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
-			for n := range contents {
-				contents[n].style = contents[n].style.Background(root.ColorAlternate)
+			bgColor = root.ColorAlternate
+		}
+		for n := range lc.contents {
+			lc.contents[n].style = lc.contents[n].style.Background(bgColor)
+		}
+
+		// search highlight
+		if searchWord != "" {
+			poss := searchPosition(line, searchWord, root.CaseSensitive)
+			for _, r := range poss {
+				reverseContents(lc, r)
 			}
 		}
 
+		// column highlight
+		if root.ColumnMode {
+			r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+			reverseContents(lc, r)
+		}
+
 		if root.WrapMode {
-			lX, lY = root.wrapContents(y, lX, lY, contents)
+			lX, lY = root.wrapContents(y, lX, lY, lc.contents)
 		} else {
-			lX, lY = root.noWrapContents(y, m.x, lY, contents)
+			lX, lY = root.noWrapContents(y, m.x, lY, lc.contents)
 		}
 	}
 
@@ -96,6 +124,12 @@ func (root *root) Draw() {
 
 	root.statusDraw()
 	root.Show()
+}
+
+func reverseContents(lc lineContents, r rangePos) {
+	for n := lc.cMap[r.start]; n < lc.cMap[r.end]; n++ {
+		lc.contents[n].style = lc.contents[n].style.Reverse(true)
+	}
 }
 
 func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
@@ -170,6 +204,8 @@ func (root *root) statusDraw() {
 		leftStatus = "Goto line:" + root.input
 	case header:
 		leftStatus = "Header length:" + root.input
+	case delimiter:
+		leftStatus = "Delimiter:" + root.input
 	default:
 		leftStatus = fmt.Sprintf("%s:%s", root.fileName, root.message)
 		leftStyle = style.Reverse(true)
