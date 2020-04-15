@@ -80,13 +80,14 @@ func (root *root) Draw() {
 			root.Screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
+
+		for n := range lc.contents {
+			lc.contents[n].style = lc.contents[n].style.Reverse(false)
+		}
+
 		line := m.getLine(m.lineNum + lY)
 		if searchWord != "" {
 			searchHighlight(line, lc, searchWord, root.CaseSensitive)
-		} else {
-			for n := range lc.contents {
-				lc.contents[n].style = lc.contents[n].style.Reverse(false)
-			}
 		}
 
 		if root.ColumnMode {

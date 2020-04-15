@@ -214,11 +214,12 @@ func parseString(line string, tabWidth int) ([]content, map[int]int) {
 	csiParameter := new(bytes.Buffer)
 	style := defaultStyle
 	x := 0
-	runeContents := make(map[int]int)
-	for n, runeValue := range line {
+	byteMaps := make(map[int]int)
+	n := 0
+	for _, runeValue := range line {
 		c := defaultContent
-		runeContents[n] = len(contents)
-
+		byteMaps[n] = len(contents)
+		n += len(string(runeValue))
 		switch state {
 		case ansiEscape:
 			switch runeValue {
@@ -295,6 +296,6 @@ func parseString(line string, tabWidth int) ([]content, map[int]int) {
 			x += 2
 		}
 	}
-	runeContents[len(string(line))] = len(contents)
-	return contents, runeContents
+	byteMaps[len(line)] = len(contents)
+	return contents, byteMaps
 }

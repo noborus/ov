@@ -84,6 +84,13 @@ func (root *root) moveDown() {
 }
 
 func (root *root) moveLeft() {
+	if root.ColumnMode {
+		if root.columnNum > 0 {
+			root.columnNum--
+			root.Model.x = root.columnModeX()
+		}
+		return
+	}
 	if root.WrapMode {
 		return
 	}
@@ -91,6 +98,11 @@ func (root *root) moveLeft() {
 }
 
 func (root *root) moveRight() {
+	if root.ColumnMode {
+		root.columnNum++
+		root.Model.x = root.columnModeX()
+		return
+	}
 	if root.WrapMode {
 		return
 	}

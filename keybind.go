@@ -41,25 +41,14 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 				root.moveHfLeft()
 				return true
 			}
-			if root.ColumnDelimiter == "" {
-				root.moveLeft()
-				return true
-			}
-			if root.columnNum > 0 {
-				root.columnNum--
-				root.Model.x = root.columnModeX()
-			}
+			root.moveLeft()
 			return true
 		case tcell.KeyRight:
 			if ev.Modifiers()&tcell.ModCtrl > 0 {
 				root.moveHfRight()
 				return true
 			}
-			if root.ColumnDelimiter == "" {
-				root.moveRight()
-			}
-			root.columnNum++
-			root.Model.x = root.columnModeX()
+			root.moveRight()
 			return true
 		case tcell.KeyDown, tcell.KeyCtrlN:
 			root.moveDown()
@@ -189,7 +178,7 @@ func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
 				r := []rune(root.input)
 				root.input = string(r[:len(r)-1])
 			}
-		case tcell.KeyCtrlI:
+		case tcell.KeyCtrlA:
 			root.CaseSensitive = !root.CaseSensitive
 		case tcell.KeyRune:
 			root.input += string(ev.Rune())
