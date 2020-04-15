@@ -30,44 +30,47 @@ func contains(s, substr string, caseSensitive bool) bool {
 	return strings.Contains(s, substr)
 }
 
-func rangePosition(s string, substr string, number int) (int, int) {
-	var start, end int
+type rangePos struct {
+	start int
+	end   int
+}
+
+func rangePosition(s string, substr string, number int) rangePos {
+	r := rangePos{0, 0}
 	i := 0
 	for n := 0; n < number-1; n++ {
 		j := strings.Index(s[i:], substr)
 		if j < 0 {
-			return -1, -1
+			return rangePos{-1, -1}
 		}
 		i += j + len(substr)
 	}
 	if number == 0 {
 		de := strings.Index(s[i:], substr)
-		end = i + de
+		r.end = i + de
 	} else {
 		ds := strings.Index(s[i:], substr)
-		start = i + ds + 1
-		de := strings.Index(s[start:], substr)
+		r.start = i + ds + 1
+		de := strings.Index(s[r.start:], substr)
 		if de < 0 {
-			end = len(s)
+			r.end = len(s)
 		} else {
-			end = start + de
+			r.end = r.start + de
 		}
 	}
-	return start, end
+	return r
 }
 
-func searchHighlight(s string, lc lineContents, substr string, caseSensitive bool) {
+func searchPosition(s string, substr string, caseSensitive bool) []rangePos {
+	var pos []rangePos
 	if !caseSensitive {
 		s = strings.ToLower(s)
 		substr = strings.ToLower(substr)
 	}
 
 	for i := strings.Index(s, substr); i >= 0; {
-		start := lc.cMap[i]
-		end := lc.cMap[i+len(substr)]
-		for ci := start; ci < end; ci++ {
-			lc.contents[ci].style = lc.contents[ci].style.Reverse(true)
-		}
+		r := rangePos{i, i + len(substr)}
+		pos = append(pos, r)
 		j := strings.Index(s[i+1:], substr)
 		if j >= 0 {
 			i += j + 1
@@ -75,4 +78,5 @@ func searchHighlight(s string, lc lineContents, substr string, caseSensitive boo
 			break
 		}
 	}
+	return pos
 }
