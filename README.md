@@ -11,6 +11,7 @@ Oviewer is a feature rich terminal pager.
 
 * Better support for unicode and wide width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
+* Supports column mode.
 * Header rows can be fixed.
 * Dynamic wrap / nowrap switchable.
 * Background color to alternate rows.
@@ -44,22 +45,28 @@ Usage:
   ov [flags]
 
 Flags:
-  -C, --alternate-rows       color to alternate rows
-  -i, --case-sensitive       case-sensitive in search
-      --config string        config file (default is $HOME/.oviewer.yaml)
-      --debug                debug mode
-  -X, --exit-write           output the current screen when exiting
-  -H, --header int           number of header rows to fix
-  -h, --help                 help for ov
-  -F, --quit-if-one-screen   quit if the output fits on one screen
-  -x, --tab-width int        tab stop width (default 8)
-  -v, --version              display version information
-  -w, --wrap                 wrap mode (default true)
+  -C, --alternate-rows            color to alternate rows
+  -i, --case-sensitive            case-sensitive in search
+  -d, --column-delimiter string   column delimiter (default ",")
+  -c, --column-mode               column mode
+      --config string             config file (default is $HOME/.oviewer.yaml)
+      --debug                     debug mode
+  -X, --exit-write                output the current screen when exiting
+  -H, --header int                number of header rows to fix
+  -h, --help                      help for ov
+  -F, --quit-if-one-screen        quit if the output fits on one screen
+  -x, --tab-width int             tab stop width (default 8)
+  -v, --version                   display version information
+  -w, --wrap                      wrap mode (default true)
 ```
 
 ### wrap/nowrap toggle (<kbd>w</kbd>)
 
 ![wrap/nowrap](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-wrap.gif)
+
+### column mode toggle (<kbd>c</kbd>)
+
+![column mode](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-column.gif)
 
 ### color to alternate rows enable/disable toggle (<kbd>C</kbd>)
 
@@ -74,13 +81,13 @@ Flags:
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
 
 ```sh
-export PSQL_PAGER="ov -w=f -H2 -F -C"
+export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
 ```
 
 You can also write in `~/.psqlrc` in previous versions.
 
 ```filename:~/.psqlrc
-\setenv PAGER 'ov -w=f -H2 -F -C'
+\setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
 ```
 
 ### mysql
@@ -88,14 +95,14 @@ You can also write in `~/.psqlrc` in previous versions.
 Use the --pager option with the mysql client.
 
 ```console
-mysql --pager="ov -w=f -H3 -F -C"
+mysql --pager='ov -w=f -H3 -F -C -d "|"'
 ```
 
 You can also write in `~/.my.cnf`.
 
 ```filename:~/.my.cnf
 [client]
-pager=ov -w=f -H3 -F -C
+pager=ov -w=f -H3 -F -C -d "|"
 ```
 
 ## Key bindings
@@ -123,6 +130,7 @@ pager=ov -w=f -H3 -F -C
 ### Mode
 
 * <kbd>w</kbd> - wrap/nowrap toggle
+* <kbd>c</kbd> - column mode enable/disable toggle
 * <kbd>C</kbd> - color to alternate rows enable/disable toggle
 
 ### Input Mode
@@ -131,10 +139,11 @@ pager=ov -w=f -H3 -F -C
 * <kbd>?</kbd> - previous search mode
 * <kbd>H</kbd> - number of header lines
 * <kbd>g</kbd> - number of go to line
+* <kbd>d</kbd> - delimiter string
 
 ### Keys in search mode
 
-* <kbd>Ctrl</kbd>+<kbd>i</kbd> - case-sensitive/insensitive toggle
+* <kbd>Ctrl</kbd>+<kbd>a</kbd> - case-sensitive/insensitive toggle
 
 ### Key after search input mode
 
