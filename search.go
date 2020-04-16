@@ -51,7 +51,10 @@ func rangePosition(s string, substr string, number int) rangePos {
 	} else {
 		ds := strings.Index(s[i:], substr)
 		r.start = i + ds + 1
-		de := strings.Index(s[r.start:], substr)
+		de := -1
+		if r.start < len(s) {
+			de = strings.Index(s[r.start:], substr)
+		}
 		if de < 0 {
 			r.end = len(s)
 		} else {

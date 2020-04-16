@@ -178,6 +178,8 @@ func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
 				r := []rune(root.input)
 				root.input = string(r[:len(r)-1])
 			}
+		case tcell.KeyTAB:
+			root.input += "\t"
 		case tcell.KeyCtrlA:
 			root.CaseSensitive = !root.CaseSensitive
 		case tcell.KeyRune:

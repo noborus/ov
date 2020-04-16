@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell"
-	"github.com/mattn/go-runewidth"
 )
 
 func (root *root) Draw() {
@@ -213,7 +212,7 @@ func (root *root) statusDraw() {
 	leftContents := strToContents(leftStatus, root.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
 
-	screen.ShowCursor(runewidth.StringWidth(leftStatus), root.statusPos)
+	screen.ShowCursor(len(leftContents), root.statusPos)
 
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endNum, next)
 	rightContents := strToContents(rightStatus, root.TabWidth)
