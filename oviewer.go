@@ -36,6 +36,8 @@ type root struct {
 
 	minStartPos int
 
+	controlBgColor bool
+
 	HeaderStyle    tcell.Style
 	ColorAlternate tcell.Color
 

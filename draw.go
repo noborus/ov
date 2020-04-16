@@ -28,6 +28,10 @@ func (root *root) Draw() {
 		}
 	}
 
+	if root.AlternateRows {
+		root.controlBgColor = true
+	}
+
 	bottom := root.bottomLineNum(m.endNum) - root.Header
 	if m.lineNum > bottom+1 {
 		m.lineNum = bottom + 1
@@ -81,17 +85,16 @@ func (root *root) Draw() {
 		}
 
 		line := m.getLine(m.lineNum + lY)
-		for n := range lc.contents {
-			lc.contents[n].style = lc.contents[n].style.Normal()
-		}
 
-		bgColor := normalBgColor
-		// alternate background color
-		if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
-			bgColor = root.ColorAlternate
-		}
-		for n := range lc.contents {
-			lc.contents[n].style = lc.contents[n].style.Background(bgColor)
+		if root.controlBgColor {
+			bgColor := normalBgColor
+			// alternate background color
+			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
+				bgColor = root.ColorAlternate
+			}
+			for n := range lc.contents {
+				lc.contents[n].style = lc.contents[n].style.Background(bgColor)
+			}
 		}
 
 		// search highlight
