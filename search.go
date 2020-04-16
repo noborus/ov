@@ -25,7 +25,7 @@ func (root *root) backSearch(num int) (int, error) {
 
 func contains(s, substr string, caseSensitive bool) bool {
 	if !caseSensitive {
-		strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+		return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 	}
 	return strings.Contains(s, substr)
 }
