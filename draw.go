@@ -97,6 +97,9 @@ func (root *root) Draw() {
 			}
 		}
 
+		for n := range lc.contents {
+			lc.contents[n].style = lc.contents[n].style.Reverse(false)
+		}
 		// search highlight
 		if searchWord != "" {
 			poss := searchPosition(line, searchWord, root.CaseSensitive)
