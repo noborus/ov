@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/noborus/oviewer"
@@ -71,7 +72,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.CaseSensitive = config.CaseSensitive
 		root.AlternateRows = config.AlternateRows
 		root.ColumnMode = config.ColumnMode
-		root.ColumnDelimiter = config.ColumnDelimiter
+		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
 
 		err = root.Run(args)
 		if err != nil {
