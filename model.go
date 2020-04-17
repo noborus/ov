@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
@@ -25,6 +26,8 @@ type Model struct {
 	vWidth     int
 	vHight     int
 	cache      *ristretto.Cache
+
+	mu sync.Mutex
 }
 
 //NewModel returns Model.
@@ -51,10 +54,24 @@ type lineContents struct {
 
 // getLine returns one line from buffer.
 func (m *Model) getLine(lineNum int) string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if lineNum < 0 || lineNum >= len(m.buffer) {
 		return ""
 	}
 	return m.buffer[lineNum]
+}
+
+func (m *Model) BufLen() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.buffer)
+}
+
+func (m *Model) BufEndNum() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.endNum
 }
 
 // getContents returns one line of contents from buffer.
@@ -68,7 +85,7 @@ func (m *Model) getContents(lineNum int, tabWidth int) []content {
 
 func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
-	if lineNum < 0 || lineNum >= len(m.buffer) {
+	if lineNum < 0 || lineNum >= m.BufLen() {
 		return lc, fmt.Errorf("out of range")
 	}
 	value, found := m.cache.Get(lineNum)
@@ -78,7 +95,7 @@ func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) 
 			return lc, fmt.Errorf("fatal error not lineContents")
 		}
 	} else {
-		lc.contents, lc.cMap = parseString(m.buffer[lineNum], tabWidth)
+		lc.contents, lc.cMap = parseString(m.getLine(lineNum), tabWidth)
 		m.cache.Set(lineNum, lc, 1)
 	}
 	return lc, nil

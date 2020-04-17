@@ -71,9 +71,11 @@ func (m *Model) ReadAll(r io.Reader) error {
 			if isPrefix {
 				continue
 			}
+			m.mu.Lock()
 			m.buffer = append(m.buffer, buf.String())
 			buf.Reset()
 			m.endNum++
+			m.mu.Unlock()
 			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
 			}

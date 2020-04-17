@@ -9,7 +9,7 @@ import (
 func (root *root) Draw() {
 	m := root.Model
 	screen := root.Screen
-	if len(m.buffer) == 0 || m.vHight == 0 {
+	if m.BufLen() == 0 || m.vHight == 0 {
 		m.lineNum = 0
 		root.statusDraw()
 		root.Show()
@@ -32,7 +32,7 @@ func (root *root) Draw() {
 		root.controlBgColor = true
 	}
 
-	bottom := root.bottomLineNum(m.endNum) - root.Header
+	bottom := root.bottomLineNum(m.BufEndNum()) - root.Header
 	if m.lineNum > bottom+1 {
 		m.lineNum = bottom + 1
 	}
@@ -220,7 +220,7 @@ func (root *root) statusDraw() {
 
 	screen.ShowCursor(len(leftContents), root.statusPos)
 
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.endNum, next)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, root.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
 	if Debug {
