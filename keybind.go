@@ -202,8 +202,11 @@ func (root *root) GoLine() {
 func (root *root) SetHeader() {
 	line, _ := strconv.Atoi(root.input)
 	if line >= 0 && line <= root.Model.vHight-1 {
-		root.Header = line
-		root.setWrapHeaderLen()
+		if root.Header != line {
+			root.Header = line
+			root.setWrapHeaderLen()
+			root.Model.ClearCache()
+		}
 	}
 	root.input = ""
 }

@@ -13,25 +13,25 @@ import (
 )
 
 type root struct {
-	Header        int
-	TabWidth      int
-	AfterWrite    bool
-	WrapMode      bool
-	QuitSmall     bool
-	CaseSensitive bool
-	AlternateRows bool
-	ColumnMode    bool
-
-	Model           *Model
-	wrapHeaderLen   int
-	bottomPos       int
-	statusPos       int
-	fileName        string
-	mode            Mode
-	input           string
+	Header          int
+	TabWidth        int
+	AfterWrite      bool
+	WrapMode        bool
+	QuitSmall       bool
+	CaseSensitive   bool
+	AlternateRows   bool
+	ColumnMode      bool
 	ColumnDelimiter string
-	columnNum       int
-	message         string
+
+	Model         *Model
+	wrapHeaderLen int
+	bottomPos     int
+	statusPos     int
+	fileName      string
+	mode          Mode
+	input         string
+	columnNum     int
+	message       string
 
 	minStartPos int
 
@@ -41,6 +41,7 @@ type root struct {
 	tcell.Screen
 }
 
+// Mode represents the state of the input.
 type Mode int
 
 const (
@@ -52,6 +53,7 @@ const (
 	delimiter
 )
 
+//Debug represents whether to enable the debug output.
 var Debug bool
 
 // PrepareView prepares when the screen size is changed.
@@ -63,6 +65,7 @@ func (root *root) PrepareView() {
 	root.statusPos = m.vHight - 1
 }
 
+// HeaderLen returns the actual number of lines in the header.
 func (root *root) HeaderLen() int {
 	if root.WrapMode {
 		return root.wrapHeaderLen
@@ -239,7 +242,7 @@ func New() *root {
 
 	root.minStartPos = -10
 	root.HeaderStyle = tcell.StyleDefault.Bold(true)
-	root.ColorAlternate = tcell.Color237
+	root.ColorAlternate = tcell.ColorGray
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	return root

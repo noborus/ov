@@ -71,7 +71,7 @@ func (m *Model) BufLen() int {
 	return len(m.buffer)
 }
 
-// BuffEndNum return last line number.
+// BufEndNum return last line number.
 func (m *Model) BufEndNum() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()

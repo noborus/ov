@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gdamore/tcell"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/noborus/oviewer"
 	"github.com/spf13/cobra"
@@ -37,6 +38,9 @@ type Config struct {
 	ColumnDelimiter string
 	// Debug is enable debug display.
 	Debug bool
+
+	// Alternating background color.
+	ColorAlternate string
 }
 
 var config Config
@@ -73,7 +77,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.AlternateRows = config.AlternateRows
 		root.ColumnMode = config.ColumnMode
 		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
-
+		if config.ColorAlternate != "" {
+			color := tcell.GetColor(config.ColorAlternate)
+			root.ColorAlternate = color
+		}
 		err = root.Run(args)
 		if err != nil {
 			return err
