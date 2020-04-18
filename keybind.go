@@ -137,6 +137,7 @@ func (root *root) keyColumnMode() {
 }
 
 func (root *root) keyAlternateRows() {
+	root.Model.ClearCache()
 	if root.AlternateRows {
 		root.AlternateRows = false
 	} else {

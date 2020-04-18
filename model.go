@@ -94,6 +94,25 @@ func (m *Model) GetContents(lineNum int, tabWidth int) []content {
 	return lc.contents
 }
 
+// NewCache creates a new cache.
+func (m *Model) NewCache() error {
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: 1e7,     // number of keys to track frequency of (10M).
+		MaxCost:     1 << 30, // maximum cost of cache (1GB).
+		BufferItems: 64,      // number of keys per Get buffer.
+	})
+	if err != nil {
+		return err
+	}
+	m.cache = cache
+	return nil
+}
+
+// ClearCache clears the cache.
+func (m *Model) ClearCache() {
+	m.cache.Clear()
+}
+
 func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
 	if lineNum < 0 || lineNum >= m.BufLen() {

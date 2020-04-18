@@ -28,10 +28,6 @@ func (root *root) Draw() {
 		}
 	}
 
-	if root.AlternateRows {
-		root.controlBgColor = true
-	}
-
 	bottom := root.bottomLineNum(m.BufEndNum()) - root.Header
 	if m.lineNum > bottom+1 {
 		m.lineNum = bottom + 1
@@ -86,10 +82,10 @@ func (root *root) Draw() {
 
 		line := m.GetLine(m.lineNum + lY)
 
-		if root.controlBgColor {
+		// alternate background color
+		if root.AlternateRows {
 			bgColor := normalBgColor
-			// alternate background color
-			if root.AlternateRows && (root.Model.lineNum+lY)%2 == 1 {
+			if (root.Model.lineNum+lY)%2 == 1 {
 				bgColor = root.ColorAlternate
 			}
 			for n := range lc.contents {

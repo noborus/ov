@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dgraph-io/ristretto"
 	"github.com/gdamore/tcell"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -35,8 +34,6 @@ type root struct {
 	message         string
 
 	minStartPos int
-
-	controlBgColor bool
 
 	HeaderStyle    tcell.Style
 	ColorAlternate tcell.Color
@@ -139,15 +136,10 @@ loop:
 // the terminal pager.
 func (root *root) Run(args []string) error {
 	m := root.Model
-	cache, err := ristretto.NewCache(&ristretto.Config{
-		NumCounters: 1e7,     // number of keys to track frequency of (10M).
-		MaxCost:     1 << 30, // maximum cost of cache (1GB).
-		BufferItems: 64,      // number of keys per Get buffer.
-	})
+	err := m.NewCache()
 	if err != nil {
 		return err
 	}
-	m.cache = cache
 
 	var reader io.Reader
 	fileName := ""
