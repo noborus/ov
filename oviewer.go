@@ -77,7 +77,7 @@ func (root *root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
+		root.wrapHeaderLen += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
 	}
 }
 
@@ -91,7 +91,7 @@ func (root *root) bottomLineNum(num int) int {
 	}
 
 	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num, root.TabWidth)) / m.vWidth)
+		y -= 1 + (len(m.GetContents(num, root.TabWidth)) / m.vWidth)
 		num--
 	}
 	num++
@@ -220,13 +220,12 @@ func (root *root) contentsSmall() bool {
 	root.PrepareView()
 	m := root.Model
 	hight := 0
-	for y := 0; y < m.endNum; y++ {
-		hight += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
+	for y := 0; y < m.BufEndNum(); y++ {
+		hight += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
 		if hight > m.vHight {
 			return false
 		}
 	}
-	fmt.Println(hight)
 	return true
 }
 
@@ -234,10 +233,10 @@ func (root *root) contentsSmall() bool {
 func (root *root) WriteOriginal() {
 	m := root.Model
 	for i := 0; i < m.vHight-1; i++ {
-		if m.lineNum+i >= len(m.buffer) {
+		if m.lineNum+i >= m.BufLen() {
 			break
 		}
-		fmt.Println(m.buffer[m.lineNum+i])
+		fmt.Println(m.GetLine(m.lineNum + i))
 	}
 }
 

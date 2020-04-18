@@ -51,7 +51,7 @@ func (root *root) Draw() {
 	lX := 0
 	hy := 0
 	for lY < root.Header {
-		line := m.getLine(lY)
+		line := m.GetLine(lY)
 		lc, err := m.lineToContents(lY, root.TabWidth)
 		if err != nil {
 			// EOF
@@ -84,7 +84,7 @@ func (root *root) Draw() {
 			continue
 		}
 
-		line := m.getLine(m.lineNum + lY)
+		line := m.GetLine(m.lineNum + lY)
 
 		if root.controlBgColor {
 			bgColor := normalBgColor
@@ -188,7 +188,7 @@ func (root *root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
 	next := "..."
-	if root.Model.eof {
+	if root.Model.BufEOF() {
 		next = ""
 	}
 	for x := 0; x < root.Model.vWidth; x++ {

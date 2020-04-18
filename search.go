@@ -6,7 +6,7 @@ import (
 )
 
 func (root *root) search(num int) (int, error) {
-	for n := num; n < root.Model.endNum; n++ {
+	for n := num; n < root.Model.BufEndNum(); n++ {
 		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
 			return n, nil
 		}

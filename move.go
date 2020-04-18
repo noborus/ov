@@ -54,10 +54,10 @@ func (root *root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < root.Model.vWidth || root.Model.yy <= 0 {
 		if (root.Model.lineNum) >= 1 {
-			pre := root.Model.getContents(root.Model.lineNum+root.Header-1, root.TabWidth)
+			pre := root.Model.GetContents(root.Model.lineNum+root.Header-1, root.TabWidth)
 			yyLen := len(pre) / (root.Model.vWidth + 1)
 			root.Model.yy = yyLen
 		}
@@ -74,7 +74,7 @@ func (root *root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < (root.Model.vWidth * (root.Model.yy + 1)) {
 		root.Model.yy = 0
 		root.Model.lineNum++
@@ -111,7 +111,7 @@ func (root *root) moveRight() {
 
 func (root *root) columnModeX() int {
 	m := root.Model
-	line := m.getLine(root.Header + 2)
+	line := m.GetLine(root.Header + 2)
 	r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
 	if r.start < 0 || r.end < 0 {
 		root.columnNum = 0

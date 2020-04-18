@@ -15,13 +15,15 @@ import (
 // The Model structure contains the values
 // for the logical screen.
 type Model struct {
+	// updated by reader goroutine
+	buffer []string
+	endNum int
+	eof    bool
+
 	x          int
 	lineNum    int
 	yy         int
-	endNum     int
-	eof        bool
 	header     []string
-	buffer     []string
 	beforeSize int
 	vWidth     int
 	vHight     int
@@ -52,8 +54,8 @@ type lineContents struct {
 	cMap     map[int]int
 }
 
-// getLine returns one line from buffer.
-func (m *Model) getLine(lineNum int) string {
+// GetLine returns one line from buffer.
+func (m *Model) GetLine(lineNum int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if lineNum < 0 || lineNum >= len(m.buffer) {
@@ -62,20 +64,29 @@ func (m *Model) getLine(lineNum int) string {
 	return m.buffer[lineNum]
 }
 
+// BufLen return buffer length.
 func (m *Model) BufLen() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return len(m.buffer)
 }
 
+// BuffEndNum return last line number.
 func (m *Model) BufEndNum() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.endNum
 }
 
-// getContents returns one line of contents from buffer.
-func (m *Model) getContents(lineNum int, tabWidth int) []content {
+// BufEOF return reaching EOF.
+func (m *Model) BufEOF() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.eof
+}
+
+// GetContents returns one line of contents from buffer.
+func (m *Model) GetContents(lineNum int, tabWidth int) []content {
 	lc, err := m.lineToContents(lineNum, tabWidth)
 	if err != nil {
 		return nil
@@ -95,7 +106,7 @@ func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) 
 			return lc, fmt.Errorf("fatal error not lineContents")
 		}
 	} else {
-		lc.contents, lc.cMap = parseString(m.getLine(lineNum), tabWidth)
+		lc.contents, lc.cMap = parseString(m.GetLine(lineNum), tabWidth)
 		m.cache.Set(lineNum, lc, 1)
 	}
 	return lc, nil
