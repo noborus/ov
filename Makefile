@@ -10,11 +10,10 @@ test: $(SRCS)
 build: $(BINARY_NAME)
 
 $(BINARY_NAME): $(SRCS)
-	go build -ldflags $(LDFLAGS) -o $(BINARY_NAME) ./cmd/ov
+	go build -ldflags $(LDFLAGS) -o $(BINARY_NAME) 
 
 install:
-	go install -ldflags $(LDFLAGS) ./cmd/ov
-
+	go install -ldflags $(LDFLAGS) -o $(BINARY_NAME) 
 clean:
 	rm -f $(BINARY_NAME)
 

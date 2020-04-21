@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/noborus/oviewer"
+	oviewer "github.com/noborus/oviewer/internal"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -172,4 +172,8 @@ func initConfig() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func main() {
+	Execute(Version, Revision)
 }
