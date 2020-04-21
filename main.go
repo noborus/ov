@@ -7,7 +7,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	homedir "github.com/mitchellh/go-homedir"
-	oviewer "github.com/noborus/oviewer/internal"
+	"github.com/noborus/oviewer/internal/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
