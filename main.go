@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/noborus/oviewer"
+	"github.com/noborus/oviewer/internal/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -99,16 +99,6 @@ var (
 	Revision string
 )
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(version string, revision string) {
-	Version = version
-	Revision = revision
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
-}
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -170,6 +160,12 @@ func initConfig() {
 
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
