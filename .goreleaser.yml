@@ -2,7 +2,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: ./cmd/ov/main.go
+  - main: ./main.go
     binary: ov
     ldflags:
       - -X main.Version={{.Version}}
