@@ -38,6 +38,13 @@ type rangePos struct {
 func rangePosition(s string, substr string, number int) rangePos {
 	r := rangePos{0, 0}
 	i := 0
+
+	if number == 0 {
+		de := strings.Index(s[i:], substr)
+		r.end = i + de
+		return r
+	}
+
 	for n := 0; n < number-1; n++ {
 		j := strings.Index(s[i:], substr)
 		if j < 0 {
@@ -45,21 +52,20 @@ func rangePosition(s string, substr string, number int) rangePos {
 		}
 		i += j + len(substr)
 	}
-	if number == 0 {
-		de := strings.Index(s[i:], substr)
-		r.end = i + de
-	} else {
-		ds := strings.Index(s[i:], substr)
-		r.start = i + ds + 1
-		de := -1
-		if r.start < len(s) {
-			de = strings.Index(s[r.start:], substr)
-		}
-		if de < 0 {
-			r.end = len(s)
-		} else {
-			r.end = r.start + de
-		}
+
+	ds := strings.Index(s[i:], substr)
+	if ds < 0 {
+		return rangePos{-1, -1}
+	}
+	r.start = i + ds + len(substr)
+	de := -1
+	if r.start < len(s) {
+		de = strings.Index(s[r.start:], substr)
+	}
+
+	r.end = r.start + de
+	if de < 0 {
+		r.end = len(s)
 	}
 	return r
 }
