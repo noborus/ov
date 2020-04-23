@@ -3,7 +3,9 @@
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
 
-OV is a feature rich terminal pager.
+Oviewer is a feature rich terminal pager.
+
+(The old repository name was oviewer.)
 
 ![ov.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov.png)
 
@@ -15,11 +17,15 @@ OV is a feature rich terminal pager.
 * Header rows can be fixed.
 * Dynamic wrap / nowrap switchable.
 * Background color to alternate rows.
+* Columns can be selected with separators.
 
 ## install
 
 ```console
 go get github.com/noborus/ov
+cd ov
+make
+sudo make install
 ```
 
 ## Usage
