@@ -1,11 +1,11 @@
-# Oviewer
+# OV - Oviewer
 
-[![Actions Status](https://github.com/noborus/oviewer/workflows/Go/badge.svg)](https://github.com/noborus/oviewer/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/noborus/oviewer)](https://goreportcard.com/report/github.com/noborus/oviewer)
+[![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
 
-Oviewer is a feature rich terminal pager.
+OV is a feature rich terminal pager.
 
-![ov.png](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov.png)
+![ov.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov.png)
 
 ## feature
 
@@ -19,7 +19,7 @@ Oviewer is a feature rich terminal pager.
 ## install
 
 ```console
-go get -u github.com/noborus/oviewer...
+go get github.com/noborus/ov
 ```
 
 ## Usage
@@ -62,19 +62,19 @@ Flags:
 
 ### wrap/nowrap toggle (<kbd>w</kbd>)
 
-![wrap/nowrap](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-wrap.gif)
+![wrap/nowrap](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-wrap.gif)
 
 ### column mode toggle (<kbd>c</kbd>)
 
-![column mode](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-column.gif)
+![column mode](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-column.gif)
 
 ### color to alternate rows enable/disable toggle (<kbd>C</kbd>)
 
-![color enable/disable](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-color.gif)
+![color enable/disable](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-color.gif)
 
 ### number of header (<kbd>H</kbd>)
 
-![header](https://raw.githubusercontent.com/noborus/oviewer/master/docs/ov-header.gif)
+![header](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-header.gif)
 
 ### psql
 
