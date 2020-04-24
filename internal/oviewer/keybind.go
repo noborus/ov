@@ -6,7 +6,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-func (root *root) HandleEvent(ev tcell.Event) bool {
+func (root *Root) HandleEvent(ev tcell.Event) bool {
 	root.message = ""
 	switch root.mode {
 	case search:
@@ -118,7 +118,7 @@ func (root *root) HandleEvent(ev tcell.Event) bool {
 	return true
 }
 
-func (root *root) keyWrap() {
+func (root *Root) keyWrap() {
 	if root.WrapMode {
 		root.WrapMode = false
 	} else {
@@ -128,7 +128,7 @@ func (root *root) keyWrap() {
 	root.setWrapHeaderLen()
 }
 
-func (root *root) keyColumnMode() {
+func (root *Root) keyColumnMode() {
 	if root.ColumnMode {
 		root.ColumnMode = false
 	} else {
@@ -136,7 +136,7 @@ func (root *root) keyColumnMode() {
 	}
 }
 
-func (root *root) keyAlternateRows() {
+func (root *Root) keyAlternateRows() {
 	root.Model.ClearCache()
 	if root.AlternateRows {
 		root.AlternateRows = false
@@ -145,27 +145,27 @@ func (root *root) keyAlternateRows() {
 	}
 }
 
-func (root *root) keySearch() {
+func (root *Root) keySearch() {
 	root.mode = search
 }
 
-func (root *root) keyDelimiter() {
+func (root *Root) keyDelimiter() {
 	root.mode = delimiter
 }
 
-func (root *root) keyPrevious() {
+func (root *Root) keyPrevious() {
 	root.mode = previous
 }
 
-func (root *root) keyGoLine() {
+func (root *Root) keyGoLine() {
 	root.mode = goline
 }
 
-func (root *root) keyHeader() {
+func (root *Root) keyHeader() {
 	root.mode = header
 }
 
-func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
+func (root *Root) inputEvent(ev tcell.Event, fn func()) bool {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
@@ -190,7 +190,7 @@ func (root *root) inputEvent(ev tcell.Event, fn func()) bool {
 	return true
 }
 
-func (root *root) GoLine() {
+func (root *Root) GoLine() {
 	lineNum, err := strconv.Atoi(root.input)
 	if err != nil {
 		return
@@ -199,7 +199,7 @@ func (root *root) GoLine() {
 	root.moveNum(lineNum - root.Header)
 }
 
-func (root *root) SetHeader() {
+func (root *Root) SetHeader() {
 	line, _ := strconv.Atoi(root.input)
 	if line >= 0 && line <= root.Model.vHight-1 {
 		if root.Header != line {
@@ -211,28 +211,28 @@ func (root *root) SetHeader() {
 	root.input = ""
 }
 
-func (root *root) SetDelimiter() {
+func (root *Root) SetDelimiter() {
 	root.ColumnDelimiter = root.input
 	root.input = ""
 }
 
-func (root *root) Search() {
+func (root *Root) Search() {
 	root.postSearch(root.search(root.Model.lineNum))
 }
 
-func (root *root) NextSearch() {
+func (root *Root) NextSearch() {
 	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
 }
 
-func (root *root) BackSearch() {
+func (root *Root) BackSearch() {
 	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
-func (root *root) NextBackSearch() {
+func (root *Root) NextBackSearch() {
 	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
 }
 
-func (root *root) postSearch(lineNum int, err error) {
+func (root *Root) postSearch(lineNum int, err error) {
 	if err != nil {
 		root.message = err.Error()
 		return

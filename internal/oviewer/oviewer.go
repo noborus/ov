@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-type root struct {
+type Root struct {
 	Header          int
 	TabWidth        int
 	AfterWrite      bool
@@ -57,7 +57,7 @@ const (
 var Debug bool
 
 // PrepareView prepares when the screen size is changed.
-func (root *root) PrepareView() {
+func (root *Root) PrepareView() {
 	m := root.Model
 	screen := root.Screen
 	m.vWidth, m.vHight = screen.Size()
@@ -66,14 +66,14 @@ func (root *root) PrepareView() {
 }
 
 // HeaderLen returns the actual number of lines in the header.
-func (root *root) HeaderLen() int {
+func (root *Root) HeaderLen() int {
 	if root.WrapMode {
 		return root.wrapHeaderLen
 	}
 	return root.Header
 }
 
-func (root *root) setWrapHeaderLen() {
+func (root *Root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
@@ -81,7 +81,7 @@ func (root *root) setWrapHeaderLen() {
 	}
 }
 
-func (root *root) bottomLineNum(num int) int {
+func (root *Root) bottomLineNum(num int) int {
 	m := root.Model
 	if !root.WrapMode {
 		if num <= m.vHight {
@@ -102,23 +102,23 @@ type eventAppQuit struct {
 	tcell.EventTime
 }
 
-func (root *root) Quit() {
+func (root *Root) Quit() {
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
 	go func() { root.Screen.PostEventWait(ev) }()
 }
 
-func (root *root) Resize() {
+func (root *Root) Resize() {
 	root.Sync()
 }
 
-func (root *root) Sync() {
+func (root *Root) Sync() {
 	root.PrepareView()
 	root.Draw()
 }
 
 // main is manages and executes events in the main routine.
-func (root *root) main() {
+func (root *Root) main() {
 	screen := root.Screen
 loop:
 	for {
@@ -137,7 +137,7 @@ loop:
 
 // Run is reads the file(or stdin) and starts
 // the terminal pager.
-func (root *root) Run(args []string) error {
+func (root *Root) Run(args []string) error {
 	m := root.Model
 	err := m.NewCache()
 	if err != nil {
@@ -211,7 +211,7 @@ func (root *root) Run(args []string) error {
 	return nil
 }
 
-func (root *root) contentsSmall() bool {
+func (root *Root) contentsSmall() bool {
 	root.PrepareView()
 	m := root.Model
 	hight := 0
@@ -225,7 +225,7 @@ func (root *root) contentsSmall() bool {
 }
 
 // WriteOriginal writes to the original terminal.
-func (root *root) WriteOriginal() {
+func (root *Root) WriteOriginal() {
 	m := root.Model
 	for i := 0; i < m.vHight-1; i++ {
 		if m.lineNum+i >= m.BufLen() {
@@ -236,8 +236,8 @@ func (root *root) WriteOriginal() {
 }
 
 // New returns the entire structure of oviewer.
-func New() *root {
-	root := &root{}
+func New() *Root {
+	root := &Root{}
 	root.Model = NewModel()
 
 	root.minStartPos = -10

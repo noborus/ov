@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (root *root) search(num int) (int, error) {
+func (root *Root) search(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
 		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
 			return n, nil
@@ -14,7 +14,7 @@ func (root *root) search(num int) (int, error) {
 	return 0, errors.New("not found")
 }
 
-func (root *root) backSearch(num int) (int, error) {
+func (root *Root) backSearch(num int) (int, error) {
 	for n := num; n >= 0; n-- {
 		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
 			return n, nil

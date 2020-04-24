@@ -41,8 +41,8 @@ func NewModel() *Model {
 	}
 }
 
-// content represents one character on the terminal.
-type content struct {
+// Content represents one character on the terminal.
+type Content struct {
 	width int
 	style tcell.Style
 	mainc rune
@@ -50,7 +50,7 @@ type content struct {
 }
 
 type lineContents struct {
-	contents []content
+	contents []Content
 	cMap     map[int]int
 }
 
@@ -86,7 +86,7 @@ func (m *Model) BufEOF() bool {
 }
 
 // GetContents returns one line of contents from buffer.
-func (m *Model) GetContents(lineNum int, tabWidth int) []content {
+func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
 	lc, err := m.lineToContents(lineNum, tabWidth)
 	if err != nil {
 		return nil
@@ -242,15 +242,15 @@ FieldLoop:
 }
 
 // strToContents converts a single-line string into a content array.
-func strToContents(line string, tabWidth int) []content {
+func strToContents(line string, tabWidth int) []Content {
 	contents, _ := parseString(line, tabWidth)
 	return contents
 }
 
-func parseString(line string, tabWidth int) ([]content, map[int]int) {
-	contents := []content{}
+func parseString(line string, tabWidth int) ([]Content, map[int]int) {
+	contents := []Content{}
 	defaultStyle := tcell.StyleDefault
-	defaultContent := content{
+	defaultContent := Content{
 		mainc: 0,
 		combc: []rune{},
 		width: 0,

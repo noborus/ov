@@ -6,7 +6,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-func (root *root) Draw() {
+func (root *Root) Draw() {
 	m := root.Model
 	screen := root.Screen
 	if m.BufLen() == 0 || m.vHight == 0 {
@@ -16,7 +16,7 @@ func (root *root) Draw() {
 		return
 	}
 
-	space := content{
+	space := Content{
 		mainc: ' ',
 		combc: nil,
 		width: 1,
@@ -133,7 +133,7 @@ func reverseContents(lc lineContents, r rangePos) {
 	}
 }
 
-func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (rX int, rY int) {
 	wX := 0
 	for {
 		if lX+wX >= len(contents) {
@@ -155,7 +155,7 @@ func (root *root) wrapContents(y int, lX int, lY int, contents []content) (rX in
 	return lX, lY
 }
 
-func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX int, rY int) {
+func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (rX int, rY int) {
 	if lX < root.minStartPos {
 		lX = root.minStartPos
 	}
@@ -174,13 +174,13 @@ func (root *root) noWrapContents(y int, lX int, lY int, contents []content) (rX 
 	return lX, lY
 }
 
-func (root *root) headerStyle(contents []content) {
+func (root *Root) headerStyle(contents []Content) {
 	for i := 0; i < len(contents); i++ {
 		contents[i].style = root.HeaderStyle
 	}
 }
 
-func (root *root) statusDraw() {
+func (root *Root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
 	next := "..."
@@ -226,7 +226,7 @@ func (root *root) statusDraw() {
 	}
 }
 
-func (root *root) setContentString(vx int, vy int, contents []content, style tcell.Style) {
+func (root *Root) setContentString(vx int, vy int, contents []Content, style tcell.Style) {
 	screen := root.Screen
 	for x, content := range contents {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, style)

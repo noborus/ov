@@ -1,29 +1,29 @@
 package oviewer
 
-func (root *root) moveTop() {
+func (root *Root) moveTop() {
 	root.Model.lineNum = 0
 	root.Model.yy = 0
 }
 
-func (root *root) moveEnd() {
+func (root *Root) moveEnd() {
 	root.moveBottomNum(root.Model.endNum)
 }
 
-func (root *root) moveNum(num int) {
+func (root *Root) moveNum(num int) {
 	root.Model.lineNum = num
 	root.Model.yy = 0
 }
 
-func (root *root) moveBottomNum(num int) {
+func (root *Root) moveBottomNum(num int) {
 	n := root.bottomLineNum(num) + 1
 	root.moveNum(n)
 }
 
-func (root *root) realHightNum() int {
+func (root *Root) realHightNum() int {
 	return root.bottomPos - (root.Model.lineNum + root.Header)
 }
 
-func (root *root) movePgUp() {
+func (root *Root) movePgUp() {
 	n := root.Model.lineNum - root.realHightNum()
 	if n >= root.Model.lineNum {
 		n = root.Model.lineNum - 1
@@ -31,7 +31,7 @@ func (root *root) movePgUp() {
 	root.moveNum(n)
 }
 
-func (root *root) movePgDn() {
+func (root *Root) movePgDn() {
 	n := root.bottomPos - root.Header
 	if n <= root.Model.lineNum {
 		n = root.Model.lineNum + 1
@@ -39,15 +39,15 @@ func (root *root) movePgDn() {
 	root.moveNum(n)
 }
 
-func (root *root) moveHfUp() {
+func (root *Root) moveHfUp() {
 	root.moveNum(root.Model.lineNum - (root.realHightNum() / 2))
 }
 
-func (root *root) moveHfDn() {
+func (root *Root) moveHfDn() {
 	root.moveNum(root.Model.lineNum + (root.realHightNum() / 2))
 }
 
-func (root *root) moveUp() {
+func (root *Root) moveUp() {
 	if !root.WrapMode {
 		root.Model.yy = 0
 		root.Model.lineNum--
@@ -67,7 +67,7 @@ func (root *root) moveUp() {
 	root.Model.yy--
 }
 
-func (root *root) moveDown() {
+func (root *Root) moveDown() {
 	if !root.WrapMode {
 		root.Model.yy = 0
 		root.Model.lineNum++
@@ -83,7 +83,7 @@ func (root *root) moveDown() {
 	root.Model.yy++
 }
 
-func (root *root) moveLeft() {
+func (root *Root) moveLeft() {
 	if root.ColumnMode {
 		if root.columnNum > 0 {
 			root.columnNum--
@@ -97,7 +97,7 @@ func (root *root) moveLeft() {
 	root.Model.x--
 }
 
-func (root *root) moveRight() {
+func (root *Root) moveRight() {
 	if root.ColumnMode {
 		root.columnNum++
 		root.Model.x = root.columnModeX()
@@ -109,7 +109,7 @@ func (root *root) moveRight() {
 	root.Model.x++
 }
 
-func (root *root) columnModeX() int {
+func (root *Root) columnModeX() int {
 	m := root.Model
 	line := m.GetLine(root.Header + 2)
 	r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
@@ -124,7 +124,7 @@ func (root *root) columnModeX() int {
 	return lc.cMap[r.start]
 }
 
-func (root *root) moveHfLeft() {
+func (root *Root) moveHfLeft() {
 	if root.WrapMode {
 		return
 	}
@@ -136,7 +136,7 @@ func (root *root) moveHfLeft() {
 	}
 }
 
-func (root *root) moveHfRight() {
+func (root *Root) moveHfRight() {
 	if root.WrapMode {
 		return
 	}
