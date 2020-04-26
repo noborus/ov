@@ -1,4 +1,3 @@
-BINARY_NAME := ov
 BIN_DIR := /usr/local/bin
 SRCS := $(shell git ls-files '*.go')
 LDFLAGS := "-X main.Version=$(shell git describe --tags --abbrev=0 --always) -X main.Revision=$(shell git rev-parse --verify --short HEAD)"
@@ -11,10 +10,11 @@ test: $(SRCS)
 build: $(BINARY_NAME)
 
 $(BINARY_NAME): $(SRCS)
-	go build -ldflags $(LDFLAGS) -o $(BINARY_NAME)
+	go build -ldflags $(LDFLAGS)
 
-install: build
-	install -D -m755 $(BINARY_NAME) $(BIN_DIR)
+install:
+	go install -ldflags $(LDFLAGS)
+
 
 clean:
 	rm -f $(BINARY_NAME)
