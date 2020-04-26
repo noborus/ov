@@ -12,6 +12,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	// Version represents the version
+	Version string = "v0.1.0"
+	// Revision set "git rev-parse --short HEAD"
+	Revision string = "HEAD"
+)
+
 var cfgFile string
 
 // Ver is version information.
@@ -91,13 +98,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		return nil
 	},
 }
-
-var (
-	// Version represents the version
-	Version string
-	// Revision set "git rev-parse --short HEAD"
-	Revision string
-)
 
 func init() {
 	cobra.OnInitialize(initConfig)
