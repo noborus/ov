@@ -24,8 +24,7 @@ Oviewer is a feature rich terminal pager.
 ```console
 go get github.com/noborus/ov
 cd ov
-make
-sudo make install
+make install
 ```
 
 ## Usage
