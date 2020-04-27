@@ -21,10 +21,47 @@ Oviewer is a feature rich terminal pager.
 
 ## install
 
+<!--
+### deb package
+
+### rpm package
+
+### homebrew
+
 ```console
-go get github.com/noborus/ov
-cd ov
+brew install noborus/tap/ov
+```
+-->
+
+### go get(simplified version)
+
+It will be installed in $GOPATH/bin by the following command.
+
+```console
+go get -u github.com/noborus/ov
+```
+
+### go get(details or developer version)
+
+First of all, download only with the following command without installing it.
+
+```console
+go get -d github.com/noborus/ov
+cd $GOPATH/src/github.com/noborus/ov
+```
+
+Next, to install to $GOPATH/bin, run the make install command.
+
+```console
 make install
+```
+
+Or, install it in a PATH location for other users to use
+(For example, in /usr/local/bin).
+
+```console
+make
+sudo install ov /usr/local/bin
 ```
 
 ## Usage
