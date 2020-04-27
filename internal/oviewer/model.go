@@ -317,6 +317,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			c.style = style
 			for i := 0; i < tabStop; i++ {
 				contents = append(contents, c)
+				x++
 			}
 			continue
 		}
