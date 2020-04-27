@@ -14,7 +14,7 @@ import (
 
 var (
 	// Version represents the version
-	Version string = "v0.1.0"
+	Version string = "v0.1.1"
 	// Revision set "git rev-parse --short HEAD"
 	Revision string = "HEAD"
 )
