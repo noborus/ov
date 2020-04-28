@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// HandleEvent handles all events.
 func (root *Root) HandleEvent(ev tcell.Event) bool {
 	root.message = ""
 	switch root.mode {
@@ -190,6 +191,7 @@ func (root *Root) inputEvent(ev tcell.Event, fn func()) bool {
 	return true
 }
 
+// GoLine will move to the specified line.
 func (root *Root) GoLine() {
 	lineNum, err := strconv.Atoi(root.input)
 	if err != nil {
@@ -199,6 +201,7 @@ func (root *Root) GoLine() {
 	root.moveNum(lineNum - root.Header)
 }
 
+// SetHeader sets the number of lines in the header.
 func (root *Root) SetHeader() {
 	line, _ := strconv.Atoi(root.input)
 	if line >= 0 && line <= root.Model.vHight-1 {
@@ -211,23 +214,28 @@ func (root *Root) SetHeader() {
 	root.input = ""
 }
 
+// SetDelimiter sets the delimiter string.
 func (root *Root) SetDelimiter() {
 	root.ColumnDelimiter = root.input
 	root.input = ""
 }
 
+// Search is a forward search.
 func (root *Root) Search() {
 	root.postSearch(root.search(root.Model.lineNum))
 }
 
+// NextSearch will re-run the forward search.
 func (root *Root) NextSearch() {
 	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
 }
 
+// BackSearch reverse search.
 func (root *Root) BackSearch() {
 	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
+// NextBackSearch will re-run the reverse search.
 func (root *Root) NextBackSearch() {
 	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
 }

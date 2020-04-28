@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+// The Root structure contains information about the drawing.
 type Root struct {
 	Header          int
 	TabWidth        int
@@ -102,16 +103,19 @@ type eventAppQuit struct {
 	tcell.EventTime
 }
 
+// Quit executes a quit event.
 func (root *Root) Quit() {
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
 	go func() { root.Screen.PostEventWait(ev) }()
 }
 
+// Resize is a wrapper function that calls sync.
 func (root *Root) Resize() {
 	root.Sync()
 }
 
+// Sync redraws the whole thing.
 func (root *Root) Sync() {
 	root.PrepareView()
 	root.Draw()

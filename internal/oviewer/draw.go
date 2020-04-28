@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// Draw is the main routine that draws the screen.
 func (root *Root) Draw() {
 	m := root.Model
 	screen := root.Screen
@@ -127,12 +128,14 @@ func (root *Root) Draw() {
 	root.Show()
 }
 
+// reverses the specified range.
 func reverseContents(lc lineContents, r rangePos) {
 	for n := lc.cMap[r.start]; n < lc.cMap[r.end]; n++ {
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
 
+// wrapContents returns the wrapped content.
 func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (rX int, rY int) {
 	wX := 0
 	for {
@@ -155,6 +158,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (rX in
 	return lX, lY
 }
 
+// returns unwrapped contents.
 func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (rX int, rY int) {
 	if lX < root.minStartPos {
 		lX = root.minStartPos
@@ -174,12 +178,14 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (rX 
 	return lX, lY
 }
 
+// headerStyle applies the style of the header.
 func (root *Root) headerStyle(contents []Content) {
 	for i := 0; i < len(contents); i++ {
 		contents[i].style = root.HeaderStyle
 	}
 }
 
+// statusDraw draws a status line.
 func (root *Root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
@@ -226,6 +232,7 @@ func (root *Root) statusDraw() {
 	}
 }
 
+// setContentString is a helper function that draws a string with setContent.
 func (root *Root) setContentString(vx int, vy int, contents []Content, style tcell.Style) {
 	screen := root.Screen
 	for x, content := range contents {

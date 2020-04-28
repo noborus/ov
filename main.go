@@ -24,6 +24,7 @@ var cfgFile string
 // Ver is version information.
 var Ver bool
 
+// Config structure contains the variables that determine the overall behavior.
 type Config struct {
 	// Wrap is Wrap mode.
 	Wrap bool
@@ -52,7 +53,7 @@ type Config struct {
 
 var config Config
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "ov",
 	Short: "Oviewer is a feature rich pager",
