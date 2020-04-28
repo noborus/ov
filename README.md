@@ -3,7 +3,7 @@
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
 
-Oviewer is a feature rich terminal pager.
+ov is a feature rich terminal pager.
 
 (The old repository name was oviewer.)
 
@@ -20,8 +20,6 @@ Oviewer is a feature rich terminal pager.
 * Columns can be selected with separators.
 
 ## install
-
-You can download the package from [releases](https://github.com/noborus/ov/releases).
 
 ### deb package
 
@@ -44,6 +42,16 @@ sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_
 
 ```console
 brew install noborus/tap/ov
+```
+
+### binary
+
+You can download the binary from [releases](https://github.com/noborus/ov/releases).
+
+```console
+curl -L -O https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x_linux_amd64.zip
+unzip ov_x.x.x_linux_amd64.zip
+sudo install ov /usr/local/bin
 ```
 
 ### go get(simplified version)
