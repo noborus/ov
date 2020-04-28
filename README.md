@@ -21,17 +21,30 @@ Oviewer is a feature rich terminal pager.
 
 ## install
 
-<!--
+You can download the package from [releases](https://github.com/noborus/ov/releases).
+
 ### deb package
+
+You can download the package from [releases](https://github.com/noborus/ov/releases).
+
+```console
+curl -L -O https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd64.deb
+sudo dpkg -i ov_x.x.x-1_amd64.deb
+```
 
 ### rpm package
 
-### homebrew
+You can download the package from [releases](https://github.com/noborus/ov/releases).
+
+```console
+sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd64.rpm
+```
+
+### homebrew(macOS or Linux)
 
 ```console
 brew install noborus/tap/ov
 ```
--->
 
 ### go get(simplified version)
 
