@@ -339,8 +339,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			c.mainc = runeValue
 			c.width = 2
 			c.style = style
-			contents = append(contents, c)
-			contents = append(contents, defaultContent)
+			contents = append(contents, c, defaultContent)
 			x += 2
 		}
 	}
