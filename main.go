@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/noborus/ov/internal/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -143,7 +142,7 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find home directory.
-		home, err := homedir.Dir()
+		home, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -151,7 +150,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".oviewer" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".oviewer")
+		viper.SetConfigName(".ov")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
