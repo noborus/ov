@@ -38,7 +38,7 @@ You can download the package from [releases](https://github.com/noborus/ov/relea
 sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd64.rpm
 ```
 
-### homebrew(macOS or Linux)
+### Homebrew(macOS or Linux)
 
 ```console
 brew install noborus/tap/ov
