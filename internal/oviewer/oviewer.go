@@ -6,7 +6,9 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gdamore/tcell"
 	"golang.org/x/crypto/ssh/terminal"
@@ -57,6 +59,19 @@ const (
 //Debug represents whether to enable the debug output.
 var Debug bool
 
+// New returns the entire structure of oviewer.
+func New() *Root {
+	root := &Root{}
+	root.Model = NewModel()
+
+	root.minStartPos = -10
+	root.HeaderStyle = tcell.StyleDefault.Bold(true)
+	root.ColorAlternate = tcell.ColorGray
+	root.ColumnDelimiter = ""
+	root.columnNum = 0
+	return root
+}
+
 // PrepareView prepares when the screen size is changed.
 func (root *Root) PrepareView() {
 	m := root.Model
@@ -99,6 +114,66 @@ func (root *Root) bottomLineNum(num int) int {
 	return num
 }
 
+func (root *Root) toggleWrap() {
+	if root.WrapMode {
+		root.WrapMode = false
+	} else {
+		root.WrapMode = true
+		root.Model.x = 0
+	}
+	root.setWrapHeaderLen()
+}
+
+func (root *Root) toggleColumnMode() {
+	if root.ColumnMode {
+		root.ColumnMode = false
+	} else {
+		root.ColumnMode = true
+	}
+}
+
+func (root *Root) toggleAlternateRows() {
+	root.Model.ClearCache()
+	if root.AlternateRows {
+		root.AlternateRows = false
+	} else {
+		root.AlternateRows = true
+	}
+}
+
+func (root *Root) setMode(mode Mode) {
+	root.mode = mode
+}
+
+// GoLine will move to the specified line.
+func (root *Root) GoLine() {
+	lineNum, err := strconv.Atoi(root.input)
+	if err != nil {
+		return
+	}
+	root.input = ""
+	root.moveNum(lineNum - root.Header)
+}
+
+// SetHeader sets the number of lines in the header.
+func (root *Root) SetHeader() {
+	line, _ := strconv.Atoi(root.input)
+	if line >= 0 && line <= root.Model.vHight-1 {
+		if root.Header != line {
+			root.Header = line
+			root.setWrapHeaderLen()
+			root.Model.ClearCache()
+		}
+	}
+	root.input = ""
+}
+
+// SetDelimiter sets the delimiter string.
+func (root *Root) SetDelimiter() {
+	root.ColumnDelimiter = root.input
+	root.input = ""
+}
+
 type eventAppQuit struct {
 	tcell.EventTime
 }
@@ -106,6 +181,17 @@ type eventAppQuit struct {
 // Quit executes a quit event.
 func (root *Root) Quit() {
 	ev := &eventAppQuit{}
+	ev.SetEventNow()
+	go func() { root.Screen.PostEventWait(ev) }()
+}
+
+type eventTimer struct {
+	tcell.EventTime
+}
+
+// runOnTime runs at time.
+func (root *Root) runOnTime() {
+	ev := &eventTimer{}
 	ev.SetEventNow()
 	go func() { root.Screen.PostEventWait(ev) }()
 }
@@ -121,14 +207,30 @@ func (root *Root) Sync() {
 	root.Draw()
 }
 
+func (root *Root) countTimer() {
+	timer := time.NewTicker(time.Millisecond * 500)
+loop:
+	for {
+		<-timer.C
+		root.runOnTime()
+		if root.Model.eof {
+			break loop
+		}
+	}
+	timer.Stop()
+}
+
 // main is manages and executes events in the main routine.
 func (root *Root) main() {
 	screen := root.Screen
+	go root.countTimer()
 loop:
 	for {
 		root.Draw()
 		ev := screen.PollEvent()
 		switch ev := ev.(type) {
+		case *eventTimer:
+			root.statusDraw()
 		case *eventAppQuit:
 			break loop
 		case *tcell.EventKey:
@@ -237,17 +339,4 @@ func (root *Root) WriteOriginal() {
 		}
 		fmt.Println(m.GetLine(m.lineNum + i))
 	}
-}
-
-// New returns the entire structure of oviewer.
-func New() *Root {
-	root := &Root{}
-	root.Model = NewModel()
-
-	root.minStartPos = -10
-	root.HeaderStyle = tcell.StyleDefault.Bold(true)
-	root.ColorAlternate = tcell.ColorGray
-	root.ColumnDelimiter = ""
-	root.columnNum = 0
-	return root
 }
