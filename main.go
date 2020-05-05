@@ -55,8 +55,8 @@ var config Config
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "ov",
-	Short: "Oviewer is a feature rich pager",
-	Long: `Oviewer is a feature rich pager(such as more/less).
+	Short: "ov is a feature rich pager",
+	Long: `ov is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {

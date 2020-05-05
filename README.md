@@ -87,9 +87,7 @@ sudo install ov /usr/local/bin
 
 ## Usage
 
-The command name of Oviewer is `ov`.
-
-Oviewer supports open file name or standard input.
+ov supports open file name or standard input.
 
 ```console
 ov filename
@@ -101,7 +99,7 @@ cat filename|ov
 
 ```console
 $ ov --help
-Oviewer is a feature rich pager(such as more/less).
+ov is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 Usage:
@@ -112,7 +110,7 @@ Flags:
   -i, --case-sensitive            case-sensitive in search
   -d, --column-delimiter string   column delimiter (default ",")
   -c, --column-mode               column mode
-      --config string             config file (default is $HOME/.oviewer.yaml)
+      --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
   -X, --exit-write                output the current screen when exiting
   -H, --header int                number of header rows to fix
