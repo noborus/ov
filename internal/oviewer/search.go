@@ -63,7 +63,7 @@ type rangePos struct {
 	end   int
 }
 
-func rangePosition(s string, substr string, number int) rangePos {
+func rangePosition(s, substr string, number int) rangePos {
 	r := rangePos{0, 0}
 	i := 0
 
@@ -98,7 +98,7 @@ func rangePosition(s string, substr string, number int) rangePos {
 	return r
 }
 
-func searchPosition(s string, substr string, caseSensitive bool) []rangePos {
+func searchPosition(s, substr string, caseSensitive bool) []rangePos {
 	var pos []rangePos
 	if !caseSensitive {
 		s = strings.ToLower(s)
