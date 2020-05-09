@@ -1,8 +1,6 @@
 package oviewer
 
 import (
-	"strconv"
-
 	"github.com/gdamore/tcell"
 )
 
@@ -23,6 +21,28 @@ func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 	default:
 		return root.defaultEvent(ev)
 	}
+}
+
+func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
+	switch ev.Key() {
+	case tcell.KeyEscape:
+		root.mode = normal
+	case tcell.KeyEnter:
+		fn()
+		root.mode = normal
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		if len(root.input) > 0 {
+			r := []rune(root.input)
+			root.input = string(r[:len(r)-1])
+		}
+	case tcell.KeyTAB:
+		root.input += "\t"
+	case tcell.KeyCtrlA:
+		root.CaseSensitive = !root.CaseSensitive
+	case tcell.KeyRune:
+		root.input += string(ev.Rune())
+	}
+	return true
 }
 
 func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
@@ -81,22 +101,22 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.Quit()
 			return true
 		case 'W', 'w':
-			root.keyWrap()
+			root.toggleWrap()
 			return true
 		case '?':
 			root.input = ""
-			root.keyPrevious()
+			root.setMode(previous)
 			return true
 		case 'c':
-			root.keyColumnMode()
+			root.toggleColumnMode()
 			return true
 		case 'd':
 			root.input = ""
-			root.keyDelimiter()
+			root.setMode(delimiter)
 			return true
 		case '/':
 			root.input = ""
-			root.keySearch()
+			root.setMode(search)
 			return true
 		case 'n':
 			root.NextSearch()
@@ -106,142 +126,16 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			return true
 		case 'g':
 			root.input = ""
-			root.keyGoLine()
+			root.setMode(goline)
 			return true
 		case 'H':
 			root.input = ""
-			root.keyHeader()
+			root.setMode(header)
 			return true
 		case 'C':
-			root.keyAlternateRows()
+			root.toggleAlternateRows()
 			return true
 		}
 	}
 	return true
-}
-
-func (root *Root) keyWrap() {
-	if root.WrapMode {
-		root.WrapMode = false
-	} else {
-		root.WrapMode = true
-		root.Model.x = 0
-	}
-	root.setWrapHeaderLen()
-}
-
-func (root *Root) keyColumnMode() {
-	if root.ColumnMode {
-		root.ColumnMode = false
-	} else {
-		root.ColumnMode = true
-	}
-}
-
-func (root *Root) keyAlternateRows() {
-	root.Model.ClearCache()
-	if root.AlternateRows {
-		root.AlternateRows = false
-	} else {
-		root.AlternateRows = true
-	}
-}
-
-func (root *Root) keySearch() {
-	root.mode = search
-}
-
-func (root *Root) keyDelimiter() {
-	root.mode = delimiter
-}
-
-func (root *Root) keyPrevious() {
-	root.mode = previous
-}
-
-func (root *Root) keyGoLine() {
-	root.mode = goline
-}
-
-func (root *Root) keyHeader() {
-	root.mode = header
-}
-
-func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
-	switch ev.Key() {
-	case tcell.KeyEscape:
-		root.mode = normal
-	case tcell.KeyEnter:
-		fn()
-		root.mode = normal
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if len(root.input) > 0 {
-			r := []rune(root.input)
-			root.input = string(r[:len(r)-1])
-		}
-	case tcell.KeyTAB:
-		root.input += "\t"
-	case tcell.KeyCtrlA:
-		root.CaseSensitive = !root.CaseSensitive
-	case tcell.KeyRune:
-		root.input += string(ev.Rune())
-	}
-	return true
-}
-
-// GoLine will move to the specified line.
-func (root *Root) GoLine() {
-	lineNum, err := strconv.Atoi(root.input)
-	if err != nil {
-		return
-	}
-	root.input = ""
-	root.moveNum(lineNum - root.Header)
-}
-
-// SetHeader sets the number of lines in the header.
-func (root *Root) SetHeader() {
-	line, _ := strconv.Atoi(root.input)
-	if line >= 0 && line <= root.Model.vHight-1 {
-		if root.Header != line {
-			root.Header = line
-			root.setWrapHeaderLen()
-			root.Model.ClearCache()
-		}
-	}
-	root.input = ""
-}
-
-// SetDelimiter sets the delimiter string.
-func (root *Root) SetDelimiter() {
-	root.ColumnDelimiter = root.input
-	root.input = ""
-}
-
-// Search is a forward search.
-func (root *Root) Search() {
-	root.postSearch(root.search(root.Model.lineNum))
-}
-
-// NextSearch will re-run the forward search.
-func (root *Root) NextSearch() {
-	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
-}
-
-// BackSearch reverse search.
-func (root *Root) BackSearch() {
-	root.postSearch(root.backSearch(root.Model.lineNum))
-}
-
-// NextBackSearch will re-run the reverse search.
-func (root *Root) NextBackSearch() {
-	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
-}
-
-func (root *Root) postSearch(lineNum int, err error) {
-	if err != nil {
-		root.message = err.Error()
-		return
-	}
-	root.moveNum(lineNum - root.Header)
 }

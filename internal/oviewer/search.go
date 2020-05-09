@@ -5,6 +5,34 @@ import (
 	"strings"
 )
 
+// Search is a forward search.
+func (root *Root) Search() {
+	root.postSearch(root.search(root.Model.lineNum))
+}
+
+// NextSearch will re-run the forward search.
+func (root *Root) NextSearch() {
+	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
+}
+
+// BackSearch reverse search.
+func (root *Root) BackSearch() {
+	root.postSearch(root.backSearch(root.Model.lineNum))
+}
+
+// NextBackSearch will re-run the reverse search.
+func (root *Root) NextBackSearch() {
+	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
+}
+
+func (root *Root) postSearch(lineNum int, err error) {
+	if err != nil {
+		root.message = err.Error()
+		return
+	}
+	root.moveNum(lineNum - root.Header)
+}
+
 func (root *Root) search(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
 		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
@@ -35,7 +63,7 @@ type rangePos struct {
 	end   int
 }
 
-func rangePosition(s string, substr string, number int) rangePos {
+func rangePosition(s, substr string, number int) rangePos {
 	r := rangePos{0, 0}
 	i := 0
 
@@ -70,7 +98,7 @@ func rangePosition(s string, substr string, number int) rangePos {
 	return r
 }
 
-func searchPosition(s string, substr string, caseSensitive bool) []rangePos {
+func searchPosition(s, substr string, caseSensitive bool) []rangePos {
 	var pos []rangePos
 	if !caseSensitive {
 		s = strings.ToLower(s)
