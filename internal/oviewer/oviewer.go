@@ -25,9 +25,11 @@ type Root struct {
 	AlternateRows   bool
 	ColumnMode      bool
 	ColumnDelimiter string
+	LineNumMode     bool
 
 	Model         *Model
 	wrapHeaderLen int
+	startPos      int
 	bottomPos     int
 	statusPos     int
 	fileName      string
@@ -69,6 +71,7 @@ func New() *Root {
 	root.ColorAlternate = tcell.ColorGray
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
+	root.startPos = 0
 	return root
 }
 
@@ -141,6 +144,15 @@ func (root *Root) toggleAlternateRows() {
 	}
 }
 
+func (root *Root) toggleLineNumMode() {
+	if root.LineNumMode {
+		root.LineNumMode = false
+	} else {
+		root.LineNumMode = true
+	}
+	root.updateEndNum()
+}
+
 func (root *Root) setMode(mode Mode) {
 	root.mode = mode
 }
@@ -203,6 +215,7 @@ func (root *Root) Resize() {
 
 // Sync redraws the whole thing.
 func (root *Root) Sync() {
+	root.PreparelineNum()
 	root.PrepareView()
 	root.Draw()
 }
@@ -220,6 +233,18 @@ loop:
 	timer.Stop()
 }
 
+func (root *Root) PreparelineNum() {
+	root.startPos = 0
+	if root.LineNumMode {
+		root.startPos = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
+	}
+}
+
+func (root *Root) updateEndNum() {
+	root.PreparelineNum()
+	root.statusDraw()
+}
+
 // main is manages and executes events in the main routine.
 func (root *Root) main() {
 	screen := root.Screen
@@ -230,7 +255,7 @@ loop:
 		ev := screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventTimer:
-			root.statusDraw()
+			root.updateEndNum()
 		case *eventAppQuit:
 			break loop
 		case *tcell.EventKey:

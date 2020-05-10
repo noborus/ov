@@ -128,6 +128,8 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.input = ""
 			root.setMode(goline)
 			return true
+		case 'G':
+			root.toggleLineNumMode()
 		case 'H':
 			root.input = ""
 			root.setMode(header)
