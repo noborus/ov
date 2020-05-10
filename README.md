@@ -1,4 +1,4 @@
-# OV - Oviewer
+# ov - Oviewer
 
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
@@ -137,6 +137,8 @@ Flags:
 
 ![header](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-header.gif)
 
+### line number (<kbd>G</kbd>)
+
 ### psql
 
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
@@ -193,6 +195,7 @@ pager=ov -w=f -H3 -F -C -d "|"
 * <kbd>w</kbd> - wrap/nowrap toggle
 * <kbd>c</kbd> - column mode enable/disable toggle
 * <kbd>C</kbd> - color to alternate rows enable/disable toggle
+* <kbd>G</kbd> - line number toogle
 
 ### Input Mode
 

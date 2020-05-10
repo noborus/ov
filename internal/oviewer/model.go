@@ -97,9 +97,9 @@ func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
 // NewCache creates a new cache.
 func (m *Model) NewCache() error {
 	cache, err := ristretto.NewCache(&ristretto.Config{
-		NumCounters: 1e7,     // number of keys to track frequency of (10M).
-		MaxCost:     1 << 30, // maximum cost of cache (1GB).
-		BufferItems: 64,      // number of keys per Get buffer.
+		NumCounters: 10000, // number of keys to track frequency of (10M).
+		MaxCost:     1000,  // maximum cost of cache (1GB).
+		BufferItems: 64,    // number of keys per Get buffer.
 	})
 	if err != nil {
 		return err

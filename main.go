@@ -13,7 +13,7 @@ import (
 
 var (
 	// Version represents the version
-	Version string = "v0.1.1"
+	Version string = "dev"
 	// Revision set "git rev-parse --short HEAD"
 	Revision string = "HEAD"
 )
@@ -43,6 +43,8 @@ type Config struct {
 	ColumnMode bool
 	// Column Delimiter
 	ColumnDelimiter string
+	// Line Number
+	LineNumMode bool
 	// Debug is enable debug display.
 	Debug bool
 
@@ -83,6 +85,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.CaseSensitive = config.CaseSensitive
 		root.AlternateRows = config.AlternateRows
 		root.ColumnMode = config.ColumnMode
+		root.LineNumMode = config.LineNumMode
 		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
 		if config.ColorAlternate != "" {
 			color := tcell.GetColor(config.ColorAlternate)
@@ -131,6 +134,9 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&config.ColumnDelimiter, "column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
+
+	rootCmd.PersistentFlags().BoolVarP(&config.LineNumMode, "line-number", "n", false, "line number")
+	_ = viper.BindPFlag("LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "debug mode")
 }
