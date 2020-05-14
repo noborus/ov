@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"github.com/gdamore/tcell"
+	"github.com/mattn/go-runewidth"
 )
 
 // HandleEvent handles all events.
@@ -27,6 +28,19 @@ func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 	}
 }
 
+func stringWidth(str string, cursor int) int {
+	width := 0
+	i := 0
+	for _, r := range string(str) {
+		width += runewidth.RuneWidth(r)
+		if width >= cursor {
+			return i
+		}
+		i++
+	}
+	return i
+}
+
 func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
 	switch ev.Key() {
 	case tcell.KeyEscape:
@@ -35,17 +49,41 @@ func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
 		fn()
 		root.mode = normal
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if len(root.input) > 0 {
-			r := []rune(root.input)
-			root.input = string(r[:len(r)-1])
+		if root.cursorX > 1 {
+			pos := stringWidth(root.input, root.cursorX)
+			runes := []rune(root.input)
+			if pos > 0 {
+				root.input = string(runes[:pos-1])
+				root.cursorX = runewidth.StringWidth(root.input) + 1
+				root.input += string(runes[pos:])
+			}
+		}
+	case tcell.KeyLeft:
+		if root.cursorX > 1 {
+			_, _, _, cw := root.GetContent(root.cursorX, root.statusPos)
+			_, _, _, w := root.GetContent(root.cursorX-cw, root.statusPos)
+			root.cursorX -= w
+		}
+	case tcell.KeyRight:
+		if root.cursorX <= runewidth.StringWidth(root.input) {
+			_, _, _, w := root.GetContent(root.cursorX, root.statusPos)
+			root.cursorX += w
 		}
 	case tcell.KeyTAB:
 		root.input += "\t"
+		root.cursorX += root.TabWidth
 	case tcell.KeyCtrlA:
 		root.CaseSensitive = !root.CaseSensitive
 	case tcell.KeyRune:
-		root.input += string(ev.Rune())
+		pos := stringWidth(root.input, root.cursorX)
+		runes := []rune(root.input)
+		root.input = string(runes[:pos])
+		r := ev.Rune()
+		root.input += string(r)
+		root.input += string(runes[pos:])
+		root.cursorX += runewidth.RuneWidth(r)
 	}
+	root.Screen.ShowCursor(root.cursorX, root.statusPos)
 	return true
 }
 
@@ -108,18 +146,15 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.toggleWrap()
 			return true
 		case '?':
-			root.input = ""
 			root.setMode(previous)
 			return true
 		case 'c':
 			root.toggleColumnMode()
 			return true
 		case 'd':
-			root.input = ""
 			root.setMode(delimiter)
 			return true
 		case '/':
-			root.input = ""
 			root.setMode(search)
 			return true
 		case 'n':
@@ -129,13 +164,11 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.NextBackSearch()
 			return true
 		case 'g':
-			root.input = ""
 			root.setMode(goline)
 			return true
 		case 'G':
 			root.toggleLineNumMode()
 		case 'H':
-			root.input = ""
 			root.setMode(header)
 			return true
 		case 'C':

@@ -198,13 +198,11 @@ func (root *Root) headerStyle(contents []Content) {
 func (root *Root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
-	next := "..."
-	if root.Model.BufEOF() {
-		next = ""
-	}
+
 	for x := 0; x < root.Model.vWidth; x++ {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
+
 	leftStatus := ""
 	caseSensitive := ""
 	if root.CaseSensitive {
@@ -230,12 +228,18 @@ func (root *Root) statusDraw() {
 	}
 	leftContents := strToContents(leftStatus, root.TabWidth)
 	root.setContentString(0, root.statusPos, leftContents, leftStyle)
+	if root.mode == normal {
+		root.Screen.ShowCursor(len(leftContents), root.statusPos)
+	}
 
-	screen.ShowCursor(len(leftContents), root.statusPos)
-
+	next := ""
+	if !root.Model.BufEOF() {
+		next = "..."
+	}
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, root.TabWidth)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
+
 	if Debug {
 		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)

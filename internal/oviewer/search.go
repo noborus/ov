@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 )
 
@@ -52,10 +53,14 @@ func (root *Root) backSearch(num int) (int, error) {
 }
 
 func contains(s, substr string, caseSensitive bool) bool {
-	if !caseSensitive {
+	if caseSensitive {
+		return strings.Contains(s, substr)
+	}
+	matched, err := regexp.MatchString(substr, s)
+	if err != nil {
 		return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 	}
-	return strings.Contains(s, substr)
+	return matched
 }
 
 type rangePos struct {
