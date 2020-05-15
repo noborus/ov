@@ -33,12 +33,26 @@ func stringWidth(str string, cursor int) int {
 	i := 0
 	for _, r := range string(str) {
 		width += runewidth.RuneWidth(r)
+		if r == '\t' {
+			width += 2
+		}
 		if width >= cursor {
 			return i
 		}
 		i++
 	}
 	return i
+}
+
+func runeWidth(str string) int {
+	width := 0
+	for _, r := range string(str) {
+		width += runewidth.RuneWidth(r)
+		if r == '\t' {
+			width += 2
+		}
+	}
+	return width
 }
 
 func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
@@ -49,33 +63,41 @@ func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
 		fn()
 		root.mode = normal
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if root.cursorX > 1 {
+		if root.cursorX > 0 {
 			pos := stringWidth(root.input, root.cursorX)
 			runes := []rune(root.input)
-			if pos > 0 {
-				root.input = string(runes[:pos-1])
-				root.cursorX = runewidth.StringWidth(root.input) + 1
-				root.input += string(runes[pos:])
+			if pos >= 0 {
+				root.input = string(runes[:pos])
+				root.cursorX = runeWidth(root.input)
+				root.input += string(runes[pos+1:])
 			}
 		}
 	case tcell.KeyLeft:
-		if root.cursorX > 1 {
-			_, _, _, cw := root.GetContent(root.cursorX, root.statusPos)
-			_, _, _, w := root.GetContent(root.cursorX-cw, root.statusPos)
-			root.cursorX -= w
+		if root.cursorX > 0 {
+			pos := stringWidth(root.input, root.cursorX)
+			runes := []rune(root.input)
+			if pos >= 0 {
+				root.cursorX = runeWidth(string(runes[:pos]))
+				if pos > 0 && runes[pos-1] == '\t' {
+					root.cursorX--
+				}
+			}
 		}
 	case tcell.KeyRight:
-		if root.cursorX <= runewidth.StringWidth(root.input) {
-			_, _, _, w := root.GetContent(root.cursorX, root.statusPos)
-			root.cursorX += w
-		}
+		pos := stringWidth(root.input, root.cursorX+1)
+		runes := []rune(root.input)
+		root.cursorX = runeWidth(string(runes[:pos+1]))
 	case tcell.KeyTAB:
+		pos := stringWidth(root.input, root.cursorX+1)
+		runes := []rune(root.input)
+		root.input = string(runes[:pos])
 		root.input += "\t"
-		root.cursorX += root.TabWidth
+		root.cursorX += 2
+		root.input += string(runes[pos:])
 	case tcell.KeyCtrlA:
 		root.CaseSensitive = !root.CaseSensitive
 	case tcell.KeyRune:
-		pos := stringWidth(root.input, root.cursorX)
+		pos := stringWidth(root.input, root.cursorX+1)
 		runes := []rune(root.input)
 		root.input = string(runes[:pos])
 		r := ev.Rune()
@@ -83,7 +105,6 @@ func (root *Root) inputEvent(ev *tcell.EventKey, fn func()) bool {
 		root.input += string(runes[pos:])
 		root.cursorX += runewidth.RuneWidth(r)
 	}
-	root.Screen.ShowCursor(root.cursorX, root.statusPos)
 	return true
 }
 

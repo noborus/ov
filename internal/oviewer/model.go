@@ -346,13 +346,23 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			}
 			continue
 		case '\t':
-			tabStop := tabWidth - (x % tabWidth)
-			c.mainc = rune(' ')
-			c.width = 1
-			c.style = style
-			for i := 0; i < tabStop; i++ {
+			if tabWidth > 0 {
+				tabStop := tabWidth - (x % tabWidth)
+				c.mainc = rune(' ')
+				c.width = 1
+				c.style = style
+				for i := 0; i < tabStop; i++ {
+					contents = append(contents, c)
+					x++
+				}
+			} else {
+				c.width = 1
+				c.style = style.Reverse(true)
+				c.mainc = rune('\\')
 				contents = append(contents, c)
-				x++
+				c.mainc = rune('t')
+				contents = append(contents, c)
+				x += 2
 			}
 			continue
 		}

@@ -92,7 +92,10 @@ func (root *Root) Draw() {
 		// line number mode
 		if root.LineNumMode {
 			lineNum := strToContents(fmt.Sprintf("%*d", root.startPos-1, root.Model.lineNum+lY-root.Header+1), root.TabWidth)
-			root.setContentString(0, y, lineNum, tcell.StyleDefault.Bold(true))
+			for i := 0; i < len(lineNum); i++ {
+				lineNum[i].style = tcell.StyleDefault.Bold(true)
+			}
+			root.setContentString(0, y, lineNum)
 		}
 
 		var nextY int
@@ -203,54 +206,70 @@ func (root *Root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	leftStatus := ""
+	leftStatus := fmt.Sprintf("%s:%s", root.fileName, root.message)
+	leftContents := strToContents(leftStatus, -1)
 	caseSensitive := ""
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	leftStyle := style
 	switch root.mode {
 	case search:
-		leftStatus = caseSensitive + "/" + root.input
+		p := caseSensitive + "/"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	case previous:
-		leftStatus = caseSensitive + "?" + root.input
+		p := caseSensitive + "?"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	case goline:
-		leftStatus = "Goto line:" + root.input
+		p := "Goto line:"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	case header:
-		leftStatus = "Header length:" + root.input
+		p := "Header length:"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	case delimiter:
-		leftStatus = "Delimiter:" + root.input
+		p := "Delimiter:"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	case tabWidth:
-		leftStatus = "TAB width:" + root.input
+		p := "TAB width:"
+		leftStatus = p + root.input
+		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	default:
-		leftStatus = fmt.Sprintf("%s:%s", root.fileName, root.message)
-		leftStyle = style.Reverse(true)
-	}
-	leftContents := strToContents(leftStatus, root.TabWidth)
-	root.setContentString(0, root.statusPos, leftContents, leftStyle)
-	if root.mode == normal {
+		for i := 0; i < len(leftContents); i++ {
+			leftContents[i].style = leftContents[i].style.Reverse(true)
+		}
 		root.Screen.ShowCursor(len(leftContents), root.statusPos)
 	}
+	root.setContentString(0, root.statusPos, leftContents)
 
 	next := ""
 	if !root.Model.BufEOF() {
 		next = "..."
 	}
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.BufEndNum(), next)
-	rightContents := strToContents(rightStatus, root.TabWidth)
-	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents, style)
+	rightContents := strToContents(rightStatus, -1)
+	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents)
 
 	if Debug {
 		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)
-		root.setContentString(30, root.statusPos, c, tcell.StyleDefault)
+		root.setContentString(30, root.statusPos, c)
 	}
 }
 
 // setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, contents []Content, style tcell.Style) {
+func (root *Root) setContentString(vx int, vy int, contents []Content) {
 	screen := root.Screen
 	for x, content := range contents {
-		screen.SetContent(vx+x, vy, content.mainc, content.combc, style)
+		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 }

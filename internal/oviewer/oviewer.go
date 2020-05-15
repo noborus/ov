@@ -158,7 +158,7 @@ func (root *Root) toggleLineNumMode() {
 func (root *Root) setMode(mode Mode) {
 	root.mode = mode
 	root.input = ""
-	root.cursorX = 1
+	root.cursorX = 0
 	root.ShowCursor(root.cursorX, root.statusPos)
 }
 
