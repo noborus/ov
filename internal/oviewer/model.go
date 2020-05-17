@@ -308,6 +308,13 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			state = ansiEscape
 			continue
 		case '\n':
+			c.mainc = rune('\r')
+			c.width = 1
+			c.style = style
+			contents = append(contents, c)
+			continue
+		case '\b':
+			contents = contents[:len(contents)-1]
 			continue
 		case '\t':
 			tabStop := tabWidth - (x % tabWidth)
