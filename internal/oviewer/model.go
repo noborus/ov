@@ -166,11 +166,10 @@ func lookupColor(colorNumber int, bright bool) string {
 	}[colorNumber]
 }
 
-func csToStyle(csiParameter *bytes.Buffer, runeValue rune) tcell.Style {
-	style := tcell.StyleDefault
+func csToStyle(style tcell.Style, csiParameter *bytes.Buffer, runeValue rune) tcell.Style {
 	fields := strings.Split(csiParameter.String(), ";")
 	if len(fields) == 0 || len(fields) == 1 && fields[0] == "0" {
-		style = style.Normal()
+		style = tcell.StyleDefault.Normal()
 	}
 FieldLoop:
 	for index, field := range fields {
@@ -291,7 +290,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			}
 		case ansiControlSequence:
 			if runeValue == 'm' {
-				style = csToStyle(csiParameter, runeValue)
+				style = csToStyle(style, csiParameter, runeValue)
 			} else if runeValue >= 'A' && runeValue <= 'T' {
 				// Ignore.
 			} else {
