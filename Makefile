@@ -16,6 +16,8 @@ $(BINARY_NAME): $(SRCS)
 install:
 	go install -ldflags $(LDFLAGS)
 
+sys-install: build
+	sudo install $(BINARY_NAME) /usr/local/bin
 
 clean:
 	rm -f $(BINARY_NAME)
