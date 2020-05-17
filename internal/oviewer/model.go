@@ -309,6 +309,9 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			continue
 		case '\n':
 			continue
+		case '\b':
+			contents = contents[:len(contents)-1]
+			continue
 		case '\t':
 			tabStop := tabWidth - (x % tabWidth)
 			c.mainc = rune(' ')
