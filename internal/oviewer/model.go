@@ -262,6 +262,8 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 	x := 0
 	byteMaps := make(map[int]int)
 	n := 0
+	bsFlag := false
+	var bsContent Content
 	for _, runeValue := range line {
 		c := defaultContent
 		byteMaps[n] = len(contents)
@@ -310,7 +312,14 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 		case '\n':
 			continue
 		case '\b':
-			contents = contents[:len(contents)-1]
+			bsFlag = true
+			if (len(contents) > 1) && (contents[len(contents)-2].width > 1) {
+				bsContent = contents[len(contents)-2]
+				contents = contents[:len(contents)-2]
+			} else {
+				bsContent = contents[len(contents)-1]
+				contents = contents[:len(contents)-1]
+			}
 			continue
 		case '\t':
 			tabStop := tabWidth - (x % tabWidth)
@@ -326,21 +335,37 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
-			if len(contents) > 0 {
-				c2 := contents[len(contents)-1]
+			if len(contents) > 1 {
+				c2 := contents[len(contents)-2]
 				c2.combc = append(c2.combc, runeValue)
-				contents[len(contents)-1] = c2
+				contents[len(contents)-2] = c2
 			}
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
 			c.style = style
+			if bsFlag {
+				if bsContent.mainc == runeValue {
+					c.style = style.Bold(true)
+				} else if bsContent.mainc == '_' {
+					c.style = style.Underline(true)
+				}
+				bsFlag = false
+			}
 			contents = append(contents, c)
 			x++
 		case 2:
 			c.mainc = runeValue
 			c.width = 2
 			c.style = style
+			if bsFlag {
+				if bsContent.mainc == runeValue {
+					c.style = style.Bold(true)
+				} else if bsContent.mainc == '_' {
+					c.style = style.Underline(true)
+				}
+				bsFlag = false
+			}
 			contents = append(contents, c, defaultContent)
 			x += 2
 		}
