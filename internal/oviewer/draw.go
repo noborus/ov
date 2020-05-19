@@ -222,6 +222,8 @@ func (root *Root) statusDraw() {
 		leftStatus = "Header length:" + root.input
 	case delimiter:
 		leftStatus = "Delimiter:" + root.input
+	case tabWidth:
+		leftStatus = "TAB width:" + root.input
 	default:
 		leftStatus = fmt.Sprintf("%s:%s", root.fileName, root.message)
 		leftStyle = style.Reverse(true)
