@@ -258,10 +258,14 @@ func overstrike(p, m rune, style tcell.Style) tcell.Style {
 }
 
 func lastContent(contents []Content) Content {
-	if (len(contents) > 1) && (contents[len(contents)-2].width > 1) {
-		return contents[len(contents)-2]
+	n := len(contents)
+	if n == 0 {
+		return Content{}
 	}
-	return contents[len(contents)-1]
+	if (n > 1) && (contents[n-2].width > 1) {
+		return contents[n-2]
+	}
+	return contents[n-1]
 }
 
 func parseString(line string, tabWidth int) ([]Content, map[int]int) {
@@ -330,6 +334,9 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 		case '\n':
 			continue
 		case '\b':
+			if len(contents) == 0 {
+				continue
+			}
 			bsFlag = true
 			bsContent = lastContent(contents)
 			if bsContent.width > 1 {
