@@ -85,20 +85,11 @@ func (m *Model) BufEOF() bool {
 	return m.eof
 }
 
-// GetContents returns one line of contents from buffer.
-func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
-	lc, err := m.lineToContents(lineNum, tabWidth)
-	if err != nil {
-		return nil
-	}
-	return lc.contents
-}
-
 // NewCache creates a new cache.
 func (m *Model) NewCache() error {
 	cache, err := ristretto.NewCache(&ristretto.Config{
-		NumCounters: 10000, // number of keys to track frequency of (10M).
-		MaxCost:     1000,  // maximum cost of cache (1GB).
+		NumCounters: 10000, // number of keys to track frequency of.
+		MaxCost:     1000,  // maximum cost of cache.
 		BufferItems: 64,    // number of keys per Get buffer.
 	})
 	if err != nil {
@@ -113,11 +104,22 @@ func (m *Model) ClearCache() {
 	m.cache.Clear()
 }
 
+// GetContents returns one line of contents from buffer.
+func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
+	lc, err := m.lineToContents(lineNum, tabWidth)
+	if err != nil {
+		return nil
+	}
+	return lc.contents
+}
+
 func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
+
 	if lineNum < 0 || lineNum >= m.BufLen() {
 		return lc, fmt.Errorf("out of range")
 	}
+
 	value, found := m.cache.Get(lineNum)
 	if found {
 		var ok bool
@@ -246,6 +248,22 @@ func strToContents(line string, tabWidth int) []Content {
 	return contents
 }
 
+func overstrike(p, m rune, style tcell.Style) tcell.Style {
+	if p == m {
+		style = style.Bold(true)
+	} else if p == '_' {
+		style = style.Underline(true)
+	}
+	return style
+}
+
+func lastContent(contents []Content) Content {
+	if (len(contents) > 1) && (contents[len(contents)-2].width > 1) {
+		return contents[len(contents)-2]
+	}
+	return contents[len(contents)-1]
+}
+
 func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 	contents := []Content{}
 	defaultStyle := tcell.StyleDefault
@@ -313,11 +331,10 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			continue
 		case '\b':
 			bsFlag = true
-			if (len(contents) > 1) && (contents[len(contents)-2].width > 1) {
-				bsContent = contents[len(contents)-2]
+			bsContent = lastContent(contents)
+			if bsContent.width > 1 {
 				contents = contents[:len(contents)-2]
 			} else {
-				bsContent = contents[len(contents)-1]
 				contents = contents[:len(contents)-1]
 			}
 			continue
@@ -335,22 +352,17 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
-			if len(contents) > 1 {
-				c2 := contents[len(contents)-2]
-				c2.combc = append(c2.combc, runeValue)
-				contents[len(contents)-2] = c2
-			}
+			content := lastContent(contents)
+			content.combc = append(content.combc, runeValue)
+			contents[len(contents)-content.width] = content
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
 			c.style = style
 			if bsFlag {
-				if bsContent.mainc == runeValue {
-					c.style = style.Bold(true)
-				} else if bsContent.mainc == '_' {
-					c.style = style.Underline(true)
-				}
+				c.style = overstrike(bsContent.mainc, runeValue, style)
 				bsFlag = false
+				bsContent = defaultContent
 			}
 			contents = append(contents, c)
 			x++
@@ -359,12 +371,9 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			c.width = 2
 			c.style = style
 			if bsFlag {
-				if bsContent.mainc == runeValue {
-					c.style = style.Bold(true)
-				} else if bsContent.mainc == '_' {
-					c.style = style.Underline(true)
-				}
+				c.style = overstrike(bsContent.mainc, runeValue, style)
 				bsFlag = false
+				bsContent = defaultContent
 			}
 			contents = append(contents, c, defaultContent)
 			x += 2
