@@ -56,6 +56,7 @@ const (
 	goline
 	header
 	delimiter
+	tabWidth
 )
 
 //Debug represents whether to enable the debug output.
@@ -183,6 +184,13 @@ func (root *Root) SetHeader() {
 // SetDelimiter sets the delimiter string.
 func (root *Root) SetDelimiter() {
 	root.ColumnDelimiter = root.input
+	root.input = ""
+}
+
+// SetTabWidth sets the tab width.
+func (root *Root) SetTabWidth() {
+	width, _ := strconv.Atoi(root.input)
+	root.TabWidth = width
 	root.input = ""
 }
 

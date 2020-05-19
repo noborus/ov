@@ -18,6 +18,10 @@ func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 		return root.inputEvent(ev, root.SetHeader)
 	case delimiter:
 		return root.inputEvent(ev, root.SetDelimiter)
+	case tabWidth:
+		b := root.inputEvent(ev, root.SetTabWidth)
+		root.Model.ClearCache()
+		return b
 	default:
 		return root.defaultEvent(ev)
 	}
@@ -136,6 +140,10 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			return true
 		case 'C':
 			root.toggleAlternateRows()
+			return true
+		case 't':
+			root.input = ""
+			root.setMode(tabWidth)
 			return true
 		}
 	}
