@@ -401,6 +401,6 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			x += 2
 		}
 	}
-	byteMaps[len(line)] = len(contents)
+	byteMaps[n] = len(contents)
 	return contents, byteMaps
 }
