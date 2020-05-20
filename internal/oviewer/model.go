@@ -288,8 +288,6 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 	var bsContent Content
 	for _, runeValue := range line {
 		c := defaultContent
-		byteMaps[n] = len(contents)
-		n += len(string(runeValue))
 		switch state {
 		case ansiEscape:
 			switch runeValue {
@@ -345,30 +343,35 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 				contents = contents[:len(contents)-1]
 			}
 			continue
-		case '\t':
-			if tabWidth > 0 {
-				tabStop := tabWidth - (x % tabWidth)
-				c.mainc = rune(' ')
-				c.width = 1
-				c.style = style
-				for i := 0; i < tabStop; i++ {
-					contents = append(contents, c)
-					x++
-				}
-			} else {
-				c.width = 1
-				c.style = style.Reverse(true)
-				c.mainc = rune('\\')
-				contents = append(contents, c)
-				c.mainc = rune('t')
-				contents = append(contents, c)
-				x += 2
-			}
-			continue
 		}
+		byteMaps[n] = len(contents)
+		n += len(string(runeValue))
 
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
+			if runeValue == '\t' {
+				if tabWidth > 0 {
+					tabStop := tabWidth - (x % tabWidth)
+					c.mainc = rune(' ')
+					c.width = 1
+					c.style = style
+					for i := 0; i < tabStop; i++ {
+						contents = append(contents, c)
+						x++
+					}
+				} else {
+					byteMaps[n] = len(contents)
+					n += len(string(runeValue))
+					c.width = 1
+					c.style = style.Reverse(true)
+					c.mainc = rune('\\')
+					contents = append(contents, c)
+					c.mainc = rune('t')
+					contents = append(contents, c)
+					x += 2
+				}
+				continue
+			}
 			content := lastContent(contents)
 			content.combc = append(content.combc, runeValue)
 			contents[len(contents)-content.width] = content

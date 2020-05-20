@@ -10,7 +10,16 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 	if !caseSensitive {
 		r = "(?i)" + r
 	}
-	return regexp.MustCompile(r)
+	re, err := regexp.Compile(r)
+	if err == nil {
+		return re
+	}
+	r = regexp.QuoteMeta(r)
+	re, err = regexp.Compile(r)
+	if err == nil {
+		return nil
+	}
+	return re
 }
 
 // Search is a forward search.
@@ -61,7 +70,12 @@ func (root *Root) backSearch(num int) (int, error) {
 	return 0, errors.New("not found")
 }
 
+var (
+	regexEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]+m")
+)
+
 func contains(s string, re *regexp.Regexp) bool {
+	s = regexEscapeSequence.ReplaceAllString(s, "")
 	return re.MatchString(s)
 }
 
@@ -108,6 +122,7 @@ func rangePosition(s, substr string, number int) rangePos {
 func searchPosition(s string, re *regexp.Regexp) []rangePos {
 	var pos []rangePos
 
+	s = regexEscapeSequence.ReplaceAllString(s, "")
 	for _, f := range re.FindAllIndex([]byte(s), -1) {
 		r := rangePos{f[0], f[1]}
 		pos = append(pos, r)
