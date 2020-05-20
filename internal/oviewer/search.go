@@ -75,6 +75,9 @@ var (
 )
 
 func contains(s string, re *regexp.Regexp) bool {
+	if re == nil {
+		return false
+	}
 	s = regexEscapeSequence.ReplaceAllString(s, "")
 	return re.MatchString(s)
 }
@@ -120,8 +123,10 @@ func rangePosition(s, substr string, number int) rangePos {
 }
 
 func searchPosition(s string, re *regexp.Regexp) []rangePos {
+	if re == nil {
+		return nil
+	}
 	var pos []rangePos
-
 	s = regexEscapeSequence.ReplaceAllString(s, "")
 	for _, f := range re.FindAllIndex([]byte(s), -1) {
 		r := rangePos{f[0], f[1]}
