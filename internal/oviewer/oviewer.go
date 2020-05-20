@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
@@ -35,6 +36,7 @@ type Root struct {
 	fileName      string
 	mode          Mode
 	input         string
+	inputRegexp   *regexp.Regexp
 	cursorX       int
 	columnNum     int
 	message       string

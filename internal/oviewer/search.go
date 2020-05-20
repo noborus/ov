@@ -6,8 +6,17 @@ import (
 	"strings"
 )
 
+func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
+	if !caseSensitive {
+		r = "(?i)" + r
+	}
+	r = regexp.QuoteMeta(r)
+	return regexp.MustCompile(r)
+}
+
 // Search is a forward search.
 func (root *Root) Search() {
+	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
 	root.postSearch(root.search(root.Model.lineNum))
 }
 
@@ -23,6 +32,7 @@ func (root *Root) BackSearch() {
 
 // NextBackSearch will re-run the reverse search.
 func (root *Root) NextBackSearch() {
+	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
 	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
 }
 
@@ -36,7 +46,7 @@ func (root *Root) postSearch(lineNum int, err error) {
 
 func (root *Root) search(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
-		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
+		if contains(root.Model.buffer[n], root.inputRegexp) {
 			return n, nil
 		}
 	}
@@ -45,22 +55,15 @@ func (root *Root) search(num int) (int, error) {
 
 func (root *Root) backSearch(num int) (int, error) {
 	for n := num; n >= 0; n-- {
-		if contains(root.Model.buffer[n], root.input, root.CaseSensitive) {
+		if contains(root.Model.buffer[n], root.inputRegexp) {
 			return n, nil
 		}
 	}
 	return 0, errors.New("not found")
 }
 
-func contains(s, substr string, caseSensitive bool) bool {
-	if caseSensitive {
-		return strings.Contains(s, substr)
-	}
-	matched, err := regexp.MatchString(substr, s)
-	if err != nil {
-		return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
-	}
-	return matched
+func contains(s string, re *regexp.Regexp) bool {
+	return re.MatchString(s)
 }
 
 type rangePos struct {
@@ -103,22 +106,12 @@ func rangePosition(s, substr string, number int) rangePos {
 	return r
 }
 
-func searchPosition(s, substr string, caseSensitive bool) []rangePos {
+func searchPosition(s string, re *regexp.Regexp) []rangePos {
 	var pos []rangePos
-	if !caseSensitive {
-		s = strings.ToLower(s)
-		substr = strings.ToLower(substr)
-	}
 
-	for i := strings.Index(s, substr); i >= 0; {
-		r := rangePos{i, i + len(substr)}
+	for _, f := range re.FindAllIndex([]byte(s), -1) {
+		r := rangePos{f[0], f[1]}
 		pos = append(pos, r)
-		j := strings.Index(s[i+1:], substr)
-		if j >= 0 {
-			i += j + 1
-		} else {
-			break
-		}
 	}
 	return pos
 }

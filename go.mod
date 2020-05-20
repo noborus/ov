@@ -11,7 +11,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
-	github.com/pelletier/go-toml v1.7.0 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/ulikunitz/xz v0.5.7
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
-	golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
 	gopkg.in/ini.v1 v1.56.0 // indirect
 )

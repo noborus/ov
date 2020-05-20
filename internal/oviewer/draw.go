@@ -77,7 +77,7 @@ func (root *Root) Draw() {
 
 		// search highlight
 		if searchWord != "" {
-			poss := searchPosition(line, searchWord, root.CaseSensitive)
+			poss := searchPosition(line, root.inputRegexp)
 			for _, r := range poss {
 				reverseContents(lc, r)
 			}
