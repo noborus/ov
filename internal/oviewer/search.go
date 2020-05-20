@@ -10,7 +10,6 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 	if !caseSensitive {
 		r = "(?i)" + r
 	}
-	r = regexp.QuoteMeta(r)
 	return regexp.MustCompile(r)
 }
 
