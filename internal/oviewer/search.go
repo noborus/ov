@@ -71,7 +71,7 @@ func (root *Root) backSearch(num int) (int, error) {
 }
 
 var (
-	regexEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]+m")
+	regexEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]*m")
 )
 
 func contains(s string, re *regexp.Regexp) bool {
