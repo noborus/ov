@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -132,9 +133,8 @@ func Test_rangePosition(t *testing.T) {
 
 func Test_searchPosition(t *testing.T) {
 	type args struct {
-		s             string
-		substr        string
-		caseSensitive bool
+		s  string
+		re *regexp.Regexp
 	}
 	tests := []struct {
 		name string
@@ -144,18 +144,16 @@ func Test_searchPosition(t *testing.T) {
 		{
 			name: "testNil",
 			args: args{
-				s:             "",
-				substr:        "t",
-				caseSensitive: false,
+				s:  "",
+				re: regexp.MustCompile("t"),
 			},
 			want: nil,
 		},
 		{
 			name: "testTest",
 			args: args{
-				s:             "test",
-				substr:        "t",
-				caseSensitive: false,
+				s:  "test",
+				re: regexp.MustCompile("t"),
 			},
 			want: []rangePos{
 				{
@@ -171,18 +169,16 @@ func Test_searchPosition(t *testing.T) {
 		{
 			name: "testNone",
 			args: args{
-				s:             "testtest",
-				substr:        "a",
-				caseSensitive: false,
+				s:  "testtest",
+				re: regexp.MustCompile("a"),
 			},
 			want: nil,
 		},
 		{
 			name: "testInCaseSensitive:",
 			args: args{
-				s:             "TEST",
-				substr:        "e",
-				caseSensitive: false,
+				s:  "TEST",
+				re: regexp.MustCompile("(?i)e"),
 			},
 			want: []rangePos{
 				{
@@ -194,16 +190,15 @@ func Test_searchPosition(t *testing.T) {
 		{
 			name: "testCaseSensitive:",
 			args: args{
-				s:             "TEST",
-				substr:        "e",
-				caseSensitive: true,
+				s:  "TEST",
+				re: regexp.MustCompile("e"),
 			},
 			want: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := searchPosition(tt.args.s, tt.args.substr, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
+			if got := searchPosition(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
 		})

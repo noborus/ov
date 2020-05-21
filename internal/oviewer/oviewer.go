@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
@@ -35,6 +36,8 @@ type Root struct {
 	fileName      string
 	mode          Mode
 	input         string
+	inputRegexp   *regexp.Regexp
+	cursorX       int
 	columnNum     int
 	message       string
 
@@ -156,6 +159,9 @@ func (root *Root) toggleLineNumMode() {
 
 func (root *Root) setMode(mode Mode) {
 	root.mode = mode
+	root.input = ""
+	root.cursorX = 0
+	root.ShowCursor(root.cursorX, root.statusPos)
 }
 
 // GoLine will move to the specified line.

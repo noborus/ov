@@ -269,11 +269,11 @@ func lastContent(contents []Content) Content {
 }
 
 func parseString(line string, tabWidth int) ([]Content, map[int]int) {
-	contents := []Content{}
+	var contents []Content
 	defaultStyle := tcell.StyleDefault
 	defaultContent := Content{
 		mainc: 0,
-		combc: []rune{},
+		combc: nil,
 		width: 0,
 		style: defaultStyle,
 	}
@@ -288,8 +288,6 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 	var bsContent Content
 	for _, runeValue := range line {
 		c := defaultContent
-		byteMaps[n] = len(contents)
-		n += len(string(runeValue))
 		switch state {
 		case ansiEscape:
 			switch runeValue {
@@ -333,35 +331,55 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			continue
 		case '\n':
 			continue
-		case '\b':
-			if len(contents) == 0 {
-				continue
-			}
-			bsFlag = true
-			bsContent = lastContent(contents)
-			if bsContent.width > 1 {
-				contents = contents[:len(contents)-2]
-			} else {
-				contents = contents[:len(contents)-1]
-			}
-			continue
-		case '\t':
-			tabStop := tabWidth - (x % tabWidth)
-			c.mainc = rune(' ')
-			c.width = 1
-			c.style = style
-			for i := 0; i < tabStop; i++ {
-				contents = append(contents, c)
-				x++
-			}
-			continue
 		}
+
+		byteMaps[n] = len(contents)
+		n += len(string(runeValue))
 
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
+			switch runeValue {
+			case '\t':
+				if tabWidth > 0 {
+					tabStop := tabWidth - (x % tabWidth)
+					c.mainc = rune(' ')
+					c.width = 1
+					c.style = style
+					for i := 0; i < tabStop; i++ {
+						contents = append(contents, c)
+						x++
+					}
+				} else {
+					byteMaps[n] = len(contents)
+					n += len(string(runeValue))
+					c.width = 1
+					c.style = style.Reverse(true)
+					c.mainc = rune('\\')
+					contents = append(contents, c)
+					c.mainc = rune('t')
+					contents = append(contents, c)
+					x += 2
+				}
+				continue
+			case '\b':
+				if len(contents) == 0 {
+					continue
+				}
+				bsFlag = true
+				bsContent = lastContent(contents)
+				if bsContent.width > 1 {
+					contents = contents[:len(contents)-2]
+				} else {
+					contents = contents[:len(contents)-1]
+				}
+				continue
+			}
 			content := lastContent(contents)
 			content.combc = append(content.combc, runeValue)
-			contents[len(contents)-content.width] = content
+			n := len(contents) - content.width
+			if n >= 0 && len(contents) > 0 {
+				contents[n] = content
+			}
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
@@ -386,6 +404,6 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			x += 2
 		}
 	}
-	byteMaps[len(line)] = len(contents)
+	byteMaps[n] = len(contents)
 	return contents, byteMaps
 }
