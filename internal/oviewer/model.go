@@ -269,11 +269,11 @@ func lastContent(contents []Content) Content {
 }
 
 func parseString(line string, tabWidth int) ([]Content, map[int]int) {
-	contents := []Content{}
+	var contents []Content
 	defaultStyle := tcell.StyleDefault
 	defaultContent := Content{
 		mainc: 0,
-		combc: []rune{},
+		combc: nil,
 		width: 0,
 		style: defaultStyle,
 	}
@@ -376,7 +376,10 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			}
 			content := lastContent(contents)
 			content.combc = append(content.combc, runeValue)
-			contents[len(contents)-content.width] = content
+			n := len(contents) - content.width
+			if n >= 0 && len(contents) > 0 {
+				contents[n] = content
+			}
 		case 1:
 			c.mainc = runeValue
 			c.width = 1
