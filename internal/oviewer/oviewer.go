@@ -229,7 +229,7 @@ func (root *Root) Resize() {
 
 // Sync redraws the whole thing.
 func (root *Root) Sync() {
-	root.PreparelineNum()
+	root.preparelineNum()
 	root.PrepareView()
 	root.Draw()
 }
@@ -247,7 +247,7 @@ loop:
 	timer.Stop()
 }
 
-func (root *Root) PreparelineNum() {
+func (root *Root) preparelineNum() {
 	root.startPos = 0
 	if root.LineNumMode {
 		root.startPos = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
@@ -255,7 +255,7 @@ func (root *Root) PreparelineNum() {
 }
 
 func (root *Root) updateEndNum() {
-	root.PreparelineNum()
+	root.preparelineNum()
 	root.statusDraw()
 }
 
