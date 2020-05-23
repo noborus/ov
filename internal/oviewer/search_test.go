@@ -6,6 +6,66 @@ import (
 	"testing"
 )
 
+func Test_contains(t *testing.T) {
+	type args struct {
+		s  string
+		re *regexp.Regexp
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:  "test",
+				re: regexp.MustCompile(`t`),
+			},
+			want: true,
+		},
+		{
+			name: "testNil",
+			args: args{
+				s:  "test",
+				re: regexp.MustCompile(``),
+			},
+			want: false,
+		},
+		{
+			name: "testEscapeSequences",
+			args: args{
+				s:  "\x1B[31mtest\x1B[0m",
+				re: regexp.MustCompile(`test`),
+			},
+			want: true,
+		},
+		{
+			name: "testEscapeSequences2",
+			args: args{
+				s:  "\x1B[31mtest\x1B[0m",
+				re: regexp.MustCompile(`m`),
+			},
+			want: false,
+		},
+		{
+			name: "testEscapeSequences3",
+			args: args{
+				s:  "tes\x1B[31mt\x1B[0m",
+				re: regexp.MustCompile(`test`),
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := contains(tt.args.s, tt.args.re); got != tt.want {
+				t.Errorf("contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_rangePosition(t *testing.T) {
 	type args struct {
 		s      string
@@ -170,15 +230,15 @@ func Test_searchPosition(t *testing.T) {
 			name: "testNone",
 			args: args{
 				s:  "testtest",
-				re: regexp.MustCompile("a"),
+				re: regexpComple("a", false),
 			},
 			want: nil,
 		},
 		{
-			name: "testInCaseSensitive:",
+			name: "testInCaseSensitive",
 			args: args{
 				s:  "TEST",
-				re: regexp.MustCompile("(?i)e"),
+				re: regexpComple("e", false),
 			},
 			want: []rangePos{
 				{
@@ -188,12 +248,50 @@ func Test_searchPosition(t *testing.T) {
 			},
 		},
 		{
-			name: "testCaseSensitive:",
+			name: "testCaseSensitive",
 			args: args{
 				s:  "TEST",
-				re: regexp.MustCompile("e"),
+				re: regexpComple("e", true),
 			},
 			want: nil,
+		},
+		{
+			name: "testMeta",
+			args: args{
+				s:  "test",
+				re: regexpComple("+", false),
+			},
+			want: nil,
+		},
+		{
+			name: "testMeta2",
+			args: args{
+				s:  "test",
+				re: regexpComple("t+", false),
+			},
+			want: []rangePos{
+				{
+					start: 0,
+					end:   1,
+				},
+				{
+					start: 3,
+					end:   4,
+				},
+			},
+		},
+		{
+			name: "testEscapeSequences",
+			args: args{
+				s:  "tes\x1B[31mt\x1B[0m",
+				re: regexpComple("test", false),
+			},
+			want: []rangePos{
+				{
+					start: 0,
+					end:   4,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

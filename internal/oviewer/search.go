@@ -6,22 +6,6 @@ import (
 	"strings"
 )
 
-func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
-	if !caseSensitive {
-		r = "(?i)" + r
-	}
-	re, err := regexp.Compile(r)
-	if err == nil {
-		return re
-	}
-	r = regexp.QuoteMeta(r)
-	re, err = regexp.Compile(r)
-	if err == nil {
-		return nil
-	}
-	return re
-}
-
 // Search is a forward search.
 func (root *Root) Search() {
 	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
@@ -70,12 +54,28 @@ func (root *Root) backSearch(num int) (int, error) {
 	return 0, errors.New("not found")
 }
 
+func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
+	if !caseSensitive {
+		r = "(?i)" + r
+	}
+	re, err := regexp.Compile(r)
+	if err == nil {
+		return re
+	}
+	r = regexp.QuoteMeta(r)
+	re, err = regexp.Compile(r)
+	if err == nil {
+		return nil
+	}
+	return re
+}
+
 var (
 	regexEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]*m")
 )
 
 func contains(s string, re *regexp.Regexp) bool {
-	if re == nil {
+	if re == nil || re.String() == "" {
 		return false
 	}
 	s = regexEscapeSequence.ReplaceAllString(s, "")
@@ -123,7 +123,7 @@ func rangePosition(s, substr string, number int) rangePos {
 }
 
 func searchPosition(s string, re *regexp.Regexp) []rangePos {
-	if re == nil {
+	if re == nil || re.String() == "" {
 		return nil
 	}
 	var pos []rangePos

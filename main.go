@@ -62,6 +62,8 @@ var rootCmd = &cobra.Command{
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var err error
+
 		if Ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
@@ -71,7 +73,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Println("Using config file:", viper.ConfigFileUsed())
 		}
 		oviewer.Debug = config.Debug
-		err := os.Setenv("TCELL_TRUECOLOR", "disable")
+
+		err = os.Setenv("TCELL_TRUECOLOR", "disable")
 		if err != nil {
 			return err
 		}
