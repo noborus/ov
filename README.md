@@ -204,6 +204,7 @@ pager=ov -w=f -H3 -F -C -d "|"
 * <kbd>H</kbd> - number of header lines
 * <kbd>g</kbd> - number of go to line
 * <kbd>d</kbd> - delimiter string
+* <kbd>d</kbd> - TAB width
 
 ### Keys in search mode
 
