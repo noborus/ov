@@ -95,8 +95,9 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
 			switch runeValue {
-			case '\t':
-				if tabWidth > 0 {
+			case '\t': // TAB
+				switch {
+				case tabWidth > 0:
 					tabStop := tabWidth - (x % tabWidth)
 					c.mainc = rune(' ')
 					c.width = 1
@@ -105,7 +106,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 						contents = append(contents, c)
 						x++
 					}
-				} else {
+				case tabWidth < 0:
 					byteMaps[n] = len(contents)
 					n += len(string(runeValue))
 					c.width = 1
@@ -115,9 +116,10 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 					c.mainc = rune('t')
 					contents = append(contents, c)
 					x += 2
+				default:
 				}
 				continue
-			case '\b':
+			case '\b': // BackSpace
 				if len(contents) == 0 {
 					continue
 				}

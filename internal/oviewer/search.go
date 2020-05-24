@@ -6,21 +6,9 @@ import (
 	"strings"
 )
 
-// Search is a forward search.
-func (root *Root) Search() {
-	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
-	root.postSearch(root.search(root.Model.lineNum))
-}
-
 // NextSearch will re-run the forward search.
 func (root *Root) NextSearch() {
 	root.postSearch(root.search(root.Model.lineNum + root.Header + 1))
-}
-
-// BackSearch reverse search.
-func (root *Root) BackSearch() {
-	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
-	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
 // NextBackSearch will re-run the reverse search.

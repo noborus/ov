@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -162,42 +161,6 @@ func (root *Root) setMode(mode Mode) {
 	root.input = ""
 	root.cursorX = 0
 	root.ShowCursor(root.cursorX, root.statusPos)
-}
-
-// GoLine will move to the specified line.
-func (root *Root) GoLine() {
-	lineNum, err := strconv.Atoi(root.input)
-	if err != nil {
-		return
-	}
-	root.input = ""
-	root.moveNum(lineNum - root.Header)
-}
-
-// SetHeader sets the number of lines in the header.
-func (root *Root) SetHeader() {
-	line, _ := strconv.Atoi(root.input)
-	if line >= 0 && line <= root.Model.vHight-1 {
-		if root.Header != line {
-			root.Header = line
-			root.setWrapHeaderLen()
-			root.Model.ClearCache()
-		}
-	}
-	root.input = ""
-}
-
-// SetDelimiter sets the delimiter string.
-func (root *Root) SetDelimiter() {
-	root.ColumnDelimiter = root.input
-	root.input = ""
-}
-
-// SetTabWidth sets the tab width.
-func (root *Root) SetTabWidth() {
-	width, _ := strconv.Atoi(root.input)
-	root.TabWidth = width
-	root.input = ""
 }
 
 type eventAppQuit struct {
