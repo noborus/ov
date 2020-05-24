@@ -42,14 +42,20 @@ func (root *Root) inputEvent(ev *tcell.EventKey) string {
 	case tcell.KeyEnter:
 		return root.input
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if root.cursorX > 0 {
-			pos := stringWidth(root.input, root.cursorX)
-			runes := []rune(root.input)
-			if pos >= 0 {
-				root.input = string(runes[:pos])
-				root.cursorX = runeWidth(root.input)
-				root.input += string(runes[pos+1:])
-			}
+		if root.cursorX == 0 {
+			return ""
+		}
+		pos := stringWidth(root.input, root.cursorX)
+		runes := []rune(root.input)
+		root.input = string(runes[:pos])
+		root.cursorX = runeWidth(root.input)
+		root.input += string(runes[pos+1:])
+	case tcell.KeyDelete:
+		pos := stringWidth(root.input, root.cursorX)
+		runes := []rune(root.input)
+		root.input = string(runes[:pos+1])
+		if len(runes) > pos+1 {
+			root.input += string(runes[pos+2:])
 		}
 	case tcell.KeyLeft:
 		if root.cursorX > 0 {
@@ -138,7 +144,10 @@ func (root *Root) GoLine(input string) {
 
 // SetHeader sets the number of lines in the header.
 func (root *Root) SetHeader(input string) {
-	line, _ := strconv.Atoi(input)
+	line, err := strconv.Atoi(input)
+	if err != nil {
+		return
+	}
 	if line >= 0 && line <= root.Model.vHight-1 {
 		if root.Header != line {
 			root.Header = line
@@ -157,7 +166,10 @@ func (root *Root) SetDelimiter(input string) {
 
 // SetTabWidth sets the tab width.
 func (root *Root) SetTabWidth(input string) {
-	width, _ := strconv.Atoi(input)
+	width, err := strconv.Atoi(input)
+	if err != nil {
+		return
+	}
 	if root.TabWidth != width {
 		root.TabWidth = width
 		root.Model.ClearCache()
