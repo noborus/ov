@@ -19,12 +19,12 @@ func (root *Root) NextSearch() {
 
 // BackSearch reverse search.
 func (root *Root) BackSearch() {
+	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
 	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
 // NextBackSearch will re-run the reverse search.
 func (root *Root) NextBackSearch() {
-	root.inputRegexp = regexpComple(root.input, root.CaseSensitive)
 	root.postSearch(root.backSearch(root.Model.lineNum + root.Header - 1))
 }
 
