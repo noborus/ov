@@ -59,66 +59,56 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 }
 
 var (
-	regexEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]*m")
+	stripEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]*m")
 )
 
 func contains(s string, re *regexp.Regexp) bool {
 	if re == nil || re.String() == "" {
 		return false
 	}
-	s = regexEscapeSequence.ReplaceAllString(s, "")
+	s = stripEscapeSequence.ReplaceAllString(s, "")
 	return re.MatchString(s)
 }
 
-type rangePos struct {
-	start int
-	end   int
-}
-
-func rangePosition(s, substr string, number int) rangePos {
-	r := rangePos{0, 0}
+func rangePosition(s, substr string, number int) (int, int) {
 	i := 0
 
 	if number == 0 {
 		de := strings.Index(s[i:], substr)
-		r.end = i + de
-		return r
+		return 0, i + de
 	}
 
 	for n := 0; n < number-1; n++ {
 		j := strings.Index(s[i:], substr)
 		if j < 0 {
-			return rangePos{-1, -1}
+			return -1, -1
 		}
 		i += j + len(substr)
 	}
 
 	ds := strings.Index(s[i:], substr)
 	if ds < 0 {
-		return rangePos{-1, -1}
+		return -1, -1
 	}
-	r.start = i + ds + len(substr)
+	start := i + ds + len(substr)
 	de := -1
-	if r.start < len(s) {
-		de = strings.Index(s[r.start:], substr)
+	if start < len(s) {
+		de = strings.Index(s[start:], substr)
 	}
 
-	r.end = r.start + de
+	end := start + de
 	if de < 0 {
-		r.end = len(s)
+		end = len(s)
 	}
-	return r
+	return start, end
 }
 
-func searchPosition(s string, re *regexp.Regexp) []rangePos {
+func searchPosition(s string, re *regexp.Regexp) [][]int {
 	if re == nil || re.String() == "" {
 		return nil
 	}
-	var pos []rangePos
-	s = regexEscapeSequence.ReplaceAllString(s, "")
-	for _, f := range re.FindAllIndex([]byte(s), -1) {
-		r := rangePos{f[0], f[1]}
-		pos = append(pos, r)
-	}
+	var pos [][]int
+	s = stripEscapeSequence.ReplaceAllString(s, "")
+	pos = append(pos, re.FindAllIndex([]byte(s), -1)...)
 	return pos
 }

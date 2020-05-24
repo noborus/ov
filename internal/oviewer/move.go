@@ -112,16 +112,16 @@ func (root *Root) moveRight() {
 func (root *Root) columnModeX() int {
 	m := root.Model
 	line := m.GetLine(root.Header + 2)
-	r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
-	if r.start < 0 || r.end < 0 {
+	start, end := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+	if start < 0 || end < 0 {
 		root.columnNum = 0
-		r = rangePosition(line, root.ColumnDelimiter, root.columnNum)
+		start, _ = rangePosition(line, root.ColumnDelimiter, root.columnNum)
 	}
 	lc, err := m.lineToContents(root.Header+2, root.TabWidth)
 	if err != nil {
 		return 0
 	}
-	return lc.cMap[r.start]
+	return lc.cMap[start]
 }
 
 func (root *Root) moveHfLeft() {

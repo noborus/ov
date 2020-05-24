@@ -73,17 +73,16 @@ func Test_rangePosition(t *testing.T) {
 		number int
 	}
 	tests := []struct {
-		name string
-		args args
-		want rangePos
+		name  string
+		args  args
+		wantS int
+		wantE int
 	}{
 		{
-			name: "testNil",
-			args: args{},
-			want: rangePos{
-				start: 0,
-				end:   0,
-			},
+			name:  "testNil",
+			args:  args{},
+			wantS: 0,
+			wantE: 0,
 		},
 		{
 			name: "testNil2",
@@ -92,10 +91,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "t",
 				number: 0,
 			},
-			want: rangePos{
-				start: 0,
-				end:   0,
-			},
+			wantS: 0,
+			wantE: 0,
 		},
 		{
 			name: "test",
@@ -104,10 +101,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "t",
 				number: 1,
 			},
-			want: rangePos{
-				start: 1,
-				end:   3,
-			},
+			wantS: 1,
+			wantE: 3,
 		},
 		{
 			name: "testComma",
@@ -116,10 +111,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: ",",
 				number: 1,
 			},
-			want: rangePos{
-				start: 2,
-				end:   3,
-			},
+			wantS: 2,
+			wantE: 3,
 		},
 		{
 			name: "testVerticalBar",
@@ -128,10 +121,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "|",
 				number: 2,
 			},
-			want: rangePos{
-				start: 4,
-				end:   5,
-			},
+			wantS: 4,
+			wantE: 5,
 		},
 		{
 			name: "testUnicodeBar",
@@ -140,10 +131,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "│",
 				number: 1,
 			},
-			want: rangePos{
-				start: 4,
-				end:   5,
-			},
+			wantS: 4,
+			wantE: 5,
 		},
 		{
 			name: "testUnicodeBar2",
@@ -152,10 +141,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "│",
 				number: 2,
 			},
-			want: rangePos{
-				start: 8,
-				end:   9,
-			},
+			wantS: 8,
+			wantE: 9,
 		},
 		{
 			name: "testUnicodeBar3",
@@ -164,10 +151,8 @@ func Test_rangePosition(t *testing.T) {
 				substr: "│",
 				number: 3,
 			},
-			want: rangePos{
-				start: -1,
-				end:   -1,
-			},
+			wantS: -1,
+			wantE: -1,
 		},
 		{
 			name: "testNone",
@@ -176,16 +161,18 @@ func Test_rangePosition(t *testing.T) {
 				substr: "│",
 				number: 9,
 			},
-			want: rangePos{
-				start: -1,
-				end:   -1,
-			},
+			wantS: -1,
+			wantE: -1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := rangePosition(tt.args.s, tt.args.substr, tt.args.number); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("rangePosition() = %v, want %v", got, tt.want)
+			gotS, gotE := rangePosition(tt.args.s, tt.args.substr, tt.args.number)
+			if gotS != tt.wantS {
+				t.Errorf("rangePosition() got = %v, want %v", gotS, tt.wantS)
+			}
+			if gotE != tt.wantE {
+				t.Errorf("rangePosition() got1 = %v, want %v", gotE, tt.wantE)
 			}
 		})
 	}
@@ -199,7 +186,7 @@ func Test_searchPosition(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []rangePos
+		want [][]int
 	}{
 		{
 			name: "testNil",
@@ -215,15 +202,9 @@ func Test_searchPosition(t *testing.T) {
 				s:  "test",
 				re: regexp.MustCompile("t"),
 			},
-			want: []rangePos{
-				{
-					start: 0,
-					end:   1,
-				},
-				{
-					start: 3,
-					end:   4,
-				},
+			want: [][]int{
+				{0, 1},
+				{3, 4},
 			},
 		},
 		{
@@ -240,11 +221,8 @@ func Test_searchPosition(t *testing.T) {
 				s:  "TEST",
 				re: regexpComple("e", false),
 			},
-			want: []rangePos{
-				{
-					start: 1,
-					end:   2,
-				},
+			want: [][]int{
+				{1, 2},
 			},
 		},
 		{
@@ -269,15 +247,9 @@ func Test_searchPosition(t *testing.T) {
 				s:  "test",
 				re: regexpComple("t+", false),
 			},
-			want: []rangePos{
-				{
-					start: 0,
-					end:   1,
-				},
-				{
-					start: 3,
-					end:   4,
-				},
+			want: [][]int{
+				{0, 1},
+				{3, 4},
 			},
 		},
 		{
@@ -286,11 +258,8 @@ func Test_searchPosition(t *testing.T) {
 				s:  "tes\x1B[31mt\x1B[0m",
 				re: regexpComple("test", false),
 			},
-			want: []rangePos{
-				{
-					start: 0,
-					end:   4,
-				},
+			want: [][]int{
+				{0, 4},
 			},
 		},
 	}

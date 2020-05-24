@@ -48,8 +48,8 @@ func (root *Root) Draw() {
 
 		// column highlight
 		if root.ColumnMode {
-			r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
-			reverseContents(lc, r)
+			start, end := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+			reverseContents(lc, start, end)
 		}
 
 		if root.WrapMode {
@@ -79,14 +79,14 @@ func (root *Root) Draw() {
 		if searchWord != "" {
 			poss := searchPosition(line, root.inputRegexp)
 			for _, r := range poss {
-				reverseContents(lc, r)
+				reverseContents(lc, r[0], r[1])
 			}
 		}
 
 		// column highlight
 		if root.ColumnMode {
-			r := rangePosition(line, root.ColumnDelimiter, root.columnNum)
-			reverseContents(lc, r)
+			start, end := rangePosition(line, root.ColumnDelimiter, root.columnNum)
+			reverseContents(lc, start, end)
 		}
 
 		// line number mode
@@ -129,7 +129,7 @@ func (root *Root) Draw() {
 	root.Show()
 }
 
-// ResetScreen initializes the screen with a blank
+// ResetScreen initializes the screen with a blank.
 func (root *Root) ResetScreen() {
 	space := Content{
 		mainc: ' ',
@@ -145,8 +145,8 @@ func (root *Root) ResetScreen() {
 }
 
 // reverses the specified range.
-func reverseContents(lc lineContents, r rangePos) {
-	for n := lc.cMap[r.start]; n < lc.cMap[r.end]; n++ {
+func reverseContents(lc lineContents, start int, end int) {
+	for n := lc.cMap[start]; n < lc.cMap[end]; n++ {
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
@@ -262,7 +262,7 @@ func (root *Root) statusDraw() {
 	if Debug {
 		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)
-		root.setContentString(30, root.statusPos, c)
+		root.setContentString(root.Model.vWidth/2, root.statusPos, c)
 	}
 }
 

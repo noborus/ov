@@ -69,6 +69,7 @@ func New() *Root {
 	root := &Root{}
 	root.Model = NewModel()
 
+	root.TabWidth = 8
 	root.minStartPos = -10
 	root.HeaderStyle = tcell.StyleDefault.Bold(true)
 	root.ColorAlternate = tcell.ColorGray
