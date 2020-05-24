@@ -53,9 +53,13 @@ func (root *Root) inputEvent(ev *tcell.EventKey) string {
 	case tcell.KeyDelete:
 		pos := stringWidth(root.input, root.cursorX)
 		runes := []rune(root.input)
-		root.input = string(runes[:pos+1])
+		dp := 1
+		if root.cursorX == 0 {
+			dp = 0
+		}
+		root.input = string(runes[:pos+dp])
 		if len(runes) > pos+1 {
-			root.input += string(runes[pos+2:])
+			root.input += string(runes[pos+dp+1:])
 		}
 	case tcell.KeyLeft:
 		if root.cursorX > 0 {
