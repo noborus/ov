@@ -9,9 +9,10 @@ import (
 
 // HandleInputEvent handles input events.
 func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
-	input := root.inputEvent(ev)
+	input, ok := root.inputEvent(ev)
+
 	// Input not confirmed or canceled.
-	if input == "" {
+	if !ok {
 		return true
 	}
 
@@ -34,16 +35,16 @@ func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
 	return true
 }
 
-func (root *Root) inputEvent(ev *tcell.EventKey) string {
+func (root *Root) inputEvent(ev *tcell.EventKey) (string, bool) {
 	switch ev.Key() {
 	case tcell.KeyEscape:
 		root.mode = normal
-		return ""
+		return "", true
 	case tcell.KeyEnter:
-		return root.input
+		return root.input, true
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if root.cursorX == 0 {
-			return ""
+			return "", false
 		}
 		pos := stringWidth(root.input, root.cursorX)
 		runes := []rune(root.input)
@@ -94,13 +95,13 @@ func (root *Root) inputEvent(ev *tcell.EventKey) string {
 		root.input += string(runes[pos:])
 		root.cursorX += runewidth.RuneWidth(r)
 	}
-	return ""
+	return "", false
 }
 
 func stringWidth(str string, cursor int) int {
 	width := 0
 	i := 0
-	for _, r := range string(str) {
+	for _, r := range str {
 		width += runewidth.RuneWidth(r)
 		if r == '\t' {
 			width += 2
@@ -115,7 +116,7 @@ func stringWidth(str string, cursor int) int {
 
 func runeWidth(str string) int {
 	width := 0
-	for _, r := range string(str) {
+	for _, r := range str {
 		width += runewidth.RuneWidth(r)
 		if r == '\t' {
 			width += 2
@@ -139,27 +140,29 @@ func (root *Root) BackSearch(input string) {
 // GoLine will move to the specified line.
 func (root *Root) GoLine(input string) {
 	lineNum, err := strconv.Atoi(input)
+	root.input = ""
 	if err != nil {
 		return
 	}
 	root.moveNum(lineNum - root.Header)
-	root.input = ""
 }
 
 // SetHeader sets the number of lines in the header.
 func (root *Root) SetHeader(input string) {
 	line, err := strconv.Atoi(input)
+	root.input = ""
 	if err != nil {
 		return
 	}
-	if line >= 0 && line <= root.Model.vHight-1 {
-		if root.Header != line {
-			root.Header = line
-			root.setWrapHeaderLen()
-			root.Model.ClearCache()
-		}
+	if line < 0 || line > root.Model.vHight-1 {
+		return
 	}
-	root.input = ""
+	if root.Header == line {
+		return
+	}
+	root.Header = line
+	root.setWrapHeaderLen()
+	root.Model.ClearCache()
 }
 
 // SetDelimiter sets the delimiter string.
@@ -171,12 +174,13 @@ func (root *Root) SetDelimiter(input string) {
 // SetTabWidth sets the tab width.
 func (root *Root) SetTabWidth(input string) {
 	width, err := strconv.Atoi(input)
+	root.input = ""
 	if err != nil {
 		return
 	}
-	if root.TabWidth != width {
-		root.TabWidth = width
-		root.Model.ClearCache()
+	if root.TabWidth == width {
+		return
 	}
-	root.input = ""
+	root.TabWidth = width
+	root.Model.ClearCache()
 }

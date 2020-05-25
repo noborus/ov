@@ -62,8 +62,6 @@ var rootCmd = &cobra.Command{
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var err error
-
 		if Ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
@@ -74,8 +72,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 		oviewer.Debug = config.Debug
 
-		err = os.Setenv("TCELL_TRUECOLOR", "disable")
-		if err != nil {
+		if err := os.Setenv("TCELL_TRUECOLOR", "disable"); err != nil {
 			return err
 		}
 
@@ -94,8 +91,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			color := tcell.GetColor(config.ColorAlternate)
 			root.ColorAlternate = color
 		}
-		err = root.Run(args)
-		if err != nil {
+
+		if err := root.Run(args); err != nil {
 			return err
 		}
 		if root.AfterWrite {

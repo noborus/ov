@@ -7,10 +7,10 @@ import (
 // HandleEvent handles all events.
 func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 	root.message = ""
-	if root.mode != normal {
-		return root.HandleInputEvent(ev)
+	if root.mode == normal {
+		return root.defaultEvent(ev)
 	}
-	return root.defaultEvent(ev)
+	return root.HandleInputEvent(ev)
 }
 
 func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
