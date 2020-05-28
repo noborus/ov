@@ -10,10 +10,20 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// strToContents converts a single-line string into a content array.
-func strToContents(line string, tabWidth int) []Content {
-	contents, _ := parseString(line, tabWidth)
-	return contents
+// Content represents one character on the terminal.
+type Content struct {
+	width int
+	mainc rune
+	combc []rune
+	style tcell.Style
+}
+
+// lineContents represents one line of contents.
+type lineContents struct {
+	// contents contains one line of contents.
+	contents []Content
+	// byteMap is the number of contents corresponding to the number of bytes.
+	byteMap map[int]int
 }
 
 // The states of the ANSI escape code parser.
@@ -24,26 +34,31 @@ const (
 	ansiControlSequence
 )
 
-func parseString(line string, tabWidth int) ([]Content, map[int]int) {
-	var contents []Content
-	defaultStyle := tcell.StyleDefault
-	defaultContent := Content{
-		mainc: 0,
-		combc: nil,
-		width: 0,
-		style: defaultStyle,
+// DefaultContent is a blank Content.
+var DefaultContent = Content{
+	mainc: 0,
+	combc: nil,
+	width: 0,
+	style: tcell.StyleDefault,
+}
+
+// parseString converts a string to lineContents.
+// parseString includes escape sequences and tabs.
+func parseString(line string, tabWidth int) lineContents {
+	lc := lineContents{
+		contents: nil,
+		byteMap:  make(map[int]int),
 	}
 
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
-	style := defaultStyle
+	style := tcell.StyleDefault
 	x := 0
-	byteMaps := make(map[int]int)
 	n := 0
 	bsFlag := false
 	var bsContent Content
 	for _, runeValue := range line {
-		c := defaultContent
+		c := DefaultContent
 		switch state {
 		case ansiEscape:
 			switch runeValue {
@@ -52,7 +67,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 				state = ansiControlSequence
 				continue
 			case 'c': // Reset.
-				style = defaultStyle
+				style = tcell.StyleDefault
 				state = ansiText
 				continue
 			case 'P', ']', 'X', '^', '_': // Substrings and commands.
@@ -89,7 +104,7 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			continue
 		}
 
-		byteMaps[n] = len(contents)
+		lc.byteMap[n] = len(lc.contents)
 		n += len(string(runeValue))
 
 		switch runewidth.RuneWidth(runeValue) {
@@ -103,40 +118,40 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 					c.width = 1
 					c.style = style
 					for i := 0; i < tabStop; i++ {
-						contents = append(contents, c)
+						lc.contents = append(lc.contents, c)
 						x++
 					}
 				case tabWidth < 0:
-					byteMaps[n] = len(contents)
+					lc.byteMap[n] = len(lc.contents)
 					n += len(string(runeValue))
 					c.width = 1
 					c.style = style.Reverse(true)
 					c.mainc = rune('\\')
-					contents = append(contents, c)
+					lc.contents = append(lc.contents, c)
 					c.mainc = rune('t')
-					contents = append(contents, c)
+					lc.contents = append(lc.contents, c)
 					x += 2
 				default:
 				}
 				continue
 			case '\b': // BackSpace
-				if len(contents) == 0 {
+				if len(lc.contents) == 0 {
 					continue
 				}
 				bsFlag = true
-				bsContent = lastContent(contents)
+				bsContent = lastContent(lc.contents)
 				if bsContent.width > 1 {
-					contents = contents[:len(contents)-2]
+					lc.contents = lc.contents[:len(lc.contents)-2]
 				} else {
-					contents = contents[:len(contents)-1]
+					lc.contents = lc.contents[:len(lc.contents)-1]
 				}
 				continue
 			}
-			content := lastContent(contents)
+			content := lastContent(lc.contents)
 			content.combc = append(content.combc, runeValue)
-			n := len(contents) - content.width
-			if n >= 0 && len(contents) > 0 {
-				contents[n] = content
+			n := len(lc.contents) - content.width
+			if n >= 0 && len(lc.contents) > 0 {
+				lc.contents[n] = content
 			}
 		case 1:
 			c.mainc = runeValue
@@ -145,9 +160,9 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			if bsFlag {
 				c.style = overstrike(bsContent.mainc, runeValue, style)
 				bsFlag = false
-				bsContent = defaultContent
+				bsContent = DefaultContent
 			}
-			contents = append(contents, c)
+			lc.contents = append(lc.contents, c)
 			x++
 		case 2:
 			c.mainc = runeValue
@@ -156,21 +171,21 @@ func parseString(line string, tabWidth int) ([]Content, map[int]int) {
 			if bsFlag {
 				c.style = overstrike(bsContent.mainc, runeValue, style)
 				bsFlag = false
-				bsContent = defaultContent
+				bsContent = DefaultContent
 			}
-			contents = append(contents, c, defaultContent)
+			lc.contents = append(lc.contents, c, DefaultContent)
 			x += 2
 		}
 	}
-	byteMaps[n] = len(contents)
-	return contents, byteMaps
+	lc.byteMap[n] = len(lc.contents)
+	return lc
 }
 
 func overstrike(p, m rune, style tcell.Style) tcell.Style {
 	if p == m {
-		style = style.Bold(true)
+		style = OverStrikeStyle
 	} else if p == '_' {
-		style = style.Underline(true)
+		style = OverLineStyle
 	}
 	return style
 }
@@ -282,4 +297,10 @@ func lookupColor(colorNumber int) string {
 		"aqua",
 		"white",
 	}[colorNumber]
+}
+
+// strToContents converts a single-line string into a content array.
+func strToContents(str string, tabWidth int) []Content {
+	lc := parseString(str, tabWidth)
+	return lc.contents
 }

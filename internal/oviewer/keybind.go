@@ -18,6 +18,9 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 	case tcell.KeyEscape, tcell.KeyCtrlC:
 		root.Quit()
 		return true
+	case tcell.KeyCtrlL:
+		root.Sync()
+		return true
 	case tcell.KeyEnter:
 		root.moveDown()
 		return true

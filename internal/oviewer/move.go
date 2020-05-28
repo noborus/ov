@@ -121,7 +121,7 @@ func (root *Root) columnModeX() int {
 	if err != nil {
 		return 0
 	}
-	return lc.cMap[start]
+	return lc.byteMap[start]
 }
 
 func (root *Root) moveHfLeft() {

@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
-	"github.com/gdamore/tcell"
 )
 
 // The Model structure contains the values
@@ -35,19 +34,6 @@ func NewModel() *Model {
 		header:     make([]string, 0),
 		beforeSize: 1000,
 	}
-}
-
-// Content represents one character on the terminal.
-type Content struct {
-	width int
-	style tcell.Style
-	mainc rune
-	combc []rune
-}
-
-type lineContents struct {
-	contents []Content
-	cMap     map[int]int
 }
 
 // GetLine returns one line from buffer.
@@ -123,7 +109,7 @@ func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) 
 			return lc, fmt.Errorf("fatal error not lineContents")
 		}
 	} else {
-		lc.contents, lc.cMap = parseString(m.GetLine(lineNum), tabWidth)
+		lc = parseString(m.GetLine(lineNum), tabWidth)
 		m.cache.Set(lineNum, lc, 1)
 	}
 	return lc, nil

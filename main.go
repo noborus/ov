@@ -88,10 +88,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.LineNumMode = config.LineNumMode
 		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
 		if config.ColorAlternate != "" {
-			color := tcell.GetColor(config.ColorAlternate)
-			root.ColorAlternate = color
+			oviewer.ColorAlternate = tcell.GetColor(config.ColorAlternate)
 		}
-
 		if err := root.Run(args); err != nil {
 			return err
 		}

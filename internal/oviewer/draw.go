@@ -109,7 +109,7 @@ func (root *Root) Draw() {
 		if root.AlternateRows {
 			bgColor := normalBgColor
 			if (m.lineNum+lY)%2 == 1 {
-				bgColor = root.ColorAlternate
+				bgColor = ColorAlternate
 			}
 			for x := 0; x < m.vWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
@@ -146,7 +146,7 @@ func (root *Root) ResetScreen() {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	for n := lc.cMap[start]; n < lc.cMap[end]; n++ {
+	for n := lc.byteMap[start]; n < lc.byteMap[end]; n++ {
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
@@ -193,7 +193,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (int
 // headerStyle applies the style of the header.
 func (root *Root) headerStyle(contents []Content) {
 	for i := 0; i < len(contents); i++ {
-		contents[i].style = root.HeaderStyle
+		contents[i].style = HeaderStyle
 	}
 }
 

@@ -42,11 +42,15 @@ type Root struct {
 
 	minStartPos int
 
-	HeaderStyle    tcell.Style
-	ColorAlternate tcell.Color
-
 	tcell.Screen
 }
+
+var (
+	HeaderStyle     tcell.Style
+	ColorAlternate  tcell.Color
+	OverStrikeStyle tcell.Style
+	OverLineStyle   tcell.Style
+)
 
 // Mode represents the state of the input.
 type Mode int
@@ -71,11 +75,14 @@ func New() *Root {
 
 	root.TabWidth = 8
 	root.minStartPos = -10
-	root.HeaderStyle = tcell.StyleDefault.Bold(true)
-	root.ColorAlternate = tcell.ColorGray
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	root.startPos = 0
+
+	HeaderStyle = tcell.StyleDefault.Bold(true)
+	ColorAlternate = tcell.ColorGray
+	OverStrikeStyle = tcell.StyleDefault.Bold(true)
+	OverLineStyle = tcell.StyleDefault.Underline(true)
 	return root
 }
 
