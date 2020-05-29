@@ -45,13 +45,6 @@ type Root struct {
 	tcell.Screen
 }
 
-var (
-	HeaderStyle     tcell.Style
-	ColorAlternate  tcell.Color
-	OverStrikeStyle tcell.Style
-	OverLineStyle   tcell.Style
-)
-
 // Mode represents the state of the input.
 type Mode int
 
@@ -68,6 +61,13 @@ const (
 //Debug represents whether to enable the debug output.
 var Debug bool
 
+var (
+	HeaderStyle     = tcell.StyleDefault.Bold(true)
+	ColorAlternate  = tcell.ColorGray
+	OverStrikeStyle = tcell.StyleDefault.Bold(true)
+	OverLineStyle   = tcell.StyleDefault.Underline(true)
+)
+
 // New returns the entire structure of oviewer.
 func New() *Root {
 	root := &Root{}
@@ -79,10 +79,6 @@ func New() *Root {
 	root.columnNum = 0
 	root.startPos = 0
 
-	HeaderStyle = tcell.StyleDefault.Bold(true)
-	ColorAlternate = tcell.ColorGray
-	OverStrikeStyle = tcell.StyleDefault.Bold(true)
-	OverLineStyle = tcell.StyleDefault.Underline(true)
 	return root
 }
 

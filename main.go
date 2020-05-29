@@ -50,6 +50,15 @@ type Config struct {
 
 	// Alternating background color.
 	ColorAlternate string
+
+	// Header color.
+	ColorHeader string
+
+	// OverStrike color.
+	ColorOverStrike string
+
+	// OverLine color.
+	ColorOverLine string
 }
 
 var config Config
@@ -87,9 +96,20 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		root.ColumnMode = config.ColumnMode
 		root.LineNumMode = config.LineNumMode
 		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
+
 		if config.ColorAlternate != "" {
 			oviewer.ColorAlternate = tcell.GetColor(config.ColorAlternate)
 		}
+		if config.ColorHeader != "" {
+			oviewer.HeaderStyle = oviewer.HeaderStyle.Foreground(tcell.GetColor(config.ColorHeader))
+		}
+		if config.ColorOverStrike != "" {
+			oviewer.OverStrikeStyle = oviewer.OverStrikeStyle.Foreground(tcell.GetColor(config.ColorOverStrike))
+		}
+		if config.ColorOverLine != "" {
+			oviewer.OverLineStyle = oviewer.OverLineStyle.Foreground(tcell.GetColor(config.ColorOverLine))
+		}
+
 		if err := root.Run(args); err != nil {
 			return err
 		}
