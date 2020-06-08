@@ -212,38 +212,12 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	switch root.mode {
-	case search:
-		p := caseSensitive + "/"
+	if root.mode != normal {
+		p := caseSensitive + root.EventInput.Prompt()
 		leftStatus = p + root.input
 		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
 		leftContents = strToContents(leftStatus, -1)
-	case previous:
-		p := caseSensitive + "?"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case goline:
-		p := "Goto line:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case header:
-		p := "Header length:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case delimiter:
-		p := "Delimiter:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case tabWidth:
-		p := "TAB width:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	default:
+	} else {
 		for i := 0; i < len(leftContents); i++ {
 			leftContents[i].style = leftContents[i].style.Reverse(true)
 		}

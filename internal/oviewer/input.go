@@ -1,50 +1,37 @@
 package oviewer
 
 import (
-	"strconv"
-
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
 )
 
 // HandleInputEvent handles input events.
 func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
-	input, ok := root.inputEvent(ev)
-
 	// Input not confirmed or canceled.
+	ok := root.inputEvent(ev)
 	if !ok {
+		// Input is not confirmed.
 		return true
 	}
 
 	// Input is confirmed.
-	switch root.mode {
-	case search:
-		root.Search(input)
-	case previous:
-		root.BackSearch(input)
-	case goline:
-		root.GoLine(input)
-	case header:
-		root.SetHeader(input)
-	case delimiter:
-		root.SetDelimiter(input)
-	case tabWidth:
-		root.SetTabWidth(input)
-	}
+	nev := root.EventInput.Confirm(root.input)
+	go func() { root.Screen.PostEventWait(nev) }()
+
 	root.mode = normal
 	return true
 }
 
-func (root *Root) inputEvent(ev *tcell.EventKey) (string, bool) {
+func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 	switch ev.Key() {
 	case tcell.KeyEscape:
 		root.mode = normal
-		return "", true
+		return true
 	case tcell.KeyEnter:
-		return root.input, true
+		return true
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if root.cursorX == 0 {
-			return "", false
+			return false
 		}
 		pos := stringWidth(root.input, root.cursorX)
 		runes := []rune(root.input)
@@ -77,6 +64,14 @@ func (root *Root) inputEvent(ev *tcell.EventKey) (string, bool) {
 		pos := stringWidth(root.input, root.cursorX+1)
 		runes := []rune(root.input)
 		root.cursorX = runeWidth(string(runes[:pos+1]))
+	case tcell.KeyUp:
+		root.input = root.EventInput.Up(root.input)
+		runes := []rune(root.input)
+		root.cursorX = runeWidth(string(runes))
+	case tcell.KeyDown:
+		root.input = root.EventInput.Down(root.input)
+		runes := []rune(root.input)
+		root.cursorX = runeWidth(string(runes))
 	case tcell.KeyTAB:
 		pos := stringWidth(root.input, root.cursorX+1)
 		runes := []rune(root.input)
@@ -95,7 +90,7 @@ func (root *Root) inputEvent(ev *tcell.EventKey) (string, bool) {
 		root.input += string(runes[pos:])
 		root.cursorX += runewidth.RuneWidth(r)
 	}
-	return "", false
+	return false
 }
 
 func stringWidth(str string, cursor int) int {
@@ -123,64 +118,4 @@ func runeWidth(str string) int {
 		}
 	}
 	return width
-}
-
-// Search is a forward search.
-func (root *Root) Search(input string) {
-	root.inputRegexp = regexpComple(input, root.CaseSensitive)
-	root.postSearch(root.search(root.Model.lineNum))
-}
-
-// BackSearch reverse search.
-func (root *Root) BackSearch(input string) {
-	root.inputRegexp = regexpComple(input, root.CaseSensitive)
-	root.postSearch(root.backSearch(root.Model.lineNum))
-}
-
-// GoLine will move to the specified line.
-func (root *Root) GoLine(input string) {
-	lineNum, err := strconv.Atoi(input)
-	root.input = ""
-	if err != nil {
-		return
-	}
-	root.moveNum(lineNum - root.Header)
-}
-
-// SetHeader sets the number of lines in the header.
-func (root *Root) SetHeader(input string) {
-	line, err := strconv.Atoi(input)
-	root.input = ""
-	if err != nil {
-		return
-	}
-	if line < 0 || line > root.Model.vHight-1 {
-		return
-	}
-	if root.Header == line {
-		return
-	}
-	root.Header = line
-	root.setWrapHeaderLen()
-	root.Model.ClearCache()
-}
-
-// SetDelimiter sets the delimiter string.
-func (root *Root) SetDelimiter(input string) {
-	root.ColumnDelimiter = input
-	root.input = ""
-}
-
-// SetTabWidth sets the tab width.
-func (root *Root) SetTabWidth(input string) {
-	width, err := strconv.Atoi(input)
-	root.input = ""
-	if err != nil {
-		return
-	}
-	if root.TabWidth == width {
-		return
-	}
-	root.TabWidth = width
-	root.Model.ClearCache()
 }
