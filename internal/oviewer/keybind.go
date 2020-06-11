@@ -104,7 +104,7 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.toggleAlternateRows()
 			return true
 		case 't':
-			root.input = ""
+			root.inputMode.input = ""
 			root.setMode(tabWidth)
 			return true
 		}
