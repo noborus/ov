@@ -16,6 +16,23 @@ import (
 
 // The Root structure contains information about the drawing.
 type Root struct {
+	tcell.Screen
+
+	Model *Model
+
+	Input      *Input
+	EventInput EventInput
+
+	fileName      string
+	message       string
+	wrapHeaderLen int
+	startPos      int
+	bottomPos     int
+	statusPos     int
+	columnNum     int
+	minStartPos   int
+
+	ColumnDelimiter string
 	Header          int
 	TabWidth        int
 	AfterWrite      bool
@@ -24,38 +41,8 @@ type Root struct {
 	CaseSensitive   bool
 	AlternateRows   bool
 	ColumnMode      bool
-	ColumnDelimiter string
 	LineNumMode     bool
-
-	Model         *Model
-	wrapHeaderLen int
-	startPos      int
-	bottomPos     int
-	statusPos     int
-	fileName      string
-
-	inputMode
-
-	columnNum int
-	message   string
-
-	minStartPos int
-
-	tcell.Screen
 }
-
-// Mode represents the state of the input.
-type Mode int
-
-const (
-	normal Mode = iota
-	search
-	previous
-	goline
-	header
-	delimiter
-	tabWidth
-)
 
 //Debug represents whether to enable the debug output.
 var Debug bool
@@ -77,33 +64,8 @@ func New() *Root {
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	root.startPos = 0
-	root.inputMode.EventInput = &NormalInput{}
-	root.inputMode.GoCList = &Candidate{
-		list: []string{
-			"1000",
-			"100",
-			"10",
-			"0",
-		},
-	}
-	root.inputMode.DelimiterCList = &Candidate{
-		list: []string{
-			"\t",
-			"|",
-			",",
-		},
-	}
-	root.inputMode.TabWidthCList = &Candidate{
-		list: []string{
-			"3",
-			"2",
-			"4",
-			"8",
-		},
-	}
-	root.inputMode.SearchCList = &Candidate{
-		list: []string{},
-	}
+	root.EventInput = &NormalInput{}
+	root.Input = NewInput()
 	return root
 }
 
@@ -380,20 +342,20 @@ loop:
 
 // Search is a Up search.
 func (root *Root) Search() {
-	root.inputRegexp = regexpComple(root.inputMode.input, root.CaseSensitive)
+	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
 	root.postSearch(root.search(root.Model.lineNum))
 }
 
 // BackSearch reverse search.
 func (root *Root) BackSearch() {
-	root.inputRegexp = regexpComple(root.inputMode.input, root.CaseSensitive)
+	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
 	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
 // GoLine will move to the specified line.
 func (root *Root) GoLine() {
-	lineNum, err := strconv.Atoi(root.inputMode.input)
-	root.inputMode.input = ""
+	lineNum, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
 	if err != nil {
 		return
 	}
@@ -402,8 +364,8 @@ func (root *Root) GoLine() {
 
 // SetHeader sets the number of lines in the header.
 func (root *Root) SetHeader() {
-	line, err := strconv.Atoi(root.inputMode.input)
-	root.inputMode.input = ""
+	line, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
 	if err != nil {
 		return
 	}
@@ -420,14 +382,14 @@ func (root *Root) SetHeader() {
 
 // SetDelimiter sets the delimiter string.
 func (root *Root) SetDelimiter() {
-	root.ColumnDelimiter = root.inputMode.input
-	root.inputMode.input = ""
+	root.ColumnDelimiter = root.Input.value
+	root.Input.value = ""
 }
 
 // SetTabWidth sets the tab width.
 func (root *Root) SetTabWidth() {
-	width, err := strconv.Atoi(root.inputMode.input)
-	root.inputMode.input = ""
+	width, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
 	if err != nil {
 		return
 	}

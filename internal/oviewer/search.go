@@ -26,7 +26,7 @@ func (root *Root) postSearch(lineNum int, err error) {
 
 func (root *Root) search(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
-		if contains(root.Model.buffer[n], root.inputMode.inputRegexp) {
+		if contains(root.Model.buffer[n], root.Input.reg) {
 			return n, nil
 		}
 	}
@@ -35,7 +35,7 @@ func (root *Root) search(num int) (int, error) {
 
 func (root *Root) backSearch(num int) (int, error) {
 	for n := num; n >= 0; n-- {
-		if contains(root.Model.buffer[n], root.inputMode.inputRegexp) {
+		if contains(root.Model.buffer[n], root.Input.reg) {
 			return n, nil
 		}
 	}

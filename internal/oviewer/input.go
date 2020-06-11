@@ -8,19 +8,30 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-type inputMode struct {
-	EventInput EventInput
-
-	mode        Mode
-	input       string
-	inputRegexp *regexp.Regexp
-	cursorX     int
+type Input struct {
+	mode    Mode
+	value   string
+	reg     *regexp.Regexp
+	cursorX int
 
 	SearchCList    *Candidate
 	GoCList        *Candidate
 	DelimiterCList *Candidate
 	TabWidthCList  *Candidate
 }
+
+// Mode represents the state of the input.
+type Mode int
+
+const (
+	normal Mode = iota
+	search
+	previous
+	goline
+	header
+	delimiter
+	tabWidth
+)
 
 type Candidate struct {
 	list []string
@@ -34,6 +45,37 @@ type EventInput interface {
 	Down(i string) string
 }
 
+func NewInput() *Input {
+	i := Input{}
+	i.GoCList = &Candidate{
+		list: []string{
+			"1000",
+			"100",
+			"10",
+			"0",
+		},
+	}
+	i.DelimiterCList = &Candidate{
+		list: []string{
+			"\t",
+			"|",
+			",",
+		},
+	}
+	i.TabWidthCList = &Candidate{
+		list: []string{
+			"3",
+			"2",
+			"4",
+			"8",
+		},
+	}
+	i.SearchCList = &Candidate{
+		list: []string{},
+	}
+	return &i
+}
+
 // HandleInputEvent handles input events.
 func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
 	// Input not confirmed or canceled.
@@ -44,80 +86,81 @@ func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
 	}
 
 	// Input is confirmed.
-	nev := root.EventInput.Confirm(root.inputMode.input)
+	nev := root.EventInput.Confirm(root.Input.value)
 	go func() { root.Screen.PostEventWait(nev) }()
 
-	root.mode = normal
+	root.Input.mode = normal
 	return true
 }
 
 func (root *Root) inputEvent(ev *tcell.EventKey) bool {
+	input := root.Input
 	switch ev.Key() {
 	case tcell.KeyEscape:
-		root.mode = normal
+		input.mode = normal
 		return true
 	case tcell.KeyEnter:
 		return true
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if root.inputMode.cursorX == 0 {
+		if input.cursorX == 0 {
 			return false
 		}
-		pos := stringWidth(root.inputMode.input, root.inputMode.cursorX)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.input = string(runes[:pos])
-		root.inputMode.cursorX = runeWidth(root.inputMode.input)
-		root.inputMode.input += string(runes[pos+1:])
+		pos := stringWidth(input.value, input.cursorX)
+		runes := []rune(input.value)
+		input.value = string(runes[:pos])
+		input.cursorX = runeWidth(input.value)
+		input.value += string(runes[pos+1:])
 	case tcell.KeyDelete:
-		pos := stringWidth(root.inputMode.input, root.inputMode.cursorX)
-		runes := []rune(root.inputMode.input)
+		pos := stringWidth(input.value, input.cursorX)
+		runes := []rune(input.value)
 		dp := 1
-		if root.inputMode.cursorX == 0 {
+		if input.cursorX == 0 {
 			dp = 0
 		}
-		root.inputMode.input = string(runes[:pos+dp])
+		input.value = string(runes[:pos+dp])
 		if len(runes) > pos+1 {
-			root.inputMode.input += string(runes[pos+dp+1:])
+			input.value += string(runes[pos+dp+1:])
 		}
 	case tcell.KeyLeft:
-		if root.inputMode.cursorX > 0 {
-			pos := stringWidth(root.input, root.inputMode.cursorX)
-			runes := []rune(root.inputMode.input)
+		if input.cursorX > 0 {
+			pos := stringWidth(input.value, input.cursorX)
+			runes := []rune(input.value)
 			if pos >= 0 {
-				root.inputMode.cursorX = runeWidth(string(runes[:pos]))
+				input.cursorX = runeWidth(string(runes[:pos]))
 				if pos > 0 && runes[pos-1] == '\t' {
-					root.inputMode.cursorX--
+					input.cursorX--
 				}
 			}
 		}
 	case tcell.KeyRight:
-		pos := stringWidth(root.input, root.inputMode.cursorX+1)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.cursorX = runeWidth(string(runes[:pos+1]))
+		pos := stringWidth(input.value, input.cursorX+1)
+		runes := []rune(input.value)
+		input.cursorX = runeWidth(string(runes[:pos+1]))
 	case tcell.KeyUp:
-		root.inputMode.input = root.EventInput.Up(root.inputMode.input)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.cursorX = runeWidth(string(runes))
+		input.value = root.EventInput.Up(input.value)
+		runes := []rune(input.value)
+		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyDown:
-		root.inputMode.input = root.EventInput.Down(root.inputMode.input)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.cursorX = runeWidth(string(runes))
+		input.value = root.EventInput.Down(input.value)
+		runes := []rune(input.value)
+		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyTAB:
-		pos := stringWidth(root.inputMode.input, root.inputMode.cursorX+1)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.input = string(runes[:pos])
-		root.inputMode.input += "\t"
-		root.inputMode.cursorX += 2
-		root.inputMode.input += string(runes[pos:])
+		pos := stringWidth(input.value, input.cursorX+1)
+		runes := []rune(input.value)
+		input.value = string(runes[:pos])
+		input.value += "\t"
+		input.cursorX += 2
+		input.value += string(runes[pos:])
 	case tcell.KeyCtrlA:
 		root.CaseSensitive = !root.CaseSensitive
 	case tcell.KeyRune:
-		pos := stringWidth(root.inputMode.input, root.cursorX+1)
-		runes := []rune(root.inputMode.input)
-		root.inputMode.input = string(runes[:pos])
+		pos := stringWidth(input.value, input.cursorX+1)
+		runes := []rune(input.value)
+		input.value = string(runes[:pos])
 		r := ev.Rune()
-		root.inputMode.input += string(r)
-		root.inputMode.input += string(runes[pos:])
-		root.inputMode.cursorX += runewidth.RuneWidth(r)
+		input.value += string(r)
+		input.value += string(runes[pos:])
+		input.cursorX += runewidth.RuneWidth(r)
 	}
 	return false
 }
@@ -150,40 +193,41 @@ func runeWidth(str string) int {
 }
 
 func (root *Root) setMode(mode Mode) {
-	root.mode = mode
-	root.inputMode.input = ""
-	root.inputMode.cursorX = 0
+	input := root.Input
+	input.mode = mode
+	input.value = ""
+	input.cursorX = 0
 	switch mode {
 	case search:
 		root.EventInput = &SearchInput{
-			clist: root.SearchCList,
+			clist: input.SearchCList,
 		}
 	case previous:
 		root.EventInput = &PreviousInput{
-			clist: root.SearchCList,
+			clist: input.SearchCList,
 		}
 	case goline:
 		root.EventInput = &GotoInput{
-			clist: root.GoCList,
+			clist: input.GoCList,
 		}
 	case header:
-		root.inputMode.input = strconv.Itoa(root.Header)
-		root.inputMode.cursorX = runeWidth(root.inputMode.input)
+		input.value = strconv.Itoa(root.Header)
+		input.cursorX = runeWidth(input.value)
 		root.EventInput = &HeaderInput{}
 	case delimiter:
-		root.inputMode.input = root.ColumnDelimiter
-		root.inputMode.cursorX = runeWidth(root.inputMode.input)
+		input.value = root.ColumnDelimiter
+		input.cursorX = runeWidth(input.value)
 		root.EventInput = &DelimiterInput{
-			clist: root.DelimiterCList,
+			clist: input.DelimiterCList,
 		}
 	case tabWidth:
 		root.EventInput = &TABWidthInput{
-			clist: root.TabWidthCList,
+			clist: input.TabWidthCList,
 		}
 	default:
 		root.EventInput = &NormalInput{}
 	}
-	root.ShowCursor(root.cursorX, root.statusPos)
+	root.ShowCursor(input.cursorX, root.statusPos)
 }
 
 type NormalInput struct {

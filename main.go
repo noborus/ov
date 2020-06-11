@@ -25,6 +25,20 @@ var Ver bool
 
 // Config structure contains the variables that determine the overall behavior.
 type Config struct {
+	// Alternating background color.
+	ColorAlternate string
+
+	// Header color.
+	ColorHeader string
+
+	// OverStrike color.
+	ColorOverStrike string
+
+	// OverLine color.
+	ColorOverLine string
+
+	// Column Delimiter
+	ColumnDelimiter string
 	// Wrap is Wrap mode.
 	Wrap bool
 	// TabWidth is tab stop num.
@@ -41,24 +55,10 @@ type Config struct {
 	AlternateRows bool
 	// Column mode
 	ColumnMode bool
-	// Column Delimiter
-	ColumnDelimiter string
 	// Line Number
 	LineNumMode bool
 	// Debug is enable debug display.
 	Debug bool
-
-	// Alternating background color.
-	ColorAlternate string
-
-	// Header color.
-	ColorHeader string
-
-	// OverStrike color.
-	ColorOverStrike string
-
-	// OverLine color.
-	ColorOverLine string
 }
 
 var config Config
