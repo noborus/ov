@@ -211,12 +211,8 @@ func (root *Root) setMode(mode Mode) {
 			clist: input.GoCList,
 		}
 	case header:
-		input.value = strconv.Itoa(root.Header)
-		input.cursorX = runeWidth(input.value)
 		root.EventInput = &HeaderInput{}
 	case delimiter:
-		input.value = root.ColumnDelimiter
-		input.cursorX = runeWidth(input.value)
 		root.EventInput = &DelimiterInput{
 			clist: input.DelimiterCList,
 		}
