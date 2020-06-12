@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"regexp"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -16,6 +16,23 @@ import (
 
 // The Root structure contains information about the drawing.
 type Root struct {
+	tcell.Screen
+
+	Model *Model
+
+	Input      *Input
+	EventInput EventInput
+
+	fileName      string
+	message       string
+	wrapHeaderLen int
+	startPos      int
+	bottomPos     int
+	statusPos     int
+	columnNum     int
+	minStartPos   int
+
+	ColumnDelimiter string
 	Header          int
 	TabWidth        int
 	AfterWrite      bool
@@ -24,39 +41,8 @@ type Root struct {
 	CaseSensitive   bool
 	AlternateRows   bool
 	ColumnMode      bool
-	ColumnDelimiter string
 	LineNumMode     bool
-
-	Model         *Model
-	wrapHeaderLen int
-	startPos      int
-	bottomPos     int
-	statusPos     int
-	fileName      string
-	mode          Mode
-	input         string
-	inputRegexp   *regexp.Regexp
-	cursorX       int
-	columnNum     int
-	message       string
-
-	minStartPos int
-
-	tcell.Screen
 }
-
-// Mode represents the state of the input.
-type Mode int
-
-const (
-	normal Mode = iota
-	search
-	previous
-	goline
-	header
-	delimiter
-	tabWidth
-)
 
 //Debug represents whether to enable the debug output.
 var Debug bool
@@ -78,7 +64,8 @@ func New() *Root {
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	root.startPos = 0
-
+	root.EventInput = &NormalInput{}
+	root.Input = NewInput()
 	return root
 }
 
@@ -89,162 +76,6 @@ func (root *Root) PrepareView() {
 	m.vWidth, m.vHight = screen.Size()
 	root.setWrapHeaderLen()
 	root.statusPos = m.vHight - 1
-}
-
-// HeaderLen returns the actual number of lines in the header.
-func (root *Root) HeaderLen() int {
-	if root.WrapMode {
-		return root.wrapHeaderLen
-	}
-	return root.Header
-}
-
-func (root *Root) setWrapHeaderLen() {
-	m := root.Model
-	root.wrapHeaderLen = 0
-	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
-	}
-}
-
-func (root *Root) bottomLineNum(num int) int {
-	m := root.Model
-	if !root.WrapMode {
-		if num <= m.vHight {
-			return 0
-		}
-		return num - (m.vHight - root.Header) + 1
-	}
-
-	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.GetContents(num, root.TabWidth)) / m.vWidth)
-		num--
-	}
-	num++
-	return num
-}
-
-func (root *Root) toggleWrap() {
-	if root.WrapMode {
-		root.WrapMode = false
-	} else {
-		root.WrapMode = true
-		root.Model.x = 0
-	}
-	root.setWrapHeaderLen()
-}
-
-func (root *Root) toggleColumnMode() {
-	if root.ColumnMode {
-		root.ColumnMode = false
-	} else {
-		root.ColumnMode = true
-	}
-}
-
-func (root *Root) toggleAlternateRows() {
-	root.Model.ClearCache()
-	if root.AlternateRows {
-		root.AlternateRows = false
-	} else {
-		root.AlternateRows = true
-	}
-}
-
-func (root *Root) toggleLineNumMode() {
-	if root.LineNumMode {
-		root.LineNumMode = false
-	} else {
-		root.LineNumMode = true
-	}
-	root.updateEndNum()
-}
-
-func (root *Root) setMode(mode Mode) {
-	root.mode = mode
-	root.input = ""
-	root.cursorX = 0
-	root.ShowCursor(root.cursorX, root.statusPos)
-}
-
-type eventAppQuit struct {
-	tcell.EventTime
-}
-
-// Quit executes a quit event.
-func (root *Root) Quit() {
-	ev := &eventAppQuit{}
-	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
-}
-
-type eventTimer struct {
-	tcell.EventTime
-}
-
-// runOnTime runs at time.
-func (root *Root) runOnTime() {
-	ev := &eventTimer{}
-	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
-}
-
-// Resize is a wrapper function that calls sync.
-func (root *Root) Resize() {
-	root.Sync()
-}
-
-// Sync redraws the whole thing.
-func (root *Root) Sync() {
-	root.preparelineNum()
-	root.PrepareView()
-	root.Draw()
-}
-
-func (root *Root) countTimer() {
-	timer := time.NewTicker(time.Millisecond * 500)
-loop:
-	for {
-		<-timer.C
-		root.runOnTime()
-		if root.Model.eof {
-			break loop
-		}
-	}
-	timer.Stop()
-}
-
-func (root *Root) preparelineNum() {
-	root.startPos = 0
-	if root.LineNumMode {
-		root.startPos = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
-	}
-}
-
-func (root *Root) updateEndNum() {
-	root.preparelineNum()
-	root.statusDraw()
-}
-
-// main is manages and executes events in the main routine.
-func (root *Root) main() {
-	screen := root.Screen
-	go root.countTimer()
-loop:
-	for {
-		root.Draw()
-		ev := screen.PollEvent()
-		switch ev := ev.(type) {
-		case *eventTimer:
-			root.updateEndNum()
-		case *eventAppQuit:
-			break loop
-		case *tcell.EventKey:
-			root.HandleEvent(ev)
-		case *tcell.EventResize:
-			root.Resize()
-		}
-	}
 }
 
 // Run is reads the file(or stdin) and starts
@@ -345,4 +176,226 @@ func (root *Root) WriteOriginal() {
 		}
 		fmt.Println(m.GetLine(m.lineNum + i))
 	}
+}
+
+// HeaderLen returns the actual number of lines in the header.
+func (root *Root) HeaderLen() int {
+	if root.WrapMode {
+		return root.wrapHeaderLen
+	}
+	return root.Header
+}
+
+func (root *Root) setWrapHeaderLen() {
+	m := root.Model
+	root.wrapHeaderLen = 0
+	for y := 0; y < root.Header; y++ {
+		root.wrapHeaderLen += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
+	}
+}
+
+func (root *Root) bottomLineNum(num int) int {
+	m := root.Model
+	if !root.WrapMode {
+		if num <= m.vHight {
+			return 0
+		}
+		return num - (m.vHight - root.Header) + 1
+	}
+
+	for y := m.vHight - root.wrapHeaderLen; y > 0; {
+		y -= 1 + (len(m.GetContents(num, root.TabWidth)) / m.vWidth)
+		num--
+	}
+	num++
+	return num
+}
+
+func (root *Root) toggleWrap() {
+	if root.WrapMode {
+		root.WrapMode = false
+	} else {
+		root.WrapMode = true
+		root.Model.x = 0
+	}
+	root.setWrapHeaderLen()
+}
+
+func (root *Root) toggleColumnMode() {
+	if root.ColumnMode {
+		root.ColumnMode = false
+	} else {
+		root.ColumnMode = true
+	}
+}
+
+func (root *Root) toggleAlternateRows() {
+	root.Model.ClearCache()
+	if root.AlternateRows {
+		root.AlternateRows = false
+	} else {
+		root.AlternateRows = true
+	}
+}
+
+func (root *Root) toggleLineNumMode() {
+	if root.LineNumMode {
+		root.LineNumMode = false
+	} else {
+		root.LineNumMode = true
+	}
+	root.updateEndNum()
+}
+
+type eventAppQuit struct {
+	tcell.EventTime
+}
+
+// Quit executes a quit event.
+func (root *Root) Quit() {
+	ev := &eventAppQuit{}
+	ev.SetEventNow()
+	go func() { root.Screen.PostEventWait(ev) }()
+}
+
+type eventTimer struct {
+	tcell.EventTime
+}
+
+// runOnTime runs at time.
+func (root *Root) runOnTime() {
+	ev := &eventTimer{}
+	ev.SetEventNow()
+	go func() { root.Screen.PostEventWait(ev) }()
+}
+
+// Resize is a wrapper function that calls sync.
+func (root *Root) Resize() {
+	root.Sync()
+}
+
+// Sync redraws the whole thing.
+func (root *Root) Sync() {
+	root.preparelineNum()
+	root.PrepareView()
+	root.Draw()
+}
+
+func (root *Root) countTimer() {
+	timer := time.NewTicker(time.Millisecond * 500)
+loop:
+	for {
+		<-timer.C
+		root.runOnTime()
+		if root.Model.eof {
+			break loop
+		}
+	}
+	timer.Stop()
+}
+
+func (root *Root) preparelineNum() {
+	root.startPos = 0
+	if root.LineNumMode {
+		root.startPos = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
+	}
+}
+
+func (root *Root) updateEndNum() {
+	root.preparelineNum()
+	root.statusDraw()
+}
+
+// main is manages and executes events in the main routine.
+func (root *Root) main() {
+	screen := root.Screen
+	go root.countTimer()
+
+loop:
+	for {
+		root.Draw()
+		ev := screen.PollEvent()
+		switch ev := ev.(type) {
+		case *eventTimer:
+			root.updateEndNum()
+		case *eventAppQuit:
+			break loop
+		case *SearchInput:
+			root.Search()
+		case *PreviousInput:
+			root.BackSearch()
+		case *GotoInput:
+			root.GoLine()
+		case *HeaderInput:
+			root.SetHeader()
+		case *DelimiterInput:
+			root.SetDelimiter()
+		case *TABWidthInput:
+			root.SetTabWidth()
+		case *tcell.EventKey:
+			root.HandleEvent(ev)
+		case *tcell.EventResize:
+			root.Resize()
+		}
+	}
+}
+
+// Search is a Up search.
+func (root *Root) Search() {
+	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
+	root.postSearch(root.search(root.Model.lineNum))
+}
+
+// BackSearch reverse search.
+func (root *Root) BackSearch() {
+	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
+	root.postSearch(root.backSearch(root.Model.lineNum))
+}
+
+// GoLine will move to the specified line.
+func (root *Root) GoLine() {
+	lineNum, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
+	if err != nil {
+		return
+	}
+	root.moveNum(lineNum - root.Header)
+}
+
+// SetHeader sets the number of lines in the header.
+func (root *Root) SetHeader() {
+	line, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
+	if err != nil {
+		return
+	}
+	if line < 0 || line > root.Model.vHight-1 {
+		return
+	}
+	if root.Header == line {
+		return
+	}
+	root.Header = line
+	root.setWrapHeaderLen()
+	root.Model.ClearCache()
+}
+
+// SetDelimiter sets the delimiter string.
+func (root *Root) SetDelimiter() {
+	root.ColumnDelimiter = root.Input.value
+	root.Input.value = ""
+}
+
+// SetTabWidth sets the tab width.
+func (root *Root) SetTabWidth() {
+	width, err := strconv.Atoi(root.Input.value)
+	root.Input.value = ""
+	if err != nil {
+		return
+	}
+	if root.TabWidth == width {
+		return
+	}
+	root.TabWidth = width
+	root.Model.ClearCache()
 }

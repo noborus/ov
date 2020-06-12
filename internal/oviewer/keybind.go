@@ -7,7 +7,7 @@ import (
 // HandleEvent handles all events.
 func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 	root.message = ""
-	if root.mode == normal {
+	if root.Input.mode == normal {
 		return root.defaultEvent(ev)
 	}
 	return root.HandleInputEvent(ev)
@@ -104,7 +104,7 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.toggleAlternateRows()
 			return true
 		case 't':
-			root.input = ""
+			root.Input.value = ""
 			root.setMode(tabWidth)
 			return true
 		}

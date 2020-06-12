@@ -29,8 +29,8 @@ func (root *Root) Draw() {
 
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 	searchWord := ""
-	if root.mode == normal {
-		searchWord = root.input
+	if root.Input.mode == normal {
+		searchWord = root.Input.value
 	}
 
 	lY := 0
@@ -77,7 +77,7 @@ func (root *Root) Draw() {
 
 		// search highlight
 		if searchWord != "" {
-			poss := searchPosition(line, root.inputRegexp)
+			poss := searchPosition(line, root.Input.reg)
 			for _, r := range poss {
 				reverseContents(lc, r[0], r[1])
 			}
@@ -212,38 +212,12 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	switch root.mode {
-	case search:
-		p := caseSensitive + "/"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
+	if root.Input.mode != normal {
+		p := caseSensitive + root.EventInput.Prompt()
+		leftStatus = p + root.Input.value
+		root.Screen.ShowCursor(len(p)+root.Input.cursorX, root.statusPos)
 		leftContents = strToContents(leftStatus, -1)
-	case previous:
-		p := caseSensitive + "?"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case goline:
-		p := "Goto line:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case header:
-		p := "Header length:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case delimiter:
-		p := "Delimiter:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	case tabWidth:
-		p := "TAB width:"
-		leftStatus = p + root.input
-		root.Screen.ShowCursor(len(p)+root.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	default:
+	} else {
 		for i := 0; i < len(leftContents); i++ {
 			leftContents[i].style = leftContents[i].style.Reverse(true)
 		}
