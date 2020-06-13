@@ -8,8 +8,12 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// Input represents the status of various inputs.
+// Retain each input list to save the input history.
 type Input struct {
-	mode    Mode
+	EventInput EventInput
+
+	mode    inputMode
 	value   string
 	reg     *regexp.Regexp
 	cursorX int
@@ -20,11 +24,11 @@ type Input struct {
 	TabWidthCList  *Candidate
 }
 
-// Mode represents the state of the input.
-type Mode int
+// inputMode represents the state of the input.
+type inputMode int
 
 const (
-	normal Mode = iota
+	normal inputMode = iota
 	search
 	previous
 	goline
@@ -33,18 +37,25 @@ const (
 	tabWidth
 )
 
+// Candidate represents a candidate list.
 type Candidate struct {
 	list []string
 	p    int
 }
 
+// EventInput is a generic interface for inputs.
 type EventInput interface {
+	// Prompt returns the prompt string in the input field.
 	Prompt() string
+	// Confirm returns the event when the input is confirmed.
 	Confirm(i string) tcell.Event
+	// Up returns strings when the up key is pressed during input.
 	Up(i string) string
+	// Down returns strings when the down key is pressed during input.
 	Down(i string) string
 }
 
+// NewInput returns all the various inputs.
 func NewInput() *Input {
 	i := Input{}
 	i.GoCList = &Candidate{
@@ -57,6 +68,7 @@ func NewInput() *Input {
 	}
 	i.DelimiterCList = &Candidate{
 		list: []string{
+			"│",
 			"\t",
 			"|",
 			",",
@@ -73,27 +85,31 @@ func NewInput() *Input {
 	i.SearchCList = &Candidate{
 		list: []string{},
 	}
+	i.EventInput = &NormalInput{}
 	return &i
 }
 
 // HandleInputEvent handles input events.
 func (root *Root) HandleInputEvent(ev *tcell.EventKey) bool {
-	// Input not confirmed or canceled.
-	ok := root.inputEvent(ev)
+	// inputEvent returns input confirmed or not confirmed.
+	ok := root.inputKeyEvent(ev)
+
+	// Not confirmed or canceled.
 	if !ok {
-		// Input is not confirmed.
 		return true
 	}
 
-	// Input is confirmed.
-	nev := root.EventInput.Confirm(root.Input.value)
+	// confirmed.
+	input := root.Input
+	nev := input.EventInput.Confirm(input.value)
 	go func() { root.Screen.PostEventWait(nev) }()
 
-	root.Input.mode = normal
+	input.mode = normal
 	return true
 }
 
-func (root *Root) inputEvent(ev *tcell.EventKey) bool {
+// inputKeyEvent handles the keystrokes of the input.
+func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	input := root.Input
 	switch ev.Key() {
 	case tcell.KeyEscape:
@@ -137,11 +153,11 @@ func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes[:pos+1]))
 	case tcell.KeyUp:
-		input.value = root.EventInput.Up(input.value)
+		input.value = input.EventInput.Up(input.value)
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyDown:
-		input.value = root.EventInput.Down(input.value)
+		input.value = input.EventInput.Down(input.value)
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyTAB:
@@ -192,38 +208,73 @@ func runeWidth(str string) int {
 	return width
 }
 
-func (root *Root) setMode(mode Mode) {
-	input := root.Input
+func (input *Input) setMode(mode inputMode) {
 	input.mode = mode
 	input.value = ""
 	input.cursorX = 0
 	switch mode {
 	case search:
-		root.EventInput = &SearchInput{
+		input.EventInput = &SearchInput{
 			clist: input.SearchCList,
 		}
 	case previous:
-		root.EventInput = &PreviousInput{
+		input.EventInput = &PreviousInput{
 			clist: input.SearchCList,
 		}
 	case goline:
-		root.EventInput = &GotoInput{
+		input.EventInput = &GotoInput{
 			clist: input.GoCList,
 		}
 	case header:
-		root.EventInput = &HeaderInput{}
+		input.EventInput = &HeaderInput{}
 	case delimiter:
-		root.EventInput = &DelimiterInput{
+		input.EventInput = &DelimiterInput{
 			clist: input.DelimiterCList,
 		}
 	case tabWidth:
-		root.EventInput = &TABWidthInput{
+		input.EventInput = &TABWidthInput{
 			clist: input.TabWidthCList,
 		}
 	default:
-		root.EventInput = &NormalInput{}
+		input.EventInput = &NormalInput{}
 	}
-	root.ShowCursor(input.cursorX, root.statusPos)
+}
+
+func (c *Candidate) up() string {
+	if len(c.list) == 0 {
+		return ""
+	}
+	if c.p > 0 {
+		c.p--
+		return c.list[c.p]
+	}
+	c.p = len(c.list) - 1
+	return c.list[c.p]
+}
+
+func (c *Candidate) down() string {
+	if len(c.list) == 0 {
+		return ""
+	}
+	if len(c.list) > c.p+1 {
+		c.p++
+		return c.list[c.p]
+	}
+	c.p = 0
+	return c.list[c.p]
+}
+
+func toLast(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+	for n, l := range list {
+		if l == s {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	list = append(list, s)
+	return list
 }
 
 type NormalInput struct {
@@ -256,33 +307,18 @@ func (s *SearchInput) Prompt() string {
 }
 
 func (s *SearchInput) Confirm(i string) tcell.Event {
-	s.clist.list = append(s.clist.list, i)
+	s.clist.list = toLast(s.clist.list, i)
+	s.clist.p = 0
 	s.SetEventNow()
 	return s
 }
 
 func (s *SearchInput) Up(i string) string {
-	if len(s.clist.list) == 0 {
-		return ""
-	}
-	if len(s.clist.list) > s.clist.p+1 {
-		s.clist.p++
-		return s.clist.list[s.clist.p]
-	}
-	s.clist.p = 0
-	return s.clist.list[s.clist.p]
+	return s.clist.up()
 }
 
 func (s *SearchInput) Down(i string) string {
-	if len(s.clist.list) == 0 {
-		return ""
-	}
-	if s.clist.p > 0 {
-		s.clist.p--
-		return s.clist.list[s.clist.p]
-	}
-	s.clist.p = len(s.clist.list) - 1
-	return s.clist.list[s.clist.p]
+	return s.clist.down()
 }
 
 type PreviousInput struct {
@@ -294,34 +330,19 @@ func (p *PreviousInput) Prompt() string {
 	return "?"
 }
 
-func (p *PreviousInput) Confirm(i string) tcell.Event {
-	p.clist.list = append(p.clist.list, i)
+func (p *PreviousInput) Confirm(s string) tcell.Event {
+	p.clist.list = toLast(p.clist.list, s)
+	p.clist.p = 0
 	p.SetEventNow()
 	return p
 }
 
-func (p *PreviousInput) Up(i string) string {
-	if len(p.clist.list) == 0 {
-		return ""
-	}
-	if len(p.clist.list) > p.clist.p+1 {
-		p.clist.p++
-		return p.clist.list[p.clist.p]
-	}
-	p.clist.p = 0
-	return p.clist.list[p.clist.p]
+func (p *PreviousInput) Up(s string) string {
+	return p.clist.up()
 }
 
-func (p *PreviousInput) Down(i string) string {
-	if len(p.clist.list) == 0 {
-		return ""
-	}
-	if p.clist.p > 0 {
-		p.clist.p--
-		return p.clist.list[p.clist.p]
-	}
-	p.clist.p = len(p.clist.list) - 1
-	return p.clist.list[p.clist.p]
+func (p *PreviousInput) Down(s string) string {
+	return p.clist.down()
 }
 
 type GotoInput struct {
@@ -333,28 +354,19 @@ func (g *GotoInput) Prompt() string {
 	return "Goto line:"
 }
 
-func (g *GotoInput) Confirm(i string) tcell.Event {
-	g.clist.list = append(g.clist.list, i)
+func (g *GotoInput) Confirm(s string) tcell.Event {
+	g.clist.list = toLast(g.clist.list, s)
+	g.clist.p = 0
 	g.SetEventNow()
 	return g
 }
 
-func (g *GotoInput) Up(i string) string {
-	if len(g.clist.list) > g.clist.p+1 {
-		g.clist.p++
-		return g.clist.list[g.clist.p]
-	}
-	g.clist.p = 0
-	return g.clist.list[g.clist.p]
+func (g *GotoInput) Up(s string) string {
+	return g.clist.up()
 }
 
-func (g *GotoInput) Down(i string) string {
-	if g.clist.p > 0 {
-		g.clist.p--
-		return g.clist.list[g.clist.p]
-	}
-	g.clist.p = len(g.clist.list) - 1
-	return g.clist.list[g.clist.p]
+func (g *GotoInput) Down(s string) string {
+	return g.clist.down()
 }
 
 type HeaderInput struct {
@@ -365,21 +377,21 @@ func (h *HeaderInput) Prompt() string {
 	return "Header length:"
 }
 
-func (h *HeaderInput) Confirm(i string) tcell.Event {
+func (h *HeaderInput) Confirm(s string) tcell.Event {
 	h.SetEventNow()
 	return h
 }
 
-func (h *HeaderInput) Up(i string) string {
-	n, err := strconv.Atoi(i)
+func (h *HeaderInput) Up(s string) string {
+	n, err := strconv.Atoi(s)
 	if err != nil {
 		return "0"
 	}
 	return strconv.Itoa(n + 1)
 }
 
-func (h *HeaderInput) Down(i string) string {
-	n, err := strconv.Atoi(i)
+func (h *HeaderInput) Down(s string) string {
+	n, err := strconv.Atoi(s)
 	if err != nil {
 		return "0"
 	}
@@ -395,28 +407,19 @@ func (d *DelimiterInput) Prompt() string {
 	return "Delimiter:"
 }
 
-func (d *DelimiterInput) Confirm(i string) tcell.Event {
-	d.clist.list = append(d.clist.list, i)
+func (d *DelimiterInput) Confirm(s string) tcell.Event {
+	d.clist.list = toLast(d.clist.list, s)
+	d.clist.p = 0
 	d.SetEventNow()
 	return d
 }
 
-func (d *DelimiterInput) Up(i string) string {
-	if d.clist.p > 0 {
-		d.clist.p--
-		return d.clist.list[d.clist.p]
-	}
-	d.clist.p = len(d.clist.list) - 1
-	return d.clist.list[d.clist.p]
+func (d *DelimiterInput) Up(s string) string {
+	return d.clist.up()
 }
 
-func (d *DelimiterInput) Down(i string) string {
-	if len(d.clist.list) > d.clist.p+1 {
-		d.clist.p++
-		return d.clist.list[d.clist.p]
-	}
-	d.clist.p = 0
-	return d.clist.list[d.clist.p]
+func (d *DelimiterInput) Down(s string) string {
+	return d.clist.down()
 }
 
 type TABWidthInput struct {
@@ -428,26 +431,17 @@ func (t *TABWidthInput) Prompt() string {
 	return "TAB width:"
 }
 
-func (t *TABWidthInput) Confirm(i string) tcell.Event {
-	t.clist.list = append(t.clist.list, i)
+func (t *TABWidthInput) Confirm(s string) tcell.Event {
+	t.clist.list = toLast(t.clist.list, s)
+	t.clist.p = 0
 	t.SetEventNow()
 	return t
 }
 
-func (t *TABWidthInput) Up(i string) string {
-	if t.clist.p > 0 {
-		t.clist.p--
-		return t.clist.list[t.clist.p]
-	}
-	t.clist.p = len(t.clist.list) - 1
-	return t.clist.list[t.clist.p]
+func (t *TABWidthInput) Up(s string) string {
+	return t.clist.up()
 }
 
-func (t *TABWidthInput) Down(i string) string {
-	if len(t.clist.list) > t.clist.p+1 {
-		t.clist.p++
-		return t.clist.list[t.clist.p]
-	}
-	t.clist.p = 0
-	return t.clist.list[t.clist.p]
+func (t *TABWidthInput) Down(s string) string {
+	return t.clist.down()
 }

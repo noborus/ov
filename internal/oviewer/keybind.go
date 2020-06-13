@@ -8,12 +8,12 @@ import (
 func (root *Root) HandleEvent(ev *tcell.EventKey) bool {
 	root.message = ""
 	if root.Input.mode == normal {
-		return root.defaultEvent(ev)
+		return root.DefaultEvent(ev)
 	}
 	return root.HandleInputEvent(ev)
 }
 
-func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
+func (root *Root) DefaultEvent(ev *tcell.EventKey) bool {
 	switch ev.Key() {
 	case tcell.KeyEscape, tcell.KeyCtrlC:
 		root.Quit()
@@ -75,16 +75,16 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.toggleWrap()
 			return true
 		case '?':
-			root.setMode(previous)
+			root.Input.setMode(previous)
 			return true
 		case 'c':
 			root.toggleColumnMode()
 			return true
 		case 'd':
-			root.setMode(delimiter)
+			root.Input.setMode(delimiter)
 			return true
 		case '/':
-			root.setMode(search)
+			root.Input.setMode(search)
 			return true
 		case 'n':
 			root.NextSearch()
@@ -93,19 +93,18 @@ func (root *Root) defaultEvent(ev *tcell.EventKey) bool {
 			root.NextBackSearch()
 			return true
 		case 'g':
-			root.setMode(goline)
+			root.Input.setMode(goline)
 			return true
 		case 'G':
 			root.toggleLineNumMode()
 		case 'H':
-			root.setMode(header)
+			root.Input.setMode(header)
 			return true
 		case 'C':
 			root.toggleAlternateRows()
 			return true
 		case 't':
-			root.Input.value = ""
-			root.setMode(tabWidth)
+			root.Input.setMode(tabWidth)
 			return true
 		}
 	}

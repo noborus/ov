@@ -212,10 +212,11 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	if root.Input.mode != normal {
-		p := caseSensitive + root.EventInput.Prompt()
-		leftStatus = p + root.Input.value
-		root.Screen.ShowCursor(len(p)+root.Input.cursorX, root.statusPos)
+	input := root.Input
+	if input.mode != normal {
+		p := caseSensitive + input.EventInput.Prompt()
+		leftStatus = p + input.value
+		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
 		leftContents = strToContents(leftStatus, -1)
 	} else {
 		for i := 0; i < len(leftContents); i++ {
@@ -233,7 +234,7 @@ func (root *Root) statusDraw() {
 	rightContents := strToContents(rightStatus, -1)
 	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents)
 
-	if Debug {
+	if root.Debug {
 		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)
 		root.setContentString(root.Model.vWidth/2, root.statusPos, c)

@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
-	"github.com/gdamore/tcell"
 	"github.com/noborus/ov/internal/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,9 +11,9 @@ import (
 
 var (
 	// Version represents the version
-	Version string = "dev"
+	Version = "dev"
 	// Revision set "git rev-parse --short HEAD"
-	Revision string = "HEAD"
+	Revision = "HEAD"
 )
 
 var cfgFile string
@@ -23,45 +21,7 @@ var cfgFile string
 // Ver is version information.
 var Ver bool
 
-// Config structure contains the variables that determine the overall behavior.
-type Config struct {
-	// Alternating background color.
-	ColorAlternate string
-
-	// Header color.
-	ColorHeader string
-
-	// OverStrike color.
-	ColorOverStrike string
-
-	// OverLine color.
-	ColorOverLine string
-
-	// Column Delimiter
-	ColumnDelimiter string
-	// Wrap is Wrap mode.
-	Wrap bool
-	// TabWidth is tab stop num.
-	TabWidth int
-	// HeaderLen is number of header rows to be fixed.
-	Header int
-	// AfterWrite writes the current screen on exit.
-	AfterWrite bool
-	// QuiteSmall Quit if the output fits on one screen.
-	QuitSmall bool
-	// CaseSensitive is case-sensitive if true
-	CaseSensitive bool
-	// Color to alternate rows
-	AlternateRows bool
-	// Column mode
-	ColumnMode bool
-	// Line Number
-	LineNumMode bool
-	// Debug is enable debug display.
-	Debug bool
-}
-
-var config Config
+var config oviewer.Config
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -79,36 +39,13 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if config.Debug {
 			fmt.Println("Using config file:", viper.ConfigFileUsed())
 		}
-		oviewer.Debug = config.Debug
 
 		if err := os.Setenv("TCELL_TRUECOLOR", "disable"); err != nil {
 			return err
 		}
 
 		root := oviewer.New()
-		root.Header = config.Header
-		root.TabWidth = config.TabWidth
-		root.WrapMode = config.Wrap
-		root.AfterWrite = config.AfterWrite
-		root.QuitSmall = config.QuitSmall
-		root.CaseSensitive = config.CaseSensitive
-		root.AlternateRows = config.AlternateRows
-		root.ColumnMode = config.ColumnMode
-		root.LineNumMode = config.LineNumMode
-		root.ColumnDelimiter = strings.ReplaceAll(config.ColumnDelimiter, "\\t", "\t")
-
-		if config.ColorAlternate != "" {
-			oviewer.ColorAlternate = tcell.GetColor(config.ColorAlternate)
-		}
-		if config.ColorHeader != "" {
-			oviewer.HeaderStyle = oviewer.HeaderStyle.Foreground(tcell.GetColor(config.ColorHeader))
-		}
-		if config.ColorOverStrike != "" {
-			oviewer.OverStrikeStyle = oviewer.OverStrikeStyle.Foreground(tcell.GetColor(config.ColorOverStrike))
-		}
-		if config.ColorOverLine != "" {
-			oviewer.OverLineStyle = oviewer.OverLineStyle.Foreground(tcell.GetColor(config.ColorOverLine))
-		}
+		root.Config = config
 
 		if err := root.Run(args); err != nil {
 			return err
@@ -126,7 +63,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oviewer.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
 
-	rootCmd.PersistentFlags().BoolVarP(&config.Wrap, "wrap", "w", true, "wrap mode")
+	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 
 	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop width")

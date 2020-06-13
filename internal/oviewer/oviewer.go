@@ -20,8 +20,7 @@ type Root struct {
 
 	Model *Model
 
-	Input      *Input
-	EventInput EventInput
+	Input *Input
 
 	fileName      string
 	message       string
@@ -32,26 +31,53 @@ type Root struct {
 	columnNum     int
 	minStartPos   int
 
-	ColumnDelimiter string
-	Header          int
-	TabWidth        int
-	AfterWrite      bool
-	WrapMode        bool
-	QuitSmall       bool
-	CaseSensitive   bool
-	AlternateRows   bool
-	ColumnMode      bool
-	LineNumMode     bool
+	Config
 }
 
-//Debug represents whether to enable the debug output.
-var Debug bool
+// Config represents the settings of ov.
+type Config struct {
+	// Alternating background color.
+	ColorAlternate string
+	// Header color.
+	ColorHeader string
+	// OverStrike color.
+	ColorOverStrike string
+	// OverLine color.
+	ColorOverLine string
+
+	// Column Delimiter
+	ColumnDelimiter string
+	// Wrap is Wrap mode.
+	WrapMode bool
+	// TabWidth is tab stop num.
+	TabWidth int
+	// HeaderLen is number of header rows to be fixed.
+	Header int
+	// AfterWrite writes the current screen on exit.
+	AfterWrite bool
+	// QuiteSmall Quit if the output fits on one screen.
+	QuitSmall bool
+	// CaseSensitive is case-sensitive if true
+	CaseSensitive bool
+	// Color to alternate rows
+	AlternateRows bool
+	// Column mode
+	ColumnMode bool
+	// Line Number
+	LineNumMode bool
+	//Debug represents whether to enable the debug output.
+	Debug bool
+}
 
 var (
-	HeaderStyle     = tcell.StyleDefault.Bold(true)
-	ColorAlternate  = tcell.ColorGray
+	// HeaderStyle represents the style of the header.
+	HeaderStyle = tcell.StyleDefault.Bold(true)
+	// ColorAlternate represents alternating colors.
+	ColorAlternate = tcell.ColorGray
+	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle = tcell.StyleDefault.Bold(true)
-	OverLineStyle   = tcell.StyleDefault.Underline(true)
+	// OverLineStyle represents the overline underline style.
+	OverLineStyle = tcell.StyleDefault.Underline(true)
 )
 
 // New returns the entire structure of oviewer.
@@ -64,7 +90,6 @@ func New() *Root {
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	root.startPos = 0
-	root.EventInput = &NormalInput{}
 	root.Input = NewInput()
 	return root
 }
@@ -85,6 +110,19 @@ func (root *Root) Run(args []string) error {
 	err := m.NewCache()
 	if err != nil {
 		return err
+	}
+
+	if root.ColorAlternate != "" {
+		ColorAlternate = tcell.GetColor(root.ColorAlternate)
+	}
+	if root.ColorHeader != "" {
+		HeaderStyle = HeaderStyle.Foreground(tcell.GetColor(root.ColorHeader))
+	}
+	if root.ColorOverStrike != "" {
+		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
+	}
+	if root.ColorOverLine != "" {
+		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
 	}
 
 	var reader io.Reader
