@@ -405,7 +405,7 @@ func (root *Root) GoLine() {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
-	root.moveNum(lineNum - root.Header)
+	root.moveNum(lineNum - root.Header - 1)
 }
 
 // SetHeader sets the number of lines in the header.
