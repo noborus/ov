@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
@@ -99,14 +98,14 @@ func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) 
 	var lc lineContents
 
 	if lineNum < 0 || lineNum >= m.BufLen() {
-		return lc, fmt.Errorf("out of range")
+		return lc, ErrOutOfRange
 	}
 
 	value, found := m.cache.Get(lineNum)
 	if found {
 		var ok bool
 		if lc, ok = value.(lineContents); !ok {
-			return lc, fmt.Errorf("fatal error not lineContents")
+			return lc, ErrFatalCache
 		}
 	} else {
 		lc = parseString(m.GetLine(lineNum), tabWidth)

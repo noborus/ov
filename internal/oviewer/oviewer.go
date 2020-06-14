@@ -2,6 +2,7 @@
 package oviewer
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,8 @@ import (
 type Root struct {
 	tcell.Screen
 
+	Config
+
 	Model *Model
 
 	Input *Input
@@ -30,8 +33,6 @@ type Root struct {
 	statusPos     int
 	columnNum     int
 	minStartPos   int
-
-	Config
 }
 
 // Config represents the settings of ov.
@@ -80,17 +81,31 @@ var (
 	OverLineStyle = tcell.StyleDefault.Underline(true)
 )
 
+var (
+	// ErrOutOfRange indicates that value is out of range.
+	ErrOutOfRange = errors.New("out of range")
+	// ErrFatalCache indicates that the cache value had a fatal error.
+	ErrFatalCache = errors.New("fatal error in cache value")
+	// ErrMissingFile indicates that the file does not exist.
+	ErrMissingFile = errors.New("missing filename")
+	// ErrNotFound indicates not found.
+	ErrNotFound = errors.New("not found")
+	// ErrInvalidNumber indicates an invalid number.
+	ErrInvalidNumber = errors.New("invalid number")
+)
+
 // New returns the entire structure of oviewer.
 func New() *Root {
 	root := &Root{}
+
 	root.Model = NewModel()
+	root.Input = NewInput()
 
 	root.TabWidth = 8
 	root.minStartPos = -10
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
 	root.startPos = 0
-	root.Input = NewInput()
 	return root
 }
 
@@ -106,31 +121,19 @@ func (root *Root) PrepareView() {
 // Run is reads the file(or stdin) and starts
 // the terminal pager.
 func (root *Root) Run(args []string) error {
-	m := root.Model
-	err := m.NewCache()
+	err := root.Model.NewCache()
 	if err != nil {
 		return err
 	}
 
-	if root.ColorAlternate != "" {
-		ColorAlternate = tcell.GetColor(root.ColorAlternate)
-	}
-	if root.ColorHeader != "" {
-		HeaderStyle = HeaderStyle.Foreground(tcell.GetColor(root.ColorHeader))
-	}
-	if root.ColorOverStrike != "" {
-		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
-	}
-	if root.ColorOverLine != "" {
-		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
-	}
+	root.setGlobalStyle()
 
 	var reader io.Reader
 	fileName := ""
 	switch len(args) {
 	case 0:
 		if terminal.IsTerminal(0) {
-			return fmt.Errorf("missing filename")
+			return ErrMissingFile
 		}
 		fileName = "(STDIN)"
 		reader = uncompressedReader(os.Stdin)
@@ -154,7 +157,7 @@ func (root *Root) Run(args []string) error {
 			defer r.Close()
 		}
 	}
-	err = m.ReadAll(reader)
+	err = root.Model.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -190,6 +193,21 @@ func (root *Root) Run(args []string) error {
 
 	root.main()
 	return nil
+}
+
+func (root *Root) setGlobalStyle() {
+	if root.ColorAlternate != "" {
+		ColorAlternate = tcell.GetColor(root.ColorAlternate)
+	}
+	if root.ColorHeader != "" {
+		HeaderStyle = HeaderStyle.Foreground(tcell.GetColor(root.ColorHeader))
+	}
+	if root.ColorOverStrike != "" {
+		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
+	}
+	if root.ColorOverLine != "" {
+		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
+	}
 }
 
 func (root *Root) contentsSmall() bool {
@@ -249,39 +267,23 @@ func (root *Root) bottomLineNum(num int) int {
 	return num
 }
 
-func (root *Root) toggleWrap() {
-	if root.WrapMode {
-		root.WrapMode = false
-	} else {
-		root.WrapMode = true
-		root.Model.x = 0
-	}
+func (root *Root) toggleWrapMode() {
+	root.WrapMode = !root.WrapMode
+	root.Model.x = 0
 	root.setWrapHeaderLen()
 }
 
 func (root *Root) toggleColumnMode() {
-	if root.ColumnMode {
-		root.ColumnMode = false
-	} else {
-		root.ColumnMode = true
-	}
+	root.ColumnMode = !root.ColumnMode
 }
 
 func (root *Root) toggleAlternateRows() {
 	root.Model.ClearCache()
-	if root.AlternateRows {
-		root.AlternateRows = false
-	} else {
-		root.AlternateRows = true
-	}
+	root.AlternateRows = !root.AlternateRows
 }
 
 func (root *Root) toggleLineNumMode() {
-	if root.LineNumMode {
-		root.LineNumMode = false
-	} else {
-		root.LineNumMode = true
-	}
+	root.LineNumMode = !root.LineNumMode
 	root.updateEndNum()
 }
 
@@ -360,7 +362,7 @@ loop:
 			break loop
 		case *SearchInput:
 			root.Search()
-		case *PreviousInput:
+		case *BackSearchInput:
 			root.BackSearch()
 		case *GotoInput:
 			root.GoLine()
@@ -371,7 +373,12 @@ loop:
 		case *TABWidthInput:
 			root.SetTabWidth()
 		case *tcell.EventKey:
-			root.HandleEvent(ev)
+			root.message = ""
+			if root.Input.mode == normal {
+				root.DefaultKeyEvent(ev)
+			} else {
+				root.InputKeyEvent(ev)
+			}
 		case *tcell.EventResize:
 			root.Resize()
 		}
@@ -395,6 +402,7 @@ func (root *Root) GoLine() {
 	lineNum, err := strconv.Atoi(root.Input.value)
 	root.Input.value = ""
 	if err != nil {
+		root.message = ErrInvalidNumber.Error()
 		return
 	}
 	root.moveNum(lineNum - root.Header)
@@ -405,9 +413,11 @@ func (root *Root) SetHeader() {
 	line, err := strconv.Atoi(root.Input.value)
 	root.Input.value = ""
 	if err != nil {
+		root.message = ErrInvalidNumber.Error()
 		return
 	}
 	if line < 0 || line > root.Model.vHight-1 {
+		root.message = ErrOutOfRange.Error()
 		return
 	}
 	if root.Header == line {
@@ -429,6 +439,7 @@ func (root *Root) SetTabWidth() {
 	width, err := strconv.Atoi(root.Input.value)
 	root.Input.value = ""
 	if err != nil {
+		root.message = ErrInvalidNumber.Error()
 		return
 	}
 	if root.TabWidth == width {

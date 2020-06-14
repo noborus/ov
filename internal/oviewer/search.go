@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"errors"
 	"regexp"
 	"strings"
 )
@@ -30,7 +29,7 @@ func (root *Root) search(num int) (int, error) {
 			return n, nil
 		}
 	}
-	return 0, errors.New("not found")
+	return 0, ErrNotFound
 }
 
 func (root *Root) backSearch(num int) (int, error) {
@@ -39,7 +38,7 @@ func (root *Root) backSearch(num int) (int, error) {
 			return n, nil
 		}
 	}
-	return 0, errors.New("not found")
+	return 0, ErrNotFound
 }
 
 func regexpComple(r string, caseSensitive bool) *regexp.Regexp {

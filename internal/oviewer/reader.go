@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"compress/gzip"
+	"errors"
 	"io"
 	"io/ioutil"
 	"time"
@@ -19,7 +20,7 @@ func uncompressedReader(reader io.Reader) io.ReadCloser {
 	buf := [7]byte{}
 	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
 	if err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
+		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 			return ioutil.NopCloser(bytes.NewReader(buf[:n]))
 		}
 		return ioutil.NopCloser(bytes.NewReader(nil))
@@ -62,7 +63,7 @@ func (m *Model) ReadAll(r io.Reader) error {
 			l, isPrefix, err := reader.ReadLine()
 			buf.Write(l)
 			if err != nil {
-				if err == io.EOF || err == io.ErrClosedPipe {
+				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
 					break
 				}
 				m.eof = false
