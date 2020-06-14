@@ -206,6 +206,13 @@ pager=ov -w=f -H3 -F -C -d "|"
 * <kbd>d</kbd> - delimiter string
 * <kbd>d</kbd> - TAB width
 
+### Keys in input mode
+
+* <kbd>KEY_UP</kbd> - displaying candidates (recent history)
+* <kbd>KEY_DOWN</kbd> - displaying candidates (oldest history)
+* <kbd>Esc</kbd> - cancel input
+* <kbd>Enter</kbd> - confirm input
+
 ### Keys in search mode
 
 * <kbd>Ctrl</kbd>+<kbd>a</kbd> - case-sensitive/insensitive toggle
