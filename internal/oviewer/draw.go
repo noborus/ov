@@ -91,7 +91,7 @@ func (root *Root) Draw() {
 
 		// line number mode
 		if root.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startPos-1, root.Model.lineNum+lY-root.Header+1), root.TabWidth)
+			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.Model.lineNum+lY-root.Header+1), root.TabWidth)
 			for i := 0; i < len(lineNum); i++ {
 				lineNum[i].style = tcell.StyleDefault.Bold(true)
 			}
@@ -161,22 +161,22 @@ func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (int, 
 			break
 		}
 		content := contents[lX+x]
-		if x+content.width+root.startPos > root.Model.vWidth {
+		if x+content.width+root.startX > root.Model.vWidth {
 			// next line
 			lX += x
 			break
 		}
-		root.Screen.SetContent(x+root.startPos, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(x+root.startX, y, content.mainc, content.combc, content.style)
 	}
 	return lX, lY
 }
 
 // noWrapContents draws contents without wrapping and returns the next drawing position.
 func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (int, int) {
-	if lX < root.minStartPos {
-		lX = root.minStartPos
+	if lX < root.minStartX {
+		lX = root.minStartX
 	}
-	for x := 0; x+root.startPos < root.Model.vWidth; x++ {
+	for x := 0; x+root.startX < root.Model.vWidth; x++ {
 		if lX+x < 0 {
 			continue
 		}
@@ -184,7 +184,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (int
 			break
 		}
 		content := contents[lX+x]
-		root.Screen.SetContent(x+root.startPos, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(x+root.startX, y, content.mainc, content.combc, content.style)
 	}
 	lY++
 	return lX, lY

@@ -71,7 +71,7 @@ func (root *Root) DefaultKeyEvent(ev *tcell.EventKey) bool {
 		case '<':
 			root.GoLine(NewGotoInput(root.Input.GoCList).Down(""))
 		case 'm':
-			root.markLineNum(root.Model.lineNum)
+			root.MarkLineNum(root.Model.lineNum)
 		case 'H':
 			root.Input.SetMode(header)
 		case 'C':

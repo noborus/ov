@@ -17,22 +17,30 @@ import (
 
 // The Root structure contains information about the drawing.
 type Root struct {
+	// tcell.Screen is the root screen.
 	tcell.Screen
-
+	// Config contains settings that determine the behavior of ov.
 	Config
-
+	// Model contains the model of ov
 	Model *Model
-
+	// Input contains the input mode.
 	Input *Input
-
-	fileName      string
-	message       string
+	// fileName is the file name to display.
+	fileName string
+	// message is the message to display.
+	message string
+	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
-	startPos      int
-	bottomPos     int
-	statusPos     int
-	columnNum     int
-	minStartPos   int
+	// bottomPos is the position of the last line displayed.
+	bottomPos int
+	// statusPos is the position of the status line.
+	statusPos int
+	// columnNum is the number of columns.
+	columnNum int
+	// startX is the start position of x.
+	startX int
+	// minStartX is the minimum start position of x.
+	minStartX int
 }
 
 // Config represents the settings of ov.
@@ -102,10 +110,10 @@ func New() *Root {
 	root.Input = NewInput()
 
 	root.TabWidth = 8
-	root.minStartPos = -10
+	root.minStartX = -10
 	root.ColumnDelimiter = ""
 	root.columnNum = 0
-	root.startPos = 0
+	root.startX = 0
 	return root
 }
 
@@ -195,6 +203,7 @@ func (root *Root) Run(args []string) error {
 	return nil
 }
 
+// setGlobalStyle sets some styles that are determined by the settings.
 func (root *Root) setGlobalStyle() {
 	if root.ColorAlternate != "" {
 		ColorAlternate = tcell.GetColor(root.ColorAlternate)
@@ -210,6 +219,7 @@ func (root *Root) setGlobalStyle() {
 	}
 }
 
+// contentsSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) contentsSmall() bool {
 	root.PrepareView()
 	m := root.Model
@@ -242,6 +252,7 @@ func (root *Root) HeaderLen() int {
 	return root.Header
 }
 
+// setWrapHeaderLen sets the value in wrapHeaderLen.
 func (root *Root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
@@ -250,6 +261,8 @@ func (root *Root) setWrapHeaderLen() {
 	}
 }
 
+// bottomLineNum returns the display start line
+// when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) int {
 	m := root.Model
 	if !root.WrapMode {
@@ -267,26 +280,31 @@ func (root *Root) bottomLineNum(num int) int {
 	return num
 }
 
+// toggleWrapMode toggles wrapMode each time it is called.
 func (root *Root) toggleWrapMode() {
 	root.WrapMode = !root.WrapMode
 	root.Model.x = 0
 	root.setWrapHeaderLen()
 }
 
+//  toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.ColumnMode = !root.ColumnMode
 }
 
+// toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
 	root.Model.ClearCache()
 	root.AlternateRows = !root.AlternateRows
 }
 
+// toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
 	root.LineNumMode = !root.LineNumMode
 	root.updateEndNum()
 }
 
+// eventAppQuit represents a quit event.
 type eventAppQuit struct {
 	tcell.EventTime
 }
@@ -298,6 +316,7 @@ func (root *Root) Quit() {
 	go func() { root.Screen.PostEventWait(ev) }()
 }
 
+// eventTimer represents a timer event.
 type eventTimer struct {
 	tcell.EventTime
 }
@@ -316,11 +335,12 @@ func (root *Root) Resize() {
 
 // Sync redraws the whole thing.
 func (root *Root) Sync() {
-	root.preparelineNum()
+	root.prepareStartX()
 	root.PrepareView()
 	root.Draw()
 }
 
+// countTimer fires events periodically until it reaches EOF.
 func (root *Root) countTimer() {
 	timer := time.NewTicker(time.Millisecond * 500)
 loop:
@@ -334,15 +354,17 @@ loop:
 	timer.Stop()
 }
 
-func (root *Root) preparelineNum() {
-	root.startPos = 0
+// prepareStartX prepares startX.
+func (root *Root) prepareStartX() {
+	root.startX = 0
 	if root.LineNumMode {
-		root.startPos = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
+		root.startX = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
 	}
 }
 
+// updateEndNum updates the last line number.
 func (root *Root) updateEndNum() {
-	root.preparelineNum()
+	root.prepareStartX()
 	root.statusDraw()
 }
 
@@ -385,18 +407,6 @@ loop:
 	}
 }
 
-// Search is a Up search.
-func (root *Root) Search(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
-	root.postSearch(root.search(root.Model.lineNum))
-}
-
-// BackSearch reverse search.
-func (root *Root) BackSearch(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
-	root.postSearch(root.backSearch(root.Model.lineNum))
-}
-
 // GoLine will move to the specified line.
 func (root *Root) GoLine(input string) {
 	lineNum, err := strconv.Atoi(input)
@@ -409,7 +419,8 @@ func (root *Root) GoLine(input string) {
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
 
-func (root *Root) markLineNum(lineNum int) {
+// MarkLineNum stores the specified number of lines.
+func (root *Root) MarkLineNum(lineNum int) {
 	s := strconv.Itoa(lineNum + 1)
 	root.Input.GoCList.list = toLast(root.Input.GoCList.list, s)
 	root.Input.GoCList.p = 0

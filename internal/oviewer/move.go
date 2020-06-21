@@ -1,28 +1,24 @@
 package oviewer
 
+// Go to the top line.
 func (root *Root) moveTop() {
 	root.Model.lineNum = 0
 	root.Model.yy = 0
 }
 
+// Go to the bottom line.
 func (root *Root) moveEnd() {
-	root.moveBottomNum(root.Model.endNum)
+	n := root.bottomLineNum(root.Model.endNum) + 1
+	root.moveNum(n)
 }
 
+// Move to the specified line.
 func (root *Root) moveNum(num int) {
 	root.Model.lineNum = num
 	root.Model.yy = 0
 }
 
-func (root *Root) moveBottomNum(num int) {
-	n := root.bottomLineNum(num) + 1
-	root.moveNum(n)
-}
-
-func (root *Root) realHightNum() int {
-	return root.bottomPos - (root.Model.lineNum + root.Header)
-}
-
+// Move up one screen.
 func (root *Root) movePgUp() {
 	n := root.Model.lineNum - root.realHightNum()
 	if n >= root.Model.lineNum {
@@ -31,6 +27,7 @@ func (root *Root) movePgUp() {
 	root.moveNum(n)
 }
 
+// Moves down one screen.
 func (root *Root) movePgDn() {
 	n := root.bottomPos - root.Header
 	if n <= root.Model.lineNum {
@@ -39,14 +36,22 @@ func (root *Root) movePgDn() {
 	root.moveNum(n)
 }
 
+// realHightNum returns the actual number of line on the screen.
+func (root *Root) realHightNum() int {
+	return root.bottomPos - (root.Model.lineNum + root.Header)
+}
+
+// Moves up half a screen.
 func (root *Root) moveHfUp() {
 	root.moveNum(root.Model.lineNum - (root.realHightNum() / 2))
 }
 
+// Moves down half a screen.
 func (root *Root) moveHfDn() {
 	root.moveNum(root.Model.lineNum + (root.realHightNum() / 2))
 }
 
+// Move up one line.
 func (root *Root) moveUp() {
 	if !root.WrapMode {
 		root.Model.yy = 0
@@ -67,7 +72,13 @@ func (root *Root) moveUp() {
 	root.Model.yy--
 }
 
+// Move down one line.
 func (root *Root) moveDown() {
+	if root.Model.lineNum > root.bottomLineNum(root.Model.endNum) {
+		root.message = "EOF"
+		return
+	}
+
 	if !root.WrapMode {
 		root.Model.yy = 0
 		root.Model.lineNum++
@@ -83,6 +94,7 @@ func (root *Root) moveDown() {
 	root.Model.yy++
 }
 
+// Move to the left.
 func (root *Root) moveLeft() {
 	if root.ColumnMode {
 		if root.columnNum > 0 {
@@ -97,6 +109,7 @@ func (root *Root) moveLeft() {
 	root.Model.x--
 }
 
+// Move to the right.
 func (root *Root) moveRight() {
 	if root.ColumnMode {
 		root.columnNum++
@@ -109,6 +122,7 @@ func (root *Root) moveRight() {
 	root.Model.x++
 }
 
+// columnModeX returns the actual x from root.columnNum.
 func (root *Root) columnModeX() int {
 	m := root.Model
 	line := m.GetLine(root.Header + 2)
@@ -124,6 +138,7 @@ func (root *Root) columnModeX() int {
 	return lc.byteMap[start]
 }
 
+// Move to the left by half a screen.
 func (root *Root) moveHfLeft() {
 	if root.WrapMode {
 		return
@@ -136,6 +151,7 @@ func (root *Root) moveHfLeft() {
 	}
 }
 
+// Move to the right by half a screen.
 func (root *Root) moveHfRight() {
 	if root.WrapMode {
 		return
