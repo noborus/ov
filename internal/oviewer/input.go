@@ -168,12 +168,7 @@ type Candidate struct {
 func NewInput() *Input {
 	i := Input{}
 	i.GoCList = &Candidate{
-		list: []string{
-			"1000",
-			"100",
-			"10",
-			"0",
-		},
+		list: []string{},
 	}
 	i.DelimiterCList = &Candidate{
 		list: []string{

@@ -361,17 +361,17 @@ loop:
 		case *eventAppQuit:
 			break loop
 		case *SearchInput:
-			root.Search()
+			root.Search(root.Input.value)
 		case *BackSearchInput:
-			root.BackSearch()
+			root.BackSearch(root.Input.value)
 		case *GotoInput:
-			root.GoLine()
+			root.GoLine(root.Input.value)
 		case *HeaderInput:
-			root.SetHeader()
+			root.SetHeader(root.Input.value)
 		case *DelimiterInput:
-			root.SetDelimiter()
+			root.SetDelimiter(root.Input.value)
 		case *TABWidthInput:
-			root.SetTabWidth()
+			root.SetTabWidth(root.Input.value)
 		case *tcell.EventKey:
 			root.message = ""
 			if root.Input.mode == normal {
@@ -386,57 +386,66 @@ loop:
 }
 
 // Search is a Up search.
-func (root *Root) Search() {
-	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
+func (root *Root) Search(input string) {
+	root.Input.reg = regexpComple(input, root.CaseSensitive)
 	root.postSearch(root.search(root.Model.lineNum))
 }
 
 // BackSearch reverse search.
-func (root *Root) BackSearch() {
-	root.Input.reg = regexpComple(root.Input.value, root.CaseSensitive)
+func (root *Root) BackSearch(input string) {
+	root.Input.reg = regexpComple(input, root.CaseSensitive)
 	root.postSearch(root.backSearch(root.Model.lineNum))
 }
 
 // GoLine will move to the specified line.
-func (root *Root) GoLine() {
-	lineNum, err := strconv.Atoi(root.Input.value)
+func (root *Root) GoLine(input string) {
+	lineNum, err := strconv.Atoi(input)
 	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
 	root.moveNum(lineNum - root.Header - 1)
+	root.message = fmt.Sprintf("Moved to line %d", lineNum)
+}
+
+func (root *Root) markLineNum(lineNum int) {
+	s := strconv.Itoa(lineNum + 1)
+	root.Input.GoCList.list = toLast(root.Input.GoCList.list, s)
+	root.Input.GoCList.p = 0
+	root.message = fmt.Sprintf("Marked to line %d", lineNum)
 }
 
 // SetHeader sets the number of lines in the header.
-func (root *Root) SetHeader() {
-	line, err := strconv.Atoi(root.Input.value)
+func (root *Root) SetHeader(input string) {
+	lineNum, err := strconv.Atoi(input)
 	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
-	if line < 0 || line > root.Model.vHight-1 {
+	if lineNum < 0 || lineNum > root.Model.vHight-1 {
 		root.message = ErrOutOfRange.Error()
 		return
 	}
-	if root.Header == line {
+	if root.Header == lineNum {
 		return
 	}
-	root.Header = line
+	root.Header = lineNum
+	root.message = fmt.Sprintf("Set Header %d", lineNum)
 	root.setWrapHeaderLen()
 	root.Model.ClearCache()
 }
 
 // SetDelimiter sets the delimiter string.
-func (root *Root) SetDelimiter() {
-	root.ColumnDelimiter = root.Input.value
+func (root *Root) SetDelimiter(input string) {
+	root.ColumnDelimiter = input
 	root.Input.value = ""
 }
 
 // SetTabWidth sets the tab width.
-func (root *Root) SetTabWidth() {
-	width, err := strconv.Atoi(root.Input.value)
+func (root *Root) SetTabWidth(input string) {
+	width, err := strconv.Atoi(input)
 	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
@@ -446,5 +455,6 @@ func (root *Root) SetTabWidth() {
 		return
 	}
 	root.TabWidth = width
+	root.message = fmt.Sprintf("Set tab width %d", width)
 	root.Model.ClearCache()
 }
