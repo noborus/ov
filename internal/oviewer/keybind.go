@@ -66,6 +66,12 @@ func (root *Root) DefaultKeyEvent(ev *tcell.EventKey) bool {
 			root.Input.SetMode(goline)
 		case 'G':
 			root.toggleLineNumMode()
+		case '>':
+			root.GoLine(NewGotoInput(root.Input.GoCList).Up(""))
+		case '<':
+			root.GoLine(NewGotoInput(root.Input.GoCList).Down(""))
+		case 'm':
+			root.markLineNum(root.Model.lineNum)
 		case 'H':
 			root.Input.SetMode(header)
 		case 'C':
