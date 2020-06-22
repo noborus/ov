@@ -55,7 +55,7 @@ func parseString(line string, tabWidth int) lineContents {
 	style := tcell.StyleDefault
 	x := 0
 	n := 0
-	bsFlag := false
+	bsFlag := false // backspace(^H) flag
 	var bsContent Content
 	for _, runeValue := range line {
 		c := DefaultContent
@@ -181,6 +181,7 @@ func parseString(line string, tabWidth int) lineContents {
 	return lc
 }
 
+// overstrike returns an overstrike tcell.Style.
 func overstrike(p, m rune, style tcell.Style) tcell.Style {
 	if p == m {
 		style = OverStrikeStyle
@@ -190,6 +191,7 @@ func overstrike(p, m rune, style tcell.Style) tcell.Style {
 	return style
 }
 
+// lastContent returns the last character of Contents.
 func lastContent(contents []Content) Content {
 	n := len(contents)
 	if n == 0 {
@@ -201,6 +203,7 @@ func lastContent(contents []Content) Content {
 	return contents[n-1]
 }
 
+// csToStyle returns tcell.Style from the control sequence.
 func csToStyle(style tcell.Style, csiParameter *bytes.Buffer) tcell.Style {
 	fields := strings.Split(csiParameter.String(), ";")
 	if len(fields) == 0 || len(fields) == 1 && fields[0] == "0" {
@@ -275,6 +278,7 @@ FieldLoop:
 	return style
 }
 
+// lookupColor returns the color name from the color number.
 func lookupColor(colorNumber int) string {
 	if colorNumber < 0 || colorNumber > 15 {
 		return "black"

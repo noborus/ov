@@ -9,20 +9,31 @@ import (
 // The Model structure contains the values
 // for the logical screen.
 type Model struct {
-	// updated by reader goroutine
+	// buffer stores the contents of the file in slices of strings.
+	// buffer,endNum and eof is updated by reader goroutine.
 	buffer []string
+	// endNum is the number of the last line read.
 	endNum int
-	eof    bool
+	// eof is or has reached EOF.
+	eof bool
 
-	x          int
-	lineNum    int
-	yy         int
-	header     []string
+	// x is the starting position of the current x.
+	x int
+	// lineNum is the starting position of the current y.
+	lineNum int
+	// yy represents the number of wrapped lines.
+	yy int
+	// header represents the header line.
+	header []string
+	// beforeSize represents the number of lines to read first.
 	beforeSize int
-	vWidth     int
-	vHight     int
-	cache      *ristretto.Cache
-
+	// vWidth represents the screen width.
+	vWidth int
+	// vHight represents the screen height.
+	vHight int
+	// cache represents a cache of contents.
+	cache *ristretto.Cache
+	// mu controls the mutex.
 	mu sync.Mutex
 }
 
@@ -94,6 +105,7 @@ func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
 	return lc.contents
 }
 
+// lineToContents returns contents from line number.
 func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
 

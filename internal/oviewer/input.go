@@ -131,6 +131,7 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	return false
 }
 
+// stringWidth returns the number of characters in the input.
 func stringWidth(str string, cursor int) int {
 	width := 0
 	i := 0
@@ -147,6 +148,7 @@ func stringWidth(str string, cursor int) int {
 	return i
 }
 
+// runeWidth returns the number of widths of the input.
 func runeWidth(str string) int {
 	width := 0
 	for _, r := range str {

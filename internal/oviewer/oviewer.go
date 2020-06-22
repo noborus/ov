@@ -117,15 +117,6 @@ func New() *Root {
 	return root
 }
 
-// PrepareView prepares when the screen size is changed.
-func (root *Root) PrepareView() {
-	m := root.Model
-	screen := root.Screen
-	m.vWidth, m.vHight = screen.Size()
-	root.setWrapHeaderLen()
-	root.statusPos = m.vHight - 1
-}
-
 // Run is reads the file(or stdin) and starts
 // the terminal pager.
 func (root *Root) Run(args []string) error {
@@ -203,6 +194,45 @@ func (root *Root) Run(args []string) error {
 	return nil
 }
 
+// main is manages and executes events in the main routine.
+func (root *Root) main() {
+	screen := root.Screen
+	go root.countTimer()
+
+loop:
+	for {
+		root.Draw()
+		ev := screen.PollEvent()
+		switch ev := ev.(type) {
+		case *eventTimer:
+			root.updateEndNum()
+		case *eventAppQuit:
+			break loop
+		case *SearchInput:
+			root.Search(root.Input.value)
+		case *BackSearchInput:
+			root.BackSearch(root.Input.value)
+		case *GotoInput:
+			root.GoLine(root.Input.value)
+		case *HeaderInput:
+			root.SetHeader(root.Input.value)
+		case *DelimiterInput:
+			root.SetDelimiter(root.Input.value)
+		case *TABWidthInput:
+			root.SetTabWidth(root.Input.value)
+		case *tcell.EventKey:
+			root.message = ""
+			if root.Input.mode == normal {
+				root.DefaultKeyEvent(ev)
+			} else {
+				root.InputKeyEvent(ev)
+			}
+		case *tcell.EventResize:
+			root.Resize()
+		}
+	}
+}
+
 // setGlobalStyle sets some styles that are determined by the settings.
 func (root *Root) setGlobalStyle() {
 	if root.ColorAlternate != "" {
@@ -217,6 +247,15 @@ func (root *Root) setGlobalStyle() {
 	if root.ColorOverLine != "" {
 		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
 	}
+}
+
+// PrepareView prepares when the screen size is changed.
+func (root *Root) PrepareView() {
+	m := root.Model
+	screen := root.Screen
+	m.vWidth, m.vHight = screen.Size()
+	root.setWrapHeaderLen()
+	root.statusPos = m.vHight - 1
 }
 
 // contentsSmall returns with bool whether the file to display fits on the screen.
@@ -368,53 +407,14 @@ func (root *Root) updateEndNum() {
 	root.statusDraw()
 }
 
-// main is manages and executes events in the main routine.
-func (root *Root) main() {
-	screen := root.Screen
-	go root.countTimer()
-
-loop:
-	for {
-		root.Draw()
-		ev := screen.PollEvent()
-		switch ev := ev.(type) {
-		case *eventTimer:
-			root.updateEndNum()
-		case *eventAppQuit:
-			break loop
-		case *SearchInput:
-			root.Search(root.Input.value)
-		case *BackSearchInput:
-			root.BackSearch(root.Input.value)
-		case *GotoInput:
-			root.GoLine(root.Input.value)
-		case *HeaderInput:
-			root.SetHeader(root.Input.value)
-		case *DelimiterInput:
-			root.SetDelimiter(root.Input.value)
-		case *TABWidthInput:
-			root.SetTabWidth(root.Input.value)
-		case *tcell.EventKey:
-			root.message = ""
-			if root.Input.mode == normal {
-				root.DefaultKeyEvent(ev)
-			} else {
-				root.InputKeyEvent(ev)
-			}
-		case *tcell.EventResize:
-			root.Resize()
-		}
-	}
-}
-
 // GoLine will move to the specified line.
 func (root *Root) GoLine(input string) {
 	lineNum, err := strconv.Atoi(input)
-	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
+
 	root.moveNum(lineNum - root.Header - 1)
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
@@ -430,7 +430,6 @@ func (root *Root) MarkLineNum(lineNum int) {
 // SetHeader sets the number of lines in the header.
 func (root *Root) SetHeader(input string) {
 	lineNum, err := strconv.Atoi(input)
-	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
@@ -442,6 +441,7 @@ func (root *Root) SetHeader(input string) {
 	if root.Header == lineNum {
 		return
 	}
+
 	root.Header = lineNum
 	root.message = fmt.Sprintf("Set Header %d", lineNum)
 	root.setWrapHeaderLen()
@@ -451,13 +451,12 @@ func (root *Root) SetHeader(input string) {
 // SetDelimiter sets the delimiter string.
 func (root *Root) SetDelimiter(input string) {
 	root.ColumnDelimiter = input
-	root.Input.value = ""
+	root.message = fmt.Sprintf("Set delimiter %s", input)
 }
 
 // SetTabWidth sets the tab width.
 func (root *Root) SetTabWidth(input string) {
 	width, err := strconv.Atoi(input)
-	root.Input.value = ""
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
@@ -465,6 +464,7 @@ func (root *Root) SetTabWidth(input string) {
 	if root.TabWidth == width {
 		return
 	}
+
 	root.TabWidth = width
 	root.message = fmt.Sprintf("Set tab width %d", width)
 	root.Model.ClearCache()
