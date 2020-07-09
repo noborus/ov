@@ -16,12 +16,14 @@ var (
 	Revision = "HEAD"
 )
 
-var cfgFile string
+var (
+	cfgFile string
 
-// Ver is version information.
-var Ver bool
+	config oviewer.Config
 
-var config oviewer.Config
+	// ver is version information.
+	ver bool
+)
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -31,7 +33,7 @@ var rootCmd = &cobra.Command{
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if Ver {
+		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
 		}
@@ -44,14 +46,14 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return err
 		}
 
-		root := oviewer.New()
-		root.Config = config
+		ov := oviewer.New()
+		ov.Config = config
 
-		if err := root.Run(args); err != nil {
+		if err := ov.Run(args); err != nil {
 			return err
 		}
-		if root.AfterWrite {
-			root.WriteOriginal()
+		if ov.AfterWrite {
+			ov.WriteOriginal()
 		}
 		return nil
 	},
@@ -61,7 +63,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oviewer.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&Ver, "version", "v", false, "display version information")
+	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 
 	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))

@@ -26,8 +26,9 @@ func uncompressedReader(reader io.Reader) io.ReadCloser {
 		return ioutil.NopCloser(bytes.NewReader(nil))
 	}
 
-	rd := io.MultiReader(bytes.NewReader(buf[:n]), reader)
 	var r io.ReadCloser
+	rd := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+
 	switch {
 	case bytes.Equal(buf[:3], []byte{0x1f, 0x8b, 0x8}):
 		r, err = gzip.NewReader(rd)
@@ -57,8 +58,10 @@ func (m *Model) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	ch := make(chan struct{})
 	go func() {
-		var buf bytes.Buffer
 		defer close(ch)
+
+		var buf bytes.Buffer
+
 		for {
 			l, isPrefix, err := reader.ReadLine()
 			buf.Write(l)
@@ -74,9 +77,9 @@ func (m *Model) ReadAll(r io.Reader) error {
 			}
 			m.mu.Lock()
 			m.buffer = append(m.buffer, buf.String())
-			buf.Reset()
 			m.endNum++
 			m.mu.Unlock()
+			buf.Reset()
 			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
 			}
