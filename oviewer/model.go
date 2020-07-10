@@ -13,7 +13,7 @@ import (
 // for the logical screen.
 type Model struct {
 	// fileName is the file name to display.
-	fileName string
+	FileName string
 	// buffer stores the contents of the file in slices of strings.
 	// buffer,endNum and eof is updated by reader goroutine.
 	buffer []string
@@ -42,8 +42,8 @@ type Model struct {
 	mu sync.Mutex
 }
 
-// NewModel reads files (or stdin) and returns Model.
-func NewModel(args []string) (*Model, error) {
+// NewModel returns Model.
+func NewModel() (*Model, error) {
 	m := &Model{
 		buffer:     make([]string, 0, 1000),
 		header:     make([]string, 0),
@@ -53,13 +53,17 @@ func NewModel(args []string) (*Model, error) {
 	if err != nil {
 		return nil, err
 	}
+	return m, nil
+}
 
+// ReadFile reads files (or stdin).
+func (m *Model) ReadFile(args []string) error {
 	var reader io.Reader
 	fileName := ""
 	switch len(args) {
 	case 0:
 		if terminal.IsTerminal(0) {
-			return nil, ErrMissingFile
+			return ErrMissingFile
 		}
 		fileName = "(STDIN)"
 		reader = uncompressedReader(os.Stdin)
@@ -67,7 +71,7 @@ func NewModel(args []string) (*Model, error) {
 		fileName = args[0]
 		r, err := os.Open(fileName)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		reader = uncompressedReader(r)
 		defer r.Close()
@@ -76,20 +80,20 @@ func NewModel(args []string) (*Model, error) {
 		for _, fileName := range args {
 			r, err := os.Open(fileName)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			readers = append(readers, uncompressedReader(r))
 			reader = io.MultiReader(readers...)
 			defer r.Close()
 		}
 	}
-	err = m.ReadAll(reader)
+	err := m.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	m.fileName = fileName
+	m.FileName = fileName
 
-	return m, nil
+	return nil
 }
 
 // GetLine returns one line from buffer.

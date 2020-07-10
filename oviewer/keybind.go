@@ -14,9 +14,9 @@ func (root *Root) DefaultKeyEvent(ev *tcell.EventKey) bool {
 	case tcell.KeyEnter:
 		root.moveDown()
 	case tcell.KeyHome:
-		root.moveTop()
+		root.MoveTop()
 	case tcell.KeyEnd:
-		root.moveEnd()
+		root.MoveEnd()
 	case tcell.KeyLeft:
 		if ev.Modifiers()&tcell.ModCtrl > 0 {
 			root.moveHfLeft()

@@ -1,19 +1,19 @@
 package oviewer
 
 // Go to the top line.
-func (root *Root) moveTop() {
+func (root *Root) MoveTop() {
 	root.Model.lineNum = 0
 	root.Model.yy = 0
 }
 
 // Go to the bottom line.
-func (root *Root) moveEnd() {
+func (root *Root) MoveEnd() {
 	n := root.bottomLineNum(root.Model.endNum) + 1
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // Move to the specified line.
-func (root *Root) moveNum(num int) {
+func (root *Root) MoveNum(num int) {
 	root.Model.lineNum = num
 	root.Model.yy = 0
 }
@@ -24,7 +24,7 @@ func (root *Root) movePgUp() {
 	if n >= root.Model.lineNum {
 		n = root.Model.lineNum - 1
 	}
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // Moves down one screen.
@@ -33,7 +33,7 @@ func (root *Root) movePgDn() {
 	if n <= root.Model.lineNum {
 		n = root.Model.lineNum + 1
 	}
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // realHightNum returns the actual number of line on the screen.
@@ -43,12 +43,12 @@ func (root *Root) realHightNum() int {
 
 // Moves up half a screen.
 func (root *Root) moveHfUp() {
-	root.moveNum(root.Model.lineNum - (root.realHightNum() / 2))
+	root.MoveNum(root.Model.lineNum - (root.realHightNum() / 2))
 }
 
 // Moves down half a screen.
 func (root *Root) moveHfDn() {
-	root.moveNum(root.Model.lineNum + (root.realHightNum() / 2))
+	root.MoveNum(root.Model.lineNum + (root.realHightNum() / 2))
 }
 
 // Move up one line.

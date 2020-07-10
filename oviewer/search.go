@@ -33,7 +33,7 @@ func (root *Root) goSearchLine(lineNum int, err error) {
 		root.message = err.Error()
 		return
 	}
-	root.moveNum(lineNum - root.Header)
+	root.MoveNum(lineNum - root.Header)
 }
 
 // search is searches below from the specified line.

@@ -28,10 +28,6 @@ func (root *Root) Draw() {
 	}
 
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
-	searchWord := ""
-	if root.Input.mode == Normal {
-		searchWord = root.Input.value
-	}
 
 	lY := 0
 	lX := 0
@@ -76,7 +72,7 @@ func (root *Root) Draw() {
 		}
 
 		// search highlight
-		if searchWord != "" {
+		if root.Input.reg != nil {
 			poss := searchPosition(line, root.Input.reg)
 			for _, r := range poss {
 				reverseContents(lc, r[0], r[1])
@@ -206,7 +202,7 @@ func (root *Root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	leftStatus := fmt.Sprintf("%s:%s", root.Model.fileName, root.message)
+	leftStatus := fmt.Sprintf("%s:%s", root.Model.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	caseSensitive := ""
 	if root.CaseSensitive {

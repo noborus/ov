@@ -46,7 +46,11 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return err
 		}
 
-		m, err := oviewer.NewModel(args)
+		m, err := oviewer.NewModel()
+		if err != nil {
+			return err
+		}
+		err = m.ReadFile(args)
 		if err != nil {
 			return err
 		}

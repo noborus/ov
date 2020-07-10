@@ -109,36 +109,27 @@ func New(m *Model) (*Root, error) {
 		columnNum: 0,
 		startX:    0,
 	}
-	err := root.Init(m)
-	if err != nil {
-		return nil, err
-	}
-	return root, nil
-}
-
-// Init.
-func (root *Root) Init(m *Model) error {
 	root.Model = m
 	root.Input = NewInput()
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = screen.Init()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	root.Screen = screen
-	return nil
+	return root, nil
 }
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Screen.Fini()
-
 	root.setGlobalStyle()
 	root.Screen.Clear()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	go func() {
@@ -381,7 +372,7 @@ func (root *Root) GoLine(input string) {
 		return
 	}
 
-	root.moveNum(lineNum - root.Header - 1)
+	root.MoveNum(lineNum - root.Header - 1)
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
 
