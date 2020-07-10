@@ -4,7 +4,6 @@ package oviewer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // The Root structure contains information about the drawing.
@@ -25,8 +23,6 @@ type Root struct {
 	Model *Model
 	// Input contains the input mode.
 	Input *Input
-	// fileName is the file name to display.
-	fileName string
 	// message is the message to display.
 	message string
 	// wrapHeaderLen is the actual header length when wrapped.
@@ -103,63 +99,27 @@ var (
 )
 
 // New returns the entire structure of oviewer.
-func New() *Root {
-	root := &Root{}
-
-	root.Model = NewModel()
-	root.Input = NewInput()
-
-	root.TabWidth = 8
-	root.minStartX = -10
-	root.ColumnDelimiter = ""
-	root.columnNum = 0
-	root.startX = 0
-	return root
+func New(m *Model) (*Root, error) {
+	root := &Root{
+		Config: Config{
+			ColumnDelimiter: "",
+			TabWidth:        8,
+		},
+		minStartX: -10,
+		columnNum: 0,
+		startX:    0,
+	}
+	err := root.Init(m)
+	if err != nil {
+		return nil, err
+	}
+	return root, nil
 }
 
-// Run is reads the file(or stdin) and starts
-// the terminal pager.
-func (root *Root) Run(args []string) error {
-	err := root.Model.NewCache()
-	if err != nil {
-		return err
-	}
-
-	root.setGlobalStyle()
-
-	var reader io.Reader
-	fileName := ""
-	switch len(args) {
-	case 0:
-		if terminal.IsTerminal(0) {
-			return ErrMissingFile
-		}
-		fileName = "(STDIN)"
-		reader = uncompressedReader(os.Stdin)
-	case 1:
-		fileName = args[0]
-		r, err := os.Open(fileName)
-		if err != nil {
-			return err
-		}
-		reader = uncompressedReader(r)
-		defer r.Close()
-	default:
-		readers := make([]io.Reader, 0)
-		for _, fileName := range args {
-			r, err := os.Open(fileName)
-			if err != nil {
-				return err
-			}
-			readers = append(readers, uncompressedReader(r))
-			reader = io.MultiReader(readers...)
-			defer r.Close()
-		}
-	}
-	err = root.Model.ReadAll(reader)
-	if err != nil {
-		return err
-	}
+// Init.
+func (root *Root) Init(m *Model) error {
+	root.Model = m
+	root.Input = NewInput()
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
@@ -169,12 +129,16 @@ func (root *Root) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-
 	root.Screen = screen
-	root.fileName = fileName
+	return nil
+}
+
+// Run starts the terminal pager.
+func (root *Root) Run() error {
 	defer root.Screen.Fini()
 
-	screen.Clear()
+	root.setGlobalStyle()
+	root.Screen.Clear()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	go func() {
@@ -191,6 +155,7 @@ func (root *Root) Run(args []string) error {
 	}
 
 	root.main()
+
 	return nil
 }
 
@@ -208,24 +173,24 @@ loop:
 			root.updateEndNum()
 		case *eventAppQuit:
 			break loop
-		case *SearchInput:
+		case *searchInput:
 			root.Search(root.Input.value)
-		case *BackSearchInput:
+		case *backSearchInput:
 			root.BackSearch(root.Input.value)
-		case *GotoInput:
+		case *gotoInput:
 			root.GoLine(root.Input.value)
-		case *HeaderInput:
+		case *headerInput:
 			root.SetHeader(root.Input.value)
-		case *DelimiterInput:
+		case *delimiterInput:
 			root.SetDelimiter(root.Input.value)
-		case *TABWidthInput:
+		case *tabWidthInput:
 			root.SetTabWidth(root.Input.value)
 		case *tcell.EventKey:
 			root.message = ""
-			if root.Input.mode == normal {
+			if root.Input.mode == Normal {
 				root.DefaultKeyEvent(ev)
 			} else {
-				root.InputKeyEvent(ev)
+				root.InputEvent(ev)
 			}
 		case *tcell.EventResize:
 			root.Resize()
@@ -276,10 +241,11 @@ func (root *Root) contentsSmall() bool {
 func (root *Root) WriteOriginal() {
 	m := root.Model
 	for i := 0; i < m.vHight-1; i++ {
-		if m.lineNum+i >= m.BufLen() {
+		n := m.lineNum + i
+		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Println(m.GetLine(m.lineNum + i))
+		fmt.Println(m.GetLine(n))
 	}
 }
 
@@ -422,8 +388,8 @@ func (root *Root) GoLine(input string) {
 // MarkLineNum stores the specified number of lines.
 func (root *Root) MarkLineNum(lineNum int) {
 	s := strconv.Itoa(lineNum + 1)
-	root.Input.GoCList.list = toLast(root.Input.GoCList.list, s)
-	root.Input.GoCList.p = 0
+	root.Input.GoCandidate.list = toLast(root.Input.GoCandidate.list, s)
+	root.Input.GoCandidate.p = 0
 	root.message = fmt.Sprintf("Marked to line %d", lineNum)
 }
 

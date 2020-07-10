@@ -51,33 +51,33 @@ func (root *Root) DefaultKeyEvent(ev *tcell.EventKey) bool {
 		case 'W', 'w':
 			root.toggleWrapMode()
 		case '?':
-			root.Input.SetMode(backsearch)
+			root.Input.SetMode(Backsearch)
 		case 'c':
 			root.toggleColumnMode()
 		case 'd':
-			root.Input.SetMode(delimiter)
+			root.Input.SetMode(Delimiter)
 		case '/':
-			root.Input.SetMode(search)
+			root.Input.SetMode(Search)
 		case 'n':
 			root.NextSearch()
 		case 'N':
 			root.NextBackSearch()
 		case 'g':
-			root.Input.SetMode(goline)
+			root.Input.SetMode(Goline)
 		case 'G':
 			root.toggleLineNumMode()
 		case '>':
-			root.GoLine(NewGotoInput(root.Input.GoCList).Up(""))
+			root.GoLine(newGotoInput(root.Input.GoCandidate).Up(""))
 		case '<':
-			root.GoLine(NewGotoInput(root.Input.GoCList).Down(""))
+			root.GoLine(newGotoInput(root.Input.GoCandidate).Down(""))
 		case 'm':
 			root.MarkLineNum(root.Model.lineNum)
 		case 'H':
-			root.Input.SetMode(header)
+			root.Input.SetMode(Header)
 		case 'C':
 			root.toggleAlternateRows()
 		case 't':
-			root.Input.SetMode(tabWidth)
+			root.Input.SetMode(TabWidth)
 		}
 	}
 	return true

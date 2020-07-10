@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/noborus/ov/internal/oviewer"
+	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -46,15 +46,26 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return err
 		}
 
-		ov := oviewer.New()
-		ov.Config = config
-
-		if err := ov.Run(args); err != nil {
+		m, err := oviewer.NewModel(args)
+		if err != nil {
 			return err
 		}
+
+		ov, err := oviewer.New(m)
+		if err != nil {
+			return err
+		}
+
+		ov.Config = config
+
+		if err := ov.Run(); err != nil {
+			return err
+		}
+
 		if ov.AfterWrite {
 			ov.WriteOriginal()
 		}
+
 		return nil
 	},
 }
@@ -62,7 +73,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oviewer.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 
 	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
@@ -111,7 +122,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".oviewer" (without extension).
+		// Search config in home directory with name ".ov" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".ov")
 	}

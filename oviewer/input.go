@@ -13,32 +13,32 @@ import (
 type Input struct {
 	EventInput EventInput
 
-	mode    inputMode
+	mode    InputMode
 	value   string
 	reg     *regexp.Regexp
 	cursorX int
 
-	SearchCList    *Candidate
-	GoCList        *Candidate
-	DelimiterCList *Candidate
-	TabWidthCList  *Candidate
+	SearchCandidate    *candidate
+	GoCandidate        *candidate
+	DelimiterCandidate *candidate
+	TabWidthCandidate  *candidate
 }
 
-// inputMode represents the state of the input.
-type inputMode int
+// InputMode represents the state of the input.
+type InputMode int
 
 const (
-	normal inputMode = iota
-	search
-	backsearch
-	goline
-	header
-	delimiter
-	tabWidth
+	Normal InputMode = iota
+	Search
+	Backsearch
+	Goline
+	Header
+	Delimiter
+	TabWidth
 )
 
-// InputKeyEvent input key events.
-func (root *Root) InputKeyEvent(ev *tcell.EventKey) bool {
+// InputEvent input key events.
+func (root *Root) InputEvent(ev *tcell.EventKey) bool {
 	// inputEvent returns input confirmed or not confirmed.
 	ok := root.inputKeyEvent(ev)
 
@@ -54,7 +54,7 @@ func (root *Root) InputKeyEvent(ev *tcell.EventKey) bool {
 		root.Screen.PostEventWait(nev)
 	}()
 
-	input.mode = normal
+	input.mode = Normal
 	return true
 }
 
@@ -64,7 +64,7 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 
 	switch ev.Key() {
 	case tcell.KeyEscape:
-		input.mode = normal
+		input.mode = Normal
 		return false
 	case tcell.KeyEnter:
 		return true
@@ -160,8 +160,8 @@ func runeWidth(str string) int {
 	return width
 }
 
-// Candidate represents a candidate list.
-type Candidate struct {
+// candidate represents a input candidate list.
+type candidate struct {
 	list []string
 	p    int
 }
@@ -169,10 +169,10 @@ type Candidate struct {
 // NewInput returns all the various inputs.
 func NewInput() *Input {
 	i := Input{}
-	i.GoCList = &Candidate{
+	i.GoCandidate = &candidate{
 		list: []string{},
 	}
-	i.DelimiterCList = &Candidate{
+	i.DelimiterCandidate = &candidate{
 		list: []string{
 			"│",
 			"\t",
@@ -180,7 +180,7 @@ func NewInput() *Input {
 			",",
 		},
 	}
-	i.TabWidthCList = &Candidate{
+	i.TabWidthCandidate = &candidate{
 		list: []string{
 			"3",
 			"2",
@@ -188,34 +188,34 @@ func NewInput() *Input {
 			"8",
 		},
 	}
-	i.SearchCList = &Candidate{
+	i.SearchCandidate = &candidate{
 		list: []string{},
 	}
-	i.EventInput = &NormalInput{}
+	i.EventInput = &normalInput{}
 	return &i
 }
 
 // SetMode changes the input mode.
-func (input *Input) SetMode(mode inputMode) {
+func (input *Input) SetMode(mode InputMode) {
 	input.mode = mode
 	input.value = ""
 	input.cursorX = 0
 
 	switch mode {
-	case search:
-		input.EventInput = NewSearchInput(input.SearchCList)
-	case backsearch:
-		input.EventInput = NewBackSearchInput(input.SearchCList)
-	case goline:
-		input.EventInput = NewGotoInput(input.GoCList)
-	case header:
-		input.EventInput = NewHeaderInput()
-	case delimiter:
-		input.EventInput = NewDelimiterInput(input.DelimiterCList)
-	case tabWidth:
-		input.EventInput = NewTABWidthInput(input.TabWidthCList)
+	case Search:
+		input.EventInput = newSearchInput(input.SearchCandidate)
+	case Backsearch:
+		input.EventInput = newBackSearchInput(input.SearchCandidate)
+	case Goline:
+		input.EventInput = newGotoInput(input.GoCandidate)
+	case Header:
+		input.EventInput = newHeaderInput()
+	case Delimiter:
+		input.EventInput = newDelimiterInput(input.DelimiterCandidate)
+	case TabWidth:
+		input.EventInput = newTabWidthInput(input.TabWidthCandidate)
 	default:
-		input.EventInput = NewNormalInput()
+		input.EventInput = newNormalInput()
 	}
 }
 
@@ -231,55 +231,55 @@ type EventInput interface {
 	Down(i string) string
 }
 
-// NormalInput represents the normal input mode.
+// normalInput represents the normal input mode.
 // This is a dummy as it normally does not accept input.
-type NormalInput struct {
+type normalInput struct {
 	tcell.EventTime
 }
 
-// NewNormalInput returns NormalInput.
-func NewNormalInput() *NormalInput {
-	return &NormalInput{}
+// newNormalInput returns normalInput.
+func newNormalInput() *normalInput {
+	return &normalInput{}
 }
 
 // Prompt returns the prompt string in the input field.
-func (n *NormalInput) Prompt() string {
+func (n *normalInput) Prompt() string {
 	return ""
 }
 
 // Confirm returns the event when the input is confirmed.
-func (n *NormalInput) Confirm(str string) tcell.Event {
+func (n *normalInput) Confirm(str string) tcell.Event {
 	return nil
 }
 
 // Up returns strings when the up key is pressed during input.
-func (n *NormalInput) Up(str string) string {
+func (n *normalInput) Up(str string) string {
 	return ""
 }
 
 // Down returns strings when the down key is pressed during input.
-func (n *NormalInput) Down(str string) string {
+func (n *normalInput) Down(str string) string {
 	return ""
 }
 
-// SearchInput represents the search input mode.
-type SearchInput struct {
-	clist *Candidate
+// searchInput represents the search input mode.
+type searchInput struct {
+	clist *candidate
 	tcell.EventTime
 }
 
-// NewSearchInput returns SearchInput.
-func NewSearchInput(clist *Candidate) *SearchInput {
-	return &SearchInput{clist: clist}
+// newSearchInput returns SearchInput.
+func newSearchInput(clist *candidate) *searchInput {
+	return &searchInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (s *SearchInput) Prompt() string {
+func (s *searchInput) Prompt() string {
 	return "/"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (s *SearchInput) Confirm(str string) tcell.Event {
+func (s *searchInput) Confirm(str string) tcell.Event {
 	s.clist.list = toLast(s.clist.list, str)
 	s.clist.p = 0
 	s.SetEventNow()
@@ -287,33 +287,33 @@ func (s *SearchInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (s *SearchInput) Up(str string) string {
+func (s *searchInput) Up(str string) string {
 	return s.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (s *SearchInput) Down(str string) string {
+func (s *searchInput) Down(str string) string {
 	return s.clist.down()
 }
 
-// BackSearchInput represents the back search input mode.
-type BackSearchInput struct {
-	clist *Candidate
+// backSearchInput represents the back search input mode.
+type backSearchInput struct {
+	clist *candidate
 	tcell.EventTime
 }
 
-// NewBackSearchInput returns BackSearchInput.
-func NewBackSearchInput(clist *Candidate) *BackSearchInput {
-	return &BackSearchInput{clist: clist}
+// newBackSearchInput returns BackSearchInput.
+func newBackSearchInput(clist *candidate) *backSearchInput {
+	return &backSearchInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (b *BackSearchInput) Prompt() string {
+func (b *backSearchInput) Prompt() string {
 	return "?"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (b *BackSearchInput) Confirm(str string) tcell.Event {
+func (b *backSearchInput) Confirm(str string) tcell.Event {
 	b.clist.list = toLast(b.clist.list, str)
 	b.clist.p = 0
 	b.SetEventNow()
@@ -321,33 +321,33 @@ func (b *BackSearchInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (b *BackSearchInput) Up(str string) string {
+func (b *backSearchInput) Up(str string) string {
 	return b.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (b *BackSearchInput) Down(str string) string {
+func (b *backSearchInput) Down(str string) string {
 	return b.clist.down()
 }
 
-// GotoInput represents the goto input mode.
-type GotoInput struct {
-	clist *Candidate
+// gotoInput represents the goto input mode.
+type gotoInput struct {
+	clist *candidate
 	tcell.EventTime
 }
 
-// NewGotoInput returns GotoInput.
-func NewGotoInput(clist *Candidate) *GotoInput {
-	return &GotoInput{clist: clist}
+// newGotoInput returns GotoInput.
+func newGotoInput(clist *candidate) *gotoInput {
+	return &gotoInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (g *GotoInput) Prompt() string {
+func (g *gotoInput) Prompt() string {
 	return "Goto line:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (g *GotoInput) Confirm(str string) tcell.Event {
+func (g *gotoInput) Confirm(str string) tcell.Event {
 	g.clist.list = toLast(g.clist.list, str)
 	g.clist.p = 0
 	g.SetEventNow()
@@ -355,38 +355,38 @@ func (g *GotoInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (g *GotoInput) Up(str string) string {
+func (g *gotoInput) Up(str string) string {
 	return g.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (g *GotoInput) Down(str string) string {
+func (g *gotoInput) Down(str string) string {
 	return g.clist.down()
 }
 
-// HeaderInput represents the goto input mode.
-type HeaderInput struct {
+// headerInput represents the goto input mode.
+type headerInput struct {
 	tcell.EventTime
 }
 
-// NewHeaderInput returns HeaderInput.
-func NewHeaderInput() *HeaderInput {
-	return &HeaderInput{}
+// newHeaderInput returns HeaderInput.
+func newHeaderInput() *headerInput {
+	return &headerInput{}
 }
 
 // Prompt returns the prompt string in the input field.
-func (h *HeaderInput) Prompt() string {
+func (h *headerInput) Prompt() string {
 	return "Header length:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (h *HeaderInput) Confirm(str string) tcell.Event {
+func (h *headerInput) Confirm(str string) tcell.Event {
 	h.SetEventNow()
 	return h
 }
 
 // Up returns strings when the up key is pressed during input.
-func (h *HeaderInput) Up(str string) string {
+func (h *headerInput) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -395,7 +395,7 @@ func (h *HeaderInput) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (h *HeaderInput) Down(str string) string {
+func (h *headerInput) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -403,24 +403,24 @@ func (h *HeaderInput) Down(str string) string {
 	return strconv.Itoa(n - 1)
 }
 
-// DelimiterInput represents the delimiter input mode.
-type DelimiterInput struct {
-	clist *Candidate
+// delimiterInput represents the delimiter input mode.
+type delimiterInput struct {
+	clist *candidate
 	tcell.EventTime
 }
 
-// NewDelimiterInput returns DelimiterInput.
-func NewDelimiterInput(clist *Candidate) *DelimiterInput {
-	return &DelimiterInput{clist: clist}
+// newDelimiterInput returns DelimiterInput.
+func newDelimiterInput(clist *candidate) *delimiterInput {
+	return &delimiterInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (d *DelimiterInput) Prompt() string {
+func (d *delimiterInput) Prompt() string {
 	return "Delimiter:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (d *DelimiterInput) Confirm(str string) tcell.Event {
+func (d *delimiterInput) Confirm(str string) tcell.Event {
 	d.clist.list = toLast(d.clist.list, str)
 	d.clist.p = 0
 	d.SetEventNow()
@@ -428,33 +428,33 @@ func (d *DelimiterInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (d *DelimiterInput) Up(str string) string {
+func (d *delimiterInput) Up(str string) string {
 	return d.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (d *DelimiterInput) Down(str string) string {
+func (d *delimiterInput) Down(str string) string {
 	return d.clist.down()
 }
 
-// TABWidthInput represents the TABWidth input mode.
-type TABWidthInput struct {
-	clist *Candidate
+// tabWidthInput represents the TABWidth input mode.
+type tabWidthInput struct {
+	clist *candidate
 	tcell.EventTime
 }
 
-// NewTABWidthInput returns TABWidthInput.
-func NewTABWidthInput(clist *Candidate) *TABWidthInput {
-	return &TABWidthInput{clist: clist}
+// newTabWidthInput returns TABWidthInput.
+func newTabWidthInput(clist *candidate) *tabWidthInput {
+	return &tabWidthInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (t *TABWidthInput) Prompt() string {
+func (t *tabWidthInput) Prompt() string {
 	return "TAB width:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (t *TABWidthInput) Confirm(str string) tcell.Event {
+func (t *tabWidthInput) Confirm(str string) tcell.Event {
 	t.clist.list = toLast(t.clist.list, str)
 	t.clist.p = 0
 	t.SetEventNow()
@@ -462,16 +462,16 @@ func (t *TABWidthInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (t *TABWidthInput) Up(str string) string {
+func (t *tabWidthInput) Up(str string) string {
 	return t.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (t *TABWidthInput) Down(str string) string {
+func (t *tabWidthInput) Down(str string) string {
 	return t.clist.down()
 }
 
-func (c *Candidate) up() string {
+func (c *candidate) up() string {
 	if len(c.list) == 0 {
 		return ""
 	}
@@ -485,7 +485,7 @@ func (c *Candidate) up() string {
 	return c.list[c.p]
 }
 
-func (c *Candidate) down() string {
+func (c *candidate) down() string {
 	if len(c.list) == 0 {
 		return ""
 	}

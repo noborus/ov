@@ -10,8 +10,8 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// Content represents one character on the terminal.
-type Content struct {
+// content represents one character on the terminal.
+type content struct {
 	width int
 	mainc rune
 	combc []rune
@@ -21,7 +21,7 @@ type Content struct {
 // lineContents represents one line of contents.
 type lineContents struct {
 	// contents contains one line of contents.
-	contents []Content
+	contents []content
 	// byteMap is the number of contents corresponding to the number of bytes.
 	byteMap map[int]int
 }
@@ -35,7 +35,7 @@ const (
 )
 
 // DefaultContent is a blank Content.
-var DefaultContent = Content{
+var DefaultContent = content{
 	mainc: 0,
 	combc: nil,
 	width: 0,
@@ -56,7 +56,7 @@ func parseString(line string, tabWidth int) lineContents {
 	x := 0
 	n := 0
 	bsFlag := false // backspace(^H) flag
-	var bsContent Content
+	var bsContent content
 	for _, runeValue := range line {
 		c := DefaultContent
 		switch state {
@@ -192,10 +192,10 @@ func overstrike(p, m rune, style tcell.Style) tcell.Style {
 }
 
 // lastContent returns the last character of Contents.
-func lastContent(contents []Content) Content {
+func lastContent(contents []content) content {
 	n := len(contents)
 	if n == 0 {
-		return Content{}
+		return content{}
 	}
 	if (n > 1) && (contents[n-2].width > 1) {
 		return contents[n-2]
@@ -304,7 +304,7 @@ func lookupColor(colorNumber int) string {
 }
 
 // strToContents converts a single-line string into a content array.
-func strToContents(str string, tabWidth int) []Content {
+func strToContents(str string, tabWidth int) []content {
 	lc := parseString(str, tabWidth)
 	return lc.contents
 }
