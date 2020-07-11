@@ -10,7 +10,7 @@ import (
 func (root *Root) Draw() {
 	m := root.Model
 	screen := root.Screen
-	if m.BufLen() == 0 || m.vHight == 0 {
+	if m.BufEndNum() == 0 || m.vHight == 0 {
 		m.lineNum = 0
 		root.statusDraw()
 		root.Show()
@@ -28,10 +28,6 @@ func (root *Root) Draw() {
 	}
 
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
-	searchWord := ""
-	if root.Input.mode == normal {
-		searchWord = root.Input.value
-	}
 
 	lY := 0
 	lX := 0
@@ -76,7 +72,7 @@ func (root *Root) Draw() {
 		}
 
 		// search highlight
-		if searchWord != "" {
+		if root.Input.reg != nil {
 			poss := searchPosition(line, root.Input.reg)
 			for _, r := range poss {
 				reverseContents(lc, r[0], r[1])
@@ -131,7 +127,7 @@ func (root *Root) Draw() {
 
 // ResetScreen initializes the screen with a blank.
 func (root *Root) ResetScreen() {
-	space := Content{
+	space := content{
 		mainc: ' ',
 		combc: nil,
 		width: 1,
@@ -152,7 +148,7 @@ func reverseContents(lc lineContents, start int, end int) {
 }
 
 // wrapContents wraps and draws the contents and returns the next drawing position.
-func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (int, int) {
+func (root *Root) wrapContents(y int, lX int, lY int, contents []content) (int, int) {
 	for x := 0; ; x++ {
 		if lX+x >= len(contents) {
 			// EOL
@@ -172,7 +168,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, contents []Content) (int, 
 }
 
 // noWrapContents draws contents without wrapping and returns the next drawing position.
-func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (int, int) {
+func (root *Root) noWrapContents(y int, lX int, lY int, contents []content) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
@@ -191,7 +187,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []Content) (int
 }
 
 // headerStyle applies the style of the header.
-func (root *Root) headerStyle(contents []Content) {
+func (root *Root) headerStyle(contents []content) {
 	for i := 0; i < len(contents); i++ {
 		contents[i].style = HeaderStyle
 	}
@@ -206,14 +202,14 @@ func (root *Root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	leftStatus := fmt.Sprintf("%s:%s", root.fileName, root.message)
+	leftStatus := fmt.Sprintf("%s:%s", root.Model.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	caseSensitive := ""
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
 	input := root.Input
-	if input.mode != normal {
+	if input.mode != Normal {
 		p := caseSensitive + input.EventInput.Prompt()
 		leftStatus = p + input.value
 		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
@@ -242,7 +238,7 @@ func (root *Root) statusDraw() {
 }
 
 // setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, contents []Content) {
+func (root *Root) setContentString(vx int, vy int, contents []content) {
 	screen := root.Screen
 	for x, content := range contents {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)

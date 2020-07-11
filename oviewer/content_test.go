@@ -24,7 +24,7 @@ func Test_parseString(t *testing.T) {
 				line: "test", tabWidth: 8,
 			},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('s'), combc: nil},
@@ -37,7 +37,7 @@ func Test_parseString(t *testing.T) {
 			name: "testASCII",
 			args: args{line: "abc", tabWidth: 4},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: nil},
@@ -49,7 +49,7 @@ func Test_parseString(t *testing.T) {
 			name: "testHiragana",
 			args: args{line: "あ", tabWidth: 4},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 2, style: tcell.StyleDefault, mainc: rune('あ'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
@@ -60,7 +60,7 @@ func Test_parseString(t *testing.T) {
 			name: "testKANJI",
 			args: args{line: "漢", tabWidth: 4},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 2, style: tcell.StyleDefault, mainc: rune('漢'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
@@ -71,7 +71,7 @@ func Test_parseString(t *testing.T) {
 			name: "testMIX",
 			args: args{line: "abc漢", tabWidth: 4},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: nil},
@@ -85,7 +85,7 @@ func Test_parseString(t *testing.T) {
 			name: "testTab",
 			args: args{line: "a\tb", tabWidth: 4},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
@@ -99,7 +99,7 @@ func Test_parseString(t *testing.T) {
 			name: "testTabMinus",
 			args: args{line: "a\tb", tabWidth: -1},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('\\'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('t'), combc: nil},
@@ -114,7 +114,7 @@ func Test_parseString(t *testing.T) {
 				line: "\x1B[31mred\x1B[m", tabWidth: 8,
 			},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('r'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('e'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('d'), combc: nil},
@@ -128,7 +128,7 @@ func Test_parseString(t *testing.T) {
 				line: "\x1B[1mbold\x1B[m", tabWidth: 8,
 			},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('b'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('o'), combc: nil},
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('l'), combc: nil},
@@ -141,7 +141,7 @@ func Test_parseString(t *testing.T) {
 			name: "testOverstrike",
 			args: args{line: "a\ba", tabWidth: 8},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 0, 3: 1},
@@ -151,7 +151,7 @@ func Test_parseString(t *testing.T) {
 			name: "testOverstrike2",
 			args: args{line: "\ba", tabWidth: 8},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 0, 2: 1},
@@ -161,7 +161,7 @@ func Test_parseString(t *testing.T) {
 			name: "testOverstrike3",
 			args: args{line: "あ\bあ", tabWidth: 8},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
@@ -180,7 +180,7 @@ func Test_parseString(t *testing.T) {
 			name: "testOverstrikeUnderLine",
 			args: args{line: "_\ba", tabWidth: 8},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 0, 3: 1},
@@ -190,7 +190,7 @@ func Test_parseString(t *testing.T) {
 			name: "testOverstrikeUnderLine2",
 			args: args{line: "_\bあ", tabWidth: 8},
 			want: lineContents{
-				contents: []Content{
+				contents: []content{
 					{width: 2, style: tcell.StyleDefault.Underline(true), mainc: rune('あ'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
@@ -210,36 +210,36 @@ func Test_parseString(t *testing.T) {
 
 func Test_lastContent(t *testing.T) {
 	type args struct {
-		contents []Content
+		contents []content
 	}
 	tests := []struct {
 		name string
 		args args
-		want Content
+		want content
 	}{
 		{
 			name: "tsetNil",
 			args: args{
 				contents: nil,
 			},
-			want: Content{},
+			want: content{},
 		},
 		{
 			name: "tset1",
 			args: args{
-				contents: []Content{
+				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('s'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 				},
 			},
-			want: Content{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
+			want: content{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 		},
 		{
 			name: "tsetWide",
 			args: args{
-				contents: []Content{
+				contents: []content{
 					{width: 2, style: tcell.StyleDefault, mainc: rune('あ'), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
 					{width: 2, style: tcell.StyleDefault, mainc: rune('い'), combc: nil},
@@ -248,7 +248,7 @@ func Test_lastContent(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
 				},
 			},
-			want: Content{width: 2, style: tcell.StyleDefault, mainc: rune('う'), combc: nil},
+			want: content{width: 2, style: tcell.StyleDefault, mainc: rune('う'), combc: nil},
 		},
 	}
 	for _, tt := range tests {
@@ -307,12 +307,12 @@ func Test_strToContents(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []Content
+		want []content
 	}{
 		{
 			name: "test1",
 			args: args{line: "1", tabWidth: 4},
-			want: []Content{
+			want: []content{
 				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: nil},
 			},
 		},

@@ -4,7 +4,6 @@ package oviewer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // The Root structure contains information about the drawing.
@@ -25,8 +23,6 @@ type Root struct {
 	Model *Model
 	// Input contains the input mode.
 	Input *Input
-	// fileName is the file name to display.
-	fileName string
 	// message is the message to display.
 	message string
 	// wrapHeaderLen is the actual header length when wrapped.
@@ -102,79 +98,53 @@ var (
 	ErrInvalidNumber = errors.New("invalid number")
 )
 
-// New returns the entire structure of oviewer.
-func New() *Root {
-	root := &Root{}
+// New return the structure of oviewer.
+func New(m *Model) (*Root, error) {
+	root := &Root{
+		Config: Config{
+			ColumnDelimiter: "",
+			TabWidth:        8,
+		},
+		minStartX: -10,
+		columnNum: 0,
+		startX:    0,
+	}
 
-	root.Model = NewModel()
+	root.Model = m
 	root.Input = NewInput()
-
-	root.TabWidth = 8
-	root.minStartX = -10
-	root.ColumnDelimiter = ""
-	root.columnNum = 0
-	root.startX = 0
-	return root
-}
-
-// Run is reads the file(or stdin) and starts
-// the terminal pager.
-func (root *Root) Run(args []string) error {
-	err := root.Model.NewCache()
-	if err != nil {
-		return err
-	}
-
-	root.setGlobalStyle()
-
-	var reader io.Reader
-	fileName := ""
-	switch len(args) {
-	case 0:
-		if terminal.IsTerminal(0) {
-			return ErrMissingFile
-		}
-		fileName = "(STDIN)"
-		reader = uncompressedReader(os.Stdin)
-	case 1:
-		fileName = args[0]
-		r, err := os.Open(fileName)
-		if err != nil {
-			return err
-		}
-		reader = uncompressedReader(r)
-		defer r.Close()
-	default:
-		readers := make([]io.Reader, 0)
-		for _, fileName := range args {
-			r, err := os.Open(fileName)
-			if err != nil {
-				return err
-			}
-			readers = append(readers, uncompressedReader(r))
-			reader = io.MultiReader(readers...)
-			defer r.Close()
-		}
-	}
-	err = root.Model.ReadAll(reader)
-	if err != nil {
-		return err
-	}
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = screen.Init()
-	if err != nil {
-		return err
+	if err = screen.Init(); err != nil {
+		return nil, err
 	}
-
 	root.Screen = screen
-	root.fileName = fileName
-	defer root.Screen.Fini()
 
-	screen.Clear()
+	return root, nil
+}
+
+// Open reads the file named of the argument and return the structure of oviewer.
+func Open(fileNames []string) (*Root, error) {
+	m, err := NewModel()
+	if err != nil {
+		return nil, err
+	}
+	err = m.ReadFile(fileNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(m)
+}
+
+// Run starts the terminal pager.
+func (root *Root) Run() error {
+	defer root.Screen.Fini()
+	root.setGlobalStyle()
+	root.Screen.Clear()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	go func() {
@@ -191,6 +161,7 @@ func (root *Root) Run(args []string) error {
 	}
 
 	root.main()
+
 	return nil
 }
 
@@ -208,24 +179,24 @@ loop:
 			root.updateEndNum()
 		case *eventAppQuit:
 			break loop
-		case *SearchInput:
+		case *searchInput:
 			root.Search(root.Input.value)
-		case *BackSearchInput:
+		case *backSearchInput:
 			root.BackSearch(root.Input.value)
-		case *GotoInput:
+		case *gotoInput:
 			root.GoLine(root.Input.value)
-		case *HeaderInput:
+		case *headerInput:
 			root.SetHeader(root.Input.value)
-		case *DelimiterInput:
+		case *delimiterInput:
 			root.SetDelimiter(root.Input.value)
-		case *TABWidthInput:
+		case *tabWidthInput:
 			root.SetTabWidth(root.Input.value)
 		case *tcell.EventKey:
 			root.message = ""
-			if root.Input.mode == normal {
-				root.DefaultKeyEvent(ev)
+			if root.Input.mode == Normal {
+				root.defaultKeyEvent(ev)
 			} else {
-				root.InputKeyEvent(ev)
+				root.inputEvent(ev)
 			}
 		case *tcell.EventResize:
 			root.Resize()
@@ -249,8 +220,8 @@ func (root *Root) setGlobalStyle() {
 	}
 }
 
-// PrepareView prepares when the screen size is changed.
-func (root *Root) PrepareView() {
+// prepareView prepares when the screen size is changed.
+func (root *Root) prepareView() {
 	m := root.Model
 	screen := root.Screen
 	m.vWidth, m.vHight = screen.Size()
@@ -260,11 +231,11 @@ func (root *Root) PrepareView() {
 
 // contentsSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) contentsSmall() bool {
-	root.PrepareView()
+	root.prepareView()
 	m := root.Model
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
+		hight += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
 		if hight > m.vHight {
 			return false
 		}
@@ -276,10 +247,11 @@ func (root *Root) contentsSmall() bool {
 func (root *Root) WriteOriginal() {
 	m := root.Model
 	for i := 0; i < m.vHight-1; i++ {
-		if m.lineNum+i >= m.BufLen() {
+		n := m.lineNum + i
+		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Println(m.GetLine(m.lineNum + i))
+		fmt.Println(m.GetLine(n))
 	}
 }
 
@@ -296,7 +268,7 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
+		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
 	}
 }
 
@@ -312,7 +284,7 @@ func (root *Root) bottomLineNum(num int) int {
 	}
 
 	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.GetContents(num, root.TabWidth)) / m.vWidth)
+		y -= 1 + (len(m.getContents(num, root.TabWidth)) / m.vWidth)
 		num--
 	}
 	num++
@@ -375,7 +347,7 @@ func (root *Root) Resize() {
 // Sync redraws the whole thing.
 func (root *Root) Sync() {
 	root.prepareStartX()
-	root.PrepareView()
+	root.prepareView()
 	root.Draw()
 }
 
@@ -415,15 +387,15 @@ func (root *Root) GoLine(input string) {
 		return
 	}
 
-	root.moveNum(lineNum - root.Header - 1)
+	root.MoveNum(lineNum - root.Header - 1)
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
 
 // MarkLineNum stores the specified number of lines.
 func (root *Root) MarkLineNum(lineNum int) {
 	s := strconv.Itoa(lineNum + 1)
-	root.Input.GoCList.list = toLast(root.Input.GoCList.list, s)
-	root.Input.GoCList.p = 0
+	root.Input.GoCandidate.list = toLast(root.Input.GoCandidate.list, s)
+	root.Input.GoCandidate.p = 0
 	root.message = fmt.Sprintf("Marked to line %d", lineNum)
 }
 

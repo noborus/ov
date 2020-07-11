@@ -1,19 +1,22 @@
 package oviewer
 
+import "fmt"
+
 // Go to the top line.
-func (root *Root) moveTop() {
+func (root *Root) MoveTop() {
 	root.Model.lineNum = 0
 	root.Model.yy = 0
 }
 
 // Go to the bottom line.
-func (root *Root) moveEnd() {
+func (root *Root) MoveEnd() {
+	root.message = fmt.Sprintf("endnum:%d", root.Model.endNum)
 	n := root.bottomLineNum(root.Model.endNum) + 1
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // Move to the specified line.
-func (root *Root) moveNum(num int) {
+func (root *Root) MoveNum(num int) {
 	root.Model.lineNum = num
 	root.Model.yy = 0
 }
@@ -24,7 +27,7 @@ func (root *Root) movePgUp() {
 	if n >= root.Model.lineNum {
 		n = root.Model.lineNum - 1
 	}
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // Moves down one screen.
@@ -33,7 +36,7 @@ func (root *Root) movePgDn() {
 	if n <= root.Model.lineNum {
 		n = root.Model.lineNum + 1
 	}
-	root.moveNum(n)
+	root.MoveNum(n)
 }
 
 // realHightNum returns the actual number of line on the screen.
@@ -43,12 +46,12 @@ func (root *Root) realHightNum() int {
 
 // Moves up half a screen.
 func (root *Root) moveHfUp() {
-	root.moveNum(root.Model.lineNum - (root.realHightNum() / 2))
+	root.MoveNum(root.Model.lineNum - (root.realHightNum() / 2))
 }
 
 // Moves down half a screen.
 func (root *Root) moveHfDn() {
-	root.moveNum(root.Model.lineNum + (root.realHightNum() / 2))
+	root.MoveNum(root.Model.lineNum + (root.realHightNum() / 2))
 }
 
 // Move up one line.
@@ -59,10 +62,10 @@ func (root *Root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < root.Model.vWidth || root.Model.yy <= 0 {
 		if (root.Model.lineNum) >= 1 {
-			pre := root.Model.GetContents(root.Model.lineNum+root.Header-1, root.TabWidth)
+			pre := root.Model.getContents(root.Model.lineNum+root.Header-1, root.TabWidth)
 			yyLen := len(pre) / (root.Model.vWidth + 1)
 			root.Model.yy = yyLen
 		}
@@ -85,7 +88,7 @@ func (root *Root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < (root.Model.vWidth * (root.Model.yy + 1)) {
 		root.Model.yy = 0
 		root.Model.lineNum++

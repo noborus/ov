@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -69,6 +70,7 @@ func (m *Model) ReadAll(r io.Reader) error {
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
 					break
 				}
+				log.Printf("error:%v\n", err)
 				m.eof = false
 				return
 			}

@@ -1,20 +1,25 @@
 package oviewer
 
 import (
+	"io"
+	"os"
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // The Model structure contains the values
 // for the logical screen.
 type Model struct {
+	// fileName is the file name to display.
+	FileName string
 	// buffer stores the contents of the file in slices of strings.
 	// buffer,endNum and eof is updated by reader goroutine.
 	buffer []string
 	// endNum is the number of the last line read.
 	endNum int
-	// eof is or has reached EOF.
+	// true if EOF is reached.
 	eof bool
 
 	// x is the starting position of the current x.
@@ -37,13 +42,57 @@ type Model struct {
 	mu sync.Mutex
 }
 
-//NewModel returns Model.
-func NewModel() *Model {
-	return &Model{
+// NewModel returns Model.
+func NewModel() (*Model, error) {
+	m := &Model{
 		buffer:     make([]string, 0, 1000),
 		header:     make([]string, 0),
 		beforeSize: 1000,
 	}
+
+	if err := m.NewCache(); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// ReadFile reads files (or stdin).
+func (m *Model) ReadFile(fileNames []string) error {
+	var reader io.Reader
+	fileName := ""
+	switch len(fileNames) {
+	case 0:
+		if terminal.IsTerminal(0) {
+			return ErrMissingFile
+		}
+		fileName = "(STDIN)"
+		reader = uncompressedReader(os.Stdin)
+	case 1:
+		fileName = fileNames[0]
+		r, err := os.Open(fileName)
+		if err != nil {
+			return err
+		}
+		reader = uncompressedReader(r)
+	default:
+		readers := make([]io.Reader, 0)
+		for _, fileName := range fileNames {
+			r, err := os.Open(fileName)
+			if err != nil {
+				return err
+			}
+			readers = append(readers, uncompressedReader(r))
+			reader = io.MultiReader(readers...)
+		}
+	}
+
+	if err := m.ReadAll(reader); err != nil {
+		return err
+	}
+
+	m.FileName = fileName
+
+	return nil
 }
 
 // GetLine returns one line from buffer.
@@ -56,13 +105,6 @@ func (m *Model) GetLine(lineNum int) string {
 	return m.buffer[lineNum]
 }
 
-// BufLen return buffer length.
-func (m *Model) BufLen() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return len(m.buffer)
-}
-
 // BufEndNum return last line number.
 func (m *Model) BufEndNum() int {
 	m.mu.Lock()
@@ -70,7 +112,7 @@ func (m *Model) BufEndNum() int {
 	return m.endNum
 }
 
-// BufEOF return reaching EOF.
+// BufEOF return true if EOF is reached.
 func (m *Model) BufEOF() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -96,8 +138,8 @@ func (m *Model) ClearCache() {
 	m.cache.Clear()
 }
 
-// GetContents returns one line of contents from buffer.
-func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
+// getContents returns one line of contents from buffer.
+func (m *Model) getContents(lineNum int, tabWidth int) []content {
 	lc, err := m.lineToContents(lineNum, tabWidth)
 	if err != nil {
 		return nil
@@ -109,7 +151,7 @@ func (m *Model) GetContents(lineNum int, tabWidth int) []Content {
 func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
 
-	if lineNum < 0 || lineNum >= m.BufLen() {
+	if lineNum < 0 || lineNum >= m.BufEndNum() {
 		return lc, ErrOutOfRange
 	}
 
