@@ -98,7 +98,7 @@ var (
 	ErrInvalidNumber = errors.New("invalid number")
 )
 
-// New returns the entire structure of oviewer.
+// New return the structure of oviewer.
 func New(m *Model) (*Root, error) {
 	root := &Root{
 		Config: Config{
@@ -109,6 +109,7 @@ func New(m *Model) (*Root, error) {
 		columnNum: 0,
 		startX:    0,
 	}
+
 	root.Model = m
 	root.Input = NewInput()
 
@@ -116,12 +117,26 @@ func New(m *Model) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = screen.Init()
-	if err != nil {
+	if err = screen.Init(); err != nil {
 		return nil, err
 	}
 	root.Screen = screen
+
 	return root, nil
+}
+
+// Open reads the file named of the argument and return the structure of oviewer.
+func Open(fileNames []string) (*Root, error) {
+	m, err := NewModel()
+	if err != nil {
+		return nil, err
+	}
+	err = m.ReadFile(fileNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(m)
 }
 
 // Run starts the terminal pager.
@@ -179,9 +194,9 @@ loop:
 		case *tcell.EventKey:
 			root.message = ""
 			if root.Input.mode == Normal {
-				root.DefaultKeyEvent(ev)
+				root.defaultKeyEvent(ev)
 			} else {
-				root.InputEvent(ev)
+				root.inputEvent(ev)
 			}
 		case *tcell.EventResize:
 			root.Resize()
@@ -205,8 +220,8 @@ func (root *Root) setGlobalStyle() {
 	}
 }
 
-// PrepareView prepares when the screen size is changed.
-func (root *Root) PrepareView() {
+// prepareView prepares when the screen size is changed.
+func (root *Root) prepareView() {
 	m := root.Model
 	screen := root.Screen
 	m.vWidth, m.vHight = screen.Size()
@@ -216,11 +231,11 @@ func (root *Root) PrepareView() {
 
 // contentsSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) contentsSmall() bool {
-	root.PrepareView()
+	root.prepareView()
 	m := root.Model
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
+		hight += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
 		if hight > m.vHight {
 			return false
 		}
@@ -253,7 +268,7 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.GetContents(y, root.TabWidth)) / m.vWidth)
+		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
 	}
 }
 
@@ -269,7 +284,7 @@ func (root *Root) bottomLineNum(num int) int {
 	}
 
 	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.GetContents(num, root.TabWidth)) / m.vWidth)
+		y -= 1 + (len(m.getContents(num, root.TabWidth)) / m.vWidth)
 		num--
 	}
 	num++
@@ -332,7 +347,7 @@ func (root *Root) Resize() {
 // Sync redraws the whole thing.
 func (root *Root) Sync() {
 	root.prepareStartX()
-	root.PrepareView()
+	root.prepareView()
 	root.Draw()
 }
 

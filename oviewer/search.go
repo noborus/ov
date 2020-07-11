@@ -48,6 +48,9 @@ func (root *Root) search(num int) (int, error) {
 
 // backsearch is searches upward from the specified line.
 func (root *Root) backSearch(num int) (int, error) {
+	if num > root.Model.BufEndNum() {
+		num = root.Model.BufEndNum() - 1
+	}
 	for n := num; n >= 0; n-- {
 		if contains(root.Model.buffer[n], root.Input.reg) {
 			return n, nil

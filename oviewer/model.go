@@ -49,18 +49,18 @@ func NewModel() (*Model, error) {
 		header:     make([]string, 0),
 		beforeSize: 1000,
 	}
-	err := m.NewCache()
-	if err != nil {
+
+	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
 // ReadFile reads files (or stdin).
-func (m *Model) ReadFile(args []string) error {
+func (m *Model) ReadFile(fileNames []string) error {
 	var reader io.Reader
 	fileName := ""
-	switch len(args) {
+	switch len(fileNames) {
 	case 0:
 		if terminal.IsTerminal(0) {
 			return ErrMissingFile
@@ -68,29 +68,28 @@ func (m *Model) ReadFile(args []string) error {
 		fileName = "(STDIN)"
 		reader = uncompressedReader(os.Stdin)
 	case 1:
-		fileName = args[0]
+		fileName = fileNames[0]
 		r, err := os.Open(fileName)
 		if err != nil {
 			return err
 		}
 		reader = uncompressedReader(r)
-		defer r.Close()
 	default:
 		readers := make([]io.Reader, 0)
-		for _, fileName := range args {
+		for _, fileName := range fileNames {
 			r, err := os.Open(fileName)
 			if err != nil {
 				return err
 			}
 			readers = append(readers, uncompressedReader(r))
 			reader = io.MultiReader(readers...)
-			defer r.Close()
 		}
 	}
-	err := m.ReadAll(reader)
-	if err != nil {
+
+	if err := m.ReadAll(reader); err != nil {
 		return err
 	}
+
 	m.FileName = fileName
 
 	return nil
@@ -139,8 +138,8 @@ func (m *Model) ClearCache() {
 	m.cache.Clear()
 }
 
-// GetContents returns one line of contents from buffer.
-func (m *Model) GetContents(lineNum int, tabWidth int) []content {
+// getContents returns one line of contents from buffer.
+func (m *Model) getContents(lineNum int, tabWidth int) []content {
 	lc, err := m.lineToContents(lineNum, tabWidth)
 	if err != nil {
 		return nil

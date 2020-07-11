@@ -38,7 +38,7 @@ const (
 )
 
 // InputEvent input key events.
-func (root *Root) InputEvent(ev *tcell.EventKey) bool {
+func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 	// inputEvent returns input confirmed or not confirmed.
 	ok := root.inputKeyEvent(ev)
 

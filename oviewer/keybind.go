@@ -5,7 +5,7 @@ import (
 )
 
 // DefaultKeyEvent default input key events.
-func (root *Root) DefaultKeyEvent(ev *tcell.EventKey) bool {
+func (root *Root) defaultKeyEvent(ev *tcell.EventKey) bool {
 	switch ev.Key() {
 	case tcell.KeyEscape, tcell.KeyCtrlC:
 		root.Quit()

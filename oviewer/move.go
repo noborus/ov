@@ -1,5 +1,7 @@
 package oviewer
 
+import "fmt"
+
 // Go to the top line.
 func (root *Root) MoveTop() {
 	root.Model.lineNum = 0
@@ -8,6 +10,7 @@ func (root *Root) MoveTop() {
 
 // Go to the bottom line.
 func (root *Root) MoveEnd() {
+	root.message = fmt.Sprintf("endnum:%d", root.Model.endNum)
 	n := root.bottomLineNum(root.Model.endNum) + 1
 	root.MoveNum(n)
 }
@@ -59,10 +62,10 @@ func (root *Root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < root.Model.vWidth || root.Model.yy <= 0 {
 		if (root.Model.lineNum) >= 1 {
-			pre := root.Model.GetContents(root.Model.lineNum+root.Header-1, root.TabWidth)
+			pre := root.Model.getContents(root.Model.lineNum+root.Header-1, root.TabWidth)
 			yyLen := len(pre) / (root.Model.vWidth + 1)
 			root.Model.yy = yyLen
 		}
@@ -85,7 +88,7 @@ func (root *Root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.GetContents(root.Model.lineNum+root.Header, root.TabWidth)
+	contents := root.Model.getContents(root.Model.lineNum+root.Header, root.TabWidth)
 	if len(contents) < (root.Model.vWidth * (root.Model.yy + 1)) {
 		root.Model.yy = 0
 		root.Model.lineNum++
