@@ -10,13 +10,13 @@ func (root *Root) defaultKeyEvent(ev *tcell.EventKey) bool {
 	case tcell.KeyEscape, tcell.KeyCtrlC:
 		root.Quit()
 	case tcell.KeyCtrlL:
-		root.Sync()
+		root.viewSync()
 	case tcell.KeyEnter:
 		root.moveDown()
 	case tcell.KeyHome:
 		root.MoveTop()
 	case tcell.KeyEnd:
-		root.MoveEnd()
+		root.MoveBottom()
 	case tcell.KeyLeft:
 		if ev.Modifiers()&tcell.ModCtrl > 0 {
 			root.moveHfLeft()
@@ -59,19 +59,19 @@ func (root *Root) defaultKeyEvent(ev *tcell.EventKey) bool {
 		case '/':
 			root.Input.SetMode(Search)
 		case 'n':
-			root.NextSearch()
+			root.nextSearch()
 		case 'N':
-			root.NextBackSearch()
+			root.nextBackSearch()
 		case 'g':
 			root.Input.SetMode(Goline)
 		case 'G':
 			root.toggleLineNumMode()
 		case '>':
-			root.GoLine(newGotoInput(root.Input.GoCandidate).Up(""))
+			root.goLine(newGotoInput(root.Input.GoCandidate).Up(""))
 		case '<':
-			root.GoLine(newGotoInput(root.Input.GoCandidate).Down(""))
+			root.goLine(newGotoInput(root.Input.GoCandidate).Down(""))
 		case 'm':
-			root.MarkLineNum(root.Model.lineNum)
+			root.markLineNum(root.lineNum)
 		case 'H':
 			root.Input.SetMode(Header)
 		case 'C':

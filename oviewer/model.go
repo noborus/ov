@@ -21,21 +21,8 @@ type Model struct {
 	endNum int
 	// true if EOF is reached.
 	eof bool
-
-	// x is the starting position of the current x.
-	x int
-	// lineNum is the starting position of the current y.
-	lineNum int
-	// yy represents the number of wrapped lines.
-	yy int
-	// header represents the header line.
-	header []string
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
-	// vWidth represents the screen width.
-	vWidth int
-	// vHight represents the screen height.
-	vHight int
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 	// mu controls the mutex.
@@ -46,7 +33,6 @@ type Model struct {
 func NewModel() (*Model, error) {
 	m := &Model{
 		buffer:     make([]string, 0, 1000),
-		header:     make([]string, 0),
 		beforeSize: 1000,
 	}
 
