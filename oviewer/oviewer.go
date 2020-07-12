@@ -139,7 +139,7 @@ func New(m *Model) (*Root, error) {
 }
 
 // Open reads the file named of the argument and return the structure of oviewer.
-func Open(fileNames []string) (*Root, error) {
+func Open(fileNames ...string) (*Root, error) {
 	m, err := NewModel()
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (root *Root) toggleLineNumMode() {
 	root.updateEndNum()
 }
 
-// resize is a wrapper function that calls sync.
+// resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
 	root.viewSync()
 }

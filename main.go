@@ -46,7 +46,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return err
 		}
 
-		ov, err := oviewer.Open(args)
+		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err
 		}

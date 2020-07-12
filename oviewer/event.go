@@ -21,17 +21,17 @@ loop:
 		case *eventAppQuit:
 			break loop
 		case *searchInput:
-			root.search(root.Input.value)
+			root.search(ev.input)
 		case *backSearchInput:
-			root.backSearch(root.Input.value)
+			root.backSearch(ev.input)
 		case *gotoInput:
-			root.goLine(root.Input.value)
+			root.goLine(ev.input)
 		case *headerInput:
-			root.setHeader(root.Input.value)
+			root.setHeader(ev.input)
 		case *delimiterInput:
-			root.setDelimiter(root.Input.value)
+			root.setDelimiter(ev.input)
 		case *tabWidthInput:
-			root.setTabWidth(root.Input.value)
+			root.setTabWidth(ev.input)
 		case *tcell.EventKey:
 			root.message = ""
 			if root.Input.mode == Normal {
@@ -85,8 +85,8 @@ loop:
 
 // MoveLine fires an event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
-	root.Input.value = strconv.Itoa(num)
 	ev := &gotoInput{}
+	ev.input = strconv.Itoa(num)
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
@@ -101,4 +101,24 @@ func (root *Root) MoveTop() {
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
 	root.MoveLine(root.Model.endNum)
+}
+
+// Search fires a forward search event.
+func (root *Root) Search(input string) {
+	ev := &searchInput{}
+	ev.input = input
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
+}
+
+// BackSearch fires a  backward search event.
+func (root *Root) BackSearch(input string) {
+	ev := &backSearchInput{}
+	ev.input = input
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
 }

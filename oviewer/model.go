@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 
@@ -44,7 +45,7 @@ func NewModel() (*Model, error) {
 
 // ReadFile reads files (or stdin).
 func (m *Model) ReadFile(fileNames []string) error {
-	var reader io.Reader
+	var reader io.ReadCloser
 	fileName := ""
 	switch len(fileNames) {
 	case 0:
@@ -68,7 +69,7 @@ func (m *Model) ReadFile(fileNames []string) error {
 				return err
 			}
 			readers = append(readers, uncompressedReader(r))
-			reader = io.MultiReader(readers...)
+			reader = ioutil.NopCloser(io.MultiReader(readers...))
 		}
 	}
 

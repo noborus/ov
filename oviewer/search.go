@@ -5,24 +5,24 @@ import (
 	"strings"
 )
 
-// search is a Up search.
+// search is forward search.
 func (root *Root) search(input string) {
 	root.Input.reg = regexpComple(input, root.CaseSensitive)
 	root.goSearchLine(root.searchLine(root.lineNum))
 }
 
-// backSearch reverse search.
+// backSearch is backward search.
 func (root *Root) backSearch(input string) {
 	root.Input.reg = regexpComple(input, root.CaseSensitive)
 	root.goSearchLine(root.backSearchLine(root.lineNum))
 }
 
-// nextSearch will re-run the forward search.
+// nextSearch is forward search again.
 func (root *Root) nextSearch() {
 	root.goSearchLine(root.searchLine(root.lineNum + root.Header + 1))
 }
 
-// nextBackSearch will re-run the reverse search.
+// nextBackSearch is backward　search again..
 func (root *Root) nextBackSearch() {
 	root.goSearchLine(root.backSearchLine(root.lineNum + root.Header - 1))
 }
