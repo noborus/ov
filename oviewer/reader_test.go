@@ -3,12 +3,13 @@ package oviewer
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"testing"
 )
 
 func TestModel_ReadAll(t *testing.T) {
 	type args struct {
-		r io.Reader
+		r io.ReadCloser
 	}
 	tests := []struct {
 		name    string
@@ -18,7 +19,7 @@ func TestModel_ReadAll(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				r: bytes.NewBufferString("foo\nbar\n"),
+				r: ioutil.NopCloser(bytes.NewBufferString("foo\nbar\n")),
 			},
 			wantErr: false,
 		},
