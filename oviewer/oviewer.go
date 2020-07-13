@@ -178,6 +178,12 @@ func (root *Root) Run() error {
 	return nil
 }
 
+// setModel sets the Model.
+func (root *Root) setModel(m *Model) {
+	root.Model = m
+	root.viewSync()
+}
+
 // setGlobalStyle sets some styles that are determined by the settings.
 func (root *Root) setGlobalStyle() {
 	if root.ColorAlternate != "" {

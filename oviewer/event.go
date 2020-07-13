@@ -16,10 +16,12 @@ loop:
 		root.draw()
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
-		case *eventTimer:
-			root.updateEndNum()
 		case *eventAppQuit:
 			break loop
+		case *eventTimer:
+			root.updateEndNum()
+		case *eventModel:
+			root.setModel(ev.m)
 		case *searchInput:
 			root.search(ev.input)
 		case *backSearchInput:
@@ -32,6 +34,8 @@ loop:
 			root.setDelimiter(ev.input)
 		case *tabWidthInput:
 			root.setTabWidth(ev.input)
+		case *tcell.EventResize:
+			root.resize()
 		case *tcell.EventKey:
 			root.message = ""
 			if root.Input.mode == Normal {
@@ -39,8 +43,6 @@ loop:
 			} else {
 				root.inputEvent(ev)
 			}
-		case *tcell.EventResize:
-			root.resize()
 		}
 	}
 }
@@ -113,10 +115,26 @@ func (root *Root) Search(input string) {
 	}()
 }
 
-// BackSearch fires a  backward search event.
+// BackSearch fires a backward search event.
 func (root *Root) BackSearch(input string) {
 	ev := &backSearchInput{}
 	ev.input = input
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
+}
+
+// eventModel represents a set model event.
+type eventModel struct {
+	m *Model
+	tcell.EventTime
+}
+
+// SetModel fires a set model event.
+func (root *Root) SetModel(m *Model) {
+	ev := &eventModel{}
+	ev.m = m
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
