@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gdamore/tcell"
 	"gitlab.com/tslocum/cbind"
@@ -79,7 +78,7 @@ func (root *Root) setHandler() map[string]func() {
 func (root *Root) setDefaultKeyBinds() map[string][]string {
 	return map[string][]string{
 		actionExit:           {"Escape", "q", "ctrl+c"},
-		actionSync:           {"ctrl + l"},
+		actionSync:           {"ctrl+l"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
@@ -109,7 +108,8 @@ func (root *Root) setDefaultKeyBinds() map[string][]string {
 		actionNextBackSearch: {"N"},
 	}
 }
-func (root *Root) KeyBind() error {
+
+func (root *Root) setKeyBind() error {
 	c := root.KeyConfig
 
 	actionHandlers := root.setHandler()
@@ -123,8 +123,7 @@ func (root *Root) KeyBind() error {
 		for _, k := range keys {
 			mod, key, ch, err := cbind.Decode(k)
 			if err != nil {
-				log.Printf("failed to set keybind %s for %s: %s", k, a, err)
-				continue
+				return fmt.Errorf("failed to set keybind %s for %s: %s", k, a, err)
 			}
 
 			if key == tcell.KeyRune {

@@ -126,6 +126,9 @@ func New(m *Model) (*Root, error) {
 		startX:    0,
 	}
 	root.KeyConfig = cbind.NewConfiguration()
+	if err := root.setKeyBind(); err != nil {
+		return nil, err
+	}
 	root.Model = m
 	root.Input = NewInput()
 
@@ -136,7 +139,6 @@ func New(m *Model) (*Root, error) {
 	if err = screen.Init(); err != nil {
 		return nil, err
 	}
-	root.KeyBind()
 	root.Screen = screen
 
 	return root, nil
