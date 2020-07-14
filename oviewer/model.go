@@ -15,9 +15,9 @@ import (
 type Model struct {
 	// fileName is the file name to display.
 	FileName string
-	// buffer stores the contents of the file in slices of strings.
-	// buffer,endNum and eof is updated by reader goroutine.
-	buffer []string
+	// lines stores the contents of the file in slices of strings.
+	// lines,endNum and eof is updated by reader goroutine.
+	lines []string
 	// endNum is the number of the last line read.
 	endNum int
 	// true if EOF is reached.
@@ -33,7 +33,7 @@ type Model struct {
 // NewModel returns Model.
 func NewModel() (*Model, error) {
 	m := &Model{
-		buffer:     make([]string, 0, 1000),
+		lines:      make([]string, 0, 1000),
 		beforeSize: 1000,
 	}
 
@@ -86,10 +86,10 @@ func (m *Model) ReadFile(fileNames []string) error {
 func (m *Model) GetLine(lineNum int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if lineNum < 0 || lineNum >= len(m.buffer) {
+	if lineNum < 0 || lineNum >= len(m.lines) {
 		return ""
 	}
-	return m.buffer[lineNum]
+	return m.lines[lineNum]
 }
 
 // BufEndNum return last line number.

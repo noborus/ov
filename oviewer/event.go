@@ -39,7 +39,8 @@ loop:
 		case *tcell.EventKey:
 			root.message = ""
 			if root.Input.mode == Normal {
-				root.defaultKeyEvent(ev)
+				//root.defaultKeyEvent(ev)
+				root.KeyCapture(ev)
 			} else {
 				root.inputEvent(ev)
 			}
@@ -54,6 +55,13 @@ type eventAppQuit struct {
 
 // Quit executes a quit event.
 func (root *Root) Quit() {
+	ev := &eventAppQuit{}
+	ev.SetEventNow()
+	go func() { root.Screen.PostEventWait(ev) }()
+}
+
+func (root *Root) WriteQuit() {
+	root.AfterWrite = true
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
 	go func() { root.Screen.PostEventWait(ev) }()

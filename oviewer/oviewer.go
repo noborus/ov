@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/gdamore/tcell"
+	"gitlab.com/tslocum/cbind"
 )
 
 // The Root structure contains information about the drawing.
@@ -22,6 +23,8 @@ type Root struct {
 	Model *Model
 	// Input contains the input mode.
 	Input *Input
+
+	KeyConfig *cbind.Configuration
 
 	// lineNum is the starting position of the current y.
 	lineNum int
@@ -122,7 +125,7 @@ func New(m *Model) (*Root, error) {
 		columnNum: 0,
 		startX:    0,
 	}
-
+	root.KeyConfig = cbind.NewConfiguration()
 	root.Model = m
 	root.Input = NewInput()
 
@@ -133,6 +136,7 @@ func New(m *Model) (*Root, error) {
 	if err = screen.Init(); err != nil {
 		return nil, err
 	}
+	root.KeyBind()
 	root.Screen = screen
 
 	return root, nil
@@ -333,11 +337,11 @@ func (root *Root) goLine(input string) {
 }
 
 // markLineNum stores the specified number of lines.
-func (root *Root) markLineNum(lineNum int) {
-	s := strconv.Itoa(lineNum + 1)
+func (root *Root) markLineNum() {
+	s := strconv.Itoa(root.lineNum + 1)
 	root.Input.GoCandidate.list = toLast(root.Input.GoCandidate.list, s)
 	root.Input.GoCandidate.p = 0
-	root.message = fmt.Sprintf("Marked to line %d", lineNum)
+	root.message = fmt.Sprintf("Marked to line %d", root.lineNum)
 }
 
 // setHeader sets the number of lines in the header.
@@ -381,4 +385,12 @@ func (root *Root) setTabWidth(input string) {
 	root.TabWidth = width
 	root.message = fmt.Sprintf("Set tab width %d", width)
 	root.Model.ClearCache()
+}
+
+func (root *Root) markNext() {
+	root.goLine(newGotoInput(root.Input.GoCandidate).Up(""))
+}
+
+func (root *Root) markPrev() {
+	root.goLine(newGotoInput(root.Input.GoCandidate).Down(""))
 }

@@ -195,28 +195,52 @@ func NewInput() *Input {
 	return &i
 }
 
-// SetMode changes the input mode.
-func (input *Input) SetMode(mode InputMode) {
-	input.mode = mode
+func (root *Root) SetSearchMode() {
+	input := root.Input
 	input.value = ""
 	input.cursorX = 0
+	input.mode = Search
+	input.EventInput = newSearchInput(input.SearchCandidate)
+}
 
-	switch mode {
-	case Search:
-		input.EventInput = newSearchInput(input.SearchCandidate)
-	case Backsearch:
-		input.EventInput = newBackSearchInput(input.SearchCandidate)
-	case Goline:
-		input.EventInput = newGotoInput(input.GoCandidate)
-	case Header:
-		input.EventInput = newHeaderInput()
-	case Delimiter:
-		input.EventInput = newDelimiterInput(input.DelimiterCandidate)
-	case TabWidth:
-		input.EventInput = newTabWidthInput(input.TabWidthCandidate)
-	default:
-		input.EventInput = newNormalInput()
-	}
+func (root *Root) SetBackSearchMode() {
+	input := root.Input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = Search
+	input.EventInput = newSearchInput(input.SearchCandidate)
+}
+
+func (root *Root) SetDelimiter() {
+	input := root.Input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = Delimiter
+	input.EventInput = newDelimiterInput(input.DelimiterCandidate)
+}
+
+func (root *Root) SetHeader() {
+	input := root.Input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = Header
+	input.EventInput = newHeaderInput()
+}
+
+func (root *Root) SetTabWidth() {
+	input := root.Input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = TabWidth
+	input.EventInput = newTabWidthInput(input.TabWidthCandidate)
+}
+
+func (root *Root) SetGoLine() {
+	input := root.Input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = Goline
+	input.EventInput = newGotoInput(input.GoCandidate)
 }
 
 // EventInput is a generic interface for inputs.

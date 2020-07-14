@@ -62,11 +62,10 @@ func (m *Model) ReadAll(r io.ReadCloser) error {
 		defer close(ch)
 		defer r.Close()
 
-		var buf bytes.Buffer
+		var line bytes.Buffer
 
 		for {
-			l, isPrefix, err := reader.ReadLine()
-			buf.Write(l)
+			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
 					break
@@ -75,17 +74,19 @@ func (m *Model) ReadAll(r io.ReadCloser) error {
 				m.eof = false
 				return
 			}
+			line.Write(buf)
 			if isPrefix {
 				continue
 			}
+
 			m.mu.Lock()
-			m.buffer = append(m.buffer, buf.String())
+			m.lines = append(m.lines, line.String())
 			m.endNum++
 			m.mu.Unlock()
-			buf.Reset()
 			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
 			}
+			line.Reset()
 		}
 		m.eof = true
 	}()
