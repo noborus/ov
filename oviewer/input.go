@@ -55,6 +55,7 @@ func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 	}()
 
 	input.mode = Normal
+	input.EventInput = newNormalInput()
 	return true
 }
 
@@ -208,7 +209,7 @@ func (root *Root) SetBackSearchMode() {
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Search
-	input.EventInput = newSearchInput(input.SearchCandidate)
+	input.EventInput = newBackSearchInput(input.SearchCandidate)
 }
 
 func (root *Root) SetDelimiter() {
