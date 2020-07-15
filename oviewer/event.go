@@ -38,9 +38,8 @@ loop:
 			root.resize()
 		case *tcell.EventKey:
 			root.message = ""
-			if root.Input.mode == Normal {
-				//root.defaultKeyEvent(ev)
-				root.KeyCapture(ev)
+			if root.input.mode == Normal {
+				root.keyCapture(ev)
 			} else {
 				root.inputEvent(ev)
 			}

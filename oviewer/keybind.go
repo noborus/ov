@@ -64,12 +64,12 @@ func (root *Root) setHandler() map[string]func() {
 		actionAlternate:      root.toggleAlternateRows,
 		actionLineNumMode:    root.toggleLineNumMode,
 		actionMark:           root.markLineNum,
-		actionSearch:         root.SetSearchMode,
-		actionBackSearch:     root.SetBackSearchMode,
-		actionDelimiter:      root.SetDelimiter,
-		actionHeader:         root.SetHeader,
-		actionTabWidth:       root.SetTabWidth,
-		actionGoLine:         root.SetGoLine,
+		actionSearch:         root.setSearchMode,
+		actionBackSearch:     root.setBackSearchMode,
+		actionDelimiter:      root.setDelimiterMode,
+		actionHeader:         root.setHeaderMode,
+		actionTabWidth:       root.setTabWidthMode,
+		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.nextSearch,
 		actionNextBackSearch: root.nextBackSearch,
 	}
@@ -110,7 +110,7 @@ func (root *Root) setDefaultKeyBinds() map[string][]string {
 }
 
 func (root *Root) setKeyBind() error {
-	c := root.KeyConfig
+	c := root.keyConfig
 
 	actionHandlers := root.setHandler()
 	keyBind := root.setDefaultKeyBinds()
@@ -144,7 +144,7 @@ func wrapEventHandler(f func()) func(_ *tcell.EventKey) *tcell.EventKey {
 	}
 }
 
-func (root *Root) KeyCapture(ev *tcell.EventKey) bool {
-	root.KeyConfig.Capture(ev)
+func (root *Root) keyCapture(ev *tcell.EventKey) bool {
+	root.keyConfig.Capture(ev)
 	return true
 }

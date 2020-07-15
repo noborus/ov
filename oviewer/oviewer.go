@@ -1,4 +1,3 @@
-// Package oviewer provides a pager for terminals.
 package oviewer
 
 import (
@@ -21,10 +20,10 @@ type Root struct {
 	Config
 	// Model contains the model of ov
 	Model *Model
-	// Input contains the input mode.
-	Input *Input
+	// input contains the input mode.
+	input *Input
 
-	KeyConfig *cbind.Configuration
+	keyConfig *cbind.Configuration
 
 	// lineNum is the starting position of the current y.
 	lineNum int
@@ -114,8 +113,8 @@ var (
 	ErrInvalidNumber = errors.New("invalid number")
 )
 
-// New return the structure of oviewer.
-func New(m *Model) (*Root, error) {
+// NewOviewer return the structure of oviewer.
+func NewOviewer(m *Model) (*Root, error) {
 	root := &Root{
 		Config: Config{
 			ColumnDelimiter: "",
@@ -125,12 +124,13 @@ func New(m *Model) (*Root, error) {
 		columnNum: 0,
 		startX:    0,
 	}
-	root.KeyConfig = cbind.NewConfiguration()
+	root.keyConfig = cbind.NewConfiguration()
 	if err := root.setKeyBind(); err != nil {
 		return nil, err
 	}
+
 	root.Model = m
-	root.Input = NewInput()
+	root.input = NewInput()
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
@@ -155,7 +155,7 @@ func Open(fileNames ...string) (*Root, error) {
 		return nil, err
 	}
 
-	return New(m)
+	return NewOviewer(m)
 }
 
 // Run starts the terminal pager.
@@ -341,8 +341,8 @@ func (root *Root) goLine(input string) {
 // markLineNum stores the specified number of lines.
 func (root *Root) markLineNum() {
 	s := strconv.Itoa(root.lineNum + 1)
-	root.Input.GoCandidate.list = toLast(root.Input.GoCandidate.list, s)
-	root.Input.GoCandidate.p = 0
+	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
+	root.input.GoCandidate.p = 0
 	root.message = fmt.Sprintf("Marked to line %d", root.lineNum)
 }
 
@@ -390,9 +390,9 @@ func (root *Root) setTabWidth(input string) {
 }
 
 func (root *Root) markNext() {
-	root.goLine(newGotoInput(root.Input.GoCandidate).Up(""))
+	root.goLine(newGotoInput(root.input.GoCandidate).Up(""))
 }
 
 func (root *Root) markPrev() {
-	root.goLine(newGotoInput(root.Input.GoCandidate).Down(""))
+	root.goLine(newGotoInput(root.input.GoCandidate).Down(""))
 }

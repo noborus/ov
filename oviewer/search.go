@@ -7,13 +7,13 @@ import (
 
 // search is forward search.
 func (root *Root) search(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
+	root.input.reg = regexpComple(input, root.CaseSensitive)
 	root.goSearchLine(root.searchLine(root.lineNum))
 }
 
 // backSearch is backward search.
 func (root *Root) backSearch(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
+	root.input.reg = regexpComple(input, root.CaseSensitive)
 	root.goSearchLine(root.backSearchLine(root.lineNum))
 }
 
@@ -39,7 +39,7 @@ func (root *Root) goSearchLine(lineNum int, err error) {
 // searchLine is searches below from the specified line.
 func (root *Root) searchLine(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
-		if contains(root.Model.GetLine(n), root.Input.reg) {
+		if contains(root.Model.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}
@@ -52,7 +52,7 @@ func (root *Root) backSearchLine(num int) (int, error) {
 		num = root.Model.BufEndNum() - 1
 	}
 	for n := num; n >= 0; n-- {
-		if contains(root.Model.GetLine(n), root.Input.reg) {
+		if contains(root.Model.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}

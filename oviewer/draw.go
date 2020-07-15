@@ -72,8 +72,8 @@ func (root *Root) draw() {
 		}
 
 		// search highlight
-		if root.Input.reg != nil {
-			poss := searchPosition(line, root.Input.reg)
+		if root.input.reg != nil {
+			poss := searchPosition(line, root.input.reg)
 			for _, r := range poss {
 				reverseContents(lc, r[0], r[1])
 			}
@@ -208,7 +208,7 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	input := root.Input
+	input := root.input
 	if input.mode != Normal {
 		p := caseSensitive + input.EventInput.Prompt()
 		leftStatus = p + input.value

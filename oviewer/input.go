@@ -47,7 +47,7 @@ func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 		return true
 	}
 
-	input := root.Input
+	input := root.input
 	// confirmed.
 	nev := input.EventInput.Confirm(input.value)
 	go func() {
@@ -61,7 +61,7 @@ func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 
 // inputKeyEvent handles the keystrokes of the input.
 func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
-	input := root.Input
+	input := root.input
 
 	switch ev.Key() {
 	case tcell.KeyEscape:
@@ -196,48 +196,48 @@ func NewInput() *Input {
 	return &i
 }
 
-func (root *Root) SetSearchMode() {
-	input := root.Input
+func (root *Root) setSearchMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Search
 	input.EventInput = newSearchInput(input.SearchCandidate)
 }
 
-func (root *Root) SetBackSearchMode() {
-	input := root.Input
+func (root *Root) setBackSearchMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Search
 	input.EventInput = newBackSearchInput(input.SearchCandidate)
 }
 
-func (root *Root) SetDelimiter() {
-	input := root.Input
+func (root *Root) setDelimiterMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Delimiter
 	input.EventInput = newDelimiterInput(input.DelimiterCandidate)
 }
 
-func (root *Root) SetHeader() {
-	input := root.Input
+func (root *Root) setHeaderMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Header
 	input.EventInput = newHeaderInput()
 }
 
-func (root *Root) SetTabWidth() {
-	input := root.Input
+func (root *Root) setTabWidthMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = TabWidth
 	input.EventInput = newTabWidthInput(input.TabWidthCandidate)
 }
 
-func (root *Root) SetGoLine() {
-	input := root.Input
+func (root *Root) setGoLineMode() {
+	input := root.input
 	input.value = ""
 	input.cursorX = 0
 	input.mode = Goline
