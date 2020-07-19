@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 
@@ -14,28 +15,15 @@ import (
 type Model struct {
 	// fileName is the file name to display.
 	FileName string
-	// buffer stores the contents of the file in slices of strings.
-	// buffer,endNum and eof is updated by reader goroutine.
-	buffer []string
+	// lines stores the contents of the file in slices of strings.
+	// lines,endNum and eof is updated by reader goroutine.
+	lines []string
 	// endNum is the number of the last line read.
 	endNum int
 	// true if EOF is reached.
 	eof bool
-
-	// x is the starting position of the current x.
-	x int
-	// lineNum is the starting position of the current y.
-	lineNum int
-	// yy represents the number of wrapped lines.
-	yy int
-	// header represents the header line.
-	header []string
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
-	// vWidth represents the screen width.
-	vWidth int
-	// vHight represents the screen height.
-	vHight int
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 	// mu controls the mutex.
@@ -45,8 +33,7 @@ type Model struct {
 // NewModel returns Model.
 func NewModel() (*Model, error) {
 	m := &Model{
-		buffer:     make([]string, 0, 1000),
-		header:     make([]string, 0),
+		lines:      make([]string, 0, 1000),
 		beforeSize: 1000,
 	}
 
@@ -58,7 +45,7 @@ func NewModel() (*Model, error) {
 
 // ReadFile reads files (or stdin).
 func (m *Model) ReadFile(fileNames []string) error {
-	var reader io.Reader
+	var reader io.ReadCloser
 	fileName := ""
 	switch len(fileNames) {
 	case 0:
@@ -82,7 +69,7 @@ func (m *Model) ReadFile(fileNames []string) error {
 				return err
 			}
 			readers = append(readers, uncompressedReader(r))
-			reader = io.MultiReader(readers...)
+			reader = ioutil.NopCloser(io.MultiReader(readers...))
 		}
 	}
 
@@ -99,10 +86,10 @@ func (m *Model) ReadFile(fileNames []string) error {
 func (m *Model) GetLine(lineNum int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if lineNum < 0 || lineNum >= len(m.buffer) {
+	if lineNum < 0 || lineNum >= len(m.lines) {
 		return ""
 	}
-	return m.buffer[lineNum]
+	return m.lines[lineNum]
 }
 
 // BufEndNum return last line number.

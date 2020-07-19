@@ -6,25 +6,25 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-// Draw is the main routine that draws the screen.
-func (root *Root) Draw() {
+// draw is the main routine that draws the screen.
+func (root *Root) draw() {
 	m := root.Model
 	screen := root.Screen
-	if m.BufEndNum() == 0 || m.vHight == 0 {
-		m.lineNum = 0
+	if m.BufEndNum() == 0 || root.vHight == 0 {
+		root.lineNum = 0
 		root.statusDraw()
 		root.Show()
 		return
 	}
 
-	root.ResetScreen()
+	root.resetScreen()
 
 	bottom := root.bottomLineNum(m.BufEndNum()) - root.Header
-	if m.lineNum > bottom+1 {
-		m.lineNum = bottom + 1
+	if root.lineNum > bottom+1 {
+		root.lineNum = bottom + 1
 	}
-	if m.lineNum < 0 {
-		m.lineNum = 0
+	if root.lineNum < 0 {
+		root.lineNum = 0
 	}
 
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
@@ -51,29 +51,29 @@ func (root *Root) Draw() {
 		if root.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
-			lX, lY = root.noWrapContents(hy, m.x, lY, contents)
+			lX, lY = root.noWrapContents(hy, root.x, lY, contents)
 		}
 	}
 
 	// Body
-	lX = m.yy * m.vWidth
-	for y := root.HeaderLen(); y < m.vHight; y++ {
-		lc, err := m.lineToContents(m.lineNum+lY, root.TabWidth)
+	lX = root.yy * root.vWidth
+	for y := root.headerLen(); y < root.vHight; y++ {
+		lc, err := m.lineToContents(root.lineNum+lY, root.TabWidth)
 		if err != nil {
 			// EOF
 			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
 			continue
 		}
 
-		line := m.GetLine(m.lineNum + lY)
+		line := m.GetLine(root.lineNum + lY)
 
 		for n := range lc.contents {
 			lc.contents[n].style = lc.contents[n].style.Reverse(false)
 		}
 
 		// search highlight
-		if root.Input.reg != nil {
-			poss := searchPosition(line, root.Input.reg)
+		if root.input.reg != nil {
+			poss := searchPosition(line, root.input.reg)
 			for _, r := range poss {
 				reverseContents(lc, r[0], r[1])
 			}
@@ -87,7 +87,7 @@ func (root *Root) Draw() {
 
 		// line number mode
 		if root.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.Model.lineNum+lY-root.Header+1), root.TabWidth)
+			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.lineNum+lY-root.Header+1), root.TabWidth)
 			for i := 0; i < len(lineNum); i++ {
 				lineNum[i].style = tcell.StyleDefault.Bold(true)
 			}
@@ -98,16 +98,16 @@ func (root *Root) Draw() {
 		if root.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
 		} else {
-			lX, nextY = root.noWrapContents(y, m.x, lY, lc.contents)
+			lX, nextY = root.noWrapContents(y, root.x, lY, lc.contents)
 		}
 
 		// alternate background color
 		if root.AlternateRows {
 			bgColor := normalBgColor
-			if (m.lineNum+lY)%2 == 1 {
+			if (root.lineNum+lY)%2 == 1 {
 				bgColor = ColorAlternate
 			}
-			for x := 0; x < m.vWidth; x++ {
+			for x := 0; x < root.vWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
 				root.SetContent(x, y, r, c, style.Background(bgColor))
 			}
@@ -116,25 +116,25 @@ func (root *Root) Draw() {
 	}
 
 	if lY > 0 {
-		root.bottomPos = m.lineNum + lY - 1
+		root.bottomPos = root.lineNum + lY - 1
 	} else {
-		root.bottomPos = m.lineNum + 1
+		root.bottomPos = root.lineNum + 1
 	}
 
 	root.statusDraw()
 	root.Show()
 }
 
-// ResetScreen initializes the screen with a blank.
-func (root *Root) ResetScreen() {
+// resetScreen initializes the screen with a blank.
+func (root *Root) resetScreen() {
 	space := content{
 		mainc: ' ',
 		combc: nil,
 		width: 1,
 		style: tcell.StyleDefault.Normal(),
 	}
-	for y := 0; y < root.Model.vHight; y++ {
-		for x := 0; x < root.Model.vWidth; x++ {
+	for y := 0; y < root.vHight; y++ {
+		for x := 0; x < root.vWidth; x++ {
 			root.Screen.SetContent(x, y, space.mainc, space.combc, space.style)
 		}
 	}
@@ -157,7 +157,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, contents []content) (int, 
 			break
 		}
 		content := contents[lX+x]
-		if x+content.width+root.startX > root.Model.vWidth {
+		if x+content.width+root.startX > root.vWidth {
 			// next line
 			lX += x
 			break
@@ -172,7 +172,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []content) (int
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
-	for x := 0; x+root.startX < root.Model.vWidth; x++ {
+	for x := 0; x+root.startX < root.vWidth; x++ {
 		if lX+x < 0 {
 			continue
 		}
@@ -198,7 +198,7 @@ func (root *Root) statusDraw() {
 	screen := root.Screen
 	style := tcell.StyleDefault
 
-	for x := 0; x < root.Model.vWidth; x++ {
+	for x := 0; x < root.vWidth; x++ {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
@@ -208,7 +208,7 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
-	input := root.Input
+	input := root.input
 	if input.mode != Normal {
 		p := caseSensitive + input.EventInput.Prompt()
 		leftStatus = p + input.value
@@ -226,14 +226,14 @@ func (root *Root) statusDraw() {
 	if !root.Model.BufEOF() {
 		next = "..."
 	}
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Model.lineNum, root.Model.BufEndNum(), next)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.lineNum, root.Model.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, -1)
-	root.setContentString(root.Model.vWidth-len(rightStatus), root.statusPos, rightContents)
+	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
 
 	if root.Debug {
-		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.HeaderLen(), root.Model.lineNum, root.bottomPos)
+		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.headerLen(), root.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)
-		root.setContentString(root.Model.vWidth/2, root.statusPos, c)
+		root.setContentString(root.vWidth/2, root.statusPos, c)
 	}
 }
 

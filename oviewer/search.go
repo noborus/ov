@@ -5,26 +5,26 @@ import (
 	"strings"
 )
 
-// Search is a Up search.
-func (root *Root) Search(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
-	root.goSearchLine(root.search(root.Model.lineNum))
+// search is forward search.
+func (root *Root) search(input string) {
+	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.goSearchLine(root.searchLine(root.lineNum))
 }
 
-// BackSearch reverse search.
-func (root *Root) BackSearch(input string) {
-	root.Input.reg = regexpComple(input, root.CaseSensitive)
-	root.goSearchLine(root.backSearch(root.Model.lineNum))
+// backSearch is backward search.
+func (root *Root) backSearch(input string) {
+	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.goSearchLine(root.backSearchLine(root.lineNum))
 }
 
-// NextSearch will re-run the forward search.
-func (root *Root) NextSearch() {
-	root.goSearchLine(root.search(root.Model.lineNum + root.Header + 1))
+// nextSearch is forward search again.
+func (root *Root) nextSearch() {
+	root.goSearchLine(root.searchLine(root.lineNum + root.Header + 1))
 }
 
-// NextBackSearch will re-run the reverse search.
-func (root *Root) NextBackSearch() {
-	root.goSearchLine(root.backSearch(root.Model.lineNum + root.Header - 1))
+// nextBackSearch is backward　search again..
+func (root *Root) nextBackSearch() {
+	root.goSearchLine(root.backSearchLine(root.lineNum + root.Header - 1))
 }
 
 // goSearchLine moves to the line found.
@@ -33,13 +33,13 @@ func (root *Root) goSearchLine(lineNum int, err error) {
 		root.message = err.Error()
 		return
 	}
-	root.MoveNum(lineNum - root.Header)
+	root.moveLine(lineNum - root.Header)
 }
 
-// search is searches below from the specified line.
-func (root *Root) search(num int) (int, error) {
+// searchLine is searches below from the specified line.
+func (root *Root) searchLine(num int) (int, error) {
 	for n := num; n < root.Model.BufEndNum(); n++ {
-		if contains(root.Model.buffer[n], root.Input.reg) {
+		if contains(root.Model.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}
@@ -47,12 +47,12 @@ func (root *Root) search(num int) (int, error) {
 }
 
 // backsearch is searches upward from the specified line.
-func (root *Root) backSearch(num int) (int, error) {
+func (root *Root) backSearchLine(num int) (int, error) {
 	if num > root.Model.BufEndNum() {
 		num = root.Model.BufEndNum() - 1
 	}
 	for n := num; n >= 0; n-- {
-		if contains(root.Model.buffer[n], root.Input.reg) {
+		if contains(root.Model.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}

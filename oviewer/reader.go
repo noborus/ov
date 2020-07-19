@@ -55,36 +55,38 @@ func uncompressedReader(reader io.Reader) io.ReadCloser {
 // ReadAll reads all from the reader to the buffer.
 // It returns if beforeSize is accumulated in buffer
 // before the end of read.
-func (m *Model) ReadAll(r io.Reader) error {
+func (m *Model) ReadAll(r io.ReadCloser) error {
 	reader := bufio.NewReader(r)
 	ch := make(chan struct{})
 	go func() {
 		defer close(ch)
+		defer r.Close()
 
-		var buf bytes.Buffer
+		var line bytes.Buffer
 
 		for {
-			l, isPrefix, err := reader.ReadLine()
-			buf.Write(l)
+			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
 					break
 				}
-				log.Printf("error:%v\n", err)
+				log.Printf("error: %v\n", err)
 				m.eof = false
 				return
 			}
+			line.Write(buf)
 			if isPrefix {
 				continue
 			}
+
 			m.mu.Lock()
-			m.buffer = append(m.buffer, buf.String())
+			m.lines = append(m.lines, line.String())
 			m.endNum++
 			m.mu.Unlock()
-			buf.Reset()
 			if m.endNum == m.beforeSize {
 				ch <- struct{}{}
 			}
+			line.Reset()
 		}
 		m.eof = true
 	}()

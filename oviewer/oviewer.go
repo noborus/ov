@@ -1,4 +1,3 @@
-// Package oviewer provides a pager for terminals.
 package oviewer
 
 import (
@@ -8,9 +7,9 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 
 	"github.com/gdamore/tcell"
+	"gitlab.com/tslocum/cbind"
 )
 
 // The Root structure contains information about the drawing.
@@ -21,20 +20,36 @@ type Root struct {
 	Config
 	// Model contains the model of ov
 	Model *Model
-	// Input contains the input mode.
-	Input *Input
+	// input contains the input mode.
+	input *Input
+
+	keyConfig *cbind.Configuration
+
+	// lineNum is the starting position of the current y.
+	lineNum int
+	// yy represents the number of wrapped lines.
+	yy int
+	// x is the starting position of the current x.
+	x int
+	// startX is the start position of x.
+	startX int
+	// columnNum is the number of columns.
+	columnNum int
+
 	// message is the message to display.
 	message string
+
+	// vWidth represents the screen width.
+	vWidth int
+	// vHight represents the screen height.
+	vHight int
+
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
 	bottomPos int
 	// statusPos is the position of the status line.
 	statusPos int
-	// columnNum is the number of columns.
-	columnNum int
-	// startX is the start position of x.
-	startX int
 	// minStartX is the minimum start position of x.
 	minStartX int
 }
@@ -98,8 +113,8 @@ var (
 	ErrInvalidNumber = errors.New("invalid number")
 )
 
-// New return the structure of oviewer.
-func New(m *Model) (*Root, error) {
+// NewOviewer return the structure of oviewer.
+func NewOviewer(m *Model) (*Root, error) {
 	root := &Root{
 		Config: Config{
 			ColumnDelimiter: "",
@@ -109,9 +124,13 @@ func New(m *Model) (*Root, error) {
 		columnNum: 0,
 		startX:    0,
 	}
+	root.keyConfig = cbind.NewConfiguration()
+	if err := root.setKeyBind(); err != nil {
+		return nil, err
+	}
 
 	root.Model = m
-	root.Input = NewInput()
+	root.input = NewInput()
 
 	screen, err := tcell.NewScreen()
 	if err != nil {
@@ -126,7 +145,7 @@ func New(m *Model) (*Root, error) {
 }
 
 // Open reads the file named of the argument and return the structure of oviewer.
-func Open(fileNames []string) (*Root, error) {
+func Open(fileNames ...string) (*Root, error) {
 	m, err := NewModel()
 	if err != nil {
 		return nil, err
@@ -136,7 +155,7 @@ func Open(fileNames []string) (*Root, error) {
 		return nil, err
 	}
 
-	return New(m)
+	return NewOviewer(m)
 }
 
 // Run starts the terminal pager.
@@ -153,7 +172,7 @@ func (root *Root) Run() error {
 		os.Exit(1)
 	}()
 
-	root.Sync()
+	root.viewSync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.contentsSmall() {
 		root.AfterWrite = true
@@ -165,43 +184,10 @@ func (root *Root) Run() error {
 	return nil
 }
 
-// main is manages and executes events in the main routine.
-func (root *Root) main() {
-	screen := root.Screen
-	go root.countTimer()
-
-loop:
-	for {
-		root.Draw()
-		ev := screen.PollEvent()
-		switch ev := ev.(type) {
-		case *eventTimer:
-			root.updateEndNum()
-		case *eventAppQuit:
-			break loop
-		case *searchInput:
-			root.Search(root.Input.value)
-		case *backSearchInput:
-			root.BackSearch(root.Input.value)
-		case *gotoInput:
-			root.GoLine(root.Input.value)
-		case *headerInput:
-			root.SetHeader(root.Input.value)
-		case *delimiterInput:
-			root.SetDelimiter(root.Input.value)
-		case *tabWidthInput:
-			root.SetTabWidth(root.Input.value)
-		case *tcell.EventKey:
-			root.message = ""
-			if root.Input.mode == Normal {
-				root.defaultKeyEvent(ev)
-			} else {
-				root.inputEvent(ev)
-			}
-		case *tcell.EventResize:
-			root.Resize()
-		}
-	}
+// setModel sets the Model.
+func (root *Root) setModel(m *Model) {
+	root.Model = m
+	root.viewSync()
 }
 
 // setGlobalStyle sets some styles that are determined by the settings.
@@ -222,11 +208,10 @@ func (root *Root) setGlobalStyle() {
 
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
-	m := root.Model
 	screen := root.Screen
-	m.vWidth, m.vHight = screen.Size()
+	root.vWidth, root.vHight = screen.Size()
 	root.setWrapHeaderLen()
-	root.statusPos = m.vHight - 1
+	root.statusPos = root.vHight - 1
 }
 
 // contentsSmall returns with bool whether the file to display fits on the screen.
@@ -235,8 +220,8 @@ func (root *Root) contentsSmall() bool {
 	m := root.Model
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
-		if hight > m.vHight {
+		hight += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
+		if hight > root.vHight {
 			return false
 		}
 	}
@@ -246,8 +231,8 @@ func (root *Root) contentsSmall() bool {
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
 	m := root.Model
-	for i := 0; i < m.vHight-1; i++ {
-		n := m.lineNum + i
+	for i := 0; i < root.vHight-1; i++ {
+		n := root.lineNum + i
 		if n >= m.BufEndNum() {
 			break
 		}
@@ -255,8 +240,8 @@ func (root *Root) WriteOriginal() {
 	}
 }
 
-// HeaderLen returns the actual number of lines in the header.
-func (root *Root) HeaderLen() int {
+// headerLen returns the actual number of lines in the header.
+func (root *Root) headerLen() int {
 	if root.WrapMode {
 		return root.wrapHeaderLen
 	}
@@ -268,7 +253,7 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Model
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / m.vWidth)
+		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
 	}
 }
 
@@ -277,14 +262,14 @@ func (root *Root) setWrapHeaderLen() {
 func (root *Root) bottomLineNum(num int) int {
 	m := root.Model
 	if !root.WrapMode {
-		if num <= m.vHight {
+		if num <= root.vHight {
 			return 0
 		}
-		return num - (m.vHight - root.Header) + 1
+		return num - (root.vHight - root.Header) + 1
 	}
 
-	for y := m.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num, root.TabWidth)) / m.vWidth)
+	for y := root.vHight - root.wrapHeaderLen; y > 0; {
+		y -= 1 + (len(m.getContents(num, root.TabWidth)) / root.vWidth)
 		num--
 	}
 	num++
@@ -294,7 +279,7 @@ func (root *Root) bottomLineNum(num int) int {
 // toggleWrapMode toggles wrapMode each time it is called.
 func (root *Root) toggleWrapMode() {
 	root.WrapMode = !root.WrapMode
-	root.Model.x = 0
+	root.x = 0
 	root.setWrapHeaderLen()
 }
 
@@ -315,54 +300,16 @@ func (root *Root) toggleLineNumMode() {
 	root.updateEndNum()
 }
 
-// eventAppQuit represents a quit event.
-type eventAppQuit struct {
-	tcell.EventTime
-}
-
-// Quit executes a quit event.
-func (root *Root) Quit() {
-	ev := &eventAppQuit{}
-	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
-}
-
-// eventTimer represents a timer event.
-type eventTimer struct {
-	tcell.EventTime
-}
-
-// runOnTime runs at time.
-func (root *Root) runOnTime() {
-	ev := &eventTimer{}
-	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
-}
-
-// Resize is a wrapper function that calls sync.
-func (root *Root) Resize() {
-	root.Sync()
+// resize is a wrapper function that calls viewSync.
+func (root *Root) resize() {
+	root.viewSync()
 }
 
 // Sync redraws the whole thing.
-func (root *Root) Sync() {
+func (root *Root) viewSync() {
 	root.prepareStartX()
 	root.prepareView()
-	root.Draw()
-}
-
-// countTimer fires events periodically until it reaches EOF.
-func (root *Root) countTimer() {
-	timer := time.NewTicker(time.Millisecond * 500)
-loop:
-	for {
-		<-timer.C
-		root.runOnTime()
-		if root.Model.eof {
-			break loop
-		}
-	}
-	timer.Stop()
+	root.draw()
 }
 
 // prepareStartX prepares startX.
@@ -379,34 +326,34 @@ func (root *Root) updateEndNum() {
 	root.statusDraw()
 }
 
-// GoLine will move to the specified line.
-func (root *Root) GoLine(input string) {
+// goLine will move to the specified line.
+func (root *Root) goLine(input string) {
 	lineNum, err := strconv.Atoi(input)
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
 
-	root.MoveNum(lineNum - root.Header - 1)
+	root.moveLine(lineNum - root.Header - 1)
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
 
-// MarkLineNum stores the specified number of lines.
-func (root *Root) MarkLineNum(lineNum int) {
-	s := strconv.Itoa(lineNum + 1)
-	root.Input.GoCandidate.list = toLast(root.Input.GoCandidate.list, s)
-	root.Input.GoCandidate.p = 0
-	root.message = fmt.Sprintf("Marked to line %d", lineNum)
+// markLineNum stores the specified number of lines.
+func (root *Root) markLineNum() {
+	s := strconv.Itoa(root.lineNum + 1)
+	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
+	root.input.GoCandidate.p = 0
+	root.message = fmt.Sprintf("Marked to line %d", root.lineNum)
 }
 
-// SetHeader sets the number of lines in the header.
-func (root *Root) SetHeader(input string) {
+// setHeader sets the number of lines in the header.
+func (root *Root) setHeader(input string) {
 	lineNum, err := strconv.Atoi(input)
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
-	if lineNum < 0 || lineNum > root.Model.vHight-1 {
+	if lineNum < 0 || lineNum > root.vHight-1 {
 		root.message = ErrOutOfRange.Error()
 		return
 	}
@@ -420,14 +367,14 @@ func (root *Root) SetHeader(input string) {
 	root.Model.ClearCache()
 }
 
-// SetDelimiter sets the delimiter string.
-func (root *Root) SetDelimiter(input string) {
+// setDelimiter sets the delimiter string.
+func (root *Root) setDelimiter(input string) {
 	root.ColumnDelimiter = input
 	root.message = fmt.Sprintf("Set delimiter %s", input)
 }
 
-// SetTabWidth sets the tab width.
-func (root *Root) SetTabWidth(input string) {
+// setTabWidth sets the tab width.
+func (root *Root) setTabWidth(input string) {
 	width, err := strconv.Atoi(input)
 	if err != nil {
 		root.message = ErrInvalidNumber.Error()
@@ -440,4 +387,12 @@ func (root *Root) SetTabWidth(input string) {
 	root.TabWidth = width
 	root.message = fmt.Sprintf("Set tab width %d", width)
 	root.Model.ClearCache()
+}
+
+func (root *Root) markNext() {
+	root.goLine(newGotoInput(root.input.GoCandidate).Up(""))
+}
+
+func (root *Root) markPrev() {
+	root.goLine(newGotoInput(root.input.GoCandidate).Down(""))
 }
