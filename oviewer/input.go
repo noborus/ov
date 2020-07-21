@@ -38,13 +38,13 @@ const (
 )
 
 // InputEvent input key events.
-func (root *Root) inputEvent(ev *tcell.EventKey) bool {
+func (root *Root) inputEvent(ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
 	ok := root.inputKeyEvent(ev)
 
 	// Not confirmed or canceled.
 	if !ok {
-		return true
+		return
 	}
 
 	input := root.input
@@ -56,7 +56,6 @@ func (root *Root) inputEvent(ev *tcell.EventKey) bool {
 
 	input.mode = Normal
 	input.EventInput = newNormalInput()
-	return true
 }
 
 // inputKeyEvent handles the keystrokes of the input.

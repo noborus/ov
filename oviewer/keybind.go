@@ -1,17 +1,20 @@
 package oviewer
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/gdamore/tcell"
 	"gitlab.com/tslocum/cbind"
 )
 
 const (
-	actionExit           = "exit"
+	actionExit           = "Exit"
 	actionWriteExit      = "write exit"
 	actionMoveDown       = "Down"
-	actionSync           = "sync"
+	actionSync           = "Sync"
 	actionMoveUp         = "UP"
 	actionMoveTop        = "Top"
 	actionMoveLeft       = "Left"
@@ -23,21 +26,21 @@ const (
 	actionMovePgDn       = "movePgDn"
 	actionMoveHfUp       = "moveHfUp"
 	actionMoveHfDn       = "moveHfDn"
+	actionMark           = "Mark"
 	actionMoveMark       = "move Next Mark"
 	actionMovePrevMark   = "move Prev Mark"
-	actionWrap           = "ToggleWrapMode"
-	actionColumnMode     = "ToggleColumnMode"
 	actionAlternate      = "AlternateRows"
-	actionMark           = "Mark"
 	actionLineNumMode    = "LineNumMode"
 	actionSearch         = "SearchMode"
-	actionBackSearch     = "BackSearchMode"
-	actionDelimiter      = "DelimiterMode"
-	actionHeader         = "HeaderMode"
-	actionTabWidth       = "TabWidthMode"
-	actionGoLine         = "GoLineMode"
+	actionWrap           = "ToggleWrap"
+	actionColumnMode     = "ToggleColumn"
+	actionBackSearch     = "BackSearch"
+	actionDelimiter      = "Delimiter"
+	actionHeader         = "Header"
+	actionTabWidth       = "TabWidth"
+	actionGoLine         = "GoLine"
 	actionNextSearch     = "NextSearch"
-	actionNextBackSearch = "BackSearch"
+	actionNextBackSearch = "NextBackSearch"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -78,6 +81,7 @@ func (root *Root) setHandler() map[string]func() {
 func (root *Root) setDefaultKeyBinds() map[string][]string {
 	return map[string][]string{
 		actionExit:           {"Escape", "q", "ctrl+c"},
+		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
@@ -109,11 +113,10 @@ func (root *Root) setDefaultKeyBinds() map[string][]string {
 	}
 }
 
-func (root *Root) setKeyBind() error {
+func (root *Root) setKeyBind(keyBind map[string][]string) error {
 	c := root.keyConfig
 
 	actionHandlers := root.setHandler()
-	keyBind := root.setDefaultKeyBinds()
 
 	for a, keys := range keyBind {
 		handler := actionHandlers[a]
@@ -132,7 +135,6 @@ func (root *Root) setKeyBind() error {
 				c.SetKey(mod, key, wrapEventHandler(handler))
 			}
 		}
-
 	}
 	return nil
 }
@@ -147,4 +149,18 @@ func wrapEventHandler(f func()) func(_ *tcell.EventKey) *tcell.EventKey {
 func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	root.keyConfig.Capture(ev)
 	return true
+}
+
+func (root *Root) keyBindString(keyBind map[string][]string) string {
+	keyBinds := make([]string, 0, len(keyBind))
+	for k := range keyBind {
+		keyBinds = append(keyBinds, k)
+	}
+
+	sort.Strings(keyBinds)
+	var b bytes.Buffer
+	for _, keys := range keyBinds {
+		fmt.Fprintf(&b, "%s: [%s]\n", keys, strings.Join(keyBind[keys], "], ["))
+	}
+	return b.String()
 }

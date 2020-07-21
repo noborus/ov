@@ -125,7 +125,8 @@ func NewOviewer(m *Model) (*Root, error) {
 		startX:    0,
 	}
 	root.keyConfig = cbind.NewConfiguration()
-	if err := root.setKeyBind(); err != nil {
+	keyBind := root.setDefaultKeyBinds()
+	if err := root.setKeyBind(keyBind); err != nil {
 		return nil, err
 	}
 
