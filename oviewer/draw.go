@@ -201,7 +201,6 @@ func (root *Root) statusDraw() {
 	for x := 0; x < root.vWidth; x++ {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
-
 	leftStatus := fmt.Sprintf("%s:%s", root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	caseSensitive := ""
@@ -209,16 +208,17 @@ func (root *Root) statusDraw() {
 		caseSensitive = "(Aa)"
 	}
 	input := root.input
-	if input.mode != Normal {
-		p := caseSensitive + input.EventInput.Prompt()
-		leftStatus = p + input.value
-		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	} else {
+	switch input.mode {
+	case Normal, Help:
 		for i := 0; i < len(leftContents); i++ {
 			leftContents[i].style = leftContents[i].style.Reverse(true)
 		}
 		root.Screen.ShowCursor(len(leftContents), root.statusPos)
+	default:
+		p := caseSensitive + input.EventInput.Prompt()
+		leftStatus = p + input.value
+		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
+		leftContents = strToContents(leftStatus, -1)
 	}
 	root.setContentString(0, root.statusPos, leftContents)
 

@@ -81,7 +81,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
-	rootCmd.PersistentFlags().BoolVarP(&helpKey, "keybind", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 
 	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))

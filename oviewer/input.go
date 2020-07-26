@@ -29,6 +29,7 @@ type InputMode int
 
 const (
 	Normal InputMode = iota
+	Help
 	Search
 	Backsearch
 	Goline

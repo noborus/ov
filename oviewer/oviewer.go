@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/gdamore/tcell"
@@ -20,6 +21,10 @@ type Root struct {
 	Config
 	// Doc contains the model of ov
 	Doc *Document
+	// help
+	helpDoc *Document
+	// temp
+	tmpDoc *Document
 	// input contains the input mode.
 	input *Input
 	// keyConfig contains the binding settings for the key.
@@ -130,6 +135,17 @@ func NewOviewer(m *Document) (*Root, error) {
 		return nil, err
 	}
 
+	help, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	help.FileName = "Help"
+	str := KeyBindString(keyBind)
+	help.lines = strings.Split(str, "\n")
+	help.eof = true
+	help.endNum = len(help.lines)
+	root.helpDoc = help
+
 	root.Doc = m
 	root.input = NewInput()
 
@@ -189,6 +205,25 @@ func (root *Root) Run() error {
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
 	root.viewSync()
+}
+
+func (root *Root) Help() {
+	if root.input.mode == Help {
+		root.toNormal()
+		return
+	}
+	root.toHelp()
+}
+
+func (root *Root) toHelp() {
+	root.tmpDoc = root.Doc
+	root.setDocument(root.helpDoc)
+	root.input.mode = Help
+}
+
+func (root *Root) toNormal() {
+	root.setDocument(root.tmpDoc)
+	root.input.mode = Normal
 }
 
 // setGlobalStyle sets some styles that are determined by the settings.

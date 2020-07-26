@@ -17,7 +17,10 @@ loop:
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
-			break loop
+			if root.input.mode != Help {
+				break loop
+			}
+			root.toNormal()
 		case *eventTimer:
 			root.updateEndNum()
 		case *eventDocument:
@@ -38,9 +41,10 @@ loop:
 			root.resize()
 		case *tcell.EventKey:
 			root.message = ""
-			if root.input.mode == Normal {
+			switch root.input.mode {
+			case Normal, Help:
 				root.keyCapture(ev)
-			} else {
+			default:
 				root.inputEvent(ev)
 			}
 		}

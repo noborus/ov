@@ -12,9 +12,10 @@ import (
 
 const (
 	actionExit           = "Exit"
-	actionWriteExit      = "write exit"
-	actionMoveDown       = "Down"
+	actionWriteExit      = "Write exit"
 	actionSync           = "Sync"
+	actionHelp           = "Help"
+	actionMoveDown       = "Down"
 	actionMoveUp         = "Up"
 	actionMoveTop        = "Top"
 	actionMoveLeft       = "Left"
@@ -48,6 +49,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionExit:           root.Quit,
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.viewSync,
+		actionHelp:           root.Help,
 		actionMoveDown:       root.moveDown,
 		actionMoveUp:         root.moveUp,
 		actionMoveTop:        root.moveTop,
@@ -85,6 +87,7 @@ func SetDefaultKeyBinds() map[string][]string {
 		actionExit:           {"Escape", "q", "ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
+		actionHelp:           {"h"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
@@ -158,6 +161,7 @@ func KeyBindString(k KeyBind) string {
 	fmt.Fprintf(&b, "\n\tKey binding\n\n")
 	k.writeKeyBind(&b, actionExit)
 	k.writeKeyBind(&b, actionWriteExit)
+	k.writeKeyBind(&b, actionHelp)
 	k.writeKeyBind(&b, actionSync)
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")
