@@ -23,6 +23,8 @@ var (
 
 	// ver is version information.
 	ver bool
+	// helpKey is key bind information.
+	helpKey bool
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -35,6 +37,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
+			return nil
+		}
+		if helpKey {
+			Help(cmd, args)
 			return nil
 		}
 
@@ -64,11 +70,18 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 	},
 }
 
+func Help(cmd *cobra.Command, args []string) {
+	fmt.Println(cmd.Short)
+	keyBind := oviewer.SetDefaultKeyBinds()
+	fmt.Println(oviewer.KeyBindString(keyBind))
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
+	rootCmd.PersistentFlags().BoolVarP(&helpKey, "keybind", "", false, "display key bind information")
 
 	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))

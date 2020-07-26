@@ -10,8 +10,8 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
-	root.message = fmt.Sprintf("endnum:%d", root.Model.endNum)
-	n := root.bottomLineNum(root.Model.endNum) + 1
+	root.message = fmt.Sprintf("endnum:%d", root.Doc.endNum)
+	n := root.bottomLineNum(root.Doc.endNum) + 1
 	root.moveLine(n)
 }
 
@@ -62,10 +62,10 @@ func (root *Root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.lineNum+root.Header, root.TabWidth)
+	contents := root.Doc.getContents(root.lineNum+root.Header, root.TabWidth)
 	if len(contents) < root.vWidth || root.yy <= 0 {
 		if (root.lineNum) >= 1 {
-			pre := root.Model.getContents(root.lineNum+root.Header-1, root.TabWidth)
+			pre := root.Doc.getContents(root.lineNum+root.Header-1, root.TabWidth)
 			yyLen := len(pre) / (root.vWidth + 1)
 			root.yy = yyLen
 		}
@@ -77,8 +77,8 @@ func (root *Root) moveUp() {
 
 // Move down one line.
 func (root *Root) moveDown() {
-	if root.lineNum > root.bottomLineNum(root.Model.endNum) {
-		if root.Model.BufEOF() {
+	if root.lineNum > root.bottomLineNum(root.Doc.endNum) {
+		if root.Doc.BufEOF() {
 			root.message = "EOF"
 		}
 		return
@@ -90,7 +90,7 @@ func (root *Root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.Model.getContents(root.lineNum+root.Header, root.TabWidth)
+	contents := root.Doc.getContents(root.lineNum+root.Header, root.TabWidth)
 	if len(contents) < (root.vWidth * (root.yy + 1)) {
 		root.yy = 0
 		root.lineNum++
@@ -129,7 +129,7 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from root.columnNum.
 func (root *Root) columnModeX() int {
-	m := root.Model
+	m := root.Doc
 	line := m.GetLine(root.Header + 2)
 	start, end := rangePosition(line, root.ColumnDelimiter, root.columnNum)
 	if start < 0 || end < 0 {

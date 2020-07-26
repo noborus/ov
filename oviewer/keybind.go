@@ -3,7 +3,7 @@ package oviewer
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"io"
 	"strings"
 
 	"github.com/gdamore/tcell"
@@ -15,32 +15,32 @@ const (
 	actionWriteExit      = "write exit"
 	actionMoveDown       = "Down"
 	actionSync           = "Sync"
-	actionMoveUp         = "UP"
+	actionMoveUp         = "Up"
 	actionMoveTop        = "Top"
 	actionMoveLeft       = "Left"
 	actionMoveRight      = "Right"
-	actionMoveHfLeft     = "halfLeft"
-	actionMoveHfRight    = "halfRight"
+	actionMoveHfLeft     = "Half left"
+	actionMoveHfRight    = "Half right"
 	actionMoveBottom     = "Bottom"
-	actionMovePgUp       = "movePgUp"
-	actionMovePgDn       = "movePgDn"
-	actionMoveHfUp       = "moveHfUp"
-	actionMoveHfDn       = "moveHfDn"
+	actionMovePgUp       = "Page up"
+	actionMovePgDn       = "Page down"
+	actionMoveHfUp       = "Page half up"
+	actionMoveHfDn       = "Page half down"
 	actionMark           = "Mark"
-	actionMoveMark       = "move Next Mark"
-	actionMovePrevMark   = "move Prev Mark"
-	actionAlternate      = "AlternateRows"
-	actionLineNumMode    = "LineNumMode"
-	actionSearch         = "SearchMode"
-	actionWrap           = "ToggleWrap"
-	actionColumnMode     = "ToggleColumn"
-	actionBackSearch     = "BackSearch"
-	actionDelimiter      = "Delimiter"
-	actionHeader         = "Header"
-	actionTabWidth       = "TabWidth"
-	actionGoLine         = "GoLine"
-	actionNextSearch     = "NextSearch"
-	actionNextBackSearch = "NextBackSearch"
+	actionMoveMark       = "Move to next mark"
+	actionMovePrevMark   = "Move to previous mark"
+	actionAlternate      = "Toggle alternating rows mode"
+	actionLineNumMode    = "Toggle line number mode"
+	actionSearch         = "Search"
+	actionWrap           = "Toggle wrap/nowrap mode"
+	actionColumnMode     = "Toggle column mode"
+	actionBackSearch     = "Backsearch"
+	actionDelimiter      = "Input delimiter"
+	actionHeader         = "Input header len"
+	actionTabWidth       = "Input tabwidth"
+	actionGoLine         = "Input line number to move"
+	actionNextSearch     = "Next search"
+	actionNextBackSearch = "Next backsearch"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -78,7 +78,9 @@ func (root *Root) setHandler() map[string]func() {
 	}
 }
 
-func (root *Root) setDefaultKeyBinds() map[string][]string {
+type KeyBind map[string][]string
+
+func SetDefaultKeyBinds() map[string][]string {
 	return map[string][]string{
 		actionExit:           {"Escape", "q", "ctrl+c"},
 		actionWriteExit:      {"Q"},
@@ -151,16 +153,53 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	return true
 }
 
-func (root *Root) keyBindString(keyBind map[string][]string) string {
-	keyBinds := make([]string, 0, len(keyBind))
-	for k := range keyBind {
-		keyBinds = append(keyBinds, k)
-	}
-
-	sort.Strings(keyBinds)
+func KeyBindString(k KeyBind) string {
 	var b bytes.Buffer
-	for _, keys := range keyBinds {
-		fmt.Fprintf(&b, "%s: [%s]\n", keys, strings.Join(keyBind[keys], "], ["))
-	}
+	fmt.Fprintf(&b, "\n\tKey binding\n\n")
+	k.writeKeyBind(&b, actionExit)
+	k.writeKeyBind(&b, actionWriteExit)
+	k.writeKeyBind(&b, actionSync)
+
+	fmt.Fprintf(&b, "\n\tMoving\n\n")
+	k.writeKeyBind(&b, actionMoveDown)
+	k.writeKeyBind(&b, actionMoveUp)
+	k.writeKeyBind(&b, actionMoveTop)
+	k.writeKeyBind(&b, actionMoveBottom)
+	k.writeKeyBind(&b, actionMovePgUp)
+	k.writeKeyBind(&b, actionMovePgDn)
+	k.writeKeyBind(&b, actionMoveHfUp)
+	k.writeKeyBind(&b, actionMoveHfDn)
+	k.writeKeyBind(&b, actionMoveLeft)
+	k.writeKeyBind(&b, actionMoveRight)
+	k.writeKeyBind(&b, actionMoveHfLeft)
+	k.writeKeyBind(&b, actionMoveHfRight)
+	k.writeKeyBind(&b, actionGoLine)
+
+	fmt.Fprintf(&b, "\n\tMark position\n\n")
+	k.writeKeyBind(&b, actionMark)
+	k.writeKeyBind(&b, actionMoveMark)
+	k.writeKeyBind(&b, actionMovePrevMark)
+
+	fmt.Fprintf(&b, "\n\tSearch\n\n")
+	k.writeKeyBind(&b, actionSearch)
+	k.writeKeyBind(&b, actionBackSearch)
+	k.writeKeyBind(&b, actionNextSearch)
+	k.writeKeyBind(&b, actionNextBackSearch)
+
+	fmt.Fprintf(&b, "\n\tChange display\n\n")
+	k.writeKeyBind(&b, actionWrap)
+	k.writeKeyBind(&b, actionColumnMode)
+	k.writeKeyBind(&b, actionAlternate)
+	k.writeKeyBind(&b, actionLineNumMode)
+
+	fmt.Fprintf(&b, "\n\tChange Display with Input\n\n")
+	k.writeKeyBind(&b, actionDelimiter)
+	k.writeKeyBind(&b, actionHeader)
+	k.writeKeyBind(&b, actionTabWidth)
+
 	return b.String()
+}
+
+func (k KeyBind) writeKeyBind(w io.Writer, action string) {
+	fmt.Fprintf(w, "%-26s: %s\n", "["+strings.Join(k[action], "], [")+"]", action)
 }

@@ -10,9 +10,9 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// The Model structure contains the values
+// The Document structure contains the values
 // for the logical screen.
-type Model struct {
+type Document struct {
 	// fileName is the file name to display.
 	FileName string
 	// lines stores the contents of the file in slices of strings.
@@ -30,9 +30,9 @@ type Model struct {
 	mu sync.Mutex
 }
 
-// NewModel returns Model.
-func NewModel() (*Model, error) {
-	m := &Model{
+// NewDocument returns Document.
+func NewDocument() (*Document, error) {
+	m := &Document{
 		lines:      make([]string, 0, 1000),
 		beforeSize: 1000,
 	}
@@ -44,7 +44,7 @@ func NewModel() (*Model, error) {
 }
 
 // ReadFile reads files (or stdin).
-func (m *Model) ReadFile(fileNames []string) error {
+func (m *Document) ReadFile(fileNames []string) error {
 	var reader io.ReadCloser
 	fileName := ""
 	switch len(fileNames) {
@@ -83,7 +83,7 @@ func (m *Model) ReadFile(fileNames []string) error {
 }
 
 // GetLine returns one line from buffer.
-func (m *Model) GetLine(lineNum int) string {
+func (m *Document) GetLine(lineNum int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if lineNum < 0 || lineNum >= len(m.lines) {
@@ -93,21 +93,21 @@ func (m *Model) GetLine(lineNum int) string {
 }
 
 // BufEndNum return last line number.
-func (m *Model) BufEndNum() int {
+func (m *Document) BufEndNum() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.endNum
 }
 
 // BufEOF return true if EOF is reached.
-func (m *Model) BufEOF() bool {
+func (m *Document) BufEOF() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.eof
 }
 
 // NewCache creates a new cache.
-func (m *Model) NewCache() error {
+func (m *Document) NewCache() error {
 	cache, err := ristretto.NewCache(&ristretto.Config{
 		NumCounters: 10000, // number of keys to track frequency of.
 		MaxCost:     1000,  // maximum cost of cache.
@@ -121,12 +121,12 @@ func (m *Model) NewCache() error {
 }
 
 // ClearCache clears the cache.
-func (m *Model) ClearCache() {
+func (m *Document) ClearCache() {
 	m.cache.Clear()
 }
 
 // getContents returns one line of contents from buffer.
-func (m *Model) getContents(lineNum int, tabWidth int) []content {
+func (m *Document) getContents(lineNum int, tabWidth int) []content {
 	lc, err := m.lineToContents(lineNum, tabWidth)
 	if err != nil {
 		return nil
@@ -135,7 +135,7 @@ func (m *Model) getContents(lineNum int, tabWidth int) []content {
 }
 
 // lineToContents returns contents from line number.
-func (m *Model) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
+func (m *Document) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
 	var lc lineContents
 
 	if lineNum < 0 || lineNum >= m.BufEndNum() {

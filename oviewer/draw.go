@@ -8,7 +8,7 @@ import (
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
-	m := root.Model
+	m := root.Doc
 	screen := root.Screen
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		root.lineNum = 0
@@ -202,7 +202,7 @@ func (root *Root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	leftStatus := fmt.Sprintf("%s:%s", root.Model.FileName, root.message)
+	leftStatus := fmt.Sprintf("%s:%s", root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	caseSensitive := ""
 	if root.CaseSensitive {
@@ -223,10 +223,10 @@ func (root *Root) statusDraw() {
 	root.setContentString(0, root.statusPos, leftContents)
 
 	next := ""
-	if !root.Model.BufEOF() {
+	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.lineNum, root.Model.BufEndNum(), next)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.lineNum, root.Doc.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, -1)
 	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
 

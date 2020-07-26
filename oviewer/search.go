@@ -38,8 +38,8 @@ func (root *Root) goSearchLine(lineNum int, err error) {
 
 // searchLine is searches below from the specified line.
 func (root *Root) searchLine(num int) (int, error) {
-	for n := num; n < root.Model.BufEndNum(); n++ {
-		if contains(root.Model.GetLine(n), root.input.reg) {
+	for n := num; n < root.Doc.BufEndNum(); n++ {
+		if contains(root.Doc.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}
@@ -48,11 +48,11 @@ func (root *Root) searchLine(num int) (int, error) {
 
 // backsearch is searches upward from the specified line.
 func (root *Root) backSearchLine(num int) (int, error) {
-	if num > root.Model.BufEndNum() {
-		num = root.Model.BufEndNum() - 1
+	if num > root.Doc.BufEndNum() {
+		num = root.Doc.BufEndNum() - 1
 	}
 	for n := num; n >= 0; n-- {
-		if contains(root.Model.GetLine(n), root.input.reg) {
+		if contains(root.Doc.GetLine(n), root.input.reg) {
 			return n, nil
 		}
 	}

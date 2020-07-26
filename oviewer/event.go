@@ -20,8 +20,8 @@ loop:
 			break loop
 		case *eventTimer:
 			root.updateEndNum()
-		case *eventModel:
-			root.setModel(ev.m)
+		case *eventDocument:
+			root.setDocument(ev.m)
 		case *searchInput:
 			root.search(ev.input)
 		case *backSearchInput:
@@ -85,7 +85,7 @@ loop:
 	for {
 		<-timer.C
 		root.runOnTime()
-		if root.Model.BufEOF() {
+		if root.Doc.BufEOF() {
 			break loop
 		}
 	}
@@ -109,7 +109,7 @@ func (root *Root) MoveTop() {
 
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
-	root.MoveLine(root.Model.endNum)
+	root.MoveLine(root.Doc.endNum)
 }
 
 // Search fires a forward search event.
@@ -132,15 +132,15 @@ func (root *Root) BackSearch(input string) {
 	}()
 }
 
-// eventModel represents a set model event.
-type eventModel struct {
-	m *Model
+// eventDocument represents a set model event.
+type eventDocument struct {
+	m *Document
 	tcell.EventTime
 }
 
-// SetModel fires a set model event.
-func (root *Root) SetModel(m *Model) {
-	ev := &eventModel{}
+// SetDocument fires a set document event.
+func (root *Root) SetDocument(m *Document) {
+	ev := &eventDocument{}
 	ev.m = m
 	ev.SetEventNow()
 	go func() {

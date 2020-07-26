@@ -18,11 +18,11 @@ type Root struct {
 	tcell.Screen
 	// Config contains settings that determine the behavior of ov.
 	Config
-	// Model contains the model of ov
-	Model *Model
+	// Doc contains the model of ov
+	Doc *Document
 	// input contains the input mode.
 	input *Input
-
+	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 
 	// lineNum is the starting position of the current y.
@@ -114,7 +114,7 @@ var (
 )
 
 // NewOviewer return the structure of oviewer.
-func NewOviewer(m *Model) (*Root, error) {
+func NewOviewer(m *Document) (*Root, error) {
 	root := &Root{
 		Config: Config{
 			ColumnDelimiter: "",
@@ -125,12 +125,12 @@ func NewOviewer(m *Model) (*Root, error) {
 		startX:    0,
 	}
 	root.keyConfig = cbind.NewConfiguration()
-	keyBind := root.setDefaultKeyBinds()
+	keyBind := SetDefaultKeyBinds()
 	if err := root.setKeyBind(keyBind); err != nil {
 		return nil, err
 	}
 
-	root.Model = m
+	root.Doc = m
 	root.input = NewInput()
 
 	screen, err := tcell.NewScreen()
@@ -147,7 +147,7 @@ func NewOviewer(m *Model) (*Root, error) {
 
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
-	m, err := NewModel()
+	m, err := NewDocument()
 	if err != nil {
 		return nil, err
 	}
@@ -185,9 +185,9 @@ func (root *Root) Run() error {
 	return nil
 }
 
-// setModel sets the Model.
-func (root *Root) setModel(m *Model) {
-	root.Model = m
+// setDocument sets the Document.
+func (root *Root) setDocument(m *Document) {
+	root.Doc = m
 	root.viewSync()
 }
 
@@ -218,7 +218,7 @@ func (root *Root) prepareView() {
 // contentsSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) contentsSmall() bool {
 	root.prepareView()
-	m := root.Model
+	m := root.Doc
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
 		hight += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
@@ -231,7 +231,7 @@ func (root *Root) contentsSmall() bool {
 
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
-	m := root.Model
+	m := root.Doc
 	for i := 0; i < root.vHight-1; i++ {
 		n := root.lineNum + i
 		if n >= m.BufEndNum() {
@@ -251,7 +251,7 @@ func (root *Root) headerLen() int {
 
 // setWrapHeaderLen sets the value in wrapHeaderLen.
 func (root *Root) setWrapHeaderLen() {
-	m := root.Model
+	m := root.Doc
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Header; y++ {
 		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
@@ -261,7 +261,7 @@ func (root *Root) setWrapHeaderLen() {
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) int {
-	m := root.Model
+	m := root.Doc
 	if !root.WrapMode {
 		if num <= root.vHight {
 			return 0
@@ -291,7 +291,7 @@ func (root *Root) toggleColumnMode() {
 
 // toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
-	root.Model.ClearCache()
+	root.Doc.ClearCache()
 	root.AlternateRows = !root.AlternateRows
 }
 
@@ -317,7 +317,7 @@ func (root *Root) viewSync() {
 func (root *Root) prepareStartX() {
 	root.startX = 0
 	if root.LineNumMode {
-		root.startX = len(fmt.Sprintf("%d", root.Model.BufEndNum())) + 1
+		root.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
 	}
 }
 
@@ -365,7 +365,7 @@ func (root *Root) setHeader(input string) {
 	root.Header = lineNum
 	root.message = fmt.Sprintf("Set Header %d", lineNum)
 	root.setWrapHeaderLen()
-	root.Model.ClearCache()
+	root.Doc.ClearCache()
 }
 
 // setDelimiter sets the delimiter string.
@@ -387,7 +387,7 @@ func (root *Root) setTabWidth(input string) {
 
 	root.TabWidth = width
 	root.message = fmt.Sprintf("Set tab width %d", width)
-	root.Model.ClearCache()
+	root.Doc.ClearCache()
 }
 
 func (root *Root) markNext() {
