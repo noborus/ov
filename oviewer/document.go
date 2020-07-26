@@ -26,6 +26,16 @@ type Document struct {
 	beforeSize int
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
+
+	// lineNum is the starting position of the current y.
+	lineNum int
+	// yy represents the number of wrapped lines.
+	yy int
+	// x is the starting position of the current x.
+	x int
+	// columnNum is the number of columns.
+	columnNum int
+
 	// mu controls the mutex.
 	mu sync.Mutex
 }

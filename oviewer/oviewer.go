@@ -30,17 +30,6 @@ type Root struct {
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 
-	// lineNum is the starting position of the current y.
-	lineNum int
-	// yy represents the number of wrapped lines.
-	yy int
-	// x is the starting position of the current x.
-	x int
-	// startX is the start position of x.
-	startX int
-	// columnNum is the number of columns.
-	columnNum int
-
 	// message is the message to display.
 	message string
 
@@ -48,6 +37,9 @@ type Root struct {
 	vWidth int
 	// vHight represents the screen height.
 	vHight int
+
+	// startX is the start position of x.
+	startX int
 
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
@@ -126,8 +118,6 @@ func NewOviewer(m *Document) (*Root, error) {
 			TabWidth:        8,
 		},
 		minStartX: -10,
-		columnNum: 0,
-		startX:    0,
 	}
 	root.keyConfig = cbind.NewConfiguration()
 	keyBind := SetDefaultKeyBinds()
@@ -268,7 +258,7 @@ func (root *Root) contentsSmall() bool {
 func (root *Root) WriteOriginal() {
 	m := root.Doc
 	for i := 0; i < root.vHight-1; i++ {
-		n := root.lineNum + i
+		n := root.Doc.lineNum + i
 		if n >= m.BufEndNum() {
 			break
 		}
@@ -315,7 +305,7 @@ func (root *Root) bottomLineNum(num int) int {
 // toggleWrapMode toggles wrapMode each time it is called.
 func (root *Root) toggleWrapMode() {
 	root.WrapMode = !root.WrapMode
-	root.x = 0
+	root.Doc.x = 0
 	root.setWrapHeaderLen()
 }
 
@@ -376,10 +366,10 @@ func (root *Root) goLine(input string) {
 
 // markLineNum stores the specified number of lines.
 func (root *Root) markLineNum() {
-	s := strconv.Itoa(root.lineNum + 1)
+	s := strconv.Itoa(root.Doc.lineNum + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.message = fmt.Sprintf("Marked to line %d", root.lineNum)
+	root.message = fmt.Sprintf("Marked to line %d", root.Doc.lineNum)
 }
 
 // setHeader sets the number of lines in the header.

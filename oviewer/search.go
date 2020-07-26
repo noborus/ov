@@ -8,23 +8,23 @@ import (
 // search is forward search.
 func (root *Root) search(input string) {
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.goSearchLine(root.searchLine(root.lineNum))
+	root.goSearchLine(root.searchLine(root.Doc.lineNum))
 }
 
 // backSearch is backward search.
 func (root *Root) backSearch(input string) {
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.goSearchLine(root.backSearchLine(root.lineNum))
+	root.goSearchLine(root.backSearchLine(root.Doc.lineNum))
 }
 
 // nextSearch is forward search again.
 func (root *Root) nextSearch() {
-	root.goSearchLine(root.searchLine(root.lineNum + root.Header + 1))
+	root.goSearchLine(root.searchLine(root.Doc.lineNum + root.Header + 1))
 }
 
 // nextBackSearch is backward　search again..
 func (root *Root) nextBackSearch() {
-	root.goSearchLine(root.backSearchLine(root.lineNum + root.Header - 1))
+	root.goSearchLine(root.backSearchLine(root.Doc.lineNum + root.Header - 1))
 }
 
 // goSearchLine moves to the line found.

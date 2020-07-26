@@ -205,5 +205,5 @@ func KeyBindString(k KeyBind) string {
 }
 
 func (k KeyBind) writeKeyBind(w io.Writer, action string) {
-	fmt.Fprintf(w, "%-26s: %s\n", "["+strings.Join(k[action], "], [")+"]", action)
+	fmt.Fprintf(w, "  %-26s: %s\n", "["+strings.Join(k[action], "], [")+"]", action)
 }
