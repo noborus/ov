@@ -162,17 +162,26 @@ func (root *Root) SetConfig(config Config) error {
 		return err
 	}
 
-	help, err := NewDocument()
+	help, err := NewHelp(keyBind)
 	if err != nil {
 		return err
 	}
-	help.FileName = "Help"
-	str := KeyBindString(keyBind)
-	help.lines = strings.Split(str, "\n")
-	help.eof = true
-	help.endNum = len(help.lines)
 	root.helpDoc = help
 	return nil
+}
+
+func NewHelp(k KeyBind) (*Document, error) {
+	help, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	help.FileName = "Help"
+	str := KeyBindString(k)
+	help.lines = append(help.lines, "\t\t\tov help\n")
+	help.lines = append(help.lines, strings.Split(str, "\n")...)
+	help.eof = true
+	help.endNum = len(help.lines)
+	return help, err
 }
 
 // Run starts the terminal pager.
