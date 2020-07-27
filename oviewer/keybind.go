@@ -11,37 +11,37 @@ import (
 )
 
 const (
-	actionExit           = "Exit"
-	actionWriteExit      = "Write exit"
-	actionSync           = "Sync"
-	actionHelp           = "Help"
-	actionMoveDown       = "Down"
-	actionMoveUp         = "Up"
-	actionMoveTop        = "Top"
-	actionMoveLeft       = "Left"
-	actionMoveRight      = "Right"
-	actionMoveHfLeft     = "Half left"
-	actionMoveHfRight    = "Half right"
-	actionMoveBottom     = "Bottom"
-	actionMovePgUp       = "Page up"
-	actionMovePgDn       = "Page down"
-	actionMoveHfUp       = "Page half up"
-	actionMoveHfDn       = "Page half down"
-	actionMark           = "Mark"
-	actionMoveMark       = "Move to next mark"
-	actionMovePrevMark   = "Move to previous mark"
-	actionAlternate      = "Toggle alternating rows mode"
-	actionLineNumMode    = "Toggle line number mode"
-	actionSearch         = "Search"
-	actionWrap           = "Toggle wrap/nowrap mode"
-	actionColumnMode     = "Toggle column mode"
-	actionBackSearch     = "Backsearch"
-	actionDelimiter      = "Input delimiter"
-	actionHeader         = "Input header len"
-	actionTabWidth       = "Input tabwidth"
-	actionGoLine         = "Input line number to move"
-	actionNextSearch     = "Next search"
-	actionNextBackSearch = "Next backsearch"
+	actionExit           = "exit"
+	actionWriteExit      = "write_exit"
+	actionSync           = "sync"
+	actionHelp           = "help"
+	actionMoveDown       = "down"
+	actionMoveUp         = "up"
+	actionMoveTop        = "top"
+	actionMoveLeft       = "left"
+	actionMoveRight      = "right"
+	actionMoveHfLeft     = "half_left"
+	actionMoveHfRight    = "half_right"
+	actionMoveBottom     = "bottom"
+	actionMovePgUp       = "page_up"
+	actionMovePgDn       = "page_down"
+	actionMoveHfUp       = "page_half_up"
+	actionMoveHfDn       = "page_half_down"
+	actionMark           = "mark"
+	actionMoveMark       = "next_mark"
+	actionMovePrevMark   = "previous_mark"
+	actionAlternate      = "alternating_rows_mode"
+	actionLineNumMode    = "line_number_mode"
+	actionSearch         = "search"
+	actionWrap           = "wrap_mode"
+	actionColumnMode     = "column_mode"
+	actionBackSearch     = "backsearch"
+	actionDelimiter      = "delimiter"
+	actionHeader         = "header"
+	actionTabWidth       = "tabwidth"
+	actionGoLine         = "goto"
+	actionNextSearch     = "next_search"
+	actionNextBackSearch = "next_backsearch"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -82,8 +82,8 @@ func (root *Root) setHandler() map[string]func() {
 
 type KeyBind map[string][]string
 
-func SetDefaultKeyBinds() map[string][]string {
-	return map[string][]string{
+func GetKeyBinds(bind map[string][]string) map[string][]string {
+	keyBind := map[string][]string{
 		actionExit:           {"Escape", "q", "ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
@@ -116,6 +116,12 @@ func SetDefaultKeyBinds() map[string][]string {
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},
 	}
+
+	for k, v := range bind {
+		keyBind[k] = v
+	}
+
+	return keyBind
 }
 
 func (root *Root) setKeyBind(keyBind map[string][]string) error {
@@ -126,14 +132,13 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 	for a, keys := range keyBind {
 		handler := actionHandlers[a]
 		if handler == nil {
-			return fmt.Errorf("failed to set keybind for %s: unknown action", a)
+			return fmt.Errorf("failed to set keybind for [%s] unknown action", a)
 		}
 		for _, k := range keys {
 			mod, key, ch, err := cbind.Decode(k)
 			if err != nil {
-				return fmt.Errorf("failed to set keybind %s for %s: %s", k, a, err)
+				return fmt.Errorf("failed to set keybind [%s] for %s: %s", k, a, err)
 			}
-
 			if key == tcell.KeyRune {
 				c.SetRune(mod, ch, wrapEventHandler(handler))
 			} else {

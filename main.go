@@ -56,7 +56,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if err != nil {
 			return err
 		}
-		ov.Config = config
+		if err = ov.SetConfig(config); err != nil {
+			return err
+		}
 
 		if err := ov.Run(); err != nil {
 			return err
@@ -72,7 +74,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 func Help(cmd *cobra.Command, args []string) {
 	fmt.Println(cmd.Short)
-	keyBind := oviewer.SetDefaultKeyBinds()
+	keyBind := oviewer.GetKeyBinds(config.Keybind)
 	fmt.Println(oviewer.KeyBindString(keyBind))
 }
 

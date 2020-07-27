@@ -82,8 +82,10 @@ type Config struct {
 	ColumnMode bool
 	// Line Number
 	LineNumMode bool
-	//Debug represents whether to enable the debug output.
+	// Debug represents whether to enable the debug output.
 	Debug bool
+	// KeyBinding
+	Keybind map[string][]string
 }
 
 var (
@@ -120,35 +122,23 @@ func NewOviewer(m *Document) (*Root, error) {
 		minStartX: -10,
 	}
 	root.keyConfig = cbind.NewConfiguration()
-	keyBind := SetDefaultKeyBinds()
-	if err := root.setKeyBind(keyBind); err != nil {
-		return nil, err
-	}
-
-	help, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-	help.FileName = "Help"
-	str := KeyBindString(keyBind)
-	help.lines = strings.Split(str, "\n")
-	help.eof = true
-	help.endNum = len(help.lines)
-	root.helpDoc = help
 
 	root.Doc = m
 	root.input = NewInput()
 
+	return root, nil
+}
+
+func (root *Root) screenInit() error {
 	screen, err := tcell.NewScreen()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err = screen.Init(); err != nil {
-		return nil, err
+		return err
 	}
 	root.Screen = screen
-
-	return root, nil
+	return nil
 }
 
 // Open reads the file named of the argument and return the structure of oviewer.
@@ -165,9 +155,33 @@ func Open(fileNames ...string) (*Root, error) {
 	return NewOviewer(m)
 }
 
+func (root *Root) SetConfig(config Config) error {
+	root.Config = config
+	keyBind := GetKeyBinds(config.Keybind)
+	if err := root.setKeyBind(keyBind); err != nil {
+		return err
+	}
+
+	help, err := NewDocument()
+	if err != nil {
+		return err
+	}
+	help.FileName = "Help"
+	str := KeyBindString(keyBind)
+	help.lines = strings.Split(str, "\n")
+	help.eof = true
+	help.endNum = len(help.lines)
+	root.helpDoc = help
+	return nil
+}
+
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	if err := root.screenInit(); err != nil {
+		return err
+	}
 	defer root.Screen.Fini()
+
 	root.setGlobalStyle()
 	root.Screen.Clear()
 
