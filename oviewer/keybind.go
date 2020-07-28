@@ -30,7 +30,7 @@ const (
 	actionMark           = "mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
-	actionAlternate      = "alternating_rows_mode"
+	actionAlternate      = "alter_rows_mode"
 	actionLineNumMode    = "line_number_mode"
 	actionSearch         = "search"
 	actionWrap           = "wrap_mode"
@@ -164,51 +164,51 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 func KeyBindString(k KeyBind) string {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "\n\tKey binding\n\n")
-	k.writeKeyBind(&b, actionExit)
-	k.writeKeyBind(&b, actionWriteExit)
-	k.writeKeyBind(&b, actionHelp)
-	k.writeKeyBind(&b, actionSync)
+	k.writeKeyBind(&b, actionExit, "quit")
+	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
+	k.writeKeyBind(&b, actionHelp, "display help screen")
+	k.writeKeyBind(&b, actionSync, "screen sync")
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")
-	k.writeKeyBind(&b, actionMoveDown)
-	k.writeKeyBind(&b, actionMoveUp)
-	k.writeKeyBind(&b, actionMoveTop)
-	k.writeKeyBind(&b, actionMoveBottom)
-	k.writeKeyBind(&b, actionMovePgUp)
-	k.writeKeyBind(&b, actionMovePgDn)
-	k.writeKeyBind(&b, actionMoveHfUp)
-	k.writeKeyBind(&b, actionMoveHfDn)
-	k.writeKeyBind(&b, actionMoveLeft)
-	k.writeKeyBind(&b, actionMoveRight)
-	k.writeKeyBind(&b, actionMoveHfLeft)
-	k.writeKeyBind(&b, actionMoveHfRight)
-	k.writeKeyBind(&b, actionGoLine)
+	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
+	k.writeKeyBind(&b, actionMoveUp, "backward by one line")
+	k.writeKeyBind(&b, actionMoveTop, "go to begin of line")
+	k.writeKeyBind(&b, actionMoveBottom, "go to end of line")
+	k.writeKeyBind(&b, actionMovePgDn, "forward by page")
+	k.writeKeyBind(&b, actionMovePgUp, "backward by page")
+	k.writeKeyBind(&b, actionMoveHfDn, "forward a half page")
+	k.writeKeyBind(&b, actionMoveHfUp, "backward a half page")
+	k.writeKeyBind(&b, actionMoveLeft, "scroll to left")
+	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
+	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
+	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
+	k.writeKeyBind(&b, actionGoLine, "number of go to line")
 
 	fmt.Fprintf(&b, "\n\tMark position\n\n")
-	k.writeKeyBind(&b, actionMark)
-	k.writeKeyBind(&b, actionMoveMark)
-	k.writeKeyBind(&b, actionMovePrevMark)
+	k.writeKeyBind(&b, actionMark, "mark current position")
+	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
+	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
 
 	fmt.Fprintf(&b, "\n\tSearch\n\n")
-	k.writeKeyBind(&b, actionSearch)
-	k.writeKeyBind(&b, actionBackSearch)
-	k.writeKeyBind(&b, actionNextSearch)
-	k.writeKeyBind(&b, actionNextBackSearch)
+	k.writeKeyBind(&b, actionSearch, "forward search mode")
+	k.writeKeyBind(&b, actionBackSearch, "backward search mode")
+	k.writeKeyBind(&b, actionNextSearch, "repeat forward search")
+	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
 
 	fmt.Fprintf(&b, "\n\tChange display\n\n")
-	k.writeKeyBind(&b, actionWrap)
-	k.writeKeyBind(&b, actionColumnMode)
-	k.writeKeyBind(&b, actionAlternate)
-	k.writeKeyBind(&b, actionLineNumMode)
+	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
+	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
+	k.writeKeyBind(&b, actionAlternate, "color to alternate rows toggle")
+	k.writeKeyBind(&b, actionLineNumMode, "line number togle")
 
 	fmt.Fprintf(&b, "\n\tChange Display with Input\n\n")
-	k.writeKeyBind(&b, actionDelimiter)
-	k.writeKeyBind(&b, actionHeader)
-	k.writeKeyBind(&b, actionTabWidth)
+	k.writeKeyBind(&b, actionDelimiter, "delimiter string")
+	k.writeKeyBind(&b, actionHeader, "number of header lines")
+	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 
 	return b.String()
 }
 
-func (k KeyBind) writeKeyBind(w io.Writer, action string) {
-	fmt.Fprintf(w, "  %-26s: %s\n", "["+strings.Join(k[action], "], [")+"]", action)
+func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
+	fmt.Fprintf(w, "  %-26s: %-16s * %s\n", "["+strings.Join(k[action], "], [")+"]", action, detail)
 }
