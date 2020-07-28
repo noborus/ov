@@ -115,29 +115,22 @@ Flags:
   -X, --exit-write                output the current screen when exiting
   -H, --header int                number of header rows to fix
   -h, --help                      help for ov
+      --help-key                  display key bind information
+  -n, --line-number               line number
   -F, --quit-if-one-screen        quit if the output fits on one screen
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information
   -w, --wrap                      wrap mode (default true)
 ```
 
-### wrap/nowrap toggle (<kbd>w</kbd>)
+It can also be changed after startup.
+Refer to the [motion image](docs/image.md).
 
-![wrap/nowrap](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-wrap.gif)
+## config
 
-### column mode toggle (<kbd>c</kbd>)
+You can set colors and key bindings in the setting file.
 
-![column mode](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-column.gif)
-
-### color to alternate rows enable/disable toggle (<kbd>C</kbd>)
-
-![color enable/disable](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-color.gif)
-
-### number of header (<kbd>H</kbd>)
-
-![header](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-header.gif)
-
-### line number (<kbd>G</kbd>)
+Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) configuration file.
 
 ### psql
 
@@ -170,54 +163,52 @@ pager=ov -w=f -H3 -F -C -d "|"
 
 ## Key bindings
 
-* <kbd>q</kbd>,<kbd>Esc</kbd> - quit
-* <kbd>Q</kbd> - output screen and quit
+```
+  [Escape], [q], [ctrl+c]   : exit             * quit
+  [Q]                       : write_exit       * output screen and quit
+  [h], [ctrl+alt+c]         : help             * display help screen
+  [ctrl+l]                  : sync             * screen sync
 
-### Move
+	Moving
 
-* <kbd>HOME</kbd> - go to begin of line
-* <kbd>END</kbd> - go to end of line
-* <kbd>KEY_UP</kbd> - backward by one line
-* <kbd>KEY_DOWN</kbd>, <kbd>Enter</kbd> - forward by one line
-* <kbd>PgUP</kbd>, <kbd>Ctrl</kbd>+<kbd>b</kbd> - backward by page
-* <kbd>PgDn</kbd>, <kbd>Ctrl</kbd>+<kbd>v</kbd> - forward by page
-* <kbd>Ctrl</kbd>+<kbd>d</kbd> - forward a half page
-* <kbd>Ctrl</kbd>+<kbd>u</kbd> - backward a half page
+  [Enter], [Down], [ctrl+N] : down             * forward by one line
+  [Up], [ctrl+p]            : up               * backward by one line
+  [Home]                    : top              * go to begin of line
+  [End]                     : bottom           * go to end of line
+  [PageDown], [ctrl+v]      : page_down        * forward by page
+  [PageUp], [ctrl+b]        : page_up          * backward by page
+  [ctrl+d]                  : page_half_down   * forward a half page
+  [ctrl+u]                  : page_half_up     * backward a half page
+  [left]                    : left             * scroll to left
+  [right]                   : right            * scroll to right
+  [ctrl+left]               : half_left        * scroll left half screen
+  [ctrl+right]              : half_right       * scroll right half screen
+  [g]                       : goto             * number of go to line
 
-* <kbd>KEY_LEFT</kbd> - scroll to left
-* <kbd>KEY_RIGHT</kbd> - scroll to right
+	Mark position
 
-* <kbd>Ctrl</kbd>+<kbd>KEY_LEFT</kbd> - scroll to left page
-* <kbd>Ctrl</kbd>+<kbd>KEY_RIGHT</kbd> - scroll to right page
+  [m]                       : mark             * mark current position
+  [>]                       : next_mark        * move to next marked position
+  [<]                       : previous_mark    * move to previous marked position
 
-### Mode
+	Search
 
-* <kbd>w</kbd> - wrap/nowrap toggle
-* <kbd>c</kbd> - column mode enable/disable toggle
-* <kbd>C</kbd> - color to alternate rows enable/disable toggle
-* <kbd>G</kbd> - line number toogle
+  [/]                       : search           * forward search mode
+  [?]                       : backsearch       * backward search mode
+  [n]                       : next_search      * repeat forward search
+  [N]                       : next_backsearch  * repeat backward search
 
-### Input Mode
+	Change display
 
-* <kbd>/</kbd> - forward search mode
-* <kbd>?</kbd> - previous search mode
-* <kbd>H</kbd> - number of header lines
-* <kbd>g</kbd> - number of go to line
-* <kbd>d</kbd> - delimiter string
-* <kbd>d</kbd> - TAB width
+  [w], [W]                  : wrap_mode        * wrap/nowrap toggle
+  [c]                       : column_mode      * column mode toggle
+  [C]                       : alter_rows_mode  * color to alternate rows toggle
+  [G]                       : line_number_mode * line number togle
 
-### Keys in input mode
+	Change Display with Input
 
-* <kbd>KEY_UP</kbd> - displaying candidates (recent history)
-* <kbd>KEY_DOWN</kbd> - displaying candidates (oldest history)
-* <kbd>Esc</kbd> - cancel input
-* <kbd>Enter</kbd> - confirm input
+  [d]                       : delimiter        * delimiter string
+  [H]                       : header           * number of header lines
+  [t]                       : tabwidth         * TAB width
 
-### Keys in search mode
-
-* <kbd>Ctrl</kbd>+<kbd>a</kbd> - case-sensitive/insensitive toggle
-
-### Key after search input mode
-
-* <kbd>n</kbd> - for next match
-* <kbd>N</kbd> - for next match in reverse direction
+```
