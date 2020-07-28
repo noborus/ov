@@ -1,0 +1,90 @@
+# TabWidth is the tab width number.
+TabWidth: 4
+# olorAlternate is an alternate background color.
+ColorAlternate: "gray"
+# ColorOverStrike is the overstrike color.
+ColorOverStrike: "green"
+# ColorOverLine is the color of the overstrike underline.
+ColorOverLine: "red"
+# Keybind
+# Special key
+#   "Enter","Backspace","Tab","Backtab","Esc",
+#   "Backspace2", "Delete", "Insert",
+#   "Up", "Down", "Left", "Right", "Home", "End",
+#   "F1...F64"
+# Modifier key
+#   "ctrl", "alt", "meta", "shift"
+# Connect with modifier key + key
+#   "ctrl+c"
+KeyBind:
+    exit:
+        - "Escape"
+        - "q"
+        - "ctrl+c"
+    write_exit:
+        - "Q"
+    sync:
+        - "ctrl+l"
+    help:
+        - "h"
+        - "ctrl+alt+c"
+    down:
+        - "Enter"
+        - "Down"
+        - "ctrl+N"
+    up:
+        - "Up"
+        - "ctrl+p"
+    top:
+        - "Home"
+    bottom:
+        - "End"
+    left:
+        - "left"
+    right:
+        - "right"
+    half_left:
+        - "ctrl+left"
+    half_right:
+        - "ctrl+right"
+    page_up:
+        - "PageUp"
+        - "ctrl+b"
+    page_down:
+        - "PageDown"
+        - "ctrl+v"
+    page_half_up:
+        - "ctrl+u"
+    page_half_down:
+        - "ctrl+d"
+    mark:
+        - "m"
+    next_mark:
+        - ">"
+    previous_mark:
+        - "<"
+    alter_rows_mode:
+        - "C"
+    line_number_mode:
+        - "G"
+    search:
+        - "/"
+    wrap_mode:
+        - "w"
+        - "W"
+    column_mode:
+        - "c"
+    backsearch:
+        - "?"
+    delimiter:
+        - "d"
+    header:
+        - "H"
+    tabwidth:
+        - "t"
+    goto:
+        - "g"
+    next_search:
+        - "n"
+    next_backsearch:
+        - "N"
