@@ -19,12 +19,12 @@ func (root *Root) backSearch(input string) {
 
 // nextSearch is forward search again.
 func (root *Root) nextSearch() {
-	root.goSearchLine(root.searchLine(root.Doc.lineNum + root.Header + 1))
+	root.goSearchLine(root.searchLine(root.Doc.lineNum + root.Doc.Header + 1))
 }
 
 // nextBackSearch is backward　search again..
 func (root *Root) nextBackSearch() {
-	root.goSearchLine(root.backSearchLine(root.Doc.lineNum + root.Header - 1))
+	root.goSearchLine(root.backSearchLine(root.Doc.lineNum + root.Doc.Header - 1))
 }
 
 // goSearchLine moves to the line found.
@@ -33,7 +33,7 @@ func (root *Root) goSearchLine(lineNum int, err error) {
 		root.message = err.Error()
 		return
 	}
-	root.moveLine(lineNum - root.Header)
+	root.moveLine(lineNum - root.Doc.Header)
 }
 
 // searchLine is searches below from the specified line.

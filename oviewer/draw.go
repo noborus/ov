@@ -19,7 +19,7 @@ func (root *Root) draw() {
 
 	root.resetScreen()
 
-	bottom := root.bottomLineNum(m.BufEndNum()) - root.Header
+	bottom := root.bottomLineNum(m.BufEndNum()) - root.Doc.Header
 	if root.Doc.lineNum > bottom+1 {
 		root.Doc.lineNum = bottom + 1
 	}
@@ -32,9 +32,9 @@ func (root *Root) draw() {
 	lY := 0
 	lX := 0
 	// Header
-	for hy := 0; lY < root.Header; hy++ {
+	for hy := 0; lY < root.Doc.Header; hy++ {
 		line := m.GetLine(lY)
-		lc, err := m.lineToContents(lY, root.TabWidth)
+		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
 		if err != nil {
 			// EOF
 			continue
@@ -43,12 +43,12 @@ func (root *Root) draw() {
 		root.headerStyle(contents)
 
 		// column highlight
-		if root.ColumnMode {
-			start, end := rangePosition(line, root.ColumnDelimiter, root.Doc.columnNum)
+		if root.Doc.ColumnMode {
+			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, start, end)
 		}
 
-		if root.WrapMode {
+		if root.Doc.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
@@ -58,7 +58,7 @@ func (root *Root) draw() {
 	// Body
 	lX = root.Doc.yy * root.vWidth
 	for y := root.headerLen(); y < root.vHight; y++ {
-		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.TabWidth)
+		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
 		if err != nil {
 			// EOF
 			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
@@ -80,14 +80,14 @@ func (root *Root) draw() {
 		}
 
 		// column highlight
-		if root.ColumnMode {
-			start, end := rangePosition(line, root.ColumnDelimiter, root.Doc.columnNum)
+		if root.Doc.ColumnMode {
+			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, start, end)
 		}
 
 		// line number mode
-		if root.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.Doc.lineNum+lY-root.Header+1), root.TabWidth)
+		if root.Doc.LineNumMode {
+			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.Doc.lineNum+lY-root.Doc.Header+1), root.Doc.TabWidth)
 			for i := 0; i < len(lineNum); i++ {
 				lineNum[i].style = tcell.StyleDefault.Bold(true)
 			}
@@ -95,14 +95,14 @@ func (root *Root) draw() {
 		}
 
 		var nextY int
-		if root.WrapMode {
+		if root.Doc.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
 		} else {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
 		}
 
 		// alternate background color
-		if root.AlternateRows {
+		if root.Doc.AlternateRows {
 			bgColor := normalBgColor
 			if (root.Doc.lineNum+lY)%2 == 1 {
 				bgColor = ColorAlternate
@@ -231,7 +231,7 @@ func (root *Root) statusDraw() {
 	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
 
 	if root.Debug {
-		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Header, root.headerLen(), root.Doc.lineNum, root.bottomPos)
+		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Doc.Header, root.headerLen(), root.Doc.lineNum, root.bottomPos)
 		c := strToContents(debugMsg, 0)
 		root.setContentString(root.vWidth/2, root.statusPos, c)
 	}

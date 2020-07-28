@@ -51,6 +51,23 @@ type Root struct {
 	minStartX int
 }
 
+type status struct {
+	// TabWidth is tab stop num.
+	TabWidth int
+	// HeaderLen is number of header rows to be fixed.
+	Header int
+	// Color to alternate rows
+	AlternateRows bool
+	// Column mode
+	ColumnMode bool
+	// Line Number
+	LineNumMode bool
+	// Wrap is Wrap mode.
+	WrapMode bool
+	// Column Delimiter
+	ColumnDelimiter string
+}
+
 // Config represents the settings of ov.
 type Config struct {
 	// Alternating background color.
@@ -62,26 +79,14 @@ type Config struct {
 	// OverLine color.
 	ColorOverLine string
 
-	// Column Delimiter
-	ColumnDelimiter string
-	// Wrap is Wrap mode.
-	WrapMode bool
-	// TabWidth is tab stop num.
-	TabWidth int
-	// HeaderLen is number of header rows to be fixed.
-	Header int
+	Status status
+
 	// AfterWrite writes the current screen on exit.
 	AfterWrite bool
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true
 	CaseSensitive bool
-	// Color to alternate rows
-	AlternateRows bool
-	// Column mode
-	ColumnMode bool
-	// Line Number
-	LineNumMode bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
 	// KeyBinding
@@ -116,8 +121,10 @@ var (
 func NewOviewer(m *Document) (*Root, error) {
 	root := &Root{
 		Config: Config{
-			ColumnDelimiter: "",
-			TabWidth:        8,
+			Status: status{
+				ColumnDelimiter: "",
+				TabWidth:        8,
+			},
 		},
 		minStartX: -10,
 	}
@@ -157,6 +164,8 @@ func Open(fileNames ...string) (*Root, error) {
 
 func (root *Root) SetConfig(config Config) error {
 	root.Config = config
+	root.Doc.status = root.Config.Status
+
 	keyBind := GetKeyBinds(config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
 		return err
@@ -269,7 +278,7 @@ func (root *Root) contentsSmall() bool {
 	m := root.Doc
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
+		hight += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
 		if hight > root.vHight {
 			return false
 		}
@@ -291,18 +300,18 @@ func (root *Root) WriteOriginal() {
 
 // headerLen returns the actual number of lines in the header.
 func (root *Root) headerLen() int {
-	if root.WrapMode {
+	if root.Doc.WrapMode {
 		return root.wrapHeaderLen
 	}
-	return root.Header
+	return root.Doc.Header
 }
 
 // setWrapHeaderLen sets the value in wrapHeaderLen.
 func (root *Root) setWrapHeaderLen() {
 	m := root.Doc
 	root.wrapHeaderLen = 0
-	for y := 0; y < root.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.TabWidth)) / root.vWidth)
+	for y := 0; y < root.Doc.Header; y++ {
+		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
 	}
 }
 
@@ -310,15 +319,15 @@ func (root *Root) setWrapHeaderLen() {
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) int {
 	m := root.Doc
-	if !root.WrapMode {
+	if !root.Doc.WrapMode {
 		if num <= root.vHight {
 			return 0
 		}
-		return num - (root.vHight - root.Header) + 1
+		return num - (root.vHight - root.Doc.Header) + 1
 	}
 
 	for y := root.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num, root.TabWidth)) / root.vWidth)
+		y -= 1 + (len(m.getContents(num, root.Doc.TabWidth)) / root.vWidth)
 		num--
 	}
 	num++
@@ -327,25 +336,25 @@ func (root *Root) bottomLineNum(num int) int {
 
 // toggleWrapMode toggles wrapMode each time it is called.
 func (root *Root) toggleWrapMode() {
-	root.WrapMode = !root.WrapMode
+	root.Doc.WrapMode = !root.Doc.WrapMode
 	root.Doc.x = 0
 	root.setWrapHeaderLen()
 }
 
 //  toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
-	root.ColumnMode = !root.ColumnMode
+	root.Doc.ColumnMode = !root.Doc.ColumnMode
 }
 
 // toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
 	root.Doc.ClearCache()
-	root.AlternateRows = !root.AlternateRows
+	root.Doc.AlternateRows = !root.Doc.AlternateRows
 }
 
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
-	root.LineNumMode = !root.LineNumMode
+	root.Doc.LineNumMode = !root.Doc.LineNumMode
 	root.updateEndNum()
 }
 
@@ -364,7 +373,7 @@ func (root *Root) viewSync() {
 // prepareStartX prepares startX.
 func (root *Root) prepareStartX() {
 	root.startX = 0
-	if root.LineNumMode {
+	if root.Doc.LineNumMode {
 		root.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
 	}
 }
@@ -383,7 +392,7 @@ func (root *Root) goLine(input string) {
 		return
 	}
 
-	root.moveLine(lineNum - root.Header - 1)
+	root.moveLine(lineNum - root.Doc.Header - 1)
 	root.message = fmt.Sprintf("Moved to line %d", lineNum)
 }
 
@@ -406,11 +415,11 @@ func (root *Root) setHeader(input string) {
 		root.message = ErrOutOfRange.Error()
 		return
 	}
-	if root.Header == lineNum {
+	if root.Doc.Header == lineNum {
 		return
 	}
 
-	root.Header = lineNum
+	root.Doc.Header = lineNum
 	root.message = fmt.Sprintf("Set Header %d", lineNum)
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
@@ -418,7 +427,7 @@ func (root *Root) setHeader(input string) {
 
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
-	root.ColumnDelimiter = input
+	root.Doc.ColumnDelimiter = input
 	root.message = fmt.Sprintf("Set delimiter %s", input)
 }
 
@@ -429,11 +438,11 @@ func (root *Root) setTabWidth(input string) {
 		root.message = ErrInvalidNumber.Error()
 		return
 	}
-	if root.TabWidth == width {
+	if root.Doc.TabWidth == width {
 		return
 	}
 
-	root.TabWidth = width
+	root.Doc.TabWidth = width
 	root.message = fmt.Sprintf("Set tab width %d", width)
 	root.Doc.ClearCache()
 }

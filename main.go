@@ -85,13 +85,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 
-	rootCmd.PersistentFlags().BoolVarP(&config.WrapMode, "wrap", "w", true, "wrap mode")
+	rootCmd.PersistentFlags().BoolVarP(&config.Status.WrapMode, "wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 
-	rootCmd.PersistentFlags().IntVarP(&config.TabWidth, "tab-width", "x", 8, "tab stop width")
+	rootCmd.PersistentFlags().IntVarP(&config.Status.TabWidth, "tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 
-	rootCmd.PersistentFlags().IntVarP(&config.Header, "header", "H", 0, "number of header rows to fix")
+	rootCmd.PersistentFlags().IntVarP(&config.Status.Header, "header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
 
 	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "output the current screen when exiting")
@@ -103,16 +103,16 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.CaseSensitive, "case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.AlternateRows, "alternate-rows", "C", false, "color to alternate rows")
+	rootCmd.PersistentFlags().BoolVarP(&config.Status.AlternateRows, "alternate-rows", "C", false, "color to alternate rows")
 	_ = viper.BindPFlag("AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.ColumnMode, "column-mode", "c", false, "column mode")
+	rootCmd.PersistentFlags().BoolVarP(&config.Status.ColumnMode, "column-mode", "c", false, "column mode")
 	_ = viper.BindPFlag("ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
-	rootCmd.PersistentFlags().StringVarP(&config.ColumnDelimiter, "column-delimiter", "d", ",", "column delimiter")
+	rootCmd.PersistentFlags().StringVarP(&config.Status.ColumnDelimiter, "column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 
-	rootCmd.PersistentFlags().BoolVarP(&config.LineNumMode, "line-number", "n", false, "line number")
+	rootCmd.PersistentFlags().BoolVarP(&config.Status.LineNumMode, "line-number", "n", false, "line number")
 	_ = viper.BindPFlag("LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolVarP(&config.Debug, "debug", "", false, "debug mode")

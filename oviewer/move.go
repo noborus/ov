@@ -32,7 +32,7 @@ func (root *Root) movePgUp() {
 
 // Moves down one screen.
 func (root *Root) movePgDn() {
-	n := root.bottomPos - root.Header
+	n := root.bottomPos - root.Doc.Header
 	if n <= root.Doc.lineNum {
 		n = root.Doc.lineNum + 1
 	}
@@ -41,7 +41,7 @@ func (root *Root) movePgDn() {
 
 // realHightNum returns the actual number of line on the screen.
 func (root *Root) realHightNum() int {
-	return root.bottomPos - (root.Doc.lineNum + root.Header)
+	return root.bottomPos - (root.Doc.lineNum + root.Doc.Header)
 }
 
 // Moves up half a screen.
@@ -56,16 +56,16 @@ func (root *Root) moveHfDn() {
 
 // Move up one line.
 func (root *Root) moveUp() {
-	if !root.WrapMode {
+	if !root.Doc.WrapMode {
 		root.Doc.yy = 0
 		root.Doc.lineNum--
 		return
 	}
 	// WrapMode
-	contents := root.Doc.getContents(root.Doc.lineNum+root.Header, root.TabWidth)
+	contents := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if len(contents) < root.vWidth || root.Doc.yy <= 0 {
 		if (root.Doc.lineNum) >= 1 {
-			pre := root.Doc.getContents(root.Doc.lineNum+root.Header-1, root.TabWidth)
+			pre := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
 			yyLen := len(pre) / (root.vWidth + 1)
 			root.Doc.yy = yyLen
 		}
@@ -84,13 +84,13 @@ func (root *Root) moveDown() {
 		return
 	}
 
-	if !root.WrapMode {
+	if !root.Doc.WrapMode {
 		root.Doc.yy = 0
 		root.Doc.lineNum++
 		return
 	}
 	// WrapMode
-	contents := root.Doc.getContents(root.Doc.lineNum+root.Header, root.TabWidth)
+	contents := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if len(contents) < (root.vWidth * (root.Doc.yy + 1)) {
 		root.Doc.yy = 0
 		root.Doc.lineNum++
@@ -101,14 +101,14 @@ func (root *Root) moveDown() {
 
 // Move to the left.
 func (root *Root) moveLeft() {
-	if root.ColumnMode {
+	if root.Doc.ColumnMode {
 		if root.Doc.columnNum > 0 {
 			root.Doc.columnNum--
 			root.Doc.x = root.columnModeX()
 		}
 		return
 	}
-	if root.WrapMode {
+	if root.Doc.WrapMode {
 		return
 	}
 	root.Doc.x--
@@ -116,12 +116,12 @@ func (root *Root) moveLeft() {
 
 // Move to the right.
 func (root *Root) moveRight() {
-	if root.ColumnMode {
+	if root.Doc.ColumnMode {
 		root.Doc.columnNum++
 		root.Doc.x = root.columnModeX()
 		return
 	}
-	if root.WrapMode {
+	if root.Doc.WrapMode {
 		return
 	}
 	root.Doc.x++
@@ -130,13 +130,13 @@ func (root *Root) moveRight() {
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
 	m := root.Doc
-	line := m.GetLine(root.Header + 2)
-	start, end := rangePosition(line, root.ColumnDelimiter, root.Doc.columnNum)
+	line := m.GetLine(root.Doc.Header + 2)
+	start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 	if start < 0 || end < 0 {
 		root.Doc.columnNum = 0
-		start, _ = rangePosition(line, root.ColumnDelimiter, root.Doc.columnNum)
+		start, _ = rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 	}
-	lc, err := m.lineToContents(root.Header+2, root.TabWidth)
+	lc, err := m.lineToContents(root.Doc.Header+2, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}
@@ -145,7 +145,7 @@ func (root *Root) columnModeX() int {
 
 // Move to the left by half a screen.
 func (root *Root) moveHfLeft() {
-	if root.WrapMode {
+	if root.Doc.WrapMode {
 		return
 	}
 	moveSize := (root.vWidth / 2)
@@ -158,7 +158,7 @@ func (root *Root) moveHfLeft() {
 
 // Move to the right by half a screen.
 func (root *Root) moveHfRight() {
-	if root.WrapMode {
+	if root.Doc.WrapMode {
 		return
 	}
 	if root.Doc.x < 0 {
