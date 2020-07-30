@@ -80,8 +80,10 @@ func (root *Root) setHandler() map[string]func() {
 	}
 }
 
+// KeyBind is the mapping of action and key.
 type KeyBind map[string][]string
 
+// GetKeyBinds returns the current key mapping.
 func GetKeyBinds(bind map[string][]string) map[string][]string {
 	keyBind := map[string][]string{
 		actionExit:           {"Escape", "q", "ctrl+c"},
@@ -132,12 +134,12 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 	for a, keys := range keyBind {
 		handler := actionHandlers[a]
 		if handler == nil {
-			return fmt.Errorf("failed to set keybind for [%s] unknown action", a)
+			return fmt.Errorf("%w for [%s] unknown action", ErrFailedKeyBind, a)
 		}
 		for _, k := range keys {
 			mod, key, ch, err := cbind.Decode(k)
 			if err != nil {
-				return fmt.Errorf("failed to set keybind [%s] for %s: %s", k, a, err)
+				return fmt.Errorf("%w [%s] for %s: %s", ErrFailedKeyBind, k, a, err)
 			}
 			if key == tcell.KeyRune {
 				c.SetRune(mod, ch, wrapEventHandler(handler))
@@ -161,6 +163,7 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	return true
 }
 
+// KeyBindString returns keybind as a string for help.
 func KeyBindString(k KeyBind) string {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "\n\tKey binding\n\n")

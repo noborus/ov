@@ -13,7 +13,7 @@ import (
 	"gitlab.com/tslocum/cbind"
 )
 
-// The Root structure contains information about the drawing.
+// Root structure contains information about the drawing.
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
@@ -51,6 +51,7 @@ type Root struct {
 	minStartX int
 }
 
+// status structure contains the status of the display.
 type status struct {
 	// TabWidth is tab stop num.
 	TabWidth int
@@ -115,6 +116,8 @@ var (
 	ErrNotFound = errors.New("not found")
 	// ErrInvalidNumber indicates an invalid number.
 	ErrInvalidNumber = errors.New("invalid number")
+	// ErrFailedKeyBind indicates keybinding failed.
+	ErrFailedKeyBind = errors.New("failed to set keybind")
 )
 
 // NewOviewer return the structure of oviewer.
@@ -162,11 +165,14 @@ func Open(fileNames ...string) (*Root, error) {
 	return NewOviewer(m)
 }
 
-func (root *Root) SetConfig(config Config) error {
+func (root *Root) SetConfig(config Config) {
 	root.Config = config
+}
+
+func (root *Root) setKeyConfig() error {
 	root.Doc.status = root.Config.Status
 
-	keyBind := GetKeyBinds(config.Keybind)
+	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
 		return err
 	}
@@ -195,6 +201,10 @@ func NewHelp(k KeyBind) (*Document, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	if err := root.setKeyConfig(); err != nil {
+		return err
+	}
+
 	if err := root.screenInit(); err != nil {
 		return err
 	}
