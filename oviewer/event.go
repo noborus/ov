@@ -63,6 +63,7 @@ func (root *Root) Quit() {
 	go func() { root.Screen.PostEventWait(ev) }()
 }
 
+// WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit() {
 	root.AfterWrite = true
 	ev := &eventAppQuit{}

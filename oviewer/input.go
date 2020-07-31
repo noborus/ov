@@ -28,13 +28,21 @@ type Input struct {
 type InputMode int
 
 const (
+	// Normal is normal mode.
 	Normal InputMode = iota
+	// Help is Help screen mode.
 	Help
+	// Search is a search input mode.
 	Search
+	// BackSearch is a backward search input mode.
 	Backsearch
+	// GoLine is a move input mode.
 	Goline
+	// Header is the number of headers input mode.
 	Header
+	// Delimiter is a delimiter input mode.
 	Delimiter
+	// TabWidth is the tab number input mode.
 	TabWidth
 )
 

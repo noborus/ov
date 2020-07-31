@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -47,6 +46,10 @@ func NewDocument() (*Document, error) {
 	m := &Document{
 		lines:      make([]string, 0, 1000),
 		beforeSize: 1000,
+		status: status{
+			ColumnDelimiter: "",
+			TabWidth:        8,
+		},
 	}
 
 	if err := m.NewCache(); err != nil {
@@ -55,34 +58,21 @@ func NewDocument() (*Document, error) {
 	return m, nil
 }
 
-// ReadFile reads files (or stdin).
-func (m *Document) ReadFile(fileNames []string) error {
+// ReadFile reads file.
+func (m *Document) ReadFile(fileName string) error {
 	var reader io.ReadCloser
-	fileName := ""
-	switch len(fileNames) {
-	case 0:
+	if fileName == "" {
 		if terminal.IsTerminal(0) {
 			return ErrMissingFile
 		}
 		fileName = "(STDIN)"
 		reader = uncompressedReader(os.Stdin)
-	case 1:
-		fileName = fileNames[0]
+	} else {
 		r, err := os.Open(fileName)
 		if err != nil {
 			return err
 		}
 		reader = uncompressedReader(r)
-	default:
-		readers := make([]io.Reader, 0)
-		for _, fileName := range fileNames {
-			r, err := os.Open(fileName)
-			if err != nil {
-				return err
-			}
-			readers = append(readers, uncompressedReader(r))
-			reader = ioutil.NopCloser(io.MultiReader(readers...))
-		}
 	}
 
 	if err := m.ReadAll(reader); err != nil {

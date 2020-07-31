@@ -42,6 +42,8 @@ const (
 	actionGoLine         = "goto"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
+	actionNextDoc        = "next_doc"
+	actionPreviousDoc    = "previous_doc"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -77,6 +79,8 @@ func (root *Root) setHandler() map[string]func() {
 		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.nextSearch,
 		actionNextBackSearch: root.nextBackSearch,
+		actionNextDoc:        root.nextDoc,
+		actionPreviousDoc:    root.previousDoc,
 	}
 }
 
@@ -117,6 +121,8 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionGoLine:         {"g"},
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},
+		actionNextDoc:        {"]"},
+		actionPreviousDoc:    {"["},
 	}
 
 	for k, v := range bind {

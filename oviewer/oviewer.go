@@ -19,12 +19,15 @@ type Root struct {
 	tcell.Screen
 	// Config contains settings that determine the behavior of ov.
 	Config
+
 	// Doc contains the model of ov
 	Doc *Document
 	// help
 	helpDoc *Document
-	// temp
-	tmpDoc *Document
+	// DocList
+	DocList    []*Document
+	CurrentDoc int
+
 	// input contains the input mode.
 	input *Input
 	// keyConfig contains the binding settings for the key.
@@ -121,19 +124,13 @@ var (
 )
 
 // NewOviewer return the structure of oviewer.
-func NewOviewer(m *Document) (*Root, error) {
+func NewOviewer(docs ...*Document) (*Root, error) {
 	root := &Root{
-		Config: Config{
-			Status: status{
-				ColumnDelimiter: "",
-				TabWidth:        8,
-			},
-		},
 		minStartX: -10,
 	}
 	root.keyConfig = cbind.NewConfiguration()
-
-	root.Doc = m
+	root.DocList = append(root.DocList, docs...)
+	root.Doc = root.DocList[0]
 	root.input = NewInput()
 
 	return root, nil
@@ -153,24 +150,50 @@ func (root *Root) screenInit() error {
 
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
-	m, err := NewDocument()
-	if err != nil {
-		return nil, err
+	if len(fileNames) == 0 {
+		return openSTDIN()
 	}
-	err = m.ReadFile(fileNames)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewOviewer(m)
+	return openFiles(fileNames)
 }
 
+func openSTDIN() (*Root, error) {
+	doc, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	err = doc.ReadFile("")
+	if err != nil {
+		return nil, err
+	}
+	return NewOviewer(doc)
+}
+
+func openFiles(fileNames []string) (*Root, error) {
+	docList := make([]*Document, 0)
+	for _, fileName := range fileNames {
+		m, err := NewDocument()
+		if err != nil {
+			return nil, err
+		}
+		err = m.ReadFile(fileName)
+		if err != nil {
+			return nil, err
+		}
+		docList = append(docList, m)
+	}
+
+	return NewOviewer(docList...)
+}
+
+// SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
 	root.Config = config
 }
 
 func (root *Root) setKeyConfig() error {
-	root.Doc.status = root.Config.Status
+	for _, doc := range root.DocList {
+		doc.status = root.Config.Status
+	}
 
 	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
@@ -185,6 +208,7 @@ func (root *Root) setKeyConfig() error {
 	return nil
 }
 
+// NewHelp generates a document for help.
 func NewHelp(k KeyBind) (*Document, error) {
 	help, err := NewDocument()
 	if err != nil {
@@ -239,6 +263,7 @@ func (root *Root) setDocument(m *Document) {
 	root.viewSync()
 }
 
+// Help is to switch between Help screen and normal screen.
 func (root *Root) Help() {
 	if root.input.mode == Help {
 		root.toNormal()
@@ -248,13 +273,12 @@ func (root *Root) Help() {
 }
 
 func (root *Root) toHelp() {
-	root.tmpDoc = root.Doc
 	root.setDocument(root.helpDoc)
 	root.input.mode = Help
 }
 
 func (root *Root) toNormal() {
-	root.setDocument(root.tmpDoc)
+	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
 }
 
@@ -463,4 +487,22 @@ func (root *Root) markNext() {
 
 func (root *Root) markPrev() {
 	root.goLine(newGotoInput(root.input.GoCandidate).Down(""))
+}
+
+func (root *Root) nextDoc() {
+	root.CurrentDoc++
+	if len(root.DocList) <= root.CurrentDoc {
+		root.CurrentDoc = root.CurrentDoc - 1
+	}
+	root.setDocument(root.DocList[root.CurrentDoc])
+	root.input.mode = Normal
+}
+
+func (root *Root) previousDoc() {
+	root.CurrentDoc--
+	if root.CurrentDoc < 0 {
+		root.CurrentDoc = 0
+	}
+	root.setDocument(root.DocList[root.CurrentDoc])
+	root.input.mode = Normal
 }
