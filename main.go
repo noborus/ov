@@ -40,7 +40,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return nil
 		}
 		if helpKey {
-			Help(cmd, args)
+			HelpKey(cmd, args)
 			return nil
 		}
 
@@ -70,7 +70,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 	},
 }
 
-func Help(cmd *cobra.Command, args []string) {
+// HelpKey displays key bindings and exits.
+func HelpKey(cmd *cobra.Command, args []string) {
 	fmt.Println(cmd.Short)
 	keyBind := oviewer.GetKeyBinds(config.Keybind)
 	fmt.Println(oviewer.KeyBindString(keyBind))
