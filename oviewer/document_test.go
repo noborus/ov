@@ -6,7 +6,7 @@ import (
 
 func TestDocument_ReadFile(t *testing.T) {
 	type args struct {
-		args []string
+		args string
 	}
 	tests := []struct {
 		name    string
@@ -16,16 +16,14 @@ func TestDocument_ReadFile(t *testing.T) {
 		{
 			name: "testNoFile",
 			args: args{
-				[]string{
-					"nofile",
-				},
+				"nofile",
 			},
 			wantErr: true,
 		},
 		{
 			name: "testSTDIN",
 			args: args{
-				[]string{},
+				"",
 			},
 			wantErr: false,
 		},
