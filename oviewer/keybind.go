@@ -192,6 +192,8 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
 	k.writeKeyBind(&b, actionGoLine, "number of go to line")
+	k.writeKeyBind(&b, actionNextDoc, "next document")
+	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
 
 	fmt.Fprintf(&b, "\n\tMark position\n\n")
 	k.writeKeyBind(&b, actionMark, "mark current position")
@@ -208,7 +210,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionAlternate, "color to alternate rows toggle")
-	k.writeKeyBind(&b, actionLineNumMode, "line number togle")
+	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 
 	fmt.Fprintf(&b, "\n\tChange Display with Input\n\n")
 	k.writeKeyBind(&b, actionDelimiter, "delimiter string")
