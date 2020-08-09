@@ -77,7 +77,7 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 }
 
 // stripEscapeSequence is a regular expression that excludes escape sequences.
-var stripEscapeSequence = regexp.MustCompile("\x1b\\[[\\d;*]*m")
+var stripEscapeSequence = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
 // contains returns a bool containing the search string.
 func contains(s string, re *regexp.Regexp) bool {

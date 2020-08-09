@@ -144,7 +144,7 @@ func Test_parseString(t *testing.T) {
 				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
 				},
-				byteMap: map[int]int{0: 0, 1: 1, 2: 0, 3: 1},
+				byteMap: map[int]int{0: 0, 1: 1},
 			},
 		},
 		{
@@ -165,7 +165,7 @@ func Test_parseString(t *testing.T) {
 					{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
-				byteMap: map[int]int{0: 0, 3: 2, 4: 0, 7: 2},
+				byteMap: map[int]int{0: 0, 3: 2},
 			},
 		},
 		{
@@ -183,7 +183,7 @@ func Test_parseString(t *testing.T) {
 				contents: []content{
 					{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
 				},
-				byteMap: map[int]int{0: 0, 1: 1, 2: 0, 3: 1},
+				byteMap: map[int]int{0: 0, 1: 1},
 			},
 		},
 		{
@@ -194,7 +194,7 @@ func Test_parseString(t *testing.T) {
 					{width: 2, style: tcell.StyleDefault.Underline(true), mainc: rune('あ'), combc: nil},
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
-				byteMap: map[int]int{0: 0, 1: 1, 2: 0, 5: 2},
+				byteMap: map[int]int{0: 0, 1: 1, 3: 2},
 			},
 		},
 	}

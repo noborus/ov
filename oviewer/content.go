@@ -140,6 +140,7 @@ func parseString(line string, tabWidth int) lineContents {
 				}
 				bsFlag = true
 				bsContent = lastContent(lc.contents)
+				n -= (1 + len(string(bsContent.mainc)))
 				if bsContent.width > 1 {
 					lc.contents = lc.contents[:len(lc.contents)-2]
 				} else {
