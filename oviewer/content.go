@@ -23,6 +23,7 @@ type lineContents struct {
 	// contents contains one line of contents.
 	contents []content
 	// byteMap is the number of contents corresponding to the number of bytes.
+	// map[byte]width
 	byteMap map[int]int
 }
 

@@ -177,6 +177,19 @@ func Test_parseString(t *testing.T) {
 			},
 		},
 		{
+			name: "testOverstrike5",
+			args: args{line: "あ\bああ\bあ", tabWidth: 8},
+			want: lineContents{
+				contents: []content{
+					{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
+					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+					{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
+					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				},
+				byteMap: map[int]int{0: 0, 3: 2, 6: 4},
+			},
+		},
+		{
 			name: "testOverstrikeUnderLine",
 			args: args{line: "_\ba", tabWidth: 8},
 			want: lineContents{
