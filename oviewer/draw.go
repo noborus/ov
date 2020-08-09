@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gdamore/tcell"
 )
@@ -45,6 +46,7 @@ func (root *Root) draw() {
 		// column highlight
 		if root.Doc.ColumnMode {
 			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			root.debugMessage(fmt.Sprintf("start,end:%v", lc.byteMap))
 			reverseContents(lc, start, end)
 		}
 
@@ -75,6 +77,7 @@ func (root *Root) draw() {
 		if root.input.reg != nil {
 			poss := searchPosition(line, root.input.reg)
 			for _, r := range poss {
+				log.Printf("r:%v:%v", r, lc.byteMap)
 				reverseContents(lc, r[0], r[1])
 			}
 		}
@@ -209,7 +212,7 @@ func (root *Root) statusDraw() {
 	}
 	input := root.input
 	switch input.mode {
-	case Normal, Help:
+	case Normal, Help, LogDoc:
 		for i := 0; i < len(leftContents); i++ {
 			leftContents[i].style = leftContents[i].style.Reverse(true)
 		}
@@ -229,12 +232,6 @@ func (root *Root) statusDraw() {
 	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Doc.lineNum, root.Doc.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, -1)
 	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
-
-	if root.Debug {
-		debugMsg := fmt.Sprintf("header:%d(%d) body:%d-%d \n", root.Doc.Header, root.headerLen(), root.Doc.lineNum, root.bottomPos)
-		c := strToContents(debugMsg, 0)
-		root.setContentString(root.vWidth/2, root.statusPos, c)
-	}
 }
 
 // setContentString is a helper function that draws a string with setContent.
