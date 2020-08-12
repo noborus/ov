@@ -3,6 +3,7 @@ package oviewer
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -24,6 +25,9 @@ type Root struct {
 	Doc *Document
 	// help
 	helpDoc *Document
+	// log
+	logDoc *Document
+
 	// DocList
 	DocList    []*Document
 	CurrentDoc int
@@ -151,21 +155,9 @@ func (root *Root) screenInit() error {
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
 	if len(fileNames) == 0 {
-		return openSTDIN()
+		fileNames = append(fileNames, "")
 	}
 	return openFiles(fileNames)
-}
-
-func openSTDIN() (*Root, error) {
-	doc, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-	err = doc.ReadFile("")
-	if err != nil {
-		return nil, err
-	}
-	return NewOviewer(doc)
 }
 
 func openFiles(fileNames []string) (*Root, error) {
@@ -223,17 +215,41 @@ func NewHelp(k KeyBind) (*Document, error) {
 	return help, err
 }
 
+func NewLogDoc() (*Document, error) {
+	logDoc, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	logDoc.FileName = "Log"
+	log.SetOutput(logDoc)
+	return logDoc, nil
+}
+
+func (logDoc *Document) Write(p []byte) (int, error) {
+	str := fmt.Sprintf("%s\n", string(p))
+	logDoc.lines = append(logDoc.lines, str)
+	logDoc.endNum = len(logDoc.lines)
+	return len(str), nil
+}
+
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	if err := root.setKeyConfig(); err != nil {
 		return err
 	}
+	logDoc, err := NewLogDoc()
+	if err != nil {
+		return err
+	}
+	root.logDoc = logDoc
 
 	if err := root.screenInit(); err != nil {
 		return err
 	}
 	defer root.Screen.Fini()
-
+	for _, d := range root.DocList {
+		log.Printf("open %s", d.FileName)
+	}
 	root.setGlobalStyle()
 	root.Screen.Clear()
 
@@ -257,6 +273,22 @@ func (root *Root) Run() error {
 	return nil
 }
 
+func (root *Root) setMessage(msg string) {
+	root.message = msg
+	root.debugMessage(msg)
+}
+
+func (root *Root) debugMessage(msg string) {
+	if !root.Debug {
+		return
+	}
+	root.message = msg
+	if len(msg) == 0 {
+		return
+	}
+	log.Printf("%s:%s", root.Doc.FileName, msg)
+}
+
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
@@ -275,6 +307,20 @@ func (root *Root) Help() {
 func (root *Root) toHelp() {
 	root.setDocument(root.helpDoc)
 	root.input.mode = Help
+}
+
+// LogDisplay is to switch between Log screen and normal screen.
+func (root *Root) logDisplay() {
+	if root.input.mode == LogDoc {
+		root.toNormal()
+		return
+	}
+	root.toLogDoc()
+}
+
+func (root *Root) toLogDoc() {
+	root.setDocument(root.logDoc)
+	root.input.mode = LogDoc
 }
 
 func (root *Root) toNormal() {
@@ -373,23 +419,27 @@ func (root *Root) toggleWrapMode() {
 	root.Doc.WrapMode = !root.Doc.WrapMode
 	root.Doc.x = 0
 	root.setWrapHeaderLen()
+	root.setMessage(fmt.Sprintf("Set WrapMode %t", root.Doc.WrapMode))
 }
 
 //  toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
+	root.setMessage(fmt.Sprintf("Set ColumnMode %t", root.Doc.ColumnMode))
 }
 
 // toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
 	root.Doc.ClearCache()
 	root.Doc.AlternateRows = !root.Doc.AlternateRows
+	root.setMessage(fmt.Sprintf("Set AlternateRows %t", root.Doc.AlternateRows))
 }
 
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
 	root.updateEndNum()
+	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
 }
 
 // resize is a wrapper function that calls viewSync.
@@ -422,12 +472,12 @@ func (root *Root) updateEndNum() {
 func (root *Root) goLine(input string) {
 	lineNum, err := strconv.Atoi(input)
 	if err != nil {
-		root.message = ErrInvalidNumber.Error()
+		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 
 	root.moveLine(lineNum - root.Doc.Header - 1)
-	root.message = fmt.Sprintf("Moved to line %d", lineNum)
+	root.debugMessage(fmt.Sprintf("Moved to line %d", lineNum))
 }
 
 // markLineNum stores the specified number of lines.
@@ -435,18 +485,18 @@ func (root *Root) markLineNum() {
 	s := strconv.Itoa(root.Doc.lineNum + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.message = fmt.Sprintf("Marked to line %d", root.Doc.lineNum)
+	root.debugMessage(fmt.Sprintf("Marked to line %d", root.Doc.lineNum))
 }
 
 // setHeader sets the number of lines in the header.
 func (root *Root) setHeader(input string) {
 	lineNum, err := strconv.Atoi(input)
 	if err != nil {
-		root.message = ErrInvalidNumber.Error()
+		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 	if lineNum < 0 || lineNum > root.vHight-1 {
-		root.message = ErrOutOfRange.Error()
+		root.setMessage(ErrOutOfRange.Error())
 		return
 	}
 	if root.Doc.Header == lineNum {
@@ -454,7 +504,7 @@ func (root *Root) setHeader(input string) {
 	}
 
 	root.Doc.Header = lineNum
-	root.message = fmt.Sprintf("Set Header %d", lineNum)
+	root.setMessage(fmt.Sprintf("Set Header %d", lineNum))
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }
@@ -462,14 +512,14 @@ func (root *Root) setHeader(input string) {
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
 	root.Doc.ColumnDelimiter = input
-	root.message = fmt.Sprintf("Set delimiter %s", input)
+	root.setMessage(fmt.Sprintf("Set delimiter %s", input))
 }
 
 // setTabWidth sets the tab width.
 func (root *Root) setTabWidth(input string) {
 	width, err := strconv.Atoi(input)
 	if err != nil {
-		root.message = ErrInvalidNumber.Error()
+		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 	if root.Doc.TabWidth == width {
@@ -477,7 +527,7 @@ func (root *Root) setTabWidth(input string) {
 	}
 
 	root.Doc.TabWidth = width
-	root.message = fmt.Sprintf("Set tab width %d", width)
+	root.setMessage(fmt.Sprintf("Set tab width %d", width))
 	root.Doc.ClearCache()
 }
 

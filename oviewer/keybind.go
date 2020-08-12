@@ -15,6 +15,7 @@ const (
 	actionWriteExit      = "write_exit"
 	actionSync           = "sync"
 	actionHelp           = "help"
+	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
 	actionMoveUp         = "up"
 	actionMoveTop        = "top"
@@ -52,6 +53,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.viewSync,
 		actionHelp:           root.Help,
+		actionLogDoc:         root.logDisplay,
 		actionMoveDown:       root.moveDown,
 		actionMoveUp:         root.moveUp,
 		actionMoveTop:        root.moveTop,
@@ -94,6 +96,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionHelp:           {"h"},
+		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
@@ -176,6 +179,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionExit, "quit")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
+	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")

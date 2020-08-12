@@ -1,6 +1,8 @@
 package oviewer
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Go to the top line.
 func (root *Root) moveTop() {
@@ -10,7 +12,7 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
-	root.message = fmt.Sprintf("endnum:%d", root.Doc.endNum)
+	root.setMessage(fmt.Sprintf("endnum:%d", root.Doc.endNum))
 	n := root.bottomLineNum(root.Doc.endNum) + 1
 	root.moveLine(n)
 }
@@ -79,7 +81,7 @@ func (root *Root) moveUp() {
 func (root *Root) moveDown() {
 	if root.Doc.lineNum > root.bottomLineNum(root.Doc.endNum) {
 		if root.Doc.BufEOF() {
-			root.message = "EOF"
+			root.setMessage("EOF")
 		}
 		return
 	}

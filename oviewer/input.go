@@ -32,6 +32,8 @@ const (
 	Normal InputMode = iota
 	// Help is Help screen mode.
 	Help
+	// LogDoc is Error screen mode.
+	LogDoc
 	// Search is a search input mode.
 	Search
 	// BackSearch is a backward search input mode.

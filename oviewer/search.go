@@ -1,19 +1,30 @@
 package oviewer
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
 
 // search is forward search.
 func (root *Root) search(input string) {
+	if input == "" {
+		root.input.reg = nil
+		return
+	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.debugMessage(fmt.Sprintf("search:%v", root.input.reg))
 	root.goSearchLine(root.searchLine(root.Doc.lineNum))
 }
 
 // backSearch is backward search.
 func (root *Root) backSearch(input string) {
+	if input == "" {
+		root.input.reg = nil
+		return
+	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.debugMessage(fmt.Sprintf("search:%v", root.input.reg))
 	root.goSearchLine(root.backSearchLine(root.Doc.lineNum))
 }
 
@@ -30,7 +41,7 @@ func (root *Root) nextBackSearch() {
 // goSearchLine moves to the line found.
 func (root *Root) goSearchLine(lineNum int, err error) {
 	if err != nil {
-		root.message = err.Error()
+		root.setMessage(err.Error())
 		return
 	}
 	root.moveLine(lineNum - root.Doc.Header)
