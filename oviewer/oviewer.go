@@ -472,7 +472,7 @@ func (root *Root) updateEndNum() {
 func (root *Root) goLine(input string) {
 	lineNum, err := strconv.Atoi(input)
 	if err != nil {
-		root.debugMessage(ErrInvalidNumber.Error())
+		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 

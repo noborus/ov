@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gdamore/tcell"
 )
@@ -46,7 +45,6 @@ func (root *Root) draw() {
 		// column highlight
 		if root.Doc.ColumnMode {
 			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			root.debugMessage(fmt.Sprintf("start,end:%v", lc.byteMap))
 			reverseContents(lc, start, end)
 		}
 
@@ -77,7 +75,6 @@ func (root *Root) draw() {
 		if root.input.reg != nil {
 			poss := searchPosition(line, root.input.reg)
 			for _, r := range poss {
-				log.Printf("r:%v:%v", r, lc.byteMap)
 				reverseContents(lc, r[0], r[1])
 			}
 		}
