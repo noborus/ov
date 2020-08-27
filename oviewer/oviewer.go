@@ -132,12 +132,22 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root := &Root{
 		minStartX: -10,
 	}
+	root.Config = NewConfig()
 	root.keyConfig = cbind.NewConfiguration()
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
 
 	return root, nil
+}
+
+// NewConfig return the structure of Config with default values.
+func NewConfig() Config {
+	return Config{
+		Status: status{
+			TabWidth: 8,
+		},
+	}
 }
 
 func (root *Root) screenInit() error {
@@ -292,6 +302,7 @@ func (root *Root) debugMessage(msg string) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
+	root.Clear()
 	root.viewSync()
 }
 

@@ -52,6 +52,10 @@ loop:
 	}
 }
 
+func (root *Root) checkScreen() bool {
+	return root.Screen != nil
+}
+
 // eventAppQuit represents a quit event.
 type eventAppQuit struct {
 	tcell.EventTime
@@ -59,17 +63,27 @@ type eventAppQuit struct {
 
 // Quit executes a quit event.
 func (root *Root) Quit() {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
 }
 
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit() {
+	if !root.checkScreen() {
+		return
+	}
 	root.AfterWrite = true
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
 }
 
 // eventTimer represents a timer event.
@@ -79,9 +93,14 @@ type eventTimer struct {
 
 // runOnTime runs at time.
 func (root *Root) runOnTime() {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &eventTimer{}
 	ev.SetEventNow()
-	go func() { root.Screen.PostEventWait(ev) }()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
 }
 
 // countTimer fires events periodically until it reaches EOF.
@@ -100,6 +119,9 @@ loop:
 
 // MoveLine fires an event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &gotoInput{}
 	ev.input = strconv.Itoa(num)
 	ev.SetEventNow()
@@ -120,6 +142,9 @@ func (root *Root) MoveBottom() {
 
 // Search fires a forward search event.
 func (root *Root) Search(input string) {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &searchInput{}
 	ev.input = input
 	ev.SetEventNow()
@@ -130,6 +155,9 @@ func (root *Root) Search(input string) {
 
 // BackSearch fires a backward search event.
 func (root *Root) BackSearch(input string) {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &backSearchInput{}
 	ev.input = input
 	ev.SetEventNow()
@@ -146,6 +174,9 @@ type eventDocument struct {
 
 // SetDocument fires a set document event.
 func (root *Root) SetDocument(m *Document) {
+	if !root.checkScreen() {
+		return
+	}
 	ev := &eventDocument{}
 	ev.m = m
 	ev.SetEventNow()
