@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	// Version represents the version
+	// Version represents the version.
 	Version = "dev"
-	// Revision set "git rev-parse --short HEAD"
+	// Revision set "git rev-parse --short HEAD".
 	Revision = "HEAD"
 )
 
