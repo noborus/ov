@@ -173,6 +173,13 @@ func Open(fileNames ...string) (*Root, error) {
 func openFiles(fileNames []string) (*Root, error) {
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
+		fi, err := os.Stat(fileName)
+		if err != nil {
+			return nil, err
+		}
+		if fi.IsDir() {
+			continue
+		}
 		m, err := NewDocument()
 		if err != nil {
 			return nil, err
@@ -182,6 +189,10 @@ func openFiles(fileNames []string) (*Root, error) {
 			return nil, err
 		}
 		docList = append(docList, m)
+	}
+
+	if len(docList) == 0 {
+		return nil, fmt.Errorf("%w: %s", ErrMissingFile, fileNames[0])
 	}
 
 	return NewOviewer(docList...)
