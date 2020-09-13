@@ -236,6 +236,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	return help, err
 }
 
+// NewLogDoc generates a document for log.
 func NewLogDoc() (*Document, error) {
 	logDoc, err := NewDocument()
 	if err != nil {

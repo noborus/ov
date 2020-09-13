@@ -36,7 +36,7 @@ const (
 	LogDoc
 	// Search is a search input mode.
 	Search
-	// BackSearch is a backward search input mode.
+	// Backsearch is a backward search input mode.
 	Backsearch
 	// GoLine is a move input mode.
 	Goline
