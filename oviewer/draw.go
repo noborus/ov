@@ -121,6 +121,10 @@ func (root *Root) draw() {
 		root.bottomPos = root.Doc.lineNum + 1
 	}
 
+	if root.mouseSelect {
+		drawSelect(root.Screen, root.oX, root.oY, root.mouseX, root.mouseY, true)
+	}
+
 	root.statusDraw()
 	root.Show()
 }

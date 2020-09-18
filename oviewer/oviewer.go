@@ -48,6 +48,11 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
+	oX          int
+	oY          int
+	mouseX      int
+	mouseY      int
+	mouseSelect bool
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
@@ -158,6 +163,7 @@ func (root *Root) screenInit() error {
 	if err = screen.Init(); err != nil {
 		return err
 	}
+	screen.EnableMouse()
 	root.Screen = screen
 	return nil
 }
