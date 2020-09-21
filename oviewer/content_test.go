@@ -31,6 +31,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4},
+				bcw:     []int{0, 1, 2, 3, 4},
 			},
 		},
 		{
@@ -43,6 +44,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+				bcw:     []int{0, 1, 2, 3},
 			},
 		},
 		{
@@ -54,6 +56,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
+				bcw:     []int{0, 2, 2, 2},
 			},
 		},
 		{
@@ -65,6 +68,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
+				bcw:     []int{0, 2, 2, 2},
 			},
 		},
 		{
@@ -79,6 +83,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 6: 5},
+				bcw:     []int{0, 1, 2, 3, 5, 5, 5},
 			},
 		},
 		{
@@ -93,6 +98,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 4, 3: 5},
+				bcw:     []int{0, 1, 4, 5},
 			},
 		},
 		{
@@ -106,6 +112,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 1, 3: 3, 4: 4},
+				bcw:     []int{0, 1, 3, 4},
 			},
 		},
 		{
@@ -120,6 +127,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('d'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+				bcw:     []int{0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3},
 			},
 		},
 		{
@@ -135,6 +143,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('d'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4},
+				bcw:     []int{0, 0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4},
 			},
 		},
 		{
@@ -145,6 +154,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1},
+				bcw:     []int{0, 1, 0, 1},
 			},
 		},
 		{
@@ -155,6 +165,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 0, 2: 1},
+				bcw:     []int{0, 0, 1},
 			},
 		},
 		{
@@ -166,6 +177,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
+				bcw:     []int{0, 2, 2, 2, 0, 2, 2, 2},
 			},
 		},
 		{
@@ -174,6 +186,7 @@ func Test_parseString(t *testing.T) {
 			want: lineContents{
 				contents: nil,
 				byteMap:  map[int]int{0: 0, 1: 0},
+				bcw:      []int{0, 0},
 			},
 		},
 		{
@@ -187,6 +200,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2, 6: 4},
+				bcw:     []int{0, 2, 2, 2, 0, 2, 2, 2, 4, 4, 4, 2, 4, 4, 4},
 			},
 		},
 		{
@@ -197,6 +211,7 @@ func Test_parseString(t *testing.T) {
 					{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1},
+				bcw:     []int{0, 1, 0, 1},
 			},
 		},
 		{
@@ -208,6 +223,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 3: 2},
+				bcw:     []int{0, 1, 0, 2, 2, 2},
 			},
 		},
 	}
@@ -334,6 +350,112 @@ func Test_strToContents(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := strToContents(tt.args.line, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("strToContent() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_contentsByteNum(t *testing.T) {
+	type args struct {
+		str   string
+		width int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "test1",
+			args: args{
+				str:   "a",
+				width: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "test2",
+			args: args{
+				str:   "a",
+				width: 1,
+			},
+			want: 1,
+		},
+		{
+			name: "test3",
+			args: args{
+				str:   "abcdefg",
+				width: 4,
+			},
+			want: 4,
+		},
+		{
+			name: "testHiragana",
+			args: args{
+				str:   "あいう",
+				width: 4,
+			},
+			want: 4,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := parseString(tt.args.str, 8)
+			if got := lc.contentsByteNum(tt.args.width); got != tt.want {
+				t.Errorf("widthToByte() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_contentsWidth(t *testing.T) {
+	type args struct {
+		str   string
+		nbyte int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "test1",
+			args: args{
+				str:   "a",
+				nbyte: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "test2",
+			args: args{
+				str:   "a",
+				nbyte: 1,
+			},
+			want: 1,
+		},
+		{
+			name: "test3",
+			args: args{
+				str:   "abcdefg",
+				nbyte: 4,
+			},
+			want: 4,
+		},
+		{
+			name: "testHiragana",
+			args: args{
+				str:   "あいう",
+				nbyte: 7,
+			},
+			want: 6,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := parseString(tt.args.str, 8)
+			if got := lc.contentsWidth(tt.args.nbyte); got != tt.want {
+				t.Errorf("contentsWidth() = %v, want %v", got, tt.want)
 			}
 		})
 	}

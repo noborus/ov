@@ -25,6 +25,8 @@ type lineContents struct {
 	// byteMap is the number of contents corresponding to the number of bytes.
 	// map[byte]width
 	byteMap map[int]int
+	// bcw is for converting width and number of bytes
+	bcw []int
 }
 
 // The states of the ANSI escape code parser.
@@ -49,16 +51,23 @@ func parseString(line string, tabWidth int) lineContents {
 	lc := lineContents{
 		contents: nil,
 		byteMap:  make(map[int]int),
+		bcw:      make([]int, len(line)+1),
 	}
-
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
 	x := 0
 	n := 0
+	b := 0
+	nb := 0
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
 	for _, runeValue := range line {
+		for i := 0; i < nb; i++ {
+			b++
+			lc.bcw[b] = len(lc.contents)
+		}
+		nb = len(string(runeValue))
 		c := DefaultContent
 		switch state {
 		case ansiEscape:
@@ -180,6 +189,10 @@ func parseString(line string, tabWidth int) lineContents {
 		}
 	}
 	lc.byteMap[n] = len(lc.contents)
+	for i := 0; i < nb; i++ {
+		b++
+		lc.bcw[b] = len(lc.contents)
+	}
 	return lc
 }
 
@@ -309,4 +322,26 @@ func lookupColor(colorNumber int) string {
 func strToContents(str string, tabWidth int) []content {
 	lc := parseString(str, tabWidth)
 	return lc.contents
+}
+
+// dptocp
+// Returns x (width) and line number (y) of contents from display points x, y.
+// func dptocp(x int, y int)int,int{}
+
+// contentsByteNum returns the number of bytes from the width of contents.
+func (lc lineContents) contentsByteNum(width int) int {
+	for b, w := range lc.bcw {
+		if w >= width {
+			return b
+		}
+	}
+	return len(lc.bcw)
+}
+
+// contentsWidth returns the width of contents from the number of bytes of contents.
+func (lc lineContents) contentsWidth(nbyte int) int {
+	if len(lc.bcw) >= nbyte {
+		return lc.bcw[nbyte]
+	}
+	return lc.bcw[len(lc.bcw)-1]
 }

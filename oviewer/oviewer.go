@@ -48,11 +48,12 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
-	oX          int
-	oY          int
-	mouseX      int
-	mouseY      int
-	mouseSelect bool
+	oX           int
+	oY           int
+	mouseX       int
+	mouseY       int
+	mousePressed bool
+	mouseSelect  bool
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.

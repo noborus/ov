@@ -142,7 +142,7 @@ func (root *Root) columnModeX() int {
 	if err != nil {
 		return 0
 	}
-	return lc.byteMap[start]
+	return lc.contentsWidth(start)
 }
 
 // Move to the left by half a screen.

@@ -65,11 +65,11 @@ func (root *Root) draw() {
 			continue
 		}
 
-		line := m.GetLine(root.Doc.lineNum + lY)
-
 		for n := range lc.contents {
 			lc.contents[n].style = lc.contents[n].style.Reverse(false)
 		}
+
+		line := m.GetLine(root.Doc.lineNum + lY)
 
 		// search highlight
 		if root.input.reg != nil {
@@ -146,7 +146,7 @@ func (root *Root) resetScreen() {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	for n := lc.byteMap[start]; n < lc.byteMap[end]; n++ {
+	for n := lc.contentsWidth(start); n < lc.contentsWidth(end); n++ {
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
