@@ -162,6 +162,22 @@ func (root *Root) setCopySelect() {
 		x1, x2 = x2, x1
 	}
 	log.Printf("L:x1:%d y1:%d x2:%d y2:%d", x1, y1, x2, y1)
+	if y1 == y2 {
+		line := root.Doc.GetLine(y1)
+		lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		sx := lc.contentsByteNum(x1)
+		ex := lc.contentsByteNum(x2)
+		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
 	line := root.Doc.GetLine(y1)
 	lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
 	if err != nil {
@@ -171,21 +187,18 @@ func (root *Root) setCopySelect() {
 
 	sx := lc.contentsByteNum(x1)
 
-	if y1 == y2 {
-		ex := lc.contentsByteNum(x2)
-		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
-			log.Println(err)
-		}
-		return
-	}
-
 	var str bytes.Buffer
 	if _, err := str.WriteString(substring(line, sx, len(line))); err != nil {
 		log.Println(err)
 		return
 	}
+	if err := str.WriteByte('\n'); err != nil {
+		log.Println(err)
+		return
+	}
 
 	for y := y1 + 1; y < y2; y++ {
+		line := root.Doc.GetLine(y)
 		if _, err := str.WriteString(line); err != nil {
 			log.Println(err)
 			return
