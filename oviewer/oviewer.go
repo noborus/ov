@@ -48,6 +48,7 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
+	lnumber      []lineNumber
 	oX           int
 	oY           int
 	mouseX       int
@@ -62,6 +63,11 @@ type Root struct {
 	statusPos int
 	// minStartX is the minimum start position of x.
 	minStartX int
+}
+
+type lineNumber struct {
+	line   int
+	branch int
 }
 
 // status structure contains the status of the display.

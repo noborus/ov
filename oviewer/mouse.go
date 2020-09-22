@@ -1,8 +1,10 @@
 package oviewer
 
 import (
+	"bytes"
 	"log"
 
+	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell"
 )
 
@@ -12,13 +14,15 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	if !root.mouseSelect && button == tcell.Button1 {
 		root.mouseSelect = true
 		root.mousePressed = true
-		root.oX, root.oY = ev.Position()
-		root.mouseX, root.mouseY = root.oX, root.oY
+		x, y := ev.Position()
+		root.oX, root.oY = root.logicalPos(x, y)
+		root.mouseX, root.mouseY = root.logicalPos(x, y)
 		return
 	}
 
 	if root.mousePressed {
-		root.mouseX, root.mouseY = ev.Position()
+		x, y := ev.Position()
+		root.mouseX, root.mouseY = root.logicalPos(x, y)
 	}
 
 	if root.mouseSelect {
@@ -62,21 +66,39 @@ func (root *Root) CopySelect() {
 	}()
 }
 
-func (root *Root) setCopySelect() {
-	log.Printf("L:%s", root.Doc.GetLine(root.Doc.lineNum+root.oY))
+func (root *Root) logicalPos(x int, y int) (int, int) {
+	logical := root.lnumber[y]
+	lx := 0
+	for n := 0; n < logical.branch; n++ {
+		lx += root.vWidth
+	}
+	lx = lx + x
+	return lx, logical.line
 }
 
-func drawSelect(s tcell.Screen, x1, y1, x2, y2 int, sel bool) {
-	w, _ := s.Size()
+func (root *Root) displayPos(lx int, ly int) (int, int) {
+	for n := 0; n < len(root.lnumber); n++ {
+		logical := root.lnumber[n]
+		if logical.line >= ly {
+			branch := lx / root.vWidth
+			x := lx - (branch * root.vWidth)
+			return x, n + branch
+		}
+	}
+	return 0, 0
+}
 
+func (root *Root) drawSelect(lx1, ly1, lx2, ly2 int, sel bool) {
+	x1, y1 := root.displayPos(lx1, ly1)
+	x2, y2 := root.displayPos(lx2, ly2)
 	if y1 == y2 {
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
 		for col := x1; col < x2; col++ {
-			mainc, combc, style, width := s.GetContent(col, y1)
+			mainc, combc, style, width := root.Screen.GetContent(col, y1)
 			style = style.Reverse(sel)
-			s.SetContent(col, y1, mainc, combc, style)
+			root.Screen.SetContent(col, y1, mainc, combc, style)
 			col += width - 1
 		}
 		return
@@ -87,26 +109,105 @@ func drawSelect(s tcell.Screen, x1, y1, x2, y2 int, sel bool) {
 		x1, x2 = x2, x1
 	}
 
-	for col := x1; col < w; col++ {
-		mainc, combc, style, width := s.GetContent(col, y1)
+	for col := x1; col < root.vWidth; col++ {
+		mainc, combc, style, width := root.Screen.GetContent(col, y1)
 		style = style.Reverse(sel)
-		s.SetContent(col, y1, mainc, combc, style)
+		root.Screen.SetContent(col, y1, mainc, combc, style)
 		col += width - 1
 	}
 
 	for row := y1 + 1; row < y2; row++ {
-		for col := 0; col < w; col++ {
-			mainc, combc, style, width := s.GetContent(col, row)
+		for col := 0; col < root.vWidth; col++ {
+			mainc, combc, style, width := root.Screen.GetContent(col, row)
 			style = style.Reverse(sel)
-			s.SetContent(col, row, mainc, combc, style)
+			root.Screen.SetContent(col, row, mainc, combc, style)
 			col += width - 1
 		}
 	}
 
 	for col := 0; col < x2; col++ {
-		mainc, combc, style, width := s.GetContent(col, y2)
+		mainc, combc, style, width := root.Screen.GetContent(col, y2)
 		style = style.Reverse(sel)
-		s.SetContent(col, y2, mainc, combc, style)
+		root.Screen.SetContent(col, y2, mainc, combc, style)
 		col += width - 1
+	}
+}
+
+func substring(str string, start int, end int) string {
+	var subs bytes.Buffer
+	byteNum := 0
+	sFlag := false
+	for _, r := range str {
+		if byteNum+len(string(r)) >= start {
+			sFlag = true
+		}
+		if sFlag {
+			if byteNum >= end {
+				break
+			}
+			subs.WriteRune(r)
+		}
+		byteNum += len(string(r))
+	}
+	return subs.String()
+}
+
+func (root *Root) setCopySelect() {
+	y1 := root.oY
+	y2 := root.mouseY
+	x1 := root.oX
+	x2 := root.mouseX
+	if y2 < y1 {
+		y1, y2 = y2, y1
+		x1, x2 = x2, x1
+	}
+	log.Printf("L:x1:%d y1:%d x2:%d y2:%d", x1, y1, x2, y1)
+	line := root.Doc.GetLine(y1)
+	lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	sx := lc.contentsByteNum(x1)
+
+	if y1 == y2 {
+		ex := lc.contentsByteNum(x2)
+		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	var str bytes.Buffer
+	if _, err := str.WriteString(substring(line, sx, len(line))); err != nil {
+		log.Println(err)
+		return
+	}
+
+	for y := y1 + 1; y < y2; y++ {
+		if _, err := str.WriteString(line); err != nil {
+			log.Println(err)
+			return
+		}
+		if err := str.WriteByte('\n'); err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
+	line = root.Doc.GetLine(y2)
+	lc, err = root.Doc.lineToContents(y2, root.Doc.TabWidth)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	ex := lc.contentsByteNum(x2)
+	if _, err := str.WriteString(substring(line, 0, ex)); err != nil {
+		log.Println(err)
+	}
+
+	if err := clipboard.WriteAll(str.String()); err != nil {
+		log.Println(err)
 	}
 }

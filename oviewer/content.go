@@ -324,10 +324,6 @@ func strToContents(str string, tabWidth int) []content {
 	return lc.contents
 }
 
-// dptocp
-// Returns x (width) and line number (y) of contents from display points x, y.
-// func dptocp(x int, y int)int,int{}
-
 // contentsByteNum returns the number of bytes from the width of contents.
 func (lc lineContents) contentsByteNum(width int) int {
 	for b, w := range lc.bcw {

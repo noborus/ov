@@ -26,11 +26,12 @@ func (root *Root) draw() {
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
 	}
-
+	root.lnumber = make([]lineNumber, root.vHight)
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
 	lX := 0
+	branch := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
 		line := m.GetLine(lY)
@@ -52,6 +53,16 @@ func (root *Root) draw() {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
+		}
+
+		root.lnumber[hy] = lineNumber{
+			line:   root.Doc.lineNum + lY - root.Doc.Header,
+			branch: branch,
+		}
+		if lX > 0 {
+			branch++
+		} else {
+			branch = 0
 		}
 	}
 
@@ -101,6 +112,16 @@ func (root *Root) draw() {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
 		}
 
+		root.lnumber[y] = lineNumber{
+			line:   root.Doc.lineNum + lY - root.Doc.Header,
+			branch: branch,
+		}
+		if lX > 0 {
+			branch++
+		} else {
+			branch = 0
+		}
+
 		// alternate background color
 		if root.Doc.AlternateRows {
 			bgColor := normalBgColor
@@ -122,7 +143,7 @@ func (root *Root) draw() {
 	}
 
 	if root.mouseSelect {
-		drawSelect(root.Screen, root.oX, root.oY, root.mouseX, root.mouseY, true)
+		root.drawSelect(root.oX, root.oY, root.mouseX, root.mouseY, true)
 	}
 
 	root.statusDraw()
