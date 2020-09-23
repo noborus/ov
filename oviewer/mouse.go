@@ -6,10 +6,26 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell"
+	"github.com/mattn/go-runewidth"
 )
 
 func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
+
+	if button == tcell.Button2 {
+		str, err := clipboard.ReadAll()
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		input := root.input
+		pos := stringWidth(input.value, input.cursorX+1)
+		runes := []rune(input.value)
+		input.value = string(runes[:pos])
+		input.value += str
+		input.value += string(runes[pos:])
+		input.cursorX += runewidth.StringWidth(str)
+		return
+	}
 
 	if !root.mouseSelect && button == tcell.Button1 {
 		root.mouseSelect = true
@@ -31,7 +47,9 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		} else if !root.mousePressed && button != tcell.ButtonNone {
 			root.mouseSelect = false
 			root.mousePressed = false
-			root.CopySelect()
+			if button == tcell.Button1 {
+				root.CopySelect()
+			}
 		}
 	}
 
@@ -170,7 +188,7 @@ func (root *Root) setCopySelect() {
 			return
 		}
 
-		sx := lc.contentsByteNum(x1)
+		sx := lc.contentsByteNum(x1) + 1
 		ex := lc.contentsByteNum(x2)
 		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
 			log.Println(err)
