@@ -179,7 +179,6 @@ func (root *Root) setCopySelect() {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
 	}
-	log.Printf("L:x1:%d y1:%d x2:%d y2:%d", x1, y1, x2, y1)
 	if y1 == y2 {
 		line := root.Doc.GetLine(y1)
 		lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
