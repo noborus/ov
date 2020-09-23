@@ -3,7 +3,7 @@ module github.com/noborus/ov
 go 1.14
 
 require (
-	github.com/atotto/clipboard v0.1.2
+	github.com/d-tsuji/clipboard v0.0.3
 	github.com/dgraph-io/ristretto v0.0.3
 	github.com/frankban/quicktest v1.8.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect

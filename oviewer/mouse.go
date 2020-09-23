@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/atotto/clipboard"
+	"github.com/d-tsuji/clipboard"
 	"github.com/gdamore/tcell"
 	"github.com/mattn/go-runewidth"
 )
@@ -13,7 +13,7 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 
 	if button == tcell.Button2 {
-		str, err := clipboard.ReadAll()
+		str, err := clipboard.Get()
 		if err != nil {
 			log.Printf("%v", err)
 		}
@@ -186,8 +186,8 @@ func (root *Root) setCopySelect() {
 
 		sx := lc.contentsByteNum(x1)
 		ex := lc.contentsByteNum(x2)
-		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
-			log.Println(err)
+		if err := clipboard.Set(substring(line, sx, ex)); err != nil {
+			log.Printf("clipboard: %v", err)
 		}
 		return
 	}
@@ -238,7 +238,7 @@ func (root *Root) setCopySelect() {
 	}
 
 	s := stripEscapeSequence.ReplaceAllString(str.String(), "")
-	if err := clipboard.WriteAll(s); err != nil {
+	if err := clipboard.Set(s); err != nil {
 		log.Println(err)
 	}
 }

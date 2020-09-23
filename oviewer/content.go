@@ -22,10 +22,7 @@ type content struct {
 type lineContents struct {
 	// contents contains one line of contents.
 	contents []content
-	// byteMap is the number of contents corresponding to the number of bytes.
-	// map[byte]width
-	byteMap map[int]int
-	// bcw is for converting width and number of bytes
+	// bcw is for converting width and number of bytes.
 	bcw []int
 }
 
@@ -50,14 +47,12 @@ var DefaultContent = content{
 func parseString(line string, tabWidth int) lineContents {
 	lc := lineContents{
 		contents: nil,
-		byteMap:  make(map[int]int),
 		bcw:      make([]int, len(line)+1),
 	}
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
 	x := 0
-	n := 0
 	b := 0
 	nb := 0
 	bsFlag := false // backspace(^H) flag
@@ -114,9 +109,6 @@ func parseString(line string, tabWidth int) lineContents {
 			continue
 		}
 
-		lc.byteMap[n] = len(lc.contents)
-		n += len(string(runeValue))
-
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
 			switch runeValue {
@@ -132,8 +124,6 @@ func parseString(line string, tabWidth int) lineContents {
 						x++
 					}
 				case tabWidth < 0:
-					lc.byteMap[n] = len(lc.contents)
-					n += len(string(runeValue))
 					c.width = 1
 					c.style = style.Reverse(true)
 					c.mainc = rune('\\')
@@ -150,7 +140,7 @@ func parseString(line string, tabWidth int) lineContents {
 				}
 				bsFlag = true
 				bsContent = lastContent(lc.contents)
-				n -= (1 + len(string(bsContent.mainc)))
+				b -= (1 + len(string(bsContent.mainc)))
 				if bsContent.width > 1 {
 					lc.contents = lc.contents[:len(lc.contents)-2]
 				} else {
@@ -188,7 +178,6 @@ func parseString(line string, tabWidth int) lineContents {
 			x += 2
 		}
 	}
-	lc.byteMap[n] = len(lc.contents)
 	lc.bcw[b] = len(lc.contents)
 	return lc
 }
