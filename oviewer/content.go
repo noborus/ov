@@ -63,11 +63,11 @@ func parseString(line string, tabWidth int) lineContents {
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
 	for _, runeValue := range line {
-		for i := 0; i < nb; i++ {
-			b++
-			lc.bcw[b] = len(lc.contents)
-		}
 		nb = len(string(runeValue))
+		for i := 0; i < nb; i++ {
+			lc.bcw[b] = len(lc.contents)
+			b++
+		}
 		c := DefaultContent
 		switch state {
 		case ansiEscape:
@@ -189,10 +189,7 @@ func parseString(line string, tabWidth int) lineContents {
 		}
 	}
 	lc.byteMap[n] = len(lc.contents)
-	for i := 0; i < nb; i++ {
-		b++
-		lc.bcw[b] = len(lc.contents)
-	}
+	lc.bcw[b] = len(lc.contents)
 	return lc
 }
 
@@ -326,6 +323,9 @@ func strToContents(str string, tabWidth int) []content {
 
 // contentsByteNum returns the number of bytes from the width of contents.
 func (lc lineContents) contentsByteNum(width int) int {
+	if width == 0 {
+		return 0
+	}
 	for b, w := range lc.bcw {
 		if w >= width {
 			return b
@@ -336,6 +336,9 @@ func (lc lineContents) contentsByteNum(width int) int {
 
 // contentsWidth returns the width of contents from the number of bytes of contents.
 func (lc lineContents) contentsWidth(nbyte int) int {
+	if nbyte < 0 {
+		return 0
+	}
 	if len(lc.bcw) >= nbyte {
 		return lc.bcw[nbyte]
 	}

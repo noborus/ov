@@ -342,6 +342,8 @@ func (root *Root) debugMessage(msg string) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
+	root.mouseSelect = false
+	root.mousePressed = false
 	root.Clear()
 	root.viewSync()
 }

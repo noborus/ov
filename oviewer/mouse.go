@@ -32,8 +32,6 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		root.mousePressed = true
 		x, y := ev.Position()
 		root.oX, root.oY = root.logicalPos(x, y)
-		root.mouseX, root.mouseY = root.logicalPos(x, y)
-		return
 	}
 
 	if root.mousePressed {
@@ -156,16 +154,16 @@ func substring(str string, start int, end int) string {
 	byteNum := 0
 	sFlag := false
 	for _, r := range str {
-		if byteNum+len(string(r)) >= start {
+		byteNum += len(string(r))
+		if byteNum > start {
 			sFlag = true
 		}
 		if sFlag {
-			if byteNum >= end {
+			if byteNum > end {
 				break
 			}
 			subs.WriteRune(r)
 		}
-		byteNum += len(string(r))
 	}
 	return subs.String()
 }
@@ -175,11 +173,10 @@ func (root *Root) setCopySelect() {
 	y2 := root.mouseY
 	x1 := root.oX
 	x2 := root.mouseX
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
-	}
 	if y1 == y2 {
+		if x1 > x2 {
+			x1, x2 = x2, x1
+		}
 		line := root.Doc.GetLine(y1)
 		lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
 		if err != nil {
@@ -187,7 +184,7 @@ func (root *Root) setCopySelect() {
 			return
 		}
 
-		sx := lc.contentsByteNum(x1) + 1
+		sx := lc.contentsByteNum(x1)
 		ex := lc.contentsByteNum(x2)
 		if err := clipboard.WriteAll(substring(line, sx, ex)); err != nil {
 			log.Println(err)
@@ -195,6 +192,10 @@ func (root *Root) setCopySelect() {
 		return
 	}
 
+	if y2 < y1 {
+		y1, y2 = y2, y1
+		x1, x2 = x2, x1
+	}
 	line := root.Doc.GetLine(y1)
 	lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
 	if err != nil {
@@ -202,9 +203,8 @@ func (root *Root) setCopySelect() {
 		return
 	}
 
-	sx := lc.contentsByteNum(x1)
-
 	var str bytes.Buffer
+	sx := lc.contentsByteNum(x1)
 	if _, err := str.WriteString(substring(line, sx, len(line))); err != nil {
 		log.Println(err)
 		return
@@ -237,8 +237,7 @@ func (root *Root) setCopySelect() {
 		log.Println(err)
 	}
 
-	s := str.String()
-	s = stripEscapeSequence.ReplaceAllString(s, "")
+	s := stripEscapeSequence.ReplaceAllString(str.String(), "")
 	if err := clipboard.WriteAll(s); err != nil {
 		log.Println(err)
 	}

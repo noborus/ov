@@ -56,7 +56,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
-				bcw:     []int{0, 2, 2, 2},
+				bcw:     []int{0, 0, 0, 2},
 			},
 		},
 		{
@@ -68,7 +68,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
-				bcw:     []int{0, 2, 2, 2},
+				bcw:     []int{0, 0, 0, 2},
 			},
 		},
 		{
@@ -83,7 +83,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 6: 5},
-				bcw:     []int{0, 1, 2, 3, 5, 5, 5},
+				bcw:     []int{0, 1, 2, 3, 3, 3, 5},
 			},
 		},
 		{
@@ -177,7 +177,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2},
-				bcw:     []int{0, 2, 2, 2, 0, 2, 2, 2},
+				bcw:     []int{0, 0, 0, 2, 0, 0, 0, 2},
 			},
 		},
 		{
@@ -200,7 +200,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 3: 2, 6: 4},
-				bcw:     []int{0, 2, 2, 2, 0, 2, 2, 2, 4, 4, 4, 2, 4, 4, 4},
+				bcw:     []int{0, 0, 0, 2, 0, 0, 0, 2, 2, 2, 4, 2, 2, 2, 4},
 			},
 		},
 		{
@@ -223,7 +223,7 @@ func Test_parseString(t *testing.T) {
 					{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 				},
 				byteMap: map[int]int{0: 0, 1: 1, 3: 2},
-				bcw:     []int{0, 1, 0, 2, 2, 2},
+				bcw:     []int{0, 1, 0, 0, 0, 2},
 			},
 		},
 	}
@@ -395,7 +395,7 @@ func Test_contentsByteNum(t *testing.T) {
 				str:   "あいう",
 				width: 4,
 			},
-			want: 4,
+			want: 6,
 		},
 	}
 	for _, tt := range tests {
@@ -448,7 +448,7 @@ func Test_contentsWidth(t *testing.T) {
 				str:   "あいう",
 				nbyte: 7,
 			},
-			want: 6,
+			want: 4,
 		},
 	}
 	for _, tt := range tests {
