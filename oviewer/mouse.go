@@ -237,7 +237,9 @@ func (root *Root) setCopySelect() {
 		log.Println(err)
 	}
 
-	if err := clipboard.WriteAll(str.String()); err != nil {
+	s := str.String()
+	s = stripEscapeSequence.ReplaceAllString(s, "")
+	if err := clipboard.WriteAll(s); err != nil {
 		log.Println(err)
 	}
 }
