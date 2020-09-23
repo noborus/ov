@@ -165,9 +165,23 @@ func (root *Root) screenInit() error {
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
 	if len(fileNames) == 0 {
-		fileNames = append(fileNames, "")
+		return openSTDIN()
 	}
 	return openFiles(fileNames)
+}
+
+func openSTDIN() (*Root, error) {
+	docList := make([]*Document, 0, 1)
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	err = m.ReadFile("")
+	if err != nil {
+		return nil, err
+	}
+	docList = append(docList, m)
+	return NewOviewer(docList...)
 }
 
 func openFiles(fileNames []string) (*Root, error) {
