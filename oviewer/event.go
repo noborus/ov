@@ -19,7 +19,7 @@ loop:
 		case *eventAppQuit:
 			if root.input.mode == Help || root.input.mode == LogDoc {
 				root.toNormal()
-				return
+				continue
 			}
 			break loop
 		case *eventTimer:
