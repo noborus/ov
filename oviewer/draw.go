@@ -80,8 +80,6 @@ func (root *Root) draw() {
 			lc.contents[n].style = lc.contents[n].style.Reverse(false)
 		}
 
-		line := m.GetLine(root.Doc.lineNum + lY)
-
 		// search highlight
 		if root.input.reg != nil {
 			str, byteMap := contentsToStr(lc)
@@ -93,8 +91,9 @@ func (root *Root) draw() {
 
 		// column highlight
 		if root.Doc.ColumnMode {
-			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, start, end)
+			str, byteMap := contentsToStr(lc)
+			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
