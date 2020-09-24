@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gdamore/tcell"
 )
@@ -169,11 +168,7 @@ func (root *Root) resetScreen() {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	log.Printf("r:%d:%d:%d:%d", start, end, lc.contentsWidth(start), lc.contentsWidth(end))
-	log.Printf("r:%v", lc.bcw)
-
 	for n := start; n < end; n++ {
-		log.Printf("rn:%d", n)
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }

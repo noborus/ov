@@ -330,7 +330,7 @@ func contentsToStr(lc lineContents) (string, map[int]int) {
 		bn += len(string(c.mainc))
 	}
 	str := buff.String()
-	byteMap[bn] = len(str)
+	byteMap[bn] = len(lc.contents)
 	return str, byteMap
 }
 
