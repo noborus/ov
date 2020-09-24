@@ -456,31 +456,31 @@ func Test_contentsToStr(t *testing.T) {
 			name:  "test1",
 			str:   "test",
 			want1: "test",
-			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4},
 		},
 		{
 			name:  "testTab",
 			str:   "t\test",
 			want1: "t\test",
-			want2: map[int]int{0: 0, 1: 1, 2: 8, 3: 9, 4: 10},
+			want2: map[int]int{0: 0, 1: 1, 2: 8, 3: 9, 4: 10, 5: 11},
 		},
 		{
 			name:  "testBackSpace",
 			str:   "t\btest",
 			want1: "test",
-			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4},
 		},
 		{
 			name:  "testEscape",
 			str:   "\x1b[40;38;5;82mHello \x1b[30;48;5;82mWorld\x1b[0m",
 			want1: "Hello World",
-			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10},
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11},
 		},
 		{
 			name:  "testMultiByte",
 			str:   "あいうえお倍",
 			want1: "あいうえお倍",
-			want2: map[int]int{0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10},
+			want2: map[int]int{0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12},
 		},
 	}
 	for _, tt := range tests {
