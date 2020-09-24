@@ -102,6 +102,8 @@ type Config struct {
 
 	Status status
 
+	// Mouse support disable.
+	DisableMouse bool
 	// AfterWrite writes the current screen on exit.
 	AfterWrite bool
 	// QuiteSmall Quit if the output fits on one screen.
@@ -171,7 +173,6 @@ func (root *Root) screenInit() error {
 	if err = screen.Init(); err != nil {
 		return err
 	}
-	screen.EnableMouse()
 	root.Screen = screen
 	return nil
 }
@@ -297,6 +298,11 @@ func (root *Root) Run() error {
 		return err
 	}
 	defer root.Screen.Fini()
+
+	if !root.Config.DisableMouse {
+		root.Screen.EnableMouse()
+	}
+
 	for _, d := range root.DocList {
 		log.Printf("open %s", d.FileName)
 	}

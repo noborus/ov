@@ -313,12 +313,12 @@ func strToContents(str string, tabWidth int) []content {
 	return lc.contents
 }
 
-func contentsToStr(lc lineContents) (string, map[int]int) {
+func contentsToStr(contents []content) (string, map[int]int) {
 	var buff bytes.Buffer
 	byteMap := make(map[int]int)
 
 	bn := 0
-	for n, c := range lc.contents {
+	for n, c := range contents {
 		if c.mainc == 0 {
 			continue
 		}
@@ -330,7 +330,7 @@ func contentsToStr(lc lineContents) (string, map[int]int) {
 		bn += len(string(c.mainc))
 	}
 	str := buff.String()
-	byteMap[bn] = len(lc.contents)
+	byteMap[bn] = len(contents)
 	return str, byteMap
 }
 

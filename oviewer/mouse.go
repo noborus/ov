@@ -3,7 +3,6 @@ package oviewer
 import (
 	"bytes"
 	"log"
-	"regexp"
 
 	"github.com/d-tsuji/clipboard"
 	"github.com/gdamore/tcell"
@@ -97,16 +96,12 @@ func (root *Root) displayPos(lx int, ly int) (int, int) {
 func (root *Root) drawSelect(lx1, ly1, lx2, ly2 int, sel bool) {
 	x1, y1 := root.displayPos(lx1, ly1)
 	x2, y2 := root.displayPos(lx2, ly2)
+
 	if y1 == y2 {
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
-		for col := x1; col < x2; col++ {
-			mainc, combc, style, width := root.Screen.GetContent(col, y1)
-			style = style.Reverse(sel)
-			root.Screen.SetContent(col, y1, mainc, combc, style)
-			col += width - 1
-		}
+		root.reverseLine(y1, x1, x2, sel)
 		return
 	}
 
@@ -114,28 +109,19 @@ func (root *Root) drawSelect(lx1, ly1, lx2, ly2 int, sel bool) {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
 	}
-
-	for col := x1; col < root.vWidth; col++ {
-		mainc, combc, style, width := root.Screen.GetContent(col, y1)
-		style = style.Reverse(sel)
-		root.Screen.SetContent(col, y1, mainc, combc, style)
-		col += width - 1
+	root.reverseLine(y1, x1, root.vWidth, sel)
+	for y := y1 + 1; y < y2; y++ {
+		root.reverseLine(y, 0, root.vWidth, sel)
 	}
+	root.reverseLine(y2, 0, x2, sel)
+}
 
-	for row := y1 + 1; row < y2; row++ {
-		for col := 0; col < root.vWidth; col++ {
-			mainc, combc, style, width := root.Screen.GetContent(col, row)
-			style = style.Reverse(sel)
-			root.Screen.SetContent(col, row, mainc, combc, style)
-			col += width - 1
-		}
-	}
-
-	for col := 0; col < x2; col++ {
-		mainc, combc, style, width := root.Screen.GetContent(col, y2)
+func (root *Root) reverseLine(y int, start int, end int, sel bool) {
+	for x := start; x < end; x++ {
+		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		style = style.Reverse(sel)
-		root.Screen.SetContent(col, y2, mainc, combc, style)
-		col += width - 1
+		root.Screen.SetContent(x, y, mainc, combc, style)
+		x += width - 1
 	}
 }
 
@@ -149,6 +135,7 @@ func (root *Root) mousePaste() {
 	str, err := clipboard.Get()
 	if err != nil {
 		log.Printf("%v", err)
+		return
 	}
 	pos := stringWidth(input.value, input.cursorX+1)
 	runes := []rune(input.value)
@@ -190,7 +177,7 @@ func (root *Root) setCopySelect() {
 	}
 
 	for y := y1 + 1; y < y2; y++ {
-		line := root.Doc.GetLine(y)
+		line := root.selectLine(y, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
 			log.Println(err)
 			return
@@ -206,56 +193,32 @@ func (root *Root) setCopySelect() {
 		log.Println(err)
 	}
 
-	s := stripEscapeSequence.ReplaceAllString(buff.String(), "")
-	if err := clipboard.Set(s); err != nil {
+	if err := clipboard.Set(buff.String()); err != nil {
 		log.Println(err)
 	}
 }
 
 func (root *Root) selectLine(y int, x1 int, x2 int) string {
-	if x1 > x2 {
-		x1, x2 = x2, x1
-	}
-	line := root.Doc.GetLine(y)
-	if x2 < 0 {
-		x2 = len(line)
-	}
-
 	lc, err := root.Doc.lineToContents(y, root.Doc.TabWidth)
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
 
-	sx := lc.contentsByteNum(x1)
-	ex := lc.contentsByteNum(x2)
-	s := substring(line, sx, ex)
-
-	return stripEscapeSequence.ReplaceAllString(s, "")
-}
-
-var stripBackSpace = regexp.MustCompile(".\b")
-
-func substring(str string, start int, end int) string {
-	var subs bytes.Buffer
-	byteNum := 0
-	sFlag := false
-	str = stripBackSpace.ReplaceAllString(str, "")
-
-	for _, r := range str {
-		byteNum += len(string(r))
-		if byteNum > start {
-			sFlag = true
-		}
-		if sFlag {
-			if byteNum > end {
-				break
-			}
-			_, err := subs.WriteRune(r)
-			if err != nil {
-				log.Println(err)
-			}
-		}
+	size := len(lc.contents)
+	if x2 < 0 {
+		x2 = size
 	}
-	return subs.String()
+	if x1 > size {
+		x1 = size
+	}
+	if x2 > size {
+		x2 = size
+	}
+	if x1 > x2 {
+		x1, x2 = x2, x1
+	}
+
+	str, _ := contentsToStr(lc.contents[x1:x2])
+	return str
 }

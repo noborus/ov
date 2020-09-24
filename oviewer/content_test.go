@@ -486,7 +486,7 @@ func Test_contentsToStr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lc := parseString(tt.str, 8)
-			got1, got2 := contentsToStr(lc)
+			got1, got2 := contentsToStr(lc.contents)
 			if got1 != tt.want1 {
 				t.Errorf("contentsToStr() = %v, want %v", got1, tt.want1)
 			}

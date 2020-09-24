@@ -82,7 +82,7 @@ func (root *Root) draw() {
 
 		// search highlight
 		if root.input.reg != nil {
-			str, byteMap := contentsToStr(lc)
+			str, byteMap := contentsToStr(lc.contents)
 			poss := searchPosition(str, root.input.reg)
 			for _, r := range poss {
 				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
@@ -91,7 +91,7 @@ func (root *Root) draw() {
 
 		// column highlight
 		if root.Doc.ColumnMode {
-			str, byteMap := contentsToStr(lc)
+			str, byteMap := contentsToStr(lc.contents)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
 		}
