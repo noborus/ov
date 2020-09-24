@@ -87,9 +87,9 @@ func Test_parseString(t *testing.T) {
 			want: lineContents{
 				contents: []content{
 					{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
+					{width: 1, style: tcell.StyleDefault, mainc: rune('\t'), combc: nil},
+					{width: 1, style: tcell.StyleDefault, mainc: rune(0), combc: nil},
+					{width: 1, style: tcell.StyleDefault, mainc: rune(0), combc: nil},
 					{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
 				},
 				bcw: []int{0, 1, 4, 5},
@@ -440,6 +440,58 @@ func Test_contentsWidth(t *testing.T) {
 			lc := parseString(tt.args.str, 8)
 			if got := lc.contentsWidth(tt.args.nbyte); got != tt.want {
 				t.Errorf("contentsWidth() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_contentsToStr(t *testing.T) {
+	tests := []struct {
+		name  string
+		str   string
+		want1 string
+		want2 map[int]int
+	}{
+		{
+			name:  "test1",
+			str:   "test",
+			want1: "test",
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+		},
+		{
+			name:  "testTab",
+			str:   "t\test",
+			want1: "t\test",
+			want2: map[int]int{0: 0, 1: 1, 2: 8, 3: 9, 4: 10},
+		},
+		{
+			name:  "testBackSpace",
+			str:   "t\btest",
+			want1: "test",
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3},
+		},
+		{
+			name:  "testEscape",
+			str:   "\x1b[40;38;5;82mHello \x1b[30;48;5;82mWorld\x1b[0m",
+			want1: "Hello World",
+			want2: map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10},
+		},
+		{
+			name:  "testMultiByte",
+			str:   "あいうえお倍",
+			want1: "あいうえお倍",
+			want2: map[int]int{0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := parseString(tt.str, 8)
+			got1, got2 := contentsToStr(lc)
+			if got1 != tt.want1 {
+				t.Errorf("contentsToStr() = %v, want %v", got1, tt.want1)
+			}
+			if !reflect.DeepEqual(got2, tt.want2) {
+				t.Errorf("contentsToStr() = %v, want %v", got2, tt.want2)
 			}
 		})
 	}

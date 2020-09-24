@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -116,10 +117,12 @@ func parseString(line string, tabWidth int) lineContents {
 				switch {
 				case tabWidth > 0:
 					tabStop := tabWidth - (x % tabWidth)
-					c.mainc = rune(' ')
 					c.width = 1
 					c.style = style
-					for i := 0; i < tabStop; i++ {
+					c.mainc = rune('\t')
+					lc.contents = append(lc.contents, c)
+					c.mainc = 0
+					for i := 0; i < tabStop-1; i++ {
 						lc.contents = append(lc.contents, c)
 						x++
 					}
@@ -308,6 +311,27 @@ func lookupColor(colorNumber int) string {
 func strToContents(str string, tabWidth int) []content {
 	lc := parseString(str, tabWidth)
 	return lc.contents
+}
+
+func contentsToStr(lc lineContents) (string, map[int]int) {
+	var buff bytes.Buffer
+	byteMap := make(map[int]int)
+
+	bn := 0
+	for n, c := range lc.contents {
+		if c.mainc == 0 {
+			continue
+		}
+		byteMap[bn] = n
+		_, err := buff.WriteRune(c.mainc)
+		if err != nil {
+			log.Println(err)
+		}
+		bn += len(string(c.mainc))
+	}
+	str := buff.String()
+	byteMap[bn] = len(str)
+	return str, byteMap
 }
 
 // contentsByteNum returns the number of bytes from the width of contents.

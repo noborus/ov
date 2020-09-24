@@ -251,7 +251,10 @@ func substring(str string, start int, end int) string {
 			if byteNum > end {
 				break
 			}
-			subs.WriteRune(r)
+			_, err := subs.WriteRune(r)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	return subs.String()

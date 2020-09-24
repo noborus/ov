@@ -140,7 +140,6 @@ func searchPosition(s string, re *regexp.Regexp) [][]int {
 	}
 
 	var pos [][]int
-	s = stripEscapeSequence.ReplaceAllString(s, "")
 	pos = append(pos, re.FindAllIndex([]byte(s), -1)...)
 	return pos
 }

@@ -253,13 +253,13 @@ func Test_searchPosition(t *testing.T) {
 			},
 		},
 		{
-			name: "testEscapeSequences",
+			name: "testM",
 			args: args{
-				s:  "tes\x1B[31mt\x1B[0m",
-				re: regexpComple("test", false),
+				s:  "man",
+				re: regexpComple("man", false),
 			},
 			want: [][]int{
-				{0, 4},
+				{0, 3},
 			},
 		},
 	}

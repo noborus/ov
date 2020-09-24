@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gdamore/tcell"
 )
@@ -84,9 +85,10 @@ func (root *Root) draw() {
 
 		// search highlight
 		if root.input.reg != nil {
-			poss := searchPosition(line, root.input.reg)
+			str, byteMap := contentsToStr(lc)
+			poss := searchPosition(str, root.input.reg)
 			for _, r := range poss {
-				reverseContents(lc, r[0], r[1])
+				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
 			}
 		}
 
@@ -167,7 +169,11 @@ func (root *Root) resetScreen() {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	for n := lc.contentsWidth(start); n < lc.contentsWidth(end); n++ {
+	log.Printf("r:%d:%d:%d:%d", start, end, lc.contentsWidth(start), lc.contentsWidth(end))
+	log.Printf("r:%v", lc.bcw)
+
+	for n := start; n < end; n++ {
+		log.Printf("rn:%d", n)
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
