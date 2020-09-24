@@ -48,11 +48,12 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
-	lnumber      []lineNumber
-	oX           int
-	oY           int
-	mouseX       int
-	mouseY       int
+	lnumber []lineNumber
+
+	x1           int
+	y1           int
+	x2           int
+	y2           int
 	mousePressed bool
 	mouseSelect  bool
 	// wrapHeaderLen is the actual header length when wrapped.

@@ -13,17 +13,7 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 
 	if button == tcell.Button2 {
-		str, err := clipboard.Get()
-		if err != nil {
-			log.Printf("%v", err)
-		}
-		input := root.input
-		pos := stringWidth(input.value, input.cursorX+1)
-		runes := []rune(input.value)
-		input.value = string(runes[:pos])
-		input.value += str
-		input.value += string(runes[pos:])
-		input.cursorX += runewidth.StringWidth(str)
+		root.mousePaste()
 		return
 	}
 
@@ -31,12 +21,12 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		root.mouseSelect = true
 		root.mousePressed = true
 		x, y := ev.Position()
-		root.oX, root.oY = root.logicalPos(x, y)
+		root.x1, root.y1 = root.logicalPos(x, y)
 	}
 
 	if root.mousePressed {
 		x, y := ev.Position()
-		root.mouseX, root.mouseY = root.logicalPos(x, y)
+		root.x2, root.y2 = root.logicalPos(x, y)
 	}
 
 	if root.mouseSelect {
@@ -62,7 +52,6 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		root.moveDown()
 		return
 	}
-
 }
 
 // eventCopySelect represents a mouse select event.
@@ -149,30 +138,31 @@ func (root *Root) drawSelect(lx1, ly1, lx2, ly2 int, sel bool) {
 	}
 }
 
-func substring(str string, start int, end int) string {
-	var subs bytes.Buffer
-	byteNum := 0
-	sFlag := false
-	for _, r := range str {
-		byteNum += len(string(r))
-		if byteNum > start {
-			sFlag = true
-		}
-		if sFlag {
-			if byteNum > end {
-				break
-			}
-			subs.WriteRune(r)
-		}
+func (root *Root) mousePaste() {
+	input := root.input
+	switch input.mode {
+	case Normal, Help, LogDoc:
+		return
 	}
-	return subs.String()
+
+	str, err := clipboard.Get()
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	pos := stringWidth(input.value, input.cursorX+1)
+	runes := []rune(input.value)
+	input.value = string(runes[:pos])
+	input.value += str
+	input.value += string(runes[pos:])
+	input.cursorX += runewidth.StringWidth(str)
 }
 
 func (root *Root) setCopySelect() {
-	y1 := root.oY
-	y2 := root.mouseY
-	x1 := root.oX
-	x2 := root.mouseX
+	y1 := root.y1
+	y2 := root.y2
+	x1 := root.x1
+	x2 := root.x2
+
 	if y1 == y2 {
 		if x1 > x2 {
 			x1, x2 = x2, x1
@@ -241,4 +231,23 @@ func (root *Root) setCopySelect() {
 	if err := clipboard.Set(s); err != nil {
 		log.Println(err)
 	}
+}
+
+func substring(str string, start int, end int) string {
+	var subs bytes.Buffer
+	byteNum := 0
+	sFlag := false
+	for _, r := range str {
+		byteNum += len(string(r))
+		if byteNum > start {
+			sFlag = true
+		}
+		if sFlag {
+			if byteNum > end {
+				break
+			}
+			subs.WriteRune(r)
+		}
+	}
+	return subs.String()
 }

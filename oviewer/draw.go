@@ -143,7 +143,7 @@ func (root *Root) draw() {
 	}
 
 	if root.mouseSelect {
-		root.drawSelect(root.oX, root.oY, root.mouseX, root.mouseY, true)
+		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
 	}
 
 	root.statusDraw()
