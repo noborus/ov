@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bytes"
 	"log"
+	"regexp"
 
 	"github.com/d-tsuji/clipboard"
 	"github.com/gdamore/tcell"
@@ -164,79 +165,83 @@ func (root *Root) setCopySelect() {
 	x2 := root.x2
 
 	if y1 == y2 {
-		if x1 > x2 {
-			x1, x2 = x2, x1
-		}
-		line := root.Doc.GetLine(y1)
-		lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		sx := lc.contentsByteNum(x1)
-		ex := lc.contentsByteNum(x2)
-		if err := clipboard.Set(substring(line, sx, ex)); err != nil {
+		str := root.selectLine(y1, x1, x2)
+		if err := clipboard.Set(str); err != nil {
 			log.Printf("clipboard: %v", err)
 		}
 		return
 	}
 
+	var buff bytes.Buffer
+
 	if y2 < y1 {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
 	}
-	line := root.Doc.GetLine(y1)
-	lc, err := root.Doc.lineToContents(y1, root.Doc.TabWidth)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 
-	var str bytes.Buffer
-	sx := lc.contentsByteNum(x1)
-	if _, err := str.WriteString(substring(line, sx, len(line))); err != nil {
+	str := root.selectLine(y1, x1, -1)
+	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
 	}
-	if err := str.WriteByte('\n'); err != nil {
+	if err := buff.WriteByte('\n'); err != nil {
 		log.Println(err)
 		return
 	}
 
 	for y := y1 + 1; y < y2; y++ {
 		line := root.Doc.GetLine(y)
-		if _, err := str.WriteString(line); err != nil {
+		if _, err := buff.WriteString(line); err != nil {
 			log.Println(err)
 			return
 		}
-		if err := str.WriteByte('\n'); err != nil {
+		if err := buff.WriteByte('\n'); err != nil {
 			log.Println(err)
 			return
 		}
 	}
 
-	line = root.Doc.GetLine(y2)
-	lc, err = root.Doc.lineToContents(y2, root.Doc.TabWidth)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	ex := lc.contentsByteNum(x2)
-	if _, err := str.WriteString(substring(line, 0, ex)); err != nil {
+	str = root.selectLine(y2, 0, x2)
+	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 	}
 
-	s := stripEscapeSequence.ReplaceAllString(str.String(), "")
+	s := stripEscapeSequence.ReplaceAllString(buff.String(), "")
 	if err := clipboard.Set(s); err != nil {
 		log.Println(err)
 	}
 }
 
+func (root *Root) selectLine(y int, x1 int, x2 int) string {
+	if x1 > x2 {
+		x1, x2 = x2, x1
+	}
+	line := root.Doc.GetLine(y)
+	if x2 < 0 {
+		x2 = len(line)
+	}
+
+	lc, err := root.Doc.lineToContents(y, root.Doc.TabWidth)
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	sx := lc.contentsByteNum(x1)
+	ex := lc.contentsByteNum(x2)
+	s := substring(line, sx, ex)
+
+	return stripEscapeSequence.ReplaceAllString(s, "")
+}
+
+var stripBackSpace = regexp.MustCompile(".\b")
+
 func substring(str string, start int, end int) string {
 	var subs bytes.Buffer
 	byteNum := 0
 	sFlag := false
+	str = stripBackSpace.ReplaceAllString(str, "")
+
 	for _, r := range str {
 		byteNum += len(string(r))
 		if byteNum > start {
