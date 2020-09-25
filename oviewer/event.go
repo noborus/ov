@@ -27,7 +27,9 @@ loop:
 		case *eventDocument:
 			root.setDocument(ev.m)
 		case *eventCopySelect:
-			root.setCopySelect()
+			root.putClipboard()
+		case *eventPasteSelect:
+			root.getClipboard()
 		case *searchInput:
 			root.search(ev.input)
 		case *backSearchInput:

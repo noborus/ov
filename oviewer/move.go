@@ -19,6 +19,7 @@ func (root *Root) moveBottom() {
 
 // Move to the specified line.
 func (root *Root) moveLine(num int) {
+	root.resetSelect()
 	root.Doc.lineNum = num
 	root.Doc.yy = 0
 }
@@ -58,6 +59,7 @@ func (root *Root) moveHfDn() {
 
 // Move up one line.
 func (root *Root) moveUp() {
+	root.resetSelect()
 	if !root.Doc.WrapMode {
 		root.Doc.yy = 0
 		root.Doc.lineNum--
@@ -79,6 +81,7 @@ func (root *Root) moveUp() {
 
 // Move down one line.
 func (root *Root) moveDown() {
+	root.resetSelect()
 	if root.Doc.lineNum > root.bottomLineNum(root.Doc.endNum) {
 		if root.Doc.BufEOF() {
 			root.setMessage("EOF")

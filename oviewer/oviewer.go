@@ -349,8 +349,6 @@ func (root *Root) debugMessage(msg string) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
-	root.mouseSelect = false
-	root.mousePressed = false
 	root.Clear()
 	root.viewSync()
 }
@@ -509,6 +507,7 @@ func (root *Root) resize() {
 
 // Sync redraws the whole thing.
 func (root *Root) viewSync() {
+	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
 	root.draw()

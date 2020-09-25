@@ -49,16 +49,17 @@ func (root *Root) draw() {
 			reverseContents(lc, start, end)
 		}
 
+		root.lnumber[hy] = lineNumber{
+			line:   lY,
+			branch: branch,
+		}
+
 		if root.Doc.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
 		}
 
-		root.lnumber[hy] = lineNumber{
-			line:   root.Doc.lineNum + lY - root.Doc.Header,
-			branch: branch,
-		}
 		if lX > 0 {
 			branch++
 		} else {
@@ -111,9 +112,8 @@ func (root *Root) draw() {
 		} else {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
 		}
-
 		root.lnumber[y] = lineNumber{
-			line:   root.Doc.lineNum + lY - root.Doc.Header,
+			line:   root.Doc.lineNum + lY,
 			branch: branch,
 		}
 		if lX > 0 {
@@ -141,7 +141,6 @@ func (root *Root) draw() {
 	} else {
 		root.bottomPos = root.Doc.lineNum + 1
 	}
-
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
 	}
