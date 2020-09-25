@@ -93,6 +93,9 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&config.Status.Header, "header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("Header", rootCmd.PersistentFlags().Lookup("header"))
 
+	rootCmd.PersistentFlags().BoolVarP(&config.DisableMouse, "disable-mouse", "", false, "disable mouse support")
+	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
+
 	rootCmd.PersistentFlags().BoolVarP(&config.AfterWrite, "exit-write", "X", false, "output the current screen when exiting")
 	_ = viper.BindPFlag("ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
 

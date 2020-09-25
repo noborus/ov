@@ -26,6 +26,10 @@ loop:
 			root.updateEndNum()
 		case *eventDocument:
 			root.setDocument(ev.m)
+		case *eventCopySelect:
+			root.putClipboard()
+		case *eventPasteSelect:
+			root.getClipboard()
 		case *searchInput:
 			root.search(ev.input)
 		case *backSearchInput:
@@ -40,6 +44,8 @@ loop:
 			root.setTabWidth(ev.input)
 		case *tcell.EventResize:
 			root.resize()
+		case *tcell.EventMouse:
+			root.mouseEvent(ev)
 		case *tcell.EventKey:
 			root.setMessage("")
 			switch root.input.mode {

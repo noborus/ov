@@ -48,6 +48,14 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
+	lnumber []lineNumber
+
+	x1           int
+	y1           int
+	x2           int
+	y2           int
+	mousePressed bool
+	mouseSelect  bool
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
@@ -56,6 +64,11 @@ type Root struct {
 	statusPos int
 	// minStartX is the minimum start position of x.
 	minStartX int
+}
+
+type lineNumber struct {
+	line   int
+	branch int
 }
 
 // status structure contains the status of the display.
@@ -89,6 +102,8 @@ type Config struct {
 
 	Status status
 
+	// Mouse support disable.
+	DisableMouse bool
 	// AfterWrite writes the current screen on exit.
 	AfterWrite bool
 	// QuiteSmall Quit if the output fits on one screen.
@@ -283,6 +298,11 @@ func (root *Root) Run() error {
 		return err
 	}
 	defer root.Screen.Fini()
+
+	if !root.Config.DisableMouse {
+		root.Screen.EnableMouse()
+	}
+
 	for _, d := range root.DocList {
 		log.Printf("open %s", d.FileName)
 	}
@@ -294,6 +314,7 @@ func (root *Root) Run() error {
 	go func() {
 		<-c
 		root.Screen.Fini()
+		fmt.Fprintf(os.Stderr, "signal catch\n")
 		os.Exit(1)
 	}()
 
@@ -486,6 +507,7 @@ func (root *Root) resize() {
 
 // Sync redraws the whole thing.
 func (root *Root) viewSync() {
+	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
 	root.draw()

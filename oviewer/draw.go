@@ -26,11 +26,12 @@ func (root *Root) draw() {
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
 	}
-
+	root.lnumber = make([]lineNumber, root.vHight)
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
 	lX := 0
+	branch := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
 		line := m.GetLine(lY)
@@ -48,10 +49,21 @@ func (root *Root) draw() {
 			reverseContents(lc, start, end)
 		}
 
+		root.lnumber[hy] = lineNumber{
+			line:   lY,
+			branch: branch,
+		}
+
 		if root.Doc.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
+		}
+
+		if lX > 0 {
+			branch++
+		} else {
+			branch = 0
 		}
 	}
 
@@ -65,24 +77,24 @@ func (root *Root) draw() {
 			continue
 		}
 
-		line := m.GetLine(root.Doc.lineNum + lY)
-
 		for n := range lc.contents {
 			lc.contents[n].style = lc.contents[n].style.Reverse(false)
 		}
 
 		// search highlight
 		if root.input.reg != nil {
-			poss := searchPosition(line, root.input.reg)
+			str, byteMap := contentsToStr(lc.contents)
+			poss := searchPosition(str, root.input.reg)
 			for _, r := range poss {
-				reverseContents(lc, r[0], r[1])
+				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
 			}
 		}
 
 		// column highlight
 		if root.Doc.ColumnMode {
-			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, start, end)
+			str, byteMap := contentsToStr(lc.contents)
+			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
@@ -99,6 +111,15 @@ func (root *Root) draw() {
 			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
 		} else {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
+		}
+		root.lnumber[y] = lineNumber{
+			line:   root.Doc.lineNum + lY,
+			branch: branch,
+		}
+		if lX > 0 {
+			branch++
+		} else {
+			branch = 0
 		}
 
 		// alternate background color
@@ -119,6 +140,9 @@ func (root *Root) draw() {
 		root.bottomPos = root.Doc.lineNum + lY - 1
 	} else {
 		root.bottomPos = root.Doc.lineNum + 1
+	}
+	if root.mouseSelect {
+		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
 	}
 
 	root.statusDraw()
@@ -142,7 +166,7 @@ func (root *Root) resetScreen() {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	for n := lc.byteMap[start]; n < lc.byteMap[end]; n++ {
+	for n := start; n < end; n++ {
 		lc.contents[n].style = lc.contents[n].style.Reverse(true)
 	}
 }
