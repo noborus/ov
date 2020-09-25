@@ -115,7 +115,7 @@ func (root *Root) putClipboard() {
 			return
 		}
 		if err := clipboard.WriteAll(str); err != nil {
-			log.Printf("clipboard: %v", err)
+			log.Printf("putClipboard: %v", err)
 		}
 		return
 	}
@@ -170,7 +170,7 @@ func (root *Root) putClipboard() {
 		return
 	}
 	if err := clipboard.WriteAll(buff.String()); err != nil {
-		log.Println(err)
+		log.Printf("putClipboard: %v", err)
 	}
 }
 
@@ -223,7 +223,7 @@ func (root *Root) getClipboard() {
 
 	str, err := clipboard.ReadAll()
 	if err != nil {
-		log.Printf("%v", err)
+		log.Printf("getClipboard: %v", err)
 		return
 	}
 	pos := stringWidth(input.value, input.cursorX+1)

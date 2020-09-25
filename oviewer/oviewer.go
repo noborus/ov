@@ -303,6 +303,13 @@ func (root *Root) Run() error {
 		root.Screen.EnableMouse()
 	}
 
+	manPN := os.Getenv("MAN_PN")
+	if len(manPN) > 0 {
+		root.Doc.FileName = manPN
+		// Bug?? Clipboard fails when called by man.
+		root.Screen.DisableMouse()
+	}
+
 	for _, d := range root.DocList {
 		log.Printf("open %s", d.FileName)
 	}
