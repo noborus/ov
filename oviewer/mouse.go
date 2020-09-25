@@ -74,6 +74,12 @@ func (root *Root) CopySelect() {
 }
 
 func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
+	if root.x1 < root.startX {
+		root.x1 = root.startX
+	}
+	if root.x2 < root.startX {
+		root.x2 = root.startX
+	}
 	if y1 == y2 {
 		if x2 < x1 {
 			x1, x2 = x2, x1
@@ -88,9 +94,9 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	}
 	root.reverseLine(y1, x1, root.vWidth, sel)
 	for y := y1 + 1; y < y2; y++ {
-		root.reverseLine(y, 0, root.vWidth, sel)
+		root.reverseLine(y, root.startX, root.vWidth, sel)
 	}
-	root.reverseLine(y2, 0, x2, sel)
+	root.reverseLine(y2, root.startX, x2, sel)
 }
 
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
@@ -105,8 +111,14 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 func (root *Root) putClipboard() {
 	y1 := root.y1
 	y2 := root.y2
-	x1 := root.x1
-	x2 := root.x2
+	x1 := root.Doc.x + root.x1
+	x2 := root.Doc.x + root.x2
+	if x1 < 0 {
+		x1 = 0
+	}
+	if x2 < 0 {
+		x2 = 0
+	}
 
 	if y1 == y2 {
 		ln := root.lnumber[y1]

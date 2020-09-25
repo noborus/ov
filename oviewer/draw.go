@@ -56,15 +56,15 @@ func (root *Root) draw() {
 
 		if root.Doc.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, contents)
+			if lX > 0 {
+				branch++
+			} else {
+				branch = 0
+			}
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
 		}
 
-		if lX > 0 {
-			branch++
-		} else {
-			branch = 0
-		}
 	}
 
 	// Body
@@ -109,17 +109,17 @@ func (root *Root) draw() {
 		var nextY int
 		if root.Doc.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
+			if lX > 0 {
+				branch++
+			} else {
+				branch = 0
+			}
 		} else {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
 		}
 		root.lnumber[y] = lineNumber{
 			line:   root.Doc.lineNum + lY,
 			branch: branch,
-		}
-		if lX > 0 {
-			branch++
-		} else {
-			branch = 0
 		}
 
 		// alternate background color
