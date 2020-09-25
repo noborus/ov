@@ -30,7 +30,7 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	if root.mouseSelect {
 		if button == tcell.ButtonNone {
 			root.mousePressed = false
-		} else if !root.mousePressed && button != tcell.ButtonNone {
+		} else if !root.mousePressed {
 			root.resetSelect()
 			if button == tcell.Button1 {
 				root.CopySelect()
@@ -74,12 +74,6 @@ func (root *Root) CopySelect() {
 }
 
 func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
-	if root.x1 < root.startX {
-		root.x1 = root.startX
-	}
-	if root.x2 < root.startX {
-		root.x2 = root.startX
-	}
 	if y1 == y2 {
 		if x2 < x1 {
 			x1, x2 = x2, x1
@@ -92,10 +86,16 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
 	}
+
+	if x1 < root.startX {
+		x1 = root.startX
+	}
 	root.reverseLine(y1, x1, root.vWidth, sel)
+
 	for y := y1 + 1; y < y2; y++ {
 		root.reverseLine(y, root.startX, root.vWidth, sel)
 	}
+
 	root.reverseLine(y2, root.startX, x2, sel)
 }
 
@@ -122,7 +122,6 @@ func (root *Root) putClipboard() {
 
 	if y1 == y2 {
 		ln := root.lnumber[y1]
-		log.Printf("lnumber:%d,%d,%d", ln.line, ln.branch, (ln.branch*root.vWidth)+x1)
 		str := root.selectLine(ln.line, (ln.branch*root.vWidth)+x1, (ln.branch*root.vWidth)+x2)
 		if len(str) == 0 {
 			return
