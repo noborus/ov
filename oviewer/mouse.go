@@ -122,7 +122,8 @@ func (root *Root) putClipboard() {
 
 	if y1 == y2 {
 		ln := root.lnumber[y1]
-		str := root.selectLine(ln.line, x1, x2)
+		log.Printf("lnumber:%d,%d,%d", ln.line, ln.branch, (ln.branch*root.vWidth)+x1)
+		str := root.selectLine(ln.line, (ln.branch*root.vWidth)+x1, (ln.branch*root.vWidth)+x2)
 		if len(str) == 0 {
 			return
 		}
@@ -140,7 +141,7 @@ func (root *Root) putClipboard() {
 	}
 
 	ln := root.lnumber[y1]
-	str := root.selectLine(ln.line, x1, -1)
+	str := root.selectLine(ln.line, (ln.branch*root.vWidth)+x1, -1)
 	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
@@ -172,7 +173,7 @@ func (root *Root) putClipboard() {
 
 	ln = root.lnumber[y2]
 	if ln.branch == 0 {
-		str = root.selectLine(ln.line, 0, x2)
+		str = root.selectLine(ln.line, 0, (ln.branch*root.vWidth)+x2)
 		if _, err := buff.WriteString(str); err != nil {
 			log.Println(err)
 		}

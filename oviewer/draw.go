@@ -106,6 +106,11 @@ func (root *Root) draw() {
 			root.setContentString(0, y, lineNum)
 		}
 
+		root.lnumber[y] = lineNumber{
+			line:   root.Doc.lineNum + lY,
+			branch: branch,
+		}
+
 		var nextY int
 		if root.Doc.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
@@ -116,10 +121,6 @@ func (root *Root) draw() {
 			}
 		} else {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
-		}
-		root.lnumber[y] = lineNumber{
-			line:   root.Doc.lineNum + lY,
-			branch: branch,
 		}
 
 		// alternate background color
