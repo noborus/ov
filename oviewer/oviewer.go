@@ -609,7 +609,7 @@ func (root *Root) markPrev() {
 
 func (root *Root) nextDoc() {
 	root.CurrentDoc++
-	root.CurrentDoc = min(root.CurrentDoc, len(root.DocList))
+	root.CurrentDoc = min(root.CurrentDoc, len(root.DocList)-1)
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
 }

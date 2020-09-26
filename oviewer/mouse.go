@@ -130,9 +130,6 @@ func (root *Root) putClipboard() {
 	x1 := root.x1
 	x2 := root.x2
 
-	x1 = max(x1, 0)
-	x2 = max(x2, 0)
-
 	rx := 0
 	if !root.Doc.ColumnMode {
 		rx = root.Doc.x
