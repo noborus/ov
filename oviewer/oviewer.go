@@ -50,6 +50,7 @@ type Root struct {
 
 	lnumber []lineNumber
 
+	skipDraw     bool
 	x1           int
 	y1           int
 	x2           int
@@ -303,6 +304,7 @@ func (root *Root) Run() error {
 		root.Screen.EnableMouse()
 	}
 
+	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
 	if len(manPN) > 0 {
 		root.Doc.FileName = manPN
@@ -607,18 +609,28 @@ func (root *Root) markPrev() {
 
 func (root *Root) nextDoc() {
 	root.CurrentDoc++
-	if len(root.DocList) <= root.CurrentDoc {
-		root.CurrentDoc = root.CurrentDoc - 1
-	}
+	root.CurrentDoc = min(root.CurrentDoc, len(root.DocList))
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
 }
 
 func (root *Root) previousDoc() {
 	root.CurrentDoc--
-	if root.CurrentDoc < 0 {
-		root.CurrentDoc = 0
-	}
+	root.CurrentDoc = max(root.CurrentDoc, 0)
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

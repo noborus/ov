@@ -117,6 +117,9 @@ func (root *Root) moveLeft() {
 		return
 	}
 	root.Doc.x--
+	if root.Doc.x < root.minStartX {
+		root.Doc.x = root.minStartX
+	}
 }
 
 // Move to the right.
@@ -135,17 +138,18 @@ func (root *Root) moveRight() {
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
 	m := root.Doc
-	line := m.GetLine(root.Doc.Header + 2)
-	start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-	if start < 0 || end < 0 {
-		root.Doc.columnNum = 0
-		start, _ = rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-	}
-	lc, err := m.lineToContents(root.Doc.Header+2, root.Doc.TabWidth)
+
+	lc, err := m.lineToContents(root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}
-	return lc.contentsWidth(start)
+	lineStr, byteMap := contentsToStr(lc.contents)
+	start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+	if start < 0 || end < 0 {
+		root.Doc.columnNum = 0
+		start, _ = rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+	}
+	return byteMap[start]
 }
 
 // Move to the left by half a screen.
@@ -158,6 +162,9 @@ func (root *Root) moveHfLeft() {
 		root.Doc.x = 0
 	} else {
 		root.Doc.x -= moveSize
+		if root.Doc.x < root.minStartX {
+			root.Doc.x = root.minStartX
+		}
 	}
 }
 

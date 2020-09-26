@@ -8,6 +8,11 @@ import (
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
+	if root.skipDraw {
+		root.skipDraw = false
+		return
+	}
+
 	m := root.Doc
 	screen := root.Screen
 	if m.BufEndNum() == 0 || root.vHight == 0 {
@@ -18,7 +23,6 @@ func (root *Root) draw() {
 	}
 
 	root.resetScreen()
-
 	bottom := root.bottomLineNum(m.BufEndNum()) - root.Doc.Header
 	if root.Doc.lineNum > bottom+1 {
 		root.Doc.lineNum = bottom + 1
@@ -34,7 +38,6 @@ func (root *Root) draw() {
 	branch := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
-		line := m.GetLine(lY)
 		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
 		if err != nil {
 			// EOF
@@ -44,9 +47,10 @@ func (root *Root) draw() {
 		root.headerStyle(contents)
 
 		// column highlight
-		if root.Doc.ColumnMode {
-			start, end := rangePosition(line, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, start, end)
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			str, byteMap := contentsToStr(lc.contents)
+			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		root.lnumber[hy] = lineNumber{
@@ -81,19 +85,18 @@ func (root *Root) draw() {
 			lc.contents[n].style = lc.contents[n].style.Reverse(false)
 		}
 
+		lineStr, byteMap := contentsToStr(lc.contents)
 		// search highlight
 		if root.input.reg != nil {
-			str, byteMap := contentsToStr(lc.contents)
-			poss := searchPosition(str, root.input.reg)
+			poss := searchPosition(lineStr, root.input.reg)
 			for _, r := range poss {
 				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
 			}
 		}
 
 		// column highlight
-		if root.Doc.ColumnMode {
-			str, byteMap := contentsToStr(lc.contents)
-			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 

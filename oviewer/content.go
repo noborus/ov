@@ -53,13 +53,12 @@ func parseString(line string, tabWidth int) lineContents {
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
-	x := 0
+	tabX := 0
 	b := 0
-	nb := 0
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
 	for _, runeValue := range line {
-		nb = len(string(runeValue))
+		nb := len(string(runeValue))
 		for i := 0; i < nb; i++ {
 			lc.bcw[b] = len(lc.contents)
 			b++
@@ -116,7 +115,7 @@ func parseString(line string, tabWidth int) lineContents {
 			case '\t': // TAB
 				switch {
 				case tabWidth > 0:
-					tabStop := tabWidth - (x % tabWidth)
+					tabStop := tabWidth - (tabX % tabWidth)
 					c.width = 1
 					c.style = style
 					c.mainc = rune('\t')
@@ -124,7 +123,7 @@ func parseString(line string, tabWidth int) lineContents {
 					c.mainc = 0
 					for i := 0; i < tabStop-1; i++ {
 						lc.contents = append(lc.contents, c)
-						x++
+						tabX++
 					}
 				case tabWidth < 0:
 					c.width = 1
@@ -133,7 +132,7 @@ func parseString(line string, tabWidth int) lineContents {
 					lc.contents = append(lc.contents, c)
 					c.mainc = rune('t')
 					lc.contents = append(lc.contents, c)
-					x += 2
+					tabX += 2
 				default:
 				}
 				continue
@@ -167,7 +166,7 @@ func parseString(line string, tabWidth int) lineContents {
 				bsContent = DefaultContent
 			}
 			lc.contents = append(lc.contents, c)
-			x++
+			tabX++
 		case 2:
 			c.mainc = runeValue
 			c.width = 2
@@ -178,7 +177,7 @@ func parseString(line string, tabWidth int) lineContents {
 				bsContent = DefaultContent
 			}
 			lc.contents = append(lc.contents, c, DefaultContent)
-			x += 2
+			tabX += 2
 		}
 	}
 	lc.bcw[b] = len(lc.contents)
@@ -313,6 +312,8 @@ func strToContents(str string, tabWidth int) []content {
 	return lc.contents
 }
 
+// contentsToStr returns a converted string
+// and byte length and contents length conversion table.
 func contentsToStr(contents []content) (string, map[int]int) {
 	var buff bytes.Buffer
 	byteMap := make(map[int]int)
@@ -332,28 +333,4 @@ func contentsToStr(contents []content) (string, map[int]int) {
 	str := buff.String()
 	byteMap[bn] = len(contents)
 	return str, byteMap
-}
-
-// contentsByteNum returns the number of bytes from the width of contents.
-func (lc lineContents) contentsByteNum(width int) int {
-	if width == 0 {
-		return 0
-	}
-	for b, w := range lc.bcw {
-		if w >= width {
-			return b
-		}
-	}
-	return len(lc.bcw)
-}
-
-// contentsWidth returns the width of contents from the number of bytes of contents.
-func (lc lineContents) contentsWidth(nbyte int) int {
-	if nbyte < 0 {
-		return 0
-	}
-	if len(lc.bcw) >= nbyte {
-		return lc.bcw[nbyte]
-	}
-	return lc.bcw[len(lc.bcw)-1]
 }

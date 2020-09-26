@@ -36,6 +36,7 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 				root.CopySelect()
 			}
 		}
+		return
 	}
 
 	if button&tcell.WheelUp != 0 {
@@ -49,6 +50,8 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		root.moveDown()
 		return
 	}
+
+	root.skipDraw = true
 }
 
 func (root *Root) resetSelect() {
@@ -87,16 +90,13 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		x1, x2 = x2, x1
 	}
 
-	if x1 < root.startX {
-		x1 = root.startX
-	}
 	root.reverseLine(y1, x1, root.vWidth, sel)
 
 	for y := y1 + 1; y < y2; y++ {
-		root.reverseLine(y, root.startX, root.vWidth, sel)
+		root.reverseLine(y, 0, root.vWidth, sel)
 	}
 
-	root.reverseLine(y2, root.startX, x2, sel)
+	root.reverseLine(y2, 0, x2, sel)
 }
 
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
@@ -111,18 +111,20 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 func (root *Root) putClipboard() {
 	y1 := root.y1
 	y2 := root.y2
-	x1 := root.Doc.x + root.x1
-	x2 := root.Doc.x + root.x2
-	if x1 < 0 {
-		x1 = 0
-	}
-	if x2 < 0 {
-		x2 = 0
+	x1 := root.x1
+	x2 := root.x2
+
+	x1 = max(x1, 0)
+	x2 = max(x2, 0)
+
+	rx := 0
+	if !root.Doc.ColumnMode {
+		rx = root.Doc.x
 	}
 
 	if y1 == y2 {
 		ln := root.lnumber[y1]
-		str := root.selectLine(ln.line, (ln.branch*root.vWidth)+x1, (ln.branch*root.vWidth)+x2)
+		str := root.selectLine(ln.line, ln.branch, x1+rx, x2+rx)
 		if len(str) == 0 {
 			return
 		}
@@ -140,7 +142,7 @@ func (root *Root) putClipboard() {
 	}
 
 	ln := root.lnumber[y1]
-	str := root.selectLine(ln.line, (ln.branch*root.vWidth)+x1, -1)
+	str := root.selectLine(ln.line, ln.branch, x1+rx, -1)
 	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
@@ -156,7 +158,7 @@ func (root *Root) putClipboard() {
 		if ln.branch > 0 {
 			continue
 		}
-		line := root.selectLine(ln.line, 0, -1)
+		line := root.selectLine(ln.line, 0, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
 			log.Println(err)
 			return
@@ -172,7 +174,7 @@ func (root *Root) putClipboard() {
 
 	ln = root.lnumber[y2]
 	if ln.branch == 0 {
-		str = root.selectLine(ln.line, 0, (ln.branch*root.vWidth)+x2)
+		str = root.selectLine(ln.line, 0, 0, x2+rx)
 		if _, err := buff.WriteString(str); err != nil {
 			log.Println(err)
 		}
@@ -185,24 +187,46 @@ func (root *Root) putClipboard() {
 		log.Printf("putClipboard: %v", err)
 	}
 }
+func (root *Root) wrapX(contents []content, branch int) int {
+	i := 0
+	w := root.startX
+	x := 0
+	for n := 0; n < len(contents); n++ {
+		content := contents[n]
+		if w+content.width > root.vWidth {
+			i++
+			w = root.startX
+		}
+		if i >= branch {
+			break
+		}
+		w += content.width
+		x += content.width
+	}
+	return x
+}
 
-func (root *Root) selectLine(ly int, x1 int, x2 int) string {
+func (root *Root) selectLine(ly int, branch int, x1 int, x2 int) string {
 	lc, err := root.Doc.lineToContents(ly, root.Doc.TabWidth)
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
-
 	size := len(lc.contents)
-	if x2 < 0 {
+
+	// -1 is a special max value.
+	if x2 == -1 {
 		x2 = size
 	}
-	if x1 > size {
-		x1 = size
-	}
-	if x2 > size {
-		x2 = size
-	}
+
+	wx := root.wrapX(lc.contents, branch)
+	x1 = x1 + wx - root.startX
+	x2 = x2 + wx - root.startX
+	log.Printf("wx:%d x1:%d x2:%d", wx, x1, x2)
+	x1 = max(0, x1)
+	x2 = max(0, x2)
+	x1 = min(x1, size)
+	x2 = min(x2, size)
 	if x1 > x2 {
 		x1, x2 = x2, x1
 	}
