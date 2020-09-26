@@ -12,6 +12,36 @@ import (
 func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 
+	if button&tcell.WheelUp != 0 {
+		root.wheelUp()
+		return
+	}
+
+	if button&tcell.WheelDown != 0 {
+		root.wheelDown()
+		return
+	}
+
+	if button != tcell.ButtonNone || root.mouseSelect {
+		root.selectRange(ev)
+		return
+	}
+
+	root.skipDraw = true
+}
+
+func (root *Root) wheelUp() {
+	root.moveUp()
+	root.moveUp()
+}
+
+func (root *Root) wheelDown() {
+	root.moveDown()
+	root.moveDown()
+}
+
+func (root *Root) selectRange(ev *tcell.EventMouse) {
+	button := ev.Buttons()
 	if button == tcell.Button2 {
 		root.PasteSelect()
 		return
@@ -38,20 +68,6 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		}
 		return
 	}
-
-	if button&tcell.WheelUp != 0 {
-		root.moveUp()
-		root.moveUp()
-		return
-	}
-
-	if button&tcell.WheelDown != 0 {
-		root.moveDown()
-		root.moveDown()
-		return
-	}
-
-	root.skipDraw = true
 }
 
 func (root *Root) resetSelect() {
@@ -168,6 +184,7 @@ func (root *Root) putClipboard() {
 			return
 		}
 		if buff.Len() > maxCopySize {
+			log.Println("over size")
 			break
 		}
 	}
@@ -187,6 +204,7 @@ func (root *Root) putClipboard() {
 		log.Printf("putClipboard: %v", err)
 	}
 }
+
 func (root *Root) wrapX(contents []content, branch int) int {
 	i := 0
 	w := root.startX
@@ -222,7 +240,6 @@ func (root *Root) selectLine(ly int, branch int, x1 int, x2 int) string {
 	wx := root.wrapX(lc.contents, branch)
 	x1 = x1 + wx - root.startX
 	x2 = x2 + wx - root.startX
-	log.Printf("wx:%d x1:%d x2:%d", wx, x1, x2)
 	x1 = max(0, x1)
 	x2 = max(0, x2)
 	x1 = min(x1, size)

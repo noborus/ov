@@ -23,6 +23,7 @@ func (root *Root) draw() {
 	}
 
 	root.resetScreen()
+
 	bottom := root.bottomLineNum(m.BufEndNum()) - root.Doc.Header
 	if root.Doc.lineNum > bottom+1 {
 		root.Doc.lineNum = bottom + 1
@@ -30,7 +31,9 @@ func (root *Root) draw() {
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
 	}
+
 	root.lnumber = make([]lineNumber, root.vHight)
+
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
@@ -140,11 +143,8 @@ func (root *Root) draw() {
 		lY = nextY
 	}
 
-	if lY > 0 {
-		root.bottomPos = root.Doc.lineNum + lY - 1
-	} else {
-		root.bottomPos = root.Doc.lineNum + 1
-	}
+	root.bottomPos = root.Doc.lineNum + max(lY, 0) - 1
+
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
 	}
