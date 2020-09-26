@@ -106,6 +106,7 @@ func (root *Root) moveDown() {
 
 // Move to the left.
 func (root *Root) moveLeft() {
+	root.resetSelect()
 	if root.Doc.ColumnMode {
 		if root.Doc.columnNum > 0 {
 			root.Doc.columnNum--
@@ -124,6 +125,7 @@ func (root *Root) moveLeft() {
 
 // Move to the right.
 func (root *Root) moveRight() {
+	root.resetSelect()
 	if root.Doc.ColumnMode {
 		root.Doc.columnNum++
 		root.Doc.x = root.columnModeX()
@@ -157,6 +159,7 @@ func (root *Root) moveHfLeft() {
 	if root.Doc.WrapMode {
 		return
 	}
+	root.resetSelect()
 	moveSize := (root.vWidth / 2)
 	if root.Doc.x > 0 && (root.Doc.x-moveSize) < 0 {
 		root.Doc.x = 0
@@ -173,6 +176,7 @@ func (root *Root) moveHfRight() {
 	if root.Doc.WrapMode {
 		return
 	}
+	root.resetSelect()
 	if root.Doc.x < 0 {
 		root.Doc.x = 0
 	} else {

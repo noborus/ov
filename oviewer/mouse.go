@@ -178,8 +178,19 @@ func (root *Root) putClipboard() {
 		return
 	}
 
+	lnumber := []int{}
+	for y := y1 + 1; y < y2; y++ {
+		l := root.lnumber[y]
+		if l.branch > 0 {
+			continue
+		}
+		if l.line == ln1.line || l.line == ln2.line {
+			continue
+		}
+		lnumber = append(lnumber, l.line)
+	}
 	maxCopySize := 100000
-	for ln := ln1.line + 1; ln < ln2.line; ln++ {
+	for _, ln := range lnumber {
 		line := root.selectLine(ln, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
 			log.Println(err)
