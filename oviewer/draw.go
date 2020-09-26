@@ -81,6 +81,10 @@ func (root *Root) draw() {
 		if err != nil {
 			// EOF
 			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
+			root.lnumber[y] = lineNumber{
+				line:   -1,
+				branch: 0,
+			}
 			continue
 		}
 

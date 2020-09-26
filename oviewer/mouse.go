@@ -137,10 +137,29 @@ func (root *Root) putClipboard() {
 	if !root.Doc.ColumnMode {
 		rx = root.Doc.x
 	}
+	if y2 < y1 {
+		y1, y2 = y2, y1
+		x1, x2 = x2, x1
+	}
 
-	if y1 == y2 {
-		ln := root.lnumber[y1]
-		str := root.selectLine(ln.line, ln.branch, x1+rx, x2+rx)
+	ln1 := root.lnumber[y1]
+	lc1, err := root.Doc.lineToContents(ln1.line, root.Doc.TabWidth)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	wx1 := root.wrapX(lc1.contents, ln1.branch)
+
+	ln2 := root.lnumber[y2]
+	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	wx2 := root.wrapX(lc2.contents, ln2.branch)
+
+	if ln1.line == ln2.line {
+		str := root.selectLine(ln1.line, x1+wx1+rx, x2+wx2+rx)
 		if len(str) == 0 {
 			return
 		}
@@ -152,13 +171,7 @@ func (root *Root) putClipboard() {
 
 	var buff bytes.Buffer
 
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
-	}
-
-	ln := root.lnumber[y1]
-	str := root.selectLine(ln.line, ln.branch, x1+rx, -1)
+	str := root.selectLine(ln1.line, x1+wx1+rx, -1)
 	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
@@ -168,13 +181,9 @@ func (root *Root) putClipboard() {
 		return
 	}
 
-	maxCopySize := 5000
-	for y := y1 + 1; y < y2; y++ {
-		ln := root.lnumber[y]
-		if ln.branch > 0 {
-			continue
-		}
-		line := root.selectLine(ln.line, 0, 0, -1)
+	maxCopySize := 100000
+	for ln := ln1.line + 1; ln < ln2.line; ln++ {
+		line := root.selectLine(ln, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
 			log.Println(err)
 			return
@@ -184,17 +193,15 @@ func (root *Root) putClipboard() {
 			return
 		}
 		if buff.Len() > maxCopySize {
-			log.Println("over size")
+			log.Printf("over size %d", buff.Len())
 			break
 		}
 	}
 
-	ln = root.lnumber[y2]
-	if ln.branch == 0 {
-		str = root.selectLine(ln.line, 0, 0, x2+rx)
-		if _, err := buff.WriteString(str); err != nil {
-			log.Println(err)
-		}
+	str = root.selectLine(ln2.line, 0, x2+wx2+rx)
+	if _, err := buff.WriteString(str); err != nil {
+		log.Println(err)
+		return
 	}
 
 	if buff.Len() == 0 {
@@ -224,22 +231,21 @@ func (root *Root) wrapX(contents []content, branch int) int {
 	return x
 }
 
-func (root *Root) selectLine(ly int, branch int, x1 int, x2 int) string {
+func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 	lc, err := root.Doc.lineToContents(ly, root.Doc.TabWidth)
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
-	size := len(lc.contents)
 
+	size := len(lc.contents)
 	// -1 is a special max value.
 	if x2 == -1 {
 		x2 = size
 	}
 
-	wx := root.wrapX(lc.contents, branch)
-	x1 = x1 + wx - root.startX
-	x2 = x2 + wx - root.startX
+	x1 = x1 - root.startX
+	x2 = x2 - root.startX
 	x1 = max(0, x1)
 	x2 = max(0, x2)
 	x1 = min(x1, size)
