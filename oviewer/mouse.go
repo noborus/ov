@@ -62,7 +62,7 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 			root.mousePressed = false
 		} else if !root.mousePressed {
 			root.resetSelect()
-			if button == tcell.Button1 {
+			if button == tcell.Button1 || button == tcell.Button3 {
 				root.CopySelect()
 			}
 		}
@@ -130,10 +130,6 @@ func (root *Root) putClipboard() {
 	x1 := root.x1
 	x2 := root.x2
 
-	rx := 0
-	if !root.Doc.ColumnMode {
-		rx = root.Doc.x
-	}
 	if y2 < y1 {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
@@ -156,7 +152,7 @@ func (root *Root) putClipboard() {
 	wx2 := root.wrapX(lc2.contents, ln2.branch)
 
 	if ln1.line == ln2.line {
-		str := root.selectLine(ln1.line, x1+wx1+rx, x2+wx2+rx)
+		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2)
 		if len(str) == 0 {
 			return
 		}
@@ -168,7 +164,7 @@ func (root *Root) putClipboard() {
 
 	var buff bytes.Buffer
 
-	str := root.selectLine(ln1.line, x1+wx1+rx, -1)
+	str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, -1)
 	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
@@ -181,10 +177,7 @@ func (root *Root) putClipboard() {
 	lnumber := []int{}
 	for y := y1 + 1; y < y2; y++ {
 		l := root.lnumber[y]
-		if l.branch > 0 {
-			continue
-		}
-		if l.line == ln1.line || l.line == ln2.line {
+		if l.line == ln1.line || l.line == ln2.line || l.branch > 0 {
 			continue
 		}
 		lnumber = append(lnumber, l.line)
@@ -206,7 +199,7 @@ func (root *Root) putClipboard() {
 		}
 	}
 
-	str = root.selectLine(ln2.line, 0, x2+wx2+rx)
+	str = root.selectLine(ln2.line, 0, root.Doc.x+x2+wx2)
 	if _, err := buff.WriteString(str); err != nil {
 		log.Println(err)
 		return
