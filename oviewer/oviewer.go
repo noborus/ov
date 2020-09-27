@@ -48,15 +48,24 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
+	// lnumber is an array that returns
+	// lineNumber (logical line and branch number) from y on the screen.
 	lnumber []lineNumber
 
-	skipDraw     bool
-	x1           int
-	y1           int
-	x2           int
-	y2           int
+	// skipDraw skips draw once when true.
+	skipDraw bool
+
+	// x1, y1, x2, y2 are the coordinates selected by the mouse.
+	x1 int
+	y1 int
+	x2 int
+	y2 int
+
+	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
-	mouseSelect  bool
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
@@ -277,6 +286,8 @@ func NewLogDoc() (*Document, error) {
 	return logDoc, nil
 }
 
+// Write matches the interface of io.Writer.
+// Therefore, the log.Print output is displayed by logDoc.
 func (logDoc *Document) Write(p []byte) (int, error) {
 	str := fmt.Sprintf("%s\n", string(p))
 	logDoc.lines = append(logDoc.lines, str)
