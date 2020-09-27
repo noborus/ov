@@ -20,12 +20,7 @@ type content struct {
 }
 
 // lineContents represents one line of contents.
-type lineContents struct {
-	// contents contains one line of contents.
-	contents []content
-	// bcw is for converting width and number of bytes.
-	bcw []int
-}
+type lineContents []content
 
 // The states of the ANSI escape code parser.
 const (
@@ -46,10 +41,7 @@ var DefaultContent = content{
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
 func parseString(line string, tabWidth int) lineContents {
-	lc := lineContents{
-		contents: nil,
-		bcw:      make([]int, len(line)+1),
-	}
+	lc := lineContents{}
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
@@ -58,11 +50,6 @@ func parseString(line string, tabWidth int) lineContents {
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
 	for _, runeValue := range line {
-		nb := len(string(runeValue))
-		for i := 0; i < nb; i++ {
-			lc.bcw[b] = len(lc.contents)
-			b++
-		}
 		c := DefaultContent
 		switch state {
 		case ansiEscape:
@@ -119,42 +106,42 @@ func parseString(line string, tabWidth int) lineContents {
 					c.width = 1
 					c.style = style
 					c.mainc = rune('\t')
-					lc.contents = append(lc.contents, c)
+					lc = append(lc, c)
 					c.mainc = 0
 					for i := 0; i < tabStop-1; i++ {
-						lc.contents = append(lc.contents, c)
+						lc = append(lc, c)
 						tabX++
 					}
 				case tabWidth < 0:
 					c.width = 1
 					c.style = style.Reverse(true)
 					c.mainc = rune('\\')
-					lc.contents = append(lc.contents, c)
+					lc = append(lc, c)
 					c.mainc = rune('t')
-					lc.contents = append(lc.contents, c)
+					lc = append(lc, c)
 					tabX += 2
 				default:
 				}
 				continue
 			case '\b': // BackSpace
-				if len(lc.contents) == 0 {
+				if len(lc) == 0 {
 					continue
 				}
 				bsFlag = true
-				bsContent = lastContent(lc.contents)
+				bsContent = lastContent(lc)
 				b -= (1 + len(string(bsContent.mainc)))
 				if bsContent.width > 1 {
-					lc.contents = lc.contents[:len(lc.contents)-2]
+					lc = lc[:len(lc)-2]
 				} else {
-					lc.contents = lc.contents[:len(lc.contents)-1]
+					lc = lc[:len(lc)-1]
 				}
 				continue
 			}
-			content := lastContent(lc.contents)
+			content := lastContent(lc)
 			content.combc = append(content.combc, runeValue)
-			n := len(lc.contents) - content.width
-			if n >= 0 && len(lc.contents) > 0 {
-				lc.contents[n] = content
+			n := len(lc) - content.width
+			if n >= 0 && len(lc) > 0 {
+				lc[n] = content
 			}
 		case 1:
 			c.mainc = runeValue
@@ -165,7 +152,7 @@ func parseString(line string, tabWidth int) lineContents {
 				bsFlag = false
 				bsContent = DefaultContent
 			}
-			lc.contents = append(lc.contents, c)
+			lc = append(lc, c)
 			tabX++
 		case 2:
 			c.mainc = runeValue
@@ -176,11 +163,10 @@ func parseString(line string, tabWidth int) lineContents {
 				bsFlag = false
 				bsContent = DefaultContent
 			}
-			lc.contents = append(lc.contents, c, DefaultContent)
+			lc = append(lc, c, DefaultContent)
 			tabX += 2
 		}
 	}
-	lc.bcw[b] = len(lc.contents)
 	return lc
 }
 
@@ -195,15 +181,15 @@ func overstrike(p, m rune, style tcell.Style) tcell.Style {
 }
 
 // lastContent returns the last character of Contents.
-func lastContent(contents []content) content {
-	n := len(contents)
+func lastContent(lc lineContents) content {
+	n := len(lc)
 	if n == 0 {
 		return content{}
 	}
-	if (n > 1) && (contents[n-2].width > 1) {
-		return contents[n-2]
+	if (n > 1) && (lc[n-2].width > 1) {
+		return lc[n-2]
 	}
-	return contents[n-1]
+	return lc[n-1]
 }
 
 // csToStyle returns tcell.Style from the control sequence.
@@ -307,19 +293,19 @@ func lookupColor(colorNumber int) string {
 }
 
 // strToContents converts a single-line string into a content array.
-func strToContents(str string, tabWidth int) []content {
+func strToContents(str string, tabWidth int) lineContents {
 	lc := parseString(str, tabWidth)
-	return lc.contents
+	return lc
 }
 
 // contentsToStr returns a converted string
 // and byte length and contents length conversion table.
-func contentsToStr(contents []content) (string, map[int]int) {
+func contentsToStr(lc lineContents) (string, map[int]int) {
 	var buff bytes.Buffer
 	byteMap := make(map[int]int)
 
 	bn := 0
-	for n, c := range contents {
+	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
@@ -331,6 +317,6 @@ func contentsToStr(contents []content) (string, map[int]int) {
 		bn += len(string(c.mainc))
 	}
 	str := buff.String()
-	byteMap[bn] = len(contents)
+	byteMap[bn] = len(lc)
 	return str, byteMap
 }

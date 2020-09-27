@@ -425,7 +425,11 @@ func (root *Root) contentsSmall() bool {
 	m := root.Doc
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		hight += 1 + (len(lc) / root.vWidth)
 		if hight > root.vHight {
 			return false
 		}
@@ -458,7 +462,11 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Doc
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Doc.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		root.wrapHeaderLen += 1 + (len(lc) / root.vWidth)
 	}
 }
 
@@ -474,7 +482,11 @@ func (root *Root) bottomLineNum(num int) int {
 	}
 
 	for y := root.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		y -= 1 + (len(lc) / root.vWidth)
 		num--
 	}
 	num++

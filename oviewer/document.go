@@ -127,32 +127,23 @@ func (m *Document) ClearCache() {
 	m.cache.Clear()
 }
 
-// getContents returns one line of contents from buffer.
-func (m *Document) getContents(lineNum int, tabWidth int) []content {
-	lc, err := m.lineToContents(lineNum, tabWidth)
-	if err != nil {
-		return nil
-	}
-	return lc.contents
-}
-
 // lineToContents returns contents from line number.
 func (m *Document) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
-	var lc lineContents
-
 	if lineNum < 0 || lineNum >= m.BufEndNum() {
-		return lc, ErrOutOfRange
+		return nil, ErrOutOfRange
 	}
 
 	value, found := m.cache.Get(lineNum)
 	if found {
-		var ok bool
-		if lc, ok = value.(lineContents); !ok {
+		lc, ok := value.(lineContents)
+		if !ok {
 			return lc, ErrFatalCache
 		}
-	} else {
-		lc = parseString(m.GetLine(lineNum), tabWidth)
-		m.cache.Set(lineNum, lc, 1)
+		return lc, nil
 	}
+
+	lc := parseString(m.GetLine(lineNum), tabWidth)
+
+	m.cache.Set(lineNum, lc, 1)
 	return lc, nil
 }

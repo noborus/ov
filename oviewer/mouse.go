@@ -141,7 +141,7 @@ func (root *Root) putClipboard() {
 		log.Println(err)
 		return
 	}
-	wx1 := root.wrapX(lc1.contents, ln1.branch)
+	wx1 := root.wrapX(lc1, ln1.branch)
 
 	ln2 := root.lnumber[y2]
 	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
@@ -149,7 +149,7 @@ func (root *Root) putClipboard() {
 		log.Println(err)
 		return
 	}
-	wx2 := root.wrapX(lc2.contents, ln2.branch)
+	wx2 := root.wrapX(lc2, ln2.branch)
 
 	if ln1.line == ln2.line {
 		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2)
@@ -213,21 +213,21 @@ func (root *Root) putClipboard() {
 	}
 }
 
-func (root *Root) wrapX(contents []content, branch int) int {
+func (root *Root) wrapX(lc lineContents, branch int) int {
 	i := 0
 	w := root.startX
 	x := 0
-	for n := 0; n < len(contents); n++ {
-		content := contents[n]
-		if w+content.width > root.vWidth {
+	for n := 0; n < len(lc); n++ {
+		c := lc[n]
+		if w+c.width > root.vWidth {
 			i++
 			w = root.startX
 		}
 		if i >= branch {
 			break
 		}
-		w += content.width
-		x += content.width
+		w += c.width
+		x += c.width
 	}
 	return x
 }
@@ -239,7 +239,7 @@ func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 		return ""
 	}
 
-	size := len(lc.contents)
+	size := len(lc)
 	// -1 is a special max value.
 	if x2 == -1 {
 		x2 = size
@@ -255,7 +255,7 @@ func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 		x1, x2 = x2, x1
 	}
 
-	str, _ := contentsToStr(lc.contents[x1:x2])
+	str, _ := contentsToStr(lc[x1:x2])
 	return str
 }
 
