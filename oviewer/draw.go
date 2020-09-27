@@ -37,8 +37,8 @@ func (root *Root) draw() {
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
-	lX := 0
 	branch := 0
+	lX := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
 		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
@@ -70,7 +70,6 @@ func (root *Root) draw() {
 		} else {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, lc)
 		}
-
 	}
 
 	// Body
@@ -91,6 +90,7 @@ func (root *Root) draw() {
 			lc[n].style = lc[n].style.Reverse(false)
 		}
 		lineStr, byteMap := contentsToStr(lc)
+
 		// search highlight
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
@@ -237,6 +237,7 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
+
 	input := root.input
 	switch input.mode {
 	case Normal, Help, LogDoc:

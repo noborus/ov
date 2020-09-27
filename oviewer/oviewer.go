@@ -329,7 +329,7 @@ func (root *Root) Run() error {
 
 	root.viewSync()
 	// Exit if fits on screen
-	if root.QuitSmall && root.contentsSmall() {
+	if root.QuitSmall && root.docSmall() {
 		root.AfterWrite = true
 		return nil
 	}
@@ -419,8 +419,11 @@ func (root *Root) prepareView() {
 	root.statusPos = root.vHight - 1
 }
 
-// contentsSmall returns with bool whether the file to display fits on the screen.
-func (root *Root) contentsSmall() bool {
+// docSmall returns with bool whether the file to display fits on the screen.
+func (root *Root) docSmall() bool {
+	if len(root.DocList) > 1 {
+		return false
+	}
 	root.prepareView()
 	m := root.Doc
 	hight := 0
@@ -484,6 +487,7 @@ func (root *Root) bottomLineNum(num int) int {
 	for y := root.vHight - root.wrapHeaderLen; y > 0; {
 		lc, err := m.lineToContents(y, root.Doc.TabWidth)
 		if err != nil {
+			y--
 			continue
 		}
 		y -= 1 + (len(lc) / root.vWidth)
