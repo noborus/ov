@@ -88,7 +88,9 @@ func (m *Document) ReadAll(r io.ReadCloser) error {
 			}
 			line.Reset()
 		}
+		m.mu.Lock()
 		m.eof = true
+		m.mu.Unlock()
 	}()
 
 	select {

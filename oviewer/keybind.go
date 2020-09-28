@@ -79,8 +79,8 @@ func (root *Root) setHandler() map[string]func() {
 		actionHeader:         root.setHeaderMode,
 		actionTabWidth:       root.setTabWidthMode,
 		actionGoLine:         root.setGoLineMode,
-		actionNextSearch:     root.nextSearch,
-		actionNextBackSearch: root.nextBackSearch,
+		actionNextSearch:     root.eventNextSearch,
+		actionNextBackSearch: root.eventNextBackSearch,
 		actionNextDoc:        root.nextDoc,
 		actionPreviousDoc:    root.previousDoc,
 	}

@@ -13,8 +13,7 @@ func (root *Root) search(input string) {
 		return
 	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.debugMessage(fmt.Sprintf("search:%v", root.input.reg))
-	root.goSearchLine(root.searchLine(root.Doc.lineNum))
+	root.nextSearch()
 }
 
 // backSearch is backward search.
@@ -24,17 +23,18 @@ func (root *Root) backSearch(input string) {
 		return
 	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.debugMessage(fmt.Sprintf("search:%v", root.input.reg))
-	root.goSearchLine(root.backSearchLine(root.Doc.lineNum))
+	root.nextBackSearch()
 }
 
 // nextSearch is forward search again.
 func (root *Root) nextSearch() {
+	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 	root.goSearchLine(root.searchLine(root.Doc.lineNum + root.Doc.Header + 1))
 }
 
-// nextBackSearch is backward　search again..
+// nextBackSearch is backward　search again.
 func (root *Root) nextBackSearch() {
+	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 	root.goSearchLine(root.backSearchLine(root.Doc.lineNum + root.Doc.Header - 1))
 }
 

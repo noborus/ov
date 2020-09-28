@@ -38,7 +38,7 @@ const (
 	Search
 	// Backsearch is a backward search input mode.
 	Backsearch
-	// GoLine is a move input mode.
+	// Goline is a move input mode.
 	Goline
 	// Header is the number of headers input mode.
 	Header
@@ -299,7 +299,7 @@ func (n *normalInput) Down(str string) string {
 
 // searchInput represents the search input mode.
 type searchInput struct {
-	input string
+	value string
 	clist *candidate
 	tcell.EventTime
 }
@@ -316,7 +316,7 @@ func (s *searchInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (s *searchInput) Confirm(str string) tcell.Event {
-	s.input = str
+	s.value = str
 	s.clist.list = toLast(s.clist.list, str)
 	s.clist.p = 0
 	s.SetEventNow()
@@ -335,7 +335,7 @@ func (s *searchInput) Down(str string) string {
 
 // backSearchInput represents the back search input mode.
 type backSearchInput struct {
-	input string
+	value string
 	clist *candidate
 	tcell.EventTime
 }
@@ -352,7 +352,7 @@ func (b *backSearchInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (b *backSearchInput) Confirm(str string) tcell.Event {
-	b.input = str
+	b.value = str
 	b.clist.list = toLast(b.clist.list, str)
 	b.clist.p = 0
 	b.SetEventNow()
@@ -371,7 +371,7 @@ func (b *backSearchInput) Down(str string) string {
 
 // gotoInput represents the goto input mode.
 type gotoInput struct {
-	input string
+	value string
 	clist *candidate
 	tcell.EventTime
 }
@@ -388,7 +388,7 @@ func (g *gotoInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (g *gotoInput) Confirm(str string) tcell.Event {
-	g.input = str
+	g.value = str
 	g.clist.list = toLast(g.clist.list, str)
 	g.clist.p = 0
 	g.SetEventNow()
@@ -407,7 +407,7 @@ func (g *gotoInput) Down(str string) string {
 
 // headerInput represents the goto input mode.
 type headerInput struct {
-	input string
+	value string
 	tcell.EventTime
 }
 
@@ -423,7 +423,7 @@ func (h *headerInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (h *headerInput) Confirm(str string) tcell.Event {
-	h.input = str
+	h.value = str
 	h.SetEventNow()
 	return h
 }
@@ -448,7 +448,7 @@ func (h *headerInput) Down(str string) string {
 
 // delimiterInput represents the delimiter input mode.
 type delimiterInput struct {
-	input string
+	value string
 	clist *candidate
 	tcell.EventTime
 }
@@ -465,7 +465,7 @@ func (d *delimiterInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (d *delimiterInput) Confirm(str string) tcell.Event {
-	d.input = str
+	d.value = str
 	d.clist.list = toLast(d.clist.list, str)
 	d.clist.p = 0
 	d.SetEventNow()
@@ -484,7 +484,7 @@ func (d *delimiterInput) Down(str string) string {
 
 // tabWidthInput represents the TABWidth input mode.
 type tabWidthInput struct {
-	input string
+	value string
 	clist *candidate
 	tcell.EventTime
 }
@@ -501,7 +501,7 @@ func (t *tabWidthInput) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (t *tabWidthInput) Confirm(str string) tcell.Event {
-	t.input = str
+	t.value = str
 	t.clist.list = toLast(t.clist.list, str)
 	t.clist.p = 0
 	t.SetEventNow()

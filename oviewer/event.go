@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"log"
 	"strconv"
 	"time"
 
@@ -28,20 +29,24 @@ loop:
 			root.setDocument(ev.m)
 		case *eventCopySelect:
 			root.putClipboard()
-		case *eventPasteSelect:
+		case *eventPaste:
 			root.getClipboard()
+		case *eventSearch:
+			root.nextSearch()
+		case *eventBackSearch:
+			root.nextBackSearch()
 		case *searchInput:
-			root.search(ev.input)
+			root.search(ev.value)
 		case *backSearchInput:
-			root.backSearch(ev.input)
+			root.backSearch(ev.value)
 		case *gotoInput:
-			root.goLine(ev.input)
+			root.goLine(ev.value)
 		case *headerInput:
-			root.setHeader(ev.input)
+			root.setHeader(ev.value)
 		case *delimiterInput:
-			root.setDelimiter(ev.input)
+			root.setDelimiter(ev.value)
 		case *tabWidthInput:
-			root.setTabWidth(ev.input)
+			root.setTabWidth(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -129,7 +134,7 @@ func (root *Root) MoveLine(num int) {
 		return
 	}
 	ev := &gotoInput{}
-	ev.input = strconv.Itoa(num)
+	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
@@ -146,13 +151,52 @@ func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.endNum)
 }
 
+// eventSearch represents search event.
+type eventSearch struct {
+	tcell.EventTime
+}
+
+func (root *Root) eventNextSearch() {
+	ev := &eventSearch{}
+	ev.SetEventNow()
+	go func() {
+		err := root.Screen.PostEvent(ev)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+}
+
+// eventBackSearch represents backward search event.
+type eventBackSearch struct {
+	tcell.EventTime
+}
+
+func (root *Root) eventNextBackSearch() {
+	ev := &eventBackSearch{}
+	ev.SetEventNow()
+	go func() {
+		err := root.Screen.PostEvent(ev)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+}
+
 // Search fires a forward search event.
-func (root *Root) Search(input string) {
+// This is for calling Search from the outside.
+// Normally, the event is executed from Confirm.
+func (root *Root) Search(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &searchInput{}
-	ev.input = input
+	if str == "" {
+		root.input.reg = nil
+		return
+	}
+	root.input.value = str
+	root.input.reg = regexpComple(str, root.CaseSensitive)
+	ev := &eventSearch{}
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
@@ -160,12 +204,19 @@ func (root *Root) Search(input string) {
 }
 
 // BackSearch fires a backward search event.
-func (root *Root) BackSearch(input string) {
+// This is for calling Search from the outside.
+// Normally, the event is executed from Confirm.
+func (root *Root) BackSearch(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &backSearchInput{}
-	ev.input = input
+	if str == "" {
+		root.input.reg = nil
+		return
+	}
+	root.input.value = str
+	root.input.reg = regexpComple(str, root.CaseSensitive)
+	ev := &eventBackSearch{}
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)

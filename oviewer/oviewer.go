@@ -353,6 +353,8 @@ func (root *Root) Run() error {
 func (root *Root) setMessage(msg string) {
 	root.message = msg
 	root.debugMessage(msg)
+	root.statusDraw()
+	root.Show()
 }
 
 func (root *Root) debugMessage(msg string) {

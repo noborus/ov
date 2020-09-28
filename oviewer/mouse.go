@@ -44,7 +44,7 @@ func (root *Root) wheelDown() {
 func (root *Root) selectRange(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 	if button == tcell.Button2 {
-		root.PasteSelect()
+		root.Paste()
 		return
 	}
 
@@ -67,7 +67,6 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 				root.CopySelect()
 			}
 		}
-		return
 	}
 }
 
@@ -89,7 +88,10 @@ func (root *Root) CopySelect() {
 	ev := &eventCopySelect{}
 	ev.SetEventNow()
 	go func() {
-		root.Screen.PostEventWait(ev)
+		err := root.Screen.PostEvent(ev)
+		if err != nil {
+			log.Println(err)
+		}
 	}()
 }
 
@@ -260,18 +262,22 @@ func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 	return str
 }
 
-type eventPasteSelect struct {
+type eventPaste struct {
 	tcell.EventTime
 }
 
-func (root *Root) PasteSelect() {
+// Paste executes the mouse paste event.
+func (root *Root) Paste() {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &eventPasteSelect{}
+	ev := &eventPaste{}
 	ev.SetEventNow()
 	go func() {
-		root.Screen.PostEventWait(ev)
+		err := root.Screen.PostEvent(ev)
+		if err != nil {
+			log.Println(err)
+		}
 	}()
 }
 
