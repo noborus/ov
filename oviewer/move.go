@@ -66,10 +66,16 @@ func (root *Root) moveUp() {
 		return
 	}
 	// WrapMode
-	contents := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
-	if len(contents) < root.vWidth || root.Doc.yy <= 0 {
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
+	if err != nil {
+		return
+	}
+	if len(lc) < root.vWidth || root.Doc.yy <= 0 {
 		if (root.Doc.lineNum) >= 1 {
-			pre := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
+			pre, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
+			if err != nil {
+				return
+			}
 			yyLen := len(pre) / (root.vWidth + 1)
 			root.Doc.yy = yyLen
 		}
@@ -95,8 +101,11 @@ func (root *Root) moveDown() {
 		return
 	}
 	// WrapMode
-	contents := root.Doc.getContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
-	if len(contents) < (root.vWidth * (root.Doc.yy + 1)) {
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
+	if err != nil {
+		return
+	}
+	if len(lc) < (root.vWidth * (root.Doc.yy + 1)) {
 		root.Doc.yy = 0
 		root.Doc.lineNum++
 		return
@@ -145,7 +154,7 @@ func (root *Root) columnModeX() int {
 	if err != nil {
 		return 0
 	}
-	lineStr, byteMap := contentsToStr(lc.contents)
+	lineStr, byteMap := contentsToStr(lc)
 	start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 	if start < 0 || end < 0 {
 		root.Doc.columnNum = 0

@@ -48,15 +48,24 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
+	// lnumber is an array that returns
+	// lineNumber (logical line and branch number) from y on the screen.
 	lnumber []lineNumber
 
-	skipDraw     bool
-	x1           int
-	y1           int
-	x2           int
-	y2           int
+	// skipDraw skips draw once when true.
+	skipDraw bool
+
+	// x1, y1, x2, y2 are the coordinates selected by the mouse.
+	x1 int
+	y1 int
+	x2 int
+	y2 int
+
+	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
-	mouseSelect  bool
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
@@ -277,6 +286,8 @@ func NewLogDoc() (*Document, error) {
 	return logDoc, nil
 }
 
+// Write matches the interface of io.Writer.
+// Therefore, the log.Print output is displayed by logDoc.
 func (logDoc *Document) Write(p []byte) (int, error) {
 	str := fmt.Sprintf("%s\n", string(p))
 	logDoc.lines = append(logDoc.lines, str)
@@ -329,7 +340,7 @@ func (root *Root) Run() error {
 
 	root.viewSync()
 	// Exit if fits on screen
-	if root.QuitSmall && root.contentsSmall() {
+	if root.QuitSmall && root.docSmall() {
 		root.AfterWrite = true
 		return nil
 	}
@@ -342,6 +353,8 @@ func (root *Root) Run() error {
 func (root *Root) setMessage(msg string) {
 	root.message = msg
 	root.debugMessage(msg)
+	root.statusDraw()
+	root.Show()
 }
 
 func (root *Root) debugMessage(msg string) {
@@ -419,13 +432,20 @@ func (root *Root) prepareView() {
 	root.statusPos = root.vHight - 1
 }
 
-// contentsSmall returns with bool whether the file to display fits on the screen.
-func (root *Root) contentsSmall() bool {
+// docSmall returns with bool whether the file to display fits on the screen.
+func (root *Root) docSmall() bool {
+	if len(root.DocList) > 1 {
+		return false
+	}
 	root.prepareView()
 	m := root.Doc
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		hight += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		hight += 1 + (len(lc) / root.vWidth)
 		if hight > root.vHight {
 			return false
 		}
@@ -458,7 +478,11 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Doc
 	root.wrapHeaderLen = 0
 	for y := 0; y < root.Doc.Header; y++ {
-		root.wrapHeaderLen += 1 + (len(m.getContents(y, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		root.wrapHeaderLen += 1 + (len(lc) / root.vWidth)
 	}
 }
 
@@ -474,7 +498,12 @@ func (root *Root) bottomLineNum(num int) int {
 	}
 
 	for y := root.vHight - root.wrapHeaderLen; y > 0; {
-		y -= 1 + (len(m.getContents(num, root.Doc.TabWidth)) / root.vWidth)
+		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		if err != nil {
+			y--
+			continue
+		}
+		y -= 1 + (len(lc) / root.vWidth)
 		num--
 	}
 	num++

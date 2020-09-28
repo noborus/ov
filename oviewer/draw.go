@@ -37,8 +37,8 @@ func (root *Root) draw() {
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
-	lX := 0
 	branch := 0
+	lX := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
 		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
@@ -46,12 +46,11 @@ func (root *Root) draw() {
 			// EOF
 			continue
 		}
-		contents := lc.contents
-		root.headerStyle(contents)
+		root.headerStyle(lc)
 
 		// column highlight
 		if root.input.mode == Normal && root.Doc.ColumnMode {
-			str, byteMap := contentsToStr(lc.contents)
+			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
 		}
@@ -62,16 +61,15 @@ func (root *Root) draw() {
 		}
 
 		if root.Doc.WrapMode {
-			lX, lY = root.wrapContents(hy, lX, lY, contents)
+			lX, lY = root.wrapContents(hy, lX, lY, lc)
 			if lX > 0 {
 				branch++
 			} else {
 				branch = 0
 			}
 		} else {
-			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, contents)
+			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, lc)
 		}
-
 	}
 
 	// Body
@@ -88,11 +86,11 @@ func (root *Root) draw() {
 			continue
 		}
 
-		for n := range lc.contents {
-			lc.contents[n].style = lc.contents[n].style.Reverse(false)
+		for n := range lc {
+			lc[n].style = lc[n].style.Reverse(false)
 		}
+		lineStr, byteMap := contentsToStr(lc)
 
-		lineStr, byteMap := contentsToStr(lc.contents)
 		// search highlight
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
@@ -123,14 +121,14 @@ func (root *Root) draw() {
 
 		var nextY int
 		if root.Doc.WrapMode {
-			lX, nextY = root.wrapContents(y, lX, lY, lc.contents)
+			lX, nextY = root.wrapContents(y, lX, lY, lc)
 			if lX > 0 {
 				branch++
 			} else {
 				branch = 0
 			}
 		} else {
-			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc.contents)
+			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc)
 		}
 
 		// alternate background color
@@ -175,20 +173,20 @@ func (root *Root) resetScreen() {
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
 	for n := start; n < end; n++ {
-		lc.contents[n].style = lc.contents[n].style.Reverse(true)
+		lc[n].style = lc[n].style.Reverse(true)
 	}
 }
 
 // wrapContents wraps and draws the contents and returns the next drawing position.
-func (root *Root) wrapContents(y int, lX int, lY int, contents []content) (int, int) {
+func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
 	for x := 0; ; x++ {
-		if lX+x >= len(contents) {
+		if lX+x >= len(lc) {
 			// EOL
 			lX = 0
 			lY++
 			break
 		}
-		content := contents[lX+x]
+		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
 			// next line
 			lX += x
@@ -200,7 +198,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, contents []content) (int, 
 }
 
 // noWrapContents draws contents without wrapping and returns the next drawing position.
-func (root *Root) noWrapContents(y int, lX int, lY int, contents []content) (int, int) {
+func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
@@ -208,10 +206,10 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []content) (int
 		if lX+x < 0 {
 			continue
 		}
-		if lX+x >= len(contents) {
+		if lX+x >= len(lc) {
 			break
 		}
-		content := contents[lX+x]
+		content := lc[lX+x]
 		root.Screen.SetContent(x+root.startX, y, content.mainc, content.combc, content.style)
 	}
 	lY++
@@ -219,9 +217,9 @@ func (root *Root) noWrapContents(y int, lX int, lY int, contents []content) (int
 }
 
 // headerStyle applies the style of the header.
-func (root *Root) headerStyle(contents []content) {
-	for i := 0; i < len(contents); i++ {
-		contents[i].style = HeaderStyle
+func (root *Root) headerStyle(lc lineContents) {
+	for i := 0; i < len(lc); i++ {
+		lc[i].style = HeaderStyle
 	}
 }
 
@@ -239,6 +237,7 @@ func (root *Root) statusDraw() {
 	if root.CaseSensitive {
 		caseSensitive = "(Aa)"
 	}
+
 	input := root.input
 	switch input.mode {
 	case Normal, Help, LogDoc:
@@ -264,9 +263,9 @@ func (root *Root) statusDraw() {
 }
 
 // setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, contents []content) {
+func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 	screen := root.Screen
-	for x, content := range contents {
+	for x, content := range lc {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 }
