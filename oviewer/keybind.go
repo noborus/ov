@@ -45,6 +45,7 @@ const (
 	actionNextBackSearch = "next_backsearch"
 	actionNextDoc        = "next_doc"
 	actionPreviousDoc    = "previous_doc"
+	actionToggleMouse    = "toggle_mouse"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -83,6 +84,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionNextBackSearch: root.eventNextBackSearch,
 		actionNextDoc:        root.nextDoc,
 		actionPreviousDoc:    root.previousDoc,
+		actionToggleMouse:    root.toggleMouse,
 	}
 }
 
@@ -126,6 +128,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionNextBackSearch: {"N"},
 		actionNextDoc:        {"]"},
 		actionPreviousDoc:    {"["},
+		actionToggleMouse:    {"ctrl+alt+r"},
 	}
 
 	for k, v := range bind {
@@ -181,6 +184,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
+	k.writeKeyBind(&b, actionToggleMouse, "toggle mouse")
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")
 	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
