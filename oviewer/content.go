@@ -107,6 +107,7 @@ func parseString(line string, tabWidth int) lineContents {
 					c.style = style
 					c.mainc = rune('\t')
 					lc = append(lc, c)
+					tabX++
 					c.mainc = 0
 					for i := 0; i < tabStop-1; i++ {
 						lc = append(lc, c)
