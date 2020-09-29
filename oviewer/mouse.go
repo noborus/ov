@@ -32,11 +32,13 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 }
 
 func (root *Root) wheelUp() {
+	root.setMessage("")
 	root.moveUp()
 	root.moveUp()
 }
 
 func (root *Root) wheelDown() {
+	root.setMessage("")
 	root.moveDown()
 	root.moveDown()
 }
@@ -49,6 +51,7 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 	}
 
 	if !root.mouseSelect && button == tcell.Button1 {
+		root.setMessage("")
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
 			root.mouseRectangle = true
 		} else {
@@ -120,11 +123,9 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	}
 
 	root.reverseLine(y1, x1, root.vWidth, sel)
-
 	for y := y1 + 1; y < y2; y++ {
 		root.reverseLine(y, 0, root.vWidth, sel)
 	}
-
 	root.reverseLine(y2, 0, x2+1, sel)
 }
 
@@ -166,12 +167,12 @@ func (root *Root) putClipboard() {
 	if err := clipboard.WriteAll(buff.String()); err != nil {
 		log.Printf("putClipboard: %v", err)
 	}
+	root.setMessage("Copy")
 }
 
 func (root *Root) rectangleToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 	var buff bytes.Buffer
 
-	root.setMessage("Rectangle")
 	for y := y1; y <= y2; y++ {
 		ln := root.lnumber[y]
 		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
@@ -195,7 +196,7 @@ func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 	if root.mouseRectangle {
 		return root.rectangleToBuffer(x1, y1, x2, y2)
 	}
-	root.setMessage("not Rectangle")
+
 	var buff bytes.Buffer
 
 	ln1 := root.lnumber[y1]

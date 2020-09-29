@@ -655,11 +655,11 @@ func (root *Root) previousDoc() {
 func (root *Root) toggleMouse() {
 	root.Config.DisableMouse = !root.Config.DisableMouse
 	if root.Config.DisableMouse {
-		root.setMessage("Disable Mouse")
 		root.Screen.DisableMouse()
+		root.setMessage("Disable Mouse")
 	} else {
-		root.setMessage("Enable Mouse")
 		root.Screen.EnableMouse()
+		root.setMessage("Enable Mouse")
 	}
 }
 
