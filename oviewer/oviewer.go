@@ -65,6 +65,8 @@ type Root struct {
 	mousePressed bool
 	// mouseSelect is a flag with mouse selection.
 	mouseSelect bool
+	// mouseRectangle is a flag for rectangle selection.
+	mouseRectangle bool
 
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
@@ -648,6 +650,17 @@ func (root *Root) previousDoc() {
 	root.CurrentDoc = max(root.CurrentDoc, 0)
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
+}
+
+func (root *Root) toggleMouse() {
+	root.Config.DisableMouse = !root.Config.DisableMouse
+	if root.Config.DisableMouse {
+		root.setMessage("Disable Mouse")
+		root.Screen.DisableMouse()
+	} else {
+		root.setMessage("Enable Mouse")
+		root.Screen.EnableMouse()
+	}
 }
 
 func max(a, b int) int {

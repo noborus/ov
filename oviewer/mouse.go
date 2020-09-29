@@ -49,6 +49,11 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 	}
 
 	if !root.mouseSelect && button == tcell.Button1 {
+		if ev.Modifiers()&tcell.ModCtrl != 0 {
+			root.mouseRectangle = true
+		} else {
+			root.mouseRectangle = false
+		}
 		root.mouseSelect = true
 		root.mousePressed = true
 		root.x1, root.y1 = ev.Position()
@@ -100,7 +105,7 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
-		root.reverseLine(y1, x1, x2, sel)
+		root.reverseLine(y1, x1, x2+1, sel)
 		return
 	}
 
@@ -109,13 +114,24 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		x1, x2 = x2, x1
 	}
 
+	if root.mouseRectangle {
+		root.drawRectangle(x1, y1, x2, y2, sel)
+		return
+	}
+
 	root.reverseLine(y1, x1, root.vWidth, sel)
 
 	for y := y1 + 1; y < y2; y++ {
 		root.reverseLine(y, 0, root.vWidth, sel)
 	}
 
-	root.reverseLine(y2, 0, x2, sel)
+	root.reverseLine(y2, 0, x2+1, sel)
+}
+
+func (root *Root) drawRectangle(x1, y1, x2, y2 int, sel bool) {
+	for y := y1; y <= y2; y++ {
+		root.reverseLine(y, x1, x2+1, sel)
+	}
 }
 
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
@@ -138,43 +154,81 @@ func (root *Root) putClipboard() {
 		x1, x2 = x2, x1
 	}
 
-	ln1 := root.lnumber[y1]
-	lc1, err := root.Doc.lineToContents(ln1.line, root.Doc.TabWidth)
+	buff, err := root.rangeToBuffer(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("%s", err))
 		return
+	}
+
+	if buff.Len() == 0 {
+		return
+	}
+	if err := clipboard.WriteAll(buff.String()); err != nil {
+		log.Printf("putClipboard: %v", err)
+	}
+}
+
+func (root *Root) rectangleToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
+	var buff bytes.Buffer
+
+	root.setMessage("Rectangle")
+	for y := y1; y <= y2; y++ {
+		ln := root.lnumber[y]
+		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
+		if err != nil {
+			return nil, err
+		}
+		wx := root.branchWidth(lc, ln.branch)
+		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
+
+		if _, err := buff.WriteString(line); err != nil {
+			return nil, err
+		}
+		if err := buff.WriteByte('\n'); err != nil {
+			return nil, err
+		}
+	}
+	return &buff, nil
+}
+
+func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
+	if root.mouseRectangle {
+		return root.rectangleToBuffer(x1, y1, x2, y2)
+	}
+	root.setMessage("not Rectangle")
+	var buff bytes.Buffer
+
+	ln1 := root.lnumber[y1]
+	lc1, err := root.Doc.lineToContents(ln1.line, root.Doc.TabWidth)
+	if err != nil {
+		return nil, err
 	}
 	wx1 := root.branchWidth(lc1, ln1.branch)
 
 	ln2 := root.lnumber[y2]
 	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
 	if err != nil {
-		root.debugMessage(fmt.Sprintf("%s", err))
-		return
+		return nil, err
 	}
 	wx2 := root.branchWidth(lc2, ln2.branch)
 
 	if ln1.line == ln2.line {
-		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2)
+		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
 		if len(str) == 0 {
-			return
+			return &buff, nil
 		}
-		if err := clipboard.WriteAll(str); err != nil {
-			log.Printf("putClipboard: %v", err)
+		if _, err := buff.WriteString(str); err != nil {
+			return nil, err
 		}
-		return
+		return &buff, nil
 	}
-
-	var buff bytes.Buffer
 
 	str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, -1)
 	if _, err := buff.WriteString(str); err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 	if err := buff.WriteByte('\n'); err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 
 	lnumber := []int{}
@@ -185,35 +239,22 @@ func (root *Root) putClipboard() {
 		}
 		lnumber = append(lnumber, l.line)
 	}
-	maxCopySize := 100000
 	for _, ln := range lnumber {
 		line := root.selectLine(ln, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
-			log.Println(err)
-			return
+			return nil, err
 		}
 		if err := buff.WriteByte('\n'); err != nil {
-			log.Println(err)
-			return
-		}
-		if buff.Len() > maxCopySize {
-			log.Printf("over size %d", buff.Len())
-			break
+			return nil, err
 		}
 	}
 
-	str = root.selectLine(ln2.line, 0, root.Doc.x+x2+wx2)
+	str = root.selectLine(ln2.line, 0, root.Doc.x+x2+wx2+1)
 	if _, err := buff.WriteString(str); err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 
-	if buff.Len() == 0 {
-		return
-	}
-	if err := clipboard.WriteAll(buff.String()); err != nil {
-		log.Printf("putClipboard: %v", err)
-	}
+	return &buff, nil
 }
 
 func (root *Root) branchWidth(lc lineContents, branch int) int {
