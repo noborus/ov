@@ -184,7 +184,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
-	k.writeKeyBind(&b, actionToggleMouse, "toggle mouse")
+	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")
 	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
@@ -229,5 +229,5 @@ func KeyBindString(k KeyBind) string {
 }
 
 func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
-	fmt.Fprintf(w, "  %-26s: %-16s * %s\n", "["+strings.Join(k[action], "], [")+"]", action, detail)
+	fmt.Fprintf(w, "  %-26s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
