@@ -113,6 +113,7 @@ Flags:
   -c, --column-mode               column mode
       --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
+      --disable-mouse             disable mouse support
   -X, --exit-write                output the current screen when exiting
   -H, --header int                number of header rows to fix
   -h, --help                      help for ov
@@ -162,54 +163,73 @@ You can also write in `~/.my.cnf`.
 pager=ov -w=f -H3 -F -C -d "|"
 ```
 
+## Mouse support
+
+The ov makes the mouse support its own control.
+This can be disabled with the option `--disable-mouse`.
+
+If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
+
+Copying to the clipboard uses [atotto/clipboard](https://github.com/atotto/clipboard).
+For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environments.
+
+Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
+
+Pasting in ov is done with the middle button.
+In other applications it is paste from the clipboard (often by pressing the right click).
+
 ## Key bindings
 
 ```
-  [Escape], [q], [ctrl+c]   : exit             * quit
-  [Q]                       : write_exit       * output screen and quit
-  [h], [ctrl+alt+c]         : help             * display help screen
-  [ctrl+l]                  : sync             * screen sync
+  [Escape], [q], [ctrl+c]    * quit
+  [Q]                        * output screen and quit
+  [h], [ctrl+alt+c]          * display help screen
+  [ctrl+alt+e]               * display log screen
+  [ctrl+l]                   * screen sync
+  [ctrl+alt+r]               * enable/disable mouse
 
 	Moving
 
-  [Enter], [Down], [ctrl+N] : down             * forward by one line
-  [Up], [ctrl+p]            : up               * backward by one line
-  [Home]                    : top              * go to begin of line
-  [End]                     : bottom           * go to end of line
-  [PageDown], [ctrl+v]      : page_down        * forward by page
-  [PageUp], [ctrl+b]        : page_up          * backward by page
-  [ctrl+d]                  : page_half_down   * forward a half page
-  [ctrl+u]                  : page_half_up     * backward a half page
-  [left]                    : left             * scroll to left
-  [right]                   : right            * scroll to right
-  [ctrl+left]               : half_left        * scroll left half screen
-  [ctrl+right]              : half_right       * scroll right half screen
-  [g]                       : goto             * number of go to line
+  [Enter], [Down], [ctrl+N]  * forward by one line
+  [Up], [ctrl+p]             * backward by one line
+  [Home]                     * go to begin of line
+  [End]                      * go to end of line
+  [PageDown], [ctrl+v]       * forward by page
+  [PageUp], [ctrl+b]         * backward by page
+  [ctrl+d]                   * forward a half page
+  [ctrl+u]                   * backward a half page
+  [left]                     * scroll to left
+  [right]                    * scroll to right
+  [ctrl+left]                * scroll left half screen
+  [ctrl+right]               * scroll right half screen
+  [g]                        * number of go to line
+  []]                        * next document
+  [[]                        * previous document
 
 	Mark position
 
-  [m]                       : mark             * mark current position
-  [>]                       : next_mark        * move to next marked position
-  [<]                       : previous_mark    * move to previous marked position
+  [m]                        * mark current position
+  [>]                        * move to next marked position
+  [<]                        * move to previous marked position
 
 	Search
 
-  [/]                       : search           * forward search mode
-  [?]                       : backsearch       * backward search mode
-  [n]                       : next_search      * repeat forward search
-  [N]                       : next_backsearch  * repeat backward search
+  [/]                        * forward search mode
+  [?]                        * backward search mode
+  [n]                        * repeat forward search
+  [N]                        * repeat backward search
 
 	Change display
 
-  [w], [W]                  : wrap_mode        * wrap/nowrap toggle
-  [c]                       : column_mode      * column mode toggle
-  [C]                       : alter_rows_mode  * color to alternate rows toggle
-  [G]                       : line_number_mode * line number togle
+  [w], [W]                   * wrap/nowrap toggle
+  [c]                        * column mode toggle
+  [C]                        * color to alternate rows toggle
+  [G]                        * line number toggle
 
 	Change Display with Input
 
-  [d]                       : delimiter        * delimiter string
-  [H]                       : header           * number of header lines
-  [t]                       : tabwidth         * TAB width
+  [d]                        * delimiter string
+  [H]                        * number of header lines
+  [t]                        * TAB width
 
 ```
