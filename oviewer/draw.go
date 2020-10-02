@@ -25,12 +25,12 @@ func (root *Root) draw() {
 	root.resetScreen()
 
 	l, b := root.bottomLineNum(root.Doc.endNum)
-	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.yy > b) {
+	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.branch > b) {
 		if root.Doc.BufEOF() {
 			root.setMessage("EOF")
 		}
 		root.Doc.lineNum = l
-		root.Doc.yy = b
+		root.Doc.branch = b
 	}
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
@@ -78,9 +78,8 @@ func (root *Root) draw() {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, lc)
 		}
 	}
-
 	// Body
-	lX = root.Doc.yy * root.vWidth
+	lX = root.Doc.branch * root.vWidth
 	for y := root.headerLen(); y < root.vHight; y++ {
 		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
 		if err != nil {

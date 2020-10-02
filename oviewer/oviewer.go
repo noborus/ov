@@ -502,7 +502,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 
 	branch := 0
 	for y := bottomLine - root.wrapHeaderLen; ; y-- {
-		if num <= 0 {
+		if num < 0 {
 			return 0, 0
 		}
 		lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)

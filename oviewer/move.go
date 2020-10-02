@@ -1,28 +1,20 @@
 package oviewer
 
-import (
-	"fmt"
-)
-
 // Go to the top line.
 func (root *Root) moveTop() {
-	root.Doc.lineNum = 0
-	root.Doc.yy = 0
+	root.moveLine(0)
 }
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
-	l, b := root.bottomLineNum(root.Doc.endNum)
-	root.setMessage(fmt.Sprintf("endnum:%d", root.Doc.endNum))
-	root.Doc.lineNum = l
-	root.Doc.yy = b
+	root.moveLine(root.Doc.endNum + 1)
 }
 
 // Move to the specified line.
 func (root *Root) moveLine(num int) {
 	root.resetSelect()
 	root.Doc.lineNum = num
-	root.Doc.yy = 0
+	root.Doc.branch = 0
 }
 
 // Move up one screen.
@@ -61,8 +53,9 @@ func (root *Root) moveHfDn() {
 // Move up one line.
 func (root *Root) moveUp() {
 	root.resetSelect()
+
 	if !root.Doc.WrapMode {
-		root.Doc.yy = 0
+		root.Doc.branch = 0
 		root.Doc.lineNum--
 		return
 	}
@@ -72,19 +65,19 @@ func (root *Root) moveUp() {
 	if err != nil {
 		return
 	}
-	if len(lc) < root.vWidth || root.Doc.yy <= 0 {
+	if len(lc) < root.vWidth || root.Doc.branch <= 0 {
 		if (root.Doc.lineNum) >= 1 {
 			pre, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
 			if err != nil {
 				return
 			}
 			yyLen := len(pre) / (root.vWidth + 1)
-			root.Doc.yy = yyLen
+			root.Doc.branch = yyLen
 		}
 		root.Doc.lineNum--
 		return
 	}
-	root.Doc.yy--
+	root.Doc.branch--
 }
 
 // Move down one line.
@@ -92,7 +85,7 @@ func (root *Root) moveDown() {
 	root.resetSelect()
 
 	if !root.Doc.WrapMode {
-		root.Doc.yy = 0
+		root.Doc.branch = 0
 		root.Doc.lineNum++
 		return
 	}
@@ -102,12 +95,13 @@ func (root *Root) moveDown() {
 	if err != nil {
 		return
 	}
-	if len(lc) < (root.vWidth * (root.Doc.yy + 1)) {
-		root.Doc.yy = 0
+	branch := (len(lc) / root.vWidth)
+	if len(lc) < root.vWidth || root.Doc.branch >= branch {
+		root.Doc.branch = 0
 		root.Doc.lineNum++
 		return
 	}
-	root.Doc.yy++
+	root.Doc.branch++
 }
 
 // Move to the left.
