@@ -22,8 +22,6 @@ func (root *Root) draw() {
 		return
 	}
 
-	root.resetScreen()
-
 	l, b := root.bottomLineNum(root.Doc.endNum)
 	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.branch > b) {
 		if root.Doc.BufEOF() {
@@ -85,6 +83,8 @@ func (root *Root) draw() {
 		if err != nil {
 			// EOF
 			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
+			root.drawEOL(1, y)
+
 			root.lnumber[y] = lineNumber{
 				line:   -1,
 				branch: 0,
@@ -161,18 +161,16 @@ func (root *Root) draw() {
 	root.Show()
 }
 
-// resetScreen initializes the screen with a blank.
-func (root *Root) resetScreen() {
+// drawEOL fills with blanks from the end of the line to the screen width.
+func (root *Root) drawEOL(eol int, y int) {
 	space := content{
-		mainc: ' ',
+		mainc: 0,
 		combc: nil,
 		width: 1,
 		style: tcell.StyleDefault.Normal(),
 	}
-	for y := 0; y < root.vHight; y++ {
-		for x := 0; x < root.vWidth; x++ {
-			root.Screen.SetContent(x, y, space.mainc, space.combc, space.style)
-		}
+	for x := eol; x < root.vWidth; x++ {
+		root.Screen.SetContent(x, y, space.mainc, space.combc, space.style)
 	}
 }
 
@@ -188,6 +186,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
+			root.drawEOL(x, y)
 			lX = 0
 			lY++
 			break
@@ -213,6 +212,8 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 			continue
 		}
 		if lX+x >= len(lc) {
+			// EOL
+			root.drawEOL(x, y)
 			break
 		}
 		content := lc[lX+x]
