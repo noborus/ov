@@ -490,26 +490,35 @@ func (root *Root) setWrapHeaderLen() {
 
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
-func (root *Root) bottomLineNum(num int) int {
-	m := root.Doc
+func (root *Root) bottomLineNum(num int) (int, int) {
+	num = min(num, root.Doc.endNum)
+	bottomLine := (root.vHight - 2)
 	if !root.Doc.WrapMode {
-		if num <= root.vHight {
-			return 0
+		if num < (root.vHight - root.Doc.Header) {
+			return 0, 0
 		}
-		return num - (root.vHight - root.Doc.Header) + 1
+		return num - bottomLine, 0
 	}
 
-	for y := root.vHight - root.wrapHeaderLen; y > 0; {
-		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+	branch := 0
+	for y := bottomLine - root.wrapHeaderLen; ; y-- {
+		if num <= 0 {
+			return 0, 0
+		}
+		lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
 		if err != nil {
-			y--
+			num -= 1
 			continue
 		}
-		y -= 1 + (len(lc) / root.vWidth)
-		num--
+		branch = (len(lc) / root.vWidth)
+		if y-branch <= 0 {
+			branch = branch - y
+			break
+		}
+		y -= branch
+		num -= 1
 	}
-	num++
-	return num
+	return num - root.Doc.Header, branch
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.

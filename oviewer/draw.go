@@ -24,27 +24,34 @@ func (root *Root) draw() {
 
 	root.resetScreen()
 
-	bottom := root.bottomLineNum(m.BufEndNum()) - root.Doc.Header
-	if root.Doc.lineNum > bottom+1 {
-		root.Doc.lineNum = bottom + 1
+	l, b := root.bottomLineNum(root.Doc.endNum)
+	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.yy > b) {
+		if root.Doc.BufEOF() {
+			root.setMessage("EOF")
+		}
+		root.Doc.lineNum = l
+		root.Doc.yy = b
 	}
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
 	}
 
-	root.lnumber = make([]lineNumber, root.vHight)
+	root.lnumber = make([]lineNumber, root.vHight+1)
 
 	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
-	branch := 0
 	lX := 0
+	branch := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
 		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
 		if err != nil {
 			// EOF
 			continue
+		}
+		if hy > root.vHight {
+			break
 		}
 		root.headerStyle(lc)
 

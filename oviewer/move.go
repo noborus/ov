@@ -12,9 +12,10 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
+	l, b := root.bottomLineNum(root.Doc.endNum)
 	root.setMessage(fmt.Sprintf("endnum:%d", root.Doc.endNum))
-	n := root.bottomLineNum(root.Doc.endNum) + 1
-	root.moveLine(n)
+	root.Doc.lineNum = l
+	root.Doc.yy = b
 }
 
 // Move to the specified line.
@@ -65,6 +66,7 @@ func (root *Root) moveUp() {
 		root.Doc.lineNum--
 		return
 	}
+
 	// WrapMode
 	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
@@ -88,18 +90,13 @@ func (root *Root) moveUp() {
 // Move down one line.
 func (root *Root) moveDown() {
 	root.resetSelect()
-	if root.Doc.lineNum > root.bottomLineNum(root.Doc.endNum) {
-		if root.Doc.BufEOF() {
-			root.setMessage("EOF")
-		}
-		return
-	}
 
 	if !root.Doc.WrapMode {
 		root.Doc.yy = 0
 		root.Doc.lineNum++
 		return
 	}
+
 	// WrapMode
 	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
