@@ -186,7 +186,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
-			root.drawEOL(x, y)
+			root.drawEOL(root.startX+x, y)
 			lX = 0
 			lY++
 			break
@@ -197,7 +197,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 			lX += x
 			break
 		}
-		root.Screen.SetContent(x+root.startX, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	return lX, lY
 }
@@ -209,15 +209,16 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 	}
 	for x := 0; x+root.startX < root.vWidth; x++ {
 		if lX+x < 0 {
+			root.Screen.SetContent(x, y, 0, nil, tcell.StyleDefault.Normal())
 			continue
 		}
 		if lX+x >= len(lc) {
 			// EOL
-			root.drawEOL(x, y)
+			root.drawEOL(root.startX+x, y)
 			break
 		}
 		content := lc[lX+x]
-		root.Screen.SetContent(x+root.startX, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	lY++
 	return lX, lY
@@ -275,4 +276,5 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 	for x, content := range lc {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
+	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
 }
