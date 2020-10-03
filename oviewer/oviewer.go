@@ -519,7 +519,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 			num--
 			continue
 		}
-		branch = (len(lc) / (root.vWidth - root.startX))
+		branch = ((len(lc) - 1) / (root.vWidth - root.startX))
 		if y-branch <= 0 {
 			branch = branch - y
 			break
