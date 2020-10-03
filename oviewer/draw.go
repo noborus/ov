@@ -25,7 +25,7 @@ func (root *Root) draw() {
 	l, b := root.bottomLineNum(root.Doc.endNum)
 	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.branch > b) {
 		if root.Doc.BufEOF() {
-			root.setMessage("EOF")
+			root.message = "EOF"
 		}
 		root.Doc.lineNum = l
 		root.Doc.branch = b
@@ -35,8 +35,6 @@ func (root *Root) draw() {
 	}
 
 	root.lnumber = make([]lineNumber, root.vHight+1)
-
-	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
 
 	lY := 0
 	lX := 0
@@ -63,6 +61,10 @@ func (root *Root) draw() {
 		root.lnumber[hy] = lineNumber{
 			line:   lY,
 			branch: branch,
+		}
+
+		for x := 0; x < root.startX; x++ {
+			root.Screen.SetContent(x, hy, 0, nil, tcell.StyleDefault.Normal())
 		}
 
 		if root.Doc.WrapMode {
@@ -139,7 +141,7 @@ func (root *Root) draw() {
 
 		// alternate background color
 		if root.Doc.AlternateRows {
-			bgColor := normalBgColor
+			bgColor := root.ColorNormalBg
 			if (root.Doc.lineNum+lY)%2 == 1 {
 				bgColor = ColorAlternate
 			}
@@ -194,6 +196,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
 			// next line
+			root.drawEOL(root.startX+x, y)
 			lX += x
 			break
 		}

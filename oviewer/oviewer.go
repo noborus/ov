@@ -112,6 +112,9 @@ type Config struct {
 	// OverLine color.
 	ColorOverLine string
 
+	// ColorNormalBg is the normal Background color.
+	ColorNormalBg tcell.Color
+
 	Status status
 
 	// Mouse support disable.
@@ -353,6 +356,9 @@ func (root *Root) Run() error {
 }
 
 func (root *Root) setMessage(msg string) {
+	if root.message == msg {
+		return
+	}
 	root.message = msg
 	root.debugMessage(msg)
 	root.statusDraw()
@@ -424,6 +430,9 @@ func (root *Root) setGlobalStyle() {
 	if root.ColorOverLine != "" {
 		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
 	}
+
+	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
+	root.ColorNormalBg = normalBgColor
 }
 
 // prepareView prepares when the screen size is changed.
@@ -484,7 +493,7 @@ func (root *Root) setWrapHeaderLen() {
 		if err != nil {
 			continue
 		}
-		root.wrapHeaderLen += 1 + (len(lc) / root.vWidth)
+		root.wrapHeaderLen += 1 + (len(lc) / (root.vWidth - root.startX))
 	}
 }
 
@@ -507,16 +516,16 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 		}
 		lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
 		if err != nil {
-			num -= 1
+			num--
 			continue
 		}
-		branch = (len(lc) / root.vWidth)
+		branch = (len(lc) / (root.vWidth - root.startX))
 		if y-branch <= 0 {
 			branch = branch - y
 			break
 		}
 		y -= branch
-		num -= 1
+		num--
 	}
 	return num - root.Doc.Header, branch
 }
@@ -545,7 +554,7 @@ func (root *Root) toggleAlternateRows() {
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
-	root.updateEndNum()
+	root.viewSync()
 	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
 }
 
@@ -585,7 +594,7 @@ func (root *Root) goLine(input string) {
 	}
 
 	root.moveLine(lineNum - root.Doc.Header - 1)
-	root.debugMessage(fmt.Sprintf("Moved to line %d", lineNum))
+	root.setMessage(fmt.Sprintf("Moved to line %d", lineNum))
 }
 
 // markLineNum stores the specified number of lines.
@@ -593,7 +602,7 @@ func (root *Root) markLineNum() {
 	s := strconv.Itoa(root.Doc.lineNum + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.debugMessage(fmt.Sprintf("Marked to line %d", root.Doc.lineNum))
+	root.setMessage(fmt.Sprintf("Marked to line %d", root.Doc.lineNum))
 }
 
 // setHeader sets the number of lines in the header.

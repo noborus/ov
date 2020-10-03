@@ -65,13 +65,13 @@ func (root *Root) moveUp() {
 	if err != nil {
 		return
 	}
-	if len(lc) < root.vWidth || root.Doc.branch <= 0 {
+	if len(lc) < (root.vWidth-root.startX) || root.Doc.branch <= 0 {
 		if (root.Doc.lineNum) >= 1 {
 			pre, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
 			if err != nil {
 				return
 			}
-			yyLen := len(pre) / (root.vWidth + 1)
+			yyLen := len(pre) / ((root.vWidth - root.startX) + 1)
 			root.Doc.branch = yyLen
 		}
 		root.Doc.lineNum--
@@ -95,8 +95,8 @@ func (root *Root) moveDown() {
 	if err != nil {
 		return
 	}
-	branch := (len(lc) / root.vWidth)
-	if len(lc) < root.vWidth || root.Doc.branch >= branch {
+	branch := (len(lc) / (root.vWidth - root.startX))
+	if len(lc) < (root.vWidth-root.startX) || root.Doc.branch >= branch {
 		root.Doc.branch = 0
 		root.Doc.lineNum++
 		return

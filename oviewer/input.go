@@ -87,7 +87,13 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		runes := []rune(input.value)
 		input.value = string(runes[:pos])
 		input.cursorX = runeWidth(input.value)
-		input.value += string(runes[pos+1:])
+		next := pos + 1
+		for ; next < len(runes); next++ {
+			if runewidth.RuneWidth(runes[next]) != 0 {
+				break
+			}
+		}
+		input.value += string(runes[next:])
 	case tcell.KeyDelete:
 		pos := stringWidth(input.value, input.cursorX)
 		runes := []rune(input.value)
@@ -96,8 +102,14 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 			dp = 0
 		}
 		input.value = string(runes[:pos+dp])
-		if len(runes) > pos+1 {
-			input.value += string(runes[pos+dp+1:])
+		next := pos + 1
+		for ; next < len(runes); next++ {
+			if runewidth.RuneWidth(runes[next]) != 0 {
+				break
+			}
+		}
+		if len(runes) > next {
+			input.value += string(runes[dp+next:])
 		}
 	case tcell.KeyLeft:
 		if input.cursorX <= 0 {

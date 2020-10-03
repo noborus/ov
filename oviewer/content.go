@@ -316,6 +316,13 @@ func contentsToStr(lc lineContents) (string, map[int]int) {
 			log.Println(err)
 		}
 		bn += len(string(c.mainc))
+		for _, r := range c.combc {
+			_, err := buff.WriteRune(r)
+			if err != nil {
+				log.Println(err)
+			}
+			bn += len(string(r))
+		}
 	}
 	str := buff.String()
 	byteMap[bn] = len(lc)
