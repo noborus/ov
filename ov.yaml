@@ -28,6 +28,8 @@ KeyBind:
     help:
         - "h"
         - "ctrl+alt+c"
+    logdoc:
+        - "ctrl+alt+e"
     down:
         - "Enter"
         - "Down"
@@ -88,3 +90,9 @@ KeyBind:
         - "n"
     next_backsearch:
         - "N"
+    next_doc:
+        - "]"
+    previous_doc:
+        - "["
+    toggle_mouse:
+        - "ctrl+alt+r"
