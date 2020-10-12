@@ -139,9 +139,7 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
-	m := root.Doc
-
-	lc, err := m.lineToContents(root.Doc.Header, root.Doc.TabWidth)
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}
