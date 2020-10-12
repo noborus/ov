@@ -139,17 +139,15 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
-	m := root.Doc
-
-	lc, err := m.lineToContents(m.lineNum+root.Doc.Header, m.TabWidth)
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}
 	lineStr, byteMap := contentsToStr(lc)
-	start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+	start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 	if start < 0 || end < 0 {
-		m.columnNum = 0
-		start, _ = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+		root.Doc.columnNum = 0
+		start, _ = rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 	}
 	return byteMap[start]
 }
