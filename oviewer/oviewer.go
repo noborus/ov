@@ -151,6 +151,8 @@ var (
 	ErrMissingFile = errors.New("missing filename")
 	// ErrNotFound indicates not found.
 	ErrNotFound = errors.New("not found")
+	// ErrCancel indicates cancel.
+	ErrCancel = errors.New("cancel")
 	// ErrInvalidNumber indicates an invalid number.
 	ErrInvalidNumber = errors.New("invalid number")
 	// ErrFailedKeyBind indicates keybinding failed.
@@ -334,15 +336,6 @@ func (root *Root) Run() error {
 	root.setGlobalStyle()
 	root.Screen.Clear()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
-	go func() {
-		<-c
-		root.Screen.Fini()
-		fmt.Fprintf(os.Stderr, "signal catch\n")
-		os.Exit(1)
-	}()
-
 	root.viewSync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.docSmall() {
@@ -350,9 +343,22 @@ func (root *Root) Run() error {
 		return nil
 	}
 
-	root.main()
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 
-	return nil
+	quitChan := make(chan struct{})
+
+	go root.main(quitChan)
+
+	for {
+		select {
+		case <-quitChan:
+			return nil
+		case sig := <-sigs:
+			return fmt.Errorf("signal catch [%s]", sig)
+		}
+	}
+
 }
 
 func (root *Root) setMessage(msg string) {

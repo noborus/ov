@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 
@@ -147,7 +148,7 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	}
 }
 
-func (root *Root) putClipboard() {
+func (root *Root) putClipboard(ctx context.Context) {
 	y1 := root.y1
 	y2 := root.y2
 	x1 := root.x1
@@ -326,7 +327,7 @@ func (root *Root) Paste() {
 	}()
 }
 
-func (root *Root) getClipboard() {
+func (root *Root) getClipboard(ctx context.Context) {
 	input := root.input
 	switch input.mode {
 	case Normal, Help, LogDoc:
@@ -338,6 +339,7 @@ func (root *Root) getClipboard() {
 		log.Printf("getClipboard: %v", err)
 		return
 	}
+
 	pos := stringWidth(input.value, input.cursorX+1)
 	runes := []rune(input.value)
 	input.value = string(runes[:pos])
