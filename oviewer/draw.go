@@ -52,7 +52,7 @@ func (root *Root) draw() {
 		root.headerStyle(lc)
 
 		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
+		if root.Doc.ColumnMode && root.input.mode == Normal {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
