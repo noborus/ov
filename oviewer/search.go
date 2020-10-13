@@ -1,70 +1,119 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // search is forward search.
-func (root *Root) search(input string) {
+func (root *Root) search(ctx context.Context, input string) {
 	if input == "" {
 		root.input.reg = nil
 		return
 	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.nextSearch()
+	root.nextSearch(ctx)
 }
 
 // backSearch is backward search.
-func (root *Root) backSearch(input string) {
+func (root *Root) backSearch(ctx context.Context, input string) {
 	if input == "" {
 		root.input.reg = nil
 		return
 	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
-	root.nextBackSearch()
+	root.nextBackSearch(ctx)
 }
 
 // nextSearch is forward search again.
-func (root *Root) nextSearch() {
+func (root *Root) nextSearch(ctx context.Context) {
 	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
-	root.goSearchLine(root.searchLine(root.Doc.lineNum + root.Doc.Header + 1))
-}
 
-// nextBackSearch is backward　search again.
-func (root *Root) nextBackSearch() {
-	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
-	root.goSearchLine(root.backSearchLine(root.Doc.lineNum + root.Doc.Header - 1))
-}
+	eg, ctx := errgroup.WithContext(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-// goSearchLine moves to the line found.
-func (root *Root) goSearchLine(lineNum int, err error) {
-	if err != nil {
+	eg.Go(func() error {
+		return root.cancelWait(cancel)
+	})
+
+	eg.Go(func() error {
+		lineNum, err := root.searchLine(ctx, root.Doc.lineNum+root.Doc.Header+1)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lineNum - root.Doc.Header)
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
 		root.setMessage(err.Error())
 		return
 	}
-	root.moveLine(lineNum - root.Doc.Header)
+}
+
+// nextBackSearch is backward　search again.
+func (root *Root) nextBackSearch(ctx context.Context) {
+	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
+
+	eg, ctx := errgroup.WithContext(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	eg.Go(func() error {
+		return root.cancelWait(cancel)
+	})
+
+	eg.Go(func() error {
+		lineNum, err := root.backSearchLine(ctx, root.Doc.lineNum+root.Doc.Header-1)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lineNum - root.Doc.Header)
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		root.setMessage(err.Error())
+		return
+	}
 }
 
 // searchLine is searches below from the specified line.
-func (root *Root) searchLine(num int) (int, error) {
+func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
+	defer root.searchQuit()
+	num = max(num, 0)
+
 	for n := num; n < root.Doc.BufEndNum(); n++ {
 		if contains(root.Doc.GetLine(n), root.input.reg) {
 			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
 		}
 	}
 	return 0, ErrNotFound
 }
 
 // backsearch is searches upward from the specified line.
-func (root *Root) backSearchLine(num int) (int, error) {
-	if num > root.Doc.BufEndNum() {
-		num = root.Doc.BufEndNum() - 1
-	}
+func (root *Root) backSearchLine(ctx context.Context, num int) (int, error) {
+	defer root.searchQuit()
+	num = min(num, root.Doc.BufEndNum()-1)
+
 	for n := num; n >= 0; n-- {
 		if contains(root.Doc.GetLine(n), root.input.reg) {
 			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
 		}
 	}
 	return 0, ErrNotFound

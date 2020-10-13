@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"log"
 	"strconv"
 	"time"
@@ -9,10 +10,10 @@ import (
 )
 
 // main is manages and executes events in the main routine.
-func (root *Root) main() {
+func (root *Root) main(quitChan chan<- struct{}) {
 	go root.countTimer()
+	ctx := context.Background()
 
-loop:
 	for {
 		root.draw()
 		ev := root.Screen.PollEvent()
@@ -22,23 +23,24 @@ loop:
 				root.toNormal()
 				continue
 			}
-			break loop
+			close(quitChan)
+			return
 		case *eventTimer:
 			root.updateEndNum()
 		case *eventDocument:
 			root.setDocument(ev.m)
 		case *eventCopySelect:
-			root.putClipboard()
+			root.putClipboard(ctx)
 		case *eventPaste:
-			root.getClipboard()
+			root.getClipboard(ctx)
 		case *eventSearch:
-			root.nextSearch()
+			root.nextSearch(ctx)
 		case *eventBackSearch:
-			root.nextBackSearch()
+			root.nextBackSearch(ctx)
 		case *searchInput:
-			root.search(ev.value)
+			root.search(ctx, ev.value)
 		case *backSearchInput:
-			root.backSearch(ev.value)
+			root.backSearch(ctx, ev.value)
 		case *gotoInput:
 			root.goLine(ev.value)
 		case *headerInput:
@@ -59,6 +61,9 @@ loop:
 			default:
 				root.inputEvent(ev)
 			}
+		case nil:
+			close(quitChan)
+			return
 		}
 	}
 }
@@ -137,7 +142,10 @@ func (root *Root) MoveLine(num int) {
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
 	go func() {
-		root.Screen.PostEventWait(ev)
+		err := root.Screen.PostEvent(ev)
+		if err != nil {
+			log.Println(err)
+		}
 	}()
 }
 
@@ -240,4 +248,36 @@ func (root *Root) SetDocument(m *Document) {
 	go func() {
 		root.Screen.PostEventWait(ev)
 	}()
+}
+
+// eventSearchQuit represents a search quit event.
+type eventSearchQuit struct {
+	tcell.EventTime
+}
+
+// searchQuit executes a quit event.
+func (root *Root) searchQuit() {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventSearchQuit{}
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
+}
+
+func (root *Root) cancelWait(cancel context.CancelFunc) error {
+	for {
+		ev := root.Screen.PollEvent()
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyCtrlC {
+				cancel()
+				return ErrCancel
+			}
+		case *eventSearchQuit:
+			return nil
+		}
+	}
 }
