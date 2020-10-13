@@ -219,7 +219,8 @@ func openFiles(fileNames []string) (*Root, error) {
 	for _, fileName := range fileNames {
 		fi, err := os.Stat(fileName)
 		if err != nil {
-			return nil, err
+			log.Println(err)
+			continue
 		}
 		if fi.IsDir() {
 			continue
