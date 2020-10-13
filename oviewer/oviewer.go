@@ -231,7 +231,8 @@ func openFiles(fileNames []string) (*Root, error) {
 		}
 		err = m.ReadFile(fileName)
 		if err != nil {
-			return nil, err
+			log.Println(err)
+			continue
 		}
 		docList = append(docList, m)
 	}
