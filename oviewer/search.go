@@ -79,12 +79,13 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 	if err == nil {
 		return re
 	}
+
 	r = regexp.QuoteMeta(r)
 	re, err = regexp.Compile(r)
 	if err == nil {
-		return nil
+		return re
 	}
-	return re
+	return nil
 }
 
 // stripEscapeSequence is a regular expression that excludes escape sequences.

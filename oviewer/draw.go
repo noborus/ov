@@ -97,20 +97,24 @@ func (root *Root) draw() {
 		for n := range lc {
 			lc[n].style = lc[n].style.Reverse(false)
 		}
-		lineStr, byteMap := contentsToStr(lc)
 
-		// search highlight
-		if root.input.reg != nil {
-			poss := searchPosition(lineStr, root.input.reg)
-			for _, r := range poss {
-				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
+		if root.input.reg != nil || (root.input.mode == Normal && root.Doc.ColumnMode) {
+			lineStr, byteMap := contentsToStr(lc)
+
+			// search highlight
+			if root.input.reg != nil {
+				lineStr, byteMap := contentsToStr(lc)
+				poss := searchPosition(lineStr, root.input.reg)
+				for _, r := range poss {
+					reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
+				}
 			}
-		}
 
-		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
-			start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, byteMap[start], byteMap[end])
+			// column highlight
+			if root.input.mode == Normal && root.Doc.ColumnMode {
+				start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+				reverseContents(lc, byteMap[start], byteMap[end])
+			}
 		}
 
 		// line number mode
