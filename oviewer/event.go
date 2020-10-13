@@ -267,17 +267,17 @@ func (root *Root) searchQuit() {
 	}()
 }
 
-func (root *Root) cancelWait(cancel context.CancelFunc) {
+func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyCtrlC {
 				cancel()
-				return
+				return ErrCancel
 			}
 		case *eventSearchQuit:
-			return
+			return nil
 		}
 	}
 }

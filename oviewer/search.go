@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // search is forward search.
@@ -31,32 +33,54 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 func (root *Root) nextSearch(ctx context.Context) {
 	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 
+	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	go root.cancelWait(cancel)
 
-	lineNum, err := root.searchLine(ctx, root.Doc.lineNum+root.Doc.Header+1)
-	if err != nil {
+	eg.Go(func() error {
+		return root.cancelWait(cancel)
+	})
+
+	eg.Go(func() error {
+		lineNum, err := root.searchLine(ctx, root.Doc.lineNum+root.Doc.Header+1)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lineNum - root.Doc.Header)
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
 		root.setMessage(err.Error())
 		return
 	}
-	root.moveLine(lineNum - root.Doc.Header)
 }
 
 // nextBackSearch is backward　search again.
 func (root *Root) nextBackSearch(ctx context.Context) {
 	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 
+	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	go root.cancelWait(cancel)
 
-	lineNum, err := root.backSearchLine(ctx, root.Doc.lineNum+root.Doc.Header-1)
-	if err != nil {
+	eg.Go(func() error {
+		return root.cancelWait(cancel)
+	})
+
+	eg.Go(func() error {
+		lineNum, err := root.backSearchLine(ctx, root.Doc.lineNum+root.Doc.Header-1)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lineNum - root.Doc.Header)
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
 		root.setMessage(err.Error())
 		return
 	}
-	root.moveLine(lineNum - root.Doc.Header)
 }
 
 // searchLine is searches below from the specified line.
