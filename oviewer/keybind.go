@@ -94,7 +94,7 @@ type KeyBind map[string][]string
 // GetKeyBinds returns the current key mapping.
 func GetKeyBinds(bind map[string][]string) map[string][]string {
 	keyBind := map[string][]string{
-		actionExit:           {"Escape", "q", "ctrl+c"},
+		actionExit:           {"Escape", "q"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionHelp:           {"h"},

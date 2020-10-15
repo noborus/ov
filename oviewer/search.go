@@ -31,7 +31,7 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 
 // nextSearch is forward search again.
 func (root *Root) nextSearch(ctx context.Context) {
-	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
+	root.setMessage(fmt.Sprintf("search:%v (ctrl+c)Cancel", root.input.value))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -54,11 +54,12 @@ func (root *Root) nextSearch(ctx context.Context) {
 		root.setMessage(err.Error())
 		return
 	}
+	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 }
 
 // nextBackSearch is backward　search again.
 func (root *Root) nextBackSearch(ctx context.Context) {
-	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
+	root.setMessage(fmt.Sprintf("search:%v (ctrl+c)Cancel", root.input.value))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -81,6 +82,7 @@ func (root *Root) nextBackSearch(ctx context.Context) {
 		root.setMessage(err.Error())
 		return
 	}
+	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
 }
 
 // searchLine is searches below from the specified line.
