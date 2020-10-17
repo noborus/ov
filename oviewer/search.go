@@ -16,6 +16,7 @@ func (root *Root) search(ctx context.Context, input string) {
 		return
 	}
 	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.Doc.lineNum--
 	root.nextSearch(ctx)
 }
 
