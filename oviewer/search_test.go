@@ -25,14 +25,6 @@ func Test_contains(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "testNil",
-			args: args{
-				s:  "test",
-				re: regexp.MustCompile(``),
-			},
-			want: false,
-		},
-		{
 			name: "testEscapeSequences",
 			args: args{
 				s:  "\x1B[31mtest\x1B[0m",
