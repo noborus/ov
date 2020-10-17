@@ -31,7 +31,7 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 
 // nextSearch is forward search again.
 func (root *Root) nextSearch(ctx context.Context) {
-	root.setMessage(fmt.Sprintf("search:%v (ctrl+c)Cancel", root.input.value))
+	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -59,7 +59,7 @@ func (root *Root) nextSearch(ctx context.Context) {
 
 // nextBackSearch is backward　search again.
 func (root *Root) nextBackSearch(ctx context.Context) {
-	root.setMessage(fmt.Sprintf("search:%v (ctrl+c)Cancel", root.input.value))
+	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -90,8 +90,12 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = max(num, 0)
 
+	re := root.input.reg
+	if re == nil || re.String() == "" {
+		return num, nil
+	}
 	for n := num; n < root.Doc.BufEndNum(); n++ {
-		if contains(root.Doc.GetLine(n), root.input.reg) {
+		if contains(root.Doc.GetLine(n), re) {
 			return n, nil
 		}
 		select {
@@ -108,8 +112,12 @@ func (root *Root) backSearchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = min(num, root.Doc.BufEndNum()-1)
 
+	re := root.input.reg
+	if re == nil || re.String() == "" {
+		return num, nil
+	}
 	for n := num; n >= 0; n-- {
-		if contains(root.Doc.GetLine(n), root.input.reg) {
+		if contains(root.Doc.GetLine(n), re) {
 			return n, nil
 		}
 		select {
@@ -144,9 +152,6 @@ var stripEscapeSequence = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
 // contains returns a bool containing the search string.
 func contains(s string, re *regexp.Regexp) bool {
-	if re == nil || re.String() == "" {
-		return false
-	}
 	s = stripEscapeSequence.ReplaceAllString(s, "")
 	return re.MatchString(s)
 }

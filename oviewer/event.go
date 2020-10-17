@@ -2,11 +2,13 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"time"
 
 	"github.com/gdamore/tcell"
+	"gitlab.com/tslocum/cbind"
 )
 
 // main is manages and executes events in the main routine.
@@ -87,6 +89,10 @@ func (root *Root) Quit() {
 	go func() {
 		root.Screen.PostEventWait(ev)
 	}()
+}
+
+func (root *Root) Cancel() {
+	return
 }
 
 // WriteQuit sets the write flag and executes a quit event.
@@ -268,14 +274,30 @@ func (root *Root) searchQuit() {
 }
 
 func (root *Root) cancelWait(cancel context.CancelFunc) error {
+	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
+		cancel()
+		return nil
+	}
+
+	c := cbind.NewConfiguration()
+
+	for _, k := range root.cancelKeys {
+		mod, key, ch, err := cbind.Decode(k)
+		if err != nil {
+			return fmt.Errorf("%w [%s] for cancel: %s", ErrFailedKeyBind, k, err)
+		}
+		if key == tcell.KeyRune {
+			c.SetRune(mod, ch, cancelApp)
+		} else {
+			c.SetKey(mod, key, cancelApp)
+		}
+	}
+
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyCtrlC {
-				cancel()
-				return ErrCancel
-			}
+			c.Capture(ev)
 		case *eventSearchQuit:
 			return nil
 		}

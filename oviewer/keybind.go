@@ -12,6 +12,7 @@ import (
 
 const (
 	actionExit           = "exit"
+	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSync           = "sync"
 	actionHelp           = "help"
@@ -51,6 +52,7 @@ const (
 func (root *Root) setHandler() map[string]func() {
 	return map[string]func(){
 		actionExit:           root.Quit,
+		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.viewSync,
 		actionHelp:           root.Help,
@@ -95,6 +97,7 @@ type KeyBind map[string][]string
 func GetKeyBinds(bind map[string][]string) map[string][]string {
 	keyBind := map[string][]string{
 		actionExit:           {"Escape", "q"},
+		actionCancel:         {"c", "ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionHelp:           {"h"},
@@ -180,6 +183,7 @@ func KeyBindString(k KeyBind) string {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "\n\tKey binding\n\n")
 	k.writeKeyBind(&b, actionExit, "quit")
+	k.writeKeyBind(&b, actionCancel, "cancel")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")

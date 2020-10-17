@@ -76,6 +76,8 @@ type Root struct {
 	statusPos int
 	// minStartX is the minimum start position of x.
 	minStartX int
+
+	cancelKeys []string
 }
 
 type lineNumber struct {
@@ -259,6 +261,13 @@ func (root *Root) setKeyConfig() error {
 	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
 		return err
+	}
+
+	keys, ok := keyBind[actionCancel]
+	if !ok {
+		log.Printf("no cancel key")
+	} else {
+		root.cancelKeys = keys
 	}
 
 	help, err := NewHelp(keyBind)
