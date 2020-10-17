@@ -165,7 +165,7 @@ pager=ov -w=f -H3 -F -C -d "|"
 
 ## Mouse support
 
-The ov makes the mouse support its own control.
+The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
@@ -176,14 +176,15 @@ For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environ
 Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
 
 Pasting in ov is done with the middle button.
-In other applications it is paste from the clipboard (often by pressing the right click).
+In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
 ## Key bindings
 
 ```
-  [Escape], [q], [ctrl+c]    * quit
+  [Escape], [q]              * quit
+  [c], [ctrl+c]              * cancel
   [Q]                        * output screen and quit
-  [h], [ctrl+alt+c]          * display help screen
+  [h]                        * display help screen
   [ctrl+alt+e]               * display log screen
   [ctrl+l]                   * screen sync
   [ctrl+alt+r]               * enable/disable mouse
