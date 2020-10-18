@@ -91,6 +91,7 @@ func (root *Root) Quit() {
 	}()
 }
 
+// Cancel usually does nothing.
 func (root *Root) Cancel() {
 	return
 }

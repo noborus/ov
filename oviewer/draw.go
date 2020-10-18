@@ -248,12 +248,13 @@ func (root *Root) statusDraw() {
 	}
 	leftStatus := fmt.Sprintf("%s:%s", root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
+
+	input := root.input
 	caseSensitive := ""
-	if root.CaseSensitive {
+	if root.CaseSensitive && (input.mode == Search || input.mode == Backsearch) {
 		caseSensitive = "(Aa)"
 	}
 
-	input := root.input
 	switch input.mode {
 	case Normal, Help, LogDoc:
 		for i := 0; i < len(leftContents); i++ {

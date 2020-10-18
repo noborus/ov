@@ -77,6 +77,7 @@ type Root struct {
 	// minStartX is the minimum start position of x.
 	minStartX int
 
+	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
 }
 
@@ -159,6 +160,8 @@ var (
 	ErrInvalidNumber = errors.New("invalid number")
 	// ErrFailedKeyBind indicates keybinding failed.
 	ErrFailedKeyBind = errors.New("failed to set keybind")
+	// ErrSignalCatch indicates that the signal has been caught.
+	ErrSignalCatch = errors.New("signal catch")
 )
 
 // NewOviewer return the structure of oviewer.
@@ -366,7 +369,7 @@ func (root *Root) Run() error {
 		case <-quitChan:
 			return nil
 		case sig := <-sigs:
-			return fmt.Errorf("signal catch [%s]", sig)
+			return fmt.Errorf("%w [%s]", ErrSignalCatch, sig)
 		}
 	}
 
