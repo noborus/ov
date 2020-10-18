@@ -36,11 +36,11 @@ func (root *Root) main(quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			root.nextSearch(ctx)
+			root.search(ctx, root.Doc.lineNum+1, root.searchLine)
 		case *eventBackSearch:
-			root.nextBackSearch(ctx)
+			root.search(ctx, root.Doc.lineNum-1, root.backSearchLine)
 		case *searchInput:
-			root.search(ctx, ev.value)
+			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:
 			root.backSearch(ctx, ev.value)
 		case *gotoInput:
@@ -93,7 +93,6 @@ func (root *Root) Quit() {
 
 // Cancel usually does nothing.
 func (root *Root) Cancel() {
-	return
 }
 
 // WriteQuit sets the write flag and executes a quit event.

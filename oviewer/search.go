@@ -19,15 +19,14 @@ const (
 	searchRegexp
 )
 
-// search is forward search.
-func (root *Root) search(ctx context.Context, input string) {
+// forwardSearch is forward search.
+func (root *Root) forwardSearch(ctx context.Context, input string) {
 	if input == "" {
 		root.input.reg = nil
 		return
 	}
 	root.input.value = input
-	root.Doc.lineNum--
-	root.nextSearch(ctx)
+	root.search(ctx, root.Doc.lineNum, root.searchLine)
 }
 
 // backSearch is backward search.
@@ -37,11 +36,11 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 		return
 	}
 	root.input.value = input
-	root.nextBackSearch(ctx)
+	root.search(ctx, root.Doc.lineNum, root.backSearchLine)
 }
 
-// nextSearch is forward search again.
-func (root *Root) nextSearch(ctx context.Context) {
+// search searches forward or backward.
+func (root *Root) search(ctx context.Context, num int, searchFunc func(context.Context, int) (int, error)) {
 	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -53,35 +52,7 @@ func (root *Root) nextSearch(ctx context.Context) {
 	})
 
 	eg.Go(func() error {
-		lineNum, err := root.searchLine(ctx, root.Doc.lineNum+root.Doc.Header+1)
-		if err != nil {
-			return err
-		}
-		root.moveLine(lineNum - root.Doc.Header)
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		root.setMessage(err.Error())
-		return
-	}
-	root.setMessage(fmt.Sprintf("search:%v", root.input.value))
-}
-
-// nextBackSearch is backward　search again.
-func (root *Root) nextBackSearch(ctx context.Context) {
-	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
-
-	eg, ctx := errgroup.WithContext(ctx)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	eg.Go(func() error {
-		return root.cancelWait(cancel)
-	})
-
-	eg.Go(func() error {
-		lineNum, err := root.backSearchLine(ctx, root.Doc.lineNum+root.Doc.Header-1)
+		lineNum, err := searchFunc(ctx, num)
 		if err != nil {
 			return err
 		}
@@ -102,12 +73,12 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 	num = max(num, 0)
 
 	if root.input.value == "" {
-		return num, nil
+		return num, ErrNotFound
 	}
 
 	root.input.reg = regexpComple(root.input.value, root.CaseSensitive)
 	if root.input.reg == nil {
-		return num, nil
+		return num, ErrNotFound
 	}
 
 	searchType := getSearchType(root.input.value, root.CaseSensitive)
@@ -122,6 +93,10 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 		default:
 		}
 	}
+
+	root.input.value = ""
+	root.input.reg = nil
+
 	return 0, ErrNotFound
 }
 
