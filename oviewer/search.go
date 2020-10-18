@@ -3,10 +3,20 @@ package oviewer
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
 	"golang.org/x/sync/errgroup"
+)
+
+// SearchType represents the type of search.
+type SearchType int
+
+const (
+	searchSensitive SearchType = iota
+	searchInsensitive
+	searchRegexp
 )
 
 // search is forward search.
@@ -15,7 +25,7 @@ func (root *Root) search(ctx context.Context, input string) {
 		root.input.reg = nil
 		return
 	}
-	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.input.value = input
 	root.Doc.lineNum--
 	root.nextSearch(ctx)
 }
@@ -26,7 +36,7 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 		root.input.reg = nil
 		return
 	}
-	root.input.reg = regexpComple(input, root.CaseSensitive)
+	root.input.value = input
 	root.nextBackSearch(ctx)
 }
 
@@ -91,12 +101,19 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = max(num, 0)
 
-	re := root.input.reg
-	if re == nil || re.String() == "" {
+	if root.input.value == "" {
 		return num, nil
 	}
+
+	root.input.reg = regexpComple(root.input.value, root.CaseSensitive)
+	if root.input.reg == nil {
+		return num, nil
+	}
+
+	searchType := getSearchType(root.input.value, root.CaseSensitive)
+
 	for n := num; n < root.Doc.BufEndNum(); n++ {
-		if contains(root.Doc.GetLine(n), re) {
+		if root.contains(root.Doc.GetLine(n), searchType) {
 			return n, nil
 		}
 		select {
@@ -113,12 +130,15 @@ func (root *Root) backSearchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = min(num, root.Doc.BufEndNum()-1)
 
-	re := root.input.reg
-	if re == nil || re.String() == "" {
+	root.input.reg = regexpComple(root.input.value, root.CaseSensitive)
+	if root.input.reg == nil {
 		return num, nil
 	}
+
+	searchType := getSearchType(root.input.value, root.CaseSensitive)
+
 	for n := num; n >= 0; n-- {
-		if contains(root.Doc.GetLine(n), re) {
+		if root.contains(root.Doc.GetLine(n), searchType) {
 			return n, nil
 		}
 		select {
@@ -145,6 +165,7 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 	if err == nil {
 		return re
 	}
+	log.Printf("regexpCompile failed %s", r)
 	return nil
 }
 
@@ -152,9 +173,30 @@ func regexpComple(r string, caseSensitive bool) *regexp.Regexp {
 var stripEscapeSequence = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
 // contains returns a bool containing the search string.
-func contains(s string, re *regexp.Regexp) bool {
-	s = stripEscapeSequence.ReplaceAllString(s, "")
-	return re.MatchString(s)
+func (root *Root) contains(s string, t SearchType) bool {
+	if strings.ContainsAny(s, "\x1b\b") {
+		s = stripEscapeSequence.ReplaceAllString(s, "")
+	}
+	switch t {
+	case searchSensitive:
+		return strings.Contains(s, root.input.value)
+	case searchInsensitive:
+		return strings.Contains(strings.ToLower(s), strings.ToLower(root.input.value))
+	default:
+		return root.input.reg.MatchString(s)
+	}
+}
+
+func getSearchType(t string, caseSensitive bool) SearchType {
+	searchType := searchRegexp
+	if t == regexp.QuoteMeta(t) {
+		if caseSensitive {
+			searchType = searchSensitive
+		} else {
+			searchType = searchInsensitive
+		}
+	}
+	return searchType
 }
 
 // rangePosition returns the range starting and ending from the s,substr string.

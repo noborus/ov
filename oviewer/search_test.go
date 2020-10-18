@@ -6,53 +6,83 @@ import (
 	"testing"
 )
 
-func Test_contains(t *testing.T) {
+func TestRoot_contains(t *testing.T) {
+	type fields struct {
+		input *Input
+	}
 	type args struct {
-		s  string
-		re *regexp.Regexp
+		s          string
+		searchType SearchType
 	}
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name   string
+		fields fields
+		args   args
+		want   bool
 	}{
 		{
 			name: "test1",
+			fields: fields{
+				input: &Input{
+					value: "t",
+				},
+			},
 			args: args{
-				s:  "test",
-				re: regexp.MustCompile(`t`),
+				s:          "test",
+				searchType: searchInsensitive,
 			},
 			want: true,
 		},
 		{
 			name: "testEscapeSequences",
+			fields: fields{
+				input: &Input{
+					value: "test",
+					reg:   regexp.MustCompile(`test`),
+				},
+			},
 			args: args{
-				s:  "\x1B[31mtest\x1B[0m",
-				re: regexp.MustCompile(`test`),
+				s:          "\x1B[31mtest\x1B[0m",
+				searchType: searchRegexp,
 			},
 			want: true,
 		},
 		{
 			name: "testEscapeSequences2",
+			fields: fields{
+				input: &Input{
+					value: "test",
+					reg:   regexp.MustCompile(`m`),
+				},
+			},
 			args: args{
-				s:  "\x1B[31mtest\x1B[0m",
-				re: regexp.MustCompile(`m`),
+				s:          "\x1B[31mtest\x1B[0m",
+				searchType: searchRegexp,
 			},
 			want: false,
 		},
 		{
 			name: "testEscapeSequences3",
+			fields: fields{
+				input: &Input{
+					value: "test",
+					reg:   regexp.MustCompile(`test`),
+				},
+			},
 			args: args{
-				s:  "tes\x1B[31mt\x1B[0m",
-				re: regexp.MustCompile(`test`),
+				s:          "tes\x1B[31mt\x1B[0m",
+				searchType: searchRegexp,
 			},
 			want: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := contains(tt.args.s, tt.args.re); got != tt.want {
-				t.Errorf("contains() = %v, want %v", got, tt.want)
+			root := &Root{
+				input: tt.fields.input,
+			}
+			if got := root.contains(tt.args.s, tt.args.searchType); got != tt.want {
+				t.Errorf("Root.contains() = %v, want %v", got, tt.want)
 			}
 		})
 	}
