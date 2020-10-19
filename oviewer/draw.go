@@ -52,7 +52,7 @@ func (root *Root) draw() {
 		root.headerStyle(lc)
 
 		// column highlight
-		if root.Doc.ColumnMode && root.input.mode == Normal {
+		if root.input.mode == Normal && root.Doc.ColumnMode {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
@@ -78,6 +78,7 @@ func (root *Root) draw() {
 			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, lc)
 		}
 	}
+
 	// Body
 	lX = root.Doc.branch * root.vWidth
 	for y := root.headerLen(); y < root.vHight; y++ {
@@ -103,7 +104,6 @@ func (root *Root) draw() {
 
 			// search highlight
 			if root.input.reg != nil {
-				lineStr, byteMap := contentsToStr(lc)
 				poss := searchPosition(lineStr, root.input.reg)
 				for _, r := range poss {
 					reverseContents(lc, byteMap[r[0]], byteMap[r[1]])

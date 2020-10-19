@@ -97,15 +97,8 @@ func (root *Root) Cancel() {
 
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit() {
-	if !root.checkScreen() {
-		return
-	}
 	root.AfterWrite = true
-	ev := &eventAppQuit{}
-	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	root.Quit()
 }
 
 // eventTimer represents a timer event.
