@@ -8,7 +8,7 @@ ov is a feature rich terminal pager.
 
 (The old repository name was oviewer.)
 
-![ov.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov.png)
+![ov.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov.gif)
 
 ## feature
 
@@ -19,6 +19,7 @@ ov is a feature rich terminal pager.
 * Dynamic wrap / nowrap switchable.
 * Background color to alternate rows.
 * Columns can be selected with separators.
+* Shortcut keys are customizable.
 
 ## install
 
@@ -182,7 +183,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 ```
   [Escape], [q]              * quit
-  [c], [ctrl+c]              * cancel
+  [ctrl+c]                   * cancel
   [Q]                        * output screen and quit
   [h]                        * display help screen
   [ctrl+alt+e]               * display log screen
