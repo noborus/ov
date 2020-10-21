@@ -182,56 +182,56 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 ## Key bindings
 
 ```
-  [Escape], [q]              * quit
-  [ctrl+c]                   * cancel
-  [Q]                        * output screen and quit
-  [h]                        * display help screen
-  [ctrl+alt+e]               * display log screen
-  [ctrl+l]                   * screen sync
-  [ctrl+alt+r]               * enable/disable mouse
+  [Escape], [q]                                                 * quit
+  [ctrl+c]                                                      * cancel
+  [Q]                                                           * output screen and quit
+  [h]                                                           * display help screen
+  [ctrl+alt+e]                                                  * display log screen
+  [ctrl+l], [r], [ctrl+r]                                       * screen sync
+  [ctrl+alt+r]                                                  * enable/disable mouse
 
 	Moving
 
-  [Enter], [Down], [ctrl+N]  * forward by one line
-  [Up], [ctrl+p]             * backward by one line
-  [Home]                     * go to begin of line
-  [End]                      * go to end of line
-  [PageDown], [ctrl+v]       * forward by page
-  [PageUp], [ctrl+b]         * backward by page
-  [ctrl+d]                   * forward a half page
-  [ctrl+u]                   * backward a half page
-  [left]                     * scroll to left
-  [right]                    * scroll to right
-  [ctrl+left]                * scroll left half screen
-  [ctrl+right]               * scroll right half screen
-  [g]                        * number of go to line
-  []]                        * next document
-  [[]                        * previous document
+  [Enter], [Down], [ctrl+N], [e], [ctrl+e], [j], [J], [ctrl+j]  * forward by one line
+  [Up], [ctrl+p], [y], [Y], [ctrl+y], [k], [K], [ctrl+k]        * backward by one line
+  [Home]                                                        * go to begin of line
+  [End]                                                         * go to end of line
+  [PageDown], [ctrl+v], [space], [alt+space], [f], [z]          * forward by page
+  [PageUp], [b], [ctrl+b], [alt+v]                              * backward by page
+  [ctrl+d], [d]                                                 * forward a half page
+  [ctrl+u], [u]                                                 * backward a half page
+  [left]                                                        * scroll to left
+  [right]                                                       * scroll to right
+  [ctrl+left]                                                   * scroll left half screen
+  [ctrl+right]                                                  * scroll right half screen
+  [g]                                                           * number of go to line
+  []]                                                           * next document
+  [[]                                                           * previous document
 
 	Mark position
 
-  [m]                        * mark current position
-  [>]                        * move to next marked position
-  [<]                        * move to previous marked position
+  [m]                                                           * mark current position
+  [>]                                                           * move to next marked position
+  [<]                                                           * move to previous marked position
 
 	Search
 
-  [/]                        * forward search mode
-  [?]                        * backward search mode
-  [n]                        * repeat forward search
-  [N]                        * repeat backward search
+  [/]                                                           * forward search mode
+  [?]                                                           * backward search mode
+  [n]                                                           * repeat forward search
+  [N]                                                           * repeat backward search
 
 	Change display
 
-  [w], [W]                   * wrap/nowrap toggle
-  [c]                        * column mode toggle
-  [C]                        * color to alternate rows toggle
-  [G]                        * line number toggle
+  [w], [W]                                                      * wrap/nowrap toggle
+  [c]                                                           * column mode toggle
+  [C]                                                           * color to alternate rows toggle
+  [G]                                                           * line number toggle
 
 	Change Display with Input
 
-  [d]                        * delimiter string
-  [H]                        * number of header lines
-  [t]                        * TAB width
+  [d]                                                           * delimiter string
+  [H]                                                           * number of header lines
+  [t]                                                           * TAB width
 
 ```
