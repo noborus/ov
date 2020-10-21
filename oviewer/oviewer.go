@@ -138,7 +138,7 @@ var (
 	// HeaderStyle represents the style of the header.
 	HeaderStyle = tcell.StyleDefault.Bold(true)
 	// ColorAlternate represents alternating colors.
-	ColorAlternate = tcell.ColorGray
+	ColorAlternate = tcell.ColorDefault
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle = tcell.StyleDefault.Bold(true)
 	// OverLineStyle represents the overline underline style.

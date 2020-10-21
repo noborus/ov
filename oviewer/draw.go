@@ -146,12 +146,18 @@ func (root *Root) draw() {
 		// alternate background color
 		if root.Doc.AlternateRows {
 			bgColor := root.ColorNormalBg
+			reverse := false
 			if (root.Doc.lineNum+lY)%2 == 1 {
-				bgColor = ColorAlternate
+				if ColorAlternate == tcell.ColorDefault {
+					// default to reversed colors
+					reverse = true
+				} else {
+					bgColor = ColorAlternate
+				}
 			}
 			for x := 0; x < root.vWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
-				root.SetContent(x, y, r, c, style.Background(bgColor))
+				root.SetContent(x, y, r, c, style.Background(bgColor).Reverse(reverse))
 			}
 		}
 		lY = nextY
