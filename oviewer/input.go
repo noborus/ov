@@ -74,7 +74,7 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	input := root.input
 
 	switch ev.Key() {
-	case tcell.KeyEscape:
+	case tcell.KeyEscape, tcell.KeyCtrlG, tcell.KeyCtrlC:
 		input.mode = Normal
 		return false
 	case tcell.KeyEnter:
