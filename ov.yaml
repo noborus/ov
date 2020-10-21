@@ -20,6 +20,7 @@ KeyBind:
     exit:
         - "Escape"
         - "q"
+    cancel:
         - "ctrl+c"
     write_exit:
         - "Q"
