@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -120,6 +121,9 @@ type Config struct {
 
 	Status status
 
+	// Editor to use for editing the current file.
+	Editor string
+
 	// Mouse support disable.
 	DisableMouse bool
 	// AfterWrite writes the current screen on exit.
@@ -162,6 +166,8 @@ var (
 	ErrFailedKeyBind = errors.New("failed to set keybind")
 	// ErrSignalCatch indicates that the signal has been caught.
 	ErrSignalCatch = errors.New("signal catch")
+	// ErrFailedCommand indicates that calling an external command failed.
+	ErrFailedCommand = errors.New("failed command")
 )
 
 // NewOviewer return the structure of oviewer.
@@ -699,6 +705,48 @@ func (root *Root) toggleMouse() {
 		root.Screen.EnableMouse()
 		root.setMessage("Enable Mouse")
 	}
+}
+
+func (root *Root) edit() {
+	editor := root.identifyEditor()
+	editCmd := exec.Command(editor, root.Doc.FileName)
+	editCmd.Stdin = os.Stdin
+	editCmd.Stdout = os.Stdout
+	if err := editCmd.Run(); err != nil {
+		root.setMessage(ErrFailedCommand.Error())
+	}
+	//TODO: Reread the file
+	root.Doc.ReadFile(root.Doc.FileName)
+	root.viewSync()
+	root.Screen.Sync()
+}
+
+func (root *Root) identifyEditor() string {
+	if ovedit := os.Getenv("OVEDIT"); ovedit != "" {
+		return ovedit
+	}
+
+	if editor := root.Config.Editor; editor != "" {
+		return editor
+	}
+
+	if lessedit := os.Getenv("LESSEDIT"); lessedit != "" {
+		return lessedit
+	}
+
+	if visual := os.Getenv("VISUAL"); visual != "" {
+		return visual
+	}
+
+	if sensibleEditor, _ := exec.LookPath("sensible-editor"); sensibleEditor != "" {
+		return sensibleEditor
+	}
+
+	if editor := os.Getenv("EDITOR"); editor != "" {
+		return editor
+	}
+
+	return "vi"
 }
 
 func max(a, b int) int {
