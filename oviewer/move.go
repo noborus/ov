@@ -7,6 +7,7 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
+	root.reRead()
 	root.moveLine(root.Doc.endNum + 1)
 }
 
