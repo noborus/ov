@@ -87,24 +87,22 @@ func (root *Root) draw() {
 				line:   -1,
 				branch: 0,
 			}
-			lineStr, byteMap = contentsToStr(lc)
+			lineStr, byteMap = root.getContentsStr(root.Doc.lineNum+lY, lc)
 			lastLY = lY
 		}
 
-		if root.input.reg != nil || (root.input.mode == Normal && root.Doc.ColumnMode) {
-			// search highlight
-			if root.input.reg != nil {
-				poss := searchPosition(lineStr, root.input.reg)
-				for _, r := range poss {
-					reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
-				}
+		// search highlight
+		if root.input.reg != nil {
+			poss := searchPosition(lineStr, root.input.reg)
+			for _, r := range poss {
+				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
 			}
+		}
 
-			// column highlight
-			if root.input.mode == Normal && root.Doc.ColumnMode {
-				start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-				reverseContents(lc, byteMap[start], byteMap[end])
-			}
+		// column highlight
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
@@ -155,6 +153,14 @@ func (root *Root) draw() {
 
 	root.statusDraw()
 	root.Show()
+}
+
+func (root *Root) getContentsStr(lineNum int, lc lineContents) (string, map[int]int) {
+	if root.Doc.lastContentsNum != lineNum {
+		root.Doc.lastContentsStr, root.Doc.lastContentsMap = contentsToStr(lc)
+		root.Doc.lastContentsNum = lineNum
+	}
+	return root.Doc.lastContentsStr, root.Doc.lastContentsMap
 }
 
 func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
