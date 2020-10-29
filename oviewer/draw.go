@@ -14,7 +14,6 @@ func (root *Root) draw() {
 	}
 
 	m := root.Doc
-	screen := root.Screen
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		root.Doc.lineNum = 0
 		root.statusDraw()
@@ -41,11 +40,7 @@ func (root *Root) draw() {
 	branch := 0
 	// Header
 	for hy := 0; lY < root.Doc.Header; hy++ {
-		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
-		if err != nil {
-			// EOF
-			continue
-		}
+		lc := root.getLineContents(lY, root.Doc.TabWidth)
 		if hy > root.vHight {
 			break
 		}
@@ -79,29 +74,24 @@ func (root *Root) draw() {
 		}
 	}
 
+	lastLY := -1
+	var lc lineContents
+	var lineStr string
+	var byteMap map[int]int
 	// Body
 	lX = root.Doc.branch * root.vWidth
 	for y := root.headerLen(); y < root.vHight; y++ {
-		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
-		if err != nil {
-			// EOF
-			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
-			root.drawEOL(1, y)
-
+		if lastLY != lY {
+			lc = root.getLineContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
 			root.lnumber[y] = lineNumber{
 				line:   -1,
 				branch: 0,
 			}
-			continue
-		}
-
-		for n := range lc {
-			lc[n].style = lc[n].style.Reverse(false)
+			lineStr, byteMap = contentsToStr(lc)
+			lastLY = lY
 		}
 
 		if root.input.reg != nil || (root.input.mode == Normal && root.Doc.ColumnMode) {
-			lineStr, byteMap := contentsToStr(lc)
-
 			// search highlight
 			if root.input.reg != nil {
 				poss := searchPosition(lineStr, root.input.reg)
@@ -165,6 +155,36 @@ func (root *Root) draw() {
 
 	root.statusDraw()
 	root.Show()
+}
+
+func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
+	lc, err := root.Doc.lineToContents(lineNum, root.Doc.TabWidth)
+	if err == nil {
+		for n := range lc {
+			lc[n].style = lc[n].style.Reverse(false)
+		}
+		return lc
+	}
+
+	// EOF
+	lc = make(lineContents, root.vWidth)
+	eof := content{
+		mainc: '~',
+		combc: nil,
+		width: 1,
+		style: tcell.StyleDefault.Foreground(tcell.ColorGray),
+	}
+	lc[0] = eof
+	space := content{
+		mainc: 0,
+		combc: nil,
+		width: 1,
+		style: tcell.StyleDefault.Normal(),
+	}
+	for x := 1; x < root.vWidth; x++ {
+		lc[x] = space
+	}
+	return lc
 }
 
 // drawEOL fills with blanks from the end of the line to the screen width.
