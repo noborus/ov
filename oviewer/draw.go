@@ -80,7 +80,7 @@ func (root *Root) draw() {
 	}
 
 	// Body
-	lX = root.Doc.branch * root.vWidth
+	lX = root.firstXPosition()
 	for y := root.headerLen(); y < root.vHight; y++ {
 		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
 		if err != nil {
@@ -285,4 +285,26 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
+}
+
+func (root *Root) firstXPosition() int {
+	if root.Doc.branch == 0 {
+		return 0
+	}
+
+	lX := root.Doc.branch * root.vWidth
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum, root.Doc.TabWidth)
+	if err != nil {
+		return 0
+	}
+
+	if len(lc) < lX {
+		return 0
+	}
+
+	lastX := lc[lX-1]
+	if lastX.width == 2 {
+		lX--
+	}
+	return lX
 }
