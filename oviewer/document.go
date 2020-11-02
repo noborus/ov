@@ -26,6 +26,10 @@ type Document struct {
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 
+	lastContentsNum int
+	lastContentsStr string
+	lastContentsMap map[int]int
+
 	// status is the display status of the document.
 	status
 	// lineNum is the starting position of the current y.

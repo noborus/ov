@@ -94,9 +94,6 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 		}
 	}
 
-	root.input.value = ""
-	root.input.reg = nil
-
 	return 0, ErrNotFound
 }
 

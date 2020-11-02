@@ -16,16 +16,20 @@ require (
 	github.com/pierrec/lz4 v2.5.2+incompatible
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v1.1.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/ulikunitz/xz v0.5.8
 	gitlab.com/tslocum/cbind v0.1.1
-	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee
-	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520
-	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211 // indirect
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
-exclude gitlab.com/tslocum/cbind v0.1.2
+exclude (
+	gitlab.com/tslocum/cbind v0.1.2
+	gitlab.com/tslocum/cbind v0.1.3
+)
