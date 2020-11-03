@@ -34,8 +34,8 @@ type Document struct {
 	status
 	// lineNum is the starting position of the current y.
 	lineNum int
-	// branch represents the number of wrapped lines.
-	branch int
+	// firstStartX represents the x position of the first line.
+	firstStartX int
 	// x is the starting position of the current x.
 	x int
 	// columnNum is the number of columns.
