@@ -79,6 +79,7 @@ func HelpKey(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
