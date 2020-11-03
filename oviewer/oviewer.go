@@ -513,7 +513,8 @@ func (root *Root) setWrapHeaderLen() {
 		if err != nil {
 			continue
 		}
-		root.wrapHeaderLen += 1 + (len(lc) / (root.vWidth - root.startX))
+		root.wrapHeaderLen++
+		root.wrapHeaderLen += ((len(lc) - 1) / (root.vWidth - root.startX))
 	}
 }
 

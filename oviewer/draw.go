@@ -8,11 +8,6 @@ import (
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
-	if root.skipDraw {
-		root.skipDraw = false
-		return
-	}
-
 	m := root.Doc
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		root.Doc.lineNum = 0
@@ -78,8 +73,12 @@ func (root *Root) draw() {
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
+
+	if root.Doc.WrapMode {
+		lX = root.firstXPosition()
+	}
+
 	// Body
-	lX = root.firstXPosition()
 	for y := root.headerLen(); y < root.vHight; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
@@ -318,8 +317,8 @@ func (root *Root) firstXPosition() int {
 		return 0
 	}
 
-	lX := root.Doc.branch * root.vWidth
-	lc, err := root.Doc.lineToContents(root.Doc.lineNum, root.Doc.TabWidth)
+	lX := root.Doc.branch * (root.vWidth - root.startX)
+	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}
@@ -328,8 +327,7 @@ func (root *Root) firstXPosition() int {
 		return 0
 	}
 
-	lastX := lc[lX-1]
-	if lastX.width == 2 {
+	if lc[lX-1].width == 2 {
 		lX--
 	}
 	return lX

@@ -95,7 +95,7 @@ func (root *Root) moveDown() {
 	if err != nil {
 		return
 	}
-	branch := (len(lc) / (root.vWidth - root.startX))
+	branch := ((len(lc) - 1) / (root.vWidth - root.startX))
 	if len(lc) < (root.vWidth-root.startX) || root.Doc.branch >= branch {
 		root.Doc.branch = 0
 		root.Doc.lineNum++
