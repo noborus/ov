@@ -46,7 +46,7 @@ func (root *Root) draw() {
 		if root.input.mode == Normal && root.Doc.ColumnMode {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, byteMap[start], byteMap[end])
+			highlightContents(lc, byteMap[start], byteMap[end], root.StyleHLColumn)
 		}
 
 		root.lnumber[hy] = lineNumber{
@@ -91,18 +91,18 @@ func (root *Root) draw() {
 			lastLY = lY
 		}
 
-		// search highlight
+		// search highlight style
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
 			for _, r := range poss {
-				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
+				highlightContents(lc, byteMap[r[0]], byteMap[r[1]], root.StyleHLSearch)
 			}
 		}
 
 		// column highlight
 		if root.input.mode == Normal && root.Doc.ColumnMode {
 			start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			reverseContents(lc, byteMap[start], byteMap[end])
+			highlightContents(lc, byteMap[start], byteMap[end], root.StyleHLColumn)
 		}
 
 		// line number mode
@@ -131,15 +131,13 @@ func (root *Root) draw() {
 			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc)
 		}
 
-		// alternate background color
+		// alternate style
 		if root.Doc.AlternateRows {
-			bgColor := root.ColorNormalBg
 			if (root.Doc.lineNum+lY)%2 == 1 {
-				bgColor = ColorAlternate
-			}
-			for x := 0; x < root.vWidth; x++ {
-				r, c, style, _ := root.GetContent(x, y)
-				root.SetContent(x, y, r, c, style.Background(bgColor))
+				for x := 0; x < root.vWidth; x++ {
+					r, c, style, _ := root.GetContent(x, y)
+					root.SetContent(x, y, r, c, applyStyle(style, root.StyleAlternate))
+				}
 			}
 		}
 		lY = nextY
@@ -207,9 +205,9 @@ func (root *Root) drawEOL(eol int, y int) {
 }
 
 // reverses the specified range.
-func reverseContents(lc lineContents, start int, end int) {
+func highlightContents(lc lineContents, start int, end int, os ovStyle) {
 	for n := start; n < end; n++ {
-		lc[n].style = lc[n].style.Reverse(true)
+		lc[n].style = applyStyle(lc[n].style, os)
 	}
 }
 
@@ -264,7 +262,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 // headerStyle applies the style of the header.
 func (root *Root) headerStyle(lc lineContents) {
 	for i := 0; i < len(lc); i++ {
-		lc[i].style = HeaderStyle
+		lc[i].style = applyStyle(lc[i].style, root.StyleHeader)
 	}
 }
 

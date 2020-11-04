@@ -106,6 +106,20 @@ type status struct {
 
 // Config represents the settings of ov.
 type Config struct {
+	// StyleAlternate is a style that applies line by line.
+	StyleAlternate ovStyle
+	// StyleHeader is the style that applies to the header.
+	StyleHeader ovStyle
+	// StyleOverStrike is a style that applies to overstrikes.
+	StyleOverStrike ovStyle
+	// OverLineS is a style that applies to overstrike underlines.
+	StyleOverLine ovStyle
+	// StyleHLSearch is the style of search highlights.
+	StyleHLSearch ovStyle
+	// StyleHLColumn is the style of the column highlights.
+
+	StyleHLColumn ovStyle
+	// Old setting method.
 	// Alternating background color.
 	ColorAlternate string
 	// Header color.
@@ -114,9 +128,6 @@ type Config struct {
 	ColorOverStrike string
 	// OverLine color.
 	ColorOverLine string
-
-	// ColorNormalBg is the normal Background color.
-	ColorNormalBg tcell.Color
 
 	Status status
 
@@ -134,15 +145,21 @@ type Config struct {
 	Keybind map[string][]string
 }
 
+type ovStyle struct {
+	Background string
+	Foreground string
+	Blink      bool
+	Bold       bool
+	Italic     bool
+	Reverse    bool
+	Underline  bool
+}
+
 var (
-	// HeaderStyle represents the style of the header.
-	HeaderStyle = tcell.StyleDefault.Bold(true)
-	// ColorAlternate represents alternating colors.
-	ColorAlternate = tcell.ColorGray
 	// OverStrikeStyle represents the overstrike style.
-	OverStrikeStyle = tcell.StyleDefault.Bold(true)
+	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
-	OverLineStyle = tcell.StyleDefault.Underline(true)
+	OverLineStyle tcell.Style
 )
 
 var (
@@ -181,6 +198,24 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 // NewConfig return the structure of Config with default values.
 func NewConfig() Config {
 	return Config{
+		StyleHeader: ovStyle{
+			Bold: true,
+		},
+		StyleAlternate: ovStyle{
+			Background: "gray",
+		},
+		StyleOverStrike: ovStyle{
+			Bold: true,
+		},
+		StyleOverLine: ovStyle{
+			Underline: true,
+		},
+		StyleHLSearch: ovStyle{
+			Reverse: true,
+		},
+		StyleHLColumn: ovStyle{
+			Reverse: true,
+		},
 		Status: status{
 			TabWidth: 8,
 		},
@@ -436,13 +471,57 @@ func (root *Root) toNormal() {
 	root.input.mode = Normal
 }
 
-// setGlobalStyle sets some styles that are determined by the settings.
+func setStyle(s ovStyle) tcell.Style {
+	style := tcell.StyleDefault
+	style = style.Background(tcell.GetColor(s.Background))
+	style = style.Foreground(tcell.GetColor(s.Foreground))
+	style = style.Blink(s.Blink)
+	style = style.Bold(s.Bold)
+	style = style.Italic(s.Italic)
+	style = style.Reverse(s.Reverse)
+	style = style.Underline(s.Underline)
+
+	return style
+}
+
+func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
+	if s.Background != "" {
+		style = style.Background(tcell.GetColor(s.Background))
+	}
+	if s.Foreground != "" {
+		style = style.Foreground(tcell.GetColor(s.Foreground))
+	}
+	if s.Blink {
+		style = style.Blink(s.Blink)
+	}
+	if s.Bold {
+		style = style.Bold(s.Bold)
+	}
+	if s.Italic {
+		style = style.Italic(s.Italic)
+	}
+	if s.Reverse {
+		style = style.Reverse(s.Reverse)
+	}
+	if s.Underline {
+		style = style.Underline(s.Underline)
+	}
+	return style
+}
+
 func (root *Root) setGlobalStyle() {
+	OverStrikeStyle = setStyle(root.Config.StyleOverStrike)
+	OverLineStyle = setStyle(root.Config.StyleOverLine)
+	root.setOldGlobalStyle()
+}
+
+// setGlobalStyle sets some styles that are determined by the settings.
+func (root *Root) setOldGlobalStyle() {
 	if root.ColorAlternate != "" {
-		ColorAlternate = tcell.GetColor(root.ColorAlternate)
+		root.StyleAlternate = ovStyle{Background: root.ColorAlternate}
 	}
 	if root.ColorHeader != "" {
-		HeaderStyle = HeaderStyle.Foreground(tcell.GetColor(root.ColorHeader))
+		root.StyleHeader = ovStyle{Foreground: root.ColorHeader}
 	}
 	if root.ColorOverStrike != "" {
 		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
@@ -450,9 +529,6 @@ func (root *Root) setGlobalStyle() {
 	if root.ColorOverLine != "" {
 		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
 	}
-
-	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
-	root.ColorNormalBg = normalBgColor
 }
 
 // prepareView prepares when the screen size is changed.
