@@ -1,6 +1,8 @@
 package oviewer
 
-import "log"
+import (
+	"log"
+)
 
 // Go to the top line.
 func (root *Root) moveTop() {
@@ -70,8 +72,19 @@ func (root *Root) moveUp() {
 	width := (root.vWidth - root.startX)
 	root.Doc.firstStartX -= width
 	if root.Doc.firstStartX > 0 {
+		lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if len(lc) > root.Doc.firstStartX {
+			if lc[root.Doc.firstStartX-1].width == 2 {
+				root.Doc.firstStartX++
+			}
+		}
 		return
 	}
+
 	if root.Doc.firstStartX >= -1 {
 		root.Doc.firstStartX = 0
 		return
@@ -93,9 +106,12 @@ func (root *Root) moveUp() {
 	}
 
 	row := len(lc) / width
-	root.Doc.firstStartX = row * width
-	if lc[width-1].width == 2 {
-		root.Doc.firstStartX--
+	root.Doc.firstStartX = 0
+	for r := 0; r < row; r++ {
+		root.Doc.firstStartX += width
+		if lc[root.Doc.firstStartX-1].width == 2 {
+			root.Doc.firstStartX--
+		}
 	}
 }
 
@@ -118,13 +134,14 @@ func (root *Root) moveDown() {
 	width := (root.vWidth - root.startX)
 	root.Doc.firstStartX = root.Doc.firstStartX + width
 	if len(lc) > root.Doc.firstStartX {
-		if lc[width-1].width == 2 {
+		if lc[root.Doc.firstStartX-1].width == 2 {
 			root.Doc.firstStartX--
 		}
-	} else {
-		root.Doc.firstStartX = 0
-		root.Doc.lineNum++
+		return
 	}
+
+	root.Doc.firstStartX = 0
+	root.Doc.lineNum++
 }
 
 // Move to the left.
