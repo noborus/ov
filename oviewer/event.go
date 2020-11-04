@@ -17,7 +17,11 @@ func (root *Root) main(quitChan chan<- struct{}) {
 	ctx := context.Background()
 
 	for {
-		root.draw()
+		if !root.skipDraw {
+			root.draw()
+		} else {
+			root.skipDraw = false
+		}
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:

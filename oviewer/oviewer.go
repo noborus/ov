@@ -513,7 +513,8 @@ func (root *Root) setWrapHeaderLen() {
 		if err != nil {
 			continue
 		}
-		root.wrapHeaderLen += 1 + (len(lc) / (root.vWidth - root.startX))
+		root.wrapHeaderLen++
+		root.wrapHeaderLen += ((len(lc) - 1) / (root.vWidth - root.startX))
 	}
 }
 
@@ -529,7 +530,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 		return num - bottomLine, 0
 	}
 
-	branch := 0
+	width := (root.vWidth - root.startX)
 	for y := bottomLine - root.wrapHeaderLen; ; y-- {
 		if num < 0 {
 			return 0, 0
@@ -539,15 +540,20 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 			num--
 			continue
 		}
-		branch = ((len(lc) - 1) / (root.vWidth - root.startX))
-		if y-branch <= 0 {
-			branch = branch - y
-			break
+		row := len(lc) / width
+		if y-row <= 0 {
+			row = row - y
+			x := row * width
+			if len(lc) > width {
+				if lc[width-1].width == 2 {
+					x--
+				}
+			}
+			return num - root.Doc.Header, x
 		}
-		y -= branch
+		y -= row
 		num--
 	}
-	return num - root.Doc.Header, branch
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.

@@ -2,17 +2,13 @@ package oviewer
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gdamore/tcell"
 )
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
-	if root.skipDraw {
-		root.skipDraw = false
-		return
-	}
-
 	m := root.Doc
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		root.Doc.lineNum = 0
@@ -21,13 +17,13 @@ func (root *Root) draw() {
 		return
 	}
 
-	l, b := root.bottomLineNum(root.Doc.endNum)
-	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.branch > b) {
+	l, x := root.bottomLineNum(root.Doc.endNum)
+	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.firstStartX > x) {
 		if root.Doc.BufEOF() {
 			root.message = "EOF"
 		}
 		root.Doc.lineNum = l
-		root.Doc.branch = b
+		root.Doc.firstStartX = x
 	}
 	if root.Doc.lineNum < 0 {
 		root.Doc.lineNum = 0
@@ -78,8 +74,12 @@ func (root *Root) draw() {
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
+
+	if root.Doc.WrapMode {
+		lX = root.Doc.firstStartX
+	}
+
 	// Body
-	lX = root.firstXPosition()
 	for y := root.headerLen(); y < root.vHight; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
@@ -215,6 +215,10 @@ func reverseContents(lc lineContents, start int, end int) {
 
 // wrapContents wraps and draws the contents and returns the next drawing position.
 func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+	if lX < 0 {
+		log.Printf("Illegal lX:%d", lX)
+		return 0, 0
+	}
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
@@ -311,26 +315,4 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
-}
-
-func (root *Root) firstXPosition() int {
-	if root.Doc.branch == 0 {
-		return 0
-	}
-
-	lX := root.Doc.branch * root.vWidth
-	lc, err := root.Doc.lineToContents(root.Doc.lineNum, root.Doc.TabWidth)
-	if err != nil {
-		return 0
-	}
-
-	if len(lc) < lX {
-		return 0
-	}
-
-	lastX := lc[lX-1]
-	if lastX.width == 2 {
-		lX--
-	}
-	return lX
 }
