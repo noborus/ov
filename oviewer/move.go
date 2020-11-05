@@ -132,7 +132,7 @@ func (root *Root) moveDown() {
 		return
 	}
 	width := (root.vWidth - root.startX)
-	root.Doc.firstStartX = root.Doc.firstStartX + width
+	root.Doc.firstStartX += width
 	if len(lc) > root.Doc.firstStartX {
 		if lc[root.Doc.firstStartX-1].width == 2 {
 			root.Doc.firstStartX--
