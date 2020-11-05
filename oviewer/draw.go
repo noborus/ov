@@ -46,7 +46,7 @@ func (root *Root) draw() {
 		if root.input.mode == Normal && root.Doc.ColumnMode {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			highlightContents(lc, byteMap[start], byteMap[end], root.StyleHLColumn)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		root.lnumber[hy] = lineNumber{
@@ -91,18 +91,18 @@ func (root *Root) draw() {
 			lastLY = lY
 		}
 
-		// search highlight style
+		// search highlight
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
 			for _, r := range poss {
-				highlightContents(lc, byteMap[r[0]], byteMap[r[1]], root.StyleHLSearch)
+				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
 			}
 		}
 
 		// column highlight
 		if root.input.mode == Normal && root.Doc.ColumnMode {
 			start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-			highlightContents(lc, byteMap[start], byteMap[end], root.StyleHLColumn)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
@@ -205,9 +205,9 @@ func (root *Root) drawEOL(eol int, y int) {
 }
 
 // reverses the specified range.
-func highlightContents(lc lineContents, start int, end int, os ovStyle) {
+func reverseContents(lc lineContents, start int, end int) {
 	for n := start; n < end; n++ {
-		lc[n].style = applyStyle(lc[n].style, os)
+		lc[n].style = lc[n].style.Reverse(true)
 	}
 }
 

@@ -114,11 +114,7 @@ type Config struct {
 	StyleOverStrike ovStyle
 	// OverLineS is a style that applies to overstrike underlines.
 	StyleOverLine ovStyle
-	// StyleHLSearch is the style of search highlights.
-	StyleHLSearch ovStyle
-	// StyleHLColumn is the style of the column highlights.
 
-	StyleHLColumn ovStyle
 	// Old setting method.
 	// Alternating background color.
 	ColorAlternate string
@@ -210,12 +206,6 @@ func NewConfig() Config {
 		},
 		StyleOverLine: ovStyle{
 			Underline: true,
-		},
-		StyleHLSearch: ovStyle{
-			Reverse: true,
-		},
-		StyleHLColumn: ovStyle{
-			Reverse: true,
 		},
 		Status: status{
 			TabWidth: 8,
