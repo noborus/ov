@@ -1,18 +1,17 @@
 # TabWidth is the tab width number.
 TabWidth: 4
+# Style
+# String of the color name: Foreground, Background
+# Boolean: Bold, Blink, Dim, Italic, Underline
 StyleAlternate:
   Background: "gray"
 StyleHeader:
   Bold: true
-#  Blink: true
-#  Italic: true
-#  Underline: true
 StyleOverStrike:
-  Foreground: "green"
-  Underline: true
+  Bold: true
 StyleOverLine:
-  Foreground: "red"
   Underline: true
+
 # Keybind
 # Special key
 #   "Enter","Backspace","Tab","Backtab","Esc",
