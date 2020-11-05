@@ -150,6 +150,7 @@ type ovStyle struct {
 	Foreground string
 	Blink      bool
 	Bold       bool
+	Dim        bool
 	Italic     bool
 	Reverse    bool
 	Underline  bool
@@ -477,6 +478,7 @@ func setStyle(s ovStyle) tcell.Style {
 	style = style.Foreground(tcell.GetColor(s.Foreground))
 	style = style.Blink(s.Blink)
 	style = style.Bold(s.Bold)
+	style = style.Dim(s.Dim)
 	style = style.Italic(s.Italic)
 	style = style.Reverse(s.Reverse)
 	style = style.Underline(s.Underline)
@@ -496,6 +498,9 @@ func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
 	}
 	if s.Bold {
 		style = style.Bold(s.Bold)
+	}
+	if s.Dim {
+		style = style.Dim(s.Dim)
 	}
 	if s.Italic {
 		style = style.Italic(s.Italic)
@@ -618,7 +623,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 		}
 		row := len(lc) / width
 		if y-row <= 0 {
-			row = row - y
+			row -= y
 			x := row * width
 			if len(lc) > width {
 				if lc[width-1].width == 2 {
