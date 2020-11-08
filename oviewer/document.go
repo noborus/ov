@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // The Document structure contains the values
@@ -66,7 +66,7 @@ func NewDocument() (*Document, error) {
 func (m *Document) ReadFile(fileName string) error {
 	var reader io.ReadCloser
 	if fileName == "" {
-		if terminal.IsTerminal(0) {
+		if term.IsTerminal(0) {
 			return ErrMissingFile
 		}
 		fileName = "(STDIN)"

@@ -16,7 +16,8 @@ func (root *Root) draw() {
 		root.Show()
 		return
 	}
-
+	//l, x := root.displayLineNum(m.lineNum, m.firstStartX)
+	//log.Printf("startLine:%d startX:%d, endLine:%d endX:%d", m.lineNum, m.firstStartX, l, x)
 	// Calculate the bottom line when it is possible to reach EOF.
 	if m.lineNum+root.vHight >= m.endNum {
 		l, x := root.bottomLineNum(m.endNum)
@@ -84,7 +85,7 @@ func (root *Root) draw() {
 	}
 
 	// Body
-	for y := root.headerLen(); y < root.vHight; y++ {
+	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(m.lineNum+lY, m.TabWidth)
 			root.lnumber[y] = lineNumber{
@@ -147,7 +148,8 @@ func (root *Root) draw() {
 		lY = nextY
 	}
 
-	root.bottomPos = m.lineNum + max(lY, 0) - 1
+	root.bottomPos = m.lineNum + max(lY, 0)
+	root.bottomEndX = lX
 
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
@@ -175,7 +177,8 @@ func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
 	}
 
 	// EOF
-	lc = make(lineContents, root.vWidth)
+	width := root.vWidth - root.startX
+	lc = make(lineContents, width)
 	eof := content{
 		mainc: '~',
 		combc: nil,
@@ -189,7 +192,7 @@ func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
 		width: 1,
 		style: tcell.StyleDefault.Normal(),
 	}
-	for x := 1; x < root.vWidth; x++ {
+	for x := 1; x < width; x++ {
 		lc[x] = space
 	}
 	return lc
@@ -221,6 +224,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
 	}
+
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL

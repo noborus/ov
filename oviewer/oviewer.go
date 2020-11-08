@@ -71,7 +71,9 @@ type Root struct {
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
-	bottomPos int
+	bottomPos  int
+	bottomEndX int
+
 	// statusPos is the position of the status line.
 	statusPos int
 	// minStartX is the minimum start position of x.
@@ -593,38 +595,66 @@ func (root *Root) setWrapHeaderLen() {
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) (int, int) {
 	num = min(num, root.Doc.endNum)
-	bottomLine := (root.vHight - 2)
-	if !root.Doc.WrapMode {
-		if num < (root.vHight - root.Doc.Header) {
-			return 0, 0
-		}
-		return num - bottomLine, 0
+	hight := root.vHight - root.headerLen() - 2
+
+	if num < 0 {
+		return 0, 0
 	}
 
-	width := (root.vWidth - root.startX)
-	for y := bottomLine - root.wrapHeaderLen; ; y-- {
-		if num < 0 {
+	if !root.Doc.WrapMode {
+		if num < hight {
 			return 0, 0
 		}
-		lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
+		return num - hight, 0
+	}
+
+	// WrapMode
+	for y := hight; y > 0; {
+		beginX, err := root.wrapLineBegin(num)
 		if err != nil {
 			num--
+			if num < 0 {
+				return 0, 0
+			}
 			continue
 		}
-		row := len(lc) / width
-		if y-row <= 0 {
-			row -= y
-			x := row * width
-			if len(lc) > width {
-				if lc[width-1].width == 2 {
-					x--
-				}
+
+		y -= max(len(beginX), 1)
+		if y < 0 {
+			i := (y * -1)
+			if len(beginX) > i {
+				return num - root.Doc.Header, beginX[i]
 			}
-			return num - root.Doc.Header, x
+			log.Printf("over? len:%d < index:%d", len(beginX), i)
+			return num - root.Doc.Header, 0
 		}
-		y -= row
+
+		if y <= 0 {
+			break
+		}
 		num--
 	}
+	return num, 0
+}
+
+// wrapLineBegin returns a list of x positions at the beginning of the wrap line.
+func (root *Root) wrapLineBegin(num int) ([]int, error) {
+	lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
+	if err != nil {
+		return nil, err
+	}
+	beginX := make([]int, 0, root.vHight)
+	lineLength := len(lc)
+	width := (root.vWidth - root.startX)
+	for n := 0; n < lineLength; n += width {
+		if n > 0 && n < len(lc) {
+			if lc[n-1].width == 2 {
+				n--
+			}
+		}
+		beginX = append(beginX, n)
+	}
+	return beginX, nil
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.
