@@ -8,6 +8,11 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+func SetupStyle() {
+	OverStrikeStyle = setStyle(ovStyle{Bold: true})
+	OverLineStyle = setStyle(ovStyle{Underline: true})
+}
+
 func Test_parseString(t *testing.T) {
 	type args struct {
 		line     string
@@ -164,6 +169,7 @@ func Test_parseString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		SetupStyle()
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {

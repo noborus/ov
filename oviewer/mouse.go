@@ -294,8 +294,8 @@ func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 		x2 = size
 	}
 
-	x1 = x1 - root.startX
-	x2 = x2 - root.startX
+	x1 -= root.startX
+	x2 -= root.startX
 	x1 = max(0, x1)
 	x2 = max(0, x2)
 	x1 = min(x1, size)

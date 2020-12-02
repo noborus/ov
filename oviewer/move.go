@@ -1,5 +1,9 @@
 package oviewer
 
+import (
+	"log"
+)
+
 // Go to the top line.
 func (root *Root) moveTop() {
 	root.moveLine(0)
@@ -14,70 +18,180 @@ func (root *Root) moveBottom() {
 func (root *Root) moveLine(num int) {
 	root.resetSelect()
 	root.Doc.lineNum = num
-	root.Doc.branch = 0
+	root.Doc.firstStartX = 0
 }
 
 // Move up one screen.
 func (root *Root) movePgUp() {
-	n := root.Doc.lineNum - root.realHightNum()
-	if n >= root.Doc.lineNum {
-		n = root.Doc.lineNum - 1
+	root.resetSelect()
+	hight := (root.statusPos - root.headerLen())
+	root.moveNumUp(hight)
+}
+
+func (root *Root) moveNumUp(hight int) {
+	if !root.Doc.WrapMode {
+		root.Doc.lineNum -= hight
+		return
 	}
-	root.moveLine(n)
+
+	// WrapMode
+	num := root.Doc.lineNum + root.Doc.Header
+	x := root.Doc.firstStartX
+
+	startX, err := root.wrapLineBegin(num)
+	if err != nil {
+		log.Println(num, err)
+		return
+	}
+
+	n := 0
+	for _, xx := range startX {
+		if xx >= x {
+			break
+		}
+		n++
+	}
+	if len(startX) <= n {
+		log.Printf("over %v x(%d) %d", startX, x, n)
+		n = len(startX) - 1
+	}
+
+	for y := hight; y > 0; y-- {
+		if n <= 0 {
+			num--
+			if num < root.Doc.Header {
+				num = 0
+				x = 0
+				break
+			}
+			startX, err = root.wrapLineBegin(num)
+			if err != nil {
+				log.Println(num, err)
+				return
+			}
+			n = len(startX)
+		}
+		if n > 0 {
+			x = startX[n-1]
+		} else {
+			x = 0
+		}
+		n--
+	}
+	root.Doc.lineNum = num - root.Doc.Header
+	root.Doc.firstStartX = x
+}
+
+func (root *Root) moveNumDown(hight int) {
+	if !root.Doc.WrapMode {
+		root.Doc.lineNum += hight
+		return
+	}
+
+	// WrapMode
+	num := root.Doc.lineNum + root.Doc.Header
+	x := root.Doc.firstStartX
+
+	n := 0
+	startX, err := root.wrapLineBegin(num)
+	if err != nil {
+		log.Println(num, err)
+		return
+	}
+	n = 0
+	for ; n < len(startX); n++ {
+		if startX[n] >= x {
+			break
+		}
+	}
+	for y := root.Doc.Header; y < hight; y++ {
+		if n > len(startX) {
+			num++
+			if num > root.Doc.endNum {
+				break
+			}
+			startX, err = root.wrapLineBegin(num)
+			if err != nil {
+				log.Println(num, err)
+				return
+			}
+			n = 0
+		}
+		if len(startX) > 0 && n < len(startX) {
+			x = startX[n]
+		} else {
+			x = 0
+		}
+		n++
+	}
+	root.Doc.lineNum = num - root.Doc.Header
+	root.Doc.firstStartX = x
 }
 
 // Moves down one screen.
 func (root *Root) movePgDn() {
-	n := root.bottomPos - root.Doc.Header
-	if n <= root.Doc.lineNum {
-		n = root.Doc.lineNum + 1
-	}
-	root.moveLine(n)
-}
-
-// realHightNum returns the actual number of line on the screen.
-func (root *Root) realHightNum() int {
-	return root.bottomPos - (root.Doc.lineNum + root.Doc.Header)
+	root.resetSelect()
+	root.Doc.lineNum = root.bottomPos - root.Doc.Header
+	root.Doc.firstStartX = root.bottomEndX
 }
 
 // Moves up half a screen.
 func (root *Root) moveHfUp() {
-	root.moveLine(root.Doc.lineNum - (root.realHightNum() / 2))
+	root.moveNumUp((root.statusPos - root.headerLen()) / 2)
 }
 
 // Moves down half a screen.
 func (root *Root) moveHfDn() {
-	root.moveLine(root.Doc.lineNum + (root.realHightNum() / 2))
+	root.moveNumDown((root.statusPos - root.headerLen()) / 2)
 }
 
 // Move up one line.
 func (root *Root) moveUp() {
 	root.resetSelect()
 
+	if root.Doc.lineNum == 0 && root.Doc.firstStartX == 0 {
+		return
+	}
+
 	if !root.Doc.WrapMode {
-		root.Doc.branch = 0
+		root.Doc.firstStartX = 0
 		root.Doc.lineNum--
 		return
 	}
 
-	// WrapMode
-	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
-	if err != nil {
-		return
-	}
-	if len(lc) < (root.vWidth-root.startX) || root.Doc.branch <= 0 {
-		if (root.Doc.lineNum) >= 1 {
-			pre, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header-1, root.Doc.TabWidth)
-			if err != nil {
+	// WrapMode.
+	// Same line.
+	if root.Doc.firstStartX > 0 {
+		beginX, err := root.wrapLineBegin(root.Doc.lineNum + root.Doc.Header)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		for n, x := range beginX {
+			if x >= root.Doc.firstStartX {
+				root.Doc.firstStartX = beginX[n-1]
 				return
 			}
-			yyLen := len(pre) / ((root.vWidth - root.startX) + 1)
-			root.Doc.branch = yyLen
 		}
-		root.Doc.lineNum--
+	}
+
+	// Previous line.
+	root.Doc.lineNum--
+	if root.Doc.lineNum < 0 {
+		root.Doc.lineNum = 0
+		root.Doc.firstStartX = 0
 		return
 	}
-	root.Doc.branch--
+	beginX, err := root.wrapLineBegin(root.Doc.lineNum + root.Doc.Header)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if len(beginX) <= 0 {
+		root.Doc.firstStartX = 0
+		return
+	}
+	root.Doc.firstStartX = beginX[len(beginX)-1]
 }
 
 // Move down one line.
@@ -85,23 +199,26 @@ func (root *Root) moveDown() {
 	root.resetSelect()
 
 	if !root.Doc.WrapMode {
-		root.Doc.branch = 0
+		root.Doc.firstStartX = 0
 		root.Doc.lineNum++
 		return
 	}
 
 	// WrapMode
-	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
+	beginX, err := root.wrapLineBegin(root.Doc.lineNum + root.Doc.Header)
 	if err != nil {
+		log.Println(err)
 		return
 	}
-	branch := (len(lc) / (root.vWidth - root.startX))
-	if len(lc) < (root.vWidth-root.startX) || root.Doc.branch >= branch {
-		root.Doc.branch = 0
-		root.Doc.lineNum++
-		return
+	for _, x := range beginX {
+		if x > root.Doc.firstStartX {
+			root.Doc.firstStartX = x
+			return
+		}
 	}
-	root.Doc.branch++
+
+	root.Doc.firstStartX = 0
+	root.Doc.lineNum++
 }
 
 // Move to the left.

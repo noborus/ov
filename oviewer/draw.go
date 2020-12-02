@@ -2,36 +2,36 @@ package oviewer
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gdamore/tcell"
 )
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
-	if root.skipDraw {
-		root.skipDraw = false
-		return
-	}
-
 	m := root.Doc
-	screen := root.Screen
 	if m.BufEndNum() == 0 || root.vHight == 0 {
-		root.Doc.lineNum = 0
+		m.lineNum = 0
 		root.statusDraw()
 		root.Show()
 		return
 	}
-
-	l, b := root.bottomLineNum(root.Doc.endNum)
-	if root.Doc.lineNum > l || (root.Doc.lineNum == l && root.Doc.branch > b) {
-		if root.Doc.BufEOF() {
-			root.message = "EOF"
+	//l, x := root.displayLineNum(m.lineNum, m.firstStartX)
+	//log.Printf("startLine:%d startX:%d, endLine:%d endX:%d", m.lineNum, m.firstStartX, l, x)
+	// Calculate the bottom line when it is possible to reach EOF.
+	if m.lineNum+root.vHight >= m.endNum {
+		l, x := root.bottomLineNum(m.endNum)
+		if m.lineNum > l || (m.lineNum == l && m.firstStartX > x) {
+			if m.BufEOF() {
+				root.message = "EOF"
+			}
+			m.lineNum = l
+			m.firstStartX = x
 		}
-		root.Doc.lineNum = l
-		root.Doc.branch = b
 	}
-	if root.Doc.lineNum < 0 {
-		root.Doc.lineNum = 0
+
+	if m.lineNum < 0 {
+		m.lineNum = 0
 	}
 
 	root.lnumber = make([]lineNumber, root.vHight+1)
@@ -40,21 +40,17 @@ func (root *Root) draw() {
 	lX := 0
 	branch := 0
 	// Header
-	for hy := 0; lY < root.Doc.Header; hy++ {
-		lc, err := m.lineToContents(lY, root.Doc.TabWidth)
-		if err != nil {
-			// EOF
-			continue
-		}
+	for hy := 0; lY < m.Header; hy++ {
+		lc := root.getLineContents(lY, m.TabWidth)
 		if hy > root.vHight {
 			break
 		}
 		root.headerStyle(lc)
 
 		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
+		if root.input.mode == Normal && m.ColumnMode {
 			str, byteMap := contentsToStr(lc)
-			start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
@@ -67,7 +63,7 @@ func (root *Root) draw() {
 			root.Screen.SetContent(x, hy, 0, nil, tcell.StyleDefault.Normal())
 		}
 
-		if root.Doc.WrapMode {
+		if m.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, lc)
 			if lX > 0 {
 				branch++
@@ -75,51 +71,48 @@ func (root *Root) draw() {
 				branch = 0
 			}
 		} else {
-			lX, lY = root.noWrapContents(hy, root.Doc.x, lY, lc)
+			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
 		}
 	}
 
-	// Body
-	lX = root.Doc.branch * root.vWidth
-	for y := root.headerLen(); y < root.vHight; y++ {
-		lc, err := m.lineToContents(root.Doc.lineNum+lY, root.Doc.TabWidth)
-		if err != nil {
-			// EOF
-			screen.SetContent(0, y, '~', nil, tcell.StyleDefault.Foreground(tcell.ColorGray))
-			root.drawEOL(1, y)
+	lastLY := -1
+	var lc lineContents
+	var lineStr string
+	var byteMap map[int]int
 
+	if m.WrapMode {
+		lX = m.firstStartX
+	}
+
+	// Body
+	for y := root.headerLen(); y < root.vHight-1; y++ {
+		if lastLY != lY {
+			lc = root.getLineContents(m.lineNum+lY, m.TabWidth)
 			root.lnumber[y] = lineNumber{
 				line:   -1,
 				branch: 0,
 			}
-			continue
+			lineStr, byteMap = root.getContentsStr(m.lineNum+lY, lc)
+			lastLY = lY
 		}
 
-		for n := range lc {
-			lc[n].style = lc[n].style.Reverse(false)
+		// search highlight
+		if root.input.reg != nil {
+			poss := searchPosition(lineStr, root.input.reg)
+			for _, r := range poss {
+				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
+			}
 		}
 
-		if root.input.reg != nil || (root.input.mode == Normal && root.Doc.ColumnMode) {
-			lineStr, byteMap := contentsToStr(lc)
-
-			// search highlight
-			if root.input.reg != nil {
-				poss := searchPosition(lineStr, root.input.reg)
-				for _, r := range poss {
-					reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
-				}
-			}
-
-			// column highlight
-			if root.input.mode == Normal && root.Doc.ColumnMode {
-				start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-				reverseContents(lc, byteMap[start], byteMap[end])
-			}
+		// column highlight
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
-		if root.Doc.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, root.Doc.lineNum+lY-root.Doc.Header+1), root.Doc.TabWidth)
+		if m.LineNumMode {
+			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, m.lineNum+lY-m.Header+1), m.TabWidth)
 			for i := 0; i < len(lineNum); i++ {
 				lineNum[i].style = tcell.StyleDefault.Bold(true)
 			}
@@ -127,12 +120,12 @@ func (root *Root) draw() {
 		}
 
 		root.lnumber[y] = lineNumber{
-			line:   root.Doc.lineNum + lY,
+			line:   m.lineNum + lY,
 			branch: branch,
 		}
 
 		var nextY int
-		if root.Doc.WrapMode {
+		if m.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc)
 			if lX > 0 {
 				branch++
@@ -140,24 +133,23 @@ func (root *Root) draw() {
 				branch = 0
 			}
 		} else {
-			lX, nextY = root.noWrapContents(y, root.Doc.x, lY, lc)
+			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
 		}
 
-		// alternate background color
-		if root.Doc.AlternateRows {
-			bgColor := root.ColorNormalBg
-			if (root.Doc.lineNum+lY)%2 == 1 {
-				bgColor = ColorAlternate
-			}
-			for x := 0; x < root.vWidth; x++ {
-				r, c, style, _ := root.GetContent(x, y)
-				root.SetContent(x, y, r, c, style.Background(bgColor))
+		// alternate style
+		if m.AlternateRows {
+			if (m.lineNum+lY)%2 == 1 {
+				for x := 0; x < root.vWidth; x++ {
+					r, c, style, _ := root.GetContent(x, y)
+					root.SetContent(x, y, r, c, applyStyle(style, root.StyleAlternate))
+				}
 			}
 		}
 		lY = nextY
 	}
 
-	root.bottomPos = root.Doc.lineNum + max(lY, 0) - 1
+	root.bottomPos = m.lineNum + max(lY, 0)
+	root.bottomEndX = lX
 
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
@@ -165,6 +157,45 @@ func (root *Root) draw() {
 
 	root.statusDraw()
 	root.Show()
+}
+
+func (root *Root) getContentsStr(lineNum int, lc lineContents) (string, map[int]int) {
+	if root.Doc.lastContentsNum != lineNum {
+		root.Doc.lastContentsStr, root.Doc.lastContentsMap = contentsToStr(lc)
+		root.Doc.lastContentsNum = lineNum
+	}
+	return root.Doc.lastContentsStr, root.Doc.lastContentsMap
+}
+
+func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
+	lc, err := root.Doc.lineToContents(lineNum, tabWidth)
+	if err == nil {
+		for n := range lc {
+			lc[n].style = lc[n].style.Reverse(false)
+		}
+		return lc
+	}
+
+	// EOF
+	width := root.vWidth - root.startX
+	lc = make(lineContents, width)
+	eof := content{
+		mainc: '~',
+		combc: nil,
+		width: 1,
+		style: tcell.StyleDefault.Foreground(tcell.ColorGray),
+	}
+	lc[0] = eof
+	space := content{
+		mainc: 0,
+		combc: nil,
+		width: 1,
+		style: tcell.StyleDefault.Normal(),
+	}
+	for x := 1; x < width; x++ {
+		lc[x] = space
+	}
+	return lc
 }
 
 // drawEOL fills with blanks from the end of the line to the screen width.
@@ -189,6 +220,11 @@ func reverseContents(lc lineContents, start int, end int) {
 
 // wrapContents wraps and draws the contents and returns the next drawing position.
 func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+	if lX < 0 {
+		log.Printf("Illegal lX:%d", lX)
+		return 0, 0
+	}
+
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
@@ -234,7 +270,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 // headerStyle applies the style of the header.
 func (root *Root) headerStyle(lc lineContents) {
 	for i := 0; i < len(lc); i++ {
-		lc[i].style = HeaderStyle
+		lc[i].style = applyStyle(lc[i].style, root.StyleHeader)
 	}
 }
 

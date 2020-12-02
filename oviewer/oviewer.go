@@ -71,7 +71,9 @@ type Root struct {
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
 	// bottomPos is the position of the last line displayed.
-	bottomPos int
+	bottomPos  int
+	bottomEndX int
+
 	// statusPos is the position of the status line.
 	statusPos int
 	// minStartX is the minimum start position of x.
@@ -106,6 +108,16 @@ type status struct {
 
 // Config represents the settings of ov.
 type Config struct {
+	// StyleAlternate is a style that applies line by line.
+	StyleAlternate ovStyle
+	// StyleHeader is the style that applies to the header.
+	StyleHeader ovStyle
+	// StyleOverStrike is a style that applies to overstrikes.
+	StyleOverStrike ovStyle
+	// OverLineS is a style that applies to overstrike underlines.
+	StyleOverLine ovStyle
+
+	// Old setting method.
 	// Alternating background color.
 	ColorAlternate string
 	// Header color.
@@ -114,9 +126,6 @@ type Config struct {
 	ColorOverStrike string
 	// OverLine color.
 	ColorOverLine string
-
-	// ColorNormalBg is the normal Background color.
-	ColorNormalBg tcell.Color
 
 	Status status
 
@@ -134,15 +143,22 @@ type Config struct {
 	Keybind map[string][]string
 }
 
+type ovStyle struct {
+	Background string
+	Foreground string
+	Blink      bool
+	Bold       bool
+	Dim        bool
+	Italic     bool
+	Reverse    bool
+	Underline  bool
+}
+
 var (
-	// HeaderStyle represents the style of the header.
-	HeaderStyle = tcell.StyleDefault.Bold(true)
-	// ColorAlternate represents alternating colors.
-	ColorAlternate = tcell.ColorGray
 	// OverStrikeStyle represents the overstrike style.
-	OverStrikeStyle = tcell.StyleDefault.Bold(true)
+	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
-	OverLineStyle = tcell.StyleDefault.Underline(true)
+	OverLineStyle tcell.Style
 )
 
 var (
@@ -181,6 +197,18 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 // NewConfig return the structure of Config with default values.
 func NewConfig() Config {
 	return Config{
+		StyleHeader: ovStyle{
+			Bold: true,
+		},
+		StyleAlternate: ovStyle{
+			Background: "gray",
+		},
+		StyleOverStrike: ovStyle{
+			Bold: true,
+		},
+		StyleOverLine: ovStyle{
+			Underline: true,
+		},
 		Status: status{
 			TabWidth: 8,
 		},
@@ -436,13 +464,61 @@ func (root *Root) toNormal() {
 	root.input.mode = Normal
 }
 
-// setGlobalStyle sets some styles that are determined by the settings.
+func setStyle(s ovStyle) tcell.Style {
+	style := tcell.StyleDefault
+	style = style.Background(tcell.GetColor(s.Background))
+	style = style.Foreground(tcell.GetColor(s.Foreground))
+	style = style.Blink(s.Blink)
+	style = style.Bold(s.Bold)
+	style = style.Dim(s.Dim)
+	style = style.Italic(s.Italic)
+	style = style.Reverse(s.Reverse)
+	style = style.Underline(s.Underline)
+
+	return style
+}
+
+func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
+	if s.Background != "" {
+		style = style.Background(tcell.GetColor(s.Background))
+	}
+	if s.Foreground != "" {
+		style = style.Foreground(tcell.GetColor(s.Foreground))
+	}
+	if s.Blink {
+		style = style.Blink(s.Blink)
+	}
+	if s.Bold {
+		style = style.Bold(s.Bold)
+	}
+	if s.Dim {
+		style = style.Dim(s.Dim)
+	}
+	if s.Italic {
+		style = style.Italic(s.Italic)
+	}
+	if s.Reverse {
+		style = style.Reverse(s.Reverse)
+	}
+	if s.Underline {
+		style = style.Underline(s.Underline)
+	}
+	return style
+}
+
 func (root *Root) setGlobalStyle() {
+	OverStrikeStyle = setStyle(root.Config.StyleOverStrike)
+	OverLineStyle = setStyle(root.Config.StyleOverLine)
+	root.setOldGlobalStyle()
+}
+
+// setGlobalStyle sets some styles that are determined by the settings.
+func (root *Root) setOldGlobalStyle() {
 	if root.ColorAlternate != "" {
-		ColorAlternate = tcell.GetColor(root.ColorAlternate)
+		root.StyleAlternate = ovStyle{Background: root.ColorAlternate}
 	}
 	if root.ColorHeader != "" {
-		HeaderStyle = HeaderStyle.Foreground(tcell.GetColor(root.ColorHeader))
+		root.StyleHeader = ovStyle{Foreground: root.ColorHeader}
 	}
 	if root.ColorOverStrike != "" {
 		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
@@ -450,9 +526,6 @@ func (root *Root) setGlobalStyle() {
 	if root.ColorOverLine != "" {
 		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
 	}
-
-	_, normalBgColor, _ := tcell.StyleDefault.Decompose()
-	root.ColorNormalBg = normalBgColor
 }
 
 // prepareView prepares when the screen size is changed.
@@ -513,7 +586,8 @@ func (root *Root) setWrapHeaderLen() {
 		if err != nil {
 			continue
 		}
-		root.wrapHeaderLen += 1 + (len(lc) / (root.vWidth - root.startX))
+		root.wrapHeaderLen++
+		root.wrapHeaderLen += ((len(lc) - 1) / (root.vWidth - root.startX))
 	}
 }
 
@@ -521,33 +595,66 @@ func (root *Root) setWrapHeaderLen() {
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) (int, int) {
 	num = min(num, root.Doc.endNum)
-	bottomLine := (root.vHight - 2)
-	if !root.Doc.WrapMode {
-		if num < (root.vHight - root.Doc.Header) {
-			return 0, 0
-		}
-		return num - bottomLine, 0
+	hight := root.vHight - root.headerLen() - 2
+
+	if num < 0 {
+		return 0, 0
 	}
 
-	branch := 0
-	for y := bottomLine - root.wrapHeaderLen; ; y-- {
-		if num < 0 {
+	if !root.Doc.WrapMode {
+		if num < hight {
 			return 0, 0
 		}
-		lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
+		return num - hight, 0
+	}
+
+	// WrapMode
+	for y := hight; y > 0; {
+		beginX, err := root.wrapLineBegin(num)
 		if err != nil {
 			num--
+			if num < 0 {
+				return 0, 0
+			}
 			continue
 		}
-		branch = ((len(lc) - 1) / (root.vWidth - root.startX))
-		if y-branch <= 0 {
-			branch = branch - y
+
+		y -= max(len(beginX), 1)
+		if y < 0 {
+			i := (y * -1)
+			if len(beginX) > i {
+				return num - root.Doc.Header, beginX[i]
+			}
+			log.Printf("over? len:%d < index:%d", len(beginX), i)
+			return num - root.Doc.Header, 0
+		}
+
+		if y <= 0 {
 			break
 		}
-		y -= branch
 		num--
 	}
-	return num - root.Doc.Header, branch
+	return num, 0
+}
+
+// wrapLineBegin returns a list of x positions at the beginning of the wrap line.
+func (root *Root) wrapLineBegin(num int) ([]int, error) {
+	lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
+	if err != nil {
+		return nil, err
+	}
+	beginX := make([]int, 0, root.vHight)
+	lineLength := len(lc)
+	width := (root.vWidth - root.startX)
+	for n := 0; n < lineLength; n += width {
+		if n > 0 && n < len(lc) {
+			if lc[n-1].width == 2 {
+				n--
+			}
+		}
+		beginX = append(beginX, n)
+	}
+	return beginX, nil
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.

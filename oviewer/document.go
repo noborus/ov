@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // The Document structure contains the values
@@ -26,12 +26,16 @@ type Document struct {
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 
+	lastContentsNum int
+	lastContentsStr string
+	lastContentsMap map[int]int
+
 	// status is the display status of the document.
 	status
 	// lineNum is the starting position of the current y.
 	lineNum int
-	// branch represents the number of wrapped lines.
-	branch int
+	// firstStartX represents the x position of the first line.
+	firstStartX int
 	// x is the starting position of the current x.
 	x int
 	// columnNum is the number of columns.
@@ -62,7 +66,7 @@ func NewDocument() (*Document, error) {
 func (m *Document) ReadFile(fileName string) error {
 	var reader io.ReadCloser
 	if fileName == "" {
-		if terminal.IsTerminal(0) {
+		if term.IsTerminal(0) {
 			return ErrMissingFile
 		}
 		fileName = "(STDIN)"

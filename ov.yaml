@@ -1,11 +1,17 @@
 # TabWidth is the tab width number.
 TabWidth: 4
-# olorAlternate is an alternate background color.
-ColorAlternate: "gray"
-# ColorOverStrike is the overstrike color.
-ColorOverStrike: "green"
-# ColorOverLine is the color of the overstrike underline.
-ColorOverLine: "red"
+# Style
+# String of the color name: Foreground, Background
+# Boolean: Bold, Blink, Dim, Italic, Underline
+StyleAlternate:
+  Background: "gray"
+StyleHeader:
+  Bold: true
+StyleOverStrike:
+  Bold: true
+StyleOverLine:
+  Underline: true
+
 # Keybind
 # Special key
 #   "Enter","Backspace","Tab","Backtab","Esc",
@@ -20,6 +26,7 @@ KeyBind:
     exit:
         - "Escape"
         - "q"
+    cancel:
         - "ctrl+c"
     write_exit:
         - "Q"

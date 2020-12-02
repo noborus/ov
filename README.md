@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
 
 ov is a feature rich terminal pager.
+It has an effective function for tabular text.
 
 (The old repository name was oviewer.)
 
@@ -12,7 +13,7 @@ ov is a feature rich terminal pager.
 
 ## feature
 
-* Better support for unicode and wide width.
+* Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
 * Supports column mode.
 * Header rows can be fixed.
@@ -20,6 +21,7 @@ ov is a feature rich terminal pager.
 * Background color to alternate rows.
 * Columns can be selected with separators.
 * Shortcut keys are customizable.
+* The style of the effect is customizable.
 
 ## install
 
@@ -131,7 +133,7 @@ Refer to the [motion image](docs/image.md).
 
 ## config
 
-You can set colors and key bindings in the setting file.
+You can set style and key bindings in the setting file.
 
 Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) configuration file.
 
@@ -178,6 +180,16 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
+## Customize
+
+### Style customization
+
+* StyleAlternate
+* StyleHeader
+* StyleOverStrike
+* StyleOverLine
+
+### Key binding customization
 
 ## Key bindings
 
