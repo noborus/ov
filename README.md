@@ -242,9 +242,39 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 ### Style customization
 
+You can customize the following items.
+
 * StyleAlternate
 * StyleHeader
 * StyleOverStrike
 * StyleOverLine
 
+Specifies the color name for the foreground and background colors.
+Specify bool values for Bold, Blink, Shaded, Italic, and Underline.
+
+[Example]
+
+```yaml
+StyleAlternate:
+  Background: "gray"
+  Bold: true
+  Underline: true
+```
+
 ### Key binding customization
+
+You can customize key bindings.
+
+[Example]
+
+```yaml
+    down:
+        - "Enter"
+        - "Down"
+        - "ctrl+N"
+    up:
+        - "Up"
+        - "ctrl+p"
+```
+
+See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information..

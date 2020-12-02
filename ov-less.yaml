@@ -1,9 +1,9 @@
-# This is the ov config file.
-# Copy it to ~/.ov.yaml or start it with `ov --config ov.yaml`.
+# This is a file with less key bindings set.
+# Copy it to ~/.ov.yaml or start it with `ov --config ov-less.yaml`.
+# Thanks to hupfdule (Marco Herrn) for the less keybinding information.
 
 # TabWidth is the tab width number.
 TabWidth: 4
-
 # Style
 # String of the color name: Foreground, Background
 # Boolean: Bold, Blink, Dim, Italic, Underline
@@ -35,19 +35,31 @@ KeyBind:
     write_exit:
         - "Q"
     sync:
+        - "r"
+        - "R"
         - "ctrl+l"
+        - "ctrl+r"
     help:
         - "h"
         - "ctrl+alt+c"
     logdoc:
         - "ctrl+alt+e"
     down:
+        - "e"
+        - "ctrl+e"
+        - "j"
+        - "J"
+        - "ctrl+j"
         - "Enter"
         - "Down"
-        - "ctrl+N"
     up:
+        - "y"
+        - "Y"
+        - "ctrl+y"
+        - "k"
+        - "K"
+        - "ctrl+K"
         - "Up"
-        - "ctrl+p"
     top:
         - "Home"
     bottom:
@@ -62,13 +74,20 @@ KeyBind:
         - "ctrl+right"
     page_up:
         - "PageUp"
-        - "ctrl+b"
+        - "b"
+        - "alt+v"
     page_down:
         - "PageDown"
         - "ctrl+v"
+        - "space"
+        - "alt+space"
+        - "f"
+        - "z"
     page_half_up:
+        - "u"
         - "ctrl+u"
     page_half_down:
+        - "d"
         - "ctrl+d"
     mark:
         - "m"
