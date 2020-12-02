@@ -71,7 +71,11 @@ func (root *Root) moveNumUp(hight int) {
 			}
 			n = len(startX)
 		}
-		x = startX[n-1]
+		if n > 0 {
+			x = startX[n-1]
+		} else {
+			x = 0
+		}
 		n--
 	}
 	root.Doc.lineNum = num - root.Doc.Header
