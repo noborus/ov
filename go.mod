@@ -23,7 +23,7 @@ require (
 	github.com/ulikunitz/xz v0.5.8
 	gitlab.com/tslocum/cbind v0.1.1
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/sys v0.0.0-20201126233918-771906719818 // indirect
+	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
