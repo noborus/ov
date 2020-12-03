@@ -610,7 +610,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 
 	// WrapMode
 	for y := hight; y > 0; {
-		beginX, err := root.wrapLineBegin(num)
+		listX, err := root.leftMostX(num)
 		if err != nil {
 			num--
 			if num < 0 {
@@ -619,13 +619,13 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 			continue
 		}
 
-		y -= max(len(beginX), 1)
+		y -= max(len(listX), 1)
 		if y < 0 {
 			i := (y * -1)
-			if len(beginX) > i {
-				return num - root.Doc.Header, beginX[i]
+			if len(listX) > i {
+				return num - root.Doc.Header, listX[i]
 			}
-			log.Printf("over? len:%d < index:%d", len(beginX), i)
+			log.Printf("over? len:%d < index:%d", len(listX), i)
 			return num - root.Doc.Header, 0
 		}
 
@@ -637,24 +637,25 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 	return num, 0
 }
 
-// wrapLineBegin returns a list of x positions at the beginning of the wrap line.
-func (root *Root) wrapLineBegin(num int) ([]int, error) {
+// leftMostX returns a list of left - most x positions when wrapping.
+func (root *Root) leftMostX(num int) ([]int, error) {
 	lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err
 	}
-	beginX := make([]int, 0, root.vHight)
+
+	listX := make([]int, 0, root.vHight)
 	lineLength := len(lc)
 	width := (root.vWidth - root.startX)
 	for n := 0; n < lineLength; n += width {
-		if n > 0 && n < len(lc) {
+		if n > 0 && n < lineLength {
 			if lc[n-1].width == 2 {
 				n--
 			}
 		}
-		beginX = append(beginX, n)
+		listX = append(listX, n)
 	}
-	return beginX, nil
+	return listX, nil
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.
