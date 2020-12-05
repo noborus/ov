@@ -36,14 +36,17 @@ func (root *Root) movePgDn() {
 
 // Moves up half a screen.
 func (root *Root) moveHfUp() {
+	root.resetSelect()
 	root.moveNumUp((root.statusPos - root.headerLen()) / 2)
 }
 
 // Moves down half a screen.
 func (root *Root) moveHfDn() {
+	root.resetSelect()
 	root.moveNumDown((root.statusPos - root.headerLen()) / 2)
 }
 
+// numOfSlice returns what number x is in slice.
 func numOfSlice(listX []int, x int) int {
 	for n, v := range listX {
 		if v >= x {
@@ -53,6 +56,7 @@ func numOfSlice(listX []int, x int) int {
 	return len(listX) - 1
 }
 
+// numOfReverseSlice returns what number x is from the back of slice.
 func numOfReverseSlice(listX []int, x int) int {
 	for n := len(listX) - 1; n >= 0; n-- {
 		if listX[n] <= x {
