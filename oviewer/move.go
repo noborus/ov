@@ -17,8 +17,8 @@ func (root *Root) moveBottom() {
 // Move to the specified line.
 func (root *Root) moveLine(num int) {
 	root.resetSelect()
-	root.Doc.lineNum = num
-	root.Doc.firstStartX = 0
+	root.Doc.topLN = num
+	root.Doc.topLX = 0
 }
 
 // Move up one screen.
@@ -30,8 +30,8 @@ func (root *Root) movePgUp() {
 // Moves down one screen.
 func (root *Root) movePgDn() {
 	root.resetSelect()
-	root.Doc.lineNum = root.bottomPos - root.Doc.Header
-	root.Doc.firstStartX = root.bottomEndX
+	root.Doc.topLN = root.bottomLN - root.Doc.Header
+	root.Doc.topLX = root.bottomLX
 }
 
 // Moves up half a screen.
@@ -65,13 +65,13 @@ func numOfReverseSlice(listX []int, x int) int {
 // Moves up by the specified number of y.
 func (root *Root) moveNumUp(moveY int) {
 	if !root.Doc.WrapMode {
-		root.Doc.lineNum -= moveY
+		root.Doc.topLN -= moveY
 		return
 	}
 
 	// WrapMode
-	num := root.Doc.lineNum + root.Doc.Header
-	x := root.Doc.firstStartX
+	num := root.Doc.topLN + root.Doc.Header
+	x := root.Doc.topLX
 
 	listX, err := root.leftMostX(num)
 	if err != nil {
@@ -102,20 +102,20 @@ func (root *Root) moveNumUp(moveY int) {
 		}
 		n--
 	}
-	root.Doc.lineNum = num - root.Doc.Header
-	root.Doc.firstStartX = x
+	root.Doc.topLN = num - root.Doc.Header
+	root.Doc.topLX = x
 }
 
 // Moves down by the specified number of y.
 func (root *Root) moveNumDown(moveY int) {
 	if !root.Doc.WrapMode {
-		root.Doc.lineNum += moveY
+		root.Doc.topLN += moveY
 		return
 	}
 
 	// WrapMode
-	num := root.Doc.lineNum + root.Doc.Header
-	x := root.Doc.firstStartX
+	num := root.Doc.topLN + root.Doc.Header
+	x := root.Doc.topLX
 
 	listX, err := root.leftMostX(num)
 	if err != nil {
@@ -143,57 +143,57 @@ func (root *Root) moveNumDown(moveY int) {
 		}
 		n++
 	}
-	root.Doc.lineNum = num - root.Doc.Header
-	root.Doc.firstStartX = x
+	root.Doc.topLN = num - root.Doc.Header
+	root.Doc.topLX = x
 }
 
 // Move up one line.
 func (root *Root) moveUp() {
 	root.resetSelect()
 
-	if root.Doc.lineNum == 0 && root.Doc.firstStartX == 0 {
+	if root.Doc.topLN == 0 && root.Doc.topLX == 0 {
 		return
 	}
 
 	if !root.Doc.WrapMode {
-		root.Doc.firstStartX = 0
-		root.Doc.lineNum--
+		root.Doc.topLX = 0
+		root.Doc.topLN--
 		return
 	}
 
 	// WrapMode.
 	// Same line.
-	if root.Doc.firstStartX > 0 {
-		listX, err := root.leftMostX(root.Doc.lineNum + root.Doc.Header)
+	if root.Doc.topLX > 0 {
+		listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		for n, x := range listX {
-			if x >= root.Doc.firstStartX {
-				root.Doc.firstStartX = listX[n-1]
+			if x >= root.Doc.topLX {
+				root.Doc.topLX = listX[n-1]
 				return
 			}
 		}
 	}
 
 	// Previous line.
-	root.Doc.lineNum--
-	if root.Doc.lineNum < 0 {
-		root.Doc.lineNum = 0
-		root.Doc.firstStartX = 0
+	root.Doc.topLN--
+	if root.Doc.topLN < 0 {
+		root.Doc.topLN = 0
+		root.Doc.topLX = 0
 		return
 	}
-	listX, err := root.leftMostX(root.Doc.lineNum + root.Doc.Header)
+	listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	if len(listX) <= 0 {
-		root.Doc.firstStartX = 0
+	if len(listX) > 0 {
+		root.Doc.topLX = listX[len(listX)-1]
 		return
 	}
-	root.Doc.firstStartX = listX[len(listX)-1]
+	root.Doc.topLX = 0
 }
 
 // Move down one line.
@@ -201,26 +201,27 @@ func (root *Root) moveDown() {
 	root.resetSelect()
 
 	if !root.Doc.WrapMode {
-		root.Doc.firstStartX = 0
-		root.Doc.lineNum++
+		root.Doc.topLX = 0
+		root.Doc.topLN++
 		return
 	}
 
 	// WrapMode
-	listX, err := root.leftMostX(root.Doc.lineNum + root.Doc.Header)
+	listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	for _, x := range listX {
-		if x > root.Doc.firstStartX {
-			root.Doc.firstStartX = x
+		if x > root.Doc.topLX {
+			root.Doc.topLX = x
 			return
 		}
 	}
 
-	root.Doc.firstStartX = 0
-	root.Doc.lineNum++
+	// Next line.
+	root.Doc.topLX = 0
+	root.Doc.topLN++
 }
 
 // Move to the left.
@@ -258,7 +259,7 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
-	lc, err := root.Doc.lineToContents(root.Doc.lineNum+root.Doc.Header, root.Doc.TabWidth)
+	lc, err := root.Doc.lineToContents(root.Doc.topLN+root.Doc.Header, root.Doc.TabWidth)
 	if err != nil {
 		return 0
 	}

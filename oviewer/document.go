@@ -32,10 +32,10 @@ type Document struct {
 
 	// status is the display status of the document.
 	status
-	// lineNum is the starting position of the current y.
-	lineNum int
-	// firstStartX represents the x position of the first line.
-	firstStartX int
+	// topLN is the starting position of the current y.
+	topLN int
+	// topLX represents the x position of the top line.
+	topLX int
 	// x is the starting position of the current x.
 	x int
 	// columnNum is the number of columns.

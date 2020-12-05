@@ -70,9 +70,11 @@ type Root struct {
 
 	// wrapHeaderLen is the actual header length when wrapped.
 	wrapHeaderLen int
-	// bottomPos is the position of the last line displayed.
-	bottomPos  int
-	bottomEndX int
+
+	// bottomLN is the last line number displayed.
+	bottomLN int
+	// bottomLX is the leftmost X position on the last line.
+	bottomLX int
 
 	// statusPos is the position of the status line.
 	statusPos int
@@ -84,8 +86,8 @@ type Root struct {
 }
 
 type lineNumber struct {
-	line   int
-	branch int
+	line int
+	wrap int
 }
 
 // status structure contains the status of the display.
@@ -561,7 +563,7 @@ func (root *Root) docSmall() bool {
 func (root *Root) WriteOriginal() {
 	m := root.Doc
 	for i := 0; i < root.vHight-1; i++ {
-		n := root.Doc.lineNum + i
+		n := root.Doc.topLN + i
 		if n >= m.BufEndNum() {
 			break
 		}
@@ -727,10 +729,10 @@ func (root *Root) goLine(input string) {
 
 // markLineNum stores the specified number of lines.
 func (root *Root) markLineNum() {
-	s := strconv.Itoa(root.Doc.lineNum + 1)
+	s := strconv.Itoa(root.Doc.topLN + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.setMessage(fmt.Sprintf("Marked to line %d", root.Doc.lineNum))
+	root.setMessage(fmt.Sprintf("Marked to line %d", root.Doc.topLN))
 }
 
 // setHeader sets the number of lines in the header.

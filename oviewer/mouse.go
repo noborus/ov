@@ -183,7 +183,7 @@ func (root *Root) rectangleToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 		if err != nil {
 			return nil, err
 		}
-		wx := root.branchWidth(lc, ln.branch)
+		wx := root.branchWidth(lc, ln.wrap)
 		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
 
 		if _, err := buff.WriteString(line); err != nil {
@@ -208,14 +208,14 @@ func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	wx1 := root.branchWidth(lc1, ln1.branch)
+	wx1 := root.branchWidth(lc1, ln1.wrap)
 
 	ln2 := root.lnumber[y2]
 	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err
 	}
-	wx2 := root.branchWidth(lc2, ln2.branch)
+	wx2 := root.branchWidth(lc2, ln2.wrap)
 
 	if ln1.line == ln2.line {
 		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
@@ -239,7 +239,7 @@ func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 	lnumber := []int{}
 	for y := y1 + 1; y < y2; y++ {
 		l := root.lnumber[y]
-		if l.line == ln1.line || l.line == ln2.line || l.branch > 0 {
+		if l.line == ln1.line || l.line == ln2.line || l.wrap > 0 {
 			continue
 		}
 		lnumber = append(lnumber, l.line)

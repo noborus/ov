@@ -11,34 +11,32 @@ import (
 func (root *Root) draw() {
 	m := root.Doc
 	if m.BufEndNum() == 0 || root.vHight == 0 {
-		m.lineNum = 0
+		m.topLN = 0
 		root.statusDraw()
 		root.Show()
 		return
 	}
-	//l, x := root.displayLineNum(m.lineNum, m.firstStartX)
-	//log.Printf("startLine:%d startX:%d, endLine:%d endX:%d", m.lineNum, m.firstStartX, l, x)
 	// Calculate the bottom line when it is possible to reach EOF.
-	if m.lineNum+root.vHight >= m.endNum {
+	if m.topLN+root.vHight >= m.endNum {
 		l, x := root.bottomLineNum(m.endNum)
-		if m.lineNum > l || (m.lineNum == l && m.firstStartX > x) {
+		if m.topLN > l || (m.topLN == l && m.topLX > x) {
 			if m.BufEOF() {
 				root.message = "EOF"
 			}
-			m.lineNum = l
-			m.firstStartX = x
+			m.topLN = l
+			m.topLX = x
 		}
 	}
 
-	if m.lineNum < 0 {
-		m.lineNum = 0
+	if m.topLN < 0 {
+		m.topLN = 0
 	}
 
 	root.lnumber = make([]lineNumber, root.vHight+1)
 
 	lY := 0
 	lX := 0
-	branch := 0
+	wrap := 0
 	// Header
 	for hy := 0; lY < m.Header; hy++ {
 		lc := root.getLineContents(lY, m.TabWidth)
@@ -55,8 +53,8 @@ func (root *Root) draw() {
 		}
 
 		root.lnumber[hy] = lineNumber{
-			line:   lY,
-			branch: branch,
+			line: lY,
+			wrap: wrap,
 		}
 
 		for x := 0; x < root.startX; x++ {
@@ -66,9 +64,9 @@ func (root *Root) draw() {
 		if m.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, lc)
 			if lX > 0 {
-				branch++
+				wrap++
 			} else {
-				branch = 0
+				wrap = 0
 			}
 		} else {
 			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
@@ -81,18 +79,18 @@ func (root *Root) draw() {
 	var byteMap map[int]int
 
 	if m.WrapMode {
-		lX = m.firstStartX
+		lX = m.topLX
 	}
 
 	// Body
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
-			lc = root.getLineContents(m.lineNum+lY, m.TabWidth)
+			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
 			root.lnumber[y] = lineNumber{
-				line:   -1,
-				branch: 0,
+				line: -1,
+				wrap: 0,
 			}
-			lineStr, byteMap = root.getContentsStr(m.lineNum+lY, lc)
+			lineStr, byteMap = root.getContentsStr(m.topLN+lY, lc)
 			lastLY = lY
 		}
 
@@ -112,7 +110,7 @@ func (root *Root) draw() {
 
 		// line number mode
 		if m.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, m.lineNum+lY-m.Header+1), m.TabWidth)
+			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
 			for i := 0; i < len(lineNum); i++ {
 				lineNum[i].style = tcell.StyleDefault.Bold(true)
 			}
@@ -120,17 +118,17 @@ func (root *Root) draw() {
 		}
 
 		root.lnumber[y] = lineNumber{
-			line:   m.lineNum + lY,
-			branch: branch,
+			line: m.topLN + lY,
+			wrap: wrap,
 		}
 
 		var nextY int
 		if m.WrapMode {
 			lX, nextY = root.wrapContents(y, lX, lY, lc)
 			if lX > 0 {
-				branch++
+				wrap++
 			} else {
-				branch = 0
+				wrap = 0
 			}
 		} else {
 			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
@@ -138,7 +136,7 @@ func (root *Root) draw() {
 
 		// alternate style
 		if m.AlternateRows {
-			if (m.lineNum+lY)%2 == 1 {
+			if (m.topLN+lY)%2 == 1 {
 				for x := 0; x < root.vWidth; x++ {
 					r, c, style, _ := root.GetContent(x, y)
 					root.SetContent(x, y, r, c, applyStyle(style, root.StyleAlternate))
@@ -148,8 +146,8 @@ func (root *Root) draw() {
 		lY = nextY
 	}
 
-	root.bottomPos = m.lineNum + max(lY, 0)
-	root.bottomEndX = lX
+	root.bottomLN = m.topLN + max(lY, 0)
+	root.bottomLX = lX
 
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
@@ -309,7 +307,7 @@ func (root *Root) statusDraw() {
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Doc.lineNum, root.Doc.BufEndNum(), next)
+	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
 	rightContents := strToContents(rightStatus, -1)
 	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
 }
