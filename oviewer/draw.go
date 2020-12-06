@@ -32,8 +32,6 @@ func (root *Root) draw() {
 		m.topLN = 0
 	}
 
-	root.lnumber = make([]lineNumber, root.vHight+1)
-
 	lY := 0
 	lX := 0
 	wrap := 0
@@ -249,16 +247,15 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 		lX = root.minStartX
 	}
 	for x := 0; x+root.startX < root.vWidth; x++ {
-		if lX+x < 0 {
-			root.Screen.SetContent(x, y, 0, nil, tcell.StyleDefault.Normal())
-			continue
-		}
 		if lX+x >= len(lc) {
 			// EOL
 			root.drawEOL(root.startX+x, y)
 			break
 		}
-		content := lc[lX+x]
+		content := DefaultContent
+		if lX+x >= 0 {
+			content = lc[lX+x]
+		}
 		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	lY++

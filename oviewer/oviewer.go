@@ -49,7 +49,7 @@ type Root struct {
 	startX int
 
 	// lnumber is an array that returns
-	// lineNumber (logical line and branch number) from y on the screen.
+	// lineNumber (number of logical lines and number of wrapping lines) from y on the screen.
 	lnumber []lineNumber
 
 	// skipDraw skips draw once when true.
@@ -85,6 +85,7 @@ type Root struct {
 	cancelKeys []string
 }
 
+// LineNumber is Number of logical lines and number of wrapping lines on the screen.
 type lineNumber struct {
 	line int
 	wrap int
@@ -534,6 +535,7 @@ func (root *Root) setOldGlobalStyle() {
 func (root *Root) prepareView() {
 	screen := root.Screen
 	root.vWidth, root.vHight = screen.Size()
+	root.lnumber = make([]lineNumber, root.vHight+1)
 	root.setWrapHeaderLen()
 	root.statusPos = root.vHight - 1
 }
@@ -596,47 +598,45 @@ func (root *Root) setWrapHeaderLen() {
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(num int) (int, int) {
-	num = min(num, root.Doc.endNum)
-	hight := root.vHight - root.headerLen() - 2
-
-	if num < 0 {
+	hight := (root.vHight - root.headerLen()) - 2
+	if num < root.headerLen() {
 		return 0, 0
 	}
 
 	if !root.Doc.WrapMode {
-		if num < hight {
-			return 0, 0
-		}
-		return num - hight, 0
+		return num - (hight + root.headerLen()), 0
 	}
 
 	// WrapMode
-	for y := hight; y > 0; {
-		listX, err := root.leftMostX(num)
-		if err != nil {
+	var listX []int
+	var err error
+	x := 0
+	n := 0
+	for y := hight; y > 0; y-- {
+		if n <= 0 {
 			num--
-			if num < 0 {
-				return 0, 0
+			if num < root.Doc.Header {
+				num = 0
+				x = 0
+				break
 			}
-			continue
-		}
-
-		y -= max(len(listX), 1)
-		if y < 0 {
-			i := (y * -1)
-			if len(listX) > i {
-				return num - root.Doc.Header, listX[i]
+			listX, err = root.leftMostX(num)
+			if err != nil {
+				log.Println(err, num)
+				y++
+				continue
 			}
-			log.Printf("over? len:%d < index:%d", len(listX), i)
-			return num - root.Doc.Header, 0
+			n = len(listX)
 		}
-
-		if y <= 0 {
-			break
+		if n > 0 {
+			x = listX[n-1]
+		} else {
+			x = 0
 		}
-		num--
+		n--
 	}
-	return num, 0
+
+	return num - root.Doc.Header, x
 }
 
 // leftMostX returns a list of left - most x positions when wrapping.
