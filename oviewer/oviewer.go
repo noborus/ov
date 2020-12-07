@@ -551,6 +551,7 @@ func (root *Root) docSmall() bool {
 	for y := 0; y < m.BufEndNum(); y++ {
 		lc, err := m.lineToContents(y, root.Doc.TabWidth)
 		if err != nil {
+			log.Println(err, y)
 			continue
 		}
 		hight += 1 + (len(lc) / root.vWidth)
@@ -588,6 +589,7 @@ func (root *Root) setWrapHeaderLen() {
 	for y := 0; y < root.Doc.Header; y++ {
 		lc, err := m.lineToContents(y, root.Doc.TabWidth)
 		if err != nil {
+			log.Println(err, y)
 			continue
 		}
 		root.wrapHeaderLen++
@@ -623,8 +625,7 @@ func (root *Root) bottomLineNum(num int) (int, int) {
 			listX, err = root.leftMostX(num)
 			if err != nil {
 				log.Println(err, num)
-				y++
-				continue
+				return 0, 0
 			}
 			n = len(listX)
 		}

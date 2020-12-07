@@ -161,7 +161,7 @@ func (root *Root) putClipboard(ctx context.Context) {
 
 	buff, err := root.rangeToBuffer(x1, y1, x2, y2)
 	if err != nil {
-		root.debugMessage(fmt.Sprintf("%s", err))
+		root.debugMessage(err.Error())
 		return
 	}
 

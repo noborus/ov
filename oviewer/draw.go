@@ -10,12 +10,14 @@ import (
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
 	m := root.Doc
+
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		m.topLN = 0
 		root.statusDraw()
 		root.Show()
 		return
 	}
+
 	// Calculate the bottom line when it is possible to reach EOF.
 	if m.topLN+root.vHight >= m.endNum {
 		l, x := root.bottomLineNum(m.endNum)
@@ -28,23 +30,47 @@ func (root *Root) draw() {
 		}
 	}
 
+	// Header
+	lY := root.drawHeader()
+
+	lX := 0
+	if m.WrapMode {
+		lX = m.topLX
+	}
 	if m.topLN < 0 {
 		m.topLN = 0
 	}
 
+	// Body
+	lX, lY = root.drawBody(lX, lY)
+
+	root.bottomLN = m.topLN + max(lY, 0)
+	root.bottomLX = lX
+
+	if root.mouseSelect {
+		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
+	}
+
+	root.statusDraw()
+	root.Show()
+}
+
+func (root *Root) drawHeader() int {
+	m := root.Doc
+
 	lY := 0
 	lX := 0
 	wrap := 0
-	// Header
 	for hy := 0; lY < m.Header; hy++ {
-		lc := root.getLineContents(lY, m.TabWidth)
 		if hy > root.vHight {
 			break
 		}
+
+		lc := root.getLineContents(lY, m.TabWidth)
 		root.headerStyle(lc)
 
 		// column highlight
-		if root.input.mode == Normal && m.ColumnMode {
+		if m.ColumnMode && root.input.mode == Normal {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			reverseContents(lc, byteMap[start], byteMap[end])
@@ -71,16 +97,23 @@ func (root *Root) draw() {
 		}
 	}
 
+	return lY
+}
+
+func (root *Root) drawBody(lX int, lY int) (int, int) {
+	m := root.Doc
+
+	listX, err := root.leftMostX(m.topLN + lY)
+	if err != nil {
+		log.Println(err, m.topLN+lY)
+	}
+	wrap := numOfSlice(listX, lX)
+
 	lastLY := -1
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
 
-	if m.WrapMode {
-		lX = m.topLX
-	}
-
-	// Body
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
@@ -120,16 +153,15 @@ func (root *Root) draw() {
 			wrap: wrap,
 		}
 
-		var nextY int
 		if m.WrapMode {
-			lX, nextY = root.wrapContents(y, lX, lY, lc)
+			lX, lY = root.wrapContents(y, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
+			lX, lY = root.noWrapContents(y, m.x, lY, lc)
 		}
 
 		// alternate style
@@ -141,18 +173,9 @@ func (root *Root) draw() {
 				}
 			}
 		}
-		lY = nextY
 	}
 
-	root.bottomLN = m.topLN + max(lY, 0)
-	root.bottomLX = lX
-
-	if root.mouseSelect {
-		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
-	}
-
-	root.statusDraw()
-	root.Show()
+	return lX, lY
 }
 
 func (root *Root) getContentsStr(lineNum int, lc lineContents) (string, map[int]int) {

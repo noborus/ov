@@ -79,7 +79,7 @@ func (root *Root) moveNumUp(moveY int) {
 
 	listX, err := root.leftMostX(num)
 	if err != nil {
-		log.Println(num, err)
+		log.Println(err, num)
 		return
 	}
 	n := numOfSlice(listX, x)
@@ -94,7 +94,7 @@ func (root *Root) moveNumUp(moveY int) {
 			}
 			listX, err = root.leftMostX(num)
 			if err != nil {
-				log.Println(num, err)
+				log.Println(err, num)
 				return
 			}
 			n = len(listX)
@@ -123,7 +123,7 @@ func (root *Root) moveNumDown(moveY int) {
 
 	listX, err := root.leftMostX(num)
 	if err != nil {
-		log.Println(num, err)
+		log.Println(err, num)
 		return
 	}
 	n := numOfReverseSlice(listX, x)
@@ -136,7 +136,7 @@ func (root *Root) moveNumDown(moveY int) {
 			}
 			listX, err = root.leftMostX(num)
 			if err != nil {
-				log.Println(num, err)
+				log.Println(err, num)
 				return
 			}
 			n = 0
