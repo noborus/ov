@@ -40,7 +40,7 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 }
 
 // search searches forward or backward.
-func (root *Root) search(ctx context.Context, num int, searchFunc func(context.Context, int) (int, error)) {
+func (root *Root) search(ctx context.Context, lN int, searchFunc func(context.Context, int) (int, error)) {
 	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -52,11 +52,11 @@ func (root *Root) search(ctx context.Context, num int, searchFunc func(context.C
 	})
 
 	eg.Go(func() error {
-		lineNum, err := searchFunc(ctx, num)
+		lN, err := searchFunc(ctx, lN)
 		if err != nil {
 			return err
 		}
-		root.moveLine(lineNum - root.Doc.Header)
+		root.moveLine(lN - root.Doc.Header)
 		return nil
 	})
 

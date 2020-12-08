@@ -599,66 +599,74 @@ func (root *Root) setWrapHeaderLen() {
 
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
-func (root *Root) bottomLineNum(num int) (int, int) {
+func (root *Root) bottomLineNum(lN int) (int, int) {
 	hight := (root.vHight - root.headerLen()) - 2
-	if num < root.headerLen() {
+	if lN < root.headerLen() {
 		return 0, 0
 	}
 
 	if !root.Doc.WrapMode {
-		return num - (hight + root.headerLen()), 0
+		return 0, lN - (hight + root.headerLen())
 	}
 
 	// WrapMode
-	var listX []int
-	var err error
-	x := 0
+	lX, lN := root.findNumUp(0, lN, hight)
+	return lX, lN - root.Doc.Header
+}
+
+// leftMostX returns a list of left - most x positions when wrapping.
+func (root *Root) leftMostX(lN int) ([]int, error) {
+	lc, err := root.Doc.lineToContents(lN, root.Doc.TabWidth)
+	if err != nil {
+		return nil, err
+	}
+
+	listX := make([]int, 0, (len(lc)/root.vWidth)+1)
+	width := (root.vWidth - root.startX)
+
+	listX = append(listX, 0)
+	for n := width; n < len(lc); n += width {
+		if lc[n-1].width == 2 {
+			n--
+		}
+		listX = append(listX, n)
+	}
+	return listX, nil
+}
+
+// findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
+func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
+	listX, err := root.leftMostX(lN)
 	n := 0
-	for y := hight; y > 0; y-- {
+	if err != nil {
+		log.Println(err, lN)
+	} else {
+		n = numOfSlice(listX, lX)
+	}
+
+	for y := upY; y > 0; y-- {
 		if n <= 0 {
-			num--
-			if num < root.Doc.Header {
-				num = 0
-				x = 0
+			lN--
+			if lN < root.Doc.Header {
+				lN = 0
+				lX = 0
 				break
 			}
-			listX, err = root.leftMostX(num)
+			listX, err = root.leftMostX(lN)
 			if err != nil {
-				log.Println(err, num)
+				log.Println(err, lN)
 				return 0, 0
 			}
 			n = len(listX)
 		}
 		if n > 0 {
-			x = listX[n-1]
+			lX = listX[n-1]
 		} else {
-			x = 0
+			lX = 0
 		}
 		n--
 	}
-
-	return num - root.Doc.Header, x
-}
-
-// leftMostX returns a list of left - most x positions when wrapping.
-func (root *Root) leftMostX(num int) ([]int, error) {
-	lc, err := root.Doc.lineToContents(num, root.Doc.TabWidth)
-	if err != nil {
-		return nil, err
-	}
-
-	listX := make([]int, 0, root.vHight)
-	lineLength := len(lc)
-	width := (root.vWidth - root.startX)
-	for n := 0; n < lineLength; n += width {
-		if n > 0 && n < lineLength {
-			if lc[n-1].width == 2 {
-				n--
-			}
-		}
-		listX = append(listX, n)
-	}
-	return listX, nil
+	return lX, lN
 }
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -718,14 +726,14 @@ func (root *Root) updateEndNum() {
 
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
-	lineNum, err := strconv.Atoi(input)
+	lN, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 
-	root.moveLine(lineNum - root.Doc.Header - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lineNum))
+	root.moveLine(lN - root.Doc.Header - 1)
+	root.setMessage(fmt.Sprintf("Moved to line %d", lN))
 }
 
 // markLineNum stores the specified number of lines.
@@ -738,21 +746,21 @@ func (root *Root) markLineNum() {
 
 // setHeader sets the number of lines in the header.
 func (root *Root) setHeader(input string) {
-	lineNum, err := strconv.Atoi(input)
+	num, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	if lineNum < 0 || lineNum > root.vHight-1 {
+	if num < 0 || num > root.vHight-1 {
 		root.setMessage(ErrOutOfRange.Error())
 		return
 	}
-	if root.Doc.Header == lineNum {
+	if root.Doc.Header == num {
 		return
 	}
 
-	root.Doc.Header = lineNum
-	root.setMessage(fmt.Sprintf("Set Header %d", lineNum))
+	root.Doc.Header = num
+	root.setMessage(fmt.Sprintf("Set Header %d", num))
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }

@@ -20,13 +20,13 @@ func (root *Root) draw() {
 
 	// Calculate the bottom line when it is possible to reach EOF.
 	if m.topLN+root.vHight >= m.endNum {
-		l, x := root.bottomLineNum(m.endNum)
-		if m.topLN > l || (m.topLN == l && m.topLX > x) {
+		tx, tn := root.bottomLineNum(m.endNum)
+		if m.topLN > tn || (m.topLN == tn && m.topLX > tx) {
 			if m.BufEOF() {
 				root.message = "EOF"
 			}
-			m.topLN = l
-			m.topLX = x
+			m.topLN = tn
+			m.topLX = tx
 		}
 	}
 
@@ -37,6 +37,7 @@ func (root *Root) draw() {
 	if m.WrapMode {
 		lX = m.topLX
 	}
+
 	if m.topLN < 0 {
 		m.topLN = 0
 	}
@@ -141,11 +142,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lineNum := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
-			for i := 0; i < len(lineNum); i++ {
-				lineNum[i].style = tcell.StyleDefault.Bold(true)
+			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
+			for i := 0; i < len(lc); i++ {
+				lc[i].style = tcell.StyleDefault.Bold(true)
 			}
-			root.setContentString(0, y, lineNum)
+			root.setContentString(0, y, lc)
 		}
 
 		root.lnumber[y] = lineNumber{
@@ -178,16 +179,16 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) getContentsStr(lineNum int, lc lineContents) (string, map[int]int) {
-	if root.Doc.lastContentsNum != lineNum {
+func (root *Root) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
+	if root.Doc.lastContentsNum != lN {
 		root.Doc.lastContentsStr, root.Doc.lastContentsMap = contentsToStr(lc)
-		root.Doc.lastContentsNum = lineNum
+		root.Doc.lastContentsNum = lN
 	}
 	return root.Doc.lastContentsStr, root.Doc.lastContentsMap
 }
 
-func (root *Root) getLineContents(lineNum int, tabWidth int) lineContents {
-	lc, err := root.Doc.lineToContents(lineNum, tabWidth)
+func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
+	lc, err := root.Doc.lineToContents(lN, tabWidth)
 	if err == nil {
 		for n := range lc {
 			lc[n].style = lc[n].style.Reverse(false)
@@ -232,8 +233,8 @@ func (root *Root) drawEOL(eol int, y int) {
 
 // reverses the specified range.
 func reverseContents(lc lineContents, start int, end int) {
-	for n := start; n < end; n++ {
-		lc[n].style = lc[n].style.Reverse(true)
+	for x := start; x < end; x++ {
+		lc[x].style = lc[x].style.Reverse(true)
 	}
 }
 
@@ -287,8 +288,8 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 
 // headerStyle applies the style of the header.
 func (root *Root) headerStyle(lc lineContents) {
-	for i := 0; i < len(lc); i++ {
-		lc[i].style = applyStyle(lc[i].style, root.StyleHeader)
+	for x := 0; x < len(lc); x++ {
+		lc[x].style = applyStyle(lc[x].style, root.StyleHeader)
 	}
 }
 

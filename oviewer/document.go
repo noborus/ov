@@ -89,13 +89,13 @@ func (m *Document) ReadFile(fileName string) error {
 }
 
 // GetLine returns one line from buffer.
-func (m *Document) GetLine(lineNum int) string {
+func (m *Document) GetLine(lN int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if lineNum < 0 || lineNum >= len(m.lines) {
+	if lN < 0 || lN >= len(m.lines) {
 		return ""
 	}
-	return m.lines[lineNum]
+	return m.lines[lN]
 }
 
 // BufEndNum return last line number.
@@ -132,12 +132,12 @@ func (m *Document) ClearCache() {
 }
 
 // lineToContents returns contents from line number.
-func (m *Document) lineToContents(lineNum int, tabWidth int) (lineContents, error) {
-	if lineNum < 0 || lineNum >= m.BufEndNum() {
+func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
+	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
 
-	value, found := m.cache.Get(lineNum)
+	value, found := m.cache.Get(lN)
 	if found {
 		lc, ok := value.(lineContents)
 		if !ok {
@@ -146,8 +146,8 @@ func (m *Document) lineToContents(lineNum int, tabWidth int) (lineContents, erro
 		return lc, nil
 	}
 
-	lc := parseString(m.GetLine(lineNum), tabWidth)
+	lc := parseString(m.GetLine(lN), tabWidth)
 
-	m.cache.Set(lineNum, lc, 1)
+	m.cache.Set(lN, lc, 1)
 	return lc, nil
 }

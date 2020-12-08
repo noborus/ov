@@ -15,9 +15,9 @@ func (root *Root) moveBottom() {
 }
 
 // Move to the specified line.
-func (root *Root) moveLine(num int) {
+func (root *Root) moveLine(lN int) {
 	root.resetSelect()
-	root.Doc.topLN = num
+	root.Doc.topLN = lN
 	root.Doc.topLX = 0
 }
 
@@ -75,39 +75,8 @@ func (root *Root) moveNumUp(moveY int) {
 
 	// WrapMode
 	num := root.Doc.topLN + root.Doc.Header
-	x := root.Doc.topLX
-
-	listX, err := root.leftMostX(num)
-	if err != nil {
-		log.Println(err, num)
-		return
-	}
-	n := numOfSlice(listX, x)
-
-	for y := moveY; y > 0; y-- {
-		if n <= 0 {
-			num--
-			if num < root.Doc.Header {
-				num = 0
-				x = 0
-				break
-			}
-			listX, err = root.leftMostX(num)
-			if err != nil {
-				log.Println(err, num)
-				return
-			}
-			n = len(listX)
-		}
-		if n > 0 {
-			x = listX[n-1]
-		} else {
-			x = 0
-		}
-		n--
-	}
+	root.Doc.topLX, num = root.findNumUp(root.Doc.topLX, num, moveY)
 	root.Doc.topLN = num - root.Doc.Header
-	root.Doc.topLX = x
 }
 
 // Moves down by the specified number of y.
@@ -160,8 +129,8 @@ func (root *Root) moveUp() {
 	}
 
 	if !root.Doc.WrapMode {
-		root.Doc.topLX = 0
 		root.Doc.topLN--
+		root.Doc.topLX = 0
 		return
 	}
 
