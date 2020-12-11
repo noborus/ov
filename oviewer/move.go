@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"log"
+	"strings"
 )
 
 // Go to the top line.
@@ -232,17 +233,26 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from root.Doc.columnNum.
 func (root *Root) columnModeX() int {
-	lc, err := root.Doc.lineToContents(root.Doc.topLN+root.Doc.Header, root.Doc.TabWidth)
-	if err != nil {
-		return 0
+	// root.Doc.Header+10 = Maximum columnMode target.
+	for i := 0; i < root.Doc.Header+10; i++ {
+		lc, err := root.Doc.lineToContents(root.Doc.topLN+root.Doc.Header+i, root.Doc.TabWidth)
+		if err != nil {
+			continue
+		}
+		lineStr, byteMap := contentsToStr(lc)
+		// Skip lines that do not contain a delimiter.
+		if !strings.Contains(lineStr, root.Doc.ColumnDelimiter) {
+			continue
+		}
+
+		start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+		if start < 0 || end < 0 {
+			root.Doc.columnNum = 0
+			start, _ = rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+		}
+		return byteMap[start]
 	}
-	lineStr, byteMap := contentsToStr(lc)
-	start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-	if start < 0 || end < 0 {
-		root.Doc.columnNum = 0
-		start, _ = rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-	}
-	return byteMap[start]
+	return 0
 }
 
 // Move to the left by half a screen.
