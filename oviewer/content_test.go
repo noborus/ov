@@ -98,9 +98,9 @@ func Test_parseString(t *testing.T) {
 				line: "\x1B[31mred\x1B[m", tabWidth: 8,
 			},
 			want: lineContents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('r'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('e'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(1)), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('e'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('d'), combc: nil},
 			},
 		},
 		{
