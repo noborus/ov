@@ -147,14 +147,15 @@ type Config struct {
 }
 
 type ovStyle struct {
-	Background string
-	Foreground string
-	Blink      bool
-	Bold       bool
-	Dim        bool
-	Italic     bool
-	Reverse    bool
-	Underline  bool
+	Background    string
+	Foreground    string
+	Blink         bool
+	Bold          bool
+	Dim           bool
+	Italic        bool
+	Reverse       bool
+	Underline     bool
+	StrikeThrough bool
 }
 
 var (
@@ -477,6 +478,7 @@ func setStyle(s ovStyle) tcell.Style {
 	style = style.Italic(s.Italic)
 	style = style.Reverse(s.Reverse)
 	style = style.Underline(s.Underline)
+	style = style.StrikeThrough(s.StrikeThrough)
 
 	return style
 }
@@ -505,6 +507,9 @@ func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
 	}
 	if s.Underline {
 		style = style.Underline(s.Underline)
+	}
+	if s.StrikeThrough {
+		style = style.StrikeThrough(s.StrikeThrough)
 	}
 	return style
 }

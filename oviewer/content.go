@@ -210,26 +210,32 @@ FieldLoop:
 			style = style.Underline(true)
 		case "5", "05":
 			style = style.Blink(true)
+		case "6", "06":
+			style = style.Blink(true)
 		case "7", "07":
 			style = style.Reverse(true)
+		case "8", "08":
+			style = style.Reverse(true)
+		case "9", "09":
+			style = style.StrikeThrough(true)
 		case "22", "24", "25", "27":
 			style = style.Normal()
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Foreground(tcell.Color(colorNumber - 30))
+			style = style.Foreground(tcell.ColorValid + tcell.Color(colorNumber-30))
 		case "39":
 			style = style.Foreground(tcell.ColorDefault)
 		case "40", "41", "42", "43", "44", "45", "46", "47":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Background(tcell.Color(colorNumber - 40))
+			style = style.Background(tcell.ColorValid + tcell.Color(colorNumber-40))
 		case "49":
 			style = style.Background(tcell.ColorDefault)
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Foreground(tcell.Color(colorNumber - 82))
+			style = style.Foreground(tcell.ColorValid + tcell.Color(colorNumber-82))
 		case "100", "101", "102", "103", "104", "105", "106", "107":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Background(tcell.Color(colorNumber - 92))
+			style = style.Background(tcell.ColorValid + tcell.Color(colorNumber-92))
 		case "38", "48":
 			var color string
 			if len(fields) > index+1 {
