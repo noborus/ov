@@ -211,7 +211,5 @@ func searchPosition(s string, re *regexp.Regexp) [][]int {
 		return nil
 	}
 
-	var pos [][]int
-	pos = append(pos, re.FindAllIndex([]byte(s), -1)...)
-	return pos
+	return re.FindAllIndex([]byte(s), -1)
 }
