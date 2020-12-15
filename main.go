@@ -66,7 +66,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if ov.AfterWrite {
 			ov.WriteOriginal()
 		}
-
+		if ov.Debug {
+			ov.WriteLog()
+		}
 		return nil
 	},
 }
