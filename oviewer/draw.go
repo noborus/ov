@@ -106,7 +106,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 	listX, err := root.leftMostX(m.topLN + lY)
 	if err != nil {
-		log.Println(err, m.topLN+lY)
+		log.Println(err, "drawBody", m.topLN+lY)
 	}
 	wrap := numOfSlice(listX, lX)
 
@@ -206,28 +206,17 @@ func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 		style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 	}
 	lc[0] = eof
-	space := content{
-		mainc: 0,
-		combc: nil,
-		width: 1,
-		style: tcell.StyleDefault.Normal(),
-	}
+
 	for x := 1; x < width; x++ {
-		lc[x] = space
+		lc[x] = DefaultContent
 	}
 	return lc
 }
 
 // drawEOL fills with blanks from the end of the line to the screen width.
 func (root *Root) drawEOL(eol int, y int) {
-	space := content{
-		mainc: 0,
-		combc: nil,
-		width: 1,
-		style: tcell.StyleDefault.Normal(),
-	}
 	for x := eol; x < root.vWidth; x++ {
-		root.Screen.SetContent(x, y, space.mainc, space.combc, space.style)
+		root.Screen.SetContent(x, y, DefaultContent.mainc, DefaultContent.combc, DefaultContent.style)
 	}
 }
 
@@ -262,6 +251,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		}
 		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
 	}
+
 	return lX, lY
 }
 
@@ -270,6 +260,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
+
 	for x := 0; x+root.startX < root.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
@@ -283,6 +274,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	lY++
+
 	return lX, lY
 }
 

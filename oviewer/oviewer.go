@@ -258,7 +258,7 @@ func openFiles(fileNames []string) (*Root, error) {
 	for _, fileName := range fileNames {
 		fi, err := os.Stat(fileName)
 		if err != nil {
-			log.Println(err)
+			log.Println(err, fileName)
 			continue
 		}
 		if fi.IsDir() {
@@ -270,7 +270,7 @@ func openFiles(fileNames []string) (*Root, error) {
 		}
 		err = m.ReadFile(fileName)
 		if err != nil {
-			log.Println(err)
+			log.Println(err, fileName)
 			continue
 		}
 		docList = append(docList, m)
@@ -342,7 +342,7 @@ func NewLogDoc() (*Document, error) {
 // Write matches the interface of io.Writer.
 // Therefore, the log.Print output is displayed by logDoc.
 func (logDoc *Document) Write(p []byte) (int, error) {
-	str := fmt.Sprintf("%s\n", string(p))
+	str := string(p)
 	logDoc.lines = append(logDoc.lines, str)
 	logDoc.endNum = len(logDoc.lines)
 	return len(str), nil
@@ -404,7 +404,6 @@ func (root *Root) Run() error {
 			return fmt.Errorf("%w [%s]", ErrSignalCatch, sig)
 		}
 	}
-
 }
 
 func (root *Root) setMessage(msg string) {
@@ -571,11 +570,25 @@ func (root *Root) docSmall() bool {
 func (root *Root) WriteOriginal() {
 	m := root.Doc
 	for i := 0; i < root.vHight-1; i++ {
-		n := root.Doc.topLN + i
+		n := m.topLN + i
 		if n >= m.BufEndNum() {
 			break
 		}
 		fmt.Println(m.GetLine(n))
+	}
+}
+
+// WriteLog write to the log terminal.
+func (root *Root) WriteLog() {
+	maxWriteLog := 10
+	m := root.logDoc
+
+	n := m.BufEndNum() - maxWriteLog
+	for i := 0; i < maxWriteLog; i++ {
+		str := strings.ReplaceAll(m.GetLine(n+i), "\n", "")
+		if len(str) > 0 {
+			fmt.Fprintln(os.Stderr, str)
+		}
 	}
 }
 
@@ -594,7 +607,7 @@ func (root *Root) setWrapHeaderLen() {
 	for y := 0; y < root.Doc.Header; y++ {
 		lc, err := m.lineToContents(y, root.Doc.TabWidth)
 		if err != nil {
-			log.Println(err, y)
+			log.Println(err, "WrapHeaderLen", y)
 			continue
 		}
 		root.wrapHeaderLen++
@@ -644,7 +657,8 @@ func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
 	listX, err := root.leftMostX(lN)
 	n := 0
 	if err != nil {
-		log.Println(err, lN)
+		// lN has no lines.
+		root.debugMessage(fmt.Sprintf("%s:%d", err.Error(), lN))
 	} else {
 		n = numOfSlice(listX, lX)
 	}
@@ -659,7 +673,7 @@ func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
 			}
 			listX, err = root.leftMostX(lN)
 			if err != nil {
-				log.Println(err, lN)
+				log.Println(err, "findNumUp", lN)
 				return 0, 0
 			}
 			n = len(listX)
@@ -712,7 +726,6 @@ func (root *Root) viewSync() {
 	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
-	root.draw()
 }
 
 // prepareStartX prepares startX.
@@ -725,6 +738,7 @@ func (root *Root) prepareStartX() {
 
 // updateEndNum updates the last line number.
 func (root *Root) updateEndNum() {
+	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.endNum))
 	root.prepareStartX()
 	root.statusDraw()
 }
