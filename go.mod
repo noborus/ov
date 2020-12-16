@@ -7,7 +7,7 @@ require (
 	github.com/dgraph-io/ristretto v0.0.3
 	github.com/frankban/quicktest v1.8.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/gdamore/tcell/v2 v2.0.0
+	github.com/gdamore/tcell/v2 v2.1.0
 	github.com/klauspost/compress v1.11.3
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-runewidth v0.0.9
@@ -23,8 +23,8 @@ require (
 	github.com/ulikunitz/xz v0.5.8
 	gitlab.com/tslocum/cbind v0.1.4
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20201207223542-d4d67f95c62d // indirect
-	golang.org/x/term v0.0.0-20201207232118-ee85cb95a76b
+	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e // indirect
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
