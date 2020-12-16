@@ -48,10 +48,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Println("Using config file:", viper.ConfigFileUsed())
 		}
 
-		if err := os.Setenv("TCELL_TRUECOLOR", "disable"); err != nil {
-			return err
-		}
-
 		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err

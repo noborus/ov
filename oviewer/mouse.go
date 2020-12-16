@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"github.com/atotto/clipboard"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -46,12 +46,12 @@ func (root *Root) wheelDown() {
 
 func (root *Root) selectRange(ev *tcell.EventMouse) {
 	button := ev.Buttons()
-	if button == tcell.Button2 {
+	if button == tcell.ButtonMiddle {
 		root.Paste()
 		return
 	}
 
-	if !root.mouseSelect && button == tcell.Button1 {
+	if !root.mouseSelect && button == tcell.ButtonPrimary {
 		root.setMessage("")
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
 			root.mouseRectangle = true
@@ -72,7 +72,7 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 			root.mousePressed = false
 		} else if !root.mousePressed {
 			root.resetSelect()
-			if button == tcell.Button1 || button == tcell.Button3 {
+			if button == tcell.ButtonPrimary || button == tcell.ButtonSecondary {
 				root.CopySelect()
 			}
 		}
