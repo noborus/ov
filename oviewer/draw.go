@@ -154,15 +154,16 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			wrap: wrap,
 		}
 
+		var nextY int
 		if m.WrapMode {
-			lX, lY = root.wrapContents(y, lX, lY, lc)
+			lX, nextY = root.wrapContents(y, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, lY = root.noWrapContents(y, m.x, lY, lc)
+			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
 		}
 
 		// alternate style
@@ -174,6 +175,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 				}
 			}
 		}
+		lY = nextY
 	}
 
 	return lX, lY
