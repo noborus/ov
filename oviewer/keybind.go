@@ -158,6 +158,10 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 			}
 			if key == tcell.KeyRune {
 				c.SetRune(mod, ch, wrapEventHandler(handler))
+				// Added "shift+N" instead of 'N' to get it on windows.
+				if 'A' <= ch && ch <= 'Z' {
+					c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
+				}
 			} else {
 				c.SetKey(mod, key, wrapEventHandler(handler))
 			}
