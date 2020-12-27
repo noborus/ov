@@ -382,7 +382,7 @@ func (root *Root) Run() error {
 	root.setGlobalStyle()
 	root.Screen.Clear()
 
-	root.viewSync()
+	root.ViewSync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.docSmall() {
 		root.AfterWrite = true
@@ -431,7 +431,7 @@ func (root *Root) debugMessage(msg string) {
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
 	root.Clear()
-	root.viewSync()
+	root.ViewSync()
 }
 
 // Help is to switch between Help screen and normal screen.
@@ -712,20 +712,26 @@ func (root *Root) toggleAlternateRows() {
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
-	root.viewSync()
+	root.ViewSync()
 	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
 }
 
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
-	root.viewSync()
+	root.ViewSync()
 }
 
-// Sync redraws the whole thing.
-func (root *Root) viewSync() {
+// ViewSync redraws the whole thing.
+func (root *Root) ViewSync() {
 	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
+}
+
+// TailSync move to tail and sync.
+func (root *Root) TailSync() {
+	root.moveBottom()
+	root.ViewSync()
 }
 
 // prepareStartX prepares startX.
