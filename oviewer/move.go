@@ -12,7 +12,9 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
-	root.moveLine(root.Doc.endNum + 1)
+	tx, tn := root.bottomLineNum(root.Doc.endNum)
+	root.Doc.topLN = tn
+	root.Doc.topLX = tx
 }
 
 // Move to the specified line.
@@ -31,8 +33,27 @@ func (root *Root) movePgUp() {
 // Moves down one screen.
 func (root *Root) movePgDn() {
 	root.resetSelect()
-	root.Doc.topLN = root.bottomLN - root.Doc.Header
-	root.Doc.topLX = root.bottomLX
+
+	y := root.bottomLN - root.Doc.Header
+	x := root.bottomLX
+	root.limitMoveDown(x, y)
+}
+
+func (root *Root) limitMoveDown(x int, y int) {
+	m := root.Doc
+	if y+root.vHight >= m.endNum {
+		tx, tn := root.bottomLineNum(m.endNum)
+		if y > tn || (y == tn && x > tx) {
+			if tn > m.topLN || (tn == m.topLN && m.topLX > tx) {
+				m.topLN = tn
+				m.topLX = tx
+			}
+			log.Println(y, m.topLN)
+			return
+		}
+	}
+	m.topLN = y
+	m.topLX = x
 }
 
 // Moves up half a screen.
@@ -82,15 +103,15 @@ func (root *Root) moveNumUp(moveY int) {
 
 // Moves down by the specified number of y.
 func (root *Root) moveNumDown(moveY int) {
-	if !root.Doc.WrapMode {
-		root.Doc.topLN += moveY
+	m := root.Doc
+	num := m.topLN + m.Header
+	if !m.WrapMode {
+		root.limitMoveDown(0, num)
 		return
 	}
 
 	// WrapMode
-	num := root.Doc.topLN + root.Doc.Header
-	x := root.Doc.topLX
-
+	x := m.topLX
 	listX, err := root.leftMostX(num)
 	if err != nil {
 		log.Println(err, num)
@@ -101,7 +122,7 @@ func (root *Root) moveNumDown(moveY int) {
 	for y := 0; y < moveY; y++ {
 		if n >= len(listX) {
 			num++
-			if num > root.Doc.endNum {
+			if num > m.endNum {
 				break
 			}
 			listX, err = root.leftMostX(num)
@@ -117,138 +138,150 @@ func (root *Root) moveNumDown(moveY int) {
 		}
 		n++
 	}
-	root.Doc.topLN = num - root.Doc.Header
-	root.Doc.topLX = x
+
+	root.limitMoveDown(x, num-m.Header)
 }
 
 // Move up one line.
 func (root *Root) moveUp() {
 	root.resetSelect()
 
-	if root.Doc.topLN == 0 && root.Doc.topLX == 0 {
+	m := root.Doc
+	if m.topLN == 0 && m.topLX == 0 {
 		return
 	}
 
-	if !root.Doc.WrapMode {
-		root.Doc.topLN--
-		root.Doc.topLX = 0
+	if !m.WrapMode {
+		m.topLN--
+		m.topLX = 0
 		return
 	}
 
 	// WrapMode.
 	// Same line.
-	if root.Doc.topLX > 0 {
-		listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
+	if m.topLX > 0 {
+		listX, err := root.leftMostX(m.topLN + m.Header)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		for n, x := range listX {
-			if x >= root.Doc.topLX {
-				root.Doc.topLX = listX[n-1]
+			if x >= m.topLX {
+				m.topLX = listX[n-1]
 				return
 			}
 		}
 	}
 
 	// Previous line.
-	root.Doc.topLN--
-	if root.Doc.topLN < 0 {
-		root.Doc.topLN = 0
-		root.Doc.topLX = 0
+	m.topLN--
+	if m.topLN < 0 {
+		m.topLN = 0
+		m.topLX = 0
 		return
 	}
-	listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
+	listX, err := root.leftMostX(m.topLN + m.Header)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	if len(listX) > 0 {
-		root.Doc.topLX = listX[len(listX)-1]
+		m.topLX = listX[len(listX)-1]
 		return
 	}
-	root.Doc.topLX = 0
+	m.topLX = 0
 }
 
 // Move down one line.
 func (root *Root) moveDown() {
 	root.resetSelect()
 
-	if !root.Doc.WrapMode {
-		root.Doc.topLX = 0
-		root.Doc.topLN++
-		return
+	m := root.Doc
+	num := m.topLN
+	x := m.topLX
+
+	if !m.WrapMode {
+		num++
+		root.limitMoveDown(0, num)
 	}
 
 	// WrapMode
-	listX, err := root.leftMostX(root.Doc.topLN + root.Doc.Header)
+	listX, err := root.leftMostX(m.topLN + m.Header)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	for _, x := range listX {
-		if x > root.Doc.topLX {
-			root.Doc.topLX = x
+		if x > m.topLX {
+			m.topLX = x
+			root.limitMoveDown(x, num)
 			return
 		}
 	}
 
 	// Next line.
-	root.Doc.topLX = 0
-	root.Doc.topLN++
+	x = 0
+	num++
+	root.limitMoveDown(x, num)
 }
 
 // Move to the left.
 func (root *Root) moveLeft() {
 	root.resetSelect()
-	if root.Doc.ColumnMode {
-		if root.Doc.columnNum > 0 {
-			root.Doc.columnNum--
-			root.Doc.x = root.columnModeX()
+
+	m := root.Doc
+	if m.ColumnMode {
+		if m.columnNum > 0 {
+			m.columnNum--
+			m.x = root.columnModeX()
 		}
 		return
 	}
-	if root.Doc.WrapMode {
+	if m.WrapMode {
 		return
 	}
-	root.Doc.x--
-	if root.Doc.x < root.minStartX {
-		root.Doc.x = root.minStartX
+	m.x--
+	if m.x < root.minStartX {
+		m.x = root.minStartX
 	}
 }
 
 // Move to the right.
 func (root *Root) moveRight() {
 	root.resetSelect()
-	if root.Doc.ColumnMode {
-		root.Doc.columnNum++
-		root.Doc.x = root.columnModeX()
+
+	m := root.Doc
+	if m.ColumnMode {
+		m.columnNum++
+		m.x = root.columnModeX()
 		return
 	}
-	if root.Doc.WrapMode {
+	if m.WrapMode {
 		return
 	}
-	root.Doc.x++
+	m.x++
 }
 
-// columnModeX returns the actual x from root.Doc.columnNum.
+// columnModeX returns the actual x from m.columnNum.
 func (root *Root) columnModeX() int {
-	// root.Doc.Header+10 = Maximum columnMode target.
-	for i := 0; i < root.Doc.Header+10; i++ {
-		lc, err := root.Doc.lineToContents(root.Doc.topLN+root.Doc.Header+i, root.Doc.TabWidth)
+
+	m := root.Doc
+	// m.Header+10 = Maximum columnMode target.
+	for i := 0; i < m.Header+10; i++ {
+		lc, err := m.lineToContents(m.topLN+m.Header+i, m.TabWidth)
 		if err != nil {
 			continue
 		}
 		lineStr, byteMap := contentsToStr(lc)
 		// Skip lines that do not contain a delimiter.
-		if !strings.Contains(lineStr, root.Doc.ColumnDelimiter) {
+		if !strings.Contains(lineStr, m.ColumnDelimiter) {
 			continue
 		}
 
-		start, end := rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+		start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		if start < 0 || end < 0 {
-			root.Doc.columnNum = 0
-			start, _ = rangePosition(lineStr, root.Doc.ColumnDelimiter, root.Doc.columnNum)
+			m.columnNum = 0
+			start, _ = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		}
 		return byteMap[start]
 	}
@@ -257,30 +290,34 @@ func (root *Root) columnModeX() int {
 
 // Move to the left by half a screen.
 func (root *Root) moveHfLeft() {
-	if root.Doc.WrapMode {
+	m := root.Doc
+
+	if m.WrapMode {
 		return
 	}
 	root.resetSelect()
 	moveSize := (root.vWidth / 2)
-	if root.Doc.x > 0 && (root.Doc.x-moveSize) < 0 {
-		root.Doc.x = 0
+	if m.x > 0 && (m.x-moveSize) < 0 {
+		m.x = 0
 	} else {
-		root.Doc.x -= moveSize
-		if root.Doc.x < root.minStartX {
-			root.Doc.x = root.minStartX
+		m.x -= moveSize
+		if m.x < root.minStartX {
+			m.x = root.minStartX
 		}
 	}
 }
 
 // Move to the right by half a screen.
 func (root *Root) moveHfRight() {
-	if root.Doc.WrapMode {
+	m := root.Doc
+
+	if m.WrapMode {
 		return
 	}
 	root.resetSelect()
-	if root.Doc.x < 0 {
-		root.Doc.x = 0
+	if m.x < 0 {
+		m.x = 0
 	} else {
-		root.Doc.x += (root.vWidth / 2)
+		m.x += (root.vWidth / 2)
 	}
 }

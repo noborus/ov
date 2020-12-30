@@ -18,18 +18,6 @@ func (root *Root) draw() {
 		return
 	}
 
-	// Calculate the bottom line when it is possible to reach EOF.
-	if m.topLN+root.vHight >= m.endNum {
-		tx, tn := root.bottomLineNum(m.endNum)
-		if m.topLN > tn || (m.topLN == tn && m.topLX > tx) {
-			if m.BufEOF() {
-				root.message = "EOF"
-			}
-			m.topLN = tn
-			m.topLX = tx
-		}
-	}
-
 	// Header
 	lY := root.drawHeader()
 
