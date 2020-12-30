@@ -35,6 +35,10 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			root.updateEndNum()
 		case *eventDocument:
 			root.setDocument(ev.m)
+		case *eventAddDocument:
+			root.addDocument(ev.m)
+		case *eventCloseDocument:
+			root.closeDocument()
 		case *eventCopySelect:
 			root.putClipboard(ctx)
 		case *eventPaste:
@@ -234,7 +238,7 @@ func (root *Root) BackSearch(str string) {
 	}()
 }
 
-// eventDocument represents a set model event.
+// eventDocument represents a set document event.
 type eventDocument struct {
 	m *Document
 	tcell.EventTime
@@ -247,6 +251,42 @@ func (root *Root) SetDocument(m *Document) {
 	}
 	ev := &eventDocument{}
 	ev.m = m
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
+}
+
+// eventAddDocument represents a set document event.
+type eventAddDocument struct {
+	m *Document
+	tcell.EventTime
+}
+
+// AddDocument fires a add document event.
+func (root *Root) AddDocument(m *Document) {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventAddDocument{}
+	ev.m = m
+	ev.SetEventNow()
+	go func() {
+		root.Screen.PostEventWait(ev)
+	}()
+}
+
+// eventCloseDocument represents a close document event.
+type eventCloseDocument struct {
+	tcell.EventTime
+}
+
+// CloseDocument fires a del document event.
+func (root *Root) CloseDocument(m *Document) {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventCloseDocument{}
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
