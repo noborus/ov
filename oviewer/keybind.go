@@ -196,6 +196,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
+	k.writeKeyBind(&b, actionCloseDoc, "close current document")
 
 	fmt.Fprintf(&b, "\n\tMoving\n\n")
 	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
