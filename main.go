@@ -85,37 +85,37 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
-	_ = viper.BindPFlag("status.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
+	_ = viper.BindPFlag("general.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
-	_ = viper.BindPFlag("status.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
+	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 
 	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header rows to fix")
-	_ = viper.BindPFlag("status.Header", rootCmd.PersistentFlags().Lookup("header"))
+	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
 
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
-	_ = viper.BindPFlag("status.DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
+	_ = viper.BindPFlag("general.DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
 
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
-	_ = viper.BindPFlag("status.ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
+	_ = viper.BindPFlag("general.ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
 
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
-	_ = viper.BindPFlag("status.QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
+	_ = viper.BindPFlag("general.QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
-	_ = viper.BindPFlag("status.CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
+	_ = viper.BindPFlag("general.CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
 
 	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "color to alternate rows")
-	_ = viper.BindPFlag("status.AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
+	_ = viper.BindPFlag("general.AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
 
 	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
-	_ = viper.BindPFlag("status.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
+	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
-	_ = viper.BindPFlag("status.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
+	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number")
-	_ = viper.BindPFlag("status.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
+	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 }
