@@ -834,6 +834,26 @@ func (root *Root) previousDoc() {
 	root.input.mode = Normal
 }
 
+func (root *Root) addDocument(m *Document) {
+	log.Printf("add: %s", m.FileName)
+	root.DocList = append(root.DocList, m)
+	root.CurrentDoc = len(root.DocList) - 1
+	root.setDocument(m)
+}
+
+func (root *Root) closeDocument() {
+	if len(root.DocList) == 1 {
+		return
+	}
+	s := root.DocList
+	root.DocList = append(s[:root.CurrentDoc], s[root.CurrentDoc+1:]...)
+	log.Printf("close : %s", root.Doc.FileName)
+	if root.CurrentDoc > 0 {
+		root.CurrentDoc--
+	}
+	root.setDocument(root.DocList[root.CurrentDoc])
+}
+
 func (root *Root) toggleMouse() {
 	root.Config.DisableMouse = !root.Config.DisableMouse
 	if root.Config.DisableMouse {
