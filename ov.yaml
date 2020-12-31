@@ -1,8 +1,15 @@
 # This is the ov config file.
 # Copy it to ~/.ov.yaml or start it with `ov --config ov.yaml`.
 
-# TabWidth is the tab width number.
-TabWidth: 4
+General:
+  # TabWidth is the tab width number.
+  TabWidth: 8
+  Header: 0
+  AlternateRows: false
+  ColumnMode: false
+  LineNumMode: false
+  WrapMode: true
+  ColumnDelimiter: ","
 
 # Style
 # String of the color name: Foreground, Background
