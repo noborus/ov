@@ -91,8 +91,8 @@ type lineNumber struct {
 	wrap int
 }
 
-// status structure contains the status of the display.
-type status struct {
+// general structure contains the general of the display.
+type general struct {
 	// TabWidth is tab stop num.
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
@@ -130,7 +130,7 @@ type Config struct {
 	// OverLine color.
 	ColorOverLine string
 
-	Status status
+	General general
 
 	// Mouse support disable.
 	DisableMouse bool
@@ -213,7 +213,7 @@ func NewConfig() Config {
 		StyleOverLine: ovStyle{
 			Underline: true,
 		},
-		Status: status{
+		General: general{
 			TabWidth: 8,
 		},
 	}
@@ -289,10 +289,6 @@ func (root *Root) SetConfig(config Config) {
 }
 
 func (root *Root) setKeyConfig() error {
-	for _, doc := range root.DocList {
-		doc.status = root.Config.Status
-	}
-
 	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
 		return err
@@ -350,6 +346,9 @@ func (logDoc *Document) Write(p []byte) (int, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	for _, doc := range root.DocList {
+		doc.general = root.Config.General
+	}
 	if err := root.setKeyConfig(); err != nil {
 		return err
 	}
@@ -836,6 +835,7 @@ func (root *Root) previousDoc() {
 
 func (root *Root) addDocument(m *Document) {
 	log.Printf("add: %s", m.FileName)
+	m.general = root.Config.General
 	root.DocList = append(root.DocList, m)
 	root.CurrentDoc = len(root.DocList) - 1
 	root.setDocument(m)

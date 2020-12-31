@@ -31,7 +31,7 @@ type Document struct {
 	lastContentsMap map[int]int
 
 	// status is the display status of the document.
-	status
+	general
 	// topLN is the starting position of the current y.
 	topLN int
 	// topLX represents the x position of the top line.
@@ -50,7 +50,7 @@ func NewDocument() (*Document, error) {
 	m := &Document{
 		lines:      make([]string, 0, 1000),
 		beforeSize: 1000,
-		status: status{
+		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
 		},
