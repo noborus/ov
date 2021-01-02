@@ -198,7 +198,6 @@ func (root *Root) moveDown() {
 
 	m := root.Doc
 	num := m.topLN
-	x := m.topLX
 
 	if !m.WrapMode {
 		num++
@@ -214,15 +213,15 @@ func (root *Root) moveDown() {
 	for _, x := range listX {
 		if x > m.topLX {
 			m.topLX = x
-			root.limitMoveDown(x, num)
+			root.limitMoveDown(m.topLX, num)
 			return
 		}
 	}
 
 	// Next line.
-	x = 0
 	num++
-	root.limitMoveDown(x, num)
+	m.topLX = 0
+	root.limitMoveDown(m.topLX, num)
 }
 
 // Move to the left.

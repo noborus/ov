@@ -148,7 +148,7 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	}
 }
 
-func (root *Root) putClipboard(ctx context.Context) {
+func (root *Root) putClipboard(_ context.Context) {
 	y1 := root.y1
 	y2 := root.y2
 	x1 := root.x1
@@ -327,7 +327,7 @@ func (root *Root) Paste() {
 	}()
 }
 
-func (root *Root) getClipboard(ctx context.Context) {
+func (root *Root) getClipboard(_ context.Context) {
 	input := root.input
 	switch input.mode {
 	case Normal, Help, LogDoc:
