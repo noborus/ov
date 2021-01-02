@@ -191,6 +191,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
   [ctrl+alt+e]               * display log screen
   [ctrl+l]                   * screen sync
   [ctrl+alt+r]               * enable/disable mouse
+  [ctrl+k]                   * close current document
 
 	Moving
 
