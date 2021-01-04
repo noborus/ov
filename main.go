@@ -55,7 +55,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 
 		if config.Debug {
-			fmt.Println("Using config file:", viper.ConfigFileUsed())
+			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
 
 		ov, err := oviewer.Open(args...)
@@ -127,9 +127,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
 	_ = viper.BindPFlag("general.DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
 
-	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
-	_ = viper.BindPFlag("general.ExitWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
-
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
 	_ = viper.BindPFlag("general.QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
@@ -148,7 +145,11 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number")
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
+	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
+	_ = viper.BindPFlag("AfterWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
+
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
+	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
 
 // initConfig reads in config file and ENV variables if set.
