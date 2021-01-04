@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -25,7 +26,12 @@ var (
 	ver bool
 	// helpKey is key bind information.
 	helpKey bool
+	// completion is the generation of shell completion.
+	completion bool
 )
+
+// ErrCompletion indicates that the completion argument was invalid.
+var ErrCompletion = errors.New("requires one of the arguments bash/zsh/fish/powershell")
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -42,6 +48,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if helpKey {
 			HelpKey(cmd, args)
 			return nil
+		}
+
+		if completion {
+			return Completion(cmd, args)
 		}
 
 		if config.Debug {
@@ -76,6 +86,26 @@ func HelpKey(cmd *cobra.Command, _ []string) {
 	fmt.Println(oviewer.KeyBindString(keyBind))
 }
 
+// Completion is shell completion.
+func Completion(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return ErrCompletion
+	}
+
+	switch args[0] {
+	case "bash":
+		return cmd.Root().GenBashCompletion(os.Stdout)
+	case "zsh":
+		return cmd.Root().GenZshCompletion(os.Stdout)
+	case "fish":
+		return cmd.Root().GenFishCompletion(os.Stdout, true)
+	case "powershell":
+		return cmd.Root().GenPowerShellCompletion(os.Stdout)
+	}
+
+	return ErrCompletion
+}
+
 func init() {
 	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
@@ -83,6 +113,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "Generate completion script [bash|zsh|fish|powershell]")
 
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("general.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
