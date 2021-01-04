@@ -132,7 +132,7 @@ func init() {
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
-	_ = viper.BindPFlag("general.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
+	_ = viper.BindPFlag("general.WrapMode", rootCmd.PersistentFlags().Lookup("wrap"))
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
