@@ -44,11 +44,10 @@ func (root *Root) limitMoveDown(x int, y int) {
 	if y+root.vHight >= m.endNum {
 		tx, tn := root.bottomLineNum(m.endNum)
 		if y > tn || (y == tn && x > tx) {
-			if tn > m.topLN || (tn == m.topLN && m.topLX > tx) {
+			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
 				m.topLN = tn
 				m.topLX = tx
 			}
-			log.Println(y, m.topLN)
 			return
 		}
 	}
@@ -210,6 +209,7 @@ func (root *Root) moveDown() {
 		log.Println(err)
 		return
 	}
+
 	for _, x := range listX {
 		if x > m.topLX {
 			m.topLX = x
