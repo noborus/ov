@@ -538,6 +538,11 @@ func (root *Root) setOldGlobalStyle() {
 func (root *Root) prepareView() {
 	screen := root.Screen
 	root.vWidth, root.vHight = screen.Size()
+
+	// Do not allow size 0.
+	root.vWidth = max(root.vWidth, 1)
+	root.vHight = max(root.vHight, 1)
+
 	root.lnumber = make([]lineNumber, root.vHight+1)
 	root.setWrapHeaderLen()
 	root.statusPos = root.vHight - 1
