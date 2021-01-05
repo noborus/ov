@@ -263,7 +263,6 @@ func (root *Root) moveRight() {
 
 // columnModeX returns the actual x from m.columnNum.
 func (root *Root) columnModeX() int {
-
 	m := root.Doc
 	// m.Header+10 = Maximum columnMode target.
 	for i := 0; i < m.Header+10; i++ {
