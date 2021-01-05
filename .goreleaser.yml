@@ -62,7 +62,7 @@ nfpms:
 brews:
   -
     name: ov
-    github:
+    tap:
       owner: noborus
       name: homebrew-tap
     commit_author:
