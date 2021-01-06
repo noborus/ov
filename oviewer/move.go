@@ -212,8 +212,7 @@ func (root *Root) moveDown() {
 
 	for _, x := range listX {
 		if x > m.topLX {
-			m.topLX = x
-			root.limitMoveDown(m.topLX, num)
+			root.limitMoveDown(x, num)
 			return
 		}
 	}
