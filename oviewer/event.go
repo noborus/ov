@@ -44,9 +44,9 @@ func (root *Root) main(quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			root.search(ctx, root.Doc.topLN+1, root.searchLine)
+			root.search(ctx, root.Doc.topLN+root.Doc.Header+1, root.searchLine)
 		case *eventBackSearch:
-			root.search(ctx, root.Doc.topLN-1, root.backSearchLine)
+			root.search(ctx, root.Doc.topLN+root.Doc.Header-1, root.backSearchLine)
 		case *searchInput:
 			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:
