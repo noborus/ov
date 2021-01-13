@@ -114,6 +114,7 @@ Flags:
   -i, --case-sensitive            case-sensitive in search
   -d, --column-delimiter string   column delimiter (default ",")
   -c, --column-mode               column mode
+      --completion                Generate completion script [bash|zsh|fish|powershell]
       --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
       --disable-mouse             disable mouse support
