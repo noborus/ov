@@ -178,6 +178,64 @@ func Test_parseString(t *testing.T) {
 		})
 	}
 }
+func Test_parseString2(t *testing.T) {
+	type args struct {
+		line     string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want lineContents
+	}{
+		{
+			name: "testIVS",
+			args: args{line: string([]rune{'\u908a', '\U000e0104'}), tabWidth: 4},
+			want: lineContents{
+				{width: 2, style: tcell.StyleDefault, mainc: rune('邊'), combc: []rune{0x000e0104}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+			},
+		},
+		{
+			name: "testEmojiCombiningSequence",
+			args: args{line: string([]rune{'1', '\ufe0f', '\u20e3'}), tabWidth: 4},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: []rune{0xfe0f, 0x20e3}},
+			},
+		},
+		{
+			name: "testEmojiModifierSequence",
+			args: args{line: string([]rune{'\u261d', '\U0001f3fb'}), tabWidth: 4},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('☝'), combc: []rune{0x0001f3fb}},
+			},
+		},
+		{
+			name: "testEmojiFlagSequence",
+			args: args{line: string([]rune{'\U0001f1ef', '\U0001f1f5'}), tabWidth: 4},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('🇯'), combc: []rune{'🇵'}},
+			},
+		},
+		{
+			name: "testEmojiZWJSequence",
+			args: args{line: string([]rune{'\U0001f468', '\u200d', '\U0001f468', '\u200d', '\U0001f466'}), tabWidth: 4},
+			want: lineContents{
+				{width: 2, style: tcell.StyleDefault, mainc: rune('👨'), combc: []rune{'\u200d', '\U0001f468', '\u200d', '\U0001f466'}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+			},
+		},
+	}
+	for _, tt := range tests {
+		SetupStyle()
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseString(tt.args.line, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseString() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func Test_lastContent(t *testing.T) {
 	type args struct {

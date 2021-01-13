@@ -9,6 +9,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 )
 
 // content represents one character on the terminal.
@@ -49,7 +50,10 @@ func parseString(line string, tabWidth int) lineContents {
 	b := 0
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
-	for _, runeValue := range line {
+
+	gr := uniseg.NewGraphemes(line)
+	for gr.Next() {
+		runeValue := gr.Runes()[0]
 		c := DefaultContent
 		switch state {
 		case ansiEscape:
@@ -146,6 +150,9 @@ func parseString(line string, tabWidth int) lineContents {
 			}
 		case 1:
 			c.mainc = runeValue
+			if len(gr.Runes()) > 1 {
+				c.combc = gr.Runes()[1:]
+			}
 			c.width = 1
 			c.style = style
 			if bsFlag {
@@ -157,6 +164,9 @@ func parseString(line string, tabWidth int) lineContents {
 			tabX++
 		case 2:
 			c.mainc = runeValue
+			if len(gr.Runes()) > 1 {
+				c.combc = gr.Runes()[1:]
+			}
 			c.width = 2
 			c.style = style
 			if bsFlag {
