@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -67,7 +68,7 @@ func (m *Document) ReadAll(r io.ReadCloser) error {
 		for {
 			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
-				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
+				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
 					break
 				}
 				log.Printf("error: %v\n", err)
