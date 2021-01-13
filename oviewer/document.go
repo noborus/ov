@@ -48,8 +48,8 @@ type Document struct {
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		lines:      make([]string, 0, 1000),
-		beforeSize: 1000,
+		lines:      make([]string, 0),
+		beforeSize: 100,
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
