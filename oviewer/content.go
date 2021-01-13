@@ -50,6 +50,7 @@ func parseString(line string, tabWidth int) lineContents {
 	b := 0
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
+
 	gr := uniseg.NewGraphemes(line)
 	for gr.Next() {
 		runeValue := gr.Runes()[0]
@@ -148,10 +149,8 @@ func parseString(line string, tabWidth int) lineContents {
 				lc[n] = content
 			}
 		case 1:
-			c.mainc = gr.Runes()[0]
+			c.mainc = runeValue
 			if len(gr.Runes()) > 1 {
-				log.Printf("%+q ", gr.Runes())
-				log.Printf("%x ", gr.Runes())
 				c.combc = gr.Runes()[1:]
 			}
 			c.width = 1
@@ -164,10 +163,8 @@ func parseString(line string, tabWidth int) lineContents {
 			lc = append(lc, c)
 			tabX++
 		case 2:
-			c.mainc = gr.Runes()[0]
+			c.mainc = runeValue
 			if len(gr.Runes()) > 1 {
-				log.Printf("%+q ", gr.Runes())
-				log.Printf("%x ", gr.Runes())
 				c.combc = gr.Runes()[1:]
 			}
 			c.width = 2
