@@ -730,6 +730,7 @@ func (root *Root) ViewSync() {
 	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
+	root.Screen.Sync()
 }
 
 // TailSync move to tail and sync.
