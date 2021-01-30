@@ -23,7 +23,6 @@ StyleOverStrike:
 StyleOverLine:
   Underline: true
 StyleLineNumber:
-  Foreground: "green"
   Bold: true
 
 # Keybind
