@@ -119,6 +119,8 @@ type Config struct {
 	StyleOverStrike ovStyle
 	// OverLineS is a style that applies to overstrike underlines.
 	StyleOverLine ovStyle
+	// StyleLineNumber is a style that applies line number.
+	StyleLineNumber ovStyle
 
 	// Old setting method.
 	// Alternating background color.
@@ -212,6 +214,9 @@ func NewConfig() Config {
 		},
 		StyleOverLine: ovStyle{
 			Underline: true,
+		},
+		StyleLineNumber: ovStyle{
+			Bold: true,
 		},
 		General: general{
 			TabWidth: 8,

@@ -132,7 +132,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		if m.LineNumMode {
 			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
 			for i := 0; i < len(lc); i++ {
-				lc[i].style = tcell.StyleDefault.Bold(true)
+				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}
 			root.setContentString(0, y, lc)
 		}
