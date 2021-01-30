@@ -8,7 +8,7 @@ require (
 	github.com/frankban/quicktest v1.8.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.1.0
-	github.com/klauspost/compress v1.11.6
+	github.com/klauspost/compress v1.11.7
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-runewidth v0.0.10
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
@@ -24,7 +24,7 @@ require (
 	github.com/ulikunitz/xz v0.5.9
 	gitlab.com/tslocum/cbind v0.1.4
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20210113000019-eaf3bda374d2 // indirect
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect

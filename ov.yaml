@@ -22,6 +22,8 @@ StyleOverStrike:
   Bold: true
 StyleOverLine:
   Underline: true
+StyleLineNumber:
+  Bold: true
 
 # Keybind
 # Special key
