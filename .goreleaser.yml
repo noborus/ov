@@ -69,6 +69,8 @@ brews:
       name: noborus
       email: noborusai@gmail.com
     homepage: https://github.com/noborus/ov
-    description: ov is a feature rich terminal pager.
+    description: "Feature rich terminal pager"
+    test:
+      system "#{bin}/ov --version"
     install:
-      bin.install 'ov'
+      bin.install "ov"
