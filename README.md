@@ -250,6 +250,7 @@ You can customize the following items.
 * StyleHeader
 * StyleOverStrike
 * StyleOverLine
+* StyleLineNumber
 
 Specifies the color name for the foreground and background colors.
 Specify bool values for Bold, Blink, Shaded, Italic, and Underline.
