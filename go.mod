@@ -9,6 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.1.0
 	github.com/klauspost/compress v1.11.7
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-runewidth v0.0.10
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
@@ -21,7 +22,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.5.1 // indirect
-	github.com/ulikunitz/xz v0.5.9
+	github.com/ulikunitz/xz v0.5.10
 	gitlab.com/tslocum/cbind v0.1.4
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
