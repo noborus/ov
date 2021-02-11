@@ -110,11 +110,11 @@ Usage:
   ov [flags]
 
 Flags:
-  -C, --alternate-rows            color to alternate rows
+  -C, --alternate-rows            alternately change the line color
   -i, --case-sensitive            case-sensitive in search
   -d, --column-delimiter string   column delimiter (default ",")
   -c, --column-mode               column mode
-      --completion                Generate completion script [bash|zsh|fish|powershell]
+      --completion                generate completion script [bash|zsh|fish|powershell]
       --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
       --disable-mouse             disable mouse support
@@ -122,7 +122,7 @@ Flags:
   -H, --header int                number of header rows to fix
   -h, --help                      help for ov
       --help-key                  display key bind information
-  -n, --line-number               line number
+  -n, --line-number               line number mode
   -F, --quit-if-one-screen        quit if the output fits on one screen
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information

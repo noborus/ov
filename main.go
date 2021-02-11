@@ -113,7 +113,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
-	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "Generate completion script [bash|zsh|fish|powershell]")
+	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "generate completion script [bash|zsh|fish|powershell]")
 
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
@@ -122,13 +122,13 @@ func init() {
 	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
 
-	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "color to alternate rows")
+	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "alternately change the line color")
 	_ = viper.BindPFlag("general.AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
 
 	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
 	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
-	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number")
+	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
