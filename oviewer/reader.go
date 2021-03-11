@@ -98,6 +98,9 @@ func (m *Document) ReadAll(r io.ReadCloser) error {
 	case <-ch:
 		return nil
 	case <-time.After(500 * time.Millisecond):
+		go func() {
+			<-ch
+		}()
 		return nil
 	}
 }
