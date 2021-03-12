@@ -3,12 +3,12 @@ module github.com/noborus/ov
 go 1.14
 
 require (
-	github.com/atotto/clipboard v0.1.2
+	github.com/atotto/clipboard v0.1.4
 	github.com/dgraph-io/ristretto v0.0.3
 	github.com/frankban/quicktest v1.8.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.1.0
-	github.com/klauspost/compress v1.11.7
+	github.com/klauspost/compress v1.11.8
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-runewidth v0.0.10
@@ -24,9 +24,9 @@ require (
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/ulikunitz/xz v0.5.10
 	gitlab.com/tslocum/cbind v0.1.4
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
-	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210227040730-b0d1d43c014d // indirect
+	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
 	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )

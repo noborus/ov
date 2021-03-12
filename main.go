@@ -65,8 +65,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		ov.SetConfig(config)
 
 		if err := ov.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-			return nil
+			return err
 		}
 
 		if ov.AfterWrite {
