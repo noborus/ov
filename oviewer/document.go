@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"io"
 	"os"
 	"sync"
 
@@ -14,6 +13,14 @@ import (
 type Document struct {
 	// fileName is the file name to display.
 	FileName string
+
+	// File is the os.File.
+	file *os.File
+	// point
+	offset int
+	// CFormat is a compressed format.
+	CFormat Compressed
+
 	// lines stores the contents of the file in slices of strings.
 	// lines,endNum and eof is updated by reader goroutine.
 	lines []string
@@ -41,6 +48,8 @@ type Document struct {
 	// columnNum is the number of columns.
 	columnNum int
 
+	FollowMode bool
+
 	// mu controls the mutex.
 	mu sync.Mutex
 }
@@ -64,26 +73,36 @@ func NewDocument() (*Document, error) {
 
 // ReadFile reads file.
 func (m *Document) ReadFile(fileName string) error {
-	var reader io.ReadCloser
-	if fileName == "" {
-		if term.IsTerminal(0) {
-			return ErrMissingFile
-		}
-		fileName = "(STDIN)"
-		reader = uncompressedReader(os.Stdin)
-	} else {
-		r, err := os.Open(fileName)
-		if err != nil {
-			return err
-		}
-		reader = uncompressedReader(r)
+	r, err := os.Open(fileName)
+	if err != nil {
+		return err
 	}
+	m.file = r
+	m.FileName = fileName
+
+	cFormat, reader := uncompressedReader(r)
+	m.CFormat = cFormat
 
 	if err := m.ReadAll(reader); err != nil {
 		return err
 	}
+	return nil
+}
 
-	m.FileName = fileName
+// ReadSTDIN read STDIN.
+func (m *Document) ReadSTDIN() error {
+	if term.IsTerminal(0) {
+		return ErrMissingFile
+	}
+
+	m.FileName = "(STDIN)"
+
+	cFormat, reader := uncompressedReader(os.Stdin)
+	m.CFormat = cFormat
+
+	if err := m.ReadAll(reader); err != nil {
+		return err
+	}
 
 	return nil
 }

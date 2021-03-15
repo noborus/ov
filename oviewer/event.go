@@ -33,6 +33,8 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			return
 		case *eventTimer:
 			root.updateEndNum()
+		case *eventFollow:
+			root.TailSync()
 		case *eventDocument:
 			root.setDocument(ev.m)
 		case *eventAddDocument:
@@ -115,12 +117,10 @@ type eventTimer struct {
 }
 
 // runOnTime runs at time.
-func (root *Root) runOnTime() {
+func (root *Root) runOnTime(ev tcell.Event) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &eventTimer{}
-	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
 	}()
@@ -129,15 +129,37 @@ func (root *Root) runOnTime() {
 // countTimer fires events periodically until it reaches EOF.
 func (root *Root) countTimer() {
 	timer := time.NewTicker(time.Millisecond * 500)
+	defer timer.Stop()
 loop:
 	for {
 		<-timer.C
-		root.runOnTime()
+		ev := &eventTimer{}
+		ev.SetEventNow()
+		root.runOnTime(ev)
 		if root.Doc.BufEOF() {
 			break loop
 		}
 	}
-	timer.Stop()
+}
+
+// eventFollow represents a follow event.
+type eventFollow struct {
+	tcell.EventTime
+}
+
+// followTimer fires events.
+func (root *Root) followTimer() {
+	timer := time.NewTicker(time.Millisecond * 50)
+	defer timer.Stop()
+	for {
+		<-timer.C
+		ev := &eventFollow{}
+		ev.SetEventNow()
+		root.runOnTime(ev)
+		if !root.Doc.FollowMode {
+			break
+		}
+	}
 }
 
 // MoveLine fires an event that moves to the specified line.

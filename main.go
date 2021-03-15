@@ -62,6 +62,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if err != nil {
 			return err
 		}
+
 		ov.SetConfig(config)
 
 		if err := ov.Run(); err != nil {
@@ -148,6 +149,9 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
+
+	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
+	_ = viper.BindPFlag("FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))

@@ -3,6 +3,7 @@ package oviewer
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -144,6 +145,9 @@ type Config struct {
 	CaseSensitive bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
+	// Follow mode.
+	FollowMode bool
+
 	// KeyBinding
 	Keybind map[string][]string
 }
@@ -250,7 +254,7 @@ func openSTDIN() (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = m.ReadFile("")
+	err = m.ReadSTDIN()
 	if err != nil {
 		return nil, err
 	}
@@ -269,15 +273,18 @@ func openFiles(fileNames []string) (*Root, error) {
 		if fi.IsDir() {
 			continue
 		}
+
 		m, err := NewDocument()
 		if err != nil {
 			return nil, err
 		}
+
 		err = m.ReadFile(fileName)
 		if err != nil {
 			log.Println(err, fileName)
 			continue
 		}
+
 		docList = append(docList, m)
 	}
 
@@ -382,6 +389,7 @@ func (root *Root) Run() error {
 
 	for _, d := range root.DocList {
 		log.Printf("open %s", d.FileName)
+		log.Printf("format %v", d.CFormat)
 	}
 	root.setGlobalStyle()
 	root.Screen.Clear()
@@ -728,6 +736,26 @@ func (root *Root) toggleLineNumMode() {
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
 	root.ViewSync()
+}
+
+func (root *Root) FollowMode() {
+	root.Doc.FollowMode = !root.Doc.FollowMode
+	log.Printf("Follow Mode %t", root.Doc.FollowMode)
+	if !root.Doc.FollowMode {
+		return
+	}
+
+	if root.Doc.BufEOF() {
+		pos, err := root.Doc.file.Seek(0, io.SeekCurrent)
+		if err != nil {
+			return
+		}
+		root.Doc.file.Close()
+		log.Printf("pos %d", pos)
+		root.Doc.ReadFollow(pos)
+	}
+
+	go root.followTimer()
 }
 
 // ViewSync redraws the whole thing.
