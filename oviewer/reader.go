@@ -5,12 +5,10 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"compress/gzip"
-	"encoding/binary"
 	"errors"
 	"io"
 	"log"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -120,55 +118,6 @@ func (m *Document) ReadFollow(reader *bufio.Reader) error {
 	}
 }
 
-func (m *Document) NotifyReadAll(eofCh chan struct{}, r io.Reader) error {
-	reader := bufio.NewReader(r)
-	ch := make(chan struct{})
-	go func() {
-		defer close(ch)
-
-		var line bytes.Buffer
-		for {
-			buf, isPrefix, err := reader.ReadLine()
-			if err != nil {
-				m.mu.Lock()
-				defer m.mu.Unlock()
-				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					close(eofCh)
-					m.eof = true
-					return
-				}
-				log.Printf("error: %v\n", err)
-				m.eof = false
-				return
-			}
-
-			line.Write(buf)
-			if isPrefix {
-				continue
-			}
-
-			m.mu.Lock()
-			m.lines = append(m.lines, line.String())
-			m.endNum++
-			m.mu.Unlock()
-			if m.endNum == m.beforeSize {
-				ch <- struct{}{}
-			}
-			line.Reset()
-		}
-	}()
-
-	select {
-	case <-ch:
-		return nil
-	case <-time.After(500 * time.Millisecond):
-		go func() {
-			<-ch
-		}()
-		return nil
-	}
-}
-
 // ReadAll reads all from the reader to the buffer.
 // It returns if beforeSize is accumulated in buffer
 // before the end of read.
@@ -217,21 +166,5 @@ func (m *Document) ReadAll(r io.Reader) error {
 			<-ch
 		}()
 		return nil
-	}
-}
-
-func waitForChange(fd int) error {
-	for {
-		var buf [syscall.SizeofInotifyEvent]byte
-		_, err := syscall.Read(fd, buf[:])
-		if err != nil {
-			return err
-		}
-		r := bytes.NewReader(buf[:])
-		var ev = syscall.InotifyEvent{}
-		_ = binary.Read(r, binary.LittleEndian, &ev)
-		if ev.Mask&syscall.IN_MODIFY == syscall.IN_MODIFY {
-			return nil
-		}
 	}
 }
