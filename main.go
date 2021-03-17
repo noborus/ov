@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -58,11 +60,18 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
 
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer watcher.Close()
+
 		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err
 		}
 
+		ov.SetWatcher(watcher)
 		ov.SetConfig(config)
 
 		if err := ov.Run(); err != nil {
@@ -137,6 +146,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 
+	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
+	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
+
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
 	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
@@ -149,9 +161,6 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
-
-	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
-	_ = viper.BindPFlag("FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))

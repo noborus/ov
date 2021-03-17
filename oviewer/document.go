@@ -1,6 +1,10 @@
 package oviewer
 
 import (
+	"bufio"
+	"errors"
+	"io"
+	"log"
 	"os"
 	"sync"
 
@@ -16,8 +20,8 @@ type Document struct {
 
 	// File is the os.File.
 	file *os.File
-	// point
-	offset int
+	// offset
+	offset int64
 	// CFormat is a compressed format.
 	CFormat Compressed
 
@@ -28,6 +32,8 @@ type Document struct {
 	endNum int
 	// true if EOF is reached.
 	eof bool
+	// true if the file is changed.
+	changed chan bool
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
 	// cache represents a cache of contents.
@@ -48,8 +54,6 @@ type Document struct {
 	// columnNum is the number of columns.
 	columnNum int
 
-	FollowMode bool
-
 	// mu controls the mutex.
 	mu sync.Mutex
 }
@@ -58,6 +62,7 @@ type Document struct {
 func NewDocument() (*Document, error) {
 	m := &Document{
 		lines:      make([]string, 0),
+		changed:    make(chan bool),
 		beforeSize: 100,
 		general: general{
 			ColumnDelimiter: "",
@@ -104,6 +109,59 @@ func (m *Document) ReadSTDIN() error {
 		return err
 	}
 
+	return nil
+}
+
+func (m *Document) Close() error {
+	pos, err := m.file.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return err
+	}
+	m.offset = pos
+	return m.file.Close()
+}
+
+func (m *Document) reOpen() error {
+	go func() {
+		if err := m.Close(); err != nil {
+			return
+		}
+
+		if !m.BufEOF() {
+			return
+		}
+
+		m.mu.Lock()
+		m.eof = false
+		m.mu.Unlock()
+
+		r, err := os.Open(m.FileName)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = r.Seek(m.offset, io.SeekStart)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		rr := compressedFormatReader(m.CFormat, r)
+		reader := bufio.NewReader(rr)
+		for {
+			err := m.ReadFollow(reader)
+			if err != nil {
+				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+					log.Println("wait")
+					<-m.changed
+					log.Println("start")
+					continue
+				}
+				log.Println(err)
+				break
+			}
+		}
+	}()
 	return nil
 }
 

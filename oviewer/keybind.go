@@ -57,7 +57,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.ViewSync,
-		actionFollow:         root.FollowMode,
+		actionFollow:         root.toggleFollowMode,
 		actionHelp:           root.Help,
 		actionLogDoc:         root.logDisplay,
 		actionMoveDown:       root.moveDown,

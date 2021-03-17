@@ -3,7 +3,6 @@ package oviewer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
 	"gitlab.com/tslocum/cbind"
 )
@@ -84,6 +84,8 @@ type Root struct {
 
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
+
+	watcher *fsnotify.Watcher
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -108,6 +110,8 @@ type general struct {
 	WrapMode bool
 	// Column Delimiter
 	ColumnDelimiter string
+	// Follow mode.
+	FollowMode bool
 }
 
 // Config represents the settings of ov.
@@ -145,8 +149,6 @@ type Config struct {
 	CaseSensitive bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
-	// Follow mode.
-	FollowMode bool
 
 	// KeyBinding
 	Keybind map[string][]string
@@ -300,6 +302,34 @@ func (root *Root) SetConfig(config Config) {
 	root.Config = config
 }
 
+func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				for _, doc := range root.DocList {
+					if doc.FileName == event.Name {
+						root.followModeFire(doc)
+					}
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	root.watcher = watcher
+	for _, doc := range root.DocList {
+		root.watcher.Add(doc.FileName)
+	}
+}
+
 func (root *Root) setKeyConfig() error {
 	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
@@ -342,6 +372,7 @@ func NewLogDoc() (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
+	logDoc.FollowMode = true
 	logDoc.FileName = "Log"
 	log.SetOutput(logDoc)
 	return logDoc, nil
@@ -444,6 +475,7 @@ func (root *Root) setDocument(m *Document) {
 	root.Doc = m
 	root.Clear()
 	root.ViewSync()
+	root.followModeFire(m)
 }
 
 // Help is to switch between Help screen and normal screen.
@@ -738,24 +770,30 @@ func (root *Root) resize() {
 	root.ViewSync()
 }
 
-func (root *Root) FollowMode() {
+func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
-	log.Printf("Follow Mode %t", root.Doc.FollowMode)
+	if root.Doc.FollowMode {
+		root.followModeFire(root.Doc)
+		go root.followTimer()
+	}
+}
+
+func (root *Root) followModeFire(m *Document) {
+	log.Printf("fire Follow Mode %s %t", m.FileName, m.FollowMode)
+	if m.FollowMode && m.BufEOF() {
+		log.Printf("reopen %s", m.FileName)
+		err := m.reOpen()
+		if err != nil {
+			log.Printf("%s cannot be reopened %v", m.FileName, err)
+		}
+	}
+	go func() {
+		m.changed <- true
+	}()
+
 	if !root.Doc.FollowMode {
 		return
 	}
-
-	if root.Doc.BufEOF() {
-		pos, err := root.Doc.file.Seek(0, io.SeekCurrent)
-		if err != nil {
-			return
-		}
-		root.Doc.file.Close()
-		log.Printf("pos %d", pos)
-		root.Doc.ReadFollow(pos)
-	}
-
-	go root.followTimer()
 }
 
 // ViewSync redraws the whole thing.

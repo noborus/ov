@@ -62,7 +62,6 @@ func (c Compressed) String() string {
 }
 
 func uncompressedReader(reader io.Reader) (Compressed, io.Reader) {
-	var err error
 	buf := [7]byte{}
 	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
 	if err != nil {
@@ -73,60 +72,73 @@ func uncompressedReader(reader io.Reader) (Compressed, io.Reader) {
 	}
 
 	mr := io.MultiReader(bytes.NewReader(buf[:n]), reader)
-
-	var r io.Reader
 	cFormat := compressType(buf[:7])
-	switch cFormat {
-	case GZIP:
-		r, err = gzip.NewReader(mr)
-	case BZIP2:
-		r = bzip2.NewReader(mr)
-	case ZSTD:
-		r, err = zstd.NewReader(mr)
-	case LZ4:
-		r = lz4.NewReader(mr)
-	case XZ:
-		r, err = xz.NewReader(mr)
-	}
-	if err != nil || r == nil {
-		r = mr
-	}
+	r := compressedFormatReader(cFormat, mr)
+
 	return cFormat, r
 }
 
-func (m *Document) ReadFollow(pos int64) error {
-	if !m.BufEOF() {
-		return nil
+func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
+	var r io.Reader
+	var err error
+	switch cFormat {
+	case GZIP:
+		r, err = gzip.NewReader(reader)
+	case BZIP2:
+		r = bzip2.NewReader(reader)
+	case ZSTD:
+		r, err = zstd.NewReader(reader)
+	case LZ4:
+		r = lz4.NewReader(reader)
+	case XZ:
+		r, err = xz.NewReader(reader)
 	}
-	m.mu.Lock()
-	m.eof = false
-	m.mu.Unlock()
-
-	r, err := os.Open(m.FileName)
-	if err != nil {
-		return err
+	if err != nil || r == nil {
+		r = reader
 	}
-	fd, _ := syscall.InotifyInit()
-	_, _ = syscall.InotifyAddWatch(fd, m.FileName, syscall.IN_MODIFY)
+	return r
+}
 
-	_, err = r.Seek(pos, io.SeekStart)
-	if err != nil {
-		return err
+func (m *Document) ReadFollow(reader *bufio.Reader) error {
+	var line bytes.Buffer
+
+	for {
+		buf, isPrefix, err := reader.ReadLine()
+		if err != nil {
+			return err
+		}
+		line.Write(buf)
+		if isPrefix {
+			continue
+		}
+
+		m.mu.Lock()
+		m.lines = append(m.lines, line.String())
+		m.endNum++
+		m.mu.Unlock()
+		line.Reset()
 	}
+}
 
+func (m *Document) NotifyReadAll(eofCh chan struct{}, r io.Reader) error {
+	reader := bufio.NewReader(r)
+	ch := make(chan struct{})
 	go func() {
-		reader := bufio.NewReader(r)
+		defer close(ch)
+
 		var line bytes.Buffer
 		for {
 			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
+				m.mu.Lock()
+				defer m.mu.Unlock()
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					if err = waitForChange(fd); err != nil {
-						return
-					}
-					continue
+					close(eofCh)
+					m.eof = true
+					return
 				}
 				log.Printf("error: %v\n", err)
+				m.eof = false
 				return
 			}
 
@@ -139,11 +151,22 @@ func (m *Document) ReadFollow(pos int64) error {
 			m.lines = append(m.lines, line.String())
 			m.endNum++
 			m.mu.Unlock()
+			if m.endNum == m.beforeSize {
+				ch <- struct{}{}
+			}
 			line.Reset()
 		}
 	}()
-	log.Println("Follow mode end")
-	return nil
+
+	select {
+	case <-ch:
+		return nil
+	case <-time.After(500 * time.Millisecond):
+		go func() {
+			<-ch
+		}()
+		return nil
+	}
 }
 
 // ReadAll reads all from the reader to the buffer.
