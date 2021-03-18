@@ -14,10 +14,10 @@ import (
 // main is manages and executes events in the main routine.
 func (root *Root) main(quitChan chan<- struct{}) {
 	go root.countTimer()
+	go root.followTimer()
 	ctx := context.Background()
 	if root.Doc.FollowMode {
 		root.followModeFire(root.Doc)
-		go root.followTimer()
 	}
 
 	for {
@@ -153,19 +153,16 @@ type eventFollow struct {
 
 // followTimer fires events.
 func (root *Root) followTimer() {
-	log.Println("followTimer on")
 	timer := time.NewTicker(time.Millisecond * 50)
-	defer timer.Stop()
 	for {
 		<-timer.C
+		if !root.Doc.FollowMode {
+			continue
+		}
 		ev := &eventFollow{}
 		ev.SetEventNow()
 		root.runOnTime(ev)
-		if !root.Doc.FollowMode {
-			break
-		}
 	}
-	log.Println("followTimer off")
 }
 
 // MoveLine fires an event that moves to the specified line.

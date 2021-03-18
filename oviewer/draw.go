@@ -283,7 +283,12 @@ func (root *Root) statusDraw() {
 	for x := 0; x < root.vWidth; x++ {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
-	leftStatus := fmt.Sprintf("%t%s:%s", root.Doc.FollowMode, root.Doc.FileName, root.message)
+
+	followMessage := ""
+	if root.Doc.FollowMode {
+		followMessage = "(Follow Mode)"
+	}
+	leftStatus := fmt.Sprintf("%s%s:%s", followMessage, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 
 	input := root.input

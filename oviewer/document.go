@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -32,7 +33,9 @@ type Document struct {
 	endNum int
 	// true if EOF is reached.
 	eof bool
-	// true if the file is changed.
+	// status represents the open status of the file.
+	status Status
+	// tell when a file changes.
 	changed chan bool
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
@@ -57,6 +60,14 @@ type Document struct {
 	// mu controls the mutex.
 	mu sync.Mutex
 }
+
+type Status int
+
+const (
+	OPEN Status = iota
+	WAIT
+	CLOSE
+)
 
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
@@ -88,9 +99,15 @@ func (m *Document) ReadFile(fileName string) error {
 	cFormat, reader := uncompressedReader(r)
 	m.CFormat = cFormat
 
-	if err := m.ReadAll(reader); err != nil {
+	cl := make(chan bool)
+	go func() {
+		<-cl
+		m.Close()
+	}()
+	if err := m.ReadAllChan(cl, reader); err != nil {
 		return err
 	}
+	m.status = OPEN
 	return nil
 }
 
@@ -108,6 +125,7 @@ func (m *Document) ReadSTDIN() error {
 	if err := m.ReadAll(reader); err != nil {
 		return err
 	}
+	m.status = OPEN
 
 	return nil
 }
@@ -115,53 +133,52 @@ func (m *Document) ReadSTDIN() error {
 func (m *Document) Close() error {
 	pos, err := m.file.Seek(0, io.SeekCurrent)
 	if err != nil {
-		return err
+		return fmt.Errorf("seek: %w", err)
 	}
 	m.offset = pos
-	return m.file.Close()
+	if err := m.file.Close(); err != nil {
+		return fmt.Errorf("close(): %w", err)
+	}
+	log.Printf("%s close", m.FileName)
+	m.status = CLOSE
+	return nil
 }
 
 func (m *Document) reOpen() error {
-	go func() {
-		if err := m.Close(); err != nil {
-			return
-		}
+	if m.status == OPEN {
+		log.Printf("aleady open %s", m.FileName)
+		return nil
+	}
 
-		if !m.BufEOF() {
-			return
-		}
+	r, err := os.Open(m.FileName)
+	if err != nil {
+		return err
+	}
+	m.mu.Lock()
+	m.eof = false
+	m.mu.Unlock()
+	log.Printf("%s reopen", m.FileName)
 
-		m.mu.Lock()
-		m.eof = false
-		m.mu.Unlock()
+	_, err = r.Seek(m.offset, io.SeekStart)
+	if err != nil {
+		return err
+	}
 
-		r, err := os.Open(m.FileName)
+	rr := compressedFormatReader(m.CFormat, r)
+	reader := bufio.NewReader(rr)
+	for {
+		err := m.ReadFollow(reader)
 		if err != nil {
-			log.Println(err)
-			return
-		}
-		_, err = r.Seek(m.offset, io.SeekStart)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		rr := compressedFormatReader(m.CFormat, r)
-		reader := bufio.NewReader(rr)
-		for {
-			err := m.ReadFollow(reader)
-			if err != nil {
-				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					log.Println("wait")
-					<-m.changed
-					log.Println("start")
-					continue
-				}
-				log.Println(err)
-				break
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+				log.Println("wait")
+				<-m.changed
+				log.Println("start")
+				continue
 			}
+			log.Println(err)
+			break
 		}
-	}()
+	}
 	return nil
 }
 

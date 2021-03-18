@@ -312,6 +312,9 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				}
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
+						go func() {
+							doc.changed <- true
+						}()
 						root.followModeFire(doc)
 					}
 				}
@@ -326,7 +329,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 
 	root.watcher = watcher
 	for _, doc := range root.DocList {
-		root.watcher.Add(doc.FileName)
+		_ = root.watcher.Add(doc.FileName)
 	}
 }
 
@@ -772,27 +775,20 @@ func (root *Root) resize() {
 
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
-	if root.Doc.FollowMode {
-		root.followModeFire(root.Doc)
-		go root.followTimer()
-	}
 }
 
 func (root *Root) followModeFire(m *Document) {
-	log.Printf("fire Follow Mode %s %t", m.FileName, m.FollowMode)
-	if m.FollowMode && m.BufEOF() {
-		log.Printf("reopen %s", m.FileName)
-		err := m.reOpen()
-		if err != nil {
-			log.Printf("%s cannot be reopened %v", m.FileName, err)
-		}
-	}
-	go func() {
-		m.changed <- true
-	}()
-
-	if !root.Doc.FollowMode {
-		return
+	if m.FollowMode && m.status == CLOSE {
+		go func() {
+			m.status = WAIT
+			log.Printf("reopen wait %s", m.FileName)
+			<-m.changed
+			log.Printf("reopen %s", m.FileName)
+			err := m.reOpen()
+			if err != nil {
+				log.Printf("%s cannot be reopened %v", m.FileName, err)
+			}
+		}()
 	}
 }
 
