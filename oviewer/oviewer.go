@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -208,6 +210,49 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.input = NewInput()
 
 	return root, nil
+}
+
+func ExecCommand(args []string) (*Root, error) {
+	command := exec.Command(args[0], args[1:]...)
+	command.Stdin = os.Stdin
+
+	docout, err := NewDocument()
+	if err != nil {
+		log.Fatal(err)
+	}
+	docout.FileName = "STDOUT"
+	docout.FollowMode = true
+	outReader, err := command.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	docerr, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	docerr.FileName = "STDERR"
+	docerr.FollowMode = true
+	errReader, err := command.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := command.Start(); err != nil {
+		return nil, err
+	}
+
+	err = docout.ReadAll(outReader)
+	if err != nil {
+		log.Println("readall out:", err)
+	}
+
+	err = docerr.ReadAll(errReader)
+	if err != nil {
+		log.Println("readall err:", err)
+	}
+
+	return NewOviewer(docout, docerr)
 }
 
 // NewConfig return the structure of Config with default values.
@@ -791,14 +836,14 @@ func (root *Root) toggleFollowAll() {
 
 func (root *Root) followModeOpen(m *Document) {
 	log.Printf("reopen wait %s", m.FileName)
-	m.status = WAIT
+	atomic.StoreInt32(&m.status, WAIT)
 	<-m.changCh
 	log.Printf("reopen %s", m.FileName)
 	err := m.reOpenRead()
 	if err != nil {
 		log.Printf("%s cannot be reopened %v", m.FileName, err)
 	}
-	m.status = OPEN
+	atomic.StoreInt32(&m.status, OPEN)
 }
 
 // ViewSync redraws the whole thing.

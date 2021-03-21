@@ -66,7 +66,7 @@ type Document struct {
 	mu sync.Mutex
 }
 
-type Status int
+type Status = int32
 
 const (
 	OPEN Status = iota
@@ -110,7 +110,7 @@ func (m *Document) ReadFile(fileName string) error {
 		m.file = r
 	}
 
-	m.status = OPEN
+	atomic.StoreInt32(&m.status, OPEN)
 
 	cFormat, reader := uncompressedReader(m.file)
 	m.CFormat = cFormat
@@ -134,12 +134,12 @@ func (m *Document) Close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close(): %w", err)
 	}
-	m.status = CLOSE
+	atomic.StoreInt32(&m.status, CLOSE)
 	return nil
 }
 
 func (m *Document) reOpenRead() error {
-	if m.status == OPEN {
+	if atomic.LoadInt32(&m.status) == OPEN {
 		log.Printf("Already open %s", m.FileName)
 		return nil
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/noborus/ov/oviewer"
@@ -60,7 +59,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 
 		if execC {
-			return ExecCommand(cmd, args)
+			return execCommand(cmd, args)
 		}
 
 		if config.Debug {
@@ -122,52 +121,13 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
-func ExecCommand(cmd *cobra.Command, args []string) error {
+func execCommand(cmd *cobra.Command, args []string) error {
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	command := exec.Command(args[0], args[1:]...)
-	command.Stdin = os.Stdin
-
-	docout, err := oviewer.NewDocument()
-	docout.FollowMode = true
-	if err != nil {
-		log.Fatal(err)
-	}
-	docout.FileName = "STDOUT"
-	outReader, err := command.StdoutPipe()
-	if err != nil {
-		log.Println("read:", err)
-	}
-
-	docerr, err := oviewer.NewDocument()
-	docerr.FollowMode = true
-	if err != nil {
-		log.Fatal(err)
-	}
-	docerr.FileName = "STDERR"
-	errReader, err := command.StderrPipe()
-	if err != nil {
-		log.Println("err read:", err)
-	}
-
-	if err := command.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	err = docout.ReadAll(outReader)
-	if err != nil {
-		log.Println("readall out:", err)
-	}
-
-	err = docerr.ReadAll(errReader)
-	if err != nil {
-		log.Println("readall err:", err)
-	}
-
-	ov, err := oviewer.NewOviewer(docout, docerr)
+	ov, err := oviewer.ExecCommand(args)
 	if err != nil {
 		log.Fatal(err)
 	}

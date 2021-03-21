@@ -182,9 +182,6 @@ func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 	if err == nil {
 		for n := range lc {
 			lc[n].style = lc[n].style.Reverse(false)
-			if root.Doc.FileName == "STDERR" {
-				lc[n].style = lc[n].style.Foreground(tcell.ColorRed)
-			}
 		}
 		return lc
 	}
@@ -288,12 +285,13 @@ func (root *Root) statusDraw() {
 	}
 
 	followMessage := ""
-	if root.Doc.FollowMode {
+	if root.General.FollowAll && root.Doc.FollowMode {
+		followMessage = "(Follow All)"
+	} else if root.Doc.FollowMode {
 		followMessage = "(Follow Mode)"
 	}
 	leftStatus := fmt.Sprintf("%s%s:%s", followMessage, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
-
 	input := root.input
 	caseSensitive := ""
 	if root.CaseSensitive && (input.mode == Search || input.mode == Backsearch) {
@@ -302,8 +300,13 @@ func (root *Root) statusDraw() {
 
 	switch input.mode {
 	case Normal, Help, LogDoc:
+		color := tcell.ColorWhite
+		if root.CurrentDoc != 0 {
+			color = tcell.Color((root.CurrentDoc + 8) % 16)
+		}
+
 		for i := 0; i < len(leftContents); i++ {
-			leftContents[i].style = leftContents[i].style.Reverse(true)
+			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
 		}
 		root.Screen.ShowCursor(len(leftContents), root.statusPos)
 	default:

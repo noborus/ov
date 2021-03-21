@@ -18,8 +18,25 @@ func (root *Root) main(quitChan chan<- struct{}) {
 	ctx := context.Background()
 
 	for {
+		if root.General.FollowAll {
+			current := root.CurrentDoc
+			for n, doc := range root.DocList {
+				if atomic.LoadInt32(&doc.changed) == 1 {
+					current = n
+				}
+				atomic.StoreInt32(&doc.changed, 0)
+			}
+
+			if root.CurrentDoc != current {
+				if root.General.FollowAll {
+					root.SetDocument(current)
+					root.debugMessage(fmt.Sprintf("switch document %s", root.Doc.FileName))
+				}
+			}
+		}
+
 		if root.Doc.FollowMode {
-			if root.Doc.status == CLOSE {
+			if atomic.LoadInt32(&root.Doc.status) == CLOSE {
 				go root.followModeOpen(root.Doc)
 			}
 			num := root.Doc.BufEndNum()
@@ -49,7 +66,9 @@ func (root *Root) main(quitChan chan<- struct{}) {
 		case *eventFollow:
 			root.TailSync()
 		case *eventDocument:
-			root.setDocument(ev.m)
+			root.CurrentDoc = ev.docNum
+			m := root.DocList[root.CurrentDoc]
+			root.setDocument(m)
 		case *eventAddDocument:
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
@@ -150,31 +169,17 @@ func (root *Root) followTimer() {
 	for {
 		<-timer.C
 		eventFlag := false
-		current := root.CurrentDoc
-		for n, doc := range root.DocList {
+		for _, doc := range root.DocList {
 			if atomic.LoadInt32(&doc.changed) == 1 {
-				current = n
-				log.Printf("changed %s", doc.FileName)
 				eventFlag = true
 			}
-			atomic.StoreInt32(&doc.changed, 0)
 		}
 
 		if !eventFlag {
 			continue
 		}
 
-		log.Printf("eventSwitch %s", root.Doc.FileName)
-		if root.CurrentDoc != current {
-			if root.General.FollowAll {
-				root.CurrentDoc = current
-				root.SetDocument(root.DocList[root.CurrentDoc])
-				log.Printf("switch document %s", root.Doc.FileName)
-			}
-			root.skipDraw = false
-		}
-
-		log.Printf("eventUpdateEndNum %s", root.Doc.FileName)
+		root.debugMessage(fmt.Sprintf("eventUpdateEndNum %s", root.Doc.FileName))
 		tev := &eventUpdateEndNum{}
 		tev.SetEventNow()
 		root.runOnTime(tev)
@@ -182,7 +187,7 @@ func (root *Root) followTimer() {
 		if !root.Doc.FollowMode {
 			continue
 		}
-		log.Printf("eventFollow %s", root.Doc.FileName)
+		root.debugMessage(fmt.Sprintf("eventFollow %s", root.Doc.FileName))
 		ev := &eventFollow{}
 		ev.SetEventNow()
 		root.runOnTime(ev)
@@ -289,17 +294,19 @@ func (root *Root) BackSearch(str string) {
 
 // eventDocument represents a set document event.
 type eventDocument struct {
-	m *Document
+	docNum int
 	tcell.EventTime
 }
 
 // SetDocument fires a set document event.
-func (root *Root) SetDocument(m *Document) {
+func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventDocument{}
-	ev.m = m
+	if docNum >= 0 && docNum < len(root.DocList) {
+		ev.docNum = docNum
+	}
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
