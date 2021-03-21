@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/dgraph-io/ristretto"
 	"golang.org/x/term"
@@ -31,12 +32,16 @@ type Document struct {
 	lines []string
 	// endNum is the number of the last line read.
 	endNum int
-	// true if EOF is reached.
-	eof bool
+
+	// 1 if EOF is reached.
+	eof   int32
+	eofCh chan bool
 	// status represents the open status of the file.
 	status Status
 	// tell when a file changes.
-	changed chan bool
+	changCh chan bool
+	// true if there is a read rest.
+	changed int32
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
 	// cache represents a cache of contents.
@@ -73,7 +78,8 @@ const (
 func NewDocument() (*Document, error) {
 	m := &Document{
 		lines:      make([]string, 0),
-		changed:    make(chan bool),
+		changCh:    make(chan bool, 2),
+		eofCh:      make(chan bool),
 		beforeSize: 100,
 		general: general{
 			ColumnDelimiter: "",
@@ -89,44 +95,33 @@ func NewDocument() (*Document, error) {
 
 // ReadFile reads file.
 func (m *Document) ReadFile(fileName string) error {
-	r, err := os.Open(fileName)
-	if err != nil {
-		return err
+	if fileName == "" {
+		if term.IsTerminal(0) {
+			return ErrMissingFile
+		}
+		m.file = os.Stdin
+		m.FileName = "(STDIN)"
+	} else {
+		m.FileName = fileName
+		r, err := os.Open(fileName)
+		if err != nil {
+			return err
+		}
+		m.file = r
 	}
-	m.file = r
-	m.FileName = fileName
 
-	cFormat, reader := uncompressedReader(r)
+	m.status = OPEN
+
+	cFormat, reader := uncompressedReader(m.file)
 	m.CFormat = cFormat
 
-	cl := make(chan bool)
 	go func() {
-		<-cl
+		<-m.eofCh
 		m.Close()
 	}()
-	if err := m.ReadAllChan(cl, reader); err != nil {
-		return err
-	}
-	m.status = OPEN
-	return nil
-}
-
-// ReadSTDIN read STDIN.
-func (m *Document) ReadSTDIN() error {
-	if term.IsTerminal(0) {
-		return ErrMissingFile
-	}
-
-	m.FileName = "(STDIN)"
-
-	cFormat, reader := uncompressedReader(os.Stdin)
-	m.CFormat = cFormat
-
 	if err := m.ReadAll(reader); err != nil {
 		return err
 	}
-	m.status = OPEN
-
 	return nil
 }
 
@@ -139,14 +134,13 @@ func (m *Document) Close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close(): %w", err)
 	}
-	log.Printf("%s close", m.FileName)
 	m.status = CLOSE
 	return nil
 }
 
-func (m *Document) reOpen() error {
+func (m *Document) reOpenRead() error {
 	if m.status == OPEN {
-		log.Printf("aleady open %s", m.FileName)
+		log.Printf("Already open %s", m.FileName)
 		return nil
 	}
 
@@ -154,10 +148,7 @@ func (m *Document) reOpen() error {
 	if err != nil {
 		return err
 	}
-	m.mu.Lock()
-	m.eof = false
-	m.mu.Unlock()
-	log.Printf("%s reopen", m.FileName)
+	atomic.StoreInt32(&m.eof, 0)
 
 	_, err = r.Seek(m.offset, io.SeekStart)
 	if err != nil {
@@ -170,9 +161,7 @@ func (m *Document) reOpen() error {
 		err := m.ReadFollow(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				log.Println("wait")
-				<-m.changed
-				log.Println("start")
+				<-m.changCh
 				continue
 			}
 			log.Println(err)
@@ -201,9 +190,7 @@ func (m *Document) BufEndNum() int {
 
 // BufEOF return true if EOF is reached.
 func (m *Document) BufEOF() bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.eof
+	return atomic.LoadInt32(&m.eof) == 1
 }
 
 // NewCache creates a new cache.

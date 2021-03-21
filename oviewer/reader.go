@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -114,6 +115,7 @@ func (m *Document) ReadFollow(reader *bufio.Reader) error {
 		m.lines = append(m.lines, line.String())
 		m.endNum++
 		m.mu.Unlock()
+		atomic.StoreInt32(&m.changed, 1)
 		line.Reset()
 	}
 }
@@ -125,20 +127,17 @@ func (m *Document) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	ch := make(chan struct{})
 	go func() {
-		defer close(ch)
-
 		var line bytes.Buffer
 		for {
 			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
-				m.mu.Lock()
-				defer m.mu.Unlock()
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					m.eof = true
+					close(m.eofCh)
+					atomic.StoreInt32(&m.eof, 1)
 					return
 				}
 				log.Printf("error: %v\n", err)
-				m.eof = false
+				atomic.StoreInt32(&m.eof, 0)
 				return
 			}
 
@@ -151,8 +150,9 @@ func (m *Document) ReadAll(r io.Reader) error {
 			m.lines = append(m.lines, line.String())
 			m.endNum++
 			m.mu.Unlock()
+			atomic.StoreInt32(&m.changed, 1)
 			if m.endNum == m.beforeSize {
-				ch <- struct{}{}
+				close(ch)
 			}
 			line.Reset()
 		}
@@ -161,59 +161,7 @@ func (m *Document) ReadAll(r io.Reader) error {
 	select {
 	case <-ch:
 		return nil
-	case <-time.After(500 * time.Millisecond):
-		go func() {
-			<-ch
-		}()
-		return nil
-	}
-}
-
-func (m *Document) ReadAllChan(cl chan bool, r io.Reader) error {
-	reader := bufio.NewReader(r)
-	ch := make(chan struct{})
-	go func() {
-		defer close(ch)
-
-		var line bytes.Buffer
-		for {
-			buf, isPrefix, err := reader.ReadLine()
-			if err != nil {
-				m.mu.Lock()
-				defer m.mu.Unlock()
-				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					m.eof = true
-					cl <- true
-					return
-				}
-				log.Printf("error: %v\n", err)
-				m.eof = false
-				return
-			}
-
-			line.Write(buf)
-			if isPrefix {
-				continue
-			}
-
-			m.mu.Lock()
-			m.lines = append(m.lines, line.String())
-			m.endNum++
-			m.mu.Unlock()
-			if m.endNum == m.beforeSize {
-				ch <- struct{}{}
-			}
-			line.Reset()
-		}
-	}()
-
-	select {
-	case <-ch:
-		return nil
-	case <-time.After(500 * time.Millisecond):
-		go func() {
-			<-ch
-		}()
+	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
 }

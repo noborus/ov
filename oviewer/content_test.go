@@ -178,6 +178,7 @@ func Test_parseString(t *testing.T) {
 		})
 	}
 }
+
 func Test_parseString2(t *testing.T) {
 	type args struct {
 		line     string

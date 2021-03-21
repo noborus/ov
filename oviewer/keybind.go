@@ -16,6 +16,7 @@ const (
 	actionWriteExit      = "write_exit"
 	actionSync           = "sync"
 	actionFollow         = "follow_mode"
+	actionFollowAll      = "follow_all"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
@@ -58,6 +59,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
+		actionFollowAll:      root.toggleFollowAll,
 		actionHelp:           root.Help,
 		actionLogDoc:         root.logDisplay,
 		actionMoveDown:       root.moveDown,
@@ -105,6 +107,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
+		actionFollowAll:      {"ctrl+A"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},

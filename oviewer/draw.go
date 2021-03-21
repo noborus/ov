@@ -182,6 +182,9 @@ func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 	if err == nil {
 		for n := range lc {
 			lc[n].style = lc[n].style.Reverse(false)
+			if root.Doc.FileName == "STDERR" {
+				lc[n].style = lc[n].style.Foreground(tcell.ColorRed)
+			}
 		}
 		return lc
 	}

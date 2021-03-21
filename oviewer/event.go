@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -13,19 +14,27 @@ import (
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(quitChan chan<- struct{}) {
-	go root.countTimer()
 	go root.followTimer()
 	ctx := context.Background()
-	if root.Doc.FollowMode {
-		root.followModeFire(root.Doc)
-	}
 
 	for {
+		if root.Doc.FollowMode {
+			if root.Doc.status == CLOSE {
+				go root.followModeOpen(root.Doc)
+			}
+			num := root.Doc.BufEndNum()
+			if root.latestNum != num {
+				root.TailSync()
+				root.latestNum = num
+			}
+		}
+
 		if !root.skipDraw {
 			root.draw()
 		} else {
 			root.skipDraw = false
 		}
+
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -35,7 +44,7 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			}
 			close(quitChan)
 			return
-		case *eventTimer:
+		case *eventUpdateEndNum:
 			root.updateEndNum()
 		case *eventFollow:
 			root.TailSync()
@@ -115,8 +124,8 @@ func (root *Root) WriteQuit() {
 	root.Quit()
 }
 
-// eventTimer represents a timer event.
-type eventTimer struct {
+// eventUpdateEndNum represents a timer event.
+type eventUpdateEndNum struct {
 	tcell.EventTime
 }
 
@@ -130,22 +139,6 @@ func (root *Root) runOnTime(ev tcell.Event) {
 	}()
 }
 
-// countTimer fires events periodically until it reaches EOF.
-func (root *Root) countTimer() {
-	timer := time.NewTicker(time.Millisecond * 500)
-	defer timer.Stop()
-loop:
-	for {
-		<-timer.C
-		ev := &eventTimer{}
-		ev.SetEventNow()
-		root.runOnTime(ev)
-		if root.Doc.BufEOF() {
-			break loop
-		}
-	}
-}
-
 // eventFollow represents a follow event.
 type eventFollow struct {
 	tcell.EventTime
@@ -153,12 +146,43 @@ type eventFollow struct {
 
 // followTimer fires events.
 func (root *Root) followTimer() {
-	timer := time.NewTicker(time.Millisecond * 50)
+	timer := time.NewTicker(time.Millisecond * 100)
 	for {
 		<-timer.C
+		eventFlag := false
+		current := root.CurrentDoc
+		for n, doc := range root.DocList {
+			if atomic.LoadInt32(&doc.changed) == 1 {
+				current = n
+				log.Printf("changed %s", doc.FileName)
+				eventFlag = true
+			}
+			atomic.StoreInt32(&doc.changed, 0)
+		}
+
+		if !eventFlag {
+			continue
+		}
+
+		log.Printf("eventSwitch %s", root.Doc.FileName)
+		if root.CurrentDoc != current {
+			if root.General.FollowAll {
+				root.CurrentDoc = current
+				root.SetDocument(root.DocList[root.CurrentDoc])
+				log.Printf("switch document %s", root.Doc.FileName)
+			}
+			root.skipDraw = false
+		}
+
+		log.Printf("eventUpdateEndNum %s", root.Doc.FileName)
+		tev := &eventUpdateEndNum{}
+		tev.SetEventNow()
+		root.runOnTime(tev)
+
 		if !root.Doc.FollowMode {
 			continue
 		}
+		log.Printf("eventFollow %s", root.Doc.FileName)
 		ev := &eventFollow{}
 		ev.SetEventNow()
 		root.runOnTime(ev)

@@ -85,6 +85,8 @@ type Root struct {
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
 
+	latestNum int
+
 	watcher *fsnotify.Watcher
 }
 
@@ -112,6 +114,8 @@ type general struct {
 	ColumnDelimiter string
 	// Follow mode.
 	FollowMode bool
+	// Follow all.
+	FollowAll bool
 }
 
 // Config represents the settings of ov.
@@ -256,7 +260,7 @@ func openSTDIN() (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = m.ReadSTDIN()
+	err = m.ReadFile("")
 	if err != nil {
 		return nil, err
 	}
@@ -312,10 +316,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				}
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
-						go func() {
-							doc.changed <- true
-						}()
-						root.followModeFire(doc)
+						doc.changCh <- true
 					}
 				}
 			case err, ok := <-watcher.Errors:
@@ -364,7 +365,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	str := KeyBindString(k)
 	help.lines = append(help.lines, "\t\t\tov help\n")
 	help.lines = append(help.lines, strings.Split(str, "\n")...)
-	help.eof = true
+	help.eof = 1
 	help.endNum = len(help.lines)
 	return help, err
 }
@@ -394,6 +395,9 @@ func (logDoc *Document) Write(p []byte) (int, error) {
 func (root *Root) Run() error {
 	for _, doc := range root.DocList {
 		doc.general = root.Config.General
+		if root.General.FollowAll {
+			doc.FollowMode = true
+		}
 	}
 	if err := root.setKeyConfig(); err != nil {
 		return err
@@ -478,7 +482,6 @@ func (root *Root) setDocument(m *Document) {
 	root.Doc = m
 	root.Clear()
 	root.ViewSync()
-	root.followModeFire(m)
 }
 
 // Help is to switch between Help screen and normal screen.
@@ -777,19 +780,25 @@ func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
 }
 
-func (root *Root) followModeFire(m *Document) {
-	if m.FollowMode && m.status == CLOSE {
-		go func() {
-			m.status = WAIT
-			log.Printf("reopen wait %s", m.FileName)
-			<-m.changed
-			log.Printf("reopen %s", m.FileName)
-			err := m.reOpen()
-			if err != nil {
-				log.Printf("%s cannot be reopened %v", m.FileName, err)
-			}
-		}()
+func (root *Root) toggleFollowAll() {
+	root.General.FollowAll = !root.General.FollowAll
+	if root.General.FollowAll {
+		for _, doc := range root.DocList {
+			doc.FollowMode = true
+		}
 	}
+}
+
+func (root *Root) followModeOpen(m *Document) {
+	log.Printf("reopen wait %s", m.FileName)
+	m.status = WAIT
+	<-m.changCh
+	log.Printf("reopen %s", m.FileName)
+	err := m.reOpenRead()
+	if err != nil {
+		log.Printf("%s cannot be reopened %v", m.FileName, err)
+	}
+	m.status = OPEN
 }
 
 // ViewSync redraws the whole thing.

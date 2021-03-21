@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/noborus/ov/oviewer"
@@ -30,6 +31,8 @@ var (
 	helpKey bool
 	// completion is the generation of shell completion.
 	completion bool
+
+	execC bool
 )
 
 // ErrCompletion indicates that the completion argument was invalid.
@@ -54,6 +57,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 		if completion {
 			return Completion(cmd, args)
+		}
+
+		if execC {
+			return ExecCommand(cmd, args)
 		}
 
 		if config.Debug {
@@ -115,6 +122,71 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
+func ExecCommand(cmd *cobra.Command, args []string) error {
+	if err := viper.Unmarshal(&config); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	command := exec.Command(args[0], args[1:]...)
+	command.Stdin = os.Stdin
+
+	docout, err := oviewer.NewDocument()
+	docout.FollowMode = true
+	if err != nil {
+		log.Fatal(err)
+	}
+	docout.FileName = "STDOUT"
+	outReader, err := command.StdoutPipe()
+	if err != nil {
+		log.Println("read:", err)
+	}
+
+	docerr, err := oviewer.NewDocument()
+	docerr.FollowMode = true
+	if err != nil {
+		log.Fatal(err)
+	}
+	docerr.FileName = "STDERR"
+	errReader, err := command.StderrPipe()
+	if err != nil {
+		log.Println("err read:", err)
+	}
+
+	if err := command.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	err = docout.ReadAll(outReader)
+	if err != nil {
+		log.Println("readall out:", err)
+	}
+
+	err = docerr.ReadAll(errReader)
+	if err != nil {
+		log.Println("readall err:", err)
+	}
+
+	ov, err := oviewer.NewOviewer(docout, docerr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ov.SetConfig(config)
+
+	if err := ov.Run(); err != nil {
+		return err
+	}
+
+	if ov.AfterWrite {
+		ov.WriteOriginal()
+	}
+	if ov.Debug {
+		ov.WriteLog()
+	}
+
+	return nil
+}
+
 func init() {
 	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
@@ -122,6 +194,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&execC, "exec", "e", false, "exec command")
 	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "generate completion script [bash|zsh|fish|powershell]")
 
 	// Config.General
@@ -148,6 +221,9 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
+
+	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow all")
+	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
