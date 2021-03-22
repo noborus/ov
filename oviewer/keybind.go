@@ -107,7 +107,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
-		actionFollowAll:      {"ctrl+A"},
+		actionFollowAll:      {"ctrl+a"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -201,6 +201,8 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
+	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
+	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
 

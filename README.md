@@ -118,7 +118,10 @@ Flags:
       --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
       --disable-mouse             disable mouse support
+  -e, --exec                      exec command
   -X, --exit-write                output the current screen when exiting
+  -A, --follow-all                follow all
+  -f, --follow-mode               follow mode
   -H, --header int                number of header rows to fix
   -h, --help                      help for ov
       --help-key                  display key bind information
@@ -138,6 +141,35 @@ You can set style and key bindings in the setting file.
 
 Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) configuration file.
 
+### follow mode
+
+Output appended data and move it to the bottom line (like tail -f).
+
+```sh
+ov --follow-mode /var/log/syslog
+```
+
+```sh
+(while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
+```
+
+### follow all mode
+
+Same as follow-mode, and switches to the last updated file when there are multiple files.
+
+```sh
+ov --follow-all /var/log/syslog /var/log/syslog
+```
+
+### exec mode
+
+Execute the command to display stdout / stderr.
+Arguments after (`--`) are interpreted as command arguments.
+
+```sh
+ov --follow-all --exec -- make
+```
+
 ### psql
 
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
@@ -148,7 +180,7 @@ export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
 
 You can also write in `~/.psqlrc` in previous versions.
 
-```filename:~/.psqlrc
+```
 \setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
 ```
 
@@ -162,7 +194,7 @@ mysql --pager='ov -w=f -H3 -F -C -d "|"'
 
 You can also write in `~/.my.cnf`.
 
-```filename:~/.my.cnf
+```
 [client]
 pager=ov -w=f -H3 -F -C -d "|"
 ```
@@ -188,9 +220,11 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
   [Escape], [q]              * quit
   [ctrl+c]                   * cancel
   [Q]                        * output screen and quit
-  [h]                        * display help screen
+  [h], [ctrl+alt+c]          * display help screen
   [ctrl+alt+e]               * display log screen
   [ctrl+l]                   * screen sync
+  [ctrl+f]                   * follow mode toggle
+  [ctrl+a]                   * follow all mode toggle
   [ctrl+alt+r]               * enable/disable mouse
   [ctrl+k]                   * close current document
 
