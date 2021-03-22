@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
@@ -28,6 +29,8 @@ var (
 	helpKey bool
 	// completion is the generation of shell completion.
 	completion bool
+
+	execC bool
 )
 
 // ErrCompletion indicates that the completion argument was invalid.
@@ -52,6 +55,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 		if completion {
 			return Completion(cmd, args)
+		}
+
+		if execC {
+			return execCommand(cmd, args)
 		}
 
 		if config.Debug {
@@ -105,6 +112,37 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
+func execCommand(cmd *cobra.Command, args []string) error {
+	if err := viper.Unmarshal(&config); err != nil {
+		return err
+	}
+
+	command := exec.Command(args[0], args[1:]...)
+	defer func() {
+		command.Process.Kill()
+		command.Wait()
+	}()
+
+	ov, err := oviewer.ExecCommand(command)
+	if err != nil {
+		return err
+	}
+	ov.SetConfig(config)
+
+	if err := ov.Run(); err != nil {
+		return err
+	}
+
+	if ov.AfterWrite {
+		ov.WriteOriginal()
+	}
+	if ov.Debug {
+		ov.WriteLog()
+	}
+
+	return nil
+}
+
 func init() {
 	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
@@ -112,6 +150,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&execC, "exec", "e", false, "exec command")
 	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "generate completion script [bash|zsh|fish|powershell]")
 
 	// Config.General
@@ -135,6 +174,12 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
+
+	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
+	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
+
+	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow all")
+	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")

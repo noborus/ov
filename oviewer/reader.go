@@ -7,9 +7,9 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -17,64 +17,130 @@ import (
 	"github.com/ulikunitz/xz"
 )
 
-func uncompressedReader(reader io.Reader) io.ReadCloser {
-	var err error
+type Compressed int
+
+const (
+	UNCOMPRESSED Compressed = iota
+	GZIP
+	BZIP2
+	ZSTD
+	LZ4
+	XZ
+)
+
+func compressType(header []byte) Compressed {
+	switch {
+	case bytes.Equal(header[:3], []byte{0x1f, 0x8b, 0x8}):
+		return GZIP
+	case bytes.Equal(header[:3], []byte{0x42, 0x5A, 0x68}):
+		return BZIP2
+	case bytes.Equal(header[:4], []byte{0x28, 0xb5, 0x2f, 0xfd}):
+		return ZSTD
+	case bytes.Equal(header[:4], []byte{0x04, 0x22, 0x4d, 0x18}):
+		return LZ4
+	case bytes.Equal(header[:7], []byte{0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x0, 0x0}):
+		return XZ
+	}
+	return UNCOMPRESSED
+}
+
+func (c Compressed) String() string {
+	switch c {
+	case GZIP:
+		return "GZIP"
+	case BZIP2:
+		return "BZIP2"
+	case ZSTD:
+		return "ZSTD"
+	case LZ4:
+		return "LZ4"
+	case XZ:
+		return "XZ"
+	}
+	return "UNCOMPRESSED"
+}
+
+func uncompressedReader(reader io.Reader) (Compressed, io.Reader) {
 	buf := [7]byte{}
 	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
 	if err != nil {
 		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
-			return ioutil.NopCloser(bytes.NewReader(buf[:n]))
+			return UNCOMPRESSED, bytes.NewReader(buf[:n])
 		}
-		return ioutil.NopCloser(bytes.NewReader(nil))
+		return UNCOMPRESSED, bytes.NewReader(nil)
 	}
 
-	var r io.ReadCloser
-	rd := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+	mr := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+	cFormat := compressType(buf[:7])
+	r := compressedFormatReader(cFormat, mr)
 
-	switch {
-	case bytes.Equal(buf[:3], []byte{0x1f, 0x8b, 0x8}):
-		r, err = gzip.NewReader(rd)
-	case bytes.Equal(buf[:3], []byte{0x42, 0x5A, 0x68}):
-		r = ioutil.NopCloser(bzip2.NewReader(rd))
-	case bytes.Equal(buf[:4], []byte{0x28, 0xb5, 0x2f, 0xfd}):
-		var zr *zstd.Decoder
-		zr, err = zstd.NewReader(rd)
-		r = ioutil.NopCloser(zr)
-	case bytes.Equal(buf[:4], []byte{0x04, 0x22, 0x4d, 0x18}):
-		r = ioutil.NopCloser(lz4.NewReader(rd))
-	case bytes.Equal(buf[:7], []byte{0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x0, 0x0}):
-		var zr *xz.Reader
-		zr, err = xz.NewReader(rd)
-		r = ioutil.NopCloser(zr)
+	return cFormat, r
+}
+
+func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
+	var r io.Reader
+	var err error
+	switch cFormat {
+	case GZIP:
+		r, err = gzip.NewReader(reader)
+	case BZIP2:
+		r = bzip2.NewReader(reader)
+	case ZSTD:
+		r, err = zstd.NewReader(reader)
+	case LZ4:
+		r = lz4.NewReader(reader)
+	case XZ:
+		r, err = xz.NewReader(reader)
 	}
 	if err != nil || r == nil {
-		r = ioutil.NopCloser(rd)
+		r = reader
 	}
 	return r
+}
+
+func (m *Document) ReadFollow(reader *bufio.Reader) error {
+	var line bytes.Buffer
+
+	for {
+		buf, isPrefix, err := reader.ReadLine()
+		if err != nil {
+			return err
+		}
+		line.Write(buf)
+		if isPrefix {
+			continue
+		}
+
+		m.mu.Lock()
+		m.lines = append(m.lines, line.String())
+		m.endNum++
+		m.mu.Unlock()
+		atomic.StoreInt32(&m.changed, 1)
+		line.Reset()
+	}
 }
 
 // ReadAll reads all from the reader to the buffer.
 // It returns if beforeSize is accumulated in buffer
 // before the end of read.
-func (m *Document) ReadAll(r io.ReadCloser) error {
+func (m *Document) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	ch := make(chan struct{})
 	go func() {
-		defer close(ch)
-		defer r.Close()
-
 		var line bytes.Buffer
-
 		for {
 			buf, isPrefix, err := reader.ReadLine()
 			if err != nil {
 				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-					break
+					close(m.eofCh)
+					atomic.StoreInt32(&m.eof, 1)
+					return
 				}
 				log.Printf("error: %v\n", err)
-				m.eof = false
+				atomic.StoreInt32(&m.eof, 0)
 				return
 			}
+
 			line.Write(buf)
 			if isPrefix {
 				continue
@@ -84,23 +150,18 @@ func (m *Document) ReadAll(r io.ReadCloser) error {
 			m.lines = append(m.lines, line.String())
 			m.endNum++
 			m.mu.Unlock()
+			atomic.StoreInt32(&m.changed, 1)
 			if m.endNum == m.beforeSize {
-				ch <- struct{}{}
+				close(ch)
 			}
 			line.Reset()
 		}
-		m.mu.Lock()
-		m.eof = true
-		m.mu.Unlock()
 	}()
 
 	select {
 	case <-ch:
 		return nil
-	case <-time.After(500 * time.Millisecond):
-		go func() {
-			<-ch
-		}()
+	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
 }

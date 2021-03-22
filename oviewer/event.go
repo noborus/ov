@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -13,15 +14,23 @@ import (
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(quitChan chan<- struct{}) {
-	go root.countTimer()
+	go root.followTimer()
 	ctx := context.Background()
 
 	for {
+		if root.General.FollowAll {
+			root.followAll()
+		}
+
+		if root.Doc.FollowMode {
+			root.follow()
+		}
+
 		if !root.skipDraw {
 			root.draw()
-		} else {
-			root.skipDraw = false
 		}
+		root.skipDraw = false
+
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -31,10 +40,15 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			}
 			close(quitChan)
 			return
-		case *eventTimer:
+		case *eventUpdateEndNum:
 			root.updateEndNum()
+		case *eventFollow:
+			root.TailSync()
 		case *eventDocument:
-			root.setDocument(ev.m)
+			root.CurrentDoc = ev.docNum
+			m := root.DocList[root.CurrentDoc]
+			root.setDocument(m)
+			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
 		case *eventAddDocument:
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
@@ -99,8 +113,10 @@ func (root *Root) Quit() {
 	}()
 }
 
-// Cancel usually does nothing.
+// Cancel follow mode and follow all mode.
 func (root *Root) Cancel() {
+	root.General.FollowAll = false
+	root.Doc.FollowMode = false
 }
 
 // WriteQuit sets the write flag and executes a quit event.
@@ -109,35 +125,84 @@ func (root *Root) WriteQuit() {
 	root.Quit()
 }
 
-// eventTimer represents a timer event.
-type eventTimer struct {
+// eventUpdateEndNum represents a timer event.
+type eventUpdateEndNum struct {
 	tcell.EventTime
 }
 
 // runOnTime runs at time.
-func (root *Root) runOnTime() {
+func (root *Root) runOnTime(ev tcell.Event) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &eventTimer{}
-	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)
 	}()
 }
 
-// countTimer fires events periodically until it reaches EOF.
-func (root *Root) countTimer() {
-	timer := time.NewTicker(time.Millisecond * 500)
-loop:
+func (root *Root) followAll() {
+	current := root.CurrentDoc
+	for n, doc := range root.DocList {
+		go root.followModeOpen(doc)
+		if atomic.LoadInt32(&doc.changed) == 1 && doc.BufEndNum() > 0 {
+			current = n
+		}
+		atomic.StoreInt32(&doc.changed, 0)
+	}
+
+	if (root.input.mode == Normal) && (root.CurrentDoc != current) {
+		root.CurrentDoc = current
+		root.SetDocument(root.CurrentDoc)
+	}
+}
+
+func (root *Root) follow() {
+	go root.followModeOpen(root.Doc)
+	num := root.Doc.BufEndNum()
+	if root.latestNum != num {
+		root.TailSync()
+		root.latestNum = num
+	}
+}
+
+// eventFollow represents a follow event.
+type eventFollow struct {
+	tcell.EventTime
+}
+
+// followTimer fires events.
+func (root *Root) followTimer() {
+	timer := time.NewTicker(time.Millisecond * 100)
 	for {
 		<-timer.C
-		root.runOnTime()
-		if root.Doc.BufEOF() {
-			break loop
+		eventFlag := false
+		for _, doc := range root.DocList {
+			if atomic.LoadInt32(&doc.changed) == 1 {
+				eventFlag = true
+			}
 		}
+		if !eventFlag {
+			continue
+		}
+
+		root.debugMessage(fmt.Sprintf("eventUpdateEndNum %s", root.Doc.FileName))
+		root.UpdateEndNum()
+
+		if !root.Doc.FollowMode {
+			continue
+		}
+
+		root.debugMessage(fmt.Sprintf("eventFollow %s", root.Doc.FileName))
+		ev := &eventFollow{}
+		ev.SetEventNow()
+		root.runOnTime(ev)
 	}
-	timer.Stop()
+}
+
+func (root *Root) UpdateEndNum() {
+	ev := &eventUpdateEndNum{}
+	ev.SetEventNow()
+	root.runOnTime(ev)
 }
 
 // MoveLine fires an event that moves to the specified line.
@@ -163,7 +228,7 @@ func (root *Root) MoveTop() {
 
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
-	root.MoveLine(root.Doc.endNum)
+	root.MoveLine(root.Doc.BufEndNum())
 }
 
 // eventSearch represents search event.
@@ -240,17 +305,19 @@ func (root *Root) BackSearch(str string) {
 
 // eventDocument represents a set document event.
 type eventDocument struct {
-	m *Document
+	docNum int
 	tcell.EventTime
 }
 
 // SetDocument fires a set document event.
-func (root *Root) SetDocument(m *Document) {
+func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventDocument{}
-	ev.m = m
+	if docNum >= 0 && docNum < len(root.DocList) {
+		ev.docNum = docNum
+	}
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)

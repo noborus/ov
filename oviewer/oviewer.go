@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
 	"gitlab.com/tslocum/cbind"
 )
@@ -83,6 +86,10 @@ type Root struct {
 
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
+
+	latestNum int
+
+	watcher *fsnotify.Watcher
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -107,6 +114,10 @@ type general struct {
 	WrapMode bool
 	// Column Delimiter
 	ColumnDelimiter string
+	// Follow mode.
+	FollowMode bool
+	// Follow all.
+	FollowAll bool
 }
 
 // Config represents the settings of ov.
@@ -144,6 +155,7 @@ type Config struct {
 	CaseSensitive bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
+
 	// KeyBinding
 	Keybind map[string][]string
 }
@@ -198,6 +210,61 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.input = NewInput()
 
 	return root, nil
+}
+
+func ExecCommand(command *exec.Cmd) (*Root, error) {
+	command.Stdin = os.Stdin
+	docout, err := NewDocument()
+	if err != nil {
+		log.Fatal(err)
+	}
+	docout.FileName = "STDOUT"
+	docout.FollowMode = true
+	outReader, err := command.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	docerr, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	docerr.FileName = "STDERR"
+	docerr.FollowMode = true
+	errReader, err := command.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := command.Start(); err != nil {
+		return nil, err
+	}
+
+	go func() {
+	loop:
+		for {
+			select {
+			case <-docout.eofCh:
+				break loop
+			case <-docerr.eofCh:
+				break loop
+			}
+		}
+		atomic.StoreInt32(&docout.changed, 1)
+		atomic.StoreInt32(&docerr.changed, 1)
+	}()
+
+	err = docout.ReadAll(outReader)
+	if err != nil {
+		log.Println("readall out:", err)
+	}
+
+	err = docerr.ReadAll(errReader)
+	if err != nil {
+		log.Println("readall err:", err)
+	}
+
+	return NewOviewer(docout, docerr)
 }
 
 // NewConfig return the structure of Config with default values.
@@ -269,15 +336,18 @@ func openFiles(fileNames []string) (*Root, error) {
 		if fi.IsDir() {
 			continue
 		}
+
 		m, err := NewDocument()
 		if err != nil {
 			return nil, err
 		}
+
 		err = m.ReadFile(fileName)
 		if err != nil {
 			log.Println(err, fileName)
 			continue
 		}
+
 		docList = append(docList, m)
 	}
 
@@ -291,6 +361,34 @@ func openFiles(fileNames []string) (*Root, error) {
 // SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
 	root.Config = config
+}
+
+func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				for _, doc := range root.DocList {
+					if doc.FileName == event.Name {
+						doc.changCh <- struct{}{}
+					}
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	root.watcher = watcher
+	for _, doc := range root.DocList {
+		_ = root.watcher.Add(doc.FileName)
+	}
 }
 
 func (root *Root) setKeyConfig() error {
@@ -324,7 +422,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	str := KeyBindString(k)
 	help.lines = append(help.lines, "\t\t\tov help\n")
 	help.lines = append(help.lines, strings.Split(str, "\n")...)
-	help.eof = true
+	help.eof = 1
 	help.endNum = len(help.lines)
 	return help, err
 }
@@ -335,6 +433,7 @@ func NewLogDoc() (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
+	logDoc.FollowMode = true
 	logDoc.FileName = "Log"
 	log.SetOutput(logDoc)
 	return logDoc, nil
@@ -351,9 +450,20 @@ func (logDoc *Document) Write(p []byte) (int, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer watcher.Close()
+	root.SetWatcher(watcher)
+
 	for _, doc := range root.DocList {
 		doc.general = root.Config.General
+		if root.General.FollowAll {
+			doc.FollowMode = true
+		}
 	}
+
 	if err := root.setKeyConfig(); err != nil {
 		return err
 	}
@@ -730,6 +840,35 @@ func (root *Root) resize() {
 	root.ViewSync()
 }
 
+func (root *Root) toggleFollowMode() {
+	root.Doc.FollowMode = !root.Doc.FollowMode
+}
+
+func (root *Root) toggleFollowAll() {
+	root.General.FollowAll = !root.General.FollowAll
+	if root.General.FollowAll {
+		for _, doc := range root.DocList {
+			doc.FollowMode = true
+		}
+	}
+}
+
+func (root *Root) followModeOpen(m *Document) {
+	m.reOpened.Do(func() {
+		if m.file == nil {
+			return
+		}
+		log.Printf("reopen wait %s", m.FileName)
+		<-m.reOpenCh
+		<-m.changCh
+		log.Printf("reopen %s", m.FileName)
+		err := m.reOpenRead()
+		if err != nil {
+			log.Printf("%s cannot be reopened %v", m.FileName, err)
+		}
+	})
+}
+
 // ViewSync redraws the whole thing.
 func (root *Root) ViewSync() {
 	root.resetSelect()
@@ -754,7 +893,7 @@ func (root *Root) prepareStartX() {
 
 // updateEndNum updates the last line number.
 func (root *Root) updateEndNum() {
-	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.endNum))
+	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
 	root.prepareStartX()
 	root.statusDraw()
 }

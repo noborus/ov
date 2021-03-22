@@ -15,6 +15,8 @@ const (
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSync           = "sync"
+	actionFollow         = "follow_mode"
+	actionFollowAll      = "follow_all"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
@@ -56,6 +58,8 @@ func (root *Root) setHandler() map[string]func() {
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSync:           root.ViewSync,
+		actionFollow:         root.toggleFollowMode,
+		actionFollowAll:      root.toggleFollowAll,
 		actionHelp:           root.Help,
 		actionLogDoc:         root.logDisplay,
 		actionMoveDown:       root.moveDown,
@@ -102,6 +106,8 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionCancel:         {"ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
+		actionFollow:         {"ctrl+f"},
+		actionFollowAll:      {"ctrl+a"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -195,6 +201,8 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
+	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
+	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
 
