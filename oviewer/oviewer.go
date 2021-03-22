@@ -249,7 +249,7 @@ func ExecCommand(args []string) (*Root, error) {
 			case <-docout.eofCh:
 				break loop
 			case <-docerr.eofCh:
-				break
+				break loop
 			}
 		}
 		outReader.Close()
