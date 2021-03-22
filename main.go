@@ -119,7 +119,9 @@ func execCommand(cmd *cobra.Command, args []string) error {
 
 	command := exec.Command(args[0], args[1:]...)
 	defer func() {
-		command.Process.Kill()
+		if command.Process != nil {
+			command.Process.Kill()
+		}
 		command.Wait()
 	}()
 
