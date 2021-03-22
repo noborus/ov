@@ -212,10 +212,8 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	return root, nil
 }
 
-func ExecCommand(args []string) (*Root, error) {
-	command := exec.Command(args[0], args[1:]...)
+func ExecCommand(command *exec.Cmd) (*Root, error) {
 	command.Stdin = os.Stdin
-
 	docout, err := NewDocument()
 	if err != nil {
 		log.Fatal(err)
@@ -252,9 +250,7 @@ func ExecCommand(args []string) (*Root, error) {
 				break loop
 			}
 		}
-		outReader.Close()
 		atomic.StoreInt32(&docout.changed, 1)
-		errReader.Close()
 		atomic.StoreInt32(&docerr.changed, 1)
 	}()
 
@@ -467,6 +463,7 @@ func (root *Root) Run() error {
 			doc.FollowMode = true
 		}
 	}
+
 	if err := root.setKeyConfig(); err != nil {
 		return err
 	}

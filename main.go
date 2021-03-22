@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
@@ -116,7 +117,13 @@ func execCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ov, err := oviewer.ExecCommand(args)
+	command := exec.Command(args[0], args[1:]...)
+	defer func() {
+		command.Process.Kill()
+		command.Wait()
+	}()
+
+	ov, err := oviewer.ExecCommand(command)
 	if err != nil {
 		return err
 	}

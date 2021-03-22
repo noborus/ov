@@ -113,8 +113,10 @@ func (root *Root) Quit() {
 	}()
 }
 
-// Cancel usually does nothing.
+// Cancel follow mode and follow all mode.
 func (root *Root) Cancel() {
+	root.General.FollowAll = false
+	root.Doc.FollowMode = false
 }
 
 // WriteQuit sets the write flag and executes a quit event.
@@ -142,7 +144,7 @@ func (root *Root) followAll() {
 	current := root.CurrentDoc
 	for n, doc := range root.DocList {
 		go root.followModeOpen(doc)
-		if atomic.LoadInt32(&doc.changed) == 1 {
+		if atomic.LoadInt32(&doc.changed) == 1 && doc.BufEndNum() > 0 {
 			current = n
 		}
 		atomic.StoreInt32(&doc.changed, 0)
