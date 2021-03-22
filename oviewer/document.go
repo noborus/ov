@@ -113,9 +113,7 @@ func (m *Document) ReadFile(fileName string) error {
 
 	go func() {
 		<-m.eofCh
-		if err := m.Close(); err != nil {
-			log.Printf("close: %v", err)
-		}
+		m.Close()
 		close(m.reOpenCh)
 	}()
 	if err := m.ReadAll(reader); err != nil {
