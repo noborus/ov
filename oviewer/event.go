@@ -148,7 +148,7 @@ func (root *Root) followAll() {
 		atomic.StoreInt32(&doc.changed, 0)
 	}
 
-	if root.CurrentDoc != current {
+	if (root.input.mode == Normal) && (root.CurrentDoc != current) {
 		root.CurrentDoc = current
 		root.SetDocument(root.CurrentDoc)
 	}

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -240,6 +241,22 @@ func ExecCommand(args []string) (*Root, error) {
 	if err := command.Start(); err != nil {
 		return nil, err
 	}
+
+	go func() {
+	loop:
+		for {
+			select {
+			case <-docout.eofCh:
+				break loop
+			case <-docerr.eofCh:
+				break
+			}
+		}
+		outReader.Close()
+		atomic.StoreInt32(&docout.changed, 1)
+		errReader.Close()
+		atomic.StoreInt32(&docerr.changed, 1)
+	}()
 
 	err = docout.ReadAll(outReader)
 	if err != nil {
@@ -478,7 +495,6 @@ func (root *Root) Run() error {
 
 	for _, d := range root.DocList {
 		log.Printf("open %s", d.FileName)
-		log.Printf("format %v", d.CFormat)
 	}
 	root.setGlobalStyle()
 	root.Screen.Clear()

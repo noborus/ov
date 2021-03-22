@@ -71,14 +71,6 @@ type Document struct {
 	mu sync.Mutex
 }
 
-type Status = int32
-
-const (
-	OPEN Status = iota
-	WAIT
-	CLOSE
-)
-
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
@@ -121,7 +113,9 @@ func (m *Document) ReadFile(fileName string) error {
 
 	go func() {
 		<-m.eofCh
-		m.Close()
+		if err := m.Close(); err != nil {
+			log.Printf("close: %v", err)
+		}
 		close(m.reOpenCh)
 	}()
 	if err := m.ReadAll(reader); err != nil {
