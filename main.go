@@ -3,10 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -66,18 +64,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
 
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer watcher.Close()
-
 		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err
 		}
-
-		ov.SetWatcher(watcher)
 		ov.SetConfig(config)
 
 		if err := ov.Run(); err != nil {
@@ -123,13 +113,12 @@ func Completion(cmd *cobra.Command, args []string) error {
 
 func execCommand(cmd *cobra.Command, args []string) error {
 	if err := viper.Unmarshal(&config); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	ov, err := oviewer.ExecCommand(args)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	ov.SetConfig(config)
 

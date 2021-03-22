@@ -12,7 +12,7 @@ func (root *Root) moveTop() {
 
 // Go to the bottom line.
 func (root *Root) moveBottom() {
-	tx, tn := root.bottomLineNum(root.Doc.endNum)
+	tx, tn := root.bottomLineNum(root.Doc.BufEndNum())
 	root.Doc.topLN = tn
 	root.Doc.topLX = tx
 }
@@ -41,8 +41,9 @@ func (root *Root) movePgDn() {
 
 func (root *Root) limitMoveDown(x int, y int) {
 	m := root.Doc
-	if y+root.vHight >= m.endNum {
-		tx, tn := root.bottomLineNum(m.endNum)
+	endNum := root.Doc.BufEndNum()
+	if y+root.vHight >= endNum {
+		tx, tn := root.bottomLineNum(endNum)
 		if y > tn || (y == tn && x > tx) {
 			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
 				m.topLN = tn
@@ -121,7 +122,7 @@ func (root *Root) moveNumDown(moveY int) {
 	for y := 0; y < moveY; y++ {
 		if n >= len(listX) {
 			num++
-			if num > m.endNum {
+			if num > m.BufEndNum() {
 				break
 			}
 			listX, err = root.leftMostX(num)

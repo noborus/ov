@@ -19,38 +19,17 @@ func (root *Root) main(quitChan chan<- struct{}) {
 
 	for {
 		if root.General.FollowAll {
-			current := root.CurrentDoc
-			for n, doc := range root.DocList {
-				if atomic.LoadInt32(&doc.changed) == 1 {
-					current = n
-				}
-				atomic.StoreInt32(&doc.changed, 0)
-			}
-
-			if root.CurrentDoc != current {
-				if root.General.FollowAll {
-					root.SetDocument(current)
-					root.debugMessage(fmt.Sprintf("switch document %s", root.Doc.FileName))
-				}
-			}
+			root.followAll()
 		}
 
 		if root.Doc.FollowMode {
-			if atomic.LoadInt32(&root.Doc.status) == CLOSE {
-				go root.followModeOpen(root.Doc)
-			}
-			num := root.Doc.BufEndNum()
-			if root.latestNum != num {
-				root.TailSync()
-				root.latestNum = num
-			}
+			root.follow()
 		}
 
 		if !root.skipDraw {
 			root.draw()
-		} else {
-			root.skipDraw = false
 		}
+		root.skipDraw = false
 
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
@@ -69,6 +48,7 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			root.CurrentDoc = ev.docNum
 			m := root.DocList[root.CurrentDoc]
 			root.setDocument(m)
+			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
 		case *eventAddDocument:
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
@@ -158,6 +138,31 @@ func (root *Root) runOnTime(ev tcell.Event) {
 	}()
 }
 
+func (root *Root) followAll() {
+	current := root.CurrentDoc
+	for n, doc := range root.DocList {
+		go root.followModeOpen(doc)
+		if atomic.LoadInt32(&doc.changed) == 1 {
+			current = n
+		}
+		atomic.StoreInt32(&doc.changed, 0)
+	}
+
+	if root.CurrentDoc != current {
+		root.CurrentDoc = current
+		root.SetDocument(root.CurrentDoc)
+	}
+}
+
+func (root *Root) follow() {
+	go root.followModeOpen(root.Doc)
+	num := root.Doc.BufEndNum()
+	if root.latestNum != num {
+		root.TailSync()
+		root.latestNum = num
+	}
+}
+
 // eventFollow represents a follow event.
 type eventFollow struct {
 	tcell.EventTime
@@ -174,24 +179,28 @@ func (root *Root) followTimer() {
 				eventFlag = true
 			}
 		}
-
 		if !eventFlag {
 			continue
 		}
 
 		root.debugMessage(fmt.Sprintf("eventUpdateEndNum %s", root.Doc.FileName))
-		tev := &eventUpdateEndNum{}
-		tev.SetEventNow()
-		root.runOnTime(tev)
+		root.UpdateEndNum()
 
 		if !root.Doc.FollowMode {
 			continue
 		}
+
 		root.debugMessage(fmt.Sprintf("eventFollow %s", root.Doc.FileName))
 		ev := &eventFollow{}
 		ev.SetEventNow()
 		root.runOnTime(ev)
 	}
+}
+
+func (root *Root) UpdateEndNum() {
+	ev := &eventUpdateEndNum{}
+	ev.SetEventNow()
+	root.runOnTime(ev)
 }
 
 // MoveLine fires an event that moves to the specified line.
@@ -217,7 +226,7 @@ func (root *Root) MoveTop() {
 
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
-	root.MoveLine(root.Doc.endNum)
+	root.MoveLine(root.Doc.BufEndNum())
 }
 
 // eventSearch represents search event.

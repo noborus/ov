@@ -34,14 +34,19 @@ type Document struct {
 	endNum int
 
 	// 1 if EOF is reached.
-	eof   int32
-	eofCh chan bool
-	// status represents the open status of the file.
-	status Status
-	// tell when a file changes.
-	changCh chan bool
-	// true if there is a read rest.
+	eof int32
+	// notify when eof is reached.
+	eofCh chan struct{}
+	// notify when reopening.
+	reOpenCh chan struct{}
+	// reOpened represents the reOpen file.
+	reOpened sync.Once
+
+	// 1 if there is a changed.
 	changed int32
+	// notify when a file changes.
+	changCh chan struct{}
+
 	// beforeSize represents the number of lines to read first.
 	beforeSize int
 	// cache represents a cache of contents.
@@ -78,8 +83,9 @@ const (
 func NewDocument() (*Document, error) {
 	m := &Document{
 		lines:      make([]string, 0),
-		changCh:    make(chan bool, 2),
-		eofCh:      make(chan bool),
+		eofCh:      make(chan struct{}),
+		reOpenCh:   make(chan struct{}),
+		changCh:    make(chan struct{}, 1),
 		beforeSize: 100,
 		general: general{
 			ColumnDelimiter: "",
@@ -110,14 +116,13 @@ func (m *Document) ReadFile(fileName string) error {
 		m.file = r
 	}
 
-	atomic.StoreInt32(&m.status, OPEN)
-
 	cFormat, reader := uncompressedReader(m.file)
 	m.CFormat = cFormat
 
 	go func() {
 		<-m.eofCh
 		m.Close()
+		close(m.reOpenCh)
 	}()
 	if err := m.ReadAll(reader); err != nil {
 		return err
@@ -134,16 +139,10 @@ func (m *Document) Close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close(): %w", err)
 	}
-	atomic.StoreInt32(&m.status, CLOSE)
 	return nil
 }
 
 func (m *Document) reOpenRead() error {
-	if atomic.LoadInt32(&m.status) == OPEN {
-		log.Printf("Already open %s", m.FileName)
-		return nil
-	}
-
 	r, err := os.Open(m.FileName)
 	if err != nil {
 		return err

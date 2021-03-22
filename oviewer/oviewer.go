@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -361,7 +360,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				}
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
-						doc.changCh <- true
+						doc.changCh <- struct{}{}
 					}
 				}
 			case err, ok := <-watcher.Errors:
@@ -438,6 +437,13 @@ func (logDoc *Document) Write(p []byte) (int, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer watcher.Close()
+	root.SetWatcher(watcher)
+
 	for _, doc := range root.DocList {
 		doc.general = root.Config.General
 		if root.General.FollowAll {
@@ -835,15 +841,19 @@ func (root *Root) toggleFollowAll() {
 }
 
 func (root *Root) followModeOpen(m *Document) {
-	log.Printf("reopen wait %s", m.FileName)
-	atomic.StoreInt32(&m.status, WAIT)
-	<-m.changCh
-	log.Printf("reopen %s", m.FileName)
-	err := m.reOpenRead()
-	if err != nil {
-		log.Printf("%s cannot be reopened %v", m.FileName, err)
-	}
-	atomic.StoreInt32(&m.status, OPEN)
+	m.reOpened.Do(func() {
+		if m.file == nil {
+			return
+		}
+		log.Printf("reopen wait %s", m.FileName)
+		<-m.reOpenCh
+		<-m.changCh
+		log.Printf("reopen %s", m.FileName)
+		err := m.reOpenRead()
+		if err != nil {
+			log.Printf("%s cannot be reopened %v", m.FileName, err)
+		}
+	})
 }
 
 // ViewSync redraws the whole thing.
@@ -870,7 +880,7 @@ func (root *Root) prepareStartX() {
 
 // updateEndNum updates the last line number.
 func (root *Root) updateEndNum() {
-	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.endNum))
+	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
 	root.prepareStartX()
 	root.statusDraw()
 }
