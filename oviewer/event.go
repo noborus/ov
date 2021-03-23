@@ -42,8 +42,6 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			return
 		case *eventUpdateEndNum:
 			root.updateEndNum()
-		case *eventFollow:
-			root.TailSync()
 		case *eventDocument:
 			root.CurrentDoc = ev.docNum
 			m := root.DocList[root.CurrentDoc]
@@ -165,11 +163,6 @@ func (root *Root) follow() {
 	}
 }
 
-// eventFollow represents a follow event.
-type eventFollow struct {
-	tcell.EventTime
-}
-
 // followTimer fires events.
 func (root *Root) followTimer() {
 	timer := time.NewTicker(time.Millisecond * 100)
@@ -187,15 +180,6 @@ func (root *Root) followTimer() {
 
 		root.debugMessage(fmt.Sprintf("eventUpdateEndNum %s", root.Doc.FileName))
 		root.UpdateEndNum()
-
-		if !root.Doc.FollowMode {
-			continue
-		}
-
-		root.debugMessage(fmt.Sprintf("eventFollow %s", root.Doc.FileName))
-		ev := &eventFollow{}
-		ev.SetEventNow()
-		root.runOnTime(ev)
 	}
 }
 
