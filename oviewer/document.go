@@ -32,6 +32,8 @@ type Document struct {
 	lines []string
 	// endNum is the number of the last line read.
 	endNum int
+	// latestNum is the endNum read at the end of the screen update.
+	latestNum int
 
 	// 1 if EOF is reached.
 	eof int32
@@ -77,7 +79,7 @@ func NewDocument() (*Document, error) {
 		lines:      make([]string, 0),
 		eofCh:      make(chan struct{}),
 		reOpenCh:   make(chan struct{}),
-		changCh:    make(chan struct{}, 1),
+		changCh:    make(chan struct{}, 10),
 		beforeSize: 100,
 		general: general{
 			ColumnDelimiter: "",

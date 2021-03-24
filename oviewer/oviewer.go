@@ -86,10 +86,6 @@ type Root struct {
 
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
-
-	latestNum int
-
-	watcher *fsnotify.Watcher
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -212,6 +208,8 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	return root, nil
 }
 
+// ExecCommand return the structure of oviewer.
+// ExecCommand executes the command and opens stdout/stderr as document.
 func ExecCommand(command *exec.Cmd) (*Root, error) {
 	command.Stdin = os.Stdin
 	docout, err := NewDocument()
@@ -385,9 +383,8 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 		}
 	}()
 
-	root.watcher = watcher
 	for _, doc := range root.DocList {
-		_ = root.watcher.Add(doc.FileName)
+		_ = watcher.Add(doc.FileName)
 	}
 }
 
@@ -858,8 +855,9 @@ func (root *Root) followModeOpen(m *Document) {
 		if m.file == nil {
 			return
 		}
-		log.Printf("reopen wait %s", m.FileName)
+		root.debugMessage(fmt.Sprintf("reopenCh wait %s", m.FileName))
 		<-m.reOpenCh
+		root.debugMessage(fmt.Sprintf("changeCh wait %s", m.FileName))
 		<-m.changCh
 		log.Printf("reopen %s", m.FileName)
 		err := m.reOpenRead()

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
@@ -58,7 +59,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 
 		if execC {
-			return execCommand(cmd, args)
+			return ExecCommand(cmd, args)
 		}
 
 		if config.Debug {
@@ -112,26 +113,30 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
-func execCommand(cmd *cobra.Command, args []string) error {
+// ExecCommand displays the output of command execution (stdout/stderr).
+func ExecCommand(cmd *cobra.Command, args []string) error {
 	if err := viper.Unmarshal(&config); err != nil {
 		return err
 	}
 
 	command := exec.Command(args[0], args[1:]...)
-	defer func() {
-		if command == nil {
-			return
-		}
-		if command.Process != nil {
-			command.Process.Kill()
-		}
-		command.Wait()
-	}()
-
 	ov, err := oviewer.ExecCommand(command)
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if command == nil || command.Process == nil {
+			return
+		}
+		if err := command.Process.Kill(); err != nil {
+			log.Println(err)
+		}
+		if err := command.Wait(); err != nil {
+			log.Println(err)
+		}
+	}()
+
 	ov.SetConfig(config)
 
 	if err := ov.Run(); err != nil {

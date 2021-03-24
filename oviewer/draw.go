@@ -285,10 +285,11 @@ func (root *Root) statusDraw() {
 	}
 
 	followMessage := ""
-	if root.General.FollowAll && root.Doc.FollowMode {
-		followMessage = "(Follow All)"
-	} else if root.Doc.FollowMode {
+	if root.Doc.FollowMode {
 		followMessage = "(Follow Mode)"
+	}
+	if root.General.FollowAll {
+		followMessage = "(Follow All)"
 	}
 	leftStatus := fmt.Sprintf("%s%s:%s", followMessage, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)

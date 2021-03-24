@@ -157,9 +157,9 @@ func (root *Root) followAll() {
 func (root *Root) follow() {
 	go root.followModeOpen(root.Doc)
 	num := root.Doc.BufEndNum()
-	if root.latestNum != num {
+	if root.Doc.latestNum != num {
 		root.TailSync()
-		root.latestNum = num
+		root.Doc.latestNum = num
 	}
 }
 
