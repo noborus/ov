@@ -158,7 +158,7 @@ ov --follow-mode /var/log/syslog
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
 ```sh
-ov --follow-all /var/log/syslog /var/log/syslog
+ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
 ### exec mode
@@ -167,7 +167,7 @@ Execute the command to display stdout / stderr.
 Arguments after (`--`) are interpreted as command arguments.
 
 ```sh
-ov --follow-all --exec -- make
+ov --follow-all --exec -- golangci-lint run --color=always --verbose ./...
 ```
 
 ### psql
