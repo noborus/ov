@@ -119,6 +119,10 @@ func ExecCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if len(args) <= 0 {
+		return fmt.Errorf("missing argument")
+	}
+
 	command := exec.Command(args[0], args[1:]...)
 	ov, err := oviewer.ExecCommand(command)
 	if err != nil {

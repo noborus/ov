@@ -49,8 +49,6 @@ type Document struct {
 	// notify when a file changes.
 	changCh chan struct{}
 
-	// beforeSize represents the number of lines to read first.
-	beforeSize int
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 
@@ -76,11 +74,10 @@ type Document struct {
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		lines:      make([]string, 0),
-		eofCh:      make(chan struct{}),
-		reOpenCh:   make(chan struct{}),
-		changCh:    make(chan struct{}, 10),
-		beforeSize: 100,
+		lines:    make([]string, 0),
+		eofCh:    make(chan struct{}),
+		reOpenCh: make(chan struct{}),
+		changCh:  make(chan struct{}, 10),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,

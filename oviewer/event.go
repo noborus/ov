@@ -142,18 +142,20 @@ func (root *Root) runOnTime(ev tcell.Event) {
 }
 
 func (root *Root) followAll() {
+	if root.input.mode != Normal {
+		return
+	}
+
 	current := root.CurrentDoc
 	for n, doc := range root.DocList {
 		go root.followModeOpen(doc)
-		if atomic.LoadInt32(&doc.changed) == 1 && doc.BufEndNum() > 0 {
-			if doc.latestNum != doc.BufEndNum() {
-				current = n
-			}
+		if (atomic.LoadInt32(&doc.changed) == 1) && (doc.latestNum != doc.BufEndNum()) {
+			current = n
 		}
 		atomic.StoreInt32(&doc.changed, 0)
 	}
 
-	if (root.input.mode == Normal) && (root.CurrentDoc != current) {
+	if root.CurrentDoc != current {
 		root.CurrentDoc = current
 		root.SetDocument(root.CurrentDoc)
 	}

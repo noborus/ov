@@ -5,12 +5,16 @@ import (
 	"os"
 	"os/exec"
 	"sync/atomic"
+
+	"golang.org/x/term"
 )
 
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
 func ExecCommand(command *exec.Cmd) (*Root, error) {
-	command.Stdin = os.Stdin
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		command.Stdin = os.Stdin
+	}
 	docout, err := NewDocument()
 	if err != nil {
 		log.Fatal(err)
