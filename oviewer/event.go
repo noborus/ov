@@ -25,12 +25,12 @@ func (root *Root) main(quitChan chan<- struct{}) {
 		if root.Doc.FollowMode {
 			root.follow()
 		}
+		atomic.StoreInt32(&root.Doc.changed, 0)
 
 		if !root.skipDraw {
 			root.draw()
 		}
 		root.skipDraw = false
-
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:

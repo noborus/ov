@@ -36,12 +36,10 @@ func (root *Root) toggleLineNumMode() {
 
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
-	root.setMessage(fmt.Sprintf("Set FollowMode %t", root.Doc.FollowMode))
 }
 
 func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
-	root.setMessage(fmt.Sprintf("Set FollowAll %t", root.Doc.FollowAll))
 }
 
 // setDocument sets the Document.
