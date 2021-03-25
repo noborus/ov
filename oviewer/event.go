@@ -91,6 +91,9 @@ func (root *Root) main(quitChan chan<- struct{}) {
 }
 
 func (root *Root) checkScreen() bool {
+	if root == nil {
+		return false
+	}
 	return root.Screen != nil
 }
 
@@ -143,7 +146,9 @@ func (root *Root) followAll() {
 	for n, doc := range root.DocList {
 		go root.followModeOpen(doc)
 		if atomic.LoadInt32(&doc.changed) == 1 && doc.BufEndNum() > 0 {
-			current = n
+			if doc.latestNum != doc.BufEndNum() {
+				current = n
+			}
 		}
 		atomic.StoreInt32(&doc.changed, 0)
 	}

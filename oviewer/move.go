@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
@@ -318,4 +319,57 @@ func (root *Root) moveHfRight() {
 	} else {
 		m.x += (root.vWidth / 2)
 	}
+}
+
+// bottomLineNum returns the display start line
+// when the last line number as an argument.
+func (root *Root) bottomLineNum(lN int) (int, int) {
+	hight := (root.vHight - root.headerLen()) - 2
+	if lN < root.headerLen() {
+		return 0, 0
+	}
+
+	if !root.Doc.WrapMode {
+		return 0, lN - (hight + root.headerLen())
+	}
+
+	// WrapMode
+	lX, lN := root.findNumUp(0, lN, hight)
+	return lX, lN - root.Doc.Header
+}
+
+// findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
+func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
+	listX, err := root.leftMostX(lN)
+	n := 0
+	if err != nil {
+		// lN has no lines.
+		root.debugMessage(fmt.Sprintf("%s:%d", err.Error(), lN))
+	} else {
+		n = numOfSlice(listX, lX)
+	}
+
+	for y := upY; y > 0; y-- {
+		if n <= 0 {
+			lN--
+			if lN < root.Doc.Header {
+				lN = 0
+				lX = 0
+				break
+			}
+			listX, err = root.leftMostX(lN)
+			if err != nil {
+				log.Println(err, "findNumUp", lN)
+				return 0, 0
+			}
+			n = len(listX)
+		}
+		if n > 0 {
+			lX = listX[n-1]
+		} else {
+			lX = 0
+		}
+		n--
+	}
+	return lX, lN
 }

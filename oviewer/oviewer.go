@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
-	"strconv"
 	"strings"
-	"sync/atomic"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -196,6 +193,9 @@ var (
 
 // NewOviewer return the structure of oviewer.
 func NewOviewer(docs ...*Document) (*Root, error) {
+	if len(docs) == 0 {
+		return nil, ErrNotFound
+	}
 	root := &Root{
 		minStartX: -10,
 	}
@@ -205,64 +205,13 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
 
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		return nil, err
+	}
+	root.Screen = screen
+
 	return root, nil
-}
-
-// ExecCommand return the structure of oviewer.
-// ExecCommand executes the command and opens stdout/stderr as document.
-func ExecCommand(command *exec.Cmd) (*Root, error) {
-	command.Stdin = os.Stdin
-	docout, err := NewDocument()
-	if err != nil {
-		log.Fatal(err)
-	}
-	docout.FileName = "STDOUT"
-	docout.FollowMode = true
-	outReader, err := command.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	docerr, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-	docerr.FileName = "STDERR"
-	docerr.FollowMode = true
-	errReader, err := command.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := command.Start(); err != nil {
-		return nil, err
-	}
-
-	go func() {
-	loop:
-		for {
-			select {
-			case <-docout.eofCh:
-				break loop
-			case <-docerr.eofCh:
-				break loop
-			}
-		}
-		atomic.StoreInt32(&docout.changed, 1)
-		atomic.StoreInt32(&docerr.changed, 1)
-	}()
-
-	err = docout.ReadAll(outReader)
-	if err != nil {
-		log.Println("readall out:", err)
-	}
-
-	err = docerr.ReadAll(errReader)
-	if err != nil {
-		log.Println("readall err:", err)
-	}
-
-	return NewOviewer(docout, docerr)
 }
 
 // NewConfig return the structure of Config with default values.
@@ -290,14 +239,9 @@ func NewConfig() Config {
 }
 
 func (root *Root) screenInit() error {
-	screen, err := tcell.NewScreen()
-	if err != nil {
+	if err := root.Screen.Init(); err != nil {
 		return err
 	}
-	if err = screen.Init(); err != nil {
-		return err
-	}
-	root.Screen = screen
 	return nil
 }
 
@@ -315,8 +259,8 @@ func openSTDIN() (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = m.ReadFile("")
-	if err != nil {
+
+	if err = m.ReadFile(""); err != nil {
 		return nil, err
 	}
 	docList = append(docList, m)
@@ -340,8 +284,7 @@ func openFiles(fileNames []string) (*Root, error) {
 			return nil, err
 		}
 
-		err = m.ReadFile(fileName)
-		if err != nil {
+		if err := m.ReadFile(fileName); err != nil {
 			log.Println(err, fileName)
 			continue
 		}
@@ -424,27 +367,6 @@ func NewHelp(k KeyBind) (*Document, error) {
 	return help, err
 }
 
-// NewLogDoc generates a document for log.
-func NewLogDoc() (*Document, error) {
-	logDoc, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-	logDoc.FollowMode = true
-	logDoc.FileName = "Log"
-	log.SetOutput(logDoc)
-	return logDoc, nil
-}
-
-// Write matches the interface of io.Writer.
-// Therefore, the log.Print output is displayed by logDoc.
-func (logDoc *Document) Write(p []byte) (int, error) {
-	str := string(p)
-	logDoc.lines = append(logDoc.lines, str)
-	logDoc.endNum = len(logDoc.lines)
-	return len(str), nil
-}
-
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	watcher, err := fsnotify.NewWatcher()
@@ -464,6 +386,7 @@ func (root *Root) Run() error {
 	if err := root.setKeyConfig(); err != nil {
 		return err
 	}
+
 	logDoc, err := NewLogDoc()
 	if err != nil {
 		return err
@@ -536,46 +459,6 @@ func (root *Root) debugMessage(msg string) {
 		return
 	}
 	log.Printf("%s:%s", root.Doc.FileName, msg)
-}
-
-// setDocument sets the Document.
-func (root *Root) setDocument(m *Document) {
-	root.Doc = m
-	root.Clear()
-	root.ViewSync()
-}
-
-// Help is to switch between Help screen and normal screen.
-func (root *Root) Help() {
-	if root.input.mode == Help {
-		root.toNormal()
-		return
-	}
-	root.toHelp()
-}
-
-func (root *Root) toHelp() {
-	root.setDocument(root.helpDoc)
-	root.input.mode = Help
-}
-
-// LogDisplay is to switch between Log screen and normal screen.
-func (root *Root) logDisplay() {
-	if root.input.mode == LogDoc {
-		root.toNormal()
-		return
-	}
-	root.toLogDoc()
-}
-
-func (root *Root) toLogDoc() {
-	root.setDocument(root.logDoc)
-	root.input.mode = LogDoc
-}
-
-func (root *Root) toNormal() {
-	root.setDocument(root.DocList[root.CurrentDoc])
-	root.input.mode = Normal
 }
 
 func setStyle(s ovStyle) tcell.Style {
@@ -716,38 +599,6 @@ func (root *Root) headerLen() int {
 	return root.Doc.Header
 }
 
-// setWrapHeaderLen sets the value in wrapHeaderLen.
-func (root *Root) setWrapHeaderLen() {
-	m := root.Doc
-	root.wrapHeaderLen = 0
-	for y := 0; y < root.Doc.Header; y++ {
-		lc, err := m.lineToContents(y, root.Doc.TabWidth)
-		if err != nil {
-			log.Println(err, "WrapHeaderLen", y)
-			continue
-		}
-		root.wrapHeaderLen++
-		root.wrapHeaderLen += ((len(lc) - 1) / (root.vWidth - root.startX))
-	}
-}
-
-// bottomLineNum returns the display start line
-// when the last line number as an argument.
-func (root *Root) bottomLineNum(lN int) (int, int) {
-	hight := (root.vHight - root.headerLen()) - 2
-	if lN < root.headerLen() {
-		return 0, 0
-	}
-
-	if !root.Doc.WrapMode {
-		return 0, lN - (hight + root.headerLen())
-	}
-
-	// WrapMode
-	lX, lN := root.findNumUp(0, lN, hight)
-	return lX, lN - root.Doc.Header
-}
-
 // leftMostX returns a list of left - most x positions when wrapping.
 func (root *Root) leftMostX(lN int) ([]int, error) {
 	lc, err := root.Doc.lineToContents(lN, root.Doc.TabWidth)
@@ -768,88 +619,6 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 	return listX, nil
 }
 
-// findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
-func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
-	listX, err := root.leftMostX(lN)
-	n := 0
-	if err != nil {
-		// lN has no lines.
-		root.debugMessage(fmt.Sprintf("%s:%d", err.Error(), lN))
-	} else {
-		n = numOfSlice(listX, lX)
-	}
-
-	for y := upY; y > 0; y-- {
-		if n <= 0 {
-			lN--
-			if lN < root.Doc.Header {
-				lN = 0
-				lX = 0
-				break
-			}
-			listX, err = root.leftMostX(lN)
-			if err != nil {
-				log.Println(err, "findNumUp", lN)
-				return 0, 0
-			}
-			n = len(listX)
-		}
-		if n > 0 {
-			lX = listX[n-1]
-		} else {
-			lX = 0
-		}
-		n--
-	}
-	return lX, lN
-}
-
-// toggleWrapMode toggles wrapMode each time it is called.
-func (root *Root) toggleWrapMode() {
-	root.Doc.WrapMode = !root.Doc.WrapMode
-	root.Doc.x = 0
-	root.setWrapHeaderLen()
-	root.setMessage(fmt.Sprintf("Set WrapMode %t", root.Doc.WrapMode))
-}
-
-//  toggleColumnMode toggles ColumnMode each time it is called.
-func (root *Root) toggleColumnMode() {
-	root.Doc.ColumnMode = !root.Doc.ColumnMode
-	root.setMessage(fmt.Sprintf("Set ColumnMode %t", root.Doc.ColumnMode))
-}
-
-// toggleAlternateRows toggles the AlternateRows each time it is called.
-func (root *Root) toggleAlternateRows() {
-	root.Doc.ClearCache()
-	root.Doc.AlternateRows = !root.Doc.AlternateRows
-	root.setMessage(fmt.Sprintf("Set AlternateRows %t", root.Doc.AlternateRows))
-}
-
-// toggleLineNumMode toggles LineNumMode every time it is called.
-func (root *Root) toggleLineNumMode() {
-	root.Doc.LineNumMode = !root.Doc.LineNumMode
-	root.ViewSync()
-	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
-}
-
-// resize is a wrapper function that calls viewSync.
-func (root *Root) resize() {
-	root.ViewSync()
-}
-
-func (root *Root) toggleFollowMode() {
-	root.Doc.FollowMode = !root.Doc.FollowMode
-}
-
-func (root *Root) toggleFollowAll() {
-	root.General.FollowAll = !root.General.FollowAll
-	if root.General.FollowAll {
-		for _, doc := range root.DocList {
-			doc.FollowMode = true
-		}
-	}
-}
-
 func (root *Root) followModeOpen(m *Document) {
 	m.reOpened.Do(func() {
 		if m.file == nil {
@@ -865,152 +634,6 @@ func (root *Root) followModeOpen(m *Document) {
 			log.Printf("%s cannot be reopened %v", m.FileName, err)
 		}
 	})
-}
-
-// ViewSync redraws the whole thing.
-func (root *Root) ViewSync() {
-	root.resetSelect()
-	root.prepareStartX()
-	root.prepareView()
-	root.Screen.Sync()
-}
-
-// TailSync move to tail and sync.
-func (root *Root) TailSync() {
-	root.moveBottom()
-	root.ViewSync()
-}
-
-// prepareStartX prepares startX.
-func (root *Root) prepareStartX() {
-	root.startX = 0
-	if root.Doc.LineNumMode {
-		root.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
-	}
-}
-
-// updateEndNum updates the last line number.
-func (root *Root) updateEndNum() {
-	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
-	root.prepareStartX()
-	root.statusDraw()
-}
-
-// goLine will move to the specified line.
-func (root *Root) goLine(input string) {
-	lN, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
-	}
-
-	root.moveLine(lN - root.Doc.Header - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lN))
-}
-
-// markLineNum stores the specified number of lines.
-func (root *Root) markLineNum() {
-	s := strconv.Itoa(root.Doc.topLN + 1)
-	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
-	root.input.GoCandidate.p = 0
-	root.setMessage(fmt.Sprintf("Marked to line %d", root.Doc.topLN))
-}
-
-// setHeader sets the number of lines in the header.
-func (root *Root) setHeader(input string) {
-	num, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
-	}
-	if num < 0 || num > root.vHight-1 {
-		root.setMessage(ErrOutOfRange.Error())
-		return
-	}
-	if root.Doc.Header == num {
-		return
-	}
-
-	root.Doc.Header = num
-	root.setMessage(fmt.Sprintf("Set Header %d", num))
-	root.setWrapHeaderLen()
-	root.Doc.ClearCache()
-}
-
-// setDelimiter sets the delimiter string.
-func (root *Root) setDelimiter(input string) {
-	root.Doc.ColumnDelimiter = input
-	root.setMessage(fmt.Sprintf("Set delimiter %s", input))
-}
-
-// setTabWidth sets the tab width.
-func (root *Root) setTabWidth(input string) {
-	width, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
-	}
-	if root.Doc.TabWidth == width {
-		return
-	}
-
-	root.Doc.TabWidth = width
-	root.setMessage(fmt.Sprintf("Set tab width %d", width))
-	root.Doc.ClearCache()
-}
-
-func (root *Root) markNext() {
-	root.goLine(newGotoInput(root.input.GoCandidate).Up(""))
-}
-
-func (root *Root) markPrev() {
-	root.goLine(newGotoInput(root.input.GoCandidate).Down(""))
-}
-
-func (root *Root) nextDoc() {
-	root.CurrentDoc++
-	root.CurrentDoc = min(root.CurrentDoc, len(root.DocList)-1)
-	root.setDocument(root.DocList[root.CurrentDoc])
-	root.input.mode = Normal
-}
-
-func (root *Root) previousDoc() {
-	root.CurrentDoc--
-	root.CurrentDoc = max(root.CurrentDoc, 0)
-	root.setDocument(root.DocList[root.CurrentDoc])
-	root.input.mode = Normal
-}
-
-func (root *Root) addDocument(m *Document) {
-	log.Printf("add: %s", m.FileName)
-	m.general = root.Config.General
-	root.DocList = append(root.DocList, m)
-	root.CurrentDoc = len(root.DocList) - 1
-	root.setDocument(m)
-}
-
-func (root *Root) closeDocument() {
-	if len(root.DocList) == 1 {
-		return
-	}
-	s := root.DocList
-	root.DocList = append(s[:root.CurrentDoc], s[root.CurrentDoc+1:]...)
-	log.Printf("close : %s", root.Doc.FileName)
-	if root.CurrentDoc > 0 {
-		root.CurrentDoc--
-	}
-	root.setDocument(root.DocList[root.CurrentDoc])
-}
-
-func (root *Root) toggleMouse() {
-	root.Config.DisableMouse = !root.Config.DisableMouse
-	if root.Config.DisableMouse {
-		root.Screen.DisableMouse()
-		root.setMessage("Disable Mouse")
-	} else {
-		root.Screen.EnableMouse()
-		root.setMessage("Enable Mouse")
-	}
 }
 
 func max(a, b int) int {
