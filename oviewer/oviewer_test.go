@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"os/exec"
 	"reflect"
 	"testing"
 
@@ -39,41 +38,6 @@ func TestNewOviewer(t *testing.T) {
 	}
 }
 
-func TestExecCommand(t *testing.T) {
-	type args struct {
-		command *exec.Cmd
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "test1",
-			args: args{
-				command: exec.Command("sh", "-c", "echo \"test\""),
-			},
-			wantErr: false,
-		},
-		{
-			name: "testNotFound",
-			args: args{
-				command: exec.Command("notFoundExec"),
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := ExecCommand(tt.args.command)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ExecCommand() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-		})
-	}
-}
-
 func TestRoot_Run(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -95,7 +59,7 @@ func TestRoot_Run(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root, err := Open(tt.ovArgs...)
 			if err != nil {
-				t.Errorf("NewOviewer error = %v", err)
+				t.Fatalf("NewOviewer error = %v", err)
 			}
 			root.Screen = tcell.NewSimulationScreen("")
 			go func() {
