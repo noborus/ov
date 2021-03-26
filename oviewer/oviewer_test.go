@@ -47,6 +47,10 @@ func TestNewOviewer(t *testing.T) {
 }
 
 func TestRoot_Run(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
 	tests := []struct {
 		name    string
 		ovArgs  []string
