@@ -15,9 +15,10 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
 		command.Stdin = os.Stdin
 	}
+
 	docout, err := NewDocument()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	docout.FileName = "STDOUT"
 	outReader, err := command.StdoutPipe()

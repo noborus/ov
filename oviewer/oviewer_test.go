@@ -7,7 +7,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+func fakeScreen() (tcell.Screen, error) {
+	return tcell.NewSimulationScreen(""), nil
+}
+
 func TestNewOviewer(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
 	type args struct {
 		docs []*Document
 	}

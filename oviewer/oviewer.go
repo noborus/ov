@@ -191,6 +191,8 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 )
 
+var tcellNewScreen = tcell.NewScreen
+
 // NewOviewer return the structure of oviewer.
 func NewOviewer(docs ...*Document) (*Root, error) {
 	if len(docs) == 0 {
@@ -205,7 +207,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
 
-	screen, err := tcell.NewScreen()
+	screen, err := tcellNewScreen()
 	if err != nil {
 		return nil, err
 	}
