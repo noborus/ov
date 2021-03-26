@@ -266,7 +266,6 @@ FieldLoop:
 					blue, _ := strconv.Atoi(fields[index+4])
 					color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
 					// both
-					log.Println(fields)
 					if len(fields) > index+9 {
 						field2 = fields[index+5]
 						red, _ := strconv.Atoi(fields[index+7])
