@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"sync/atomic"
-	"time"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/pierrec/lz4"
@@ -125,7 +124,6 @@ func (m *Document) ReadFollow(reader *bufio.Reader) error {
 // before the end of read.
 func (m *Document) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
-	ch := make(chan struct{})
 	go func() {
 		var line bytes.Buffer
 		for {
@@ -151,17 +149,8 @@ func (m *Document) ReadAll(r io.Reader) error {
 			m.endNum++
 			m.mu.Unlock()
 			atomic.StoreInt32(&m.changed, 1)
-			if m.endNum == m.beforeSize {
-				close(ch)
-			}
 			line.Reset()
 		}
 	}()
-
-	select {
-	case <-ch:
-		return nil
-	case <-time.After(100 * time.Millisecond):
-		return nil
-	}
+	return nil
 }

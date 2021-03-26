@@ -49,8 +49,6 @@ type Document struct {
 	// notify when a file changes.
 	changCh chan struct{}
 
-	// beforeSize represents the number of lines to read first.
-	beforeSize int
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
 
@@ -76,11 +74,10 @@ type Document struct {
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		lines:      make([]string, 0),
-		eofCh:      make(chan struct{}),
-		reOpenCh:   make(chan struct{}),
-		changCh:    make(chan struct{}, 10),
-		beforeSize: 100,
+		lines:    make([]string, 0),
+		eofCh:    make(chan struct{}),
+		reOpenCh: make(chan struct{}),
+		changCh:  make(chan struct{}, 10),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
@@ -124,6 +121,8 @@ func (m *Document) ReadFile(fileName string) error {
 	return nil
 }
 
+// Close closes the File.
+// Record the last read position.
 func (m *Document) Close() error {
 	pos, err := m.file.Seek(0, io.SeekCurrent)
 	if err != nil {
@@ -136,11 +135,14 @@ func (m *Document) Close() error {
 	return nil
 }
 
+// reOpenRead reopens and reads the file.
+// Seek to the position where the file was closed, and then read.
 func (m *Document) reOpenRead() error {
 	r, err := os.Open(m.FileName)
 	if err != nil {
 		return err
 	}
+	m.file = r
 	atomic.StoreInt32(&m.eof, 0)
 
 	_, err = r.Seek(m.offset, io.SeekStart)

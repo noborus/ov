@@ -25,12 +25,12 @@ func (root *Root) main(quitChan chan<- struct{}) {
 		if root.Doc.FollowMode {
 			root.follow()
 		}
+		atomic.StoreInt32(&root.Doc.changed, 0)
 
 		if !root.skipDraw {
 			root.draw()
 		}
 		root.skipDraw = false
-
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -91,6 +91,9 @@ func (root *Root) main(quitChan chan<- struct{}) {
 }
 
 func (root *Root) checkScreen() bool {
+	if root == nil {
+		return false
+	}
 	return root.Screen != nil
 }
 
@@ -139,16 +142,20 @@ func (root *Root) runOnTime(ev tcell.Event) {
 }
 
 func (root *Root) followAll() {
+	if root.input.mode != Normal {
+		return
+	}
+
 	current := root.CurrentDoc
 	for n, doc := range root.DocList {
 		go root.followModeOpen(doc)
-		if atomic.LoadInt32(&doc.changed) == 1 && doc.BufEndNum() > 0 {
+		if (atomic.LoadInt32(&doc.changed) == 1) && (doc.latestNum != doc.BufEndNum()) {
 			current = n
 		}
 		atomic.StoreInt32(&doc.changed, 0)
 	}
 
-	if (root.input.mode == Normal) && (root.CurrentDoc != current) {
+	if root.CurrentDoc != current {
 		root.CurrentDoc = current
 		root.SetDocument(root.CurrentDoc)
 	}
