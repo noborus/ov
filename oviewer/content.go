@@ -248,27 +248,32 @@ FieldLoop:
 			style = style.Background(tcell.ColorValid + tcell.Color(colorNumber-92))
 		case "38", "48":
 			var color string
+			var color2 string
+			var field2 string
 			if len(fields) > index+1 {
 				if fields[index+1] == "5" && len(fields) > index+2 { // 8-bit colors.
-					colorNumber, _ := strconv.Atoi(fields[index+2])
-					if colorNumber <= 7 {
-						color = lookupColor(colorNumber)
-					} else if colorNumber <= 15 {
-						color = lookupColor(colorNumber)
-					} else if colorNumber <= 231 {
-						red := (colorNumber - 16) / 36
-						green := ((colorNumber - 16) / 6) % 6
-						blue := (colorNumber - 16) % 6
-						color = fmt.Sprintf("#%02x%02x%02x", 255*red/5, 255*green/5, 255*blue/5)
-					} else if colorNumber <= 255 {
-						grey := 255 * (colorNumber - 232) / 23
-						color = fmt.Sprintf("#%02x%02x%02x", grey, grey, grey)
+					c, _ := strconv.Atoi(fields[index+2])
+					color = colorName(c)
+					// both
+					if len(fields) > index+5 {
+						field2 = fields[index+3]
+						c, _ := strconv.Atoi(fields[index+5])
+						color2 = colorName(c)
 					}
 				} else if fields[index+1] == "2" && len(fields) > index+4 { // 24-bit colors.
 					red, _ := strconv.Atoi(fields[index+2])
 					green, _ := strconv.Atoi(fields[index+3])
 					blue, _ := strconv.Atoi(fields[index+4])
 					color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
+					// both
+					log.Println(fields)
+					if len(fields) > index+9 {
+						field2 = fields[index+5]
+						red, _ := strconv.Atoi(fields[index+7])
+						green, _ := strconv.Atoi(fields[index+8])
+						blue, _ := strconv.Atoi(fields[index+9])
+						color2 = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
+					}
 				}
 			}
 			if len(color) > 0 {
@@ -277,11 +282,36 @@ FieldLoop:
 				} else {
 					style = style.Background(tcell.GetColor(color))
 				}
+				// both
+				if len(color2) > 0 {
+					if field2 == "38" {
+						style = style.Foreground(tcell.GetColor(color2))
+					} else {
+						style = style.Background(tcell.GetColor(color2))
+					}
+				}
 				break FieldLoop
 			}
 		}
 	}
 	return style
+}
+
+func colorName(colorNumber int) string {
+	if colorNumber <= 7 {
+		return lookupColor(colorNumber)
+	} else if colorNumber <= 15 {
+		return lookupColor(colorNumber)
+	} else if colorNumber <= 231 {
+		red := (colorNumber - 16) / 36
+		green := ((colorNumber - 16) / 6) % 6
+		blue := (colorNumber - 16) % 6
+		return fmt.Sprintf("#%02x%02x%02x", 255*red/5, 255*green/5, 255*blue/5)
+	} else if colorNumber <= 255 {
+		grey := 255 * (colorNumber - 232) / 23
+		return fmt.Sprintf("#%02x%02x%02x", grey, grey, grey)
+	}
+	return ""
 }
 
 // lookupColor returns the color name from the color number.
