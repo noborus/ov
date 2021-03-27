@@ -47,6 +47,10 @@ KeyBind:
         - "R"
         - "ctrl+l"
         - "ctrl+r"
+    follow_mode:
+        - "F"
+    follow_all:
+        - "ctrl+a"
     help:
         - "h"
         - "ctrl+alt+c"

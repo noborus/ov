@@ -45,6 +45,10 @@ KeyBind:
         - "Q"
     sync:
         - "ctrl+l"
+    follow_mode:
+        - "ctrl+f"
+    follow_all:
+        - "ctrl+a"
     help:
         - "h"
         - "ctrl+alt+c"
