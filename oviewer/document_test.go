@@ -1,30 +1,41 @@
 package oviewer
 
 import (
+	"bytes"
+	"reflect"
 	"testing"
 )
 
-func TestDocument_ReadFile(t *testing.T) {
+func TestDocument_lineToContents(t *testing.T) {
 	type args struct {
-		args string
+		lN       int
+		tabWidth int
 	}
 	tests := []struct {
 		name    string
+		str     string
 		args    args
+		want    lineContents
 		wantErr bool
 	}{
 		{
-			name: "testNoFile",
+			name: "testEmpty",
+			str:  ``,
 			args: args{
-				"nofile",
+				lN:       0,
+				tabWidth: 4,
 			},
+			want:    nil,
 			wantErr: true,
 		},
 		{
-			name: "testSTDIN",
+			name: "test1",
+			str:  "test\n",
 			args: args{
-				"",
+				lN:       0,
+				tabWidth: 4,
 			},
+			want:    strToContents("test", 4),
 			wantErr: false,
 		},
 	}
@@ -34,8 +45,18 @@ func TestDocument_ReadFile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := m.ReadFile(tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("Document.ReadFile() error = %v, wantErr %v", err, tt.wantErr)
+			if err := m.ReadAll(bytes.NewBufferString(tt.str)); err != nil {
+				t.Fatal(err)
+			}
+			<-m.eofCh
+			t.Logf("num:%d", m.BufEndNum())
+			got, err := m.lineToContents(tt.args.lN, tt.args.tabWidth)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.lineToContents() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Document.lineToContents() = %v, want %v", got, tt.want)
 			}
 		})
 	}

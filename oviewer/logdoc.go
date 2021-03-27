@@ -1,6 +1,8 @@
 package oviewer
 
-import "log"
+import (
+	"log"
+)
 
 // NewLogDoc generates a document for log.
 func NewLogDoc() (*Document, error) {
@@ -18,11 +20,6 @@ func NewLogDoc() (*Document, error) {
 // Therefore, the log.Print output is displayed by logDoc.
 func (logDoc *Document) Write(p []byte) (int, error) {
 	str := string(p)
-
-	logDoc.mu.Lock()
-	logDoc.lines = append(logDoc.lines, str)
-	logDoc.endNum = len(logDoc.lines)
-	logDoc.mu.Unlock()
-
+	logDoc.append(str)
 	return len(str), nil
 }

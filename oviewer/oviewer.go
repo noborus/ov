@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -380,9 +381,6 @@ func (root *Root) Run() error {
 
 	for _, doc := range root.DocList {
 		doc.general = root.Config.General
-		if root.General.FollowAll {
-			doc.FollowMode = true
-		}
 	}
 
 	if err := root.setKeyConfig(); err != nil {
@@ -398,7 +396,7 @@ func (root *Root) Run() error {
 	if err := root.screenInit(); err != nil {
 		return err
 	}
-	defer root.Screen.Fini()
+	defer root.Close()
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse()
@@ -430,7 +428,11 @@ func (root *Root) Run() error {
 
 	quitChan := make(chan struct{})
 
-	go root.main(quitChan)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	go root.main(ctx, quitChan)
 
 	for {
 		select {
@@ -440,6 +442,15 @@ func (root *Root) Run() error {
 			return fmt.Errorf("%w [%s]", ErrSignalCatch, sig)
 		}
 	}
+}
+
+func (root *Root) Close() {
+	root.Screen.Fini()
+	for _, doc := range root.DocList {
+		doc.Close()
+	}
+	root.logDoc.cache.Close()
+	root.helpDoc.cache.Close()
 }
 
 func (root *Root) setMessage(msg string) {
@@ -622,20 +633,18 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 }
 
 func (root *Root) followModeOpen(m *Document) {
-	m.reOpened.Do(func() {
-		if m.file == nil {
-			return
-		}
-		root.debugMessage(fmt.Sprintf("reopenCh wait %s", m.FileName))
-		<-m.reOpenCh
-		root.debugMessage(fmt.Sprintf("changeCh wait %s", m.FileName))
-		<-m.changCh
-		log.Printf("reopen %s", m.FileName)
-		err := m.reOpenRead()
-		if err != nil {
-			log.Printf("%s cannot be reopened %v", m.FileName, err)
-		}
-	})
+	if m.file == nil {
+		return
+	}
+	root.debugMessage(fmt.Sprintf("reopenCh wait %s", m.FileName))
+	<-m.reOpenCh
+	root.debugMessage(fmt.Sprintf("changeCh wait %s", m.FileName))
+	<-m.changCh
+	log.Printf("reopen %s", m.FileName)
+	err := m.reOpenRead()
+	if err != nil {
+		log.Printf("%s cannot be reopened %v", m.FileName, err)
+	}
 }
 
 func max(a, b int) int {
