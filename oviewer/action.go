@@ -150,28 +150,32 @@ func (root *Root) markPrev() {
 }
 
 func (root *Root) nextDoc() {
-	root.mu.RLock()
-	defer root.mu.RUnlock()
-
-	if root.CurrentDoc+1 >= len(root.DocList) {
+	if root.CurrentDoc+1 >= root.DocumentLen() {
 		root.setMessage("No next doc")
 		return
 	}
+
+	root.mu.RLock()
 	root.CurrentDoc++
-	root.setDocument(root.DocList[root.CurrentDoc])
+	m := root.DocList[root.CurrentDoc]
+	root.mu.RUnlock()
+
+	root.setDocument(m)
 	root.input.mode = Normal
 }
 
 func (root *Root) previousDoc() {
-	root.mu.RLock()
-	defer root.mu.RUnlock()
-
 	if root.CurrentDoc <= 0 {
 		root.setMessage("No previous doc")
 		return
 	}
+
+	root.mu.RLock()
 	root.CurrentDoc--
-	root.setDocument(root.DocList[root.CurrentDoc])
+	m := root.DocList[root.CurrentDoc]
+	root.mu.RUnlock()
+
+	root.setDocument(m)
 	root.input.mode = Normal
 }
 
