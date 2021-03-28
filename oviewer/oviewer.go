@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -32,6 +33,8 @@ type Root struct {
 	// DocList
 	DocList    []*Document
 	CurrentDoc int
+	// mu controls the mutex.
+	mu sync.Mutex
 
 	// input contains the input mode.
 	input *Input
@@ -241,13 +244,6 @@ func NewConfig() Config {
 	}
 }
 
-func (root *Root) screenInit() error {
-	if err := root.Screen.Init(); err != nil {
-		return err
-	}
-	return nil
-}
-
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
 	if len(fileNames) == 0 {
@@ -315,11 +311,13 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
+				root.mu.Lock()
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
 						doc.changCh <- struct{}{}
 					}
 				}
+				root.mu.Unlock()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -334,10 +332,10 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}
 }
 
-func (root *Root) setKeyConfig() error {
+func (root *Root) setKeyConfig() (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config.Keybind)
 	if err := root.setKeyBind(keyBind); err != nil {
-		return err
+		return nil, err
 	}
 
 	keys, ok := keyBind[actionCancel]
@@ -346,13 +344,7 @@ func (root *Root) setKeyConfig() error {
 	} else {
 		root.cancelKeys = keys
 	}
-
-	help, err := NewHelp(keyBind)
-	if err != nil {
-		return err
-	}
-	root.helpDoc = help
-	return nil
+	return keyBind, nil
 }
 
 // NewHelp generates a document for help.
@@ -379,24 +371,27 @@ func (root *Root) Run() error {
 	defer watcher.Close()
 	root.SetWatcher(watcher)
 
-	for _, doc := range root.DocList {
-		doc.general = root.Config.General
+	if err := root.Screen.Init(); err != nil {
+		return fmt.Errorf("Screen.Init(): %w", err)
 	}
+	defer root.Close()
 
-	if err := root.setKeyConfig(); err != nil {
+	keyBind, err := root.setKeyConfig()
+	if err != nil {
 		return err
 	}
+
+	help, err := NewHelp(keyBind)
+	if err != nil {
+		return err
+	}
+	root.helpDoc = help
 
 	logDoc, err := NewLogDoc()
 	if err != nil {
 		return err
 	}
 	root.logDoc = logDoc
-
-	if err := root.screenInit(); err != nil {
-		return err
-	}
-	defer root.Close()
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse()
@@ -410,8 +405,9 @@ func (root *Root) Run() error {
 		root.Screen.DisableMouse()
 	}
 
-	for _, d := range root.DocList {
-		log.Printf("open %s", d.FileName)
+	for _, doc := range root.DocList {
+		log.Printf("open %s", doc.FileName)
+		doc.general = root.Config.General
 	}
 	root.setGlobalStyle()
 	root.Screen.Clear()

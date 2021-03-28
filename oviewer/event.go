@@ -24,7 +24,6 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		if root.General.FollowAll || root.Doc.FollowMode {
 			root.follow()
 		}
-		atomic.StoreInt32(&root.Doc.changed, 0)
 
 		if !root.skipDraw {
 			root.draw()
@@ -43,8 +42,10 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.updateEndNum()
 		case *eventDocument:
 			root.CurrentDoc = ev.docNum
+			root.mu.Lock()
 			m := root.DocList[root.CurrentDoc]
 			root.setDocument(m)
+			root.mu.Unlock()
 			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
 		case *eventAddDocument:
 			root.addDocument(ev.m)
@@ -146,12 +147,15 @@ func (root *Root) followAll() {
 	}
 
 	current := root.CurrentDoc
+
+	root.mu.Lock()
 	for n, doc := range root.DocList {
 		root.onceFollowMode(doc)
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
 	}
+	root.mu.Unlock()
 
 	if root.CurrentDoc != current {
 		root.CurrentDoc = current
@@ -187,11 +191,15 @@ func (root *Root) followTimer(ctx context.Context) {
 
 		<-timer.C
 		eventFlag := false
+		root.mu.Lock()
 		for _, doc := range root.DocList {
 			if atomic.LoadInt32(&doc.changed) == 1 {
 				eventFlag = true
+				atomic.StoreInt32(&doc.changed, 0)
 			}
 		}
+		root.mu.Unlock()
+
 		if !eventFlag {
 			continue
 		}
@@ -316,9 +324,11 @@ func (root *Root) SetDocument(docNum int) {
 		return
 	}
 	ev := &eventDocument{}
+	root.mu.Lock()
 	if docNum >= 0 && docNum < len(root.DocList) {
 		ev.docNum = docNum
 	}
+	root.mu.Unlock()
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)

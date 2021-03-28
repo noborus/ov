@@ -105,6 +105,12 @@ func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
 func (m *Document) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	go func() {
+		select {
+		case <-m.closeCh:
+			return
+		default:
+		}
+
 		err := m.readAll(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
@@ -185,6 +191,11 @@ func (m *Document) reOpenRead() error {
 	rr := compressedFormatReader(m.CFormat, r)
 	reader := bufio.NewReader(rr)
 	for {
+		select {
+		case <-m.closeCh:
+			return nil
+		default:
+		}
 		err := m.readAll(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
