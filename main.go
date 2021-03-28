@@ -34,8 +34,12 @@ var (
 	execC bool
 )
 
-// ErrCompletion indicates that the completion argument was invalid.
-var ErrCompletion = errors.New("requires one of the arguments bash/zsh/fish/powershell")
+var (
+	// ErrCompletion indicates that the completion argument was invalid.
+	ErrCompletion = errors.New("requires one of the arguments bash/zsh/fish/powershell")
+	// ErrorNoArgument indicating that there are no arguments to execute.
+	ErrNoArgument = errors.New("no arguments to execute")
+)
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -115,12 +119,11 @@ func Completion(cmd *cobra.Command, args []string) error {
 
 // ExecCommand displays the output of command execution (stdout/stderr).
 func ExecCommand(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return ErrNoArgument
+	}
 	if err := viper.Unmarshal(&config); err != nil {
 		return err
-	}
-
-	if len(args) <= 0 {
-		return fmt.Errorf("missing argument")
 	}
 
 	command := exec.Command(args[0], args[1:]...)

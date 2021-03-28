@@ -78,8 +78,8 @@ func (root *Root) toLogDoc() {
 }
 
 func (root *Root) toNormal() {
-	root.mu.Lock()
-	defer root.mu.Unlock()
+	root.mu.RLock()
+	defer root.mu.RUnlock()
 
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
@@ -150,50 +150,60 @@ func (root *Root) markPrev() {
 }
 
 func (root *Root) nextDoc() {
-	root.mu.Lock()
-	defer root.mu.Unlock()
+	root.mu.RLock()
+	defer root.mu.RUnlock()
 
+	if root.CurrentDoc+1 >= len(root.DocList) {
+		root.setMessage("No next doc")
+		return
+	}
 	root.CurrentDoc++
-	root.CurrentDoc = min(root.CurrentDoc, len(root.DocList)-1)
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
 }
 
 func (root *Root) previousDoc() {
-	root.mu.Lock()
-	defer root.mu.Unlock()
+	root.mu.RLock()
+	defer root.mu.RUnlock()
 
+	if root.CurrentDoc <= 0 {
+		root.setMessage("No previous doc")
+		return
+	}
 	root.CurrentDoc--
-	root.CurrentDoc = max(root.CurrentDoc, 0)
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.input.mode = Normal
 }
 
 func (root *Root) addDocument(m *Document) {
-	root.mu.Lock()
-	defer root.mu.Unlock()
-
 	log.Printf("add: %s", m.FileName)
 	m.general = root.Config.General
+
+	root.mu.Lock()
 	root.DocList = append(root.DocList, m)
 	root.CurrentDoc = len(root.DocList) - 1
+	root.mu.Unlock()
+
 	root.setDocument(m)
 }
 
 func (root *Root) closeDocument() {
-	root.mu.Lock()
-	defer root.mu.Unlock()
-
-	if len(root.DocList) == 1 {
+	if root.DocumentLen() == 1 {
 		return
 	}
+
 	m := root.Doc
-	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	log.Printf("close : %s", m.FileName)
+
+	root.mu.Lock()
+	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
 	}
-	root.setDocument(root.DocList[root.CurrentDoc])
+	doc := root.DocList[root.CurrentDoc]
+	root.mu.Unlock()
+
+	root.setDocument(doc)
 	m.Close()
 }
 

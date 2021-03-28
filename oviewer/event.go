@@ -42,10 +42,10 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.updateEndNum()
 		case *eventDocument:
 			root.CurrentDoc = ev.docNum
-			root.mu.Lock()
+			root.mu.RLock()
 			m := root.DocList[root.CurrentDoc]
+			root.mu.RUnlock()
 			root.setDocument(m)
-			root.mu.Unlock()
 			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
 		case *eventAddDocument:
 			root.addDocument(ev.m)
@@ -148,14 +148,14 @@ func (root *Root) followAll() {
 
 	current := root.CurrentDoc
 
-	root.mu.Lock()
+	root.mu.RLock()
 	for n, doc := range root.DocList {
 		root.onceFollowMode(doc)
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
 	}
-	root.mu.Unlock()
+	root.mu.RUnlock()
 
 	if root.CurrentDoc != current {
 		root.CurrentDoc = current
@@ -324,11 +324,9 @@ func (root *Root) SetDocument(docNum int) {
 		return
 	}
 	ev := &eventDocument{}
-	root.mu.Lock()
-	if docNum >= 0 && docNum < len(root.DocList) {
+	if docNum >= 0 && docNum < root.DocumentLen() {
 		ev.docNum = docNum
 	}
-	root.mu.Unlock()
 	ev.SetEventNow()
 	go func() {
 		root.Screen.PostEventWait(ev)

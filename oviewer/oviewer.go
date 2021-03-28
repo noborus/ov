@@ -28,13 +28,13 @@ type Root struct {
 	// help
 	helpDoc *Document
 	// log
-	logDoc *Document
+	logDoc *LogDocument
 
 	// DocList
 	DocList    []*Document
 	CurrentDoc int
-	// mu controls the mutex.
-	mu sync.Mutex
+	// mu controls the RWMutex.
+	mu sync.RWMutex
 
 	// input contains the input mode.
 	input *Input
@@ -311,13 +311,13 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
-				root.mu.Lock()
+				root.mu.RLock()
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
 						doc.changCh <- struct{}{}
 					}
 				}
-				root.mu.Unlock()
+				root.mu.RUnlock()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -641,6 +641,12 @@ func (root *Root) followModeOpen(m *Document) {
 	if err != nil {
 		log.Printf("%s cannot be reopened %v", m.FileName, err)
 	}
+}
+
+func (root *Root) DocumentLen() int {
+	root.mu.RLock()
+	defer root.mu.RUnlock()
+	return len(root.DocList)
 }
 
 func max(a, b int) int {
