@@ -1,9 +1,13 @@
 package oviewer
 
-import "log"
+import (
+	"log"
+)
+
+type LogDocument = Document
 
 // NewLogDoc generates a document for log.
-func NewLogDoc() (*Document, error) {
+func NewLogDoc() (*LogDocument, error) {
 	logDoc, err := NewDocument()
 	if err != nil {
 		return nil, err
@@ -16,13 +20,8 @@ func NewLogDoc() (*Document, error) {
 
 // Write matches the interface of io.Writer.
 // Therefore, the log.Print output is displayed by logDoc.
-func (logDoc *Document) Write(p []byte) (int, error) {
+func (logDoc *LogDocument) Write(p []byte) (int, error) {
 	str := string(p)
-
-	logDoc.mu.Lock()
-	logDoc.lines = append(logDoc.lines, str)
-	logDoc.endNum = len(logDoc.lines)
-	logDoc.mu.Unlock()
-
+	logDoc.append(str)
 	return len(str), nil
 }

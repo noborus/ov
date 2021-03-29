@@ -13,19 +13,17 @@ import (
 )
 
 // main is manages and executes events in the main routine.
-func (root *Root) main(quitChan chan<- struct{}) {
-	go root.followTimer()
-	ctx := context.Background()
+func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
+	go root.followTimer(ctx)
 
 	for {
 		if root.General.FollowAll {
 			root.followAll()
 		}
 
-		if root.Doc.FollowMode {
+		if root.General.FollowAll || root.Doc.FollowMode {
 			root.follow()
 		}
-		atomic.StoreInt32(&root.Doc.changed, 0)
 
 		if !root.skipDraw {
 			root.draw()
@@ -44,7 +42,9 @@ func (root *Root) main(quitChan chan<- struct{}) {
 			root.updateEndNum()
 		case *eventDocument:
 			root.CurrentDoc = ev.docNum
+			root.mu.RLock()
 			m := root.DocList[root.CurrentDoc]
+			root.mu.RUnlock()
 			root.setDocument(m)
 			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
 		case *eventAddDocument:
@@ -147,22 +147,25 @@ func (root *Root) followAll() {
 	}
 
 	current := root.CurrentDoc
+
+	root.mu.RLock()
 	for n, doc := range root.DocList {
-		go root.followModeOpen(doc)
-		if (atomic.LoadInt32(&doc.changed) == 1) && (doc.latestNum != doc.BufEndNum()) {
+		root.onceFollowMode(doc)
+		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
-		atomic.StoreInt32(&doc.changed, 0)
 	}
+	root.mu.RUnlock()
 
 	if root.CurrentDoc != current {
 		root.CurrentDoc = current
+		log.Printf("switch document: %d", root.CurrentDoc)
 		root.SetDocument(root.CurrentDoc)
 	}
 }
 
 func (root *Root) follow() {
-	go root.followModeOpen(root.Doc)
+	root.onceFollowMode(root.Doc)
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum != num {
 		root.TailSync()
@@ -170,22 +173,37 @@ func (root *Root) follow() {
 	}
 }
 
+func (root *Root) onceFollowMode(doc *Document) {
+	doc.reOpened.Do(func() {
+		go root.followModeOpen(doc)
+	})
+}
+
 // followTimer fires events.
-func (root *Root) followTimer() {
+func (root *Root) followTimer(ctx context.Context) {
 	timer := time.NewTicker(time.Millisecond * 100)
 	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		<-timer.C
 		eventFlag := false
+		root.mu.Lock()
 		for _, doc := range root.DocList {
 			if atomic.LoadInt32(&doc.changed) == 1 {
 				eventFlag = true
+				atomic.StoreInt32(&doc.changed, 0)
 			}
 		}
+		root.mu.Unlock()
+
 		if !eventFlag {
 			continue
 		}
 
-		root.debugMessage(fmt.Sprintf("eventUpdateEndNum %s", root.Doc.FileName))
 		root.UpdateEndNum()
 	}
 }
@@ -306,7 +324,7 @@ func (root *Root) SetDocument(docNum int) {
 		return
 	}
 	ev := &eventDocument{}
-	if docNum >= 0 && docNum < len(root.DocList) {
+	if docNum >= 0 && docNum < root.DocumentLen() {
 		ev.docNum = docNum
 	}
 	ev.SetEventNow()

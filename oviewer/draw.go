@@ -284,14 +284,18 @@ func (root *Root) statusDraw() {
 		screen.SetContent(x, root.statusPos, 0, nil, style)
 	}
 
-	followMessage := ""
+	number := ""
+	if root.input.mode == Normal && root.DocumentLen() > 1 {
+		number = fmt.Sprintf("[%d]", root.CurrentDoc)
+	}
+	follow := ""
 	if root.Doc.FollowMode {
-		followMessage = "(Follow Mode)"
+		follow = "(Follow Mode)"
 	}
 	if root.General.FollowAll {
-		followMessage = "(Follow All)"
+		follow = "(Follow All)"
 	}
-	leftStatus := fmt.Sprintf("%s%s:%s", followMessage, root.Doc.FileName, root.message)
+	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	input := root.input
 	caseSensitive := ""
