@@ -285,7 +285,7 @@ func (root *Root) statusDraw() {
 	}
 
 	number := ""
-	if root.DocumentLen() > 1 {
+	if root.input.mode == Normal && root.DocumentLen() > 1 {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
 	follow := ""
