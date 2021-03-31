@@ -99,33 +99,6 @@ func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
 	return r
 }
 
-// ReadAll reads all from the reader to the buffer.
-// It returns if beforeSize is accumulated in buffer
-// before the end of read.
-func (m *Document) ReadAll(r io.Reader) error {
-	reader := bufio.NewReader(r)
-	go func() {
-		select {
-		case <-m.closeCh:
-			return
-		default:
-		}
-
-		err := m.readAll(reader)
-		if err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				close(m.eofCh)
-				atomic.StoreInt32(&m.eof, 1)
-				return
-			}
-			log.Printf("error: %v\n", err)
-			atomic.StoreInt32(&m.eof, 0)
-			return
-		}
-	}()
-	return nil
-}
-
 // ReadFile reads file.
 func (m *Document) ReadFile(fileName string) error {
 	if fileName == "" {
@@ -157,6 +130,37 @@ func (m *Document) ReadFile(fileName string) error {
 	return nil
 }
 
+// followModeOpen opens the file in follow mode.
+// Seek to the position where the file was closed, and then read.
+func (m *Document) followModeOpen() {
+	if m.file == nil {
+		return
+	}
+	<-m.reOpenCh
+	<-m.changCh
+
+	log.Printf("reopen %s", m.FileName)
+	r, err := os.Open(m.FileName)
+	if err != nil {
+		log.Printf("reopen %s", err)
+		return
+	}
+	m.mu.Lock()
+	m.file = r
+	m.mu.Unlock()
+	atomic.StoreInt32(&m.eof, 0)
+
+	if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
+		log.Printf("seek %s", err)
+		return
+	}
+
+	rr := compressedFormatReader(m.CFormat, r)
+	if err := m.reOpenReadAll(rr); err != nil {
+		log.Printf("%s cannot be reopened %v", m.FileName, err)
+	}
+}
+
 // Close closes the File.
 // Record the last read position.
 func (m *Document) close() error {
@@ -171,48 +175,56 @@ func (m *Document) close() error {
 	return nil
 }
 
-// reOpenRead reopens and reads the file.
-// Seek to the position where the file was closed, and then read.
-func (m *Document) reOpenRead() error {
-	r, err := os.Open(m.FileName)
-	if err != nil {
-		return err
-	}
-	m.mu.Lock()
-	m.file = r
-	m.mu.Unlock()
-	atomic.StoreInt32(&m.eof, 0)
-
-	_, err = r.Seek(m.offset, io.SeekStart)
-	if err != nil {
-		return err
-	}
-
-	rr := compressedFormatReader(m.CFormat, r)
-	reader := bufio.NewReader(rr)
-	for {
-		select {
-		case <-m.closeCh:
-			return nil
-		default:
+// ReadAll reads all from the reader to the buffer.
+// It returns if beforeSize is accumulated in buffer
+// before the end of read.
+func (m *Document) ReadAll(r io.Reader) error {
+	reader := bufio.NewReader(r)
+	go func() {
+		if m.checkClose() {
+			return
 		}
-		err := m.readAll(reader)
-		if err != nil {
+
+		if err := m.readAll(reader); err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+				close(m.eofCh)
+				atomic.StoreInt32(&m.eof, 1)
+				return
+			}
+			log.Printf("error: %v\n", err)
+			atomic.StoreInt32(&m.eof, 0)
+			return
+		}
+	}()
+	return nil
+}
+
+// reOpenReadAll will continue to read the file when it reaches EOF.
+func (m *Document) reOpenReadAll(r io.Reader) error {
+	reader := bufio.NewReader(r)
+	for {
+		if m.checkClose() {
+			return nil
+		}
+
+		if err := m.readAll(reader); err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
 				<-m.changCh
 				continue
 			}
-			log.Println(err)
-			break
+			return err
 		}
 	}
-	return nil
 }
 
 func (m *Document) readAll(reader *bufio.Reader) error {
 	var line bytes.Buffer
 
 	for {
+		if m.checkClose() {
+			return nil
+		}
+
 		buf, isPrefix, err := reader.ReadLine()
 		if err != nil {
 			return err

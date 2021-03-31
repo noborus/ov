@@ -197,7 +197,7 @@ func (root *Root) closeDocument() {
 	}
 
 	m := root.Doc
-	log.Printf("close : %s", m.FileName)
+	log.Printf("close [%d]%s", root.CurrentDoc, m.FileName)
 
 	root.mu.Lock()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)

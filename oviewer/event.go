@@ -175,7 +175,7 @@ func (root *Root) follow() {
 
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.reOpened.Do(func() {
-		go root.followModeOpen(doc)
+		go doc.followModeOpen()
 	})
 }
 
@@ -191,14 +191,14 @@ func (root *Root) followTimer(ctx context.Context) {
 
 		<-timer.C
 		eventFlag := false
-		root.mu.Lock()
+		root.mu.RLock()
 		for _, doc := range root.DocList {
 			if atomic.LoadInt32(&doc.changed) == 1 {
 				eventFlag = true
 				atomic.StoreInt32(&doc.changed, 0)
 			}
 		}
-		root.mu.Unlock()
+		root.mu.RUnlock()
 
 		if !eventFlag {
 			continue

@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"log"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -151,10 +152,21 @@ func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
 }
 
 func (m *Document) Close() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	close(m.closeCh)
 	close(m.changCh)
-	m.mu.Lock()
 	m.file.Close()
-	m.mu.Unlock()
 	m.cache.Close()
+}
+
+func (m *Document) checkClose() bool {
+	select {
+	case <-m.closeCh:
+		log.Println("document close")
+		return true
+	default:
+	}
+	return false
 }

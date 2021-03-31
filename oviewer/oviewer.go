@@ -328,7 +328,10 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		_ = watcher.Add(doc.FileName)
+		err := watcher.Add(doc.FileName)
+		if err != nil {
+			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
+		}
 	}
 }
 
@@ -364,17 +367,17 @@ func NewHelp(k KeyBind) (*Document, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	if err := root.Screen.Init(); err != nil {
+		return fmt.Errorf("Screen.Init(): %w", err)
+	}
+	defer root.Close()
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
-
-	if err := root.Screen.Init(); err != nil {
-		return fmt.Errorf("Screen.Init(): %w", err)
-	}
-	defer root.Close()
 
 	keyBind, err := root.setKeyConfig()
 	if err != nil {
@@ -405,8 +408,8 @@ func (root *Root) Run() error {
 		root.Screen.DisableMouse()
 	}
 
-	for _, doc := range root.DocList {
-		log.Printf("open %s", doc.FileName)
+	for n, doc := range root.DocList {
+		log.Printf("open [%d]%s", n, doc.FileName)
 		doc.general = root.Config.General
 	}
 	root.setGlobalStyle()
@@ -442,9 +445,11 @@ func (root *Root) Run() error {
 
 func (root *Root) Close() {
 	root.Screen.Fini()
+	root.mu.Lock()
 	for _, doc := range root.DocList {
 		doc.Close()
 	}
+	root.mu.Unlock()
 	root.logDoc.cache.Close()
 	root.helpDoc.cache.Close()
 }
@@ -626,21 +631,6 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 		listX = append(listX, n)
 	}
 	return listX, nil
-}
-
-func (root *Root) followModeOpen(m *Document) {
-	if m.file == nil {
-		return
-	}
-	root.debugMessage(fmt.Sprintf("reopenCh wait %s", m.FileName))
-	<-m.reOpenCh
-	root.debugMessage(fmt.Sprintf("changeCh wait %s", m.FileName))
-	<-m.changCh
-	log.Printf("reopen %s", m.FileName)
-	err := m.reOpenRead()
-	if err != nil {
-		log.Printf("%s cannot be reopened %v", m.FileName, err)
-	}
 }
 
 func (root *Root) DocumentLen() int {
