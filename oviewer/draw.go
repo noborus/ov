@@ -114,18 +114,18 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			lastLY = lY
 		}
 
+		// column highlight
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+			root.columnHighlight(lc, byteMap[start], byteMap[end])
+		}
+
 		// search highlight
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
 			for _, r := range poss {
 				root.searchHighlight(lc, byteMap[r[0]], byteMap[r[1]])
 			}
-		}
-
-		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
-			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
-			root.columnHighlight(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
