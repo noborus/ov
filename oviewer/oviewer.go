@@ -129,6 +129,10 @@ type Config struct {
 	StyleOverLine ovStyle
 	// StyleLineNumber is a style that applies line number.
 	StyleLineNumber ovStyle
+	// StyleSearchHighlight is the style that applies to the search highlight.
+	StyleSearchHighlight ovStyle
+	// StyleColumnHighlight is the style that applies to the column highlight.
+	StyleColumnHighlight ovStyle
 
 	// Old setting method.
 	// Alternating background color.
@@ -238,6 +242,12 @@ func NewConfig() Config {
 		StyleLineNumber: ovStyle{
 			Bold: true,
 		},
+		StyleSearchHighlight: ovStyle{
+			Reverse: true,
+		},
+		StyleColumnHighlight: ovStyle{
+			Reverse: true,
+		},
 		General: general{
 			TabWidth: 8,
 		},
@@ -303,6 +313,7 @@ func (root *Root) SetConfig(config Config) {
 	root.Config = config
 }
 
+// SetWatcher sets file monitoring.
 func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	go func() {
 		for {

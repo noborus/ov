@@ -24,6 +24,10 @@ StyleOverLine:
   Underline: true
 StyleLineNumber:
   Bold: true
+StyleSearchHighlight:
+  Reverse: true
+StyleColumnHighlight:
+  Reverse: true
 
 # Keybind
 # Special key
