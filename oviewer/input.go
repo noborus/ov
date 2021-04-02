@@ -18,6 +18,7 @@ type Input struct {
 	reg     *regexp.Regexp
 	cursorX int
 
+	BulkCandidate      *candidate
 	SearchCandidate    *candidate
 	GoCandidate        *candidate
 	DelimiterCandidate *candidate
@@ -34,6 +35,8 @@ const (
 	Help
 	// LogDoc is Error screen mode.
 	LogDoc
+	// BulkConfig is a bulk configuration input mode.
+	BulkConfig
 	// Search is a search input mode.
 	Search
 	// Backsearch is a backward search input mode.
@@ -192,6 +195,11 @@ type candidate struct {
 // NewInput returns all the various inputs.
 func NewInput() *Input {
 	i := Input{}
+	i.BulkCandidate = &candidate{
+		list: []string{
+			"general",
+		},
+	}
 	i.GoCandidate = &candidate{
 		list: []string{},
 	}
@@ -216,6 +224,14 @@ func NewInput() *Input {
 	}
 	i.EventInput = &normalInput{}
 	return &i
+}
+
+func (root *Root) setBulkConfigMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = BulkConfig
+	input.EventInput = newbulkConfigInput(input.BulkCandidate)
 }
 
 func (root *Root) setSearchMode() {
@@ -456,6 +472,39 @@ func (h *headerInput) Down(str string) string {
 		return "0"
 	}
 	return strconv.Itoa(n - 1)
+}
+
+// bulkConfigInput represents the mode input mode.
+type bulkConfigInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+func newbulkConfigInput(clist *candidate) *bulkConfigInput {
+	return &bulkConfigInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (d *bulkConfigInput) Prompt() string {
+	return "Mode:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (d *bulkConfigInput) Confirm(str string) tcell.Event {
+	d.value = str
+	d.SetEventNow()
+	return d
+}
+
+// Up returns strings when the up key is pressed during input.
+func (d *bulkConfigInput) Up(str string) string {
+	return d.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (d *bulkConfigInput) Down(str string) string {
+	return d.clist.down()
 }
 
 // delimiterInput represents the delimiter input mode.

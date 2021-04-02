@@ -3,7 +3,6 @@
 # Thanks to hupfdule (Marco Herrn) for the less keybinding information.
 
 General:
-  # TabWidth is the tab width number.
   TabWidth: 4
   Header: 0
   AlternateRows: false
@@ -142,3 +141,19 @@ KeyBind:
         - "["
     toggle_mouse:
         - "ctrl+alt+r"
+
+Mode:
+  psql:
+    Header: 2
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    WrapMode: true
+    ColumnDelimiter: "|"
+  MySQL:
+    Header: 3
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    WrapMode: true
+    ColumnDelimiter: "|"

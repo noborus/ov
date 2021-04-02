@@ -59,7 +59,7 @@ func (root *Root) drawHeader() int {
 		root.headerStyle(lc)
 
 		// column highlight
-		if m.ColumnMode && root.input.mode == Normal {
+		if m.ColumnMode {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
@@ -115,7 +115,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
+		if root.Doc.ColumnMode {
 			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
 		}

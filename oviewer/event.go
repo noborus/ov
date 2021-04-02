@@ -41,12 +41,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		case *eventDocument:
-			root.CurrentDoc = ev.docNum
-			root.mu.RLock()
-			m := root.DocList[root.CurrentDoc]
-			root.mu.RUnlock()
-			root.setDocument(m)
-			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
+			root.switchDocument(ev.docNum)
 		case *eventAddDocument:
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
@@ -59,6 +54,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.search(ctx, root.Doc.topLN+root.Doc.Header+1, root.searchLine)
 		case *eventBackSearch:
 			root.search(ctx, root.Doc.topLN+root.Doc.Header-1, root.backSearchLine)
+		case *bulkConfigInput:
+			root.setBulkConfig(ev.value)
 		case *searchInput:
 			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:

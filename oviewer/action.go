@@ -179,6 +179,15 @@ func (root *Root) previousDoc() {
 	root.input.mode = Normal
 }
 
+func (root *Root) switchDocument(docNum int) {
+	root.CurrentDoc = docNum
+	root.mu.RLock()
+	m := root.DocList[root.CurrentDoc]
+	root.mu.RUnlock()
+	root.setDocument(m)
+	root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
+}
+
 func (root *Root) addDocument(m *Document) {
 	log.Printf("add: %s", m.FileName)
 	m.general = root.Config.General
@@ -220,6 +229,23 @@ func (root *Root) toggleMouse() {
 		root.Screen.EnableMouse()
 		root.setMessage("Enable Mouse")
 	}
+}
+
+func (root *Root) setBulkConfig(input string) {
+	c, ok := root.Config.Mode[input]
+	if !ok {
+		if input != "general" {
+			root.setMessage(fmt.Sprintf("Not Mode %s", input))
+			return
+		}
+		c = root.General
+	}
+
+	root.Doc.general = c
+	root.setWrapHeaderLen()
+	root.Doc.ClearCache()
+	root.ViewSync()
+	root.setMessage(fmt.Sprintf("Set Mode %s", input))
 }
 
 // setDelimiter sets the delimiter string.

@@ -144,7 +144,10 @@ type Config struct {
 	// OverLine color.
 	ColorOverLine string
 
+	// General represents the general behavior.
 	General general
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
 
 	// Mouse support disable.
 	DisableMouse bool
@@ -425,6 +428,13 @@ func (root *Root) Run() error {
 	}
 	root.setGlobalStyle()
 	root.Screen.Clear()
+
+	list := make([]string, 0, len(root.Config.Mode)+1)
+	list = append(list, "general")
+	for name := range root.Config.Mode {
+		list = append(list, name)
+	}
+	root.input.BulkCandidate.list = list
 
 	root.ViewSync()
 	// Exit if fits on screen

@@ -34,6 +34,7 @@ const (
 	actionMark           = "mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
+	actionBulkConfig     = "set_bulk_config"
 	actionAlternate      = "alter_rows_mode"
 	actionLineNumMode    = "line_number_mode"
 	actionSearch         = "search"
@@ -76,6 +77,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionMoveHfRight:    root.moveHfRight,
 		actionMoveMark:       root.markNext,
 		actionMovePrevMark:   root.markPrev,
+		actionBulkConfig:     root.setBulkConfigMode,
 		actionWrap:           root.toggleWrapMode,
 		actionColumnMode:     root.toggleColumnMode,
 		actionAlternate:      root.toggleAlternateRows,
@@ -124,6 +126,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionMoveHfRight:    {"ctrl+right"},
 		actionMoveMark:       {">"},
 		actionMovePrevMark:   {"<"},
+		actionBulkConfig:     {"p", "P"},
 		actionWrap:           {"w", "W"},
 		actionColumnMode:     {"c"},
 		actionAlternate:      {"C"},
