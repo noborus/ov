@@ -279,10 +279,18 @@ func (root *Root) columnModeX() int {
 
 		start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		if start < 0 || end < 0 {
-			m.columnNum = 0
-			start, _ = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+			m.columnNum--
+			start, end = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		}
-		return byteMap[start]
+		sx := byteMap[start]
+		ex := byteMap[end] + 10
+		if root.vWidth > ex {
+			return 0
+		}
+		if ex-root.vWidth > 0 {
+			return ex - root.vWidth
+		}
+		return sx
 	}
 	return 0
 }
