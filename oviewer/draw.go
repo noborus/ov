@@ -62,7 +62,7 @@ func (root *Root) drawHeader() int {
 		if m.ColumnMode && root.input.mode == Normal {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
-			reverseContents(lc, byteMap[start], byteMap[end])
+			root.columnHighlight(lc, byteMap[start], byteMap[end])
 		}
 
 		root.lnumber[hy] = lineNumber{
@@ -114,18 +114,18 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			lastLY = lY
 		}
 
+		// column highlight
+		if root.input.mode == Normal && root.Doc.ColumnMode {
+			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+			root.columnHighlight(lc, byteMap[start], byteMap[end])
+		}
+
 		// search highlight
 		if root.input.reg != nil {
 			poss := searchPosition(lineStr, root.input.reg)
 			for _, r := range poss {
-				reverseContents(lc, byteMap[r[0]], byteMap[r[1]])
+				root.searchHighlight(lc, byteMap[r[0]], byteMap[r[1]])
 			}
-		}
-
-		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
-			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
-			reverseContents(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
@@ -178,17 +178,16 @@ func (root *Root) getContentsStr(lN int, lc lineContents) (string, map[int]int) 
 }
 
 func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
-	lc, err := root.Doc.lineToContents(lN, tabWidth)
+	org, err := root.Doc.lineToContents(lN, tabWidth)
 	if err == nil {
-		for n := range lc {
-			lc[n].style = lc[n].style.Reverse(false)
-		}
+		lc := make(lineContents, len(org))
+		copy(lc, org)
 		return lc
 	}
 
 	// EOF
 	width := root.vWidth - root.startX
-	lc = make(lineContents, width)
+	lc := make(lineContents, width)
 	eof := content{
 		mainc: '~',
 		combc: nil,
@@ -207,13 +206,6 @@ func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 func (root *Root) drawEOL(eol int, y int) {
 	for x := eol; x < root.vWidth; x++ {
 		root.Screen.SetContent(x, y, DefaultContent.mainc, DefaultContent.combc, DefaultContent.style)
-	}
-}
-
-// reverses the specified range.
-func reverseContents(lc lineContents, start int, end int) {
-	for x := start; x < end; x++ {
-		lc[x].style = lc[x].style.Reverse(true)
 	}
 }
 
@@ -270,8 +262,23 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 
 // headerStyle applies the style of the header.
 func (root *Root) headerStyle(lc lineContents) {
-	for x := 0; x < len(lc); x++ {
-		lc[x].style = applyStyle(lc[x].style, root.StyleHeader)
+	RangeStyle(lc, 0, len(lc), root.StyleHeader)
+}
+
+// searchHighlight applies the style of the search highlight.
+func (root *Root) searchHighlight(lc lineContents, start int, end int) {
+	RangeStyle(lc, start, end, root.StyleSearchHighlight)
+}
+
+// columnHighlight applies the style of the column highlight.
+func (root *Root) columnHighlight(lc lineContents, start int, end int) {
+	RangeStyle(lc, start, end, root.StyleColumnHighlight)
+}
+
+// RangeStyle applies the style to the specified range.
+func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
+	for x := start; x < end; x++ {
+		lc[x].style = applyStyle(lc[x].style, style)
 	}
 }
 

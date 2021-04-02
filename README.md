@@ -285,8 +285,10 @@ You can customize the following items.
 * StyleOverStrike
 * StyleOverLine
 * StyleLineNumber
+* StyleSearchHighlight
+* StyleColumnHighlight
 
-Specifies the color name for the foreground and background colors.
+Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
 Specify bool values for Bold, Blink, Shaded, Italic, and Underline.
 
 [Example]
