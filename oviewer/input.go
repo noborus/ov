@@ -31,10 +31,6 @@ type InputMode int
 const (
 	// Normal is normal mode.
 	Normal InputMode = iota
-	// Help is Help screen mode.
-	Help
-	// LogDoc is Error screen mode.
-	LogDoc
 	// BulkConfig is a bulk configuration input mode.
 	BulkConfig
 	// Search is a search input mode.

@@ -51,7 +51,7 @@ func (root *Root) setDocument(m *Document) {
 
 // Help is to switch between Help screen and normal screen.
 func (root *Root) Help() {
-	if root.input.mode == Help {
+	if root.screenMode == Help {
 		root.toNormal()
 		return
 	}
@@ -60,12 +60,12 @@ func (root *Root) Help() {
 
 func (root *Root) toHelp() {
 	root.setDocument(root.helpDoc)
-	root.input.mode = Help
+	root.screenMode = Help
 }
 
 // LogDisplay is to switch between Log screen and normal screen.
 func (root *Root) logDisplay() {
-	if root.input.mode == LogDoc {
+	if root.screenMode == LogDoc {
 		root.toNormal()
 		return
 	}
@@ -74,7 +74,7 @@ func (root *Root) logDisplay() {
 
 func (root *Root) toLogDoc() {
 	root.setDocument(root.logDoc)
-	root.input.mode = LogDoc
+	root.screenMode = LogDoc
 }
 
 func (root *Root) toNormal() {
@@ -82,7 +82,7 @@ func (root *Root) toNormal() {
 	defer root.mu.RUnlock()
 
 	root.setDocument(root.DocList[root.CurrentDoc])
-	root.input.mode = Normal
+	root.screenMode = Docs
 }
 
 // setWrapHeaderLen sets the value in wrapHeaderLen.

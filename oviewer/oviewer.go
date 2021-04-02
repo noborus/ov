@@ -36,6 +36,8 @@ type Root struct {
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
 	// keyConfig contains the binding settings for the key.
@@ -183,6 +185,19 @@ var (
 	OverLineStyle tcell.Style
 )
 
+// ScreenMode represents the state of the screen.
+type ScreenMode int
+
+const (
+	// Normal is normal mode.
+	Docs ScreenMode = iota
+	// Help is Help screen mode.
+	Help
+	// LogDoc is Error screen mode.
+	LogDoc
+	// BulkConfig is a bulk configuration input mode.
+)
+
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
@@ -217,6 +232,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
+	root.screenMode = Docs
 
 	screen, err := tcellNewScreen()
 	if err != nil {

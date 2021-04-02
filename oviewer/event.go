@@ -32,7 +32,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
-			if root.input.mode == Help || root.input.mode == LogDoc {
+			if root.screenMode != Docs {
 				root.toNormal()
 				continue
 			}
@@ -75,7 +75,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *tcell.EventKey:
 			root.setMessage("")
 			switch root.input.mode {
-			case Normal, Help, LogDoc:
+			case Normal:
 				root.keyCapture(ev)
 			default:
 				root.inputEvent(ev)

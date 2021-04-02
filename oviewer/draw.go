@@ -311,7 +311,7 @@ func (root *Root) statusDraw() {
 	}
 
 	switch input.mode {
-	case Normal, Help, LogDoc:
+	case Normal:
 		color := tcell.ColorWhite
 		if root.CurrentDoc != 0 {
 			color = tcell.Color((root.CurrentDoc + 8) % 16)

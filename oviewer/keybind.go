@@ -238,6 +238,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
 
 	fmt.Fprintf(&b, "\n\tChange display\n\n")
+	k.writeKeyBind(&b, actionBulkConfig, "bundle and change settings")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionAlternate, "color to alternate rows toggle")
