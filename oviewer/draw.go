@@ -56,7 +56,7 @@ func (root *Root) drawHeader() int {
 		}
 
 		lc := root.getLineContents(lY, m.TabWidth)
-		root.headerStyle(lc)
+		root.lineStyle(lc, root.StyleHeader)
 
 		// column highlight
 		if m.ColumnMode {
@@ -106,6 +106,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
+			root.lineStyle(lc, root.StyleBody)
 			root.lnumber[y] = lineNumber{
 				line: -1,
 				wrap: 0,
@@ -260,9 +261,9 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 	return lX, lY
 }
 
-// headerStyle applies the style of the header.
-func (root *Root) headerStyle(lc lineContents) {
-	RangeStyle(lc, 0, len(lc), root.StyleHeader)
+// lineStyle applies the style for one line.
+func (root *Root) lineStyle(lc lineContents, style ovStyle) {
+	RangeStyle(lc, 0, len(lc), style)
 }
 
 // searchHighlight applies the style of the search highlight.

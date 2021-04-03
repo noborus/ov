@@ -17,10 +17,6 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	go root.followTimer(ctx)
 
 	for {
-		if root.General.FollowAll {
-			root.followAll()
-		}
-
 		if root.General.FollowAll || root.Doc.FollowMode {
 			root.follow()
 		}
@@ -29,6 +25,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.draw()
 		}
 		root.skipDraw = false
+
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -87,6 +84,9 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	}
 }
 
+// checkScreen is true if screen is ready.
+// checkScreen is used in case it is called directly from the outside.
+// True if called from the event loop.
 func (root *Root) checkScreen() bool {
 	if root == nil {
 		return false
@@ -138,8 +138,21 @@ func (root *Root) runOnTime(ev tcell.Event) {
 	}()
 }
 
+func (root *Root) follow() {
+	if root.General.FollowAll {
+		root.followAll()
+	}
+
+	root.onceFollowMode(root.Doc)
+	num := root.Doc.BufEndNum()
+	if root.Doc.latestNum != num {
+		root.TailSync()
+		root.Doc.latestNum = num
+	}
+}
+
 func (root *Root) followAll() {
-	if root.input.mode != Normal {
+	if root.screenMode != Docs {
 		return
 	}
 
@@ -161,15 +174,6 @@ func (root *Root) followAll() {
 	}
 }
 
-func (root *Root) follow() {
-	root.onceFollowMode(root.Doc)
-	num := root.Doc.BufEndNum()
-	if root.Doc.latestNum != num {
-		root.TailSync()
-		root.Doc.latestNum = num
-	}
-}
-
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.reOpened.Do(func() {
 		go doc.followModeOpen()
@@ -181,31 +185,31 @@ func (root *Root) followTimer(ctx context.Context) {
 	timer := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
+		case <-timer.C:
+			root.eventUpdate()
 		case <-ctx.Done():
 			return
-		default:
 		}
 
-		<-timer.C
-		eventFlag := false
-		root.mu.RLock()
-		for _, doc := range root.DocList {
-			if atomic.LoadInt32(&doc.changed) == 1 {
-				eventFlag = true
-				atomic.StoreInt32(&doc.changed, 0)
-			}
-		}
-		root.mu.RUnlock()
-
-		if !eventFlag {
-			continue
-		}
-
-		root.UpdateEndNum()
 	}
 }
 
-func (root *Root) UpdateEndNum() {
+func (root *Root) eventUpdate() {
+	eventFlag := false
+
+	root.mu.RLock()
+	for _, doc := range root.DocList {
+		if atomic.LoadInt32(&doc.changed) == 1 {
+			eventFlag = true
+			atomic.StoreInt32(&doc.changed, 0)
+		}
+	}
+	root.mu.RUnlock()
+
+	if !eventFlag {
+		return
+	}
+
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
 	root.runOnTime(ev)

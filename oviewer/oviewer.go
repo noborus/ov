@@ -59,6 +59,7 @@ type Root struct {
 	lnumber []lineNumber
 
 	// skipDraw skips draw once when true.
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
 
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
@@ -125,6 +126,8 @@ type Config struct {
 	StyleAlternate ovStyle
 	// StyleHeader is the style that applies to the header.
 	StyleHeader ovStyle
+	// StyleHeader is the style that applies to the header.
+	StyleBody ovStyle
 	// StyleOverStrike is a style that applies to overstrikes.
 	StyleOverStrike ovStyle
 	// OverLineS is a style that applies to overstrike underlines.

@@ -292,6 +292,7 @@ func (root *Root) columnModeX() int {
 		}
 		return sx
 	}
+	m.columnNum = 0
 	return 0
 }
 
