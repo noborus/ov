@@ -14,7 +14,7 @@ import (
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
-	go root.followTimer(ctx)
+	go root.updateInterval(ctx)
 
 	for {
 		if root.General.FollowAll || root.Doc.FollowMode {
@@ -176,12 +176,12 @@ func (root *Root) followAll() {
 
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.reOpened.Do(func() {
-		go doc.followModeOpen()
+		go doc.openFollowMode()
 	})
 }
 
-// followTimer fires events.
-func (root *Root) followTimer(ctx context.Context) {
+// updateInterval calls eventUpdate at regular intervals.
+func (root *Root) updateInterval(ctx context.Context) {
 	timer := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
@@ -190,10 +190,10 @@ func (root *Root) followTimer(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		}
-
 	}
 }
 
+// eventUpdate fires the event if it needs to be updated.
 func (root *Root) eventUpdate() {
 	eventFlag := false
 

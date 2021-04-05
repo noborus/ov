@@ -155,7 +155,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
 		}
 
-		// alternate style
+		// alternate style applies from beginning to end of line, not content.
 		if m.AlternateRows {
 			if (m.topLN+lY)%2 == 1 {
 				for x := 0; x < root.vWidth; x++ {
@@ -227,7 +227,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		}
 		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
-			// next line
+			// EOL
 			root.drawEOL(root.startX+x, y)
 			lX += x
 			break
@@ -244,7 +244,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 		lX = root.minStartX
 	}
 
-	for x := 0; x+root.startX < root.vWidth; x++ {
+	for x := 0; root.startX+x < root.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
 			root.drawEOL(root.startX+x, y)

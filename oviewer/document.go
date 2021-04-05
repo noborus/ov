@@ -151,6 +151,7 @@ func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
 	return lc, nil
 }
 
+// Close closes the document.
 func (m *Document) Close() {
 	m.mu.Lock()
 	defer m.mu.Unlock()

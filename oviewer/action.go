@@ -34,10 +34,12 @@ func (root *Root) toggleLineNumMode() {
 	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
 }
 
+// toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
 }
 
+// toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
 }

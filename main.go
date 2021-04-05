@@ -20,8 +20,9 @@ var (
 )
 
 var (
+	// cfgFile is the configuration file name.
 	cfgFile string
-
+	// config is the oviewer setting.
 	config oviewer.Config
 
 	// ver is version information.
@@ -30,14 +31,14 @@ var (
 	helpKey bool
 	// completion is the generation of shell completion.
 	completion bool
-
-	execC bool
+	// execCommand targets the output of executing the command.
+	execCommand bool
 )
 
 var (
 	// ErrCompletion indicates that the completion argument was invalid.
 	ErrCompletion = errors.New("requires one of the arguments bash/zsh/fish/powershell")
-	// ErrorNoArgument indicating that there are no arguments to execute.
+	// ErrNoArgument indicating that there are no arguments to execute.
 	ErrNoArgument = errors.New("no arguments to execute")
 )
 
@@ -49,6 +50,10 @@ var rootCmd = &cobra.Command{
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if config.Debug {
+			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		}
+
 		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil
@@ -62,12 +67,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return Completion(cmd, args)
 		}
 
-		if execC {
+		if execCommand {
 			return ExecCommand(cmd, args)
-		}
-
-		if config.Debug {
-			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
 
 		ov, err := oviewer.Open(args...)
@@ -117,13 +118,10 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
-// ExecCommand displays the output of command execution (stdout/stderr).
+// ExecCommand targets the output of command execution (stdout/stderr).
 func ExecCommand(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return ErrNoArgument
-	}
-	if err := viper.Unmarshal(&config); err != nil {
-		return err
 	}
 
 	command := exec.Command(args[0], args[1:]...)
@@ -167,7 +165,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
-	rootCmd.PersistentFlags().BoolVarP(&execC, "exec", "e", false, "exec command")
+	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "exec command")
 	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "generate completion script [bash|zsh|fish|powershell]")
 
 	// Config.General
