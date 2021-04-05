@@ -128,16 +128,6 @@ type eventUpdateEndNum struct {
 	tcell.EventTime
 }
 
-// runOnTime runs at time.
-func (root *Root) runOnTime(ev tcell.Event) {
-	if !root.checkScreen() {
-		return
-	}
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
-}
-
 func (root *Root) follow() {
 	if root.General.FollowAll {
 		root.followAll()
@@ -195,6 +185,9 @@ func (root *Root) updateInterval(ctx context.Context) {
 
 // eventUpdate fires the event if it needs to be updated.
 func (root *Root) eventUpdate() {
+	if !root.checkScreen() {
+		return
+	}
 	eventFlag := false
 
 	root.mu.RLock()
@@ -212,7 +205,10 @@ func (root *Root) eventUpdate() {
 
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
-	root.runOnTime(ev)
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // MoveLine fires an event that moves to the specified line.
@@ -223,12 +219,10 @@ func (root *Root) MoveLine(num int) {
 	ev := &gotoInput{}
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
-	go func() {
-		err := root.Screen.PostEvent(ev)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // MoveTop fires the event of moving to top.
@@ -249,12 +243,10 @@ type eventSearch struct {
 func (root *Root) eventNextSearch() {
 	ev := &eventSearch{}
 	ev.SetEventNow()
-	go func() {
-		err := root.Screen.PostEvent(ev)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // eventBackSearch represents backward search event.
@@ -265,12 +257,10 @@ type eventBackSearch struct {
 func (root *Root) eventNextBackSearch() {
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
-	go func() {
-		err := root.Screen.PostEvent(ev)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // Search fires a forward search event.
