@@ -11,6 +11,7 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// mouseEvent handles mouse events.
 func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 
@@ -32,18 +33,22 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	root.skipDraw = true
 }
 
+// wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp() {
 	root.setMessage("")
 	root.moveUp()
 	root.moveUp()
 }
 
+// wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown() {
 	root.setMessage("")
 	root.moveDown()
 	root.moveDown()
 }
 
+// selectRange saves the position by selecting the range with the mouse.
+// The selection range is represented by (x1, y1), (x2, y2).
 func (root *Root) selectRange(ev *tcell.EventMouse) {
 	button := ev.Buttons()
 	if button == tcell.ButtonMiddle {
@@ -79,6 +84,7 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 	}
 }
 
+// resetSelect resets the selection.
 func (root *Root) resetSelect() {
 	root.mouseSelect = false
 	root.mousePressed = false
@@ -104,6 +110,9 @@ func (root *Root) CopySelect() {
 	}()
 }
 
+// drawSelect highlights the selection.
+// Multi-line selection is included until the end of the line,
+// but if the rectangle flag is true, the rectangle will be the range.
 func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	if y1 == y2 {
 		if x1 == x2 {
@@ -133,12 +142,14 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	root.reverseLine(y2, 0, x2+1, sel)
 }
 
+// drawRectangle highlights the rectangular area.
 func (root *Root) drawRectangle(x1, y1, x2, y2 int, sel bool) {
 	for y := y1; y <= y2; y++ {
 		root.reverseLine(y, x1, x2+1, sel)
 	}
 }
 
+// reverseLine reverses one line.
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	for x := start; x < end; x++ {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
@@ -148,6 +159,7 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	}
 }
 
+// putClipboard writes the selection to the clipboard.
 func (root *Root) putClipboard(_ context.Context) {
 	y1 := root.y1
 	y2 := root.y2
@@ -159,46 +171,25 @@ func (root *Root) putClipboard(_ context.Context) {
 		x1, x2 = x2, x1
 	}
 
-	buff, err := root.rangeToBuffer(x1, y1, x2, y2)
+	buff, err := root.rangeToByte(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(err.Error())
 		return
 	}
 
-	if buff.Len() == 0 {
+	if len(buff) == 0 {
 		return
 	}
-	if err := clipboard.WriteAll(buff.String()); err != nil {
+	if err := clipboard.WriteAll(string(buff)); err != nil {
 		log.Printf("putClipboard: %v", err)
 	}
 	root.setMessage("Copy")
 }
 
-func (root *Root) rectangleToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
-	var buff bytes.Buffer
-
-	for y := y1; y <= y2; y++ {
-		ln := root.lnumber[y]
-		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
-		if err != nil {
-			return nil, err
-		}
-		wx := root.branchWidth(lc, ln.wrap)
-		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
-
-		if _, err := buff.WriteString(line); err != nil {
-			return nil, err
-		}
-		if err := buff.WriteByte('\n'); err != nil {
-			return nil, err
-		}
-	}
-	return &buff, nil
-}
-
-func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
+// rangeToByte returns the selection.
+func (root *Root) rangeToByte(x1, y1, x2, y2 int) ([]byte, error) {
 	if root.mouseRectangle {
-		return root.rectangleToBuffer(x1, y1, x2, y2)
+		return root.rectangleToByte(x1, y1, x2, y2)
 	}
 
 	var buff bytes.Buffer
@@ -220,12 +211,12 @@ func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 	if ln1.line == ln2.line {
 		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
 		if len(str) == 0 {
-			return &buff, nil
+			return buff.Bytes(), nil
 		}
 		if _, err := buff.WriteString(str); err != nil {
 			return nil, err
 		}
-		return &buff, nil
+		return buff.Bytes(), nil
 	}
 
 	str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, -1)
@@ -259,9 +250,33 @@ func (root *Root) rangeToBuffer(x1, y1, x2, y2 int) (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	return &buff, nil
+	return buff.Bytes(), nil
 }
 
+// rectangleToByte returns a rectangular range.
+func (root *Root) rectangleToByte(x1, y1, x2, y2 int) ([]byte, error) {
+	var buff bytes.Buffer
+
+	for y := y1; y <= y2; y++ {
+		ln := root.lnumber[y]
+		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
+		if err != nil {
+			return nil, err
+		}
+		wx := root.branchWidth(lc, ln.wrap)
+		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
+
+		if _, err := buff.WriteString(line); err != nil {
+			return nil, err
+		}
+		if err := buff.WriteByte('\n'); err != nil {
+			return nil, err
+		}
+	}
+	return buff.Bytes(), nil
+}
+
+// branchWidth returns the leftmost position of the number of wrapped line.
 func (root *Root) branchWidth(lc lineContents, branch int) int {
 	i := 0
 	w := root.startX
@@ -281,6 +296,7 @@ func (root *Root) branchWidth(lc lineContents, branch int) int {
 	return x
 }
 
+// selectLine returns a string in the specified range on one line.
 func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 	lc, err := root.Doc.lineToContents(ly, root.Doc.TabWidth)
 	if err != nil {
@@ -327,6 +343,7 @@ func (root *Root) Paste() {
 	}()
 }
 
+// getClipboard writes a string from the clipboard.
 func (root *Root) getClipboard(_ context.Context) {
 	input := root.input
 	switch input.mode {
