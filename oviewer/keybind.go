@@ -34,6 +34,7 @@ const (
 	actionMark           = "mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
+	actionBulkConfig     = "set_bulk_config"
 	actionAlternate      = "alter_rows_mode"
 	actionLineNumMode    = "line_number_mode"
 	actionSearch         = "search"
@@ -76,6 +77,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionMoveHfRight:    root.moveHfRight,
 		actionMoveMark:       root.markNext,
 		actionMovePrevMark:   root.markPrev,
+		actionBulkConfig:     root.setBulkConfigMode,
 		actionWrap:           root.toggleWrapMode,
 		actionColumnMode:     root.toggleColumnMode,
 		actionAlternate:      root.toggleAlternateRows,
@@ -124,6 +126,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionMoveHfRight:    {"ctrl+right"},
 		actionMoveMark:       {">"},
 		actionMovePrevMark:   {"<"},
+		actionBulkConfig:     {"p", "P"},
 		actionWrap:           {"w", "W"},
 		actionColumnMode:     {"c"},
 		actionAlternate:      {"C"},
@@ -235,6 +238,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
 
 	fmt.Fprintf(&b, "\n\tChange display\n\n")
+	k.writeKeyBind(&b, actionBulkConfig, "bundle and change settings")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionAlternate, "color to alternate rows toggle")

@@ -34,10 +34,12 @@ func (root *Root) toggleLineNumMode() {
 	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
 }
 
+// toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
 }
 
+// toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
 }
@@ -51,7 +53,7 @@ func (root *Root) setDocument(m *Document) {
 
 // Help is to switch between Help screen and normal screen.
 func (root *Root) Help() {
-	if root.input.mode == Help {
+	if root.screenMode == Help {
 		root.toNormal()
 		return
 	}
@@ -60,12 +62,12 @@ func (root *Root) Help() {
 
 func (root *Root) toHelp() {
 	root.setDocument(root.helpDoc)
-	root.input.mode = Help
+	root.screenMode = Help
 }
 
 // LogDisplay is to switch between Log screen and normal screen.
 func (root *Root) logDisplay() {
-	if root.input.mode == LogDoc {
+	if root.screenMode == LogDoc {
 		root.toNormal()
 		return
 	}
@@ -74,7 +76,7 @@ func (root *Root) logDisplay() {
 
 func (root *Root) toLogDoc() {
 	root.setDocument(root.logDoc)
-	root.input.mode = LogDoc
+	root.screenMode = LogDoc
 }
 
 func (root *Root) toNormal() {
@@ -82,7 +84,7 @@ func (root *Root) toNormal() {
 	defer root.mu.RUnlock()
 
 	root.setDocument(root.DocList[root.CurrentDoc])
-	root.input.mode = Normal
+	root.screenMode = Docs
 }
 
 // setWrapHeaderLen sets the value in wrapHeaderLen.
@@ -179,6 +181,15 @@ func (root *Root) previousDoc() {
 	root.input.mode = Normal
 }
 
+func (root *Root) switchDocument(docNum int) {
+	root.CurrentDoc = docNum
+	root.mu.RLock()
+	m := root.DocList[root.CurrentDoc]
+	root.mu.RUnlock()
+	root.setDocument(m)
+	root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
+}
+
 func (root *Root) addDocument(m *Document) {
 	log.Printf("add: %s", m.FileName)
 	m.general = root.Config.General
@@ -220,6 +231,23 @@ func (root *Root) toggleMouse() {
 		root.Screen.EnableMouse()
 		root.setMessage("Enable Mouse")
 	}
+}
+
+func (root *Root) setBulkConfig(input string) {
+	c, ok := root.Config.Mode[input]
+	if !ok {
+		if input != "general" {
+			root.setMessage(fmt.Sprintf("Not Mode %s", input))
+			return
+		}
+		c = root.General
+	}
+
+	root.Doc.general = c
+	root.setWrapHeaderLen()
+	root.Doc.ClearCache()
+	root.ViewSync()
+	root.setMessage(fmt.Sprintf("Set Mode %s", input))
 }
 
 // setDelimiter sets the delimiter string.

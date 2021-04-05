@@ -14,13 +14,9 @@ import (
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
-	go root.followTimer(ctx)
+	go root.updateInterval(ctx)
 
 	for {
-		if root.General.FollowAll {
-			root.followAll()
-		}
-
 		if root.General.FollowAll || root.Doc.FollowMode {
 			root.follow()
 		}
@@ -29,10 +25,11 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.draw()
 		}
 		root.skipDraw = false
+
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
-			if root.input.mode == Help || root.input.mode == LogDoc {
+			if root.screenMode != Docs {
 				root.toNormal()
 				continue
 			}
@@ -41,12 +38,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		case *eventDocument:
-			root.CurrentDoc = ev.docNum
-			root.mu.RLock()
-			m := root.DocList[root.CurrentDoc]
-			root.mu.RUnlock()
-			root.setDocument(m)
-			root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
+			root.switchDocument(ev.docNum)
 		case *eventAddDocument:
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
@@ -59,6 +51,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.search(ctx, root.Doc.topLN+root.Doc.Header+1, root.searchLine)
 		case *eventBackSearch:
 			root.search(ctx, root.Doc.topLN+root.Doc.Header-1, root.backSearchLine)
+		case *bulkConfigInput:
+			root.setBulkConfig(ev.value)
 		case *searchInput:
 			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:
@@ -78,7 +72,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *tcell.EventKey:
 			root.setMessage("")
 			switch root.input.mode {
-			case Normal, Help, LogDoc:
+			case Normal:
 				root.keyCapture(ev)
 			default:
 				root.inputEvent(ev)
@@ -90,6 +84,9 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	}
 }
 
+// checkScreen is true if screen is ready.
+// checkScreen is used in case it is called directly from the outside.
+// True if called from the event loop.
 func (root *Root) checkScreen() bool {
 	if root == nil {
 		return false
@@ -141,8 +138,21 @@ func (root *Root) runOnTime(ev tcell.Event) {
 	}()
 }
 
+func (root *Root) follow() {
+	if root.General.FollowAll {
+		root.followAll()
+	}
+
+	root.onceFollowMode(root.Doc)
+	num := root.Doc.BufEndNum()
+	if root.Doc.latestNum != num {
+		root.TailSync()
+		root.Doc.latestNum = num
+	}
+}
+
 func (root *Root) followAll() {
-	if root.input.mode != Normal {
+	if root.screenMode != Docs {
 		return
 	}
 
@@ -164,51 +174,42 @@ func (root *Root) followAll() {
 	}
 }
 
-func (root *Root) follow() {
-	root.onceFollowMode(root.Doc)
-	num := root.Doc.BufEndNum()
-	if root.Doc.latestNum != num {
-		root.TailSync()
-		root.Doc.latestNum = num
-	}
-}
-
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.reOpened.Do(func() {
-		go doc.followModeOpen()
+		go doc.openFollowMode()
 	})
 }
 
-// followTimer fires events.
-func (root *Root) followTimer(ctx context.Context) {
+// updateInterval calls eventUpdate at regular intervals.
+func (root *Root) updateInterval(ctx context.Context) {
 	timer := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
+		case <-timer.C:
+			root.eventUpdate()
 		case <-ctx.Done():
 			return
-		default:
 		}
-
-		<-timer.C
-		eventFlag := false
-		root.mu.RLock()
-		for _, doc := range root.DocList {
-			if atomic.LoadInt32(&doc.changed) == 1 {
-				eventFlag = true
-				atomic.StoreInt32(&doc.changed, 0)
-			}
-		}
-		root.mu.RUnlock()
-
-		if !eventFlag {
-			continue
-		}
-
-		root.UpdateEndNum()
 	}
 }
 
-func (root *Root) UpdateEndNum() {
+// eventUpdate fires the event if it needs to be updated.
+func (root *Root) eventUpdate() {
+	eventFlag := false
+
+	root.mu.RLock()
+	for _, doc := range root.DocList {
+		if atomic.LoadInt32(&doc.changed) == 1 {
+			eventFlag = true
+			atomic.StoreInt32(&doc.changed, 0)
+		}
+	}
+	root.mu.RUnlock()
+
+	if !eventFlag {
+		return
+	}
+
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
 	root.runOnTime(ev)

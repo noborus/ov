@@ -18,14 +18,21 @@ import (
 	"golang.org/x/term"
 )
 
+// Compressed represents the type of compression.
 type Compressed int
 
 const (
+	// UNCOMPRESSED is an uncompressed format.
 	UNCOMPRESSED Compressed = iota
+	// GZIP is gzip compressed format.
 	GZIP
+	// BZIP2 is bzip2 compressed format.
 	BZIP2
+	// ZSTD is zstd compressed format.
 	ZSTD
+	// LZ4 is lz4 compressed format.
 	LZ4
+	// XZ is xz compressed format.
 	XZ
 )
 
@@ -130,9 +137,9 @@ func (m *Document) ReadFile(fileName string) error {
 	return nil
 }
 
-// followModeOpen opens the file in follow mode.
+// openFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
-func (m *Document) followModeOpen() {
+func (m *Document) openFollowMode() {
 	if m.file == nil {
 		return
 	}
@@ -156,7 +163,7 @@ func (m *Document) followModeOpen() {
 	}
 
 	rr := compressedFormatReader(m.CFormat, r)
-	if err := m.reOpenReadAll(rr); err != nil {
+	if err := m.ContinueReadAll(rr); err != nil {
 		log.Printf("%s cannot be reopened %v", m.FileName, err)
 	}
 }
@@ -199,8 +206,8 @@ func (m *Document) ReadAll(r io.Reader) error {
 	return nil
 }
 
-// reOpenReadAll will continue to read the file when it reaches EOF.
-func (m *Document) reOpenReadAll(r io.Reader) error {
+// ContinueReadAll continues to read even if it reaches EOF.
+func (m *Document) ContinueReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	for {
 		if m.checkClose() {
@@ -208,7 +215,7 @@ func (m *Document) reOpenReadAll(r io.Reader) error {
 		}
 
 		if err := m.readAll(reader); err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+			if errors.Is(err, io.EOF) {
 				<-m.changCh
 				continue
 			}

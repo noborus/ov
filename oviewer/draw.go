@@ -56,10 +56,10 @@ func (root *Root) drawHeader() int {
 		}
 
 		lc := root.getLineContents(lY, m.TabWidth)
-		root.headerStyle(lc)
+		root.lineStyle(lc, root.StyleHeader)
 
 		// column highlight
-		if m.ColumnMode && root.input.mode == Normal {
+		if m.ColumnMode {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
@@ -106,6 +106,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
+			root.lineStyle(lc, root.StyleBody)
 			root.lnumber[y] = lineNumber{
 				line: -1,
 				wrap: 0,
@@ -115,7 +116,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// column highlight
-		if root.input.mode == Normal && root.Doc.ColumnMode {
+		if root.Doc.ColumnMode {
 			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
 		}
@@ -154,7 +155,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
 		}
 
-		// alternate style
+		// alternate style applies from beginning to end of line, not content.
 		if m.AlternateRows {
 			if (m.topLN+lY)%2 == 1 {
 				for x := 0; x < root.vWidth; x++ {
@@ -226,7 +227,7 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		}
 		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
-			// next line
+			// EOL
 			root.drawEOL(root.startX+x, y)
 			lX += x
 			break
@@ -243,7 +244,7 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 		lX = root.minStartX
 	}
 
-	for x := 0; x+root.startX < root.vWidth; x++ {
+	for x := 0; root.startX+x < root.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
 			root.drawEOL(root.startX+x, y)
@@ -260,9 +261,9 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 	return lX, lY
 }
 
-// headerStyle applies the style of the header.
-func (root *Root) headerStyle(lc lineContents) {
-	RangeStyle(lc, 0, len(lc), root.StyleHeader)
+// lineStyle applies the style for one line.
+func (root *Root) lineStyle(lc lineContents, style ovStyle) {
+	RangeStyle(lc, 0, len(lc), style)
 }
 
 // searchHighlight applies the style of the search highlight.
@@ -311,7 +312,7 @@ func (root *Root) statusDraw() {
 	}
 
 	switch input.mode {
-	case Normal, Help, LogDoc:
+	case Normal:
 		color := tcell.ColorWhite
 		if root.CurrentDoc != 0 {
 			color = tcell.Color((root.CurrentDoc + 8) % 16)

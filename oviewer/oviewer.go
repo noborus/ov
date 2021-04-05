@@ -28,7 +28,7 @@ type Root struct {
 	// help
 	helpDoc *Document
 	// log
-	logDoc *LogDocument
+	logDoc *Document
 
 	// DocList
 	DocList    []*Document
@@ -36,6 +36,8 @@ type Root struct {
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
 	// keyConfig contains the binding settings for the key.
@@ -57,6 +59,7 @@ type Root struct {
 	lnumber []lineNumber
 
 	// skipDraw skips draw once when true.
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
 
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
@@ -123,6 +126,8 @@ type Config struct {
 	StyleAlternate ovStyle
 	// StyleHeader is the style that applies to the header.
 	StyleHeader ovStyle
+	// StyleHeader is the style that applies to the header.
+	StyleBody ovStyle
 	// StyleOverStrike is a style that applies to overstrikes.
 	StyleOverStrike ovStyle
 	// OverLineS is a style that applies to overstrike underlines.
@@ -144,7 +149,10 @@ type Config struct {
 	// OverLine color.
 	ColorOverLine string
 
+	// General represents the general behavior.
 	General general
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
 
 	// Mouse support disable.
 	DisableMouse bool
@@ -161,15 +169,25 @@ type Config struct {
 	Keybind map[string][]string
 }
 
+// ovStyle represents a style in addition to the original style.
 type ovStyle struct {
-	Background    string
-	Foreground    string
-	Blink         bool
-	Bold          bool
-	Dim           bool
-	Italic        bool
-	Reverse       bool
-	Underline     bool
+	// Background is a color name string.
+	Background string
+	// Foreground is a color name string.
+	Foreground string
+	// If true, add blink.
+	Blink bool
+	// If true, add bold.
+	Bold bool
+	// If true, add dim.
+	Dim bool
+	// If true, add italic.
+	Italic bool
+	// If true, add reverse.
+	Reverse bool
+	// If true, add underline.
+	Underline bool
+	// If true, add strikethrough.
 	StrikeThrough bool
 }
 
@@ -178,6 +196,18 @@ var (
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
 	OverLineStyle tcell.Style
+)
+
+// ScreenMode represents the state of the screen.
+type ScreenMode int
+
+const (
+	// Docs is a normal document screen mode.
+	Docs ScreenMode = iota
+	// Help is Help screen mode.
+	Help
+	// LogDoc is Error screen mode.
+	LogDoc
 )
 
 var (
@@ -202,6 +232,7 @@ var (
 var tcellNewScreen = tcell.NewScreen
 
 // NewOviewer return the structure of oviewer.
+// NewOviewer requires one or more documents.
 func NewOviewer(docs ...*Document) (*Root, error) {
 	if len(docs) == 0 {
 		return nil, ErrNotFound
@@ -214,6 +245,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
+	root.screenMode = Docs
 
 	screen, err := tcellNewScreen()
 	if err != nil {
@@ -426,6 +458,13 @@ func (root *Root) Run() error {
 	root.setGlobalStyle()
 	root.Screen.Clear()
 
+	list := make([]string, 0, len(root.Config.Mode)+1)
+	list = append(list, "general")
+	for name := range root.Config.Mode {
+		list = append(list, name)
+	}
+	root.input.BulkCandidate.list = list
+
 	root.ViewSync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.docSmall() {
@@ -454,6 +493,7 @@ func (root *Root) Run() error {
 	}
 }
 
+// Close closes the oviewer.
 func (root *Root) Close() {
 	root.Screen.Fini()
 	root.mu.Lock()
@@ -644,6 +684,7 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 	return listX, nil
 }
 
+// DocumentLen returns the number of Docs.
 func (root *Root) DocumentLen() int {
 	root.mu.RLock()
 	defer root.mu.RUnlock()

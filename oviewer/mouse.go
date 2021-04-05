@@ -330,7 +330,7 @@ func (root *Root) Paste() {
 func (root *Root) getClipboard(_ context.Context) {
 	input := root.input
 	switch input.mode {
-	case Normal, Help, LogDoc:
+	case Normal:
 		return
 	}
 

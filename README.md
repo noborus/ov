@@ -15,13 +15,15 @@ It has an effective function for tabular text.
 
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
-* Supports column mode.
+* Columns support column mode that can be selected by delimiter.
 * Header rows can be fixed.
 * Dynamic wrap / nowrap switchable.
-* Background color to alternate rows.
-* Columns can be selected with separators.
+* Supports alternating row style changes.
 * Shortcut keys are customizable.
 * The style of the effect is customizable.
+* Supports follow-mode (like tail -f).
+* Supports following multiple files and switching when updated.
+* Run the command you can target the stdout/stderr.
 
 ## install
 
