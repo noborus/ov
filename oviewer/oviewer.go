@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -292,6 +293,18 @@ func Open(fileNames ...string) (*Root, error) {
 		return openSTDIN()
 	}
 	return openFiles(fileNames)
+}
+
+func NewRoot(read io.Reader) (*Root, error) {
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = m.ReadAll(read); err != nil {
+		return nil, err
+	}
+	return NewOviewer(m)
 }
 
 func openSTDIN() (*Root, error) {
