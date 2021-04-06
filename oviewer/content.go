@@ -206,8 +206,10 @@ func lastContent(lc lineContents) content {
 // csToStyle returns tcell.Style from the control sequence.
 func csToStyle(style tcell.Style, csiParameter *bytes.Buffer) tcell.Style {
 	fields := strings.Split(csiParameter.String(), ";")
-	if len(fields) == 0 || len(fields) == 1 && fields[0] == "0" {
-		style = tcell.StyleDefault.Normal()
+	if len(fields) == 1 {
+		if fields[0] == "0" || fields[0] == "" {
+			style = tcell.StyleDefault.Normal()
+		}
 	}
 FieldLoop:
 	for index, field := range fields {
