@@ -301,7 +301,7 @@ func NewRoot(read io.Reader) (*Root, error) {
 		return nil, err
 	}
 
-	if err = m.ReadAll(io.NopCloser(read)); err != nil {
+	if err = m.ReadAll(read); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
