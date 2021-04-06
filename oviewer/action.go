@@ -152,52 +152,28 @@ func (root *Root) markPrev() {
 }
 
 func (root *Root) nextDoc() {
-	if root.CurrentDoc+1 >= root.DocumentLen() {
-		root.setMessage("No next doc")
-		return
-	}
-
-	root.mu.RLock()
-	root.CurrentDoc++
-	m := root.DocList[root.CurrentDoc]
-	root.mu.RUnlock()
-
-	root.setDocument(m)
+	root.setDocumentNum(root.CurrentDoc + 1)
 	root.input.mode = Normal
 }
 
 func (root *Root) previousDoc() {
-	if root.CurrentDoc <= 0 {
-		root.setMessage("No previous doc")
-		return
-	}
-
-	root.mu.RLock()
-	root.CurrentDoc--
-	m := root.DocList[root.CurrentDoc]
-	root.mu.RUnlock()
-
-	root.setDocument(m)
+	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.mode = Normal
 }
 
 func (root *Root) switchDocument(docNum int) {
-	root.CurrentDoc = docNum
-	root.mu.RLock()
-	m := root.DocList[root.CurrentDoc]
-	root.mu.RUnlock()
-	root.setDocument(m)
-	root.debugMessage(fmt.Sprintf("switch document %s", m.FileName))
+	root.setDocumentNum(docNum)
+	root.debugMessage(fmt.Sprintf("switch document %s", root.Doc.FileName))
 }
 
 func (root *Root) addDocument(m *Document) {
+	root.mu.Lock()
+	defer root.mu.Unlock()
 	log.Printf("add: %s", m.FileName)
 	m.general = root.Config.General
 
-	root.mu.Lock()
 	root.DocList = append(root.DocList, m)
 	root.CurrentDoc = len(root.DocList) - 1
-	root.mu.Unlock()
 
 	root.setDocument(m)
 }
@@ -207,19 +183,36 @@ func (root *Root) closeDocument() {
 		return
 	}
 
+	root.mu.Lock()
+	defer root.mu.Unlock()
+
 	m := root.Doc
 	log.Printf("close [%d]%s", root.CurrentDoc, m.FileName)
 
-	root.mu.Lock()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
 	}
 	doc := root.DocList[root.CurrentDoc]
-	root.mu.Unlock()
 
 	root.setDocument(doc)
-	m.Close()
+	log.Printf("close? %s", m.FileName)
+	//m.Close()
+}
+
+func (root *Root) setDocumentNum(docNum int) {
+	root.mu.Lock()
+	defer root.mu.Unlock()
+
+	if docNum >= len(root.DocList) {
+		docNum = len(root.DocList) - 1
+	}
+	if docNum < 0 {
+		docNum = 0
+	}
+	root.CurrentDoc = docNum
+	m := root.DocList[root.CurrentDoc]
+	root.setDocument(m)
 }
 
 func (root *Root) toggleMouse() {

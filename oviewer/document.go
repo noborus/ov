@@ -151,21 +151,10 @@ func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
 	return lc, nil
 }
 
-// Close closes the document.
-func (m *Document) Close() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	close(m.closeCh)
-	close(m.changCh)
-	m.file.Close()
-	m.cache.Close()
-}
-
 func (m *Document) checkClose() bool {
 	select {
 	case <-m.closeCh:
-		log.Println("document close")
+		log.Printf("document closed %s", m.FileName)
 		return true
 	default:
 	}

@@ -509,13 +509,6 @@ func (root *Root) Run() error {
 // Close closes the oviewer.
 func (root *Root) Close() {
 	root.Screen.Fini()
-	root.mu.Lock()
-	for _, doc := range root.DocList {
-		doc.Close()
-	}
-	root.mu.Unlock()
-	root.logDoc.cache.Close()
-	root.helpDoc.cache.Close()
 }
 
 func (root *Root) setMessage(msg string) {
