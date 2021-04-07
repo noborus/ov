@@ -224,7 +224,7 @@ func (root *Root) toggleMouse() {
 	}
 }
 
-func (root *Root) setBulkConfig(input string) {
+func (root *Root) setViewMode(input string) {
 	c, ok := root.Config.Mode[input]
 	if !ok {
 		if input != "general" {

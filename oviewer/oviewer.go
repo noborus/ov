@@ -476,7 +476,7 @@ func (root *Root) Run() error {
 	for name := range root.Config.Mode {
 		list = append(list, name)
 	}
-	root.input.BulkCandidate.list = list
+	root.input.ModeCandidate.list = list
 
 	root.ViewSync()
 	// Exit if fits on screen

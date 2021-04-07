@@ -51,8 +51,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.search(ctx, root.Doc.topLN+root.Doc.Header+1, root.searchLine)
 		case *eventBackSearch:
 			root.search(ctx, root.Doc.topLN+root.Doc.Header-1, root.backSearchLine)
-		case *bulkConfigInput:
-			root.setBulkConfig(ev.value)
+		case *viewModeInput:
+			root.setViewMode(ev.value)
 		case *searchInput:
 			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:
