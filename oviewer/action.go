@@ -196,8 +196,6 @@ func (root *Root) closeDocument() {
 	doc := root.DocList[root.CurrentDoc]
 
 	root.setDocument(doc)
-	log.Printf("close? %s", m.FileName)
-	//m.Close()
 }
 
 func (root *Root) setDocumentNum(docNum int) {
