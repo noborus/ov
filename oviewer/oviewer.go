@@ -12,9 +12,9 @@ import (
 	"sync"
 	"syscall"
 
-	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
+	"gitlab.com/tslocum/cbind"
 )
 
 // Root structure contains information about the drawing.
