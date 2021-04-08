@@ -130,10 +130,6 @@ type eventUpdateEndNum struct {
 
 // follow updates the document in follow mode.
 func (root *Root) follow() {
-	if root.screenMode != Docs {
-		return
-	}
-
 	if root.General.FollowAll {
 		root.followAll()
 	}
@@ -150,6 +146,10 @@ func (root *Root) follow() {
 // followAll monitors and switches all document updates
 // in follow all mode.
 func (root *Root) followAll() {
+	if root.screenMode != Docs {
+		return
+	}
+
 	current := root.CurrentDoc
 
 	root.mu.RLock()
