@@ -129,6 +129,7 @@ func (m *Document) ReadFile(fileName string) error {
 	go func() {
 		<-m.eofCh
 		m.close()
+		atomic.StoreInt32(&m.changed, 1)
 		close(m.reOpenCh)
 	}()
 	if err := m.ReadAll(reader); err != nil {

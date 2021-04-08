@@ -196,8 +196,6 @@ func (root *Root) closeDocument() {
 	doc := root.DocList[root.CurrentDoc]
 
 	root.setDocument(doc)
-	log.Printf("close? %s", m.FileName)
-	//m.Close()
 }
 
 func (root *Root) setDocumentNum(docNum int) {
@@ -226,7 +224,7 @@ func (root *Root) toggleMouse() {
 	}
 }
 
-func (root *Root) setBulkConfig(input string) {
+func (root *Root) setViewMode(input string) {
 	c, ok := root.Config.Mode[input]
 	if !ok {
 		if input != "general" {

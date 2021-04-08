@@ -51,8 +51,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.search(ctx, root.Doc.topLN+root.Doc.Header+1, root.searchLine)
 		case *eventBackSearch:
 			root.search(ctx, root.Doc.topLN+root.Doc.Header-1, root.backSearchLine)
-		case *bulkConfigInput:
-			root.setBulkConfig(ev.value)
+		case *viewModeInput:
+			root.setViewMode(ev.value)
 		case *searchInput:
 			root.forwardSearch(ctx, ev.value)
 		case *backSearchInput:
@@ -128,7 +128,12 @@ type eventUpdateEndNum struct {
 	tcell.EventTime
 }
 
+// follow updates the document in follow mode.
 func (root *Root) follow() {
+	if root.screenMode != Docs {
+		return
+	}
+
 	if root.General.FollowAll {
 		root.followAll()
 	}
@@ -136,16 +141,15 @@ func (root *Root) follow() {
 	root.onceFollowMode(root.Doc)
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum != num {
+		root.skipDraw = false
 		root.TailSync()
 		root.Doc.latestNum = num
 	}
 }
 
+// followAll monitors and switches all document updates
+// in follow all mode.
 func (root *Root) followAll() {
-	if root.screenMode != Docs {
-		return
-	}
-
 	current := root.CurrentDoc
 
 	root.mu.RLock()
@@ -164,6 +168,7 @@ func (root *Root) followAll() {
 	}
 }
 
+// onceFollowMode is executed only once as follow mode.
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.reOpened.Do(func() {
 		go doc.openFollowMode()

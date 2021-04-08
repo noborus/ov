@@ -263,6 +263,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 	Change display
 
+  [p], [P]                   * view mode selection
   [w], [W]                   * wrap/nowrap toggle
   [c]                        * column mode toggle
   [C]                        * color to alternate rows toggle
