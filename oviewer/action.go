@@ -228,7 +228,7 @@ func (root *Root) setViewMode(input string) {
 	c, ok := root.Config.Mode[input]
 	if !ok {
 		if input != "general" {
-			root.setMessage(fmt.Sprintf("Not Mode %s", input))
+			root.setMessage(fmt.Sprintf("%s mode not found", input))
 			return
 		}
 		c = root.General
@@ -238,7 +238,7 @@ func (root *Root) setViewMode(input string) {
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 	root.ViewSync()
-	root.setMessage(fmt.Sprintf("Set Mode %s", input))
+	root.setMessage(fmt.Sprintf("Set mode %s", input))
 }
 
 // setDelimiter sets the delimiter string.

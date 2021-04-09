@@ -238,13 +238,13 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
 
 	fmt.Fprintf(&b, "\n\tChange display\n\n")
-	k.writeKeyBind(&b, actionViewMode, "view mode selection")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionAlternate, "color to alternate rows toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 
 	fmt.Fprintf(&b, "\n\tChange Display with Input\n\n")
+	k.writeKeyBind(&b, actionViewMode, "view mode selection")
 	k.writeKeyBind(&b, actionDelimiter, "delimiter string")
 	k.writeKeyBind(&b, actionHeader, "number of header lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
