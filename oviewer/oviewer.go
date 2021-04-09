@@ -252,6 +252,9 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := screen.Init(); err != nil {
+		return nil, fmt.Errorf("Screen.Init(): %w", err)
+	}
 	root.Screen = screen
 
 	return root, nil
@@ -423,9 +426,6 @@ func NewHelp(k KeyBind) (*Document, error) {
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
-	if err := root.Screen.Init(); err != nil {
-		return fmt.Errorf("Screen.Init(): %w", err)
-	}
 	defer root.Close()
 
 	watcher, err := fsnotify.NewWatcher()
