@@ -155,6 +155,8 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
+![ov-tail.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-tail.gif)
+
 ### follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.

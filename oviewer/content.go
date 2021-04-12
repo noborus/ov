@@ -163,9 +163,12 @@ func parseString(line string, tabWidth int) lineContents {
 			lc = append(lc, c)
 			tabX++
 		case 2:
+			log.Printf(" %d", len(gr.Runes()))
 			c.mainc = runeValue
 			if len(gr.Runes()) > 1 {
 				c.combc = gr.Runes()[1:]
+				log.Printf(" %02x %02x ", c.mainc, c.combc)
+				log.Printf(" %s", string(gr.Runes()))
 			}
 			c.width = 2
 			c.style = style
