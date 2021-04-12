@@ -171,8 +171,10 @@ Execute the command to display stdout / stderr.
 Arguments after (`--`) are interpreted as command arguments.
 
 ```sh
-ov --follow-all --exec -- golangci-lint run --color=always --verbose ./...
+ov --follow-all --exec -- make
 ```
+
+![ov-exec.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-exec.gif)
 
 ### psql
 
