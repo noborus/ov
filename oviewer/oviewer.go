@@ -14,7 +14,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
-	"gitlab.com/tslocum/cbind"
+	"code.rocketnine.space/tslocum/cbind"
 )
 
 // Root structure contains information about the drawing.
