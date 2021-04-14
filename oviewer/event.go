@@ -106,9 +106,9 @@ func (root *Root) Quit() {
 	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	if err := root.Screen.PostEvent(ev); err != nil {
+		log.Println(err)
+	}
 }
 
 // Cancel follow mode and follow all mode.
@@ -271,41 +271,37 @@ func (root *Root) eventNextBackSearch() {
 // Search fires a forward search event.
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
-func (root *Root) Search(str string) {
+func (root *Root) Search(str string) error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	if str == "" {
 		root.input.reg = nil
-		return
+		return nil
 	}
 	root.input.value = str
 	root.input.reg = regexpComple(str, root.CaseSensitive)
 	ev := &eventSearch{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 // BackSearch fires a backward search event.
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
-func (root *Root) BackSearch(str string) {
+func (root *Root) BackSearch(str string) error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	if str == "" {
 		root.input.reg = nil
-		return
+		return nil
 	}
 	root.input.value = str
 	root.input.reg = regexpComple(str, root.CaseSensitive)
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 // eventDocument represents a set document event.
@@ -315,18 +311,16 @@ type eventDocument struct {
 }
 
 // SetDocument fires a set document event.
-func (root *Root) SetDocument(docNum int) {
+func (root *Root) SetDocument(docNum int) error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	ev := &eventDocument{}
 	if docNum >= 0 && docNum < root.DocumentLen() {
 		ev.docNum = docNum
 	}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 // eventAddDocument represents a set document event.
@@ -336,16 +330,14 @@ type eventAddDocument struct {
 }
 
 // AddDocument fires a add document event.
-func (root *Root) AddDocument(m *Document) {
+func (root *Root) AddDocument(m *Document) error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	ev := &eventAddDocument{}
 	ev.m = m
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 // eventCloseDocument represents a close document event.
@@ -354,15 +346,13 @@ type eventCloseDocument struct {
 }
 
 // CloseDocument fires a del document event.
-func (root *Root) CloseDocument(m *Document) {
+func (root *Root) CloseDocument(m *Document) error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	ev := &eventCloseDocument{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 // eventSearchQuit represents a search quit event.
@@ -371,15 +361,13 @@ type eventSearchQuit struct {
 }
 
 // searchQuit executes a quit event.
-func (root *Root) searchQuit() {
+func (root *Root) searchQuit() error {
 	if !root.checkScreen() {
-		return
+		return nil
 	}
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	return root.Screen.PostEvent(ev)
 }
 
 func (root *Root) cancelWait(cancel context.CancelFunc) error {

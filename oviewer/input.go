@@ -48,24 +48,23 @@ const (
 )
 
 // InputEvent input key events.
-func (root *Root) inputEvent(ev *tcell.EventKey) {
+func (root *Root) inputEvent(ev *tcell.EventKey) error {
 	// inputEvent returns input confirmed or not confirmed.
 	ok := root.inputKeyEvent(ev)
 
 	// Not confirmed or canceled.
 	if !ok {
-		return
+		return nil
 	}
 
 	input := root.input
 	// confirmed.
 	nev := input.EventInput.Confirm(input.value)
-	go func() {
-		root.Screen.PostEventWait(nev)
-	}()
+	if err := root.Screen.PostEvent(nev); err != nil { return err }
 
 	input.mode = Normal
 	input.EventInput = newNormalInput()
+	return nil
 }
 
 // inputKeyEvent handles the keystrokes of the input.
