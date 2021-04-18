@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"code.rocketnine.space/tslocum/cbind"
+	"github.com/gdamore/tcell/v2"
 )
 
 const (

@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
 	"code.rocketnine.space/tslocum/cbind"
+	"github.com/gdamore/tcell/v2"
 )
 
 // main is manages and executes events in the main routine.

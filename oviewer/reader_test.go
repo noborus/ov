@@ -3,7 +3,6 @@ package oviewer
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"testing"
 )
 
@@ -46,7 +45,7 @@ func TestDocument_ReadFile(t *testing.T) {
 
 func TestDocument_ReadAll(t *testing.T) {
 	type args struct {
-		r io.ReadCloser
+		r io.Reader
 	}
 	tests := []struct {
 		name    string
@@ -56,7 +55,7 @@ func TestDocument_ReadAll(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				r: ioutil.NopCloser(bytes.NewBufferString("foo\nbar\n")),
+				r: bytes.NewBufferString("foo\nbar\n"),
 			},
 			wantErr: false,
 		},

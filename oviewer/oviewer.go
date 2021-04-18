@@ -12,9 +12,9 @@ import (
 	"sync"
 	"syscall"
 
+	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
-	"code.rocketnine.space/tslocum/cbind"
 )
 
 // Root structure contains information about the drawing.
@@ -621,6 +621,9 @@ func (root *Root) docSmall() bool {
 	}
 	root.prepareView()
 	m := root.Doc
+	if !m.BufEOF() {
+		return false
+	}
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
 		lc, err := m.lineToContents(y, root.Doc.TabWidth)
