@@ -50,6 +50,12 @@ sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_
 brew install noborus/tap/ov
 ```
 
+### pkg (FreeBSD)
+
+```console
+pkg install ov
+```
+
 ### binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
