@@ -203,6 +203,7 @@ func (root *Root) moveDown() {
 	if !m.WrapMode {
 		num++
 		root.limitMoveDown(0, num)
+		return
 	}
 
 	// WrapMode
