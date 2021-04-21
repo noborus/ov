@@ -83,9 +83,9 @@ KeyBind:
         - "PageDown"
         - "ctrl+v"
     page_half_up:
-        - "ctrl+u"
+        - "u"
     page_half_down:
-        - "ctrl+d"
+        - "d"
     mark:
         - "m"
     next_mark:
@@ -106,7 +106,7 @@ KeyBind:
     backsearch:
         - "?"
     delimiter:
-        - "d"
+        - "ctrl+d"
     header:
         - "H"
     tabwidth:

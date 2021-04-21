@@ -100,10 +100,8 @@ KeyBind:
         - "z"
     page_half_up:
         - "u"
-        - "ctrl+u"
     page_half_down:
         - "d"
-        - "ctrl+d"
     mark:
         - "m"
     next_mark:
@@ -124,7 +122,7 @@ KeyBind:
     backsearch:
         - "?"
     delimiter:
-        - "d"
+        - "ctrl+d"
     header:
         - "H"
     tabwidth:

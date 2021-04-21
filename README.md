@@ -248,8 +248,8 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
   [End]                      * go to end of line
   [PageDown], [ctrl+v]       * forward by page
   [PageUp], [ctrl+b]         * backward by page
-  [ctrl+d]                   * forward a half page
-  [ctrl+u]                   * backward a half page
+  [d]                        * forward a half page
+  [u]                        * backward a half page
   [left]                     * scroll to left
   [right]                    * scroll to right
   [ctrl+left]                * scroll left half screen
@@ -281,7 +281,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 	Change Display with Input
 
-  [d]                        * delimiter string
+  [ctrl+d]                   * delimiter string
   [H]                        * number of header lines
   [t]                        * TAB width
 
