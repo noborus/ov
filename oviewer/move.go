@@ -107,7 +107,7 @@ func (root *Root) moveNumDown(moveY int) {
 	m := root.Doc
 	num := m.topLN + m.Header
 	if !m.WrapMode {
-		root.limitMoveDown(0, num)
+		root.limitMoveDown(0, num+moveY)
 		return
 	}
 
