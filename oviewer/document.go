@@ -75,7 +75,7 @@ func NewDocument() (*Document, error) {
 		lines:    make([]string, 0),
 		eofCh:    make(chan struct{}),
 		reOpenCh: make(chan struct{}),
-		changCh:  make(chan struct{}, 10),
+		changCh:  make(chan struct{}),
 		closeCh:  make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
