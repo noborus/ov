@@ -373,7 +373,10 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				root.mu.RLock()
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
-						doc.changCh <- struct{}{}
+						select {
+						case doc.changCh <- struct{}{}:
+						default:
+						}
 					}
 				}
 				root.mu.RUnlock()
