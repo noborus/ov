@@ -8,7 +8,10 @@ all: build
 test: $(SRCS)
 	go test ./...
 
-build: $(BINARY_NAME)
+deps:
+	go mod tidy
+
+build: $(BINARY_NAME) deps
 
 $(BINARY_NAME): $(SRCS)
 	go build -ldflags $(LDFLAGS)
@@ -22,4 +25,4 @@ sys-install: build
 clean:
 	rm -f $(BINARY_NAME)
 
-.PHONY: all test build install clean
+.PHONY: all test deps build install clean
