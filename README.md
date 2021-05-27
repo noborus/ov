@@ -44,6 +44,12 @@ You can download the package from [releases](https://github.com/noborus/ov/relea
 sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd64.rpm
 ```
 
+### MacPorts (macOS)
+
+```console
+sudo port install ov
+```
+
 ### Homebrew(macOS or Linux)
 
 ```console
