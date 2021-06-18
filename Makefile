@@ -11,7 +11,7 @@ test: $(SRCS)
 deps:
 	go mod tidy
 
-build: $(BINARY_NAME) deps
+build: deps $(BINARY_NAME)
 
 $(BINARY_NAME): $(SRCS)
 	go build -ldflags $(LDFLAGS)
