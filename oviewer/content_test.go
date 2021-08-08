@@ -316,6 +316,14 @@ func Test_csToStyle(t *testing.T) {
 			},
 			want: tcell.StyleDefault.Foreground(tcell.GetColor("#0000ff")),
 		},
+		{
+			name: "attributes",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: bytes.NewBufferString("2;3;4;5;6;7;8;9"),
+			},
+			want: tcell.StyleDefault.Dim(true).Italic(true).Underline(true).Blink(true).Reverse(true).StrikeThrough(true),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

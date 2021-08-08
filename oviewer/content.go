@@ -218,6 +218,8 @@ FieldLoop:
 			style = style.Bold(true)
 		case "2", "02":
 			style = style.Dim(true)
+		case "3", "03":
+			style = style.Italic(true)
 		case "4", "04":
 			style = style.Underline(true)
 		case "5", "05":
