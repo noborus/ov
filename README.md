@@ -72,12 +72,12 @@ unzip ov_x.x.x_linux_amd64.zip
 sudo install ov /usr/local/bin
 ```
 
-### go get(simplified version)
+### go install
 
 It will be installed in $GOPATH/bin by the following command.
 
 ```console
-go get -u github.com/noborus/ov
+go install github.com/noborus/ov@latest
 ```
 
 ### go get(details or developer version)
