@@ -56,7 +56,6 @@ func (root *Root) drawHeader() int {
 		}
 
 		lc := root.getLineContents(lY, m.TabWidth)
-		root.lineStyle(lc, root.StyleHeader)
 
 		// column highlight
 		if m.ColumnMode {
@@ -70,10 +69,6 @@ func (root *Root) drawHeader() int {
 			wrap: wrap,
 		}
 
-		for x := 0; x < root.startX; x++ {
-			root.Screen.SetContent(x, hy, 0, nil, tcell.StyleDefault.Normal())
-		}
-
 		if m.WrapMode {
 			lX, lY = root.wrapContents(hy, lX, lY, lc)
 			if lX > 0 {
@@ -83,6 +78,11 @@ func (root *Root) drawHeader() int {
 			}
 		} else {
 			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
+		}
+
+		for x := 0; x < root.vWidth; x++ {
+			r, c, style, _ := root.GetContent(x, hy)
+			root.Screen.SetContent(x, hy, r, c, applyStyle(style, root.StyleHeader))
 		}
 	}
 
