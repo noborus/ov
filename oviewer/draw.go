@@ -47,10 +47,10 @@ func (root *Root) draw() {
 func (root *Root) drawHeader() int {
 	m := root.Doc
 
-	lY := 0
+	lY := m.SkipLines
 	lX := 0
 	wrap := 0
-	for hy := 0; lY < m.Header; hy++ {
+	for hy := 0; lY < m.Header+m.SkipLines; hy++ {
 		if hy > root.vHight {
 			break
 		}
@@ -80,6 +80,7 @@ func (root *Root) drawHeader() int {
 			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
 		}
 
+		// header style
 		for x := 0; x < root.vWidth; x++ {
 			r, c, style, _ := root.GetContent(x, hy)
 			root.Screen.SetContent(x, hy, r, c, applyStyle(style, root.StyleHeader))
