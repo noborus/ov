@@ -43,6 +43,7 @@ const (
 	actionBackSearch     = "backsearch"
 	actionDelimiter      = "delimiter"
 	actionHeader         = "header"
+	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
 	actionGoLine         = "goto"
 	actionNextSearch     = "next_search"
@@ -87,6 +88,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionBackSearch:     root.setBackSearchMode,
 		actionDelimiter:      root.setDelimiterMode,
 		actionHeader:         root.setHeaderMode,
+		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
 		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.eventNextSearch,
@@ -136,6 +138,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionBackSearch:     {"?"},
 		actionDelimiter:      {"d"},
 		actionHeader:         {"H"},
+		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
 		actionGoLine:         {"g"},
 		actionNextSearch:     {"n"},

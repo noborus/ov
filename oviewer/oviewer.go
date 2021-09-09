@@ -105,6 +105,8 @@ type general struct {
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
+	// SkipLines is the rows to skip.
+	SkipLines int
 	// Color to alternate rows
 	AlternateRows bool
 	// Column mode

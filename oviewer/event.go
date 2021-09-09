@@ -61,6 +61,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.goLine(ev.value)
 		case *headerInput:
 			root.setHeader(ev.value)
+		case *skipLinesInput:
+			root.setSkipLines(ev.value)
 		case *delimiterInput:
 			root.setDelimiter(ev.value)
 		case *tabWidthInput:

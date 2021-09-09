@@ -138,7 +138,28 @@ func (root *Root) setHeader(input string) {
 	}
 
 	root.Doc.Header = num
-	root.setMessage(fmt.Sprintf("Set Header %d", num))
+	root.setMessage(fmt.Sprintf("Set header lines %d", num))
+	root.setWrapHeaderLen()
+	root.Doc.ClearCache()
+}
+
+// setSkipLines sets the number of lines to skip.
+func (root *Root) setSkipLines(input string) {
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	if num < 0 || num > root.vHight-1 {
+		root.setMessage(ErrOutOfRange.Error())
+		return
+	}
+	if root.Doc.SkipLines == num {
+		return
+	}
+
+	root.Doc.SkipLines = num
+	root.setMessage(fmt.Sprintf("Set skip lines %d", num))
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }

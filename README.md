@@ -198,7 +198,7 @@ export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
 
 You can also write in `~/.psqlrc` in previous versions.
 
-```
+```sh
 \setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
 ```
 
@@ -212,7 +212,7 @@ mysql --pager='ov -w=f -H3 -F -C -d "|"'
 
 You can also write in `~/.my.cnf`.
 
-```
+```console
 [client]
 pager=ov -w=f -H3 -F -C -d "|"
 ```
@@ -234,7 +234,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 ## Key bindings
 
-```
+```console
   [Escape], [q]              * quit
   [ctrl+c]                   * cancel
   [Q]                        * output screen and quit
