@@ -647,11 +647,22 @@ func (root *Root) docSmall() bool {
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
 	m := root.Doc
-	for i := 0; i < root.vHight-1; i++ {
-		n := m.topLN + i
+	p := 0
+	for n := m.topLN; ; n++ {
 		if n >= m.BufEndNum() {
 			break
 		}
+
+		lc, err := m.lineToContents(n, root.Doc.TabWidth)
+		if err != nil {
+			log.Println(err, n)
+			continue
+		}
+		p += 1 + (len(lc) / root.vWidth)
+		if p >= root.vHight {
+			break
+		}
+
 		fmt.Println(m.GetLine(n))
 	}
 }
