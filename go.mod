@@ -13,17 +13,13 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6
 	github.com/mattn/go-runewidth v0.0.13
-	github.com/mitchellh/mapstructure v1.4.2 // indirect
-	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.2.0
-	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v1.2.1
-	github.com/spf13/viper v1.8.1
+	github.com/spf13/viper v1.9.0
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210915083310-ed5796bab164 // indirect
-	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
+	golang.org/x/sys v0.0.0-20211006225509-1a26e0398eed // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/ini.v1 v1.63.2 // indirect
 )

@@ -108,9 +108,10 @@ func (root *Root) Quit() {
 	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // Cancel follow mode and follow all mode.
@@ -285,9 +286,10 @@ func (root *Root) Search(str string) {
 	root.input.reg = regexpComple(str, root.CaseSensitive)
 	ev := &eventSearch{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // BackSearch fires a backward search event.
@@ -305,9 +307,10 @@ func (root *Root) BackSearch(str string) {
 	root.input.reg = regexpComple(str, root.CaseSensitive)
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // eventDocument represents a set document event.
@@ -326,9 +329,10 @@ func (root *Root) SetDocument(docNum int) {
 		ev.docNum = docNum
 	}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // eventAddDocument represents a set document event.
@@ -345,9 +349,10 @@ func (root *Root) AddDocument(m *Document) {
 	ev := &eventAddDocument{}
 	ev.m = m
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // eventCloseDocument represents a close document event.
@@ -362,9 +367,10 @@ func (root *Root) CloseDocument(m *Document) {
 	}
 	ev := &eventCloseDocument{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // eventSearchQuit represents a search quit event.
@@ -379,9 +385,10 @@ func (root *Root) searchQuit() {
 	}
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
-	go func() {
-		root.Screen.PostEventWait(ev)
-	}()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (root *Root) cancelWait(cancel context.CancelFunc) error {

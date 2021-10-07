@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"log"
 	"regexp"
 	"strconv"
 
@@ -62,9 +63,10 @@ func (root *Root) inputEvent(ev *tcell.EventKey) {
 	input := root.input
 	// confirmed.
 	nev := input.EventInput.Confirm(input.value)
-	go func() {
-		root.Screen.PostEventWait(nev)
-	}()
+	err := root.Screen.PostEvent(nev)
+	if err != nil {
+		log.Println(err)
+	}
 
 	input.mode = Normal
 	input.EventInput = newNormalInput()
