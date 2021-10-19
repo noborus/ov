@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -62,6 +63,12 @@ func (root *Root) drawHeader() int {
 			str, byteMap := contentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
+		}
+
+		// line number mode
+		if m.LineNumMode {
+			lc := strToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
+			root.setContentString(0, hy, lc)
 		}
 
 		root.lnumber[hy] = lineNumber{

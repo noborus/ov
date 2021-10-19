@@ -86,7 +86,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	}
 }
 
-// checkScreen is true if screen is ready.
+// checkScreen returns true if the screen is ready.
 // checkScreen is used in case it is called directly from the outside.
 // True if called from the event loop.
 func (root *Root) checkScreen() bool {
@@ -138,12 +138,15 @@ func (root *Root) follow() {
 	}
 
 	root.onceFollowMode(root.Doc)
+
 	num := root.Doc.BufEndNum()
-	if root.Doc.latestNum != num {
-		root.skipDraw = false
-		root.TailSync()
-		root.Doc.latestNum = num
+	if root.Doc.latestNum == num {
+		return
 	}
+
+	root.skipDraw = false
+	root.TailSync()
+	root.Doc.latestNum = num
 }
 
 // followAll monitors and switches all document updates

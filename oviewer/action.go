@@ -109,9 +109,8 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-
-	root.moveLine(lN - root.Doc.Header - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lN))
+	lN = root.moveLine(lN - 1)
+	root.setMessage(fmt.Sprintf("Moved to line %d", lN+1))
 }
 
 // markLineNum stores the specified number of lines.
