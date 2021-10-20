@@ -250,6 +250,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
 	k.writeKeyBind(&b, actionDelimiter, "delimiter string")
 	k.writeKeyBind(&b, actionHeader, "number of header lines")
+	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 
 	return b.String()
