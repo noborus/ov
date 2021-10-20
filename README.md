@@ -141,6 +141,7 @@ Flags:
       --help-key                  display key bind information
   -n, --line-number               line number mode
   -F, --quit-if-one-screen        quit if the output fits on one screen
+      --skip-lines int            skip the number of lines
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information
   -w, --wrap                      wrap mode (default true)

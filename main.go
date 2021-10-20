@@ -175,7 +175,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
 
-	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "skip the number of liness")
+	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "skip the number of lines")
 	_ = viper.BindPFlag("general.SkipLines", rootCmd.PersistentFlags().Lookup("skip-lines"))
 
 	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "alternately change the line color")
