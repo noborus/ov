@@ -132,10 +132,8 @@ func (m *Document) ReadFile(fileName string) error {
 		atomic.StoreInt32(&m.changed, 1)
 		close(m.reOpenCh)
 	}()
-	if err := m.ReadAll(reader); err != nil {
-		return err
-	}
-	return nil
+
+	return m.ReadAll(reader)
 }
 
 // openFollowMode opens the file in follow mode.

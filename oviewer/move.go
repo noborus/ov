@@ -19,10 +19,18 @@ func (root *Root) moveBottom() {
 }
 
 // Move to the specified line.
-func (root *Root) moveLine(lN int) {
+func (root *Root) moveLine(lN int) int {
 	root.resetSelect()
+
+	if lN < 0 {
+		lN = 0
+	}
+	if lN > root.Doc.BufEndNum() {
+		lN = root.Doc.BufEndNum()
+	}
 	root.Doc.topLN = lN
 	root.Doc.topLX = 0
+	return lN
 }
 
 // Move up one screen.
