@@ -290,6 +290,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
   [d]                        * delimiter string
   [H]                        * number of header lines
+  [ctrl+s]                   * number of skip lines
   [t]                        * TAB width
 
 ```
