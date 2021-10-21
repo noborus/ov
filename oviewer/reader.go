@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"sync/atomic"
 
 	"github.com/klauspost/compress/zstd"
@@ -224,7 +225,7 @@ func (m *Document) ContinueReadAll(r io.Reader) error {
 }
 
 func (m *Document) readAll(reader *bufio.Reader) error {
-	var line bytes.Buffer
+	var line strings.Builder
 
 	for {
 		if m.checkClose() {
