@@ -1,10 +1,10 @@
 package oviewer
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
@@ -171,7 +171,7 @@ func (root *Root) putClipboard(_ context.Context) {
 		x1, x2 = x2, x1
 	}
 
-	buff, err := root.rangeToByte(x1, y1, x2, y2)
+	buff, err := root.rangeToString(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(err.Error())
 		return
@@ -180,51 +180,51 @@ func (root *Root) putClipboard(_ context.Context) {
 	if len(buff) == 0 {
 		return
 	}
-	if err := clipboard.WriteAll(string(buff)); err != nil {
+	if err := clipboard.WriteAll(buff); err != nil {
 		log.Printf("putClipboard: %v", err)
 	}
 	root.setMessage("Copy")
 }
 
-// rangeToByte returns the selection.
-func (root *Root) rangeToByte(x1, y1, x2, y2 int) ([]byte, error) {
+// rangeToString returns the selection.
+func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if root.mouseRectangle {
-		return root.rectangleToByte(x1, y1, x2, y2)
+		return root.rectangleToString(x1, y1, x2, y2)
 	}
 
-	var buff bytes.Buffer
+	var buff strings.Builder
 
 	ln1 := root.lnumber[y1]
 	lc1, err := root.Doc.lineToContents(ln1.line, root.Doc.TabWidth)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	wx1 := root.branchWidth(lc1, ln1.wrap)
 
 	ln2 := root.lnumber[y2]
 	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	wx2 := root.branchWidth(lc2, ln2.wrap)
 
 	if ln1.line == ln2.line {
 		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
 		if len(str) == 0 {
-			return buff.Bytes(), nil
+			return buff.String(), nil
 		}
 		if _, err := buff.WriteString(str); err != nil {
-			return nil, err
+			return "", err
 		}
-		return buff.Bytes(), nil
+		return buff.String(), nil
 	}
 
 	str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, -1)
 	if _, err := buff.WriteString(str); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := buff.WriteByte('\n'); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	lnumber := []int{}
@@ -238,42 +238,42 @@ func (root *Root) rangeToByte(x1, y1, x2, y2 int) ([]byte, error) {
 	for _, ln := range lnumber {
 		line := root.selectLine(ln, 0, -1)
 		if _, err := buff.WriteString(line); err != nil {
-			return nil, err
+			return "", err
 		}
 		if err := buff.WriteByte('\n'); err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
 	str = root.selectLine(ln2.line, 0, root.Doc.x+x2+wx2+1)
 	if _, err := buff.WriteString(str); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return buff.Bytes(), nil
+	return buff.String(), nil
 }
 
 // rectangleToByte returns a rectangular range.
-func (root *Root) rectangleToByte(x1, y1, x2, y2 int) ([]byte, error) {
-	var buff bytes.Buffer
+func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
+	var buff strings.Builder
 
 	for y := y1; y <= y2; y++ {
 		ln := root.lnumber[y]
 		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		wx := root.branchWidth(lc, ln.wrap)
 		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
 
 		if _, err := buff.WriteString(line); err != nil {
-			return nil, err
+			return "", err
 		}
 		if err := buff.WriteByte('\n'); err != nil {
-			return nil, err
+			return "", err
 		}
 	}
-	return buff.Bytes(), nil
+	return buff.String(), nil
 }
 
 // branchWidth returns the leftmost position of the number of wrapped line.

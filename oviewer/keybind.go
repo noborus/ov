@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -199,7 +198,7 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 
 // KeyBindString returns keybind as a string for help.
 func KeyBindString(k KeyBind) string {
-	var b bytes.Buffer
+	var b strings.Builder
 	fmt.Fprintf(&b, "\n\tKey binding\n\n")
 	k.writeKeyBind(&b, actionExit, "quit")
 	k.writeKeyBind(&b, actionCancel, "cancel")
