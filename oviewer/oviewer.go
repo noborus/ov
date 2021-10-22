@@ -121,6 +121,8 @@ type general struct {
 	FollowMode bool
 	// Follow all.
 	FollowAll bool
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
 }
 
 // Config represents the settings of ov.
@@ -292,7 +294,8 @@ func NewConfig() Config {
 			Background: "darkgoldenrod",
 		},
 		General: general{
-			TabWidth: 8,
+			TabWidth:       8,
+			MarkStyleWidth: 1,
 		},
 	}
 }

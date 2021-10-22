@@ -80,6 +80,7 @@ func NewDocument() (*Document, error) {
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
+			MarkStyleWidth:  1,
 		},
 	}
 

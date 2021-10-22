@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -112,6 +113,9 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lineStr string
 	var byteMap map[int]int
 
+	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
+	marked := markedList(root.input.GoCandidate.list)
+
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
@@ -174,16 +178,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			}
 		}
 
-		for _, buff := range root.input.GoCandidate.list {
-			lineNum, err := strconv.Atoi(buff)
-			if err != nil {
-				continue
-			}
-			if m.topLN+lY+1 == lineNum {
-				for x := 0; x < root.vWidth; x++ {
-					r, c, style, _ := root.GetContent(x, y)
-					root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
-				}
+		// mark style.
+		if intContains(marked, m.topLN+lY+1) {
+			for x := 0; x < markStyleWidth; x++ {
+				r, c, style, _ := root.GetContent(x, y)
+				root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
 			}
 		}
 
@@ -369,4 +368,26 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
+}
+
+func markedList(list []string) []int {
+	var marked []int
+	for _, buff := range list {
+		lineNum, err := strconv.Atoi(buff)
+		if err != nil {
+			continue
+		}
+		marked = append(marked, lineNum)
+	}
+	sort.Ints(marked)
+	return marked
+}
+
+func intContains(list []int, e int) bool {
+	for _, n := range list {
+		if e == n {
+			return true
+		}
+	}
+	return false
 }

@@ -116,22 +116,23 @@ func (root *Root) goLine(input string) {
 // addMark marks the current line number.
 func (root *Root) addMark() {
 	c := min(root.Doc.topLN, root.Doc.endNum)
-	s := strconv.Itoa(c + 1)
+	s := strconv.Itoa(c + root.Doc.Header + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.setMessage(fmt.Sprintf("Marked to line %s", s))
+	root.setMessage(fmt.Sprintf("Marked to line %d", c+1))
 }
 
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark() {
-	s := strconv.Itoa(root.Doc.topLN + 1)
+	c := root.Doc.topLN
+	s := strconv.Itoa(c + root.Doc.Header + 1)
 	oLen := len(root.input.GoCandidate.list)
 	root.input.GoCandidate.list = remove(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
 	if oLen == len(root.input.GoCandidate.list) {
-		root.setMessage(fmt.Sprintf("Not marked line %s", s))
+		root.setMessage(fmt.Sprintf("Not marked line %d", c+1))
 	} else {
-		root.setMessage(fmt.Sprintf("Remove the mark at line %s", s))
+		root.setMessage(fmt.Sprintf("Remove the mark at line %d", c+1))
 	}
 }
 
