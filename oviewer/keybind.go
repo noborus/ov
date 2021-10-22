@@ -31,6 +31,7 @@ const (
 	actionMoveHfUp       = "page_half_up"
 	actionMoveHfDn       = "page_half_down"
 	actionMark           = "mark"
+	actionRemoveMark     = "remove_mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
 	actionViewMode       = "set_view_mode"
@@ -82,7 +83,8 @@ func (root *Root) setHandler() map[string]func() {
 		actionColumnMode:     root.toggleColumnMode,
 		actionAlternate:      root.toggleAlternateRows,
 		actionLineNumMode:    root.toggleLineNumMode,
-		actionMark:           root.markLineNum,
+		actionMark:           root.addMark,
+		actionRemoveMark:     root.removeMark,
 		actionSearch:         root.setSearchMode,
 		actionBackSearch:     root.setBackSearchMode,
 		actionDelimiter:      root.setDelimiterMode,
@@ -133,6 +135,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionMark:           {"m"},
+		actionRemoveMark:     {"M"},
 		actionSearch:         {"/"},
 		actionBackSearch:     {"?"},
 		actionDelimiter:      {"d"},

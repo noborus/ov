@@ -141,6 +141,8 @@ type Config struct {
 	StyleSearchHighlight ovStyle
 	// StyleColumnHighlight is the style that applies to the column highlight.
 	StyleColumnHighlight ovStyle
+	// StyleMarkLine is a style that marked line.
+	StyleMarkLine ovStyle
 
 	// Old setting method.
 	// Alternating background color.
@@ -285,6 +287,9 @@ func NewConfig() Config {
 		},
 		StyleColumnHighlight: ovStyle{
 			Reverse: true,
+		},
+		StyleMarkLine: ovStyle{
+			Background: "darkgoldenrod",
 		},
 		General: general{
 			TabWidth: 8,

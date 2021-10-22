@@ -113,12 +113,26 @@ func (root *Root) goLine(input string) {
 	root.setMessage(fmt.Sprintf("Moved to line %d", lN+1))
 }
 
-// markLineNum stores the specified number of lines.
-func (root *Root) markLineNum() {
-	s := strconv.Itoa(root.Doc.topLN + 1)
+// addMark marks the current line number.
+func (root *Root) addMark() {
+	c := min(root.Doc.topLN, root.Doc.endNum)
+	s := strconv.Itoa(c + 1)
 	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
 	root.input.GoCandidate.p = 0
-	root.setMessage(fmt.Sprintf("Marked to line %d", root.Doc.topLN))
+	root.setMessage(fmt.Sprintf("Marked to line %s", s))
+}
+
+// removeMark removes the current line number from the mark.
+func (root *Root) removeMark() {
+	s := strconv.Itoa(root.Doc.topLN + 1)
+	oLen := len(root.input.GoCandidate.list)
+	root.input.GoCandidate.list = remove(root.input.GoCandidate.list, s)
+	root.input.GoCandidate.p = 0
+	if oLen == len(root.input.GoCandidate.list) {
+		root.setMessage(fmt.Sprintf("Not marked line %s", s))
+	} else {
+		root.setMessage(fmt.Sprintf("Remove the mark at line %s", s))
+	}
 }
 
 // setHeader sets the number of lines in the header.

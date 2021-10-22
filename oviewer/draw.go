@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -172,6 +173,20 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 				}
 			}
 		}
+
+		for _, buff := range root.input.GoCandidate.list {
+			lineNum, err := strconv.Atoi(buff)
+			if err != nil {
+				continue
+			}
+			if m.topLN+lY+1 == lineNum {
+				for x := 0; x < root.vWidth; x++ {
+					r, c, style, _ := root.GetContent(x, y)
+					root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
+				}
+			}
+		}
+
 		lY = nextY
 	}
 
