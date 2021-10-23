@@ -32,6 +32,7 @@ const (
 	actionMoveHfDn       = "page_half_down"
 	actionMark           = "mark"
 	actionRemoveMark     = "remove_mark"
+	actionRemoveAllMark  = "remove_all_mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
 	actionViewMode       = "set_view_mode"
@@ -85,6 +86,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionLineNumMode:    root.toggleLineNumMode,
 		actionMark:           root.addMark,
 		actionRemoveMark:     root.removeMark,
+		actionRemoveAllMark:  root.removeAllMark,
 		actionSearch:         root.setSearchMode,
 		actionBackSearch:     root.setBackSearchMode,
 		actionDelimiter:      root.setDelimiterMode,
@@ -135,6 +137,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionMark:           {"m"},
+		actionRemoveAllMark:  {"ctrl+delete"},
 		actionRemoveMark:     {"M"},
 		actionSearch:         {"/"},
 		actionBackSearch:     {"?"},
@@ -233,6 +236,8 @@ func KeyBindString(k KeyBind) string {
 
 	fmt.Fprintf(&b, "\n\tMark position\n\n")
 	k.writeKeyBind(&b, actionMark, "mark current position")
+	k.writeKeyBind(&b, actionRemoveMark, "remove mark current position")
+	k.writeKeyBind(&b, actionRemoveAllMark, "remove all mark")
 	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
 	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
 

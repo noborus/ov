@@ -102,6 +102,11 @@ func (root *Root) setWrapHeaderLen() {
 	}
 }
 
+func (root *Root) goLineNumber(ln int) {
+	ln = root.moveLine(ln)
+	root.setMessage(fmt.Sprintf("Moved to line %d", ln+1))
+}
+
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
 	lN, err := strconv.Atoi(input)
@@ -109,31 +114,61 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	lN = root.moveLine(lN - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lN+1))
+	root.goLineNumber(lN - 1)
+}
+func (root *Root) markNext() {
+	if len(root.Doc.marked) == 0 {
+		return
+	}
+
+	if len(root.Doc.marked) > root.Doc.markedPoint+1 {
+		root.Doc.markedPoint++
+	} else {
+		root.Doc.markedPoint = 0
+	}
+	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
+}
+
+func (root *Root) markPrev() {
+	if len(root.Doc.marked) == 0 {
+		return
+	}
+
+	if root.Doc.markedPoint > 0 {
+		root.Doc.markedPoint--
+	} else {
+		root.Doc.markedPoint = len(root.Doc.marked) - 1
+	}
+	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
 }
 
 // addMark marks the current line number.
 func (root *Root) addMark() {
 	c := min(root.Doc.topLN, root.Doc.endNum)
-	s := strconv.Itoa(c + root.Doc.Header + 1)
-	root.input.GoCandidate.list = toLast(root.input.GoCandidate.list, s)
-	root.input.GoCandidate.p = 0
+	root.Doc.marked = append(root.Doc.marked, c)
 	root.setMessage(fmt.Sprintf("Marked to line %d", c+1))
 }
 
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark() {
 	c := root.Doc.topLN
-	s := strconv.Itoa(c + root.Doc.Header + 1)
-	oLen := len(root.input.GoCandidate.list)
-	root.input.GoCandidate.list = remove(root.input.GoCandidate.list, s)
-	root.input.GoCandidate.p = 0
-	if oLen == len(root.input.GoCandidate.list) {
+	oLen := len(root.Doc.marked)
+	for n, l := range root.Doc.marked {
+		if l == c {
+			root.Doc.marked = append(root.Doc.marked[:n], root.Doc.marked[n+1:]...)
+		}
+	}
+	if oLen == len(root.Doc.marked) {
 		root.setMessage(fmt.Sprintf("Not marked line %d", c+1))
 	} else {
 		root.setMessage(fmt.Sprintf("Remove the mark at line %d", c+1))
 	}
+}
+
+func (root *Root) removeAllMark() {
+	root.Doc.marked = nil
+	root.Doc.markedPoint = 0
+	root.setMessage(fmt.Sprintf("Remove all mark"))
 }
 
 // setHeader sets the number of lines in the header.
@@ -176,14 +211,6 @@ func (root *Root) setSkipLines(input string) {
 	root.setMessage(fmt.Sprintf("Set skip lines %d", num))
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
-}
-
-func (root *Root) markNext() {
-	root.goLine(newGotoInput(root.input.GoCandidate).Up(""))
-}
-
-func (root *Root) markPrev() {
-	root.goLine(newGotoInput(root.input.GoCandidate).Down(""))
 }
 
 func (root *Root) nextDoc() {

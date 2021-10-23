@@ -114,7 +114,6 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var byteMap map[int]int
 
 	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
-	marked := markedList(root.input.GoCandidate.list)
 
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
@@ -179,7 +178,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// mark style.
-		if intContains(marked, m.topLN+lY+1) {
+		if intContains(m.marked, m.topLN+lY-root.Doc.Header) {
 			for x := 0; x < markStyleWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
 				root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))

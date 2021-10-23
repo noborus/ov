@@ -65,6 +65,10 @@ type Document struct {
 	// columnNum is the number of columns.
 	columnNum int
 
+	// marked is a list of marked line numbers.
+	marked      []int
+	markedPoint int
+
 	// mu controls the mutex.
 	mu sync.Mutex
 }
