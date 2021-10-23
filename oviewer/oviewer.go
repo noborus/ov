@@ -699,7 +699,7 @@ func (root *Root) headerLen() int {
 
 // leftMostX returns a list of left - most x positions when wrapping.
 func (root *Root) leftMostX(lN int) ([]int, error) {
-	lc, err := root.Doc.lineToContents(lN, root.Doc.TabWidth)
+	lc, err := root.Doc.lineToContents(lN+root.Doc.Header+root.Doc.SkipLines, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err
 	}

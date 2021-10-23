@@ -3,12 +3,13 @@ package oviewer
 import (
 	"fmt"
 	"log"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
+
+// ln: lineNumber = Logical line.
+// lineNumber = lines[indices] - (header + skipLines) + 1.
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
@@ -143,7 +144,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
+			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-(m.Header+m.SkipLines)+1), m.TabWidth)
 			for i := 0; i < len(lc); i++ {
 				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}
@@ -178,7 +179,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// mark style.
-		if intContains(m.marked, m.topLN+lY-root.Doc.Header) {
+		if intContains(m.marked, m.topLN+lY) {
 			for x := 0; x < markStyleWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
 				root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
@@ -367,19 +368,6 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
-}
-
-func markedList(list []string) []int {
-	var marked []int
-	for _, buff := range list {
-		lineNum, err := strconv.Atoi(buff)
-		if err != nil {
-			continue
-		}
-		marked = append(marked, lineNum)
-	}
-	sort.Ints(marked)
-	return marked
 }
 
 func intContains(list []int, e int) bool {
