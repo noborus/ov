@@ -8,9 +8,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// ln: lineNumber = Logical line.
-// lineNumber = lines[indices] - (header + skipLines) + 1.
-
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
 	m := root.Doc
@@ -54,7 +51,7 @@ func (root *Root) drawHeader() int {
 	lY := m.SkipLines
 	lX := 0
 	wrap := 0
-	for hy := 0; lY < m.Header+m.SkipLines; hy++ {
+	for hy := 0; lY < m.firstLine(); hy++ {
 		if hy > root.vHight {
 			break
 		}
@@ -103,7 +100,7 @@ func (root *Root) drawHeader() int {
 func (root *Root) drawBody(lX int, lY int) (int, int) {
 	m := root.Doc
 
-	listX, err := root.leftMostX(m.topLN + lY)
+	listX, err := root.leftMostX(m.topLN + root.Doc.firstLine() + lY)
 	if err != nil {
 		log.Println(err, "drawBody", m.topLN+lY)
 	}
@@ -144,7 +141,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-(m.Header+m.SkipLines)+1), m.TabWidth)
+			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
 			for i := 0; i < len(lc); i++ {
 				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}

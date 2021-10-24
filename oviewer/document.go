@@ -165,3 +165,8 @@ func (m *Document) checkClose() bool {
 	}
 	return false
 }
+
+// fistLine is the first line that excludes the SkipLines and Header.
+func (m *Document) firstLine() int {
+	return m.SkipLines + m.Header
+}
