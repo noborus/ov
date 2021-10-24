@@ -149,7 +149,7 @@ func (root *Root) markPrev() {
 // addMark marks the current line number.
 func (root *Root) addMark() {
 	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.endNum)
-	root.Doc.marked = rmList(root.Doc.marked, c)
+	root.Doc.marked = removeInt(root.Doc.marked, c)
 	root.Doc.marked = append(root.Doc.marked, c)
 	root.setMessage(fmt.Sprintf("Marked to line %d", c-root.Doc.firstLine()+1))
 }
@@ -158,7 +158,7 @@ func (root *Root) addMark() {
 func (root *Root) removeMark() {
 	c := root.Doc.topLN + root.Doc.firstLine()
 	oLen := len(root.Doc.marked)
-	root.Doc.marked = rmList(root.Doc.marked, c)
+	root.Doc.marked = removeInt(root.Doc.marked, c)
 	if oLen == len(root.Doc.marked) {
 		root.setMessage(fmt.Sprintf("Not marked line %d", c-root.Doc.firstLine()+1))
 	} else {
@@ -166,20 +166,11 @@ func (root *Root) removeMark() {
 	}
 }
 
-func rmList(list []int, c int) []int {
-	for n, l := range list {
-		if l == c {
-			list = append(list[:n], list[n+1:]...)
-		}
-	}
-	return list
-}
-
 // removeAllMark removes all marks.
 func (root *Root) removeAllMark() {
 	root.Doc.marked = nil
 	root.Doc.markedPoint = 0
-	root.setMessage(fmt.Sprintf("Remove all marks"))
+	root.setMessage("Remove all marks")
 }
 
 // setHeader sets the number of lines in the header.

@@ -9,6 +9,7 @@ General:
   LineNumMode: false
   WrapMode: true
   ColumnDelimiter: ","
+  MarkStyleWidth: 1
 
 # Style
 # String of the color name: Foreground, Background
@@ -88,6 +89,10 @@ KeyBind:
         - "ctrl+d"
     mark:
         - "m"
+    remove_mark:
+        - "M"
+    remove_all_mark:
+        - "ctrl+delete"
     next_mark:
         - ">"
     previous_mark:

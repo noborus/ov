@@ -314,7 +314,7 @@ func NewRoot(read io.Reader) (*Root, error) {
 		return nil, err
 	}
 
-	if err = m.ReadAll(read); err != nil {
+	if err := m.ReadAll(read); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
@@ -327,7 +327,7 @@ func openSTDIN() (*Root, error) {
 		return nil, err
 	}
 
-	if err = m.ReadFile(""); err != nil {
+	if err := m.ReadFile(""); err != nil {
 		return nil, err
 	}
 	docList = append(docList, m)
@@ -736,4 +736,26 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func removeStr(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+
+	for n, l := range list {
+		if l == s {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
+}
+
+func removeInt(list []int, c int) []int {
+	for n, l := range list {
+		if l == c {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
 }

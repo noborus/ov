@@ -658,25 +658,12 @@ func (c *candidate) down() string {
 	return c.list[c.p]
 }
 
-func remove(list []string, s string) []string {
-	if len(s) == 0 {
-		return list
-	}
-
-	for n, l := range list {
-		if l == s {
-			list = append(list[:n], list[n+1:]...)
-		}
-	}
-	return list
-}
-
 func toLast(list []string, s string) []string {
 	if len(s) == 0 {
 		return list
 	}
 
-	list = remove(list, s)
+	list = removeStr(list, s)
 	list = append(list, s)
 	return list
 }
