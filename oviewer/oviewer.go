@@ -121,6 +121,8 @@ type general struct {
 	FollowMode bool
 	// Follow all.
 	FollowAll bool
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
 }
 
 // Config represents the settings of ov.
@@ -141,6 +143,8 @@ type Config struct {
 	StyleSearchHighlight ovStyle
 	// StyleColumnHighlight is the style that applies to the column highlight.
 	StyleColumnHighlight ovStyle
+	// StyleMarkLine is a style that marked line.
+	StyleMarkLine ovStyle
 
 	// Old setting method.
 	// Alternating background color.
@@ -286,8 +290,12 @@ func NewConfig() Config {
 		StyleColumnHighlight: ovStyle{
 			Reverse: true,
 		},
+		StyleMarkLine: ovStyle{
+			Background: "darkgoldenrod",
+		},
 		General: general{
-			TabWidth: 8,
+			TabWidth:       8,
+			MarkStyleWidth: 1,
 		},
 	}
 }
@@ -306,7 +314,7 @@ func NewRoot(read io.Reader) (*Root, error) {
 		return nil, err
 	}
 
-	if err = m.ReadAll(read); err != nil {
+	if err := m.ReadAll(read); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
@@ -319,7 +327,7 @@ func openSTDIN() (*Root, error) {
 		return nil, err
 	}
 
-	if err = m.ReadFile(""); err != nil {
+	if err := m.ReadFile(""); err != nil {
 		return nil, err
 	}
 	docList = append(docList, m)
@@ -728,4 +736,26 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func removeStr(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+
+	for n, l := range list {
+		if l == s {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
+}
+
+func removeInt(list []int, c int) []int {
+	for n, l := range list {
+		if l == c {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
 }

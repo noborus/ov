@@ -51,7 +51,7 @@ func (root *Root) drawHeader() int {
 	lY := m.SkipLines
 	lX := 0
 	wrap := 0
-	for hy := 0; lY < m.Header+m.SkipLines; hy++ {
+	for hy := 0; lY < m.firstLine(); hy++ {
 		if hy > root.vHight {
 			break
 		}
@@ -100,7 +100,7 @@ func (root *Root) drawHeader() int {
 func (root *Root) drawBody(lX int, lY int) (int, int) {
 	m := root.Doc
 
-	listX, err := root.leftMostX(m.topLN + lY)
+	listX, err := root.leftMostX(m.topLN + root.Doc.firstLine() + lY)
 	if err != nil {
 		log.Println(err, "drawBody", m.topLN+lY)
 	}
@@ -110,6 +110,8 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
+
+	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
 
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
@@ -139,7 +141,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.Header+1), m.TabWidth)
+			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
 			for i := 0; i < len(lc); i++ {
 				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}
@@ -172,6 +174,15 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 				}
 			}
 		}
+
+		// mark style.
+		if intContains(m.marked, m.topLN+lY) {
+			for x := 0; x < markStyleWidth; x++ {
+				r, c, style, _ := root.GetContent(x, y)
+				root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
+			}
+		}
+
 		lY = nextY
 	}
 
@@ -354,4 +365,13 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
+}
+
+func intContains(list []int, e int) bool {
+	for _, n := range list {
+		if e == n {
+			return true
+		}
+	}
+	return false
 }

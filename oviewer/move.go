@@ -43,7 +43,7 @@ func (root *Root) movePgUp() {
 func (root *Root) movePgDn() {
 	root.resetSelect()
 
-	y := root.bottomLN - root.Doc.Header
+	y := root.bottomLN - root.Doc.firstLine()
 	x := root.bottomLX
 	root.limitMoveDown(x, y)
 }
@@ -169,7 +169,7 @@ func (root *Root) moveUp() {
 	// WrapMode.
 	// Same line.
 	if m.topLX > 0 {
-		listX, err := root.leftMostX(m.topLN + m.Header)
+		listX, err := root.leftMostX(m.topLN + m.firstLine())
 		if err != nil {
 			log.Println(err)
 			return
@@ -189,7 +189,7 @@ func (root *Root) moveUp() {
 		m.topLX = 0
 		return
 	}
-	listX, err := root.leftMostX(m.topLN + m.Header)
+	listX, err := root.leftMostX(m.topLN + m.firstLine())
 	if err != nil {
 		log.Println(err)
 		return
@@ -215,7 +215,7 @@ func (root *Root) moveDown() {
 	}
 
 	// WrapMode
-	listX, err := root.leftMostX(m.topLN + m.Header)
+	listX, err := root.leftMostX(m.topLN + m.firstLine())
 	if err != nil {
 		log.Println(err)
 		return

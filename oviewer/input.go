@@ -425,8 +425,10 @@ func (g *gotoInput) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (g *gotoInput) Confirm(str string) tcell.Event {
 	g.value = str
-	g.clist.list = toLast(g.clist.list, str)
-	g.clist.p = 0
+	if _, err := strconv.Atoi(str); err == nil {
+		g.clist.list = toLast(g.clist.list, str)
+		g.clist.p = 0
+	}
 	g.SetEventNow()
 	return g
 }
@@ -661,12 +663,7 @@ func toLast(list []string, s string) []string {
 		return list
 	}
 
-	for n, l := range list {
-		if l == s {
-			list = append(list[:n], list[n+1:]...)
-		}
-	}
-
+	list = removeStr(list, s)
 	list = append(list, s)
 	return list
 }

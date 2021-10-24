@@ -65,6 +65,10 @@ type Document struct {
 	// columnNum is the number of columns.
 	columnNum int
 
+	// marked is a list of marked line numbers.
+	marked      []int
+	markedPoint int
+
 	// mu controls the mutex.
 	mu sync.Mutex
 }
@@ -80,6 +84,7 @@ func NewDocument() (*Document, error) {
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
+			MarkStyleWidth:  1,
 		},
 	}
 
@@ -159,4 +164,9 @@ func (m *Document) checkClose() bool {
 	default:
 	}
 	return false
+}
+
+// fistLine is the first line that excludes the SkipLines and Header.
+func (m *Document) firstLine() int {
+	return m.SkipLines + m.Header
 }
