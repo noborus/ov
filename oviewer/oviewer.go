@@ -224,6 +224,8 @@ var (
 	ErrFatalCache = errors.New("fatal error in cache value")
 	// ErrMissingFile indicates that the file does not exist.
 	ErrMissingFile = errors.New("missing filename")
+	// ErrMissingFile indicates that the file does not exist.
+	ErrIsDirectory = errors.New("is a directory")
 	// ErrNotFound indicates not found.
 	ErrNotFound = errors.New("not found")
 	// ErrCancel indicates cancel.
@@ -302,10 +304,19 @@ func NewConfig() Config {
 
 // Open reads the file named of the argument and return the structure of oviewer.
 func Open(fileNames ...string) (*Root, error) {
-	if len(fileNames) == 0 {
+	switch len(fileNames) {
+	case 0:
 		return openSTDIN()
+	case 1:
+		m, err := openFile(fileNames[0])
+		if err != nil {
+			return nil, err
+		}
+		return NewOviewer(m)
+	default:
+		return openFiles(fileNames)
 	}
-	return openFiles(fileNames)
+
 }
 
 func NewRoot(read io.Reader) (*Root, error) {
@@ -334,28 +345,32 @@ func openSTDIN() (*Root, error) {
 	return NewOviewer(docList...)
 }
 
+func openFile(fileName string) (*Document, error) {
+	fi, err := os.Stat(fileName)
+	if err != nil {
+		return nil, err
+	}
+	if fi.IsDir() {
+		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
+	}
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+	if err := m.ReadFile(fileName); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func openFiles(fileNames []string) (*Root, error) {
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
-		fi, err := os.Stat(fileName)
+		m, err := openFile(fileName)
 		if err != nil {
-			log.Println(err, fileName)
+			log.Println(err)
 			continue
 		}
-		if fi.IsDir() {
-			continue
-		}
-
-		m, err := NewDocument()
-		if err != nil {
-			return nil, err
-		}
-
-		if err := m.ReadFile(fileName); err != nil {
-			log.Println(err, fileName)
-			continue
-		}
-
 		docList = append(docList, m)
 	}
 
