@@ -12,6 +12,7 @@ import (
 func (root *Root) draw() {
 	m := root.Doc
 
+	root.Screen.Clear()
 	if m.BufEndNum() == 0 || root.vHight == 0 {
 		m.topLN = 0
 		root.statusDraw()
@@ -222,13 +223,6 @@ func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 	return lc
 }
 
-// drawEOL fills with blanks from the end of the line to the screen width.
-func (root *Root) drawEOL(eol int, y int) {
-	for x := eol; x < root.vWidth; x++ {
-		root.Screen.SetContent(x, y, DefaultContent.mainc, DefaultContent.combc, DefaultContent.style)
-	}
-}
-
 // wrapContents wraps and draws the contents and returns the next drawing position.
 func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < 0 {
@@ -239,7 +233,6 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
-			root.drawEOL(root.startX+x, y)
 			lX = 0
 			lY++
 			break
@@ -247,7 +240,6 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
 			// EOL
-			root.drawEOL(root.startX+x, y)
 			lX += x
 			break
 		}
@@ -266,7 +258,6 @@ func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, i
 	for x := 0; root.startX+x < root.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
-			root.drawEOL(root.startX+x, y)
 			break
 		}
 		content := DefaultContent
