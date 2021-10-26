@@ -49,6 +49,7 @@ var rootCmd = &cobra.Command{
 	Long: `ov is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 `,
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if config.Debug {
 			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())

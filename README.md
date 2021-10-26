@@ -268,6 +268,8 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 	Mark position
 
   [m]                        * mark current position
+  [M]                        * remove mark current position
+  [ctrl+delete]              * remove all mark
   [>]                        * move to next marked position
   [<]                        * move to previous marked position
 
