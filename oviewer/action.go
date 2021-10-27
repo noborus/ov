@@ -110,7 +110,7 @@ func (root *Root) goLine(input string) {
 		return
 	}
 	lN = root.moveLine(lN - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lN))
+	root.setMessage(fmt.Sprintf("Moved to line %d", lN+1))
 }
 
 func (root *Root) goLineNumber(ln int) {
