@@ -56,7 +56,7 @@ func (root *Root) search(ctx context.Context, lN int, searchFunc func(context.Co
 		if err != nil {
 			return err
 		}
-		root.moveLine(lN - root.Doc.Header)
+		root.moveLine(lN - root.Doc.firstLine())
 		return nil
 	})
 
@@ -146,15 +146,17 @@ var stripEscapeSequence = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
 // contains returns a bool containing the search string.
 func (root *Root) contains(s string, t SearchType) bool {
+	// Remove EscapeSequence.
 	if strings.ContainsAny(s, "\x1b\b") {
 		s = stripEscapeSequence.ReplaceAllString(s, "")
 	}
+
 	switch t {
 	case searchSensitive:
 		return strings.Contains(s, root.input.value)
 	case searchInsensitive:
 		return strings.Contains(strings.ToLower(s), strings.ToLower(root.input.value))
-	default:
+	default: // Regular expressions.
 		return root.input.reg.MatchString(s)
 	}
 }
