@@ -26,7 +26,7 @@ func (root *Root) forwardSearch(ctx context.Context, input string) {
 		return
 	}
 	root.input.value = input
-	root.search(ctx, root.Doc.topLN+root.Doc.Header, root.searchLine)
+	root.search(ctx, root.Doc.topLN+root.Doc.firstLine(), root.searchLine)
 }
 
 // backSearch is backward search.
@@ -36,7 +36,7 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 		return
 	}
 	root.input.value = input
-	root.search(ctx, root.Doc.topLN+root.Doc.Header, root.backSearchLine)
+	root.search(ctx, root.Doc.topLN+root.Doc.firstLine(), root.backSearchLine)
 }
 
 // search searches forward or backward.

@@ -105,15 +105,15 @@ func (root *Root) moveNumUp(moveY int) {
 	}
 
 	// WrapMode
-	num := root.Doc.topLN + root.Doc.Header
+	num := root.Doc.topLN + root.Doc.firstLine()
 	root.Doc.topLX, num = root.findNumUp(root.Doc.topLX, num, moveY)
-	root.Doc.topLN = num - root.Doc.Header
+	root.Doc.topLN = num - root.Doc.firstLine()
 }
 
 // Moves down by the specified number of y.
 func (root *Root) moveNumDown(moveY int) {
 	m := root.Doc
-	num := m.topLN + m.Header
+	num := m.topLN + m.firstLine()
 	if !m.WrapMode {
 		root.limitMoveDown(0, num+moveY)
 		return
@@ -353,7 +353,7 @@ func (root *Root) bottomLineNum(lN int) (int, int) {
 
 	// WrapMode
 	lX, lN := root.findNumUp(0, lN, hight)
-	return lX, lN - root.Doc.Header
+	return lX, lN - root.Doc.firstLine()
 }
 
 // findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
