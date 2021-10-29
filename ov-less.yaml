@@ -27,6 +27,8 @@ StyleSearchHighlight:
   Reverse: true
 StyleColumnHighlight:
   Reverse: true
+StyleMarkLine:
+  Background: "darkgoldenrod"
 
 # Keybind
 # Special key
