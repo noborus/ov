@@ -316,11 +316,15 @@ func (root *Root) statusDraw() {
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
 	input := root.input
-	caseSensitive := ""
-	if root.CaseSensitive && (input.mode == Search || input.mode == Backsearch) {
-		caseSensitive = "(Aa)"
+	searchMode := ""
+	if input.mode == Search || input.mode == Backsearch {
+		if root.Config.Incsearch {
+			searchMode += "(I)"
+		}
+		if root.CaseSensitive {
+			searchMode += "(Aa)"
+		}
 	}
-
 	switch input.mode {
 	case Normal:
 		color := tcell.ColorWhite
@@ -333,7 +337,7 @@ func (root *Root) statusDraw() {
 		}
 		root.Screen.ShowCursor(len(leftContents), root.statusPos)
 	default:
-		p := caseSensitive + input.EventInput.Prompt()
+		p := searchMode + input.EventInput.Prompt()
 		leftStatus = p + input.value
 		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
 		leftContents = strToContents(leftStatus, -1)

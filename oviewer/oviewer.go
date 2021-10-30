@@ -41,6 +41,12 @@ type Root struct {
 	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
+	// Original position at the start of search.
+	OriginPos int
+	// Original string.
+	OriginStr string
+	//
+	cancelFunc context.CancelFunc
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 
@@ -167,8 +173,10 @@ type Config struct {
 	AfterWrite bool
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
-	// CaseSensitive is case-sensitive if true
+	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
+	// Incsearch is incremental server if true.
+	Incsearch bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
 

@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"log"
 	"regexp"
 	"strconv"
@@ -51,16 +52,20 @@ const (
 )
 
 // InputEvent input key events.
-func (root *Root) inputEvent(ev *tcell.EventKey) {
+func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
 	ok := root.inputKeyEvent(ev)
 
 	// Not confirmed or canceled.
 	if !ok {
+		if root.Config.Incsearch {
+			root.incSearch(ctx)
+		}
 		return
 	}
 
 	input := root.input
+
 	// confirmed.
 	nev := input.EventInput.Confirm(input.value)
 	err := root.Screen.PostEvent(nev)
@@ -78,6 +83,8 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 
 	switch ev.Key() {
 	case tcell.KeyEscape:
+		input.value = ""
+		input.reg = nil
 		input.mode = Normal
 		return false
 	case tcell.KeyEnter:
@@ -145,6 +152,8 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		input.value += string(runes[pos:])
 	case tcell.KeyCtrlA:
 		root.CaseSensitive = !root.CaseSensitive
+	case tcell.KeyCtrlS:
+		root.Config.Incsearch = !root.Config.Incsearch
 	case tcell.KeyRune:
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)
@@ -240,6 +249,7 @@ func (root *Root) setSearchMode() {
 	input.cursorX = 0
 	input.mode = Search
 	input.EventInput = newSearchInput(input.SearchCandidate)
+	root.OriginPos = root.Doc.topLN
 }
 
 func (root *Root) setBackSearchMode() {
@@ -248,6 +258,7 @@ func (root *Root) setBackSearchMode() {
 	input.cursorX = 0
 	input.mode = Search
 	input.EventInput = newBackSearchInput(input.SearchCandidate)
+	root.OriginPos = root.Doc.topLN
 }
 
 func (root *Root) setDelimiterMode() {

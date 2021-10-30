@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -39,6 +40,35 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 	root.search(ctx, root.Doc.topLN+root.Doc.firstLine(), root.backSearchLine)
 }
 
+//incSearch implements incremental search.
+func (root *Root) incSearch(ctx context.Context) {
+	input := root.input
+	if input.mode != Search {
+		return
+	}
+
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	root.cancelFunc = cancel
+	if !strings.Contains(input.value, root.OriginStr) {
+		root.moveLine(root.OriginPos)
+	}
+	root.OriginStr = input.value
+	go func() {
+		lN, err := root.searchLine(ctx, root.Doc.topLN+root.Doc.firstLine())
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				root.setMessage(err.Error())
+			}
+			return
+		}
+		root.moveLine(lN - root.Doc.firstLine())
+		root.cancelFunc = nil
+	}()
+}
+
 // search searches forward or backward.
 func (root *Root) search(ctx context.Context, lN int, searchFunc func(context.Context, int) (int, error)) {
 	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.input.value, strings.Join(root.cancelKeys, ",")))
@@ -46,9 +76,10 @@ func (root *Root) search(ctx context.Context, lN int, searchFunc func(context.Co
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	root.cancelFunc = cancel
 
 	eg.Go(func() error {
-		return root.cancelWait(cancel)
+		return root.cancelWait()
 	})
 
 	eg.Go(func() error {

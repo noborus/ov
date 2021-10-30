@@ -77,7 +77,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			case Normal:
 				root.keyCapture(ev)
 			default:
-				root.inputEvent(ev)
+				root.inputEvent(ctx, ev)
 			}
 		case nil:
 			close(quitChan)
@@ -394,9 +394,13 @@ func (root *Root) searchQuit() {
 	}
 }
 
-func (root *Root) cancelWait(cancel context.CancelFunc) error {
+func (root *Root) cancelWait() error {
 	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
-		cancel()
+		if root.cancelFunc != nil {
+			root.cancelFunc()
+			root.setMessage("cancel")
+			root.cancelFunc = nil
+		}
 		return nil
 	}
 
