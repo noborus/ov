@@ -23,7 +23,8 @@ const (
 // forwardSearch is forward search.
 func (root *Root) forwardSearch(ctx context.Context, input string) {
 	if input == "" {
-		root.input.reg = nil
+		root.searchWord = ""
+		root.searchReg = nil
 		return
 	}
 	root.input.value = input
@@ -33,7 +34,8 @@ func (root *Root) forwardSearch(ctx context.Context, input string) {
 // backSearch is backward search.
 func (root *Root) backSearch(ctx context.Context, input string) {
 	if input == "" {
-		root.input.reg = nil
+		root.searchWord = ""
+		root.searchReg = nil
 		return
 	}
 	root.input.value = input
@@ -107,12 +109,17 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 		return num, ErrNotFound
 	}
 
-	root.input.reg = regexpComple(root.input.value, root.CaseSensitive)
-	if root.input.reg == nil {
-		return num, ErrNotFound
+	if root.Config.RegexpSearch {
+		root.searchReg = regexpComple(root.input.value, root.CaseSensitive)
+		if root.searchReg == nil {
+			log.Println(ErrNotFound)
+			return num, ErrNotFound
+		}
+	} else {
+		root.searchWord = root.input.value
 	}
 
-	searchType := getSearchType(root.input.value, root.CaseSensitive)
+	searchType := getSearchType(root.input.value, root.CaseSensitive, root.Config.RegexpSearch)
 
 	for n := num; n < root.Doc.BufEndNum(); n++ {
 		if root.contains(root.Doc.GetLine(n), searchType) {
@@ -133,12 +140,12 @@ func (root *Root) backSearchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = min(num, root.Doc.BufEndNum()-1)
 
-	root.input.reg = regexpComple(root.input.value, root.CaseSensitive)
-	if root.input.reg == nil {
+	root.searchReg = regexpComple(root.input.value, root.CaseSensitive)
+	if root.searchReg == nil {
 		return num, nil
 	}
 
-	searchType := getSearchType(root.input.value, root.CaseSensitive)
+	searchType := getSearchType(root.input.value, root.CaseSensitive, root.Config.RegexpSearch)
 
 	for n := num; n >= 0; n-- {
 		if root.contains(root.Doc.GetLine(n), searchType) {
@@ -188,20 +195,18 @@ func (root *Root) contains(s string, t SearchType) bool {
 	case searchInsensitive:
 		return strings.Contains(strings.ToLower(s), strings.ToLower(root.input.value))
 	default: // Regular expressions.
-		return root.input.reg.MatchString(s)
+		return root.searchReg.MatchString(s)
 	}
 }
 
-func getSearchType(t string, caseSensitive bool) SearchType {
-	searchType := searchRegexp
-	if t == regexp.QuoteMeta(t) {
-		if caseSensitive {
-			searchType = searchSensitive
-		} else {
-			searchType = searchInsensitive
-		}
+func getSearchType(t string, caseSensitive bool, regexpSearch bool) SearchType {
+	if regexpSearch && t != regexp.QuoteMeta(t) {
+		return searchRegexp
 	}
-	return searchType
+	if caseSensitive {
+		return searchSensitive
+	}
+	return searchInsensitive
 }
 
 // rangePosition returns the range starting and ending from the s,substr string.
@@ -238,11 +243,36 @@ func rangePosition(s, substr string, number int) (int, int) {
 	return start, end
 }
 
-// searchPosition returns an array of the beginning and end of the search string.
-func searchPosition(s string, re *regexp.Regexp) [][]int {
+// searchPositionReg returns an array of the beginning and end of the search string.
+func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	if re == nil || re.String() == "" {
 		return nil
 	}
 
 	return re.FindAllIndex([]byte(s), -1)
+}
+
+// searchPosition returns an array of the beginning and end of the search string.
+func searchPosition(s string, substr string) [][]int {
+	if substr == "" {
+		return nil
+	}
+
+	var locs [][]int
+	searchText := s
+	offSet := 0
+	loc := strings.Index(searchText, substr)
+	for loc != -1 {
+		// trim off the portion we already searched, and look from there
+		searchText = searchText[loc+len(substr):]
+		locs = append(locs, []int{loc + offSet, loc + offSet + len(substr)})
+
+		// We need to keep the offset of the match so we continue searching
+		offSet += loc + len(substr)
+
+		// strings.Index does checks of if the string is empty so we don't need
+		// to explicitly do it ourselves
+		loc = strings.Index(searchText, substr)
+	}
+	return locs
 }

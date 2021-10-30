@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -47,6 +48,10 @@ type Root struct {
 	OriginStr string
 	//
 	cancelFunc context.CancelFunc
+
+	searchWord string
+	searchReg  *regexp.Regexp
+
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 
@@ -175,6 +180,8 @@ type Config struct {
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
+	// RegexpSearch is Regular expression search if true.
+	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
 	// Debug represents whether to enable the debug output.

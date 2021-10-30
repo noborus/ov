@@ -213,6 +213,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
 
+	rootCmd.PersistentFlags().BoolP("regexp-search", "", false, "regular expression search")
+	_ = viper.BindPFlag("RegexpSearch", rootCmd.PersistentFlags().Lookup("regexp-search"))
+
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
 	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
 
