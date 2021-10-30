@@ -133,8 +133,13 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// search highlight
-		if root.input.reg != nil {
-			poss := searchPosition(lineStr, root.input.reg)
+		if root.searchWord != "" || root.searchReg != nil {
+			var poss [][]int
+			if root.searchReg != nil {
+				poss = searchPositionReg(lineStr, root.searchReg)
+			} else {
+				poss = searchPosition(lineStr, root.searchWord)
+			}
 			for _, r := range poss {
 				root.searchHighlight(lc, byteMap[r[0]], byteMap[r[1]])
 			}
@@ -318,6 +323,9 @@ func (root *Root) statusDraw() {
 	input := root.input
 	searchMode := ""
 	if input.mode == Search || input.mode == Backsearch {
+		if root.Config.RegexpSearch {
+			searchMode += "(R)"
+		}
 		if root.Config.Incsearch {
 			searchMode += "(I)"
 		}

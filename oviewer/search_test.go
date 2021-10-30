@@ -38,7 +38,6 @@ func TestRoot_contains(t *testing.T) {
 			fields: fields{
 				input: &Input{
 					value: "test",
-					reg:   regexp.MustCompile(`test`),
 				},
 			},
 			args: args{
@@ -51,8 +50,7 @@ func TestRoot_contains(t *testing.T) {
 			name: "testEscapeSequences2",
 			fields: fields{
 				input: &Input{
-					value: "test",
-					reg:   regexp.MustCompile(`m`),
+					value: "m",
 				},
 			},
 			args: args{
@@ -66,7 +64,6 @@ func TestRoot_contains(t *testing.T) {
 			fields: fields{
 				input: &Input{
 					value: "test",
-					reg:   regexp.MustCompile(`test`),
 				},
 			},
 			args: args{
@@ -81,6 +78,7 @@ func TestRoot_contains(t *testing.T) {
 			root := &Root{
 				input: tt.fields.input,
 			}
+			root.searchReg = regexp.MustCompile(root.input.value)
 			if got := root.contains(tt.args.s, tt.args.searchType); got != tt.want {
 				t.Errorf("Root.contains() = %v, want %v", got, tt.want)
 			}
@@ -287,7 +285,7 @@ func Test_searchPosition(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := searchPosition(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
+			if got := searchPositionReg(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
 		})

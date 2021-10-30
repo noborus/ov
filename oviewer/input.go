@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"log"
-	"regexp"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
@@ -17,7 +16,6 @@ type Input struct {
 
 	mode    InputMode
 	value   string
-	reg     *regexp.Regexp
 	cursorX int
 
 	ModeCandidate      *candidate
@@ -84,7 +82,6 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	switch ev.Key() {
 	case tcell.KeyEscape:
 		input.value = ""
-		input.reg = nil
 		input.mode = Normal
 		return false
 	case tcell.KeyEnter:
@@ -154,6 +151,8 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		root.CaseSensitive = !root.CaseSensitive
 	case tcell.KeyCtrlS:
 		root.Config.Incsearch = !root.Config.Incsearch
+	case tcell.KeyCtrlR:
+		root.Config.RegexpSearch = !root.Config.RegexpSearch
 	case tcell.KeyRune:
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)

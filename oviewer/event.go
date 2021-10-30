@@ -282,11 +282,12 @@ func (root *Root) Search(str string) {
 		return
 	}
 	if str == "" {
-		root.input.reg = nil
+		root.searchWord = ""
+		root.searchReg = nil
 		return
 	}
-	root.input.value = str
-	root.input.reg = regexpComple(str, root.CaseSensitive)
+	root.searchWord = str
+	root.searchReg = regexpComple(str, root.CaseSensitive)
 	ev := &eventSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
@@ -303,11 +304,12 @@ func (root *Root) BackSearch(str string) {
 		return
 	}
 	if str == "" {
-		root.input.reg = nil
+		root.searchWord = ""
+		root.searchReg = nil
 		return
 	}
-	root.input.value = str
-	root.input.reg = regexpComple(str, root.CaseSensitive)
+	root.searchWord = str
+	root.searchReg = regexpComple(str, root.CaseSensitive)
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
