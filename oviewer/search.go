@@ -253,13 +253,16 @@ func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 }
 
 // searchPosition returns an array of the beginning and end of the search string.
-func searchPosition(s string, substr string) [][]int {
+func searchPosition(caseSensitive bool, searchText string, substr string) [][]int {
 	if substr == "" {
 		return nil
 	}
 
 	var locs [][]int
-	searchText := s
+	if !caseSensitive {
+		searchText = strings.ToLower(searchText)
+		substr = strings.ToLower(substr)
+	}
 	offSet := 0
 	loc := strings.Index(searchText, substr)
 	for loc != -1 {
