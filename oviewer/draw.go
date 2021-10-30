@@ -138,7 +138,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			if root.searchReg != nil {
 				poss = searchPositionReg(lineStr, root.searchReg)
 			} else {
-				poss = searchPosition(lineStr, root.searchWord)
+				poss = searchPosition(root.Config.CaseSensitive, lineStr, root.searchWord)
 			}
 			for _, r := range poss {
 				root.searchHighlight(lc, byteMap[r[0]], byteMap[r[1]])
