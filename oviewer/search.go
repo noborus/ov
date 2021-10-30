@@ -109,14 +109,12 @@ func (root *Root) searchLine(ctx context.Context, num int) (int, error) {
 		return num, ErrNotFound
 	}
 
+	root.searchWord = root.input.value
 	if root.Config.RegexpSearch {
 		root.searchReg = regexpComple(root.input.value, root.CaseSensitive)
 		if root.searchReg == nil {
-			log.Println(ErrNotFound)
 			return num, ErrNotFound
 		}
-	} else {
-		root.searchWord = root.input.value
 	}
 
 	searchType := getSearchType(root.input.value, root.CaseSensitive, root.Config.RegexpSearch)
@@ -140,9 +138,12 @@ func (root *Root) backSearchLine(ctx context.Context, num int) (int, error) {
 	defer root.searchQuit()
 	num = min(num, root.Doc.BufEndNum()-1)
 
-	root.searchReg = regexpComple(root.input.value, root.CaseSensitive)
-	if root.searchReg == nil {
-		return num, nil
+	root.searchWord = root.input.value
+	if root.Config.RegexpSearch {
+		root.searchReg = regexpComple(root.input.value, root.CaseSensitive)
+		if root.searchReg == nil {
+			return num, ErrNotFound
+		}
 	}
 
 	searchType := getSearchType(root.input.value, root.CaseSensitive, root.Config.RegexpSearch)
@@ -266,15 +267,9 @@ func searchPosition(caseSensitive bool, searchText string, substr string) [][]in
 	offSet := 0
 	loc := strings.Index(searchText, substr)
 	for loc != -1 {
-		// trim off the portion we already searched, and look from there
 		searchText = searchText[loc+len(substr):]
 		locs = append(locs, []int{loc + offSet, loc + offSet + len(substr)})
-
-		// We need to keep the offset of the match so we continue searching
 		offSet += loc + len(substr)
-
-		// strings.Index does checks of if the string is empty so we don't need
-		// to explicitly do it ourselves
 		loc = strings.Index(searchText, substr)
 	}
 	return locs
