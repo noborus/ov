@@ -53,6 +53,10 @@ const (
 	actionPreviousDoc    = "previous_doc"
 	actionCloseDoc       = "close_doc"
 	actionToggleMouse    = "toggle_mouse"
+
+	inputCaseSensitive = "input_casesensitive"
+	inputIncSearch     = "input_incsearch"
+	inputRegexpSearch  = "input_regexp_search"
 )
 
 func (root *Root) setHandler() map[string]func() {
@@ -100,6 +104,9 @@ func (root *Root) setHandler() map[string]func() {
 		actionPreviousDoc:    root.previousDoc,
 		actionCloseDoc:       root.closeDocument,
 		actionToggleMouse:    root.toggleMouse,
+		inputCaseSensitive:   root.inputCaseSensitive,
+		inputIncSearch:       root.inputIncSearch,
+		inputRegexpSearch:    root.inputRegexpSearch,
 	}
 }
 
@@ -152,6 +159,10 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionPreviousDoc:    {"["},
 		actionCloseDoc:       {"ctrl+k"},
 		actionToggleMouse:    {"ctrl+alt+r"},
+
+		inputCaseSensitive: {"alt+c"},
+		inputIncSearch:     {"alt+i"},
+		inputRegexpSearch:  {"alt+r"},
 	}
 
 	for k, v := range bind {
@@ -163,6 +174,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 
 func (root *Root) setKeyBind(keyBind map[string][]string) error {
 	c := root.keyConfig
+	in := root.inputKeyConfig
 
 	actionHandlers := root.setHandler()
 
@@ -171,20 +183,30 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 		if handler == nil {
 			return fmt.Errorf("%w for [%s] unknown action", ErrFailedKeyBind, a)
 		}
-		for _, k := range keys {
-			mod, key, ch, err := cbind.Decode(k)
-			if err != nil {
-				return fmt.Errorf("%w [%s] for %s: %s", ErrFailedKeyBind, k, a, err)
+
+		if strings.HasPrefix(a, "input_") {
+			setHandler(in, handler, a, keys)
+			continue
+		}
+		setHandler(c, handler, a, keys)
+	}
+	return nil
+}
+
+func setHandler(c *cbind.Configuration, handler func(), name string, keys []string) error {
+	for _, k := range keys {
+		mod, key, ch, err := cbind.Decode(k)
+		if err != nil {
+			return fmt.Errorf("%w [%s] for %s: %s", ErrFailedKeyBind, k, name, err)
+		}
+		if key == tcell.KeyRune {
+			c.SetRune(mod, ch, wrapEventHandler(handler))
+			// Added "shift+N" instead of 'N' to get it on windows.
+			if 'A' <= ch && ch <= 'Z' {
+				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
 			}
-			if key == tcell.KeyRune {
-				c.SetRune(mod, ch, wrapEventHandler(handler))
-				// Added "shift+N" instead of 'N' to get it on windows.
-				if 'A' <= ch && ch <= 'Z' {
-					c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
-				}
-			} else {
-				c.SetKey(mod, key, wrapEventHandler(handler))
-			}
+		} else {
+			c.SetKey(mod, key, wrapEventHandler(handler))
 		}
 	}
 	return nil
@@ -260,6 +282,10 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 
+	fmt.Fprintf(&b, "\n\tKey binding when typing\n\n")
+	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
+	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
+	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	return b.String()
 }
 

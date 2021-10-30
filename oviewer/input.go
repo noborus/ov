@@ -78,8 +78,11 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 // inputKeyEvent handles the keystrokes of the input.
 func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	input := root.input
-
-	switch ev.Key() {
+	evKey := root.inputKeyConfig.Capture(ev)
+	if evKey == nil {
+		return false
+	}
+	switch evKey.Key() {
 	case tcell.KeyEscape:
 		input.value = ""
 		input.mode = Normal
@@ -147,12 +150,6 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		input.value += "\t"
 		input.cursorX += 2
 		input.value += string(runes[pos:])
-	case tcell.KeyCtrlA:
-		root.CaseSensitive = !root.CaseSensitive
-	case tcell.KeyCtrlS:
-		root.Config.Incsearch = !root.Config.Incsearch
-	case tcell.KeyCtrlR:
-		root.Config.RegexpSearch = !root.Config.RegexpSearch
 	case tcell.KeyRune:
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)
@@ -163,6 +160,16 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		input.cursorX += runewidth.RuneWidth(r)
 	}
 	return false
+}
+
+func (root *Root) inputCaseSensitive() {
+	root.Config.CaseSensitive = !root.Config.CaseSensitive
+}
+func (root *Root) inputIncSearch() {
+	root.Config.Incsearch = !root.Config.Incsearch
+}
+func (root *Root) inputRegexpSearch() {
+	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
 
 // stringWidth returns the number of characters in the input.
