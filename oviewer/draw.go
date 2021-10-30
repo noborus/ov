@@ -133,7 +133,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// search highlight
-		if root.searchWord != "" || root.searchReg != nil {
+		if root.searchWord != "" {
 			var poss [][]int
 			if root.searchReg != nil {
 				poss = searchPositionReg(lineStr, root.searchReg)
