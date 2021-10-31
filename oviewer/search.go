@@ -63,7 +63,7 @@ func (root *Root) incSearch(ctx context.Context) {
 			}
 			return
 		}
-		root.MoveLine(lN - root.Doc.firstLine())
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
 	}()
 }
 
@@ -88,7 +88,7 @@ func (root *Root) incBackSearch(ctx context.Context) {
 			}
 			return
 		}
-		root.MoveLine(lN - root.Doc.firstLine())
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
 	}()
 }
 
