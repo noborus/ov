@@ -44,18 +44,15 @@ func (root *Root) backSearch(ctx context.Context, input string) {
 
 //incSearch implements incremental search.
 func (root *Root) incSearch(ctx context.Context) {
-	input := root.input
-	if input.mode != Search {
-		return
-	}
-
 	if root.cancelFunc != nil {
 		root.cancelFunc()
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	root.cancelFunc = cancel
+
+	input := root.input
 	if !strings.Contains(input.value, root.OriginStr) {
-		root.moveLine(root.OriginPos)
+		root.Doc.topLN = root.OriginPos
 	}
 	root.OriginStr = input.value
 	go func() {
@@ -66,8 +63,32 @@ func (root *Root) incSearch(ctx context.Context) {
 			}
 			return
 		}
-		root.moveLine(lN - root.Doc.firstLine())
-		root.cancelFunc = nil
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
+	}()
+}
+
+//incSearch implements incremental search.
+func (root *Root) incBackSearch(ctx context.Context) {
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	root.cancelFunc = cancel
+
+	input := root.input
+	if !strings.Contains(input.value, root.OriginStr) {
+		root.Doc.topLN = root.OriginPos
+	}
+	root.OriginStr = input.value
+	go func() {
+		lN, err := root.backSearchLine(ctx, root.Doc.topLN+root.Doc.firstLine())
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				root.setMessage(err.Error())
+			}
+			return
+		}
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
 	}()
 }
 

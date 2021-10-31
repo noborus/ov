@@ -54,6 +54,8 @@ type Root struct {
 
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
+	// inputKeyConfig contains the binding settings for the key.
+	inputKeyConfig *cbind.Configuration
 
 	// message is the message to display.
 	message string
@@ -266,6 +268,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	}
 	root.Config = NewConfig()
 	root.keyConfig = cbind.NewConfiguration()
+	root.inputKeyConfig = cbind.NewConfiguration()
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
