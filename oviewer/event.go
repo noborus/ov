@@ -48,15 +48,15 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			root.search(ctx, root.Doc.topLN+root.Doc.firstLine()+1, root.searchLine)
+			root.forwardSearch(ctx, root.Doc.topLN+root.Doc.firstLine()+1, root.input.value)
 		case *eventBackSearch:
-			root.search(ctx, root.Doc.topLN+root.Doc.firstLine()-1, root.backSearchLine)
+			root.backSearch(ctx, root.Doc.topLN+root.Doc.firstLine()-1, root.input.value)
 		case *viewModeInput:
 			root.setViewMode(ev.value)
 		case *searchInput:
-			root.forwardSearch(ctx, ev.value)
+			root.forwardSearch(ctx, root.Doc.topLN+root.Doc.firstLine(), ev.value)
 		case *backSearchInput:
-			root.backSearch(ctx, ev.value)
+			root.backSearch(ctx, root.Doc.topLN+root.Doc.firstLine(), ev.value)
 		case *gotoInput:
 			root.goLine(ev.value)
 		case *headerInput:
@@ -287,7 +287,7 @@ func (root *Root) Search(str string) {
 		return
 	}
 	root.searchWord = str
-	root.searchReg = regexpComple(str, root.CaseSensitive)
+	root.searchReg = regexpCompile(str, root.CaseSensitive)
 	ev := &eventSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
@@ -309,7 +309,7 @@ func (root *Root) BackSearch(str string) {
 		return
 	}
 	root.searchWord = str
-	root.searchReg = regexpComple(str, root.CaseSensitive)
+	root.searchReg = regexpCompile(str, root.CaseSensitive)
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)

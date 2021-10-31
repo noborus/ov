@@ -78,8 +78,9 @@ func TestRoot_contains(t *testing.T) {
 			root := &Root{
 				input: tt.fields.input,
 			}
+			root.searchWord = root.input.value
 			root.searchReg = regexp.MustCompile(root.input.value)
-			if got := root.contains(tt.args.s, tt.args.searchType); got != tt.want {
+			if got := root.contains(tt.args.s, root.searchWord, root.searchReg, tt.args.searchType); got != tt.want {
 				t.Errorf("Root.contains() = %v, want %v", got, tt.want)
 			}
 		})
@@ -231,7 +232,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testNone",
 			args: args{
 				s:  "testtest",
-				re: regexpComple("a", false),
+				re: regexpCompile("a", false),
 			},
 			want: nil,
 		},
@@ -239,7 +240,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testInCaseSensitive",
 			args: args{
 				s:  "TEST",
-				re: regexpComple("e", false),
+				re: regexpCompile("e", false),
 			},
 			want: [][]int{
 				{1, 2},
@@ -249,7 +250,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testCaseSensitive",
 			args: args{
 				s:  "TEST",
-				re: regexpComple("e", true),
+				re: regexpCompile("e", true),
 			},
 			want: nil,
 		},
@@ -257,7 +258,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testMeta",
 			args: args{
 				s:  "test",
-				re: regexpComple("+", false),
+				re: regexpCompile("+", false),
 			},
 			want: nil,
 		},
@@ -265,7 +266,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testMeta2",
 			args: args{
 				s:  "test",
-				re: regexpComple("t+", false),
+				re: regexpCompile("t+", false),
 			},
 			want: [][]int{
 				{0, 1},
@@ -276,7 +277,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testM",
 			args: args{
 				s:  "man",
-				re: regexpComple("man", false),
+				re: regexpCompile("man", false),
 			},
 			want: [][]int{
 				{0, 3},
