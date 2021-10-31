@@ -57,7 +57,12 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// Not confirmed or canceled.
 	if !ok {
 		if root.Config.Incsearch {
-			root.incSearch(ctx)
+			switch root.input.mode {
+			case Search:
+				root.incSearch(ctx)
+			case Backsearch:
+				root.incBackSearch(ctx)
+			}
 		}
 		return
 	}
@@ -262,7 +267,7 @@ func (root *Root) setBackSearchMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = Search
+	input.mode = Backsearch
 	input.EventInput = newBackSearchInput(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
