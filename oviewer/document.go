@@ -86,6 +86,7 @@ func NewDocument() (*Document, error) {
 			TabWidth:        8,
 			MarkStyleWidth:  1,
 		},
+		lastContentsNum: -1,
 	}
 
 	if err := m.NewCache(); err != nil {
