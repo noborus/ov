@@ -1,5 +1,9 @@
 # This is the ov config file.
 # Copy it to ~/.ov.yaml or start it with `ov --config ov.yaml`.
+#
+# CaseSensitive: false
+# RegexpSearch: false
+# Incsearch: ftrue
 
 General:
   TabWidth: 8
