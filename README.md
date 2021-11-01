@@ -24,6 +24,7 @@ It has an effective function for tabular text.
 * Supports follow-mode (like tail -f).
 * Supports following multiple files and switching when updated.
 * Run the command you can target the stdout/stderr.
+* Supports incremental search and regular expression search.
 
 ## install
 
@@ -139,8 +140,10 @@ Flags:
   -H, --header int                number of header rows to fix
   -h, --help                      help for ov
       --help-key                  display key bind information
+      --incsearch                 incremental search (default true)
   -n, --line-number               line number mode
   -F, --quit-if-one-screen        quit if the output fits on one screen
+      --regexp-search             regular expression search
       --skip-lines int            skip the number of lines
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information
@@ -149,6 +152,42 @@ Flags:
 
 It can also be changed after startup.
 Refer to the [motion image](docs/image.md).
+
+### Search
+
+Search can be toggled between incremental search, regular expression search, and case sensitivity.
+Displayed when the following are enabled in the search input prompt:
+
+| Function | display | (Default)key |command option |
+|:---------|:--------|:----|:--------------|
+| Incremental search | (I) | alt+i | --incremental |
+| Regular expression search | (R) | alt+r | --regexp-search  |
+| Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
+
+### Mark
+
+Mark the display position.
+The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
+
+The marks can be erased individually.
+It is also possible to erase all marks.
+
+Use the `>`next and `<`previous (default) key to move to the marked position.
+
+### Mouse support
+
+The ov makes the mouse support its control.
+This can be disabled with the option `--disable-mouse`.
+
+If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
+
+Copying to the clipboard uses [atotto/clipboard](https://github.com/atotto/clipboard).
+For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environments.
+
+Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
+
+Pasting in ov is done with the middle button.
+In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
 ## config
 
@@ -218,21 +257,6 @@ You can also write in `~/.my.cnf`.
 pager=ov -w=f -H3 -F -C -d "|"
 ```
 
-## Mouse support
-
-The ov makes the mouse support its control.
-This can be disabled with the option `--disable-mouse`.
-
-If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
-
-Copying to the clipboard uses [atotto/clipboard](https://github.com/atotto/clipboard).
-For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environments.
-
-Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
-
-Pasting in ov is done with the middle button.
-In other applications, it is pasted from the clipboard (often by pressing the right-click).
-
 ## Key bindings
 
 ```console
@@ -295,6 +319,11 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
   [ctrl+s]                   * number of skip lines
   [t]                        * TAB width
 
+	Key binding when typing
+
+  [alt+c]                    * case-sensitive toggle
+  [alt+r]                    * regular expression search toggle
+  [alt+i]                    * incremental search toggle
 ```
 
 ## Customize
