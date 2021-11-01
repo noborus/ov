@@ -135,7 +135,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		// search highlight
 		if root.searchWord != "" {
 			var poss [][]int
-			if root.searchReg != nil {
+			if root.Config.RegexpSearch {
 				poss = searchPositionReg(lineStr, root.searchReg)
 			} else {
 				poss = searchPosition(root.Config.CaseSensitive, lineStr, root.searchWord)
