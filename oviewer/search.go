@@ -83,7 +83,7 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 	searchWord := root.searchWord
 	searchReg := root.searchReg
 	eg.Go(func() error {
-		lN, err := root.searchLine(ctx, searchWord, searchReg, lN)
+		lN, err := root.backSearchLine(ctx, searchWord, searchReg, lN)
 		if err != nil {
 			return err
 		}
