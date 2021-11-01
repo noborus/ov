@@ -241,7 +241,7 @@ var (
 	ErrFatalCache = errors.New("fatal error in cache value")
 	// ErrMissingFile indicates that the file does not exist.
 	ErrMissingFile = errors.New("missing filename")
-	// ErrMissingFile indicates that the file does not exist.
+	// ErrIsDirectory indicates that specify a directory instead of a file.
 	ErrIsDirectory = errors.New("is a directory")
 	// ErrNotFound indicates not found.
 	ErrNotFound = errors.New("not found")
@@ -337,6 +337,7 @@ func Open(fileNames ...string) (*Root, error) {
 
 }
 
+// NewRoot returns the structure of the oviewer.
 func NewRoot(read io.Reader) (*Root, error) {
 	m, err := NewDocument()
 	if err != nil {
