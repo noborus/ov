@@ -155,6 +155,7 @@ Refer to the [motion image](docs/image.md).
 
 ### Search
 
+Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
 Displayed when the following are enabled in the search input prompt:
 
@@ -166,11 +167,11 @@ Displayed when the following are enabled in the search input prompt:
 
 ### Mark
 
-Mark the display position.
+Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
 
-The marks can be erased individually.
-It is also possible to erase all marks.
+Marks can be erased individually with the `M` key(default).
+It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
