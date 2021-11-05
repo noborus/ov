@@ -42,6 +42,7 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 
 	go func() {
 		<-docout.eofCh
+		docout.FileName = "STDOUT(done)"
 		atomic.StoreInt32(&docout.changed, 1)
 		atomic.StoreInt32(&docerr.changed, 1)
 	}()
