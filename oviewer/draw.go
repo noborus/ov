@@ -206,26 +206,14 @@ func (root *Root) getContentsStr(lN int, lc lineContents) (string, map[int]int) 
 
 func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
 	org, err := root.Doc.lineToContents(lN, tabWidth)
-	if err == nil {
-		lc := make(lineContents, len(org))
-		copy(lc, org)
+	if err != nil {
+		// EOF
+		lc := make(lineContents, 1)
+		lc[0] = EOFContent
 		return lc
 	}
-
-	// EOF
-	width := root.vWidth - root.startX
-	lc := make(lineContents, width)
-	eof := content{
-		mainc: '~',
-		combc: nil,
-		width: 1,
-		style: tcell.StyleDefault.Foreground(tcell.ColorGray),
-	}
-	lc[0] = eof
-
-	for x := 1; x < width; x++ {
-		lc[x] = DefaultContent
-	}
+	lc := make(lineContents, len(org))
+	copy(lc, org)
 	return lc
 }
 

@@ -39,6 +39,14 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
+// EOFContent is "~" only.
+var EOFContent = content{
+	mainc: '~',
+	combc: nil,
+	width: 1,
+	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
+}
+
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
 func parseString(line string, tabWidth int) lineContents {
