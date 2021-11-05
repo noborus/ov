@@ -100,20 +100,11 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 
 //incSearch implements incremental search.
 func (root *Root) incSearch(ctx context.Context) {
-	if root.cancelFunc != nil {
-		root.cancelFunc()
-	}
-	ctx, cancel := context.WithCancel(ctx)
-	root.cancelFunc = cancel
+	root.cancelRestart(ctx)
 
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-
-	// Return to position at start of input.
-	if !strings.Contains(root.searchWord, root.OriginStr) {
-		root.Doc.topLN = root.OriginPos
-	}
-	root.OriginStr = root.input.value
+	root.Doc.topLN = root.returnStartPosition()
 
 	go func() {
 		lN, err := root.searchLine(ctx, root.searchWord, root.searchReg, root.Doc.topLN+root.Doc.firstLine())
@@ -129,20 +120,11 @@ func (root *Root) incSearch(ctx context.Context) {
 
 //incSearch implements incremental search.
 func (root *Root) incBackSearch(ctx context.Context) {
-	if root.cancelFunc != nil {
-		root.cancelFunc()
-	}
-	ctx, cancel := context.WithCancel(ctx)
-	root.cancelFunc = cancel
+	root.cancelRestart(ctx)
 
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-
-	// Return to position at start of input.
-	if !strings.Contains(root.searchWord, root.OriginStr) {
-		root.Doc.topLN = root.OriginPos
-	}
-	root.OriginStr = root.input.value
+	root.Doc.topLN = root.returnStartPosition()
 
 	go func() {
 		lN, err := root.backSearchLine(ctx, root.searchWord, root.searchReg, root.Doc.topLN+root.Doc.firstLine())
@@ -154,6 +136,25 @@ func (root *Root) incBackSearch(ctx context.Context) {
 		}
 		root.MoveLine(lN - root.Doc.firstLine() + 1)
 	}()
+}
+
+// cancelRestart calls the cancel function and sets the cancel function again.
+func (root *Root) cancelRestart(ctx context.Context) {
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	root.cancelFunc = cancel
+}
+
+// returnStartPosition checks the input value and returns the start position.
+func (root *Root) returnStartPosition() int {
+	start := root.Doc.topLN
+	if !strings.Contains(root.searchWord, root.OriginStr) {
+		start = root.OriginPos
+	}
+	root.OriginStr = root.searchWord
+	return start
 }
 
 // searchLine is searches below from the specified line.

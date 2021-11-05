@@ -185,10 +185,14 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 		}
 
 		if strings.HasPrefix(a, "input_") {
-			setHandler(in, handler, a, keys)
+			if err := setHandler(in, handler, a, keys); err != nil {
+				return err
+			}
 			continue
 		}
-		setHandler(c, handler, a, keys)
+		if err := setHandler(c, handler, a, keys); err != nil {
+			return err
+		}
 	}
 	return nil
 }
