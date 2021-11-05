@@ -108,6 +108,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	wrap := numOfSlice(listX, lX)
 
 	lastLY := -1
+	root.Doc.lastContentsNum = -1
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
