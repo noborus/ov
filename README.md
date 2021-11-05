@@ -1,4 +1,4 @@
-# ov - Oviewer
+# ov - feature rich terminal pager.
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
@@ -6,8 +6,6 @@
 
 ov is a feature rich terminal pager.
 It has an effective function for tabular text.
-
-(The old repository name was oviewer.)
 
 ![ov.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov.gif)
 
