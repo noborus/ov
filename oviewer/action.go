@@ -359,4 +359,5 @@ func (root *Root) updateEndNum() {
 	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
 	root.prepareStartX()
 	root.statusDraw()
+	root.setWrapHeaderLen()
 }
