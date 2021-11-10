@@ -289,15 +289,25 @@ func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
 
 // statusDraw draws a status line.
 func (root *Root) statusDraw() {
-	screen := root.Screen
-	style := tcell.StyleDefault
+	leftContents, cursorPos := root.leftStatus()
+	root.setContentString(0, root.statusPos, leftContents)
 
-	for x := 0; x < root.vWidth; x++ {
-		screen.SetContent(x, root.statusPos, 0, nil, style)
+	rightContents := root.rightStatus()
+	root.setContentString(root.vWidth-len(rightContents), root.statusPos, rightContents)
+
+	root.Screen.ShowCursor(cursorPos, root.statusPos)
+}
+
+func (root *Root) leftStatus() (lineContents, int) {
+	if root.input.mode == Normal {
+		return root.normalLeftStatus()
 	}
+	return root.inputLeftStatus()
+}
 
+func (root *Root) normalLeftStatus() (lineContents, int) {
 	number := ""
-	if root.input.mode == Normal && root.DocumentLen() > 1 {
+	if root.DocumentLen() > 1 && root.screenMode == Docs {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
 	follow := ""
@@ -309,6 +319,17 @@ func (root *Root) statusDraw() {
 	}
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
+	color := tcell.ColorWhite
+	if root.CurrentDoc != 0 {
+		color = tcell.Color((root.CurrentDoc + 8) % 16)
+	}
+	for i := 0; i < len(leftContents); i++ {
+		leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
+	}
+	return leftContents, len(leftContents)
+}
+
+func (root *Root) inputLeftStatus() (lineContents, int) {
 	input := root.input
 	searchMode := ""
 	if input.mode == Search || input.mode == Backsearch {
@@ -322,32 +343,19 @@ func (root *Root) statusDraw() {
 			searchMode += "(Aa)"
 		}
 	}
-	switch input.mode {
-	case Normal:
-		color := tcell.ColorWhite
-		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
-		}
+	p := searchMode + input.EventInput.Prompt()
+	leftStatus := p + input.value
+	leftContents := strToContents(leftStatus, -1)
+	return leftContents, len(p) + input.cursorX
+}
 
-		for i := 0; i < len(leftContents); i++ {
-			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
-		}
-		root.Screen.ShowCursor(len(leftContents), root.statusPos)
-	default:
-		p := searchMode + input.EventInput.Prompt()
-		leftStatus = p + input.value
-		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	}
-	root.setContentString(0, root.statusPos, leftContents)
-
+func (root *Root) rightStatus() lineContents {
 	next := ""
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
-	rightContents := strToContents(rightStatus, -1)
-	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
+	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
+	return strToContents(str, -1)
 }
 
 // setContentString is a helper function that draws a string with setContent.
