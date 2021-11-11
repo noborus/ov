@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"log"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -135,13 +134,14 @@ func (m *Document) ClearCache() {
 	m.cache.Clear()
 }
 
-// lineToContents returns contents from line number.
-func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
+// lnToContents returns contents from line number and tabwidth.
+func (m *Document) lnToContents(lN int, tabWidth int) (lineContents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
 
 	value, found := m.cache.Get(lN)
+	// It was cached.
 	if found {
 		lc, ok := value.(lineContents)
 		if !ok {
@@ -150,20 +150,38 @@ func (m *Document) lineToContents(lN int, tabWidth int) (lineContents, error) {
 		return lc, nil
 	}
 
+	// It wasn't cached.
 	lc := parseString(m.GetLine(lN), tabWidth)
-
 	m.cache.Set(lN, lc, 1)
 	return lc, nil
 }
 
-func (m *Document) checkClose() bool {
-	select {
-	case <-m.closeCh:
-		log.Printf("document closed %s", m.FileName)
-		return true
-	default:
+// getContents returns lineContents from line number and tabwidth.
+// If the line number does not exist, EOF content is returned.
+func (m *Document) getContents(lN int, tabWidth int) lineContents {
+	org, err := m.lnToContents(lN, tabWidth)
+	if err != nil {
+		// EOF
+		lc := make(lineContents, 1)
+		lc[0] = EOFContent
+		return lc
 	}
-	return false
+	lc := make(lineContents, len(org))
+	copy(lc, org)
+	return lc
+}
+
+// getContentsStr is returns a converted string
+// and byte length and contents length conversion table.
+// getContentsStr saves the last result
+// and reduces the number of executions of contentsToStr.
+// Because it takes time to analyze a line with a very long line.
+func (m *Document) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
+	if m.lastContentsNum != lN {
+		m.lastContentsStr, m.lastContentsMap = contentsToStr(lc)
+		m.lastContentsNum = lN
+	}
+	return m.lastContentsStr, m.lastContentsMap
 }
 
 // fistLine is the first line that excludes the SkipLines and Header.

@@ -11,27 +11,26 @@ func (root *Root) toggleWrapMode() {
 	root.Doc.WrapMode = !root.Doc.WrapMode
 	root.Doc.x = 0
 	root.setWrapHeaderLen()
-	root.setMessage(fmt.Sprintf("Set WrapMode %t", root.Doc.WrapMode))
+	root.setMessagef("Set WrapMode %t", root.Doc.WrapMode)
 }
 
 //  toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
-	root.setMessage(fmt.Sprintf("Set ColumnMode %t", root.Doc.ColumnMode))
+	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }
 
 // toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
-	root.Doc.ClearCache()
 	root.Doc.AlternateRows = !root.Doc.AlternateRows
-	root.setMessage(fmt.Sprintf("Set AlternateRows %t", root.Doc.AlternateRows))
+	root.setMessagef("Set AlternateRows %t", root.Doc.AlternateRows)
 }
 
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode() {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
 	root.ViewSync()
-	root.setMessage(fmt.Sprintf("Set LineNumMode %t", root.Doc.LineNumMode))
+	root.setMessagef("Set LineNumMode %t", root.Doc.LineNumMode)
 }
 
 // toggleFollowMode toggles follow mode.
@@ -47,7 +46,6 @@ func (root *Root) toggleFollowAll() {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
-	root.Clear()
 	root.ViewSync()
 }
 
@@ -92,7 +90,7 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Doc
 	root.wrapHeaderLen = 0
 	for y := m.SkipLines; y < m.firstLine(); y++ {
-		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		lc, err := m.lnToContents(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Println(err, "WrapHeaderLen", y)
 			continue
@@ -110,12 +108,12 @@ func (root *Root) goLine(input string) {
 		return
 	}
 	lN = root.moveLine(lN - 1)
-	root.setMessage(fmt.Sprintf("Moved to line %d", lN+1))
+	root.setMessagef("Moved to line %d", lN+1)
 }
 
 func (root *Root) goLineNumber(ln int) {
 	ln = root.moveLine(ln - root.Doc.firstLine())
-	root.setMessage(fmt.Sprintf("Moved to line %d", ln+1))
+	root.setMessagef("Moved to line %d", ln+1)
 }
 
 // markNext moves to the next mark.
@@ -151,7 +149,7 @@ func (root *Root) addMark() {
 	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.endNum)
 	root.Doc.marked = removeInt(root.Doc.marked, c)
 	root.Doc.marked = append(root.Doc.marked, c)
-	root.setMessage(fmt.Sprintf("Marked to line %d", c-root.Doc.firstLine()+1))
+	root.setMessagef("Marked to line %d", c-root.Doc.firstLine()+1)
 }
 
 // removeMark removes the current line number from the mark.
@@ -160,9 +158,9 @@ func (root *Root) removeMark() {
 	oLen := len(root.Doc.marked)
 	root.Doc.marked = removeInt(root.Doc.marked, c)
 	if oLen == len(root.Doc.marked) {
-		root.setMessage(fmt.Sprintf("Not marked line %d", c-root.Doc.firstLine()+1))
+		root.setMessagef("Not marked line %d", c-root.Doc.firstLine()+1)
 	} else {
-		root.setMessage(fmt.Sprintf("Remove the mark at line %d", c-root.Doc.firstLine()+1))
+		root.setMessagef("Remove the mark at line %d", c-root.Doc.firstLine()+1)
 	}
 }
 
@@ -189,7 +187,7 @@ func (root *Root) setHeader(input string) {
 	}
 
 	root.Doc.Header = num
-	root.setMessage(fmt.Sprintf("Set header lines %d", num))
+	root.setMessagef("Set header lines %d", num)
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }
@@ -210,7 +208,7 @@ func (root *Root) setSkipLines(input string) {
 	}
 
 	root.Doc.SkipLines = num
-	root.setMessage(fmt.Sprintf("Set skip lines %d", num))
+	root.setMessagef("Set skip lines %d", num)
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }
@@ -233,7 +231,7 @@ func (root *Root) switchDocument(docNum int) {
 func (root *Root) addDocument(m *Document) {
 	root.mu.Lock()
 	defer root.mu.Unlock()
-	log.Printf("add: %s", m.FileName)
+	root.setMessagef("add %s", m.FileName)
 	m.general = root.Config.General
 
 	root.DocList = append(root.DocList, m)
@@ -250,9 +248,7 @@ func (root *Root) closeDocument() {
 	root.mu.Lock()
 	defer root.mu.Unlock()
 
-	m := root.Doc
-	log.Printf("close [%d]%s", root.CurrentDoc, m.FileName)
-
+	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
@@ -292,7 +288,7 @@ func (root *Root) setViewMode(input string) {
 	c, ok := root.Config.Mode[input]
 	if !ok {
 		if input != "general" {
-			root.setMessage(fmt.Sprintf("%s mode not found", input))
+			root.setMessagef("%s mode not found", input)
 			return
 		}
 		c = root.General
@@ -302,13 +298,13 @@ func (root *Root) setViewMode(input string) {
 	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 	root.ViewSync()
-	root.setMessage(fmt.Sprintf("Set mode %s", input))
+	root.setMessagef("Set mode %s", input)
 }
 
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
 	root.Doc.ColumnDelimiter = input
-	root.setMessage(fmt.Sprintf("Set delimiter %s", input))
+	root.setMessagef("Set delimiter %s", input)
 }
 
 // setTabWidth sets the tab width.
@@ -323,7 +319,7 @@ func (root *Root) setTabWidth(input string) {
 	}
 
 	root.Doc.TabWidth = width
-	root.setMessage(fmt.Sprintf("Set tab width %d", width))
+	root.setMessagef("Set tab width %d", width)
 	root.Doc.ClearCache()
 }
 

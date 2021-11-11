@@ -253,3 +253,13 @@ func (m *Document) append(line string) {
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 }
+
+func (m *Document) checkClose() bool {
+	select {
+	case <-m.closeCh:
+		log.Printf("document closed %s", m.FileName)
+		return true
+	default:
+	}
+	return false
+}

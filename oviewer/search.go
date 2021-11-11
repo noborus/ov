@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -30,7 +29,7 @@ func (root *Root) forwardSearch(ctx context.Context, lN int, input string) {
 	root.input.value = input
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ",")))
+	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -56,7 +55,7 @@ func (root *Root) forwardSearch(ctx context.Context, lN int, input string) {
 		root.setMessage(err.Error())
 		return
 	}
-	root.setMessage(fmt.Sprintf("search:%v", searchWord))
+	root.setMessagef("search:%v", searchWord)
 }
 
 // backSearch is backward search.
@@ -69,7 +68,7 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 	root.input.value = input
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.setMessage(fmt.Sprintf("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ",")))
+	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
 
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -95,7 +94,7 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 		root.setMessage(err.Error())
 		return
 	}
-	root.setMessage(fmt.Sprintf("search:%v", root.searchWord))
+	root.setMessagef("search:%v", root.searchWord)
 }
 
 //incSearch implements incremental search.

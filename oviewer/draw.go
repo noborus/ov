@@ -57,7 +57,7 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		lc := root.getLineContents(lY, m.TabWidth)
+		lc := m.getContents(lY, m.TabWidth)
 
 		// column highlight
 		if m.ColumnMode {
@@ -78,14 +78,14 @@ func (root *Root) drawHeader() int {
 		}
 
 		if m.WrapMode {
-			lX, lY = root.wrapContents(hy, lX, lY, lc)
+			lX, lY = root.drawWrapLine(hy, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
+			lX, lY = root.drawNoWrapLine(hy, m.x, lY, lc)
 		}
 
 		// header style
@@ -117,13 +117,13 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
-			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
+			lc = m.getContents(m.topLN+lY, m.TabWidth)
 			root.lineStyle(lc, root.StyleBody)
 			root.lnumber[y] = lineNumber{
 				line: -1,
 				wrap: 0,
 			}
-			lineStr, byteMap = root.getContentsStr(m.topLN+lY, lc)
+			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)
 			lastLY = lY
 		}
 
@@ -162,14 +162,14 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		var nextY int
 		if m.WrapMode {
-			lX, nextY = root.wrapContents(y, lX, lY, lc)
+			lX, nextY = root.drawWrapLine(y, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
+			lX, nextY = root.drawNoWrapLine(y, m.x, lY, lc)
 		}
 
 		// alternate style applies from beginning to end of line, not content.
@@ -196,29 +196,8 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
-	if root.Doc.lastContentsNum != lN {
-		root.Doc.lastContentsStr, root.Doc.lastContentsMap = contentsToStr(lc)
-		root.Doc.lastContentsNum = lN
-	}
-	return root.Doc.lastContentsStr, root.Doc.lastContentsMap
-}
-
-func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
-	org, err := root.Doc.lineToContents(lN, tabWidth)
-	if err != nil {
-		// EOF
-		lc := make(lineContents, 1)
-		lc[0] = EOFContent
-		return lc
-	}
-	lc := make(lineContents, len(org))
-	copy(lc, org)
-	return lc
-}
-
-// wrapContents wraps and draws the contents and returns the next drawing position.
-func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+// drawWrapLine wraps and draws the contents and returns the next drawing position.
+func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < 0 {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
@@ -243,8 +222,8 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 	return lX, lY
 }
 
-// noWrapContents draws contents without wrapping and returns the next drawing position.
-func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+// drawNoWrapLine draws contents without wrapping and returns the next drawing position.
+func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
