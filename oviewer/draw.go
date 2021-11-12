@@ -57,7 +57,7 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		lc := root.getLineContents(lY, m.TabWidth)
+		lc := m.getContents(lY, m.TabWidth)
 
 		// column highlight
 		if m.ColumnMode {
@@ -78,14 +78,14 @@ func (root *Root) drawHeader() int {
 		}
 
 		if m.WrapMode {
-			lX, lY = root.wrapContents(hy, lX, lY, lc)
+			lX, lY = root.drawWrapLine(hy, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, lY = root.noWrapContents(hy, m.x, lY, lc)
+			lX, lY = root.drawNoWrapLine(hy, m.x, lY, lc)
 		}
 
 		// header style
@@ -117,13 +117,13 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
-			lc = root.getLineContents(m.topLN+lY, m.TabWidth)
+			lc = m.getContents(m.topLN+lY, m.TabWidth)
 			root.lineStyle(lc, root.StyleBody)
 			root.lnumber[y] = lineNumber{
 				line: -1,
 				wrap: 0,
 			}
-			lineStr, byteMap = root.getContentsStr(m.topLN+lY, lc)
+			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)
 			lastLY = lY
 		}
 
@@ -162,14 +162,14 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		var nextY int
 		if m.WrapMode {
-			lX, nextY = root.wrapContents(y, lX, lY, lc)
+			lX, nextY = root.drawWrapLine(y, lX, lY, lc)
 			if lX > 0 {
 				wrap++
 			} else {
 				wrap = 0
 			}
 		} else {
-			lX, nextY = root.noWrapContents(y, m.x, lY, lc)
+			lX, nextY = root.drawNoWrapLine(y, m.x, lY, lc)
 		}
 
 		// alternate style applies from beginning to end of line, not content.
@@ -196,29 +196,8 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
-	if root.Doc.lastContentsNum != lN {
-		root.Doc.lastContentsStr, root.Doc.lastContentsMap = contentsToStr(lc)
-		root.Doc.lastContentsNum = lN
-	}
-	return root.Doc.lastContentsStr, root.Doc.lastContentsMap
-}
-
-func (root *Root) getLineContents(lN int, tabWidth int) lineContents {
-	org, err := root.Doc.lineToContents(lN, tabWidth)
-	if err != nil {
-		// EOF
-		lc := make(lineContents, 1)
-		lc[0] = EOFContent
-		return lc
-	}
-	lc := make(lineContents, len(org))
-	copy(lc, org)
-	return lc
-}
-
-// wrapContents wraps and draws the contents and returns the next drawing position.
-func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+// drawWrapLine wraps and draws the contents and returns the next drawing position.
+func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < 0 {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
@@ -243,8 +222,8 @@ func (root *Root) wrapContents(y int, lX int, lY int, lc lineContents) (int, int
 	return lX, lY
 }
 
-// noWrapContents draws contents without wrapping and returns the next drawing position.
-func (root *Root) noWrapContents(y int, lX int, lY int, lc lineContents) (int, int) {
+// drawNoWrapLine draws contents without wrapping and returns the next drawing position.
+func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
@@ -289,15 +268,25 @@ func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
 
 // statusDraw draws a status line.
 func (root *Root) statusDraw() {
-	screen := root.Screen
-	style := tcell.StyleDefault
+	leftContents, cursorPos := root.leftStatus()
+	root.setContentString(0, root.statusPos, leftContents)
 
-	for x := 0; x < root.vWidth; x++ {
-		screen.SetContent(x, root.statusPos, 0, nil, style)
+	rightContents := root.rightStatus()
+	root.setContentString(root.vWidth-len(rightContents), root.statusPos, rightContents)
+
+	root.Screen.ShowCursor(cursorPos, root.statusPos)
+}
+
+func (root *Root) leftStatus() (lineContents, int) {
+	if root.input.mode == Normal {
+		return root.normalLeftStatus()
 	}
+	return root.inputLeftStatus()
+}
 
+func (root *Root) normalLeftStatus() (lineContents, int) {
 	number := ""
-	if root.input.mode == Normal && root.DocumentLen() > 1 {
+	if root.DocumentLen() > 1 && root.screenMode == Docs {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
 	follow := ""
@@ -309,6 +298,17 @@ func (root *Root) statusDraw() {
 	}
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
 	leftContents := strToContents(leftStatus, -1)
+	color := tcell.ColorWhite
+	if root.CurrentDoc != 0 {
+		color = tcell.Color((root.CurrentDoc + 8) % 16)
+	}
+	for i := 0; i < len(leftContents); i++ {
+		leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
+	}
+	return leftContents, len(leftContents)
+}
+
+func (root *Root) inputLeftStatus() (lineContents, int) {
 	input := root.input
 	searchMode := ""
 	if input.mode == Search || input.mode == Backsearch {
@@ -322,32 +322,19 @@ func (root *Root) statusDraw() {
 			searchMode += "(Aa)"
 		}
 	}
-	switch input.mode {
-	case Normal:
-		color := tcell.ColorWhite
-		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
-		}
+	p := searchMode + input.EventInput.Prompt()
+	leftStatus := p + input.value
+	leftContents := strToContents(leftStatus, -1)
+	return leftContents, len(p) + input.cursorX
+}
 
-		for i := 0; i < len(leftContents); i++ {
-			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
-		}
-		root.Screen.ShowCursor(len(leftContents), root.statusPos)
-	default:
-		p := searchMode + input.EventInput.Prompt()
-		leftStatus = p + input.value
-		root.Screen.ShowCursor(len(p)+input.cursorX, root.statusPos)
-		leftContents = strToContents(leftStatus, -1)
-	}
-	root.setContentString(0, root.statusPos, leftContents)
-
+func (root *Root) rightStatus() lineContents {
 	next := ""
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	rightStatus := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
-	rightContents := strToContents(rightStatus, -1)
-	root.setContentString(root.vWidth-len(rightStatus), root.statusPos, rightContents)
+	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
+	return strToContents(str, -1)
 }
 
 // setContentString is a helper function that draws a string with setContent.

@@ -13,6 +13,7 @@ import (
 )
 
 // content represents one character on the terminal.
+// content is a value that can be set in SetContent() of tcell.
 type content struct {
 	width int
 	mainc rune

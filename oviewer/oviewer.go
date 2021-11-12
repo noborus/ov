@@ -46,11 +46,13 @@ type Root struct {
 	OriginPos int
 	// Original string.
 	OriginStr string
-	//
+	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
+	// searchWord for on-screen highlighting.
 	searchWord string
-	searchReg  *regexp.Regexp
+	// searchReg for on-screen highlighting.
+	searchReg *regexp.Regexp
 
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
@@ -113,6 +115,7 @@ type lineNumber struct {
 }
 
 // general structure contains the general of the display.
+// general contains values that determine the behavior of each document.
 type general struct {
 	// TabWidth is tab stop num.
 	TabWidth int
@@ -338,6 +341,7 @@ func Open(fileNames ...string) (*Root, error) {
 }
 
 // NewRoot returns the structure of the oviewer.
+// NewRoot is a simplified version that can be used externally.
 func NewRoot(read io.Reader) (*Root, error) {
 	m, err := NewDocument()
 	if err != nil {
@@ -568,6 +572,11 @@ func (root *Root) setMessage(msg string) {
 	root.Show()
 }
 
+func (root *Root) setMessagef(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	root.setMessage(msg)
+}
+
 func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
@@ -673,7 +682,7 @@ func (root *Root) docSmall() bool {
 	}
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		lc, err := m.lineToContents(y, root.Doc.TabWidth)
+		lc, err := m.lnToContents(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Println(err, y)
 			continue
@@ -695,7 +704,7 @@ func (root *Root) WriteOriginal() {
 			break
 		}
 
-		lc, err := m.lineToContents(n, root.Doc.TabWidth)
+		lc, err := m.lnToContents(n, root.Doc.TabWidth)
 		if err != nil {
 			log.Println(err, n)
 			continue
@@ -733,7 +742,7 @@ func (root *Root) headerLen() int {
 
 // leftMostX returns a list of left - most x positions when wrapping.
 func (root *Root) leftMostX(lN int) ([]int, error) {
-	lc, err := root.Doc.lineToContents(lN, root.Doc.TabWidth)
+	lc, err := root.Doc.lnToContents(lN, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err
 	}

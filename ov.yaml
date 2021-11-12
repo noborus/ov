@@ -63,6 +63,7 @@ KeyBind:
         - "h"
         - "ctrl+alt+c"
     logdoc:
+        - "ctrl+f2"
         - "ctrl+alt+e"
     down:
         - "Enter"
@@ -133,6 +134,7 @@ KeyBind:
     previous_doc:
         - "["
     toggle_mouse:
+        - "ctrl+f3"
         - "ctrl+alt+r"
 
 Mode:

@@ -276,7 +276,7 @@ func (root *Root) columnModeX() int {
 	m := root.Doc
 	// m.Header+10 = Maximum columnMode target.
 	for i := 0; i < m.Header+10; i++ {
-		lc, err := m.lineToContents(m.topLN+m.Header+i, m.TabWidth)
+		lc, err := m.lnToContents(m.topLN+m.Header+i, m.TabWidth)
 		if err != nil {
 			continue
 		}

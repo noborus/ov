@@ -195,14 +195,14 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
 
 	ln1 := root.lnumber[y1]
-	lc1, err := root.Doc.lineToContents(ln1.line, root.Doc.TabWidth)
+	lc1, err := root.Doc.lnToContents(ln1.line, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
 	}
 	wx1 := root.branchWidth(lc1, ln1.wrap)
 
 	ln2 := root.lnumber[y2]
-	lc2, err := root.Doc.lineToContents(ln2.line, root.Doc.TabWidth)
+	lc2, err := root.Doc.lnToContents(ln2.line, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
 	}
@@ -259,7 +259,7 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 
 	for y := y1; y <= y2; y++ {
 		ln := root.lnumber[y]
-		lc, err := root.Doc.lineToContents(ln.line, root.Doc.TabWidth)
+		lc, err := root.Doc.lnToContents(ln.line, root.Doc.TabWidth)
 		if err != nil {
 			return "", err
 		}
@@ -298,7 +298,7 @@ func (root *Root) branchWidth(lc lineContents, branch int) int {
 
 // selectLine returns a string in the specified range on one line.
 func (root *Root) selectLine(ly int, x1 int, x2 int) string {
-	lc, err := root.Doc.lineToContents(ly, root.Doc.TabWidth)
+	lc, err := root.Doc.lnToContents(ly, root.Doc.TabWidth)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("%s", err))
 		return ""
