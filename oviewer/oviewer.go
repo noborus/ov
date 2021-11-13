@@ -460,21 +460,6 @@ func (root *Root) setKeyConfig() (map[string][]string, error) {
 	return keyBind, nil
 }
 
-// NewHelp generates a document for help.
-func NewHelp(k KeyBind) (*Document, error) {
-	help, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-	help.FileName = "Help"
-	str := KeyBindString(k)
-	help.lines = append(help.lines, "\t\t\tov help\n")
-	help.lines = append(help.lines, strings.Split(str, "\n")...)
-	help.eof = 1
-	help.endNum = len(help.lines)
-	return help, err
-}
-
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Close()
