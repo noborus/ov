@@ -97,7 +97,7 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 	root.setMessagef("search:%v", root.searchWord)
 }
 
-//incSearch implements incremental search.
+// incSearch implements incremental search.
 func (root *Root) incSearch(ctx context.Context) {
 	root.cancelRestart(ctx)
 
@@ -117,7 +117,7 @@ func (root *Root) incSearch(ctx context.Context) {
 	}()
 }
 
-//incSearch implements incremental search.
+// incBackSearch implements incremental back search.
 func (root *Root) incBackSearch(ctx context.Context) {
 	root.cancelRestart(ctx)
 

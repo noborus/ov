@@ -46,6 +46,56 @@ func TestNewOviewer(t *testing.T) {
 	}
 }
 
+func TestOpen(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type args struct {
+		fileNames []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test1",
+			args: args{
+				fileNames: []string{"../testdata/test.txt"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "test2",
+			args: args{
+				fileNames: []string{
+					"../testdata/test.txt",
+					"../testdata/test2.txt",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "testErr",
+			args: args{
+				fileNames: []string{"../testdata/err.txt"},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.args.fileNames...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Open() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			root.Quit()
+		})
+	}
+}
+
 func TestRoot_Run(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -57,13 +107,13 @@ func TestRoot_Run(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "test1",
-			ovArgs:  []string{"../testdata/test.txt"},
+			name:    "testEmpty",
+			ovArgs:  []string{},
 			wantErr: false,
 		},
 		{
-			name:    "testEmpty",
-			ovArgs:  []string{},
+			name:    "test1",
+			ovArgs:  []string{"../testdata/test.txt"},
 			wantErr: false,
 		},
 	}

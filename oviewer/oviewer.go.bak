@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"archive/zip"
 	"context"
 	"errors"
 	"fmt"
@@ -329,6 +330,11 @@ func Open(fileNames ...string) (*Root, error) {
 	case 0:
 		return openSTDIN()
 	case 1:
+		if strings.Contains(fileNames[0], "zip") {
+			log.Println("zip")
+			return openZipFile(fileNames[0])
+		}
+
 		m, err := openFile(fileNames[0])
 		if err != nil {
 			return nil, err
@@ -337,6 +343,7 @@ func Open(fileNames ...string) (*Root, error) {
 	default:
 		return openFiles(fileNames)
 	}
+
 }
 
 // NewRoot returns the structure of the oviewer.
@@ -383,6 +390,32 @@ func openFile(fileName string) (*Document, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func openZipFile(fileName string) (*Root, error) {
+	docList := make([]*Document, 0)
+	r, err := zip.OpenReader(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		m, err := NewDocument()
+		if err != nil {
+			return nil, err
+		}
+		m.FileName = f.Name
+		m.ReadAllFile(rc)
+		docList = append(docList, m)
+	}
+	return NewOviewer(docList...)
 }
 
 func openFiles(fileNames []string) (*Root, error) {
@@ -749,4 +782,40 @@ func (root *Root) DocumentLen() int {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
 	return len(root.DocList)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func removeStr(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+
+	for n, l := range list {
+		if l == s {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
+}
+
+func removeInt(list []int, c int) []int {
+	for n, l := range list {
+		if l == c {
+			list = append(list[:n], list[n+1:]...)
+		}
+	}
+	return list
 }

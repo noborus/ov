@@ -183,7 +183,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		// mark style.
-		if intContains(m.marked, m.topLN+lY) {
+		if containsInt(m.marked, m.topLN+lY) {
 			for x := 0; x < markStyleWidth; x++ {
 				r, c, style, _ := root.GetContent(x, y)
 				root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
@@ -344,13 +344,4 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
-}
-
-func intContains(list []int, e int) bool {
-	for _, n := range list {
-		if e == n {
-			return true
-		}
-	}
-	return false
 }
