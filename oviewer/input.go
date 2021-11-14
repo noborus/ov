@@ -170,9 +170,11 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
 }
+
 func (root *Root) inputIncSearch() {
 	root.Config.Incsearch = !root.Config.Incsearch
 }
+
 func (root *Root) inputRegexpSearch() {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
