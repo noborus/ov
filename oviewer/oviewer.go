@@ -524,7 +524,7 @@ func (root *Root) Run() error {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 
 	sigSuspend := make(chan os.Signal, 1)
-	signal.Notify(sigSuspend, syscall.SIGTSTP)
+	registerSIGTSTP(sigSuspend)
 
 	quitChan := make(chan struct{})
 
