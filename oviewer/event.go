@@ -35,6 +35,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			}
 			close(quitChan)
 			return
+		case *eventAppSuspend:
+			root.suspend()
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		case *eventDocument:
@@ -107,6 +109,24 @@ func (root *Root) Quit() {
 		return
 	}
 	ev := &eventAppQuit{}
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// eventAppSuspend represents a suspend event.
+type eventAppSuspend struct {
+	tcell.EventTime
+}
+
+// Quit executes a quit event.
+func (root *Root) Suspend() {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventAppSuspend{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {

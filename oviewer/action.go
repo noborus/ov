@@ -3,6 +3,9 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 )
 
@@ -271,6 +274,32 @@ func (root *Root) setDocumentNum(docNum int) {
 	root.CurrentDoc = docNum
 	m := root.DocList[root.CurrentDoc]
 	root.setDocument(m)
+}
+
+func (root *Root) suspend() {
+	log.Println("Suspend")
+	if err := root.Screen.Suspend(); err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println("suspended ov")
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		if runtime.GOOS == "windows" {
+			shell = "CMD.EXE"
+		} else {
+			shell = "/bin/sh"
+		}
+	}
+	c := exec.Command(shell, "-l")
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Run()
+	if err := root.Screen.Resume(); err != nil {
+		log.Println(err)
+	}
+	log.Println("Resume")
 }
 
 func (root *Root) toggleMouse() {
