@@ -5,7 +5,6 @@ package oviewer
 
 import (
 	"os"
-	"os/signal"
 )
 
 // Dummy function because there is no sigtstp in windows.
