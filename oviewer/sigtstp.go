@@ -9,6 +9,8 @@ import (
 	"syscall"
 )
 
-func registerSIGTSTP(sigSuspend chan os.Signal) {
+func registerSIGTSTP() chan os.Signal {
+	sigSuspend := make(chan os.Signal, 1)
 	signal.Notify(sigSuspend, syscall.SIGTSTP)
+	return sigSuspend
 }

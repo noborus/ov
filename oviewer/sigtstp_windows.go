@@ -6,9 +6,10 @@ package oviewer
 import (
 	"os"
 	"os/signal"
-	"syscall"
 )
 
 // Dummy function because there is no sigtstp in windows.
-func registerSIGTSTP(sigSuspend chan os.Signal) {
+func registerSIGTSTP() chan os.Signal {
+	sigSuspend := make(chan os.Signal, 1)
+	return sigSuspend
 }
