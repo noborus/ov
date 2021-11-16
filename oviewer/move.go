@@ -274,9 +274,9 @@ func (root *Root) moveRight() {
 // columnModeX returns the actual x from m.columnNum.
 func (root *Root) columnModeX() int {
 	m := root.Doc
-	// m.Header+10 = Maximum columnMode target.
-	for i := 0; i < m.Header+10; i++ {
-		lc, err := m.lnToContents(m.topLN+m.Header+i, m.TabWidth)
+	// m.firstLine()+10 = Maximum columnMode target.
+	for i := 0; i < m.firstLine()+10; i++ {
+		lc, err := m.lnToContents(m.topLN+m.firstLine()+i, m.TabWidth)
 		if err != nil {
 			continue
 		}
