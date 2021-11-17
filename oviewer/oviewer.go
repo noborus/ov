@@ -523,6 +523,8 @@ func (root *Root) Run() error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 
+	sigSuspend := registerSIGTSTP()
+
 	quitChan := make(chan struct{})
 
 	ctx := context.Background()
@@ -535,6 +537,8 @@ func (root *Root) Run() error {
 		select {
 		case <-quitChan:
 			return nil
+		case <-sigSuspend:
+			root.Suspend()
 		case sig := <-sigs:
 			return fmt.Errorf("%w [%s]", ErrSignalCatch, sig)
 		}

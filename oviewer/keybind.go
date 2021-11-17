@@ -12,6 +12,7 @@ const (
 	actionExit           = "exit"
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
+	actionSuspend        = "suspend"
 	actionSync           = "sync"
 	actionFollow         = "follow_mode"
 	actionFollowAll      = "follow_all"
@@ -63,6 +64,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionExit:           root.Quit,
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
+		actionSuspend:        root.suspend,
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
@@ -158,6 +160,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionPreviousDoc:    {"["},
 		actionCloseDoc:       {"ctrl+k"},
 		actionToggleMouse:    {"ctrl+alt+r"},
+		actionSuspend:        {"ctrl+z"},
 
 		inputCaseSensitive: {"alt+c"},
 		inputIncSearch:     {"alt+i"},
