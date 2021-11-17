@@ -50,16 +50,15 @@ ov is a terminal pager.
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
 * Columns support column mode that can be selected by delimiter.
-* Header rows can be fixed.
-* Dynamic wrap / nowrap switchable.
+* The header row can always be displayed.
+* Dynamic wrap/nowrap switchable.
 * Supports alternating row style changes.
 * Shortcut keys are customizable.
 * The style of the effect is customizable.
 * Supports follow-mode (like tail -f).
 * Supports following multiple files and switching when updated.
-* Run the command you can target the stdout/stderr.
+* Supports the execution of commands that toggle both stdout and stder for display.
 * Supports incremental search and regular expression search.
-
 
 ##  2. <a name='install'></a>install
 
@@ -153,7 +152,7 @@ ov filename
 cat filename|ov
 ```
 
-Used by other commands by setting the environment variable PAGER.
+Used by other commands by setting the environment variable **PAGER**.
 
 ```console
 export PAGER=ov
@@ -161,15 +160,13 @@ export PAGER=ov
 
 ###  3.2. <a name='followmode'></a>follow mode
 
-Output appended data and move it to the bottom line (like tail -f).
+Output appended data and move it to the bottom line (like `tail -f`).
 
-```sh
+```console
 ov --follow-mode /var/log/syslog
 ```
 
-example
-
-```sh
+```console
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
@@ -179,7 +176,7 @@ example
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
-```sh
+```console
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
@@ -188,7 +185,7 @@ ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 Execute the command to display stdout / stderr.
 Arguments after (`--`) are interpreted as command arguments.
 
-```sh
+```console
 ov --follow-all --exec -- make
 ```
 
@@ -353,13 +350,13 @@ Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/o
 
 Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
 
-```sh
+```console
 export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
 ```
 
 You can also write in `~/.psqlrc` in previous versions.
 
-```console
+```text
 \setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
 ```
 
@@ -367,13 +364,13 @@ You can also write in `~/.psqlrc` in previous versions.
 
 Use the --pager option with the mysql client.
 
-```sh
+```console
 mysql --pager='ov -w=f -H3 -F -C -d "|"'
 ```
 
 You can also write in `~/.my.cnf`.
 
-```console
+```ini
 [client]
 pager=ov -w=f --skip-lines 1 -H1 -F -C -d "|"
 ```
