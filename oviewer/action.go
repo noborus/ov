@@ -93,9 +93,9 @@ func (root *Root) setWrapHeaderLen() {
 	m := root.Doc
 	root.wrapHeaderLen = 0
 	for y := m.SkipLines; y < m.firstLine(); y++ {
-		lc, err := m.lnToContents(y, root.Doc.TabWidth)
+		lc, err := m.contentsLN(y, root.Doc.TabWidth)
 		if err != nil {
-			log.Println(err, "WrapHeaderLen", y)
+			log.Printf("WrapHeaderLen %d: %s", y, err)
 			continue
 		}
 		root.wrapHeaderLen++
@@ -178,11 +178,11 @@ func (root *Root) removeAllMark() {
 func (root *Root) setHeader(input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
+		root.setMessagef("Set header: %s", ErrInvalidNumber.Error())
 		return
 	}
 	if num < 0 || num > root.vHight-1 {
-		root.setMessage(ErrOutOfRange.Error())
+		root.setMessagef("Set header %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
 	if root.Doc.Header == num {
@@ -199,11 +199,11 @@ func (root *Root) setHeader(input string) {
 func (root *Root) setSkipLines(input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
+		root.setMessagef("Set skip line: %s", ErrInvalidNumber.Error())
 		return
 	}
 	if num < 0 || num > root.vHight-1 {
-		root.setMessage(ErrOutOfRange.Error())
+		root.setMessagef("Set skip line: %s", ErrOutOfRange.Error())
 		return
 	}
 	if root.Doc.SkipLines == num {
@@ -296,6 +296,7 @@ func (root *Root) suspend() {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	c.Run()
+	fmt.Println("resume ov")
 	if err := root.Screen.Resume(); err != nil {
 		log.Println(err)
 	}

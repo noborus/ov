@@ -357,7 +357,7 @@ func Test_strToContents(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := strToContents(tt.args.line, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
+			if got := StrToContents(tt.args.line, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("strToContent() = %v, want %v", got, tt.want)
 			}
 		})
@@ -405,7 +405,7 @@ func Test_contentsToStr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lc := parseString(tt.str, 8)
-			got1, got2 := contentsToStr(lc)
+			got1, got2 := ContentsToStr(lc)
 			if got1 != tt.want1 {
 				t.Errorf("contentsToStr() = %v, want %v", got1, tt.want1)
 			}

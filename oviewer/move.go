@@ -276,11 +276,11 @@ func (root *Root) columnModeX() int {
 	m := root.Doc
 	// m.firstLine()+10 = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+10; i++ {
-		lc, err := m.lnToContents(m.topLN+m.firstLine()+i, m.TabWidth)
+		lc, err := m.contentsLN(m.topLN+m.firstLine()+i, m.TabWidth)
 		if err != nil {
 			continue
 		}
-		lineStr, byteMap := contentsToStr(lc)
+		lineStr, byteMap := ContentsToStr(lc)
 		// Skip lines that do not contain a delimiter.
 		if !strings.Contains(lineStr, m.ColumnDelimiter) {
 			continue

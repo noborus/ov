@@ -57,18 +57,20 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		lc := m.getContents(lY, m.TabWidth)
-
+		lc, err := m.contentsLN(lY, m.TabWidth)
+		if err != nil {
+			break
+		}
 		// column highlight
 		if m.ColumnMode {
-			str, byteMap := contentsToStr(lc)
+			str, byteMap := ContentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
 			root.columnHighlight(lc, byteMap[start], byteMap[end])
 		}
 
 		// line number mode
 		if m.LineNumMode {
-			lc := strToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
+			lc := StrToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
 			root.setContentString(0, hy, lc)
 		}
 
@@ -103,7 +105,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 	listX, err := root.leftMostX(m.topLN + root.Doc.firstLine() + lY)
 	if err != nil {
-		log.Println(err, "drawBody", m.topLN+lY)
+		log.Printf("drawBody %d:%s", m.topLN+lY, err)
 	}
 	wrap := numOfSlice(listX, lX)
 
@@ -148,7 +150,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := strToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
+			lc := StrToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
 			for i := 0; i < len(lc); i++ {
 				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}
@@ -297,7 +299,7 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 		follow = "(Follow All)"
 	}
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
-	leftContents := strToContents(leftStatus, -1)
+	leftContents := StrToContents(leftStatus, -1)
 	color := tcell.ColorWhite
 	if root.CurrentDoc != 0 {
 		color = tcell.Color((root.CurrentDoc + 8) % 16)
@@ -324,7 +326,7 @@ func (root *Root) inputLeftStatus() (lineContents, int) {
 	}
 	p := searchMode + input.EventInput.Prompt()
 	leftStatus := p + input.value
-	leftContents := strToContents(leftStatus, -1)
+	leftContents := StrToContents(leftStatus, -1)
 	return leftContents, len(p) + input.cursorX
 }
 
@@ -334,7 +336,7 @@ func (root *Root) rightStatus() lineContents {
 		next = "..."
 	}
 	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
-	return strToContents(str, -1)
+	return StrToContents(str, -1)
 }
 
 // setContentString is a helper function that draws a string with setContent.

@@ -50,7 +50,7 @@ var EOFContent = content{
 
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
-func parseString(line string, tabWidth int) lineContents {
+func parseString(str string, tabWidth int) lineContents {
 	lc := lineContents{}
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
@@ -60,7 +60,7 @@ func parseString(line string, tabWidth int) lineContents {
 	bsFlag := false // backspace(^H) flag
 	var bsContent content
 
-	gr := uniseg.NewGraphemes(line)
+	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {
 		runeValue := gr.Runes()[0]
 		c := DefaultContent
@@ -351,15 +351,16 @@ func lookupColor(colorNumber int) string {
 	}[colorNumber]
 }
 
-// strToContents converts a single-line string into a content array.
-func strToContents(str string, tabWidth int) lineContents {
-	lc := parseString(str, tabWidth)
-	return lc
+// StrToContents converts a single-line string into a one line of contents.
+// Parse escape sequences, etc.
+// 1 Content matches the characters displayed on the screen.
+func StrToContents(str string, tabWidth int) lineContents {
+	return parseString(str, tabWidth)
 }
 
-// contentsToStr returns a converted string
+// ContentsToStr returns a converted string
 // and byte length and contents length conversion table.
-func contentsToStr(lc lineContents) (string, map[int]int) {
+func ContentsToStr(lc lineContents) (string, map[int]int) {
 	var buff bytes.Buffer
 	byteMap := make(map[int]int)
 
