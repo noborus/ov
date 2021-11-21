@@ -134,8 +134,8 @@ func (m *Document) ClearCache() {
 	m.cache.Clear()
 }
 
-// lnToContents returns contents from line number and tabwidth.
-func (m *Document) lnToContents(lN int, tabWidth int) (lineContents, error) {
+// contentsLN returns contents from line number and tabwidth.
+func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
@@ -159,7 +159,7 @@ func (m *Document) lnToContents(lN int, tabWidth int) (lineContents, error) {
 // getContents returns lineContents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getContents(lN int, tabWidth int) lineContents {
-	org, err := m.lnToContents(lN, tabWidth)
+	org, err := m.contentsLN(lN, tabWidth)
 	if err != nil {
 		// EOF
 		lc := make(lineContents, 1)
@@ -178,7 +178,7 @@ func (m *Document) getContents(lN int, tabWidth int) lineContents {
 // Because it takes time to analyze a line with a very long line.
 func (m *Document) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
 	if m.lastContentsNum != lN {
-		m.lastContentsStr, m.lastContentsMap = contentsToStr(lc)
+		m.lastContentsStr, m.lastContentsMap = ContentsToStr(lc)
 		m.lastContentsNum = lN
 	}
 	return m.lastContentsStr, m.lastContentsMap

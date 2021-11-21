@@ -258,6 +258,7 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 )
 
+// This is a function of tcell.NewScreen but can be replaced with mock.
 var tcellNewScreen = tcell.NewScreen
 
 // NewOviewer return the structure of oviewer.
@@ -324,19 +325,42 @@ func NewConfig() Config {
 }
 
 // Open reads the file named of the argument and return the structure of oviewer.
+// If there is no file name, create Root from standard input.
+// If there is only one file name, create Root from that file,
+// but return an error if the open is an error.
+// If there is more than one file name, create Root from multiple files.
 func Open(fileNames ...string) (*Root, error) {
+	logDoc, err := NewLogDoc()
+	if err != nil {
+		return nil, err
+	}
+
+	var root *Root
 	switch len(fileNames) {
 	case 0:
-		return openSTDIN()
+		root, err = openSTDIN()
+		if err != nil {
+			return nil, err
+		}
 	case 1:
 		m, err := openFile(fileNames[0])
 		if err != nil {
 			return nil, err
 		}
-		return NewOviewer(m)
+		root, err = NewOviewer(m)
+		if err != nil {
+			return nil, err
+		}
 	default:
-		return openFiles(fileNames)
+		root, err = openFiles(fileNames)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	root.logDoc = logDoc
+
+	return root, nil
 }
 
 // NewRoot returns the structure of the oviewer.
@@ -390,7 +414,7 @@ func openFiles(fileNames []string) (*Root, error) {
 	for _, fileName := range fileNames {
 		m, err := openFile(fileName)
 		if err != nil {
-			log.Println(err)
+			log.Printf("open error: %s", err)
 			continue
 		}
 		docList = append(docList, m)
@@ -470,22 +494,17 @@ func (root *Root) Run() error {
 	defer watcher.Close()
 	root.SetWatcher(watcher)
 
+	// Do not set the key bindings in NewOviewer
+	// because it is done after loading the config.
 	keyBind, err := root.setKeyConfig()
 	if err != nil {
 		return err
 	}
-
 	help, err := NewHelp(keyBind)
 	if err != nil {
 		return err
 	}
 	root.helpDoc = help
-
-	logDoc, err := NewLogDoc()
-	if err != nil {
-		return err
-	}
-	root.logDoc = logDoc
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse()
@@ -670,9 +689,9 @@ func (root *Root) docSmall() bool {
 	}
 	hight := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		lc, err := m.lnToContents(y, root.Doc.TabWidth)
+		lc, err := m.contentsLN(y, root.Doc.TabWidth)
 		if err != nil {
-			log.Println(err, y)
+			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
 		hight += 1 + (len(lc) / root.vWidth)
@@ -692,7 +711,7 @@ func (root *Root) WriteOriginal() {
 			break
 		}
 
-		lc, err := m.lnToContents(n, root.Doc.TabWidth)
+		lc, err := m.contentsLN(n, root.Doc.TabWidth)
 		if err != nil {
 			log.Println(err, n)
 			continue
@@ -730,7 +749,7 @@ func (root *Root) headerLen() int {
 
 // leftMostX returns a list of left - most x positions when wrapping.
 func (root *Root) leftMostX(lN int) ([]int, error) {
-	lc, err := root.Doc.lnToContents(lN, root.Doc.TabWidth)
+	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err
 	}
