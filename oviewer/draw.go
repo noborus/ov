@@ -46,21 +46,23 @@ func (root *Root) draw() {
 	root.Show()
 }
 
+// drawHeader draws header.
 func (root *Root) drawHeader() int {
 	m := root.Doc
 
+	// lY is a logical line.
 	lY := m.SkipLines
+	// lX is the x position of Contents.
 	lX := 0
+
+	// wrap is the number of wrapped lines.
 	wrap := 0
 	for hy := 0; lY < m.firstLine(); hy++ {
 		if hy > root.vHight {
 			break
 		}
 
-		lc, err := m.contentsLN(lY, m.TabWidth)
-		if err != nil {
-			break
-		}
+		lc := m.getContents(lY, m.TabWidth)
 		// column highlight
 		if m.ColumnMode {
 			str, byteMap := ContentsToStr(lc)
@@ -96,7 +98,6 @@ func (root *Root) drawHeader() int {
 			root.Screen.SetContent(x, hy, r, c, applyStyle(style, root.StyleHeader))
 		}
 	}
-
 	return lY
 }
 
@@ -109,24 +110,27 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	}
 	wrap := numOfSlice(listX, lX)
 
-	lastLY := -1
+	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
+
 	root.Doc.lastContentsNum = -1
+
+	// lc, lineStr, byteMap store the previous value.
+	// Because it may be a continuation from the previous line in wrap mode.
+	lastLY := -1
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
-
-	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
-
 	for y := root.headerLen(); y < root.vHight-1; y++ {
 		if lastLY != lY {
 			lc = m.getContents(m.topLN+lY, m.TabWidth)
+			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)
+			lastLY = lY
+
 			root.lineStyle(lc, root.StyleBody)
 			root.lnumber[y] = lineNumber{
 				line: -1,
 				wrap: 0,
 			}
-			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)
-			lastLY = lY
 		}
 
 		// column highlight
