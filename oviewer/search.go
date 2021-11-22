@@ -99,7 +99,7 @@ func (root *Root) backSearch(ctx context.Context, lN int, input string) {
 
 // incSearch implements incremental search.
 func (root *Root) incSearch(ctx context.Context) {
-	root.cancelRestart(ctx)
+	ctx = root.cancelRestart(ctx)
 
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
@@ -119,7 +119,7 @@ func (root *Root) incSearch(ctx context.Context) {
 
 // incBackSearch implements incremental back search.
 func (root *Root) incBackSearch(ctx context.Context) {
-	root.cancelRestart(ctx)
+	ctx = root.cancelRestart(ctx)
 
 	root.searchWord = root.input.value
 	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
@@ -138,12 +138,13 @@ func (root *Root) incBackSearch(ctx context.Context) {
 }
 
 // cancelRestart calls the cancel function and sets the cancel function again.
-func (root *Root) cancelRestart(ctx context.Context) {
+func (root *Root) cancelRestart(ctx context.Context) context.Context {
 	if root.cancelFunc != nil {
 		root.cancelFunc()
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	root.cancelFunc = cancel
+	return ctx
 }
 
 // returnStartPosition checks the input value and returns the start position.

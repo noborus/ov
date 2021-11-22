@@ -158,13 +158,13 @@ func (root *Root) addMark() {
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark() {
 	c := root.Doc.topLN + root.Doc.firstLine()
-	oLen := len(root.Doc.marked)
-	root.Doc.marked = removeInt(root.Doc.marked, c)
-	if oLen == len(root.Doc.marked) {
+	marked := removeInt(root.Doc.marked, c)
+	if len(root.Doc.marked) == len(marked) {
 		root.setMessagef("Not marked line %d", c-root.Doc.firstLine()+1)
-	} else {
-		root.setMessagef("Remove the mark at line %d", c-root.Doc.firstLine()+1)
+		return
 	}
+	root.Doc.marked = marked
+	root.setMessagef("Remove the mark at line %d", c-root.Doc.firstLine()+1)
 }
 
 // removeAllMark removes all marks.
@@ -295,7 +295,9 @@ func (root *Root) suspend() {
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
-	c.Run()
+	if err := c.Run(); err != nil {
+		log.Println(err)
+	}
 	fmt.Println("resume ov")
 	if err := root.Screen.Resume(); err != nil {
 		log.Println(err)
