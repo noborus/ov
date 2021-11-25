@@ -115,9 +115,6 @@ func (root *Root) CopySelect() {
 // but if the rectangle flag is true, the rectangle will be the range.
 func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	if y1 == y2 {
-		if x1 == x2 {
-			return
-		}
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
