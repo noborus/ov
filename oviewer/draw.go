@@ -8,6 +8,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+const statusline = 1
+
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
 	m := root.Doc
@@ -28,9 +30,7 @@ func (root *Root) draw() {
 		lX = m.topLX
 	}
 
-	if m.topLN < 0 {
-		m.topLN = 0
-	}
+	m.topLN = max(m.topLN, 0)
 
 	// Body
 	lX, lY = root.drawBody(lX, lY)
@@ -57,7 +57,9 @@ func (root *Root) drawHeader() int {
 
 	// wrap is the number of wrapped lines.
 	wrap := 0
-	for hy := 0; lY < m.firstLine(); hy++ {
+	// hy is the drawing line.
+	hy := 0
+	for ; lY < m.firstLine(); hy++ {
 		if hy > root.vHight {
 			break
 		}
@@ -98,6 +100,7 @@ func (root *Root) drawHeader() int {
 			root.Screen.SetContent(x, hy, r, c, applyStyle(style, root.StyleHeader))
 		}
 	}
+	root.headerLen = hy
 	return lY
 }
 
@@ -120,7 +123,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lc lineContents
 	var lineStr string
 	var byteMap map[int]int
-	for y := root.headerLen(); y < root.vHight-1; y++ {
+	for y := root.headerLen; y < root.vHight-statusline; y++ {
 		if lastLY != lY {
 			lc = m.getContents(m.topLN+lY, m.TabWidth)
 			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)

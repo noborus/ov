@@ -36,7 +36,7 @@ func (root *Root) moveLine(lN int) int {
 // Move up one screen.
 func (root *Root) movePgUp() {
 	root.resetSelect()
-	root.moveNumUp(root.statusPos - root.headerLen())
+	root.moveNumUp(root.statusPos - root.headerLen)
 }
 
 // Moves down one screen.
@@ -68,13 +68,13 @@ func (root *Root) limitMoveDown(x int, y int) {
 // Moves up half a screen.
 func (root *Root) moveHfUp() {
 	root.resetSelect()
-	root.moveNumUp((root.statusPos - root.headerLen()) / 2)
+	root.moveNumUp((root.statusPos - root.headerLen) / 2)
 }
 
 // Moves down half a screen.
 func (root *Root) moveHfDn() {
 	root.resetSelect()
-	root.moveNumDown((root.statusPos - root.headerLen()) / 2)
+	root.moveNumDown((root.statusPos - root.headerLen) / 2)
 }
 
 // numOfSlice returns what number x is in slice.
@@ -342,15 +342,14 @@ func (root *Root) moveHfRight() {
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(lN int) (int, int) {
-	hight := (root.vHight - root.headerLen()) - 2
-	if lN < root.headerLen() {
+	if lN < root.headerLen {
 		return 0, 0
 	}
 
+	hight := (root.vHight - root.headerLen) - 2
 	if !root.Doc.WrapMode {
-		return 0, lN - (hight + root.headerLen())
+		return 0, lN - (hight + root.headerLen)
 	}
-
 	// WrapMode
 	lX, lN := root.findNumUp(0, lN, hight)
 	return lX, lN - root.Doc.firstLine()
