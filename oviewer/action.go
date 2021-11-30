@@ -13,7 +13,6 @@ import (
 func (root *Root) toggleWrapMode() {
 	root.Doc.WrapMode = !root.Doc.WrapMode
 	root.Doc.x = 0
-	root.setWrapHeaderLen()
 	root.setMessagef("Set WrapMode %t", root.Doc.WrapMode)
 }
 
@@ -86,21 +85,6 @@ func (root *Root) toNormal() {
 
 	root.setDocument(root.DocList[root.CurrentDoc])
 	root.screenMode = Docs
-}
-
-// setWrapHeaderLen sets the value in wrapHeaderLen.
-func (root *Root) setWrapHeaderLen() {
-	m := root.Doc
-	root.wrapHeaderLen = 0
-	for y := m.SkipLines; y < m.firstLine(); y++ {
-		lc, err := m.contentsLN(y, root.Doc.TabWidth)
-		if err != nil {
-			log.Printf("WrapHeaderLen %d: %s", y, err)
-			continue
-		}
-		root.wrapHeaderLen++
-		root.wrapHeaderLen += ((len(lc) - 1) / (root.vWidth - root.startX))
-	}
 }
 
 // goLine will move to the specified line.
@@ -191,7 +175,6 @@ func (root *Root) setHeader(input string) {
 
 	root.Doc.Header = num
 	root.setMessagef("Set header lines %d", num)
-	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }
 
@@ -212,7 +195,6 @@ func (root *Root) setSkipLines(input string) {
 
 	root.Doc.SkipLines = num
 	root.setMessagef("Set skip lines %d", num)
-	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 }
 
@@ -327,7 +309,6 @@ func (root *Root) setViewMode(input string) {
 	}
 
 	root.Doc.general = c
-	root.setWrapHeaderLen()
 	root.Doc.ClearCache()
 	root.ViewSync()
 	root.setMessagef("Set mode %s", input)
@@ -387,5 +368,4 @@ func (root *Root) updateEndNum() {
 	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
 	root.prepareStartX()
 	root.statusDraw()
-	root.setWrapHeaderLen()
 }

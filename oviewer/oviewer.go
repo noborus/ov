@@ -91,8 +91,8 @@ type Root struct {
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
 
-	// wrapHeaderLen is the actual header length when wrapped.
-	wrapHeaderLen int
+	// headerLen is the actual header length when wrapped.
+	headerLen int
 
 	// bottomLN is the last line number displayed.
 	bottomLN int
@@ -673,8 +673,7 @@ func (root *Root) prepareView() {
 	root.vHight = max(root.vHight, 1)
 
 	root.lnumber = make([]lineNumber, root.vHight+1)
-	root.setWrapHeaderLen()
-	root.statusPos = root.vHight - 1
+	root.statusPos = root.vHight - statusline
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -737,14 +736,6 @@ func (root *Root) WriteLog() {
 			fmt.Fprintln(os.Stderr, str)
 		}
 	}
-}
-
-// headerLen returns the actual number of lines in the header.
-func (root *Root) headerLen() int {
-	if root.Doc.WrapMode {
-		return root.wrapHeaderLen
-	}
-	return root.Doc.Header
 }
 
 // leftMostX returns a list of left - most x positions when wrapping.
