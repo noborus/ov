@@ -558,6 +558,19 @@ func (root *Root) Run() error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Suppress the output of os.Stdout and os.Stderr
+	// because the screen collapses.
+	tmpStdout := os.Stdout
+	tmpStderr := os.Stderr
+	defer func() {
+		os.Stdout = tmpStdout
+	}()
+	defer func() {
+		os.Stderr = tmpStderr
+	}()
+	os.Stdout = nil
+	os.Stderr = nil
+
 	go func() {
 		// Undo screen when goroutine panic.
 		defer func() {
