@@ -5,6 +5,7 @@ import (
 )
 
 // NewLogDoc generates a document for log.
+// NewLogDoc makes LogDoc the output destination of go's standard logger.
 func NewLogDoc() (*Document, error) {
 	m, err := NewDocument()
 	if err != nil {
@@ -16,7 +17,7 @@ func NewLogDoc() (*Document, error) {
 	return m, nil
 }
 
-// Write matches the interface of io.Writer.
+// Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
 func (m *Document) Write(p []byte) (int, error) {
 	str := string(p)

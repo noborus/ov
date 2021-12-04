@@ -51,16 +51,12 @@ func (root *Root) setDocument(m *Document) {
 	root.ViewSync()
 }
 
-// Help is to switch between Help screen and normal screen.
-func (root *Root) Help() {
+// helpDisplay is to switch between helpDisplay screen and normal screen.
+func (root *Root) helpDisplay() {
 	if root.screenMode == Help {
 		root.toNormal()
 		return
 	}
-	root.toHelp()
-}
-
-func (root *Root) toHelp() {
 	root.setDocument(root.helpDoc)
 	root.screenMode = Help
 }
@@ -71,14 +67,11 @@ func (root *Root) logDisplay() {
 		root.toNormal()
 		return
 	}
-	root.toLogDoc()
-}
-
-func (root *Root) toLogDoc() {
 	root.setDocument(root.logDoc)
 	root.screenMode = LogDoc
 }
 
+// toNormal displays a normal document.
 func (root *Root) toNormal() {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
@@ -98,6 +91,7 @@ func (root *Root) goLine(input string) {
 	root.setMessagef("Moved to line %d", lN+1)
 }
 
+// goLineNumber moves to the specified line number.
 func (root *Root) goLineNumber(ln int) {
 	ln = root.moveLine(ln - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", ln+1)
@@ -198,21 +192,25 @@ func (root *Root) setSkipLines(input string) {
 	root.Doc.ClearCache()
 }
 
+// nextDoc displays the next document.
 func (root *Root) nextDoc() {
 	root.setDocumentNum(root.CurrentDoc + 1)
 	root.input.mode = Normal
 }
 
+// previouseDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.mode = Normal
 }
 
+// switchDocument displays the document of the specified docNum.
 func (root *Root) switchDocument(docNum int) {
 	root.setDocumentNum(docNum)
 	root.debugMessage(fmt.Sprintf("switch document %s", root.Doc.FileName))
 }
 
+// addDocument adds a document and displays it.
 func (root *Root) addDocument(m *Document) {
 	root.mu.Lock()
 	defer root.mu.Unlock()
@@ -225,6 +223,8 @@ func (root *Root) addDocument(m *Document) {
 	root.setDocument(m)
 }
 
+// closeDocument closes the document.
+// If there is only one document, do nothing.
 func (root *Root) closeDocument() {
 	if root.DocumentLen() == 1 {
 		return
@@ -243,6 +243,8 @@ func (root *Root) closeDocument() {
 	root.setDocument(doc)
 }
 
+// setDocumentNum actually specifies docNum to display the document.
+// This function is called internally from next / previous / switch / add.
 func (root *Root) setDocumentNum(docNum int) {
 	root.mu.Lock()
 	defer root.mu.Unlock()
@@ -258,6 +260,8 @@ func (root *Root) setDocumentNum(docNum int) {
 	root.setDocument(m)
 }
 
+// suspend suspends the current screen display and runs the shell.
+// It will return when you exit the shell.
 func (root *Root) suspend() {
 	log.Println("Suspend")
 	if err := root.Screen.Suspend(); err != nil {
@@ -287,6 +291,8 @@ func (root *Root) suspend() {
 	log.Println("Resume")
 }
 
+// toggleMouse toggles mouse control.
+// When disabled, the mouse is controlled on the terminal side.
 func (root *Root) toggleMouse() {
 	root.Config.DisableMouse = !root.Config.DisableMouse
 	if root.Config.DisableMouse {
@@ -298,6 +304,8 @@ func (root *Root) toggleMouse() {
 	}
 }
 
+// setViewMode switches to the preset display mode.
+// Set header lines and columMode together.
 func (root *Root) setViewMode(input string) {
 	c, ok := root.Config.Mode[input]
 	if !ok {

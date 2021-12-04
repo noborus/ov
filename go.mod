@@ -14,6 +14,7 @@ require (
 	github.com/jwalton/gchalk v1.2.1
 	github.com/klauspost/compress v1.13.6
 	github.com/mattn/go-runewidth v0.0.13
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.2.0
 	github.com/spf13/cobra v1.2.1
@@ -23,5 +24,5 @@ require (
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/ini.v1 v1.65.0 // indirect
+	gopkg.in/ini.v1 v1.66.2 // indirect
 )

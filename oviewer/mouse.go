@@ -30,6 +30,7 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 		return
 	}
 
+	// Avoid redrawing with other mouse events.
 	root.skipDraw = true
 }
 
