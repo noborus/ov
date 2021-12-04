@@ -287,6 +287,12 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	}
 	root.Screen = screen
 
+	logDoc, err := NewLogDoc()
+	if err != nil {
+		return nil, err
+	}
+	root.logDoc = logDoc
+
 	return root, nil
 }
 
@@ -330,12 +336,8 @@ func NewConfig() Config {
 // but return an error if the open is an error.
 // If there is more than one file name, create Root from multiple files.
 func Open(fileNames ...string) (*Root, error) {
-	logDoc, err := NewLogDoc()
-	if err != nil {
-		return nil, err
-	}
-
 	var root *Root
+	var err error
 	switch len(fileNames) {
 	case 0:
 		root, err = openSTDIN()
@@ -357,8 +359,6 @@ func Open(fileNames ...string) (*Root, error) {
 			return nil, err
 		}
 	}
-
-	root.logDoc = logDoc
 
 	return root, nil
 }
@@ -410,11 +410,12 @@ func openFile(fileName string) (*Document, error) {
 }
 
 func openFiles(fileNames []string) (*Root, error) {
+	errors := make([]string, 0)
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
 		m, err := openFile(fileName)
 		if err != nil {
-			log.Printf("open error: %s", err)
+			errors = append(errors, fmt.Sprintf("open error: %s", err))
 			continue
 		}
 		docList = append(docList, m)
@@ -423,8 +424,15 @@ func openFiles(fileNames []string) (*Root, error) {
 	if len(docList) == 0 {
 		return nil, fmt.Errorf("%w: %s", ErrMissingFile, fileNames[0])
 	}
+	root, err := NewOviewer(docList...)
+	if err != nil {
+		return nil, err
+	}
 
-	return NewOviewer(docList...)
+	for _, e := range errors {
+		log.Println(e)
+	}
+	return root, err
 }
 
 // SetConfig sets config.
@@ -550,7 +558,26 @@ func (root *Root) Run() error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	go root.main(ctx, quitChan)
+	// Suppress the output of os.Stdout and os.Stderr
+	// because the screen collapses.
+	tmpStdout := os.Stdout
+	tmpStderr := os.Stderr
+	defer func() {
+		os.Stdout = tmpStdout
+	}()
+	defer func() {
+		os.Stderr = tmpStderr
+	}()
+	os.Stdout = nil
+	os.Stderr = nil
+
+	go func() {
+		// Undo screen when goroutine panic.
+		defer func() {
+			root.Close()
+		}()
+		root.main(ctx, quitChan)
+	}()
 
 	for {
 		select {

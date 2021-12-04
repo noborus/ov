@@ -68,7 +68,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
-		actionHelp:           root.Help,
+		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
 		actionMoveDown:       root.moveDown,
 		actionMoveUp:         root.moveUp,
