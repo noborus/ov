@@ -83,9 +83,9 @@ func parseString(str string, tabWidth int) lineContents {
 			}
 		case ansiSubstring:
 			if runeValue == 0x1b {
-				state = ansiEscape
-				continue
+				state = ansiControlSequence
 			}
+			continue
 		case ansiControlSequence:
 			if runeValue == 'm' {
 				style = csToStyle(style, csiParameter)

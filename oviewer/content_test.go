@@ -104,6 +104,78 @@ func Test_parseString(t *testing.T) {
 			},
 		},
 		{
+			name: "bright color",
+			args: args{
+				line: "\x1B[90mc\x1B[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorGray), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "bright color back",
+			args: args{
+				line: "\x1B[100mc\x1B[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGray), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "216 color",
+			args: args{
+				line: "\x1B[38;5;31mc\x1B[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "256",
+			args: args{
+				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "256 both",
+			args: args{
+				line: "\x1b[38;5;1;48;5;2mc\x1b[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)).Background(tcell.Color(tcell.ColorValid + 2)), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "24bitcolor",
+			args: args{
+				line: "\x1b[38;2;250;123;250mc\x1b[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(250, 123, 250)), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "24bitcolor both",
+			args: args{
+				line: "\x1b[38;2;255;0;0;48;2;0;0;255mc\x1b[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(255, 0, 0)).Background(tcell.NewRGBColor(0, 0, 255)), mainc: rune('c'), combc: nil},
+			},
+		},
+		{
+			name: "default color",
+			args: args{
+				line: "\x1B[39md\x1B[m", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('d'), combc: nil},
+			},
+		},
+		{
 			name: "bold",
 			args: args{
 				line: "\x1B[1mbold\x1B[m", tabWidth: 8,
@@ -113,6 +185,35 @@ func Test_parseString(t *testing.T) {
 				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('o'), combc: nil},
 				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('l'), combc: nil},
 				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('d'), combc: nil},
+			},
+		},
+		{
+			name: "reset",
+			args: args{
+				line: "\x1B[31mr\x1B[me", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
+			},
+		},
+		{
+			name: "reset2",
+			args: args{
+				line: "\x1B[31mr\x1Bce", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
+			},
+		},
+		{
+			name: "substring",
+			args: args{
+				line: "\x1B]sub\x1Bmt", tabWidth: 8,
+			},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
 			},
 		},
 		{
@@ -173,7 +274,7 @@ func Test_parseString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseString() got = %v, want %v", got, tt.want)
+				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
