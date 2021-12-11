@@ -67,9 +67,9 @@ func (root *Root) drawHeader() int {
 		lc := m.getContents(lY, m.TabWidth)
 		// column highlight
 		if m.ColumnMode {
-			str, byteMap := ContentsToStr(lc)
+			str, posCV := ContentsToStr(lc)
 			start, end := rangePosition(str, m.ColumnDelimiter, m.columnNum)
-			root.columnHighlight(lc, byteMap[start], byteMap[end])
+			root.columnHighlight(lc, posCV[start], posCV[end])
 		}
 
 		// line number mode
@@ -122,11 +122,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	lastLY := -1
 	var lc lineContents
 	var lineStr string
-	var byteMap map[int]int
+	var posCV map[int]int
 	for y := root.headerLen; y < root.vHight-statusline; y++ {
 		if lastLY != lY {
 			lc = m.getContents(m.topLN+lY, m.TabWidth)
-			lineStr, byteMap = m.getContentsStr(m.topLN+lY, lc)
+			lineStr, posCV = m.getContentsStr(m.topLN+lY, lc)
 			lastLY = lY
 
 			root.lineStyle(lc, root.StyleBody)
@@ -139,7 +139,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		// column highlight
 		if root.Doc.ColumnMode {
 			start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
-			root.columnHighlight(lc, byteMap[start], byteMap[end])
+			root.columnHighlight(lc, posCV[start], posCV[end])
 		}
 
 		// search highlight
@@ -151,7 +151,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 				poss = searchPosition(root.Config.CaseSensitive, lineStr, root.searchWord)
 			}
 			for _, r := range poss {
-				root.searchHighlight(lc, byteMap[r[0]], byteMap[r[1]])
+				root.searchHighlight(lc, posCV[r[0]], posCV[r[1]])
 			}
 		}
 

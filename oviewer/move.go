@@ -280,7 +280,7 @@ func (root *Root) columnModeX() int {
 		if err != nil {
 			continue
 		}
-		lineStr, byteMap := ContentsToStr(lc)
+		lineStr, posCV := ContentsToStr(lc)
 		// Skip lines that do not contain a delimiter.
 		if !strings.Contains(lineStr, m.ColumnDelimiter) {
 			continue
@@ -291,8 +291,8 @@ func (root *Root) columnModeX() int {
 			m.columnNum--
 			start, end = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		}
-		sx := byteMap[start]
-		ex := byteMap[end] + 10
+		sx := posCV[start]
+		ex := posCV[end] + 10
 		if root.vWidth > ex {
 			return 0
 		}

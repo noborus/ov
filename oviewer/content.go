@@ -83,9 +83,9 @@ func parseString(str string, tabWidth int) lineContents {
 			}
 		case ansiSubstring:
 			if runeValue == 0x1b {
-				state = ansiEscape
-				continue
+				state = ansiControlSequence
 			}
+			continue
 		case ansiControlSequence:
 			if runeValue == 'm' {
 				style = csToStyle(style, csiParameter)
@@ -359,17 +359,17 @@ func StrToContents(str string, tabWidth int) lineContents {
 }
 
 // ContentsToStr returns a converted string
-// and byte length and contents length conversion table.
+// and byte position, as well as the content position conversion table.
 func ContentsToStr(lc lineContents) (string, map[int]int) {
 	var buff bytes.Buffer
-	byteMap := make(map[int]int)
+	posCV := make(map[int]int)
 
 	bn := 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		byteMap[bn] = n
+		posCV[bn] = n
 		_, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -384,6 +384,6 @@ func ContentsToStr(lc lineContents) (string, map[int]int) {
 		}
 	}
 	str := buff.String()
-	byteMap[bn] = len(lc)
-	return str, byteMap
+	posCV[bn] = len(lc)
+	return str, posCV
 }
