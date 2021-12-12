@@ -162,21 +162,21 @@ func searchPosition(caseSensitive bool, searchText string, substr string) [][]in
 	return locs
 }
 
-func (root *Root) setSearch(input string) searchMatch {
-	if input == "" {
+func (root *Root) setSearch(word string, caseSensitive bool) searchMatch {
+	if word == "" {
 		root.searchWord = ""
 		root.searchReg = nil
 		return nil
 	}
-	root.input.value = input
-	root.searchWord = input
-	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
+	root.input.value = word
+	root.searchWord = word
+	root.searchReg = regexpCompile(root.searchWord, caseSensitive)
 
-	return getSearchMatch(root.searchWord, root.searchReg, root.CaseSensitive, root.Config.RegexpSearch)
+	return getSearchMatch(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
 }
 
-// forwardSearch is forward search.
-func (root *Root) forwardSearch(ctx context.Context, lN int, search searchMatch) {
+// searchMove is forward/back search.
+func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search searchMatch) {
 	if search == nil {
 		return
 	}
@@ -191,7 +191,12 @@ func (root *Root) forwardSearch(ctx context.Context, lN int, search searchMatch)
 	})
 
 	eg.Go(func() error {
-		lN, err := root.searchLine(ctx, search, lN)
+		var err error
+		if forward {
+			lN, err = root.searchLine(ctx, search, lN)
+		} else {
+			lN, err = root.backSearchLine(ctx, search, lN)
+		}
 		if err != nil {
 			return err
 		}
@@ -206,39 +211,8 @@ func (root *Root) forwardSearch(ctx context.Context, lN int, search searchMatch)
 	root.setMessagef("search:%v", root.searchWord)
 }
 
-// backSearch is backward search.
-func (root *Root) backSearch(ctx context.Context, lN int, search searchMatch) {
-	if search == nil {
-		return
-	}
-	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
-	eg, ctx := errgroup.WithContext(ctx)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	root.cancelFunc = cancel
-
-	eg.Go(func() error {
-		return root.cancelWait()
-	})
-
-	eg.Go(func() error {
-		lN, err := root.backSearchLine(ctx, search, lN)
-		if err != nil {
-			return err
-		}
-		root.moveLine(lN - root.Doc.firstLine())
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		root.setMessage(err.Error())
-		return
-	}
-	root.setMessagef("search:%v", root.searchWord)
-}
-
-// incSearch implements incremental search.
-func (root *Root) incSearch(ctx context.Context, search searchMatch) {
+// incSearch implements incremental forward/back search.
+func (root *Root) incSearch(ctx context.Context, forward bool, search searchMatch) {
 	if search == nil {
 		return
 	}
@@ -247,28 +221,13 @@ func (root *Root) incSearch(ctx context.Context, search searchMatch) {
 	root.Doc.topLN = root.returnStartPosition()
 
 	go func() {
-		lN, err := root.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
-		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
-			}
-			return
+		var lN int
+		var err error
+		if forward {
+			lN, err = root.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+		} else {
+			lN, err = root.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
 		}
-		root.MoveLine(lN - root.Doc.firstLine() + 1)
-	}()
-}
-
-// incBackSearch implements incremental back search.
-func (root *Root) incBackSearch(ctx context.Context, search searchMatch) {
-	if search == nil {
-		return
-	}
-	ctx = root.cancelRestart(ctx)
-
-	root.Doc.topLN = root.returnStartPosition()
-
-	go func() {
-		lN, err := root.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Println(err)

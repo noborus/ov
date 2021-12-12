@@ -3,6 +3,7 @@ package oviewer
 import (
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -524,6 +525,57 @@ func Test_searchPosition(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := searchPosition(tt.args.caseSensitive, tt.args.searchText, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setSearch(t *testing.T) {
+	type fields struct {
+		input *Input
+	}
+	type args struct {
+		word          string
+		caseSensitive bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   searchMatch
+	}{
+		{
+			name: "testNil",
+			fields: fields{
+				input: &Input{},
+			},
+			args: args{
+				word:          "",
+				caseSensitive: false,
+			},
+			want: nil,
+		},
+		{
+			name: "test1",
+			fields: fields{
+				input: &Input{},
+			},
+			args: args{
+				word:          "test",
+				caseSensitive: false,
+			},
+			want: searchWord{
+				word: strings.ToLower("test"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := &Root{
+				input: tt.fields.input,
+			}
+			if got := root.setSearch(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Root.setSearch() = %v, want %v", got, tt.want)
 			}
 		})
 	}
