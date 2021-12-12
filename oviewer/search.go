@@ -10,192 +10,72 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// SearchType represents the type of search.
-type SearchType int
-
-const (
-	searchSensitive SearchType = iota
-	searchInsensitive
-	searchRegexp
-)
-
-// forwardSearch is forward search.
-func (root *Root) forwardSearch(ctx context.Context, lN int, input string) {
-	if input == "" {
-		root.searchWord = ""
-		root.searchReg = nil
-		return
-	}
-	root.input.value = input
-	root.searchWord = root.input.value
-	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
-
-	eg, ctx := errgroup.WithContext(ctx)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	root.cancelFunc = cancel
-
-	eg.Go(func() error {
-		return root.cancelWait()
-	})
-
-	searchWord := root.searchWord
-	searchReg := root.searchReg
-	eg.Go(func() error {
-		lN, err := root.searchLine(ctx, searchWord, searchReg, lN)
-		if err != nil {
-			return err
-		}
-		root.moveLine(lN - root.Doc.firstLine())
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		root.setMessage(err.Error())
-		return
-	}
-	root.setMessagef("search:%v", searchWord)
+// searchMatch interface provides a match method that determines
+// if the search word matches the argument string.
+type searchMatch interface {
+	match(string) bool
 }
 
-// backSearch is backward search.
-func (root *Root) backSearch(ctx context.Context, lN int, input string) {
-	if input == "" {
-		root.searchWord = ""
-		root.searchReg = nil
-		return
-	}
-	root.input.value = input
-	root.searchWord = root.input.value
-	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
-
-	eg, ctx := errgroup.WithContext(ctx)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	root.cancelFunc = cancel
-
-	eg.Go(func() error {
-		return root.cancelWait()
-	})
-
-	searchWord := root.searchWord
-	searchReg := root.searchReg
-	eg.Go(func() error {
-		lN, err := root.backSearchLine(ctx, searchWord, searchReg, lN)
-		if err != nil {
-			return err
-		}
-		root.moveLine(lN - root.Doc.firstLine())
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		root.setMessage(err.Error())
-		return
-	}
-	root.setMessagef("search:%v", root.searchWord)
+// searchWord is a case-insensitive search.
+type searchWord struct {
+	word string
 }
 
-// incSearch implements incremental search.
-func (root *Root) incSearch(ctx context.Context) {
-	ctx = root.cancelRestart(ctx)
-
-	root.searchWord = root.input.value
-	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.Doc.topLN = root.returnStartPosition()
-
-	go func() {
-		lN, err := root.searchLine(ctx, root.searchWord, root.searchReg, root.Doc.topLN+root.Doc.firstLine())
-		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
-			}
-			return
-		}
-		root.MoveLine(lN - root.Doc.firstLine() + 1)
-	}()
+// sensitiveWord is a case-sensitive search.
+type sensitiveWord struct {
+	word string
 }
 
-// incBackSearch implements incremental back search.
-func (root *Root) incBackSearch(ctx context.Context) {
-	ctx = root.cancelRestart(ctx)
-
-	root.searchWord = root.input.value
-	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
-	root.Doc.topLN = root.returnStartPosition()
-
-	go func() {
-		lN, err := root.backSearchLine(ctx, root.searchWord, root.searchReg, root.Doc.topLN+root.Doc.firstLine())
-		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
-			}
-			return
-		}
-		root.MoveLine(lN - root.Doc.firstLine() + 1)
-	}()
+// regexpWord is a regular expression search.
+type regexpWord struct {
+	word *regexp.Regexp
 }
 
-// cancelRestart calls the cancel function and sets the cancel function again.
-func (root *Root) cancelRestart(ctx context.Context) context.Context {
-	if root.cancelFunc != nil {
-		root.cancelFunc()
+// (searchWord) match is a case-insensitive search.
+func (substr searchWord) match(s string) bool {
+	s = stripEscapeSequence(s)
+	return strings.Contains(strings.ToLower(s), substr.word)
+}
+
+// (sensitiveWord) match is a case-sensitive search.
+func (substr sensitiveWord) match(s string) bool {
+	s = stripEscapeSequence(s)
+	return strings.Contains(s, substr.word)
+}
+
+// (regexpWord) match is a regular expression search.
+func (substr regexpWord) match(s string) bool {
+	s = stripEscapeSequence(s)
+	return substr.word.MatchString(s)
+}
+
+// stripRegexpES is a regular expression that excludes escape sequences.
+var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
+
+// stripEscapeSequence strips if it contains escape sequences.
+func stripEscapeSequence(s string) string {
+	// Remove EscapeSequence.
+	if strings.ContainsAny(s, "\x1b\b") {
+		s = stripRegexpES.ReplaceAllString(s, "")
 	}
-	ctx, cancel := context.WithCancel(ctx)
-	root.cancelFunc = cancel
-	return ctx
+	return s
 }
 
-// returnStartPosition checks the input value and returns the start position.
-func (root *Root) returnStartPosition() int {
-	start := root.Doc.topLN
-	if !strings.Contains(root.searchWord, root.OriginStr) {
-		start = root.OriginPos
-	}
-	root.OriginStr = root.searchWord
-	return start
-}
-
-// searchLine is searches below from the specified line.
-func (root *Root) searchLine(ctx context.Context, searchWord string, searchReg *regexp.Regexp, num int) (int, error) {
-	defer root.searchQuit()
-	num = max(num, 0)
-
-	searchType := getSearchType(searchWord, root.CaseSensitive, root.Config.RegexpSearch)
-
-	for n := num; n < root.Doc.BufEndNum(); n++ {
-		if root.contains(root.Doc.GetLine(n), searchWord, searchReg, searchType) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
+// getSearchMatch returns the searchMatch interface suitable for the search term.
+func getSearchMatch(searhWord string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) searchMatch {
+	if regexpSearch && searhWord != regexp.QuoteMeta(searhWord) {
+		return regexpWord{
+			word: searchReg,
 		}
 	}
-
-	return 0, ErrNotFound
-}
-
-// backsearch is searches upward from the specified line.
-func (root *Root) backSearchLine(ctx context.Context, searchWord string, searchReg *regexp.Regexp, num int) (int, error) {
-	defer root.searchQuit()
-	num = min(num, root.Doc.BufEndNum()-1)
-
-	searchType := getSearchType(searchWord, root.CaseSensitive, root.Config.RegexpSearch)
-
-	for n := num; n >= 0; n-- {
-		if root.contains(root.Doc.GetLine(n), searchWord, searchReg, searchType) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
+	if caseSensitive {
+		return sensitiveWord{
+			word: searhWord,
 		}
 	}
-	return 0, ErrNotFound
+	return searchWord{
+		word: strings.ToLower(searhWord),
+	}
 }
 
 // regexpCompile is regexp.Compile the search string.
@@ -215,36 +95,6 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 	}
 	log.Printf("regexpCompile failed %s", r)
 	return nil
-}
-
-// stripEscapeSequence is a regular expression that excludes escape sequences.
-var stripEscapeSequence = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
-
-// contains returns a bool containing the search string.
-func (root *Root) contains(s string, substr string, subReg *regexp.Regexp, t SearchType) bool {
-	// Remove EscapeSequence.
-	if strings.ContainsAny(s, "\x1b\b") {
-		s = stripEscapeSequence.ReplaceAllString(s, "")
-	}
-
-	switch t {
-	case searchSensitive:
-		return strings.Contains(s, substr)
-	case searchInsensitive:
-		return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
-	default: // Regular expressions.
-		return subReg.MatchString(s)
-	}
-}
-
-func getSearchType(t string, caseSensitive bool, regexpSearch bool) SearchType {
-	if regexpSearch && t != regexp.QuoteMeta(t) {
-		return searchRegexp
-	}
-	if caseSensitive {
-		return searchSensitive
-	}
-	return searchInsensitive
 }
 
 // rangePosition returns the range starting and ending from the s,substr string.
@@ -310,4 +160,178 @@ func searchPosition(caseSensitive bool, searchText string, substr string) [][]in
 		loc = strings.Index(searchText, substr)
 	}
 	return locs
+}
+
+func (root *Root) setSearch(input string) searchMatch {
+	if input == "" {
+		root.searchWord = ""
+		root.searchReg = nil
+		return nil
+	}
+	root.input.value = input
+	root.searchWord = input
+	root.searchReg = regexpCompile(root.searchWord, root.CaseSensitive)
+
+	return getSearchMatch(root.searchWord, root.searchReg, root.CaseSensitive, root.Config.RegexpSearch)
+}
+
+// forwardSearch is forward search.
+func (root *Root) forwardSearch(ctx context.Context, lN int, search searchMatch) {
+	if search == nil {
+		return
+	}
+	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
+	eg, ctx := errgroup.WithContext(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	root.cancelFunc = cancel
+
+	eg.Go(func() error {
+		return root.cancelWait()
+	})
+
+	eg.Go(func() error {
+		lN, err := root.searchLine(ctx, search, lN)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lN - root.Doc.firstLine())
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		root.setMessage(err.Error())
+		return
+	}
+	root.setMessagef("search:%v", root.searchWord)
+}
+
+// backSearch is backward search.
+func (root *Root) backSearch(ctx context.Context, lN int, search searchMatch) {
+	if search == nil {
+		return
+	}
+	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
+	eg, ctx := errgroup.WithContext(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	root.cancelFunc = cancel
+
+	eg.Go(func() error {
+		return root.cancelWait()
+	})
+
+	eg.Go(func() error {
+		lN, err := root.backSearchLine(ctx, search, lN)
+		if err != nil {
+			return err
+		}
+		root.moveLine(lN - root.Doc.firstLine())
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		root.setMessage(err.Error())
+		return
+	}
+	root.setMessagef("search:%v", root.searchWord)
+}
+
+// incSearch implements incremental search.
+func (root *Root) incSearch(ctx context.Context, search searchMatch) {
+	if search == nil {
+		return
+	}
+	ctx = root.cancelRestart(ctx)
+
+	root.Doc.topLN = root.returnStartPosition()
+
+	go func() {
+		lN, err := root.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				log.Println(err)
+			}
+			return
+		}
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
+	}()
+}
+
+// incBackSearch implements incremental back search.
+func (root *Root) incBackSearch(ctx context.Context, search searchMatch) {
+	if search == nil {
+		return
+	}
+	ctx = root.cancelRestart(ctx)
+
+	root.Doc.topLN = root.returnStartPosition()
+
+	go func() {
+		lN, err := root.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				log.Println(err)
+			}
+			return
+		}
+		root.MoveLine(lN - root.Doc.firstLine() + 1)
+	}()
+}
+
+// cancelRestart calls the cancel function and sets the cancel function again.
+func (root *Root) cancelRestart(ctx context.Context) context.Context {
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	root.cancelFunc = cancel
+	return ctx
+}
+
+// returnStartPosition checks the input value and returns the start position.
+func (root *Root) returnStartPosition() int {
+	start := root.Doc.topLN
+	if !strings.Contains(root.searchWord, root.OriginStr) {
+		start = root.OriginPos
+	}
+	root.OriginStr = root.searchWord
+	return start
+}
+
+// searchLine is searches below from the specified line.
+func (root *Root) searchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+	defer root.searchQuit()
+	num = max(num, 0)
+
+	for n := num; n < root.Doc.BufEndNum(); n++ {
+		if search.match(root.Doc.GetLine(n)) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+
+	return 0, ErrNotFound
+}
+
+// backsearch is searches upward from the specified line.
+func (root *Root) backSearchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+	defer root.searchQuit()
+	num = min(num, root.Doc.BufEndNum()-1)
+
+	for n := num; n >= 0; n-- {
+		if search.match(root.Doc.GetLine(n)) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
 }
