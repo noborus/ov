@@ -133,6 +133,9 @@ func (m *Document) ReadFile(fileName string) error {
 		atomic.StoreInt32(&m.changed, 1)
 		close(m.reOpenCh)
 	}()
+	if STDOUTPIPE != nil {
+		reader = io.TeeReader(reader, STDOUTPIPE)
+	}
 
 	return m.ReadAll(reader)
 }

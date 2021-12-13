@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -47,12 +48,23 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 		atomic.StoreInt32(&docerr.changed, 1)
 	}()
 
-	err = docout.ReadAll(outReader)
+	var reader io.Reader
+	reader = outReader
+	if STDOUTPIPE != nil {
+		reader = io.TeeReader(reader, STDOUTPIPE)
+	}
+
+	err = docout.ReadAll(reader)
 	if err != nil {
 		log.Printf("%s", err)
 	}
 
-	err = docerr.ReadAll(errReader)
+	var errreader io.Reader
+	errreader = errReader
+	if STDERRPIPE != nil {
+		errreader = io.TeeReader(errreader, STDERRPIPE)
+	}
+	err = docerr.ReadAll(errreader)
 	if err != nil {
 		log.Printf("%s", err)
 	}

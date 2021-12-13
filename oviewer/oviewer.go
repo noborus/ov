@@ -225,6 +225,11 @@ var (
 	OverLineStyle tcell.Style
 )
 
+var (
+	STDOUTPIPE *os.File
+	STDERRPIPE *os.File
+)
+
 // ScreenMode represents the state of the screen.
 type ScreenMode int
 
@@ -370,7 +375,9 @@ func NewRoot(read io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if STDOUTPIPE != nil {
+		read = io.TeeReader(read, STDOUTPIPE)
+	}
 	if err := m.ReadAll(read); err != nil {
 		return nil, err
 	}
@@ -557,19 +564,6 @@ func (root *Root) Run() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
-	// Suppress the output of os.Stdout and os.Stderr
-	// because the screen collapses.
-	tmpStdout := os.Stdout
-	tmpStderr := os.Stderr
-	defer func() {
-		os.Stdout = tmpStdout
-	}()
-	defer func() {
-		os.Stderr = tmpStderr
-	}()
-	os.Stdout = nil
-	os.Stderr = nil
 
 	go func() {
 		// Undo screen when goroutine panic.

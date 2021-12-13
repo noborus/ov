@@ -10,6 +10,7 @@ import (
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 var (
@@ -72,6 +73,24 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return ExecCommand(cmd, args)
 		}
 
+		// Suppress the output of os.Stdout and os.Stderr
+		// because the screen collapses.
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			tmpStdout := os.Stdout
+			os.Stdout = nil
+			defer func() {
+				os.Stdout = tmpStdout
+			}()
+		} else {
+			oviewer.STDOUTPIPE = os.Stdout
+		}
+
+		tmpStderr := os.Stderr
+		os.Stderr = nil
+		defer func() {
+			os.Stderr = tmpStderr
+		}()
+
 		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err
@@ -123,6 +142,27 @@ func Completion(cmd *cobra.Command, args []string) error {
 func ExecCommand(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return ErrNoArgument
+	}
+	// Suppress the output of os.Stdout and os.Stderr
+	// because the screen collapses.
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		tmpStdout := os.Stdout
+		os.Stdout = nil
+		defer func() {
+			os.Stdout = tmpStdout
+		}()
+	} else {
+		oviewer.STDOUTPIPE = os.Stdout
+	}
+
+	if term.IsTerminal(int(os.Stderr.Fd())) {
+		tmpStderr := os.Stderr
+		os.Stderr = nil
+		defer func() {
+			os.Stderr = tmpStderr
+		}()
+	} else {
+		oviewer.STDERRPIPE = os.Stderr
 	}
 
 	command := exec.Command(args[0], args[1:]...)
