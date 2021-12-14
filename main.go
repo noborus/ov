@@ -73,31 +73,13 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return ExecCommand(cmd, args)
 		}
 
-		// Suppress the output of os.Stdout and os.Stderr
-		// because the screen collapses.
-		if term.IsTerminal(int(os.Stdout.Fd())) {
-			tmpStdout := os.Stdout
-			os.Stdout = nil
-			defer func() {
-				os.Stdout = tmpStdout
-			}()
-		} else {
-			oviewer.STDOUTPIPE = os.Stdout
-		}
-
-		tmpStderr := os.Stderr
-		os.Stderr = nil
-		defer func() {
-			os.Stderr = tmpStderr
-		}()
-
 		ov, err := oviewer.Open(args...)
 		if err != nil {
 			return err
 		}
 		ov.SetConfig(config)
 
-		if err := ov.Run(); err != nil {
+		if err := Run(ov); err != nil {
 			return err
 		}
 
@@ -136,6 +118,33 @@ func Completion(cmd *cobra.Command, args []string) error {
 	}
 
 	return ErrCompletion
+}
+
+// Run is a wrapper for oviewer.Run.
+// Evacuate stdout and stderr during the run.
+func Run(ov *oviewer.Root) error {
+	// Suppress the output of os.Stdout and os.Stderr
+	// because the screen collapses.
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		tmpStdout := os.Stdout
+		os.Stdout = nil
+		defer func() {
+			os.Stdout = tmpStdout
+		}()
+	} else {
+		oviewer.STDOUTPIPE = os.Stdout
+	}
+
+	tmpStderr := os.Stderr
+	os.Stderr = nil
+	defer func() {
+		os.Stderr = tmpStderr
+	}()
+
+	if err := ov.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ExecCommand targets the output of command execution (stdout/stderr).
