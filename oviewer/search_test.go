@@ -182,7 +182,6 @@ func Test_getSearchMatch(t *testing.T) {
 		caseSensitive bool
 		regexpSearch  bool
 	}
-	type word string
 	tests := []struct {
 		name string
 		args args

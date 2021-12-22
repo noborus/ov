@@ -120,6 +120,46 @@ func Completion(cmd *cobra.Command, args []string) error {
 	return ErrCompletion
 }
 
+// ExecCommand targets the output of command execution (stdout/stderr).
+func ExecCommand(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return ErrNoArgument
+	}
+
+	command := exec.Command(args[0], args[1:]...)
+	ov, err := oviewer.ExecCommand(command)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if command == nil || command.Process == nil {
+			return
+		}
+		if err := command.Process.Kill(); err != nil {
+			log.Println(err)
+		}
+		if err := command.Wait(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	ov.SetConfig(config)
+
+	if err := Run(ov); err != nil {
+		return err
+	}
+
+	if ov.AfterWrite {
+		ov.WriteOriginal()
+	}
+	if ov.Debug {
+		ov.WriteLog()
+	}
+
+	return nil
+}
+
 // Run is a wrapper for oviewer.Run.
 // Evacuate stdout and stderr during the run.
 func Run(ov *oviewer.Root) error {
@@ -144,67 +184,6 @@ func Run(ov *oviewer.Root) error {
 	if err := ov.Run(); err != nil {
 		return err
 	}
-	return nil
-}
-
-// ExecCommand targets the output of command execution (stdout/stderr).
-func ExecCommand(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return ErrNoArgument
-	}
-	// Suppress the output of os.Stdout and os.Stderr
-	// because the screen collapses.
-	if term.IsTerminal(int(os.Stdout.Fd())) {
-		tmpStdout := os.Stdout
-		os.Stdout = nil
-		defer func() {
-			os.Stdout = tmpStdout
-		}()
-	} else {
-		oviewer.STDOUTPIPE = os.Stdout
-	}
-
-	if term.IsTerminal(int(os.Stderr.Fd())) {
-		tmpStderr := os.Stderr
-		os.Stderr = nil
-		defer func() {
-			os.Stderr = tmpStderr
-		}()
-	} else {
-		oviewer.STDERRPIPE = os.Stderr
-	}
-
-	command := exec.Command(args[0], args[1:]...)
-	ov, err := oviewer.ExecCommand(command)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if command == nil || command.Process == nil {
-			return
-		}
-		if err := command.Process.Kill(); err != nil {
-			log.Println(err)
-		}
-		if err := command.Wait(); err != nil {
-			log.Println(err)
-		}
-	}()
-
-	ov.SetConfig(config)
-
-	if err := ov.Run(); err != nil {
-		return err
-	}
-
-	if ov.AfterWrite {
-		ov.WriteOriginal()
-	}
-	if ov.Debug {
-		ov.WriteLog()
-	}
-
 	return nil
 }
 
