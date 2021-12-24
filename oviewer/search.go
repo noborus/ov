@@ -162,6 +162,8 @@ func searchPosition(caseSensitive bool, searchText string, substr string) [][]in
 	return locs
 }
 
+// setSearch is a wrapper for getSearchMatch and returns a searchMatch interface.
+// Returns nil if there is no search term.
 func (root *Root) setSearch(word string, caseSensitive bool) searchMatch {
 	if word == "" {
 		root.searchWord = ""
@@ -212,10 +214,12 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search s
 }
 
 // incSearch implements incremental forward/back search.
-func (root *Root) incSearch(ctx context.Context, forward bool, search searchMatch) {
+func (root *Root) incSearch(ctx context.Context, forward bool) {
+	search := root.setSearch(root.input.value, root.CaseSensitive)
 	if search == nil {
 		return
 	}
+
 	ctx = root.cancelRestart(ctx)
 
 	root.Doc.topLN = root.returnStartPosition()
