@@ -57,12 +57,11 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// Not confirmed or canceled.
 	if !ok {
 		if root.Config.Incsearch {
-			search := root.setSearch(root.input.value, root.CaseSensitive)
 			switch root.input.mode {
 			case Search:
-				root.incSearch(ctx, true, search)
+				root.incSearch(ctx, true)
 			case Backsearch:
-				root.incSearch(ctx, false, search)
+				root.incSearch(ctx, false)
 			}
 		}
 		return
