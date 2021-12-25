@@ -35,6 +35,8 @@ ov is a terminal pager.
 	* 4.2. [mysql](#mysql)
 	* 4.3. [git](#git)
 	* 4.4. [man](#man)
+	* 4.5. [procs](#procs)
+	* 4.6. [bat](#bat)
 * 5. [command option](#commandoption)
 * 6. [Key bindings](#Keybindings)
 * 7. [config](#config)
@@ -299,6 +301,19 @@ ov -w=f --skip-lines 1 -H1 -F -C -d "|"'
 
 ![ov-mysql.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-mysql.gif)
 
+For mysqlsh, use the `--pager` option or set it while mysqlsh is running.
+For example, in js mode, it can be made persistent by the following command.
+
+```js
+shell.options.setPersist("pager","ov -H1 --skip-lines 1 -C -w=false -d'|' -F")
+```
+
+SQL mode and Python mode.
+
+```
+\option --persist pager "ov -w=f -H1 --skip-lines 1 -F -C -d '|'"
+```
+
 ###  4.3. <a name='git'></a>git
 
 `ov` can also be used as a git pager.
@@ -333,6 +348,28 @@ StyleOverStrike:
 StyleOverLine:
   Foreground: "red"
   Underline: true
+```
+
+###  4.5. <a name='procs'></a>procs
+
+[procs](https://github.com/dalance/procs) supports pager.
+You can specify the pager in the [configuration file](https://github.com/dalance/procs#configuration).
+
+It is convenient to set header(`-H`) to 1 or 2.
+
+```toml
+[pager]
+command = "ov -H=1 -w=false -d=│"
+```
+
+###  4.6. <a name='bat'></a>bat
+
+[bat](https://github.com/sharkdp/bat) supports pager.
+
+You can use it by setting the environment variable PAGER or BAT_PAGER.
+
+```console
+export BAT_PAGER="ov -F"
 ```
 
 ##  5. <a name='commandoption'></a>command option
