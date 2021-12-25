@@ -30,14 +30,17 @@ ov is a terminal pager.
 	* 3.5. [Search](#Search)
 	* 3.6. [Mark](#Mark)
 	* 3.7. [Mouse support](#Mousesupport)
-* 4. [command option](#commandoption)
-* 5. [Key bindings](#Keybindings)
-* 6. [config](#config)
-	* 6.1. [psql](#psql)
-	* 6.2. [mysql](#mysql)
-* 7. [Customize](#Customize)
-	* 7.1. [Style customization](#Stylecustomization)
-	* 7.2. [Key binding customization](#Keybindingcustomization)
+* 4. [Called from other commands](#Calledfromothercommands)
+	* 4.1. [psql](#psql)
+	* 4.2. [mysql](#mysql)
+	* 4.3. [git](#git)
+	* 4.4. [man](#man)
+* 5. [command option](#commandoption)
+* 6. [Key bindings](#Keybindings)
+* 7. [config](#config)
+* 8. [Customize](#Customize)
+	* 8.1. [Style customization](#Stylecustomization)
+	* 8.2. [Key binding customization](#Keybindingcustomization)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -191,7 +194,6 @@ ov --follow-all --exec -- make
 
 ![ov-exec.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-exec.gif)
 
-
 ###  3.5. <a name='Search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
@@ -229,7 +231,111 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-##  4. <a name='commandoption'></a>command option
+##  4. <a name='Calledfromothercommands'></a>Called from other commands
+
+###  4.1. <a name='psql'></a>psql
+
+`ov` can be used as a pager for psql output.
+
+Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
+
+```console
+export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
+```
+
+You can also write in `~/.psqlrc` in previous versions.
+
+```text
+\setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
+```
+
+The header(`-H1`) may be 1, because the second line of the header is a separator line.
+In that case, it is a good idea to set the header style of `ov.yaml`.
+
+```yaml
+StyleHeader:
+  Background: "darkcyan"
+```
+
+![ov-psql.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-psql.png)
+
+Select a column in column mode to quickly find long rows. The columns are clear even in wrapping.
+
+![ovcolumn.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ovcolumn.gif)
+
+Note that the column selection style is reverse by default. Therefore, specify a color for Foreground and reverse it.
+
+```yaml
+StyleColumnHighlight:
+  Foreground: "lightcyan"
+  Reverse: true
+```
+
+###  4.2. <a name='mysql'></a>mysql
+
+`ov` can be used as a pager for mysql or MySQL Shell.
+
+Use the --pager option with the mysql client.
+
+```console
+mysql --pager='ov -w=f -H3 -F -C -d "|"'
+```
+
+You can also write in `~/.my.cnf`.
+
+```ini
+[client]
+pager=ov -w=f -H3 -F -C -d "|"
+```
+
+![ov-mysql.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-mysql.png)
+
+The header line for mysql is 3, but it's surrounded by a separator line.
+You can increase the display area by setting the skip line to 1 and the header to 1.
+
+```console
+ov -w=f --skip-lines 1 -H1 -F -C -d "|"'
+```
+
+![ov-mysql.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-mysql.gif)
+
+###  4.3. <a name='git'></a>git
+
+`ov` can also be used as a git pager.
+
+Set the pager in ~ / .gitconfig.
+
+```ini
+[core]
+	pager = ov -F
+```
+
+It can be used to display logs and diffs and can be searched for incremental search.
+
+![ov-git.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-git.png)
+
+###  4.4. <a name='man'></a>man
+
+`ov` can also be used as a man pager.
+
+```env
+MANPAGER=ov
+```
+
+In the man page, you can set the color by the `StyleOverStrike` and `StyleOverLine` styles.
+
+![ov-man.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-man.png)
+
+```yaml
+StyleOverStrike:
+  Foreground: "aqua"
+  Bold: true
+StyleOverLine:
+  Foreground: "red"
+  Underline: true
+```
+
+##  5. <a name='commandoption'></a>command option
 
 ```console
 $ ov --help
@@ -266,9 +372,8 @@ Flags:
 ```
 
 It can also be changed after startup.
-Refer to the [motion image](docs/image.md).
 
-##  5. <a name='Keybindings'></a>Key bindings
+##  6. <a name='Keybindings'></a>Key bindings
 
 ```console
  [Escape], [q]                * quit
@@ -340,44 +445,15 @@ Refer to the [motion image](docs/image.md).
  [alt+i]                      * incremental search toggle
 ```
 
-##  6. <a name='config'></a>config
+##  7. <a name='config'></a>config
 
 You can set style and key bindings in the setting file.
 
 Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) configuration file.
 
-###  6.1. <a name='psql'></a>psql
+##  8. <a name='Customize'></a>Customize
 
-Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
-
-```console
-export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
-```
-
-You can also write in `~/.psqlrc` in previous versions.
-
-```text
-\setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
-```
-
-###  6.2. <a name='mysql'></a>mysql
-
-Use the --pager option with the mysql client.
-
-```console
-mysql --pager='ov -w=f -H3 -F -C -d "|"'
-```
-
-You can also write in `~/.my.cnf`.
-
-```ini
-[client]
-pager=ov -w=f --skip-lines 1 -H1 -F -C -d "|"
-```
-
-##  7. <a name='Customize'></a>Customize
-
-###  7.1. <a name='Stylecustomization'></a>Style customization
+###  8.1. <a name='Stylecustomization'></a>Style customization
 
 You can customize the following items.
 
@@ -402,7 +478,7 @@ StyleAlternate:
   Underline: true
 ```
 
-###  7.2. <a name='Keybindingcustomization'></a>Key binding customization
+###  8.2. <a name='Keybindingcustomization'></a>Key binding customization
 
 You can customize key bindings.
 
