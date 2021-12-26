@@ -32,7 +32,9 @@ ov is a terminal pager.
 	* 3.7. [Mouse support](#Mousesupport)
 * 4. [Called from other commands](#Calledfromothercommands)
 	* 4.1. [psql](#psql)
+		* 4.1.1. [pgcli](#pgcli)
 	* 4.2. [mysql](#mysql)
+		* 4.2.1. [mycli](#mycli)
 	* 4.3. [git](#git)
 	* 4.4. [man](#man)
 	* 4.5. [procs](#procs)
@@ -273,6 +275,16 @@ StyleColumnHighlight:
   Reverse: true
 ```
 
+####  4.1.1. <a name='pgcli'></a>pgcli
+
+`ov` can be set as a pager for [pgcli](https://github.com/dbcli/pgcli).
+
+~/.config/pgcli/config
+
+```config
+pager = 'ov -C -d "|" --skip-lines 1 -H1'
+```
+
 ###  4.2. <a name='mysql'></a>mysql
 
 `ov` can be used as a pager for mysql or MySQL Shell.
@@ -310,8 +322,20 @@ shell.options.setPersist("pager","ov -H1 --skip-lines 1 -C -w=false -d'|' -F")
 
 SQL mode and Python mode.
 
-```
+```console
 \option --persist pager "ov -w=f -H1 --skip-lines 1 -F -C -d '|'"
+```
+
+####  4.2.1. <a name='mycli'></a>mycli
+
+`ov` can be set as a pager for [mycli](https://github.com/dbcli/mycli).
+
+`mycli` reads the client section of `~ /.my.cnf` in mysql.
+Please refer to [https://www.mycli.net/config](https://www.mycli.net/config).
+
+```ini
+[client]
+pager="ov -C --skip-lines 1 --header 1 -d'|'"
 ```
 
 ###  4.3. <a name='git'></a>git
