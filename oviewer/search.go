@@ -99,14 +99,20 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 
 // rangePosition returns the range starting and ending from the s,substr string.
 func rangePosition(s, substr string, number int) (int, int) {
-	i := 0
-
-	if number == 0 {
-		de := strings.Index(s[i:], substr)
-		return 0, i + de
+	left := strings.Index(s, substr)
+	// If left == 0
+	// | a | b | c |
+	// If left > 0
+	// a | b | c
+	if left > 0 {
+		if number == 0 {
+			return 0, left
+		}
+		number--
 	}
 
-	for n := 0; n < number-1; n++ {
+	i := 0
+	for n := 0; n < number; n++ {
 		j := strings.Index(s[i:], substr)
 		if j < 0 {
 			return -1, -1
@@ -128,6 +134,7 @@ func rangePosition(s, substr string, number int) (int, int) {
 	if de < 0 {
 		end = len(s)
 	}
+
 	return start, end
 }
 
