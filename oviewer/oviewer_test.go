@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"bytes"
+	"io"
 	"reflect"
 	"testing"
 
@@ -83,6 +85,13 @@ func TestOpen(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "testDir",
+			args: args{
+				fileNames: []string{"../testdata/"},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,6 +105,37 @@ func TestOpen(t *testing.T) {
 	}
 }
 
+func TestNewRoot(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type args struct {
+		read io.Reader
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Root
+		wantErr bool
+	}{
+		{
+			name:    "test1",
+			args:    args{read: bytes.NewBufferString("test")},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewRoot(tt.args.read)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewRoot() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func TestRoot_Run(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -103,16 +143,35 @@ func TestRoot_Run(t *testing.T) {
 	}()
 	tests := []struct {
 		name    string
+		general general
 		ovArgs  []string
 		wantErr bool
 	}{
 		{
-			name:    "testEmpty",
+			name: "testEmpty",
+			general: general{
+				TabWidth:       8,
+				MarkStyleWidth: 1,
+			},
 			ovArgs:  []string{},
 			wantErr: false,
 		},
 		{
-			name:    "test1",
+			name: "test1",
+			general: general{
+				TabWidth:       8,
+				MarkStyleWidth: 1,
+			},
+			ovArgs:  []string{"../testdata/test.txt"},
+			wantErr: false,
+		},
+		{
+			name: "testHeader",
+			general: general{
+				TabWidth:       8,
+				MarkStyleWidth: 1,
+				Header:         1,
+			},
 			ovArgs:  []string{"../testdata/test.txt"},
 			wantErr: false,
 		},
@@ -130,6 +189,37 @@ func TestRoot_Run(t *testing.T) {
 				}
 			}()
 			root.Quit()
+		})
+	}
+}
+
+func Test_applyStyle(t *testing.T) {
+	type args struct {
+		style tcell.Style
+		s     ovStyle
+	}
+	tests := []struct {
+		name string
+		args args
+		want tcell.Style
+	}{
+		{
+			name: "test1",
+			args: args{
+				style: tcell.StyleDefault,
+				s: ovStyle{
+					Background: "red",
+					Foreground: "white",
+				},
+			},
+			want: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := applyStyle(tt.args.style, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("applyStyle() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
