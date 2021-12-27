@@ -291,24 +291,24 @@ func Test_rangePosition(t *testing.T) {
 			wantE: 0,
 		},
 		{
-			name: "testNil2",
+			name: "test1",
 			args: args{
 				s:      "test",
 				substr: "t",
 				number: 0,
 			},
-			wantS: 0,
-			wantE: 0,
+			wantS: 1,
+			wantE: 3,
 		},
 		{
-			name: "test",
+			name: "test2",
 			args: args{
 				s:      "test",
 				substr: "t",
 				number: 1,
 			},
-			wantS: 1,
-			wantE: 3,
+			wantS: 4,
+			wantE: 4,
 		},
 		{
 			name: "testComma",
