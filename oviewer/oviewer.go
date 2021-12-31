@@ -225,8 +225,13 @@ var (
 	OverLineStyle tcell.Style
 )
 
+// ov output destination
 var (
+	// Redirect to standard output.
+	// echo "t" | ov> out
 	STDOUTPIPE *os.File
+	// Redirects the error output of ov --exec.
+	// ov --exec -- command 2> out
 	STDERRPIPE *os.File
 )
 
@@ -375,9 +380,6 @@ func NewRoot(read io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	if STDOUTPIPE != nil {
-		read = io.TeeReader(read, STDOUTPIPE)
-	}
 	if err := m.ReadAll(read); err != nil {
 		return nil, err
 	}
@@ -496,6 +498,14 @@ func (root *Root) setKeyConfig() (map[string][]string, error) {
 		root.cancelKeys = keys
 	}
 	return keyBind, nil
+}
+
+func (root *Root) SetKeyHandler(name string, keys []string, handler func()) error {
+	c := root.keyConfig
+	if err := setHandler(c, name, keys, handler); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Run starts the terminal pager.

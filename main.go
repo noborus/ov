@@ -69,6 +69,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return Completion(cmd, args)
 		}
 
+		SetRedirect()
+
 		if execCommand {
 			return ExecCommand(cmd, args)
 		}
@@ -79,7 +81,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 		ov.SetConfig(config)
 
-		if err := Run(ov); err != nil {
+		if err := ov.Run(); err != nil {
 			return err
 		}
 
@@ -146,7 +148,7 @@ func ExecCommand(cmd *cobra.Command, args []string) error {
 
 	ov.SetConfig(config)
 
-	if err := Run(ov); err != nil {
+	if err := ov.Run(); err != nil {
 		return err
 	}
 
@@ -162,7 +164,7 @@ func ExecCommand(cmd *cobra.Command, args []string) error {
 
 // Run is a wrapper for oviewer.Run.
 // Evacuate stdout and stderr during the run.
-func Run(ov *oviewer.Root) error {
+func SetRedirect() {
 	// Suppress the output of os.Stdout and os.Stderr
 	// because the screen collapses.
 	if term.IsTerminal(int(os.Stdout.Fd())) {
@@ -175,16 +177,15 @@ func Run(ov *oviewer.Root) error {
 		oviewer.STDOUTPIPE = os.Stdout
 	}
 
-	tmpStderr := os.Stderr
-	os.Stderr = nil
-	defer func() {
-		os.Stderr = tmpStderr
-	}()
-
-	if err := ov.Run(); err != nil {
-		return err
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		tmpStderr := os.Stderr
+		os.Stderr = nil
+		defer func() {
+			os.Stderr = tmpStderr
+		}()
+	} else {
+		oviewer.STDERRPIPE = os.Stderr
 	}
-	return nil
 }
 
 func init() {
