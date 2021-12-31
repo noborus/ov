@@ -180,26 +180,26 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 
 	actionHandlers := root.setHandler()
 
-	for a, keys := range keyBind {
-		handler := actionHandlers[a]
+	for name, keys := range keyBind {
+		handler := actionHandlers[name]
 		if handler == nil {
-			return fmt.Errorf("%w for [%s] unknown action", ErrFailedKeyBind, a)
+			return fmt.Errorf("%w for [%s] unknown action", ErrFailedKeyBind, name)
 		}
 
-		if strings.HasPrefix(a, "input_") {
-			if err := setHandler(in, handler, a, keys); err != nil {
+		if strings.HasPrefix(name, "input_") {
+			if err := setHandler(in, name, keys, handler); err != nil {
 				return err
 			}
 			continue
 		}
-		if err := setHandler(c, handler, a, keys); err != nil {
+		if err := setHandler(c, name, keys, handler); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func setHandler(c *cbind.Configuration, handler func(), name string, keys []string) error {
+func setHandler(c *cbind.Configuration, name string, keys []string, handler func()) error {
 	for _, k := range keys {
 		mod, key, ch, err := cbind.Decode(k)
 		if err != nil {
