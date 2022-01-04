@@ -7,6 +7,7 @@ import (
 )
 
 func TestDocument_lineToContents(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		lN       int
 		tabWidth int

@@ -123,7 +123,6 @@ func (root *Root) moveNumDown(moveY int) {
 	x := m.topLX
 	listX, err := root.leftMostX(num)
 	if err != nil {
-		log.Println(err, num)
 		return
 	}
 	n := numOfReverseSlice(listX, x)
@@ -136,7 +135,7 @@ func (root *Root) moveNumDown(moveY int) {
 			}
 			listX, err = root.leftMostX(num)
 			if err != nil {
-				log.Println(err, num)
+				log.Printf("moveNumDown: %d %s", num, err.Error())
 				return
 			}
 			n = 0
