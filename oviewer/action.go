@@ -196,18 +196,23 @@ func (root *Root) setSkipLines(input string) {
 func (root *Root) nextDoc() {
 	root.setDocumentNum(root.CurrentDoc + 1)
 	root.input.mode = Normal
+	root.debugMessage("next document")
+	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // previouseDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.mode = Normal
+	root.debugMessage("previous document")
+	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // switchDocument displays the document of the specified docNum.
 func (root *Root) switchDocument(docNum int) {
 	root.setDocumentNum(docNum)
-	root.debugMessage(fmt.Sprintf("switch document %s", root.Doc.FileName))
+	root.debugMessage("switch document")
+	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // addDocument adds a document and displays it.

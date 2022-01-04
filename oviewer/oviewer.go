@@ -225,13 +225,13 @@ var (
 	OverLineStyle tcell.Style
 )
 
-// ov output destination
+// ov output destination.
 var (
 	// Redirect to standard output.
-	// echo "t" | ov> out
+	//     echo "t" | ov> out
 	STDOUTPIPE *os.File
 	// Redirects the error output of ov --exec.
-	// ov --exec -- command 2> out
+	//     ov --exec -- command 2> out
 	STDERRPIPE *os.File
 )
 

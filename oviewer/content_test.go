@@ -14,6 +14,7 @@ func SetupStyle() {
 }
 
 func Test_parseString(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		line     string
 		tabWidth int
@@ -280,7 +281,8 @@ func Test_parseString(t *testing.T) {
 	}
 }
 
-func Test_parseString2(t *testing.T) {
+func Test_parseStringCombining(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		line     string
 		tabWidth int
@@ -340,6 +342,7 @@ func Test_parseString2(t *testing.T) {
 }
 
 func Test_lastContent(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		lc lineContents
 	}
@@ -392,6 +395,7 @@ func Test_lastContent(t *testing.T) {
 }
 
 func Test_csToStyle(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		style        tcell.Style
 		csiParameter *bytes.Buffer
@@ -439,6 +443,7 @@ func Test_csToStyle(t *testing.T) {
 }
 
 func Test_strToContents(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		line     string
 		tabWidth int
@@ -466,6 +471,7 @@ func Test_strToContents(t *testing.T) {
 }
 
 func Test_contentsToStr(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		str   string
