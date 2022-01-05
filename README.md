@@ -39,6 +39,7 @@ ov is a terminal pager.
 	* 4.4. [man](#man)
 	* 4.5. [procs](#procs)
 	* 4.6. [bat](#bat)
+	* 4.7. [csv](#csv)
 * 5. [command option](#commandoption)
 * 6. [Key bindings](#Keybindings)
 * 7. [config](#config)
@@ -330,7 +331,7 @@ SQL mode and Python mode.
 
 `ov` can be set as a pager for [mycli](https://github.com/dbcli/mycli).
 
-`mycli` reads the client section of `~ /.my.cnf` in mysql.
+`mycli` reads the client section of `~/.my.cnf` in mysql.
 Please refer to [https://www.mycli.net/config](https://www.mycli.net/config).
 
 ```ini
@@ -342,7 +343,7 @@ pager="ov -C --skip-lines 1 --header 1 -d'|'"
 
 `ov` can also be used as a git pager.
 
-Set the pager in ~ / .gitconfig.
+Set the pager in ~/.gitconfig.
 
 ```ini
 [core]
@@ -395,6 +396,16 @@ You can use it by setting the environment variable PAGER or BAT_PAGER.
 ```console
 export BAT_PAGER="ov -F"
 ```
+
+###  4.7. <a name='csv'></a>csv
+
+`ov` can also be used as a csv viewer.
+
+```console
+ov -H1 -C -d',' -c MOCK_DATA.csv
+```
+
+![ov-csv.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-csv.png)
 
 ##  5. <a name='commandoption'></a>command option
 
