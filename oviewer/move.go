@@ -286,7 +286,7 @@ func (root *Root) columnModeX() int {
 		}
 
 		start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
-		if start < 0 || end < 0 || (start == end) {
+		if start < 0 || end < 0 || (start == len(lineStr)) {
 			m.columnNum--
 			start, end = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
 		}
