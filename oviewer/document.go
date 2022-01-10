@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"fmt"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -141,9 +142,9 @@ func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	value, found := m.cache.Get(lN)
-	// It was cached.
-	if found {
+	key := fmt.Sprintf("contents:%d", lN)
+	if value, found := m.cache.Get(key); found {
+		// It was cached.
 		lc, ok := value.(lineContents)
 		if !ok {
 			return lc, ErrFatalCache
@@ -152,8 +153,9 @@ func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
 	}
 
 	// It wasn't cached.
-	lc := parseString(m.GetLine(lN), tabWidth)
-	m.cache.Set(lN, lc, 1)
+	str := m.GetLine(lN)
+	lc := parseString(str, tabWidth)
+	m.cache.Set(key, lc, 1)
 	return lc, nil
 }
 
