@@ -144,12 +144,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// search highlight
 		if root.searchWord != "" {
-			var poss [][]int
-			if root.Config.RegexpSearch {
-				poss = searchPositionReg(lineStr, root.searchReg)
-			} else {
-				poss = searchPosition(root.Config.CaseSensitive, lineStr, root.searchWord)
-			}
+			poss := root.searchPosition(m.topLN+lY, lineStr)
 			for _, r := range poss {
 				root.searchHighlight(lc, posCV[r[0]], posCV[r[1]])
 			}

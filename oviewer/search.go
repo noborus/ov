@@ -3,6 +3,7 @@ package oviewer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -138,17 +139,47 @@ func rangePosition(s, substr string, number int) (int, int) {
 	return start, end
 }
 
+func (root *Root) searchPosition(lN int, lineStr string) [][]int {
+	m := root.Doc
+	s := "s"
+	if root.Config.RegexpSearch {
+		s += "r"
+	}
+	if root.Config.CaseSensitive {
+		s += "i"
+	}
+
+	key := fmt.Sprintf("search:%d:%s:%s", lN, s, root.searchWord)
+	if value, found := m.cache.Get(key); found {
+		poss, ok := value.([][]int)
+		if !ok {
+			return nil
+		}
+		log.Println("search cache hit")
+		return poss
+	}
+
+	log.Println("no cache")
+	var poss [][]int
+	if root.Config.RegexpSearch {
+		poss = searchPositionReg(lineStr, root.searchReg)
+	} else {
+		poss = searchPositionStr(root.Config.CaseSensitive, lineStr, root.searchWord)
+	}
+	m.cache.Set(key, poss, 3)
+	return poss
+}
+
 // searchPositionReg returns an array of the beginning and end of the search string.
 func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	if re == nil || re.String() == "" {
 		return nil
 	}
-
 	return re.FindAllIndex([]byte(s), -1)
 }
 
 // searchPosition returns an array of the beginning and end of the search string.
-func searchPosition(caseSensitive bool, searchText string, substr string) [][]int {
+func searchPositionStr(caseSensitive bool, searchText string, substr string) [][]int {
 	if substr == "" {
 		return nil
 	}

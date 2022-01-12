@@ -771,25 +771,6 @@ func (root *Root) WriteLog() {
 
 // leftMostX returns a list of left - most x positions when wrapping.
 func (root *Root) leftMostX(lN int) ([]int, error) {
-	m := root.Doc
-	key := fmt.Sprintf("listx:%d:%d", lN, root.vWidth)
-	if value, found := m.cache.Get(key); found {
-		listX, ok := value.([]int)
-		if !ok {
-			return nil, ErrFatalCache
-		}
-		return listX, nil
-	}
-
-	listX, err := root.calculationLeftMostX(lN)
-	if err != nil {
-		return nil, err
-	}
-	m.cache.Set(key, listX, 2)
-	return listX, nil
-}
-
-func (root *Root) calculationLeftMostX(lN int) ([]int, error) {
 	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
 	if err != nil {
 		return nil, err

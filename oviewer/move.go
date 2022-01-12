@@ -33,6 +33,27 @@ func (root *Root) moveLine(lN int) int {
 	return lN
 }
 
+// Move to the nth wrapping line of the specified line.
+func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
+	lN = root.moveLine(lN)
+	if !root.Doc.WrapMode {
+		return lN, 0
+	}
+	listX, err := root.leftMostX(lN)
+	if err != nil {
+		return lN, 0
+	}
+
+	if nTh >= len(listX) {
+		nTh = len(listX) - 1
+	}
+
+	root.Doc.topLN = lN
+	root.Doc.topLX = listX[nTh]
+
+	return lN, nTh
+}
+
 // Move up one screen.
 func (root *Root) movePgUp() {
 	root.resetSelect()
@@ -42,7 +63,6 @@ func (root *Root) movePgUp() {
 // Moves down one screen.
 func (root *Root) movePgDn() {
 	root.resetSelect()
-
 	y := root.bottomLN - root.Doc.firstLine()
 	x := root.bottomLX
 	root.limitMoveDown(x, y)

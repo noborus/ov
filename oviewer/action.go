@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -82,13 +83,33 @@ func (root *Root) toNormal() {
 
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
-	lN, err := strconv.Atoi(input)
+	if !strings.Contains(input, ".") {
+		// Line number only.
+		lN, err := strconv.Atoi(input)
+		if err != nil {
+			root.setMessage(ErrInvalidNumber.Error())
+			return
+		}
+		lN = root.moveLine(lN - 1)
+		root.setMessagef("Moved to line %d", lN+1)
+		return
+	}
+
+	// Line number and number of wrapping lines.
+	inputs := strings.Split(input, ".")
+	lN, err := strconv.Atoi(inputs[0])
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	lN = root.moveLine(lN - 1)
-	root.setMessagef("Moved to line %d", lN+1)
+	log.Println(lN)
+	nTh, err := strconv.Atoi(inputs[1])
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	lN, nTh = root.moveLineNth(lN-1, nTh)
+	root.setMessagef("Moved to line %d.%d", lN+1, nTh)
 }
 
 // goLineNumber moves to the specified line number.
