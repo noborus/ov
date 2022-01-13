@@ -22,6 +22,9 @@ type Document struct {
 	// CFormat is a compressed format.
 	CFormat Compressed
 
+	// Is it possible to seek.
+	seekable bool
+
 	// lines stores the contents of the file in slices of strings.
 	// lines,endNum and eof is updated by reader goroutine.
 	lines []string
@@ -87,6 +90,7 @@ func NewDocument() (*Document, error) {
 			MarkStyleWidth:  1,
 		},
 		lastContentsNum: -1,
+		seekable:        true,
 	}
 
 	if err := m.NewCache(); err != nil {

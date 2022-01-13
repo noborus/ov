@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"os/signal"
@@ -411,6 +412,10 @@ func openFile(fileName string) (*Document, error) {
 	m, err := NewDocument()
 	if err != nil {
 		return nil, err
+	}
+
+	if fi.Mode()&fs.ModeNamedPipe != 0 {
+		m.seekable = false
 	}
 	if err := m.ReadFile(fileName); err != nil {
 		return nil, err
