@@ -160,9 +160,11 @@ func (m *Document) openFollowMode() {
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.eof, 0)
 
-	if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
-		log.Printf("seek %s", err)
-		return
+	if m.seekable {
+		if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
+			log.Printf("openFollowMode: %s", err)
+			return
+		}
 	}
 
 	rr := compressedFormatReader(m.CFormat, r)
