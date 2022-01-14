@@ -74,8 +74,8 @@ func (root *Root) drawHeader() int {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := StrToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
-			root.setContentString(0, hy, lc)
+			numC := StrToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
+			root.setContentString(0, hy, numC)
 		}
 
 		root.lnumber[hy] = lineNumber{
@@ -152,11 +152,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		// line number mode
 		if m.LineNumMode {
-			lc := StrToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
-			for i := 0; i < len(lc); i++ {
-				lc[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
+			numC := StrToContents(fmt.Sprintf("%*d", root.startX-1, m.topLN+lY-m.firstLine()+1), m.TabWidth)
+			for i := 0; i < len(numC); i++ {
+				numC[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 			}
-			root.setContentString(0, y, lc)
+			root.setContentString(0, y, numC)
 		}
 
 		root.lnumber[y] = lineNumber{

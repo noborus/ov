@@ -151,11 +151,11 @@ func parseString(str string, tabWidth int) lineContents {
 				}
 				continue
 			}
-			content := lastContent(lc)
-			content.combc = append(content.combc, runeValue)
-			n := len(lc) - content.width
+			lastC := lastContent(lc)
+			lastC.combc = append(lastC.combc, runeValue)
+			n := len(lc) - lastC.width
 			if n >= 0 && len(lc) > 0 {
-				lc[n] = content
+				lc[n] = lastC
 			}
 		case 1:
 			c.mainc = runeValue

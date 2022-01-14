@@ -129,7 +129,9 @@ func (m *Document) ReadFile(fileName string) error {
 
 	go func() {
 		<-m.eofCh
-		m.close()
+		if err := m.close(); err != nil {
+			log.Printf("ReadFile: %s", err)
+		}
 		atomic.StoreInt32(&m.changed, 1)
 		close(m.reOpenCh)
 	}()
