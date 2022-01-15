@@ -394,6 +394,7 @@ func openSTDIN() (*Root, error) {
 		return nil, err
 	}
 
+	m.seekable = false
 	if err := m.ReadFile(""); err != nil {
 		return nil, err
 	}
