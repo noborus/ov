@@ -178,11 +178,13 @@ func (m *Document) openFollowMode() {
 // Close closes the File.
 // Record the last read position.
 func (m *Document) close() error {
-	pos, err := m.file.Seek(0, io.SeekCurrent)
-	if err != nil {
-		return fmt.Errorf("seek: %w", err)
+	if m.seekable {
+		pos, err := m.file.Seek(0, io.SeekCurrent)
+		if err != nil {
+			return fmt.Errorf("seek: %w", err)
+		}
+		m.offset = pos
 	}
-	m.offset = pos
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close(): %w", err)
 	}
