@@ -255,10 +255,12 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	}
 }
 
-func (m *Document) append(line string) {
+func (m *Document) append(lines ...string) {
 	m.mu.Lock()
-	m.lines = append(m.lines, line)
-	m.endNum++
+	for _, line := range lines {
+		m.lines = append(m.lines, line)
+		m.endNum++
+	}
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 }

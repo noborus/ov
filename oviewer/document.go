@@ -103,7 +103,7 @@ func NewDocument() (*Document, error) {
 func (m *Document) GetLine(n int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if n < 0 || n >= len(m.lines) {
+	if n < 0 || n >= m.endNum {
 		return ""
 	}
 	return m.lines[n]
