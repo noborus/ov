@@ -238,13 +238,12 @@ func (root *Root) switchDocument(docNum int) {
 
 // addDocument adds a document and displays it.
 func (root *Root) addDocument(m *Document) {
-	root.mu.Lock()
-	defer root.mu.Unlock()
 	root.setMessagef("add %s", m.FileName)
+	root.mu.Lock()
 	m.general = root.Config.General
-
 	root.DocList = append(root.DocList, m)
 	root.CurrentDoc = len(root.DocList) - 1
+	root.mu.Unlock()
 
 	root.setDocument(m)
 }
@@ -256,15 +255,15 @@ func (root *Root) closeDocument() {
 		return
 	}
 
-	root.mu.Lock()
-	defer root.mu.Unlock()
-
 	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
+
+	root.mu.Lock()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
 	}
 	doc := root.DocList[root.CurrentDoc]
+	root.mu.Unlock()
 
 	root.setDocument(doc)
 }
@@ -273,8 +272,6 @@ func (root *Root) closeDocument() {
 // This function is called internally from next / previous / switch / add.
 func (root *Root) setDocumentNum(docNum int) {
 	root.mu.Lock()
-	defer root.mu.Unlock()
-
 	if docNum >= len(root.DocList) {
 		docNum = len(root.DocList) - 1
 	}
@@ -283,6 +280,7 @@ func (root *Root) setDocumentNum(docNum int) {
 	}
 	root.CurrentDoc = docNum
 	m := root.DocList[root.CurrentDoc]
+	root.mu.Unlock()
 	root.setDocument(m)
 }
 
