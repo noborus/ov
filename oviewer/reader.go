@@ -133,7 +133,7 @@ func (m *Document) ReadFile(fileName string) error {
 			log.Printf("ReadFile: %s", err)
 		}
 		atomic.StoreInt32(&m.changed, 1)
-		close(m.reOpenCh)
+		close(m.followCh)
 	}()
 	if STDOUTPIPE != nil {
 		reader = io.TeeReader(reader, STDOUTPIPE)
@@ -148,15 +148,15 @@ func (m *Document) openFollowMode() {
 	if m.file == nil {
 		return
 	}
-	<-m.reOpenCh
+	<-m.followCh
 	<-m.changCh
 
-	log.Printf("reopen %s", m.FileName)
 	r, err := os.Open(m.FileName)
 	if err != nil {
-		log.Printf("reopen %s", err)
+		log.Printf("openFollowMode: %s", err)
 		return
 	}
+	log.Printf("openFollowMode %s", m.FileName)
 	m.mu.Lock()
 	m.file = r
 	m.mu.Unlock()
@@ -171,7 +171,7 @@ func (m *Document) openFollowMode() {
 
 	rr := compressedFormatReader(m.CFormat, r)
 	if err := m.ContinueReadAll(rr); err != nil {
-		log.Printf("%s cannot be reopened %v", m.FileName, err)
+		log.Printf("%s cannot open as follow mode %v", m.FileName, err)
 	}
 }
 
@@ -181,12 +181,12 @@ func (m *Document) close() error {
 	if m.seekable {
 		pos, err := m.file.Seek(0, io.SeekCurrent)
 		if err != nil {
-			return fmt.Errorf("seek: %w", err)
+			return fmt.Errorf("close: %w", err)
 		}
 		m.offset = pos
 	}
 	if err := m.file.Close(); err != nil {
-		return fmt.Errorf("close(): %w", err)
+		return fmt.Errorf("close: %w", err)
 	}
 	return nil
 }
@@ -237,10 +237,6 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	var line strings.Builder
 
 	for {
-		if m.checkClose() {
-			return nil
-		}
-
 		buf, isPrefix, err := reader.ReadLine()
 		if err != nil {
 			return err
