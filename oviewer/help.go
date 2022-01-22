@@ -15,14 +15,12 @@ func NewHelp(k KeyBind) (*Document, error) {
 		return nil, err
 	}
 
-	help.lines = append(help.lines, "\t\t\t"+gchalk.WithUnderline().Bold("ov help\n"))
+	help.append("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
 
-	str := KeyBindString(k)
-	help.lines = append(help.lines, strings.Split(str, "\n")...)
-
+	str := strings.Split(KeyBindString(k), "\n")
+	help.append(str...)
 	help.FileName = "Help"
 	help.eof = 1
-	help.endNum = len(help.lines)
 	return help, err
 }
 
