@@ -794,10 +794,3 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 	}
 	return listX, nil
 }
-
-// DocumentLen returns the number of Docs.
-func (root *Root) DocumentLen() int {
-	root.mu.RLock()
-	defer root.mu.RUnlock()
-	return len(root.DocList)
-}
