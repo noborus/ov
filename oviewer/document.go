@@ -44,8 +44,9 @@ type Document struct {
 	changed int32
 	// notify when a file changes.
 	changCh chan struct{}
-	// notify close document.
-	closeCh chan struct{}
+
+	// 1 if there is a closed.
+	closed int32
 
 	// cache represents a cache of contents.
 	cache *ristretto.Cache
@@ -83,7 +84,6 @@ func NewDocument() (*Document, error) {
 		eofCh:    make(chan struct{}),
 		followCh: make(chan struct{}),
 		changCh:  make(chan struct{}),
-		closeCh:  make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,

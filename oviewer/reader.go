@@ -149,6 +149,7 @@ func (m *Document) openFollowMode() {
 		return
 	}
 	<-m.followCh
+	// Wait for the file to open until it changes.
 	<-m.changCh
 
 	r, err := os.Open(m.FileName)
@@ -156,6 +157,7 @@ func (m *Document) openFollowMode() {
 		log.Printf("openFollowMode: %s", err)
 		return
 	}
+	atomic.StoreInt32(&m.closed, 0)
 	log.Printf("openFollowMode %s", m.FileName)
 	m.mu.Lock()
 	m.file = r
@@ -178,6 +180,10 @@ func (m *Document) openFollowMode() {
 // Close closes the File.
 // Record the last read position.
 func (m *Document) close() error {
+	if m.checkClose() {
+		return nil
+	}
+
 	if m.seekable {
 		pos, err := m.file.Seek(0, io.SeekCurrent)
 		if err != nil {
@@ -188,6 +194,8 @@ func (m *Document) close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
+	atomic.StoreInt32(&m.closed, 1)
+	atomic.StoreInt32(&m.changed, 1)
 	return nil
 }
 
@@ -262,11 +270,8 @@ func (m *Document) append(lines ...string) {
 }
 
 func (m *Document) checkClose() bool {
-	select {
-	case <-m.closeCh:
-		log.Printf("document closed %s", m.FileName)
+	if atomic.LoadInt32(&m.closed) == 1 {
 		return true
-	default:
 	}
 	return false
 }
