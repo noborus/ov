@@ -31,7 +31,7 @@ var (
 	// helpKey is key bind information.
 	helpKey bool
 	// completion is the generation of shell completion.
-	completion bool
+	completion string
 	// execCommand targets the output of executing the command.
 	execCommand bool
 )
@@ -55,6 +55,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if config.Debug {
 			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
+		if config.General.ColumnDelimiter == "\\t" {
+			config.General.ColumnDelimiter = "\t"
+		}
 
 		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
@@ -65,8 +68,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return nil
 		}
 
-		if completion {
-			return Completion(cmd, args)
+		if completion != "" {
+			return Completion(cmd, completion)
 		}
 
 		SetRedirect()
@@ -103,12 +106,8 @@ func HelpKey(cmd *cobra.Command, _ []string) {
 }
 
 // Completion is shell completion.
-func Completion(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return ErrCompletion
-	}
-
-	switch args[0] {
+func Completion(cmd *cobra.Command, arg string) error {
+	switch arg {
 	case "bash":
 		return cmd.Root().GenBashCompletion(os.Stdout)
 	case "zsh":
@@ -193,20 +192,36 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
+	_ = rootCmd.RegisterFlagCompletionFunc("config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"yaml"}, cobra.ShellCompDirectiveFilterFileExt
+	})
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "exec command")
-	rootCmd.PersistentFlags().BoolVarP(&completion, "completion", "", false, "generate completion script [bash|zsh|fish|powershell]")
+
+	rootCmd.PersistentFlags().StringVarP(&completion, "completion", "", "", "generate completion script [bash|zsh|fish|powershell]")
+	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
+	_ = rootCmd.RegisterFlagCompletionFunc("tab-width", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"3\ttab width", "2\ttab width", "4\ttab width", "8\ttab width"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header rows to fix")
 	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
+	_ = rootCmd.RegisterFlagCompletionFunc("header", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "skip the number of lines")
 	_ = viper.BindPFlag("general.SkipLines", rootCmd.PersistentFlags().Lookup("skip-lines"))
+	_ = rootCmd.RegisterFlagCompletionFunc("skip-lines", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "alternately change the line color")
 	_ = viper.BindPFlag("general.AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
@@ -222,6 +237,9 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
+	_ = rootCmd.RegisterFlagCompletionFunc("column-delimiter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{",\tcomma", "|\tvertical line", "\\\\t\ttab", "│\tbox"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
