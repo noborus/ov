@@ -43,11 +43,12 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 
 	go func() {
 		<-docout.eofCh
-		log.Printf("close %s", docout.FileName)
 		atomic.StoreInt32(&docout.changed, 1)
-		log.Printf("close %s", docerr.FileName)
 		atomic.StoreInt32(&docerr.changed, 1)
 		docout.FileName = "STDOUT(done)"
+		docout.close()
+		docerr.FileName = "STDERR(done)"
+		docerr.close()
 	}()
 
 	var reader io.Reader

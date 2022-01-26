@@ -11,7 +11,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.4.0
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/jwalton/gchalk v1.2.1
-	github.com/klauspost/compress v1.14.1
+	github.com/klauspost/compress v1.14.2
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.2.0
