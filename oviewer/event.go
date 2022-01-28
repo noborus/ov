@@ -200,9 +200,10 @@ func (root *Root) followAll() {
 
 // onceFollowMode opens the follow mode only once.
 func (root *Root) onceFollowMode(doc *Document) {
-	doc.onceFollow.Do(func() {
+	if atomic.LoadInt32(&doc.openFollow) == 0 {
+		atomic.StoreInt32(&doc.openFollow, 1)
 		go doc.startFollowMode()
-	})
+	}
 }
 
 // updateInterval calls eventUpdate at regular intervals.

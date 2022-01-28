@@ -37,8 +37,8 @@ type Document struct {
 	eofCh chan struct{}
 	// notify when reopening.
 	followCh chan struct{}
-	// onceFollow represents the open followMode file.
-	onceFollow sync.Once
+	// openFollow represents the open followMode file.
+	openFollow int32
 
 	// 1 if there is a changed.
 	changed int32

@@ -197,6 +197,7 @@ func (m *Document) close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
+	atomic.StoreInt32(&m.openFollow, 0)
 	atomic.StoreInt32(&m.closed, 1)
 	atomic.StoreInt32(&m.changed, 1)
 	return nil
