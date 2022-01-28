@@ -129,8 +129,10 @@ func (m *Document) ReadFile(fileName string) error {
 
 	go func() {
 		<-m.eofCh
-		if err := m.close(); err != nil {
-			log.Printf("ReadFile: %s", err)
+		if m.seekable {
+			if err := m.close(); err != nil {
+				log.Printf("ReadFile: %s", err)
+			}
 		}
 		atomic.StoreInt32(&m.changed, 1)
 		close(m.followCh)
@@ -142,39 +144,40 @@ func (m *Document) ReadFile(fileName string) error {
 	return m.ReadAll(reader)
 }
 
-// openFollowMode opens the file in follow mode.
+// startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
-func (m *Document) openFollowMode() {
+func (m *Document) startFollowMode() {
 	if m.file == nil {
 		return
 	}
+
 	<-m.followCh
-	// Wait for the file to open until it changes.
-	<-m.changCh
-
-	r, err := os.Open(m.FileName)
-	if err != nil {
-		log.Printf("openFollowMode: %s", err)
-		return
-	}
-	atomic.StoreInt32(&m.closed, 0)
-	log.Printf("openFollowMode %s", m.FileName)
-	m.mu.Lock()
-	m.file = r
-	m.mu.Unlock()
-	atomic.StoreInt32(&m.eof, 0)
-
 	if m.seekable {
-		if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
-			log.Printf("openFollowMode: %s", err)
-			return
-		}
+		// Wait for the file to open until it changes.
+		<-m.changCh
+		m.file = m.openFollowFile()
 	}
 
-	rr := compressedFormatReader(m.CFormat, r)
-	if err := m.ContinueReadAll(rr); err != nil {
+	r := compressedFormatReader(m.CFormat, m.file)
+	if err := m.ContinueReadAll(r); err != nil {
 		log.Printf("%s cannot open as follow mode %v", m.FileName, err)
 	}
+}
+
+func (m *Document) openFollowFile() *os.File {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	r, err := os.Open(m.FileName)
+	if err != nil {
+		log.Printf("openFollowFile: %s", err)
+		return m.file
+	}
+	atomic.StoreInt32(&m.closed, 0)
+	atomic.StoreInt32(&m.eof, 0)
+	if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
+		log.Printf("openFollowMode: %s", err)
+	}
+	return r
 }
 
 // Close closes the File.

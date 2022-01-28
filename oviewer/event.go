@@ -201,7 +201,7 @@ func (root *Root) followAll() {
 // onceFollowMode opens the follow mode only once.
 func (root *Root) onceFollowMode(doc *Document) {
 	doc.onceFollow.Do(func() {
-		go doc.openFollowMode()
+		go doc.startFollowMode()
 	})
 }
 

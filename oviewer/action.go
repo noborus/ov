@@ -46,6 +46,19 @@ func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
 }
 
+// closeFile close the file.
+func (root *Root) closeFile() {
+	if root.Doc.checkClose() {
+		root.setMessage("already closed")
+		return
+	}
+	if err := root.Doc.close(); err != nil {
+		log.Printf("closeFile: %s", err)
+	}
+	root.setMessagef("close file %s", root.Doc.FileName)
+	log.Printf("close file %s", root.Doc.FileName)
+}
+
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
 	if !strings.Contains(input, ".") {
