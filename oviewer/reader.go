@@ -263,6 +263,36 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	}
 }
 
+func (m *Document) reload() error {
+	if (m.file == os.Stdin && m.BufEOF()) || !m.seekable && m.checkClose() {
+		return fmt.Errorf("already closed %s", m.FileName)
+	}
+	if m.seekable {
+		if !m.checkClose() && m.file != nil {
+			if err := m.close(); err != nil {
+				return err
+			}
+		}
+	}
+
+	m.mu.Lock()
+	m.endNum = 0
+	m.lines = make([]string, 0)
+	m.mu.Unlock()
+
+	if m.seekable {
+		m.eofCh = make(chan struct{})
+		m.followCh = make(chan struct{})
+		m.changCh = make(chan struct{})
+		atomic.StoreInt32(&m.closed, 0)
+		if err := m.ReadFile(m.FileName); err != nil {
+			return err
+		}
+	}
+	m.ClearCache()
+	return nil
+}
+
 func (m *Document) append(lines ...string) {
 	m.mu.Lock()
 	for _, line := range lines {

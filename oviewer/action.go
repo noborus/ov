@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync/atomic"
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -49,6 +48,10 @@ func (root *Root) toggleFollowAll() {
 
 // closeFile close the file.
 func (root *Root) closeFile() {
+	if root.screenMode != Docs {
+		return
+	}
+
 	if root.Doc.checkClose() {
 		root.setMessage("already closed")
 		return
@@ -60,32 +63,17 @@ func (root *Root) closeFile() {
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
+// reload reload the current document.
 func (root *Root) reload() {
-	m := root.Doc
-	if m.seekable {
-		if !m.checkClose() {
-			if err := m.close(); err != nil {
-				log.Printf("reload: %s", err)
-				return
-			}
-		}
+	if root.screenMode != Docs {
+		return
 	}
 
-	m.mu.Lock()
-	m.endNum = 0
-	m.lines = make([]string, 0)
-	m.mu.Unlock()
-	if m.seekable {
-		m.eofCh = make(chan struct{})
-		m.followCh = make(chan struct{})
-		m.changCh = make(chan struct{})
-		atomic.StoreInt32(&m.closed, 0)
-		if err := m.ReadFile(m.FileName); err != nil {
-			log.Printf("reload: %s", err)
-			return
-		}
+	if err := root.Doc.reload(); err != nil {
+		root.setMessagef("cannot reload: %s", err)
+		return
 	}
-	m.ClearCache()
+	root.setMessagef("reload %s", root.Doc.FileName)
 }
 
 // goLine will move to the specified line.
