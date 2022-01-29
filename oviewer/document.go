@@ -22,6 +22,8 @@ type Document struct {
 	// CFormat is a compressed format.
 	CFormat Compressed
 
+	// preventReload is true to prevent reload.
+	preventReload bool
 	// Is it possible to seek.
 	seekable bool
 
@@ -58,6 +60,9 @@ type Document struct {
 	// status is the display status of the document.
 	general
 
+	// WatchMode is watch mode.
+	WatchMode bool
+
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
@@ -91,6 +96,7 @@ func NewDocument() (*Document, error) {
 		},
 		lastContentsNum: -1,
 		seekable:        true,
+		preventReload:   false,
 	}
 
 	if err := m.NewCache(); err != nil {

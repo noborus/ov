@@ -14,6 +14,10 @@ import (
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
+	if root.Doc.WatchMode {
+		log.Println("watch start", root.Doc.WatchMode, root.Doc.WatchInterval)
+		root.watchStart()
+	}
 	go root.updateInterval(ctx)
 
 	for {

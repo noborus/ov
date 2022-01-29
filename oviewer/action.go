@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -64,16 +65,51 @@ func (root *Root) closeFile() {
 }
 
 // reload reload the current document.
-func (root *Root) reload() {
-	if root.screenMode != Docs {
-		return
-	}
-
-	if err := root.Doc.reload(); err != nil {
-		root.setMessagef("cannot reload: %s", err)
+func (root *Root) Reload() {
+	if err := root.reload(); err != nil {
+		root.setMessagef("cannot reload %s", err)
 		return
 	}
 	root.setMessagef("reload %s", root.Doc.FileName)
+}
+
+func (root *Root) reload() error {
+	if root.Doc.preventReload {
+		return fmt.Errorf("cannot reload: %s", root.Doc.FileName)
+	}
+
+	if err := root.Doc.reload(); err != nil {
+		return fmt.Errorf("cannot reload: %w", err)
+	}
+	log.Printf("reload %s", root.Doc.FileName)
+	return nil
+}
+
+func (root *Root) watch() {
+	root.Doc.WatchMode = !root.Doc.WatchMode
+	log.Println("watch start")
+	if root.Doc.WatchMode {
+		root.watchStart()
+	}
+}
+
+func (root *Root) watchStart() {
+	m := root.Doc
+	m.WatchInterval = max(m.WatchInterval, 1)
+	ticker := time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
+	go func() {
+		for {
+			<-ticker.C
+			if m.WatchMode {
+				if err := m.reload(); err != nil {
+					log.Println(err)
+				}
+			} else {
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 // goLine will move to the specified line.

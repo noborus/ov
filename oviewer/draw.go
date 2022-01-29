@@ -15,7 +15,7 @@ func (root *Root) draw() {
 	m := root.Doc
 
 	root.Screen.Clear()
-	if m.BufEndNum() == 0 || root.vHight == 0 {
+	if root.vHight == 0 {
 		m.topLN = 0
 		root.statusDraw()
 		root.Show()
@@ -109,7 +109,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 	listX, err := root.leftMostX(m.topLN + root.Doc.firstLine() + lY)
 	if err != nil {
-		log.Printf("drawBody %d:%s", m.topLN+lY, err)
+		root.debugMessage(fmt.Sprintf("drawBody %d:%s", m.topLN+lY, err))
 	}
 	wrap := numOfSlice(listX, lX)
 
@@ -293,14 +293,17 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 	if root.DocumentLen() > 1 && root.screenMode == Docs {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
-	follow := ""
+	modeStatus := ""
 	if root.Doc.FollowMode {
-		follow = "(Follow Mode)"
+		modeStatus = "(Follow Mode)"
 	}
 	if root.General.FollowAll {
-		follow = "(Follow All)"
+		modeStatus = "(Follow All)"
 	}
-	leftStatus := fmt.Sprintf("%s%s%s:%s", number, follow, root.Doc.FileName, root.message)
+	if root.Doc.WatchMode {
+		modeStatus += "(Watch)"
+	}
+	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, root.Doc.FileName, root.message)
 	leftContents := StrToContents(leftStatus, -1)
 	color := tcell.ColorWhite
 	if root.CurrentDoc != 0 {
