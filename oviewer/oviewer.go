@@ -124,19 +124,19 @@ type general struct {
 	Header int
 	// SkipLines is the rows to skip.
 	SkipLines int
-	// Color to alternate rows
+	// AlternateRows alternately style rows.
 	AlternateRows bool
-	// Column mode
+	// ColumnMode is column mode.
 	ColumnMode bool
-	// Line Number
+	// LineNumMode displays line numbers.
 	LineNumMode bool
 	// Wrap is Wrap mode.
 	WrapMode bool
-	// Column Delimiter
+	// ColumnDelimiter is a column delimiter.
 	ColumnDelimiter string
-	// Follow mode.
+	// FollowMode is the follow mode.
 	FollowMode bool
-	// Follow all.
+	//FollowAll is a follow mode for all documents.
 	FollowAll bool
 	// MarkStyleWidth is width to apply the style of the marked line.
 	MarkStyleWidth int

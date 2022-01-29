@@ -8,7 +8,7 @@ func max(a, b int) int {
 	return b
 }
 
-// max returns the smaller value of the argument.
+// min returns the smaller value of the argument.
 func min(a, b int) int {
 	if a < b {
 		return a
