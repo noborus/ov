@@ -46,6 +46,36 @@ func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
 }
 
+// closeFile close the file.
+func (root *Root) closeFile() {
+	if root.screenMode != Docs {
+		return
+	}
+
+	if root.Doc.checkClose() {
+		root.setMessage("already closed")
+		return
+	}
+	if err := root.Doc.close(); err != nil {
+		log.Printf("closeFile: %s", err)
+	}
+	root.setMessagef("close file %s", root.Doc.FileName)
+	log.Printf("close file %s", root.Doc.FileName)
+}
+
+// reload reload the current document.
+func (root *Root) reload() {
+	if root.screenMode != Docs {
+		return
+	}
+
+	if err := root.Doc.reload(); err != nil {
+		root.setMessagef("cannot reload: %s", err)
+		return
+	}
+	root.setMessagef("reload %s", root.Doc.FileName)
+}
+
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
 	if !strings.Contains(input, ".") {

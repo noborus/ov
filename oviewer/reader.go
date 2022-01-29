@@ -129,8 +129,10 @@ func (m *Document) ReadFile(fileName string) error {
 
 	go func() {
 		<-m.eofCh
-		if err := m.close(); err != nil {
-			log.Printf("ReadFile: %s", err)
+		if m.seekable {
+			if err := m.close(); err != nil {
+				log.Printf("ReadFile: %s", err)
+			}
 		}
 		atomic.StoreInt32(&m.changed, 1)
 		close(m.followCh)
@@ -142,39 +144,40 @@ func (m *Document) ReadFile(fileName string) error {
 	return m.ReadAll(reader)
 }
 
-// openFollowMode opens the file in follow mode.
+// startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
-func (m *Document) openFollowMode() {
+func (m *Document) startFollowMode() {
 	if m.file == nil {
 		return
 	}
+
 	<-m.followCh
-	// Wait for the file to open until it changes.
-	<-m.changCh
-
-	r, err := os.Open(m.FileName)
-	if err != nil {
-		log.Printf("openFollowMode: %s", err)
-		return
-	}
-	atomic.StoreInt32(&m.closed, 0)
-	log.Printf("openFollowMode %s", m.FileName)
-	m.mu.Lock()
-	m.file = r
-	m.mu.Unlock()
-	atomic.StoreInt32(&m.eof, 0)
-
 	if m.seekable {
-		if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
-			log.Printf("openFollowMode: %s", err)
-			return
-		}
+		// Wait for the file to open until it changes.
+		<-m.changCh
+		m.file = m.openFollowFile()
 	}
 
-	rr := compressedFormatReader(m.CFormat, r)
-	if err := m.ContinueReadAll(rr); err != nil {
+	r := compressedFormatReader(m.CFormat, m.file)
+	if err := m.ContinueReadAll(r); err != nil {
 		log.Printf("%s cannot open as follow mode %v", m.FileName, err)
 	}
+}
+
+func (m *Document) openFollowFile() *os.File {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	r, err := os.Open(m.FileName)
+	if err != nil {
+		log.Printf("openFollowFile: %s", err)
+		return m.file
+	}
+	atomic.StoreInt32(&m.closed, 0)
+	atomic.StoreInt32(&m.eof, 0)
+	if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
+		log.Printf("openFollowMode: %s", err)
+	}
+	return r
 }
 
 // Close closes the File.
@@ -194,6 +197,7 @@ func (m *Document) close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
+	atomic.StoreInt32(&m.openFollow, 0)
 	atomic.StoreInt32(&m.closed, 1)
 	atomic.StoreInt32(&m.changed, 1)
 	return nil
@@ -257,6 +261,36 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		m.append(line.String())
 		line.Reset()
 	}
+}
+
+func (m *Document) reload() error {
+	if (m.file == os.Stdin && m.BufEOF()) || !m.seekable && m.checkClose() {
+		return fmt.Errorf("already closed %s", m.FileName)
+	}
+	if m.seekable {
+		if !m.checkClose() && m.file != nil {
+			if err := m.close(); err != nil {
+				return err
+			}
+		}
+	}
+
+	m.mu.Lock()
+	m.endNum = 0
+	m.lines = make([]string, 0)
+	m.mu.Unlock()
+
+	if m.seekable {
+		m.eofCh = make(chan struct{})
+		m.followCh = make(chan struct{})
+		m.changCh = make(chan struct{})
+		atomic.StoreInt32(&m.closed, 0)
+		if err := m.ReadFile(m.FileName); err != nil {
+			return err
+		}
+	}
+	m.ClearCache()
+	return nil
 }
 
 func (m *Document) append(lines ...string) {
