@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -63,17 +64,51 @@ func (root *Root) closeFile() {
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
-// reload reload the current document.
-func (root *Root) reload() {
-	if root.screenMode != Docs {
-		return
+func (root *Root) reload(m *Document) error {
+	if m.preventReload {
+		return fmt.Errorf("cannot reload: %s", m.FileName)
 	}
 
-	if err := root.Doc.reload(); err != nil {
-		root.setMessagef("cannot reload: %s", err)
-		return
+	if err := m.reload(); err != nil {
+		return fmt.Errorf("cannot reload: %w", err)
 	}
-	root.setMessagef("reload %s", root.Doc.FileName)
+	return nil
+}
+
+func (root *Root) watch() {
+	root.Doc.WatchMode = !root.Doc.WatchMode
+	if root.Doc.WatchMode {
+		root.watchStart()
+	}
+}
+
+func (root *Root) watchStart() {
+	m := root.Doc
+	m.WatchInterval = max(m.WatchInterval, 1)
+	if m.ticker != nil {
+		log.Println("watch stop")
+		m.ticker.Stop()
+	}
+	log.Printf("watch start at interval %d", m.WatchInterval)
+	m.ticker = time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
+	go func() {
+		for {
+			<-m.ticker.C
+			if m.WatchMode {
+				ev := &eventReload{}
+				ev.SetEventNow()
+				ev.m = m
+				err := root.Screen.PostEvent(ev)
+				if err != nil {
+					log.Println(err)
+				}
+			} else {
+				log.Println("watch stop")
+				m.ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 // goLine will move to the specified line.
@@ -290,6 +325,21 @@ func (root *Root) setTabWidth(input string) {
 	root.Doc.TabWidth = width
 	root.setMessagef("Set tab width %d", width)
 	root.Doc.ClearCache()
+}
+
+func (root *Root) setWatchInterval(input string) {
+	interval, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	if root.Doc.WatchInterval == interval {
+		return
+	}
+
+	root.Doc.WatchInterval = interval
+	root.watchStart()
+	root.setMessagef("Set watch interval %d", interval)
 }
 
 // resize is a wrapper function that calls viewSync.

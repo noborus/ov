@@ -18,6 +18,7 @@ const (
 	actionFollowAll      = "follow_all"
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
+	actionWatch          = "watch"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
@@ -48,6 +49,7 @@ const (
 	actionHeader         = "header"
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
+	actionWatchInterval  = "watch_interval"
 	actionGoLine         = "goto"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
@@ -70,7 +72,8 @@ func (root *Root) setHandler() map[string]func() {
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
-		actionReload:         root.reload,
+		actionReload:         root.Reload,
+		actionWatch:          root.watch,
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
@@ -102,6 +105,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionHeader:         root.setHeaderMode,
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
+		actionWatchInterval:  root.setWatchMode,
 		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.eventNextSearch,
 		actionNextBackSearch: root.eventNextBackSearch,
@@ -129,6 +133,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionFollowAll:      {"ctrl+a"},
 		actionCloseFile:      {"ctrl+alt+w"},
 		actionReload:         {"ctrl+alt+l"},
+		actionWatch:          {"T"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -159,6 +164,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionHeader:         {"H"},
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
+		actionWatchInterval:  {"ctrl+w"},
 		actionGoLine:         {"g"},
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},

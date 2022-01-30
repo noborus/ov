@@ -23,6 +23,7 @@ type Input struct {
 	GoCandidate        *candidate
 	DelimiterCandidate *candidate
 	TabWidthCandidate  *candidate
+	WatchCandidate     *candidate
 }
 
 // InputMode represents the state of the input.
@@ -45,6 +46,8 @@ const (
 	Delimiter
 	// TabWidth is the tab number input mode.
 	TabWidth
+	// WatchInterval is the watch interval input mode.
+	Watch
 	// SkipLines is the number of lines to skip.
 	SkipLines
 )
@@ -241,6 +244,13 @@ func NewInput() *Input {
 			"8",
 		},
 	}
+	i.WatchCandidate = &candidate{
+		list: []string{
+			"3",
+			"2",
+			"1",
+		},
+	}
 	i.SearchCandidate = &candidate{
 		list: []string{},
 	}
@@ -304,6 +314,14 @@ func (root *Root) setTabWidthMode() {
 	input.cursorX = 0
 	input.mode = TabWidth
 	input.EventInput = newTabWidthInput(input.TabWidthCandidate)
+}
+
+func (root *Root) setWatchMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = Watch
+	input.EventInput = newWatchIntevalInput(input.WatchCandidate)
 }
 
 func (root *Root) setGoLineMode() {
@@ -651,6 +669,42 @@ func (t *tabWidthInput) Up(str string) string {
 
 // Down returns strings when the down key is pressed during input.
 func (t *tabWidthInput) Down(str string) string {
+	return t.clist.down()
+}
+
+// watchIntervalInput represents the WatchInteval input mode.
+type watchIntervalInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+// newWatchIntevalInputt returns WatchIntevalInput.
+func newWatchIntevalInput(clist *candidate) *watchIntervalInput {
+	return &watchIntervalInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (t *watchIntervalInput) Prompt() string {
+	return "Watch interval:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (t *watchIntervalInput) Confirm(str string) tcell.Event {
+	t.value = str
+	t.clist.list = toLast(t.clist.list, str)
+	t.clist.p = 0
+	t.SetEventNow()
+	return t
+}
+
+// Up returns strings when the up key is pressed during input.
+func (t *watchIntervalInput) Up(str string) string {
+	return t.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (t *watchIntervalInput) Down(str string) string {
 	return t.clist.down()
 }
 

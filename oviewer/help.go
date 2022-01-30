@@ -10,18 +10,20 @@ import (
 
 // NewHelp generates a document for help.
 func NewHelp(k KeyBind) (*Document, error) {
-	help, err := NewDocument()
+	m, err := NewDocument()
 	if err != nil {
 		return nil, err
 	}
 
-	help.append("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
+	m.append("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
 
 	str := strings.Split(KeyBindString(k), "\n")
-	help.append(str...)
-	help.FileName = "Help"
-	help.eof = 1
-	return help, err
+	m.append(str...)
+	m.FileName = "Help"
+	m.eof = 1
+	m.preventReload = true
+	m.seekable = false
+	return m, err
 }
 
 // KeyBindString returns keybind as a string for help.

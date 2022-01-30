@@ -138,6 +138,8 @@ type general struct {
 	FollowMode bool
 	//FollowAll is a follow mode for all documents.
 	FollowAll bool
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval int
 	// MarkStyleWidth is width to apply the style of the marked line.
 	MarkStyleWidth int
 }
@@ -552,6 +554,9 @@ func (root *Root) Run() error {
 	for n, doc := range root.DocList {
 		log.Printf("open [%d]%s", n, doc.FileName)
 		doc.general = root.Config.General
+		if doc.general.WatchInterval > 0 {
+			doc.WatchMode = true
+		}
 	}
 	root.setGlobalStyle()
 	root.Screen.Clear()

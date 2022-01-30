@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/ini.v1 v1.66.3 // indirect
 )
