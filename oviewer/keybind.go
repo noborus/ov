@@ -49,6 +49,7 @@ const (
 	actionHeader         = "header"
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
+	actionWatchInterval  = "watch_interval"
 	actionGoLine         = "goto"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
@@ -104,6 +105,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionHeader:         root.setHeaderMode,
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
+		actionWatchInterval:  root.setWatchMode,
 		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.eventNextSearch,
 		actionNextBackSearch: root.eventNextBackSearch,
@@ -162,6 +164,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionHeader:         {"H"},
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
+		actionWatchInterval:  {"ctrl+w"},
 		actionGoLine:         {"g"},
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},

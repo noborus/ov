@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/dgraph-io/ristretto"
 )
@@ -62,7 +63,7 @@ type Document struct {
 
 	// WatchMode is watch mode.
 	WatchMode bool
-
+	ticker    *time.Ticker
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.

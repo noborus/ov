@@ -39,6 +39,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			}
 			close(quitChan)
 			return
+		case *eventReload:
+			root.reload(ev.m)
 		case *eventAppSuspend:
 			root.suspend()
 		case *eventUpdateEndNum:
@@ -77,6 +79,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setDelimiter(ev.value)
 		case *tabWidthInput:
 			root.setTabWidth(ev.value)
+		case *watchIntervalInput:
+			root.setWatchInterval(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -457,5 +461,26 @@ func (root *Root) cancelWait() error {
 		case *eventSearchQuit:
 			return nil
 		}
+	}
+}
+
+// eventReload represents a reload event.
+type eventReload struct {
+	m *Document
+	tcell.EventTime
+}
+
+// Reload executes a reload event.
+func (root *Root) Reload() {
+	if !root.checkScreen() {
+		return
+	}
+	log.Printf("reload %s", root.Doc.FileName)
+	ev := &eventReload{}
+	ev.SetEventNow()
+	ev.m = root.Doc
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
 	}
 }

@@ -135,7 +135,7 @@ func (m *Document) ReadFile(fileName string) error {
 			}
 		}
 		atomic.StoreInt32(&m.changed, 1)
-		close(m.followCh)
+		m.followCh <- struct{}{}
 	}()
 	if STDOUTPIPE != nil {
 		reader = io.TeeReader(reader, STDOUTPIPE)
@@ -215,7 +215,7 @@ func (m *Document) ReadAll(r io.Reader) error {
 
 		if err := m.readAll(reader); err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				close(m.eofCh)
+				m.eofCh <- struct{}{}
 				atomic.StoreInt32(&m.eof, 1)
 				return
 			}
@@ -283,9 +283,6 @@ func (m *Document) reload() error {
 		return nil
 	}
 
-	m.eofCh = make(chan struct{})
-	m.followCh = make(chan struct{})
-	m.changCh = make(chan struct{})
 	atomic.StoreInt32(&m.closed, 0)
 	return m.ReadFile(m.FileName)
 }
