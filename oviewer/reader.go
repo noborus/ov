@@ -258,6 +258,12 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 			continue
 		}
 
+		if m.Stream {
+			if m.endNum > 0 && m.lines[len(m.lines)-1] == "" {
+				m.reset()
+			}
+		}
+
 		m.append(line.String())
 		line.Reset()
 	}
@@ -277,7 +283,6 @@ func (m *Document) reload() error {
 	}
 
 	m.reset()
-	m.ClearCache()
 
 	if !m.seekable {
 		return nil
@@ -303,6 +308,7 @@ func (m *Document) reset() {
 	m.lines = m.lines[:0]
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
+	m.ClearCache()
 }
 
 func (m *Document) checkClose() bool {

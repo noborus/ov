@@ -192,6 +192,8 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
+	// Stream is stream mode reset by delimiter.
+	Stream bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
 
@@ -273,6 +275,8 @@ var (
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
 var tcellNewScreen = tcell.NewScreen
+
+var StreamMode bool
 
 // NewOviewer return the structure of oviewer.
 // NewOviewer requires one or more documents.

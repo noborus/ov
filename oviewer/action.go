@@ -75,6 +75,10 @@ func (root *Root) reload(m *Document) error {
 	return nil
 }
 
+func (root *Root) stream() {
+	root.Doc.Stream = !root.Doc.Stream
+}
+
 func (root *Root) watch() {
 	root.Doc.WatchMode = !root.Doc.WatchMode
 	if root.Doc.WatchMode {
