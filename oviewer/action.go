@@ -72,6 +72,8 @@ func (root *Root) reload(m *Document) error {
 	if err := m.reload(); err != nil {
 		return fmt.Errorf("cannot reload: %w", err)
 	}
+	time.Sleep(100 * time.Millisecond)
+
 	return nil
 }
 
