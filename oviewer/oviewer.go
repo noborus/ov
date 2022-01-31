@@ -550,7 +550,7 @@ func (root *Root) Run() error {
 	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
 	if len(manPN) > 0 {
-		root.Doc.FileName = manPN
+		root.Doc.Caption = manPN
 		// Bug?? Clipboard fails when called by man.
 		root.Screen.DisableMouse()
 	}

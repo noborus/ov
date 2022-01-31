@@ -15,6 +15,8 @@ import (
 type Document struct {
 	// fileName is the file name to display.
 	FileName string
+	// Caption is an additional caption to display after the file name.
+	Caption string
 
 	// File is the os.File.
 	file *os.File
