@@ -144,6 +144,14 @@ func (m *Document) ReadFile(fileName string) error {
 	return m.ReadAll(reader)
 }
 
+// onceFollowMode opens the follow mode only once.
+func (m *Document) onceFollowMode() {
+	if atomic.LoadInt32(&m.openFollow) == 0 {
+		atomic.StoreInt32(&m.openFollow, 1)
+		go m.startFollowMode()
+	}
+}
+
 // startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
 func (m *Document) startFollowMode() {
@@ -224,6 +232,11 @@ func (m *Document) ReadAll(r io.Reader) error {
 			return
 		}
 	}()
+
+	// Named pipes for continuous read.
+	if !m.seekable {
+		m.onceFollowMode()
+	}
 	return nil
 }
 
