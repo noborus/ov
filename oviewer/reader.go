@@ -144,6 +144,14 @@ func (m *Document) ReadFile(fileName string) error {
 	return m.ReadAll(reader)
 }
 
+// onceFollowMode opens the follow mode only once.
+func (m *Document) onceFollowMode() {
+	if atomic.LoadInt32(&m.openFollow) == 0 {
+		atomic.StoreInt32(&m.openFollow, 1)
+		go m.startFollowMode()
+	}
+}
+
 // startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
 func (m *Document) startFollowMode() {
@@ -224,6 +232,11 @@ func (m *Document) ReadAll(r io.Reader) error {
 			return
 		}
 	}()
+
+	// Named pipes for continuous read.
+	if !m.seekable {
+		m.onceFollowMode()
+	}
 	return nil
 }
 
@@ -258,9 +271,21 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 			continue
 		}
 
+		if m.Stream {
+			m.checkAndReset()
+		}
+
 		m.append(line.String())
 		line.Reset()
 	}
+}
+
+func (m *Document) checkAndReset() {
+	if m.endNum == 0 || m.lines[m.endNum-1] != "" {
+		return
+	}
+	m.Caption = strings.TrimSpace(m.lines[0])
+	m.reset()
 }
 
 func (m *Document) reload() error {
@@ -277,7 +302,6 @@ func (m *Document) reload() error {
 	}
 
 	m.reset()
-	m.ClearCache()
 
 	if !m.seekable {
 		return nil
@@ -303,6 +327,7 @@ func (m *Document) reset() {
 	m.lines = m.lines[:0]
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
+	m.ClearCache()
 }
 
 func (m *Document) checkClose() bool {

@@ -169,7 +169,7 @@ func (root *Root) follow() {
 		root.followAll()
 	}
 
-	root.onceFollowMode(root.Doc)
+	root.Doc.onceFollowMode()
 
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum == num {
@@ -192,7 +192,7 @@ func (root *Root) followAll() {
 
 	root.mu.RLock()
 	for n, doc := range root.DocList {
-		root.onceFollowMode(doc)
+		root.Doc.onceFollowMode()
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
@@ -203,14 +203,6 @@ func (root *Root) followAll() {
 		root.CurrentDoc = current
 		log.Printf("switch document: %d", root.CurrentDoc)
 		root.SetDocument(root.CurrentDoc)
-	}
-}
-
-// onceFollowMode opens the follow mode only once.
-func (root *Root) onceFollowMode(doc *Document) {
-	if atomic.LoadInt32(&doc.openFollow) == 0 {
-		atomic.StoreInt32(&doc.openFollow, 1)
-		go doc.startFollowMode()
 	}
 }
 

@@ -87,6 +87,13 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 
+	fmt.Fprint(&b, gchalk.Bold("\n\tClose and reload\n\n"))
+	k.writeKeyBind(&b, actionCloseFile, "close file")
+	k.writeKeyBind(&b, actionReload, "reload file")
+	k.writeKeyBind(&b, actionWatch, "watch mode")
+	k.writeKeyBind(&b, actionWatchInterval, "set watch interval")
+	k.writeKeyBind(&b, actionStream, "stream mode")
+
 	fmt.Fprint(&b, gchalk.Bold("\n\tKey binding when typing\n\n"))
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")

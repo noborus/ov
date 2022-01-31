@@ -15,6 +15,8 @@ import (
 type Document struct {
 	// fileName is the file name to display.
 	FileName string
+	// Caption is an additional caption to display after the file name.
+	Caption string
 
 	// File is the os.File.
 	file *os.File
@@ -64,6 +66,9 @@ type Document struct {
 	// WatchMode is watch mode.
 	WatchMode bool
 	ticker    *time.Ticker
+	// stream is stream mode.
+	Stream bool
+
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
@@ -98,6 +103,7 @@ func NewDocument() (*Document, error) {
 		lastContentsNum: -1,
 		seekable:        true,
 		preventReload:   false,
+		Stream:          StreamMode,
 	}
 
 	if err := m.NewCache(); err != nil {

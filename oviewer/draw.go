@@ -300,10 +300,21 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 	if root.General.FollowAll {
 		modeStatus = "(Follow All)"
 	}
+	if root.Doc.Stream {
+		modeStatus += "(Stream)"
+	}
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
 	}
-	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, root.Doc.FileName, root.message)
+
+	caption := ""
+	if root.Doc.Caption != "" {
+		caption = root.Doc.Caption
+	} else {
+		caption = root.Doc.FileName
+	}
+
+	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, caption, root.message)
 	leftContents := StrToContents(leftStatus, -1)
 	color := tcell.ColorWhite
 	if root.CurrentDoc != 0 {

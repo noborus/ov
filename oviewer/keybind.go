@@ -19,6 +19,7 @@ const (
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
 	actionWatch          = "watch"
+	actionStream         = "stream"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
@@ -74,6 +75,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionFollowAll:      root.toggleFollowAll,
 		actionReload:         root.Reload,
 		actionWatch:          root.watch,
+		actionStream:         root.stream,
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
@@ -133,7 +135,8 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionFollowAll:      {"ctrl+a"},
 		actionCloseFile:      {"ctrl+alt+w"},
 		actionReload:         {"ctrl+alt+l"},
-		actionWatch:          {"T"},
+		actionWatch:          {"ctrl+alt+u"},
+		actionStream:         {"ctrl+alt+s"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
