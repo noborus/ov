@@ -274,7 +274,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 
-	rootCmd.PersistentFlags().BoolP("stream", "", false, "Stream mode reset by delimiter")
+	rootCmd.PersistentFlags().BoolP("stream", "", false, "stream mode reset by delimiter")
 	_ = viper.BindPFlag("Stream", rootCmd.PersistentFlags().Lookup("stream"))
 
 }

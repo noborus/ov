@@ -91,11 +91,11 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 
 	r = regexp.QuoteMeta(r)
 	re, err = regexp.Compile(r)
-	if err == nil {
-		return re
+	if err != nil {
+		log.Printf("regexpCompile failed %s", r)
+		return nil
 	}
-	log.Printf("regexpCompile failed %s", r)
-	return nil
+	return re
 }
 
 // rangePosition returns the range starting and ending from the s,substr string.
@@ -155,11 +155,9 @@ func (root *Root) searchPosition(lN int, lineStr string) [][]int {
 		if !ok {
 			return nil
 		}
-		log.Println("search cache hit")
 		return poss
 	}
 
-	log.Println("no cache")
 	var poss [][]int
 	if root.Config.RegexpSearch {
 		poss = searchPositionReg(lineStr, root.searchReg)
