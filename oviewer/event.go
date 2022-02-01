@@ -467,6 +467,7 @@ func (root *Root) Reload() {
 	if !root.checkScreen() {
 		return
 	}
+	root.setMessagef("reload %s", root.Doc.FileName)
 	log.Printf("reload %s", root.Doc.FileName)
 	ev := &eventReload{}
 	ev.SetEventNow()

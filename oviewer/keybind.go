@@ -19,6 +19,7 @@ const (
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
 	actionWatch          = "watch"
+	actionWatchInterval  = "watch_interval"
 	actionStream         = "stream"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
@@ -50,7 +51,6 @@ const (
 	actionHeader         = "header"
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
-	actionWatchInterval  = "watch_interval"
 	actionGoLine         = "goto"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
@@ -75,6 +75,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionFollowAll:      root.toggleFollowAll,
 		actionReload:         root.Reload,
 		actionWatch:          root.watch,
+		actionWatchInterval:  root.setWatchIntervalMode,
 		actionStream:         root.stream,
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
@@ -107,7 +108,6 @@ func (root *Root) setHandler() map[string]func() {
 		actionHeader:         root.setHeaderMode,
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
-		actionWatchInterval:  root.setWatchMode,
 		actionGoLine:         root.setGoLineMode,
 		actionNextSearch:     root.eventNextSearch,
 		actionNextBackSearch: root.eventNextBackSearch,
@@ -133,10 +133,11 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
 		actionFollowAll:      {"ctrl+a"},
-		actionCloseFile:      {"ctrl+alt+w"},
-		actionReload:         {"ctrl+alt+l"},
-		actionWatch:          {"ctrl+alt+u"},
-		actionStream:         {"ctrl+alt+s"},
+		actionCloseFile:      {"ctrl+alt+s", "ctrl+F9"},
+		actionReload:         {"ctrl+alt+l", "F5"},
+		actionWatch:          {"ctrl+alt+w", "F4"},
+		actionWatchInterval:  {"ctrl+w"},
+		actionStream:         {"ctrl+alt+p", "F6"},
 		actionHelp:           {"h"},
 		actionLogDoc:         {"ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -167,7 +168,6 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionHeader:         {"H"},
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
-		actionWatchInterval:  {"ctrl+w"},
 		actionGoLine:         {"g"},
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},

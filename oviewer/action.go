@@ -344,6 +344,12 @@ func (root *Root) setWatchInterval(input string) {
 	}
 
 	root.Doc.WatchInterval = interval
+	if root.Doc.WatchInterval == 0 {
+		root.Doc.WatchMode = false
+		return
+	}
+
+	root.Doc.WatchMode = true
 	root.watchStart()
 	root.setMessagef("Set watch interval %d", interval)
 }

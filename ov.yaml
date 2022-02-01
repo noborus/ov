@@ -55,6 +55,17 @@ KeyBind:
         - "Q"
     sync:
         - "ctrl+l"
+    reload:
+        - "ctrl+alt+l"
+        - "F5"
+    watch:
+        - "ctrl+alt+w"
+        - "F4"
+    watch_interval:
+        - "ctrl+w"
+    stream:
+        - "ctrl+alt+p"
+        - "F6"
     follow_mode:
         - "ctrl+f"
     follow_all:
@@ -104,6 +115,9 @@ KeyBind:
         - ">"
     previous_mark:
         - "<"
+    set_view_mode:
+        - "p"
+        - "P"
     alter_rows_mode:
         - "C"
     line_number_mode:
@@ -121,6 +135,8 @@ KeyBind:
         - "d"
     header:
         - "H"
+    skip_lines:
+        - "ctrl+s"
     tabwidth:
         - "t"
     goto:
@@ -136,6 +152,8 @@ KeyBind:
     toggle_mouse:
         - "ctrl+f3"
         - "ctrl+alt+r"
+    suspend:
+        - "ctrl+z"
 
 Mode:
   Psql:

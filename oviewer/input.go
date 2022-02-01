@@ -316,7 +316,7 @@ func (root *Root) setTabWidthMode() {
 	input.EventInput = newTabWidthInput(input.TabWidthCandidate)
 }
 
-func (root *Root) setWatchMode() {
+func (root *Root) setWatchIntervalMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
