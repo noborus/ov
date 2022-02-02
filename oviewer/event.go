@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -191,7 +190,7 @@ func (root *Root) followAll() {
 
 	root.mu.RLock()
 	for n, doc := range root.DocList {
-		root.Doc.onceFollowMode()
+		doc.onceFollowMode()
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
@@ -223,18 +222,8 @@ func (root *Root) eventUpdate() {
 	if !root.checkScreen() {
 		return
 	}
-	eventFlag := false
 
-	root.mu.RLock()
-	for _, doc := range root.DocList {
-		if atomic.LoadInt32(&doc.changed) == 1 {
-			eventFlag = true
-			atomic.StoreInt32(&doc.changed, 0)
-		}
-	}
-	root.mu.RUnlock()
-
-	if !eventFlag {
+	if !root.hasDocChanged() {
 		return
 	}
 

@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"sync/atomic"
 )
 
 // DocumentLen returns the number of Docs.
@@ -10,6 +11,19 @@ func (root *Root) DocumentLen() int {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
 	return len(root.DocList)
+}
+
+// hasDocChanged() returns if doc has changed.
+func (root *Root) hasDocChanged() bool {
+	root.mu.RLock()
+	defer root.mu.RUnlock()
+	eventFlag := false
+	for _, doc := range root.DocList {
+		if atomic.SwapInt32(&doc.changed, 0) == 1 {
+			eventFlag = true
+		}
+	}
+	return eventFlag
 }
 
 // addDocument adds a document and displays it.

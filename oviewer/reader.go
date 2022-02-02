@@ -146,10 +146,10 @@ func (m *Document) ReadFile(fileName string) error {
 
 // onceFollowMode opens the follow mode only once.
 func (m *Document) onceFollowMode() {
-	if atomic.LoadInt32(&m.openFollow) == 0 {
-		atomic.StoreInt32(&m.openFollow, 1)
-		go m.startFollowMode()
+	if atomic.SwapInt32(&m.openFollow, 1) == 1 {
+		return
 	}
+	go m.startFollowMode()
 }
 
 // startFollowMode opens the file in follow mode.
