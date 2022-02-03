@@ -93,8 +93,11 @@ KeyBind:
         - "Up"
     top:
         - "Home"
+        - "<"
     bottom:
         - "End"
+        - ">"
+        - "G"
     left:
         - "left"
     right:
@@ -127,16 +130,16 @@ KeyBind:
     remove_all_mark:
         - "ctrl+delete"
     next_mark:
-        - ">"
+        - "alt+>"
     previous_mark:
-        - "<"
+        - "alt+<"
     set_view_mode:
         - "p"
         - "P"
     alter_rows_mode:
         - "C"
     line_number_mode:
-        - "G"
+        - "alt+n"
     search:
         - "/"
     wrap_mode:
