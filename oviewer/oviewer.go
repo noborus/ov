@@ -16,7 +16,6 @@ import (
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
-	"github.com/gdamore/tcell/v2"
 )
 
 // Root structure contains information about the drawing.
@@ -768,6 +767,16 @@ func (root *Root) WriteOriginal() {
 
 		fmt.Println(m.GetLine(n))
 	}
+}
+
+// WriteOriginalTillQuit writes doc to the original terminal till the
+// doc was viewed
+func (root *Root) WriteOriginalTillQuit() {
+	m := root.Doc
+	for n := 0; n < m.topLN; n++ {
+		fmt.Println(m.GetLine(n))
+	}
+	root.WriteOriginal()
 }
 
 // WriteLog write to the log terminal.
