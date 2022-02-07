@@ -152,7 +152,7 @@ func (root *Root) Cancel() {
 
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit() {
-	root.AfterWrite = true
+	root.IsWriteOriginal = true
 	root.Quit()
 }
 

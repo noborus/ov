@@ -35,8 +35,8 @@ func (root *Root) draw() {
 	// Body
 	lX, lY = root.drawBody(lX, lY)
 
-	root.bottomLN = m.topLN + max(lY, 0)
-	root.bottomLX = lX
+	m.bottomLN = m.topLN + max(lY, 0)
+	m.bottomLX = lX
 
 	if root.mouseSelect {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)

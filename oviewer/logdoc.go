@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"log"
+	"strings"
 )
 
 // NewLogDoc generates a document for log.
@@ -21,7 +22,7 @@ func NewLogDoc() (*Document, error) {
 // Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
 func (m *Document) Write(p []byte) (int, error) {
-	str := string(p)
+	str := strings.TrimSuffix(string(p), "\n")
 	m.append(str)
 	return len(str), nil
 }
