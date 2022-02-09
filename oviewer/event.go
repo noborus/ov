@@ -79,6 +79,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setTabWidth(ev.value)
 		case *watchIntervalInput:
 			root.setWatchInterval(ev.value)
+		case *writeBAInput:
+			root.setWriteBA(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:

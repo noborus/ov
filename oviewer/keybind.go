@@ -10,6 +10,7 @@ import (
 
 const (
 	actionExit           = "exit"
+	actionWriteBA        = "exitWriteBA"
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSuspend        = "suspend"
@@ -67,6 +68,7 @@ const (
 func (root *Root) setHandler() map[string]func() {
 	return map[string]func(){
 		actionExit:           root.Quit,
+		actionWriteBA:        root.setWriteBAMode,
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSuspend:        root.suspend,
@@ -128,6 +130,7 @@ type KeyBind map[string][]string
 func GetKeyBinds(bind map[string][]string) map[string][]string {
 	keyBind := map[string][]string{
 		actionExit:           {"Escape", "q"},
+		actionWriteBA:        {"ctrl+q"},
 		actionCancel:         {"ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSync:           {"ctrl+l"},
