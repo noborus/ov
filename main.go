@@ -61,6 +61,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		// stream mode must be set first.
 		oviewer.StreamMode = config.Stream
 
+		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
+		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
+
 		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
 			return nil

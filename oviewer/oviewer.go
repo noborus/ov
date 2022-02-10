@@ -562,7 +562,6 @@ func (root *Root) Run() error {
 			doc.WatchMode = true
 		}
 	}
-	root.setGlobalStyle()
 	root.Screen.Clear()
 
 	list := make([]string, 0, len(root.Config.Mode)+1)
@@ -641,7 +640,7 @@ func (root *Root) debugMessage(msg string) {
 	log.Printf("%s:%s", root.Doc.FileName, msg)
 }
 
-func setStyle(s ovStyle) tcell.Style {
+func ToTcellStyle(s ovStyle) tcell.Style {
 	style := tcell.StyleDefault
 	style = style.Background(tcell.GetColor(s.Background))
 	style = style.Foreground(tcell.GetColor(s.Foreground))
@@ -685,28 +684,6 @@ func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
 		style = style.StrikeThrough(s.StrikeThrough)
 	}
 	return style
-}
-
-func (root *Root) setGlobalStyle() {
-	OverStrikeStyle = setStyle(root.Config.StyleOverStrike)
-	OverLineStyle = setStyle(root.Config.StyleOverLine)
-	root.setOldGlobalStyle()
-}
-
-// setGlobalStyle sets some styles that are determined by the settings.
-func (root *Root) setOldGlobalStyle() {
-	if root.ColorAlternate != "" {
-		root.StyleAlternate = ovStyle{Background: root.ColorAlternate}
-	}
-	if root.ColorHeader != "" {
-		root.StyleHeader = ovStyle{Foreground: root.ColorHeader}
-	}
-	if root.ColorOverStrike != "" {
-		OverStrikeStyle = OverStrikeStyle.Foreground(tcell.GetColor(root.ColorOverStrike))
-	}
-	if root.ColorOverLine != "" {
-		OverLineStyle = OverLineStyle.Foreground(tcell.GetColor(root.ColorOverLine))
-	}
 }
 
 // prepareView prepares when the screen size is changed.

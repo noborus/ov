@@ -2,15 +2,22 @@ package oviewer
 
 import (
 	"bytes"
+	"os"
 	"reflect"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
 
-func SetupStyle() {
-	OverStrikeStyle = setStyle(ovStyle{Bold: true})
-	OverLineStyle = setStyle(ovStyle{Underline: true})
+func setup() {
+	OverStrikeStyle = ToTcellStyle(ovStyle{Bold: true})
+	OverLineStyle = ToTcellStyle(ovStyle{Underline: true})
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	ret := m.Run()
+	os.Exit(ret)
 }
 
 func Test_parseString(t *testing.T) {
@@ -271,7 +278,6 @@ func Test_parseString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		SetupStyle()
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
@@ -331,7 +337,6 @@ func Test_parseStringCombining(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		SetupStyle()
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
