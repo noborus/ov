@@ -1,0 +1,105 @@
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:00+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:00+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:01+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:01+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:01+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:02+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:02+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:02+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:02+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:03+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:03+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:03+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:03+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:03+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:04+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:05+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:05+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:05+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:06+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:06+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:06+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:06+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:07+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:07+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:07+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:07+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:08+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:08+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:09+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:09+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:09+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:09+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:09+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:10+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:10+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:10+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:10+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:10+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:11+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:11+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:11+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:12+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:12+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:12+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:13+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:13+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:13+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:13+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:14+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:14+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:14+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:14+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:15+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:15+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:15+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:15+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:16+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:16+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:16+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:16+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:17+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:17+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:17+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:17+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:17+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:18+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:18+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:18+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:19+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:19+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:19+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:20+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:20+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:20+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:20+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:21+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:21+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:21+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:22+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:22+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:22+0000[49m WARN A [38;2;202;185;2mwarning[39m that should be ignored is usually at this level and should be actionable.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:22+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:23+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:23+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:23+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:24+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:24+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:24+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:25+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:25+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:25+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:25+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:25+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:26+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:26+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:26+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:27+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:27+0000[49m [38;2;199;24;0mERROR[39m An [38;2;199;24;0merror[39m is usually an exception that has been caught and not handled.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:27+0000[49m DEBUG This is a debug log that shows a log that can be ignored.
+[48;2;163;90;0m2022-02-10[49mT[48;2;163;90;0m00:51:27+0000[49m INFO This is less important than debug log and is often used to provide context in the current task.
