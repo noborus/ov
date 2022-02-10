@@ -6,18 +6,19 @@ import (
 )
 
 func BenchmarkParseString_Normal(b *testing.B) {
-	f, err := os.ReadFile("../testdata/normal.txt")
-	if err != nil {
-		b.Fatal(err)
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		parseString(string(f), 8)
-	}
+	Parse_Helper(b, "../testdata/normal.txt")
 }
 
 func BenchmarkParseString_AnsiEscape(b *testing.B) {
-	f, err := os.ReadFile("../testdata/ansiescape.txt")
+	Parse_Helper(b, "../testdata/ansiescape.txt")
+}
+
+func BenchmarkParseString_ChromaTerm(b *testing.B) {
+	Parse_Helper(b, "../testdata/ct.log")
+}
+
+func Parse_Helper(b *testing.B, fileName string) {
+	f, err := os.ReadFile(fileName)
 	if err != nil {
 		b.Fatal(err)
 	}
