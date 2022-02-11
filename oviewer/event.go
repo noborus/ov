@@ -11,6 +11,11 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+var (
+	// UpdateInterval is the update interval that calls eventUpdate().
+	UpdateInterval time.Duration = 50
+)
+
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
@@ -208,7 +213,7 @@ func (root *Root) followAll() {
 
 // updateInterval calls eventUpdate at regular intervals.
 func (root *Root) updateInterval(ctx context.Context) {
-	timer := time.NewTicker(time.Millisecond * 100)
+	timer := time.NewTicker(time.Millisecond * UpdateInterval)
 	for {
 		select {
 		case <-timer.C:
