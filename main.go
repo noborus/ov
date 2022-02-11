@@ -93,7 +93,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			return err
 		}
 
-		if ov.AfterWrite {
+		if ov.IsWriteOriginal {
 			ov.WriteOriginal()
 		}
 		if ov.Debug {
@@ -156,7 +156,7 @@ func ExecCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if ov.AfterWrite {
+	if ov.IsWriteOriginal {
 		ov.WriteOriginal()
 	}
 	if ov.Debug {
@@ -260,7 +260,13 @@ func init() {
 	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
 
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
-	_ = viper.BindPFlag("AfterWrite", rootCmd.PersistentFlags().Lookup("exit-write"))
+	_ = viper.BindPFlag("IsWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write"))
+
+	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "NUM before the current lines when exiting")
+	_ = viper.BindPFlag("BeforeWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-before"))
+
+	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "NUM after the current lines when exiting")
+	_ = viper.BindPFlag("AfterWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-after"))
 
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
 	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))

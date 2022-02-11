@@ -24,6 +24,7 @@ type Input struct {
 	DelimiterCandidate *candidate
 	TabWidthCandidate  *candidate
 	WatchCandidate     *candidate
+	WriteBACandidate   *candidate
 }
 
 // InputMode represents the state of the input.
@@ -50,6 +51,8 @@ const (
 	Watch
 	// SkipLines is the number of lines to skip.
 	SkipLines
+	// WriteBA is the number of ranges to write at quit.
+	WriteBA
 )
 
 // InputEvent input key events.
@@ -254,6 +257,11 @@ func NewInput() *Input {
 	i.SearchCandidate = &candidate{
 		list: []string{},
 	}
+	i.WriteBACandidate = &candidate{
+		list: []string{
+			":",
+		},
+	}
 	i.EventInput = &normalInput{}
 	return &i
 }
@@ -322,6 +330,14 @@ func (root *Root) setWatchIntervalMode() {
 	input.cursorX = 0
 	input.mode = Watch
 	input.EventInput = newWatchIntevalInput(input.WatchCandidate)
+}
+
+func (root *Root) setWriteBAMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = WriteBA
+	input.EventInput = newWriteBAInput(input.WriteBACandidate)
 }
 
 func (root *Root) setGoLineMode() {
@@ -705,6 +721,42 @@ func (t *watchIntervalInput) Up(str string) string {
 
 // Down returns strings when the down key is pressed during input.
 func (t *watchIntervalInput) Down(str string) string {
+	return t.clist.down()
+}
+
+// writeBAInput represents the WatchInteval input mode.
+type writeBAInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+// newWatchIntevalInputt returns WatchIntevalInput.
+func newWriteBAInput(clist *candidate) *writeBAInput {
+	return &writeBAInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (t *writeBAInput) Prompt() string {
+	return "WriteAndQuit Before:After:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (t *writeBAInput) Confirm(str string) tcell.Event {
+	t.value = str
+	t.clist.list = toLast(t.clist.list, str)
+	t.clist.p = 0
+	t.SetEventNow()
+	return t
+}
+
+// Up returns strings when the up key is pressed during input.
+func (t *writeBAInput) Up(str string) string {
+	return t.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (t *writeBAInput) Down(str string) string {
 	return t.clist.down()
 }
 

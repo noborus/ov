@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"strings"
 	"sync"
 	"syscall"
 
@@ -95,11 +94,6 @@ type Root struct {
 	// headerLen is the actual header length when wrapped.
 	headerLen int
 
-	// bottomLN is the last line number displayed.
-	bottomLN int
-	// bottomLX is the leftmost X position on the last line.
-	bottomLX int
-
 	// statusPos is the position of the status line.
 	statusPos int
 	// minStartX is the minimum start position of x.
@@ -182,8 +176,15 @@ type Config struct {
 
 	// Mouse support disable.
 	DisableMouse bool
-	// AfterWrite writes the current screen on exit.
-	AfterWrite bool
+	// IsWriteOriginal is true, write the current screen on quit.
+	IsWriteOriginal bool
+	// BeforeWriteOriginal specifies the number of lines before the current position.
+	// 0 is the top of the current screen
+	BeforeWriteOriginal int
+	// AfterWriteOriginal specifies the number of lines after the current position.
+	// 0 specifies the bottom of the screen.
+	AfterWriteOriginal int
+
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
@@ -251,6 +252,8 @@ const (
 	// LogDoc is Error screen mode.
 	LogDoc
 )
+
+const MaxWriteLog int = 10
 
 var (
 	// ErrOutOfRange indicates that value is out of range.
@@ -574,7 +577,7 @@ func (root *Root) Run() error {
 	root.ViewSync()
 	// Exit if fits on screen
 	if root.QuitSmall && root.docSmall() {
-		root.AfterWrite = true
+		root.IsWriteOriginal = true
 		return nil
 	}
 
@@ -727,38 +730,25 @@ func (root *Root) docSmall() bool {
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
 	m := root.Doc
-	p := 0
-	for n := m.topLN; ; n++ {
-		if n >= m.BufEndNum() {
-			break
-		}
-
-		lc, err := m.contentsLN(n, root.Doc.TabWidth)
-		if err != nil {
-			log.Println(err, n)
-			continue
-		}
-		p += 1 + (len(lc) / root.vWidth)
-		if p >= root.vHight {
-			break
-		}
-
-		fmt.Println(m.GetLine(n))
+	if m.bottomLN == 0 {
+		m.bottomLN = m.BufEndNum()
 	}
+
+	start := max(0, m.topLN-root.BeforeWriteOriginal)
+	end := m.bottomLN
+	if root.AfterWriteOriginal != 0 {
+		end = m.topLN + root.AfterWriteOriginal - 1
+	}
+
+	m.Export(os.Stdout, start, end)
 }
 
 // WriteLog write to the log terminal.
 func (root *Root) WriteLog() {
-	maxWriteLog := 10
 	m := root.logDoc
-
-	n := m.BufEndNum() - maxWriteLog
-	for i := 0; i < maxWriteLog; i++ {
-		str := strings.ReplaceAll(m.GetLine(n+i), "\n", "")
-		if len(str) > 0 {
-			fmt.Fprintln(os.Stderr, str)
-		}
-	}
+	start := max(0, m.BufEndNum()-MaxWriteLog)
+	end := m.BufEndNum()
+	m.Export(os.Stdout, start, end)
 }
 
 // leftMostX returns a list of left - most x positions when wrapping.

@@ -4,6 +4,8 @@
 # CaseSensitive: false
 # RegexpSearch: false
 # Incsearch: ftrue
+# BeforeWriteOriginal: 1000
+# AfterWriteOriginal: 0
 
 General:
   TabWidth: 8

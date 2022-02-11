@@ -354,6 +354,36 @@ func (root *Root) setWatchInterval(input string) {
 	root.setMessagef("Set watch interval %d", interval)
 }
 
+func (root *Root) setWriteBA(input string) {
+	ba := strings.Split(input, ":")
+	bstr := ba[0]
+	if bstr == "" {
+		bstr = "0"
+	}
+	before, err := strconv.Atoi(bstr)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	root.BeforeWriteOriginal = before
+
+	if len(ba) > 1 {
+		astr := ba[1]
+		if astr == "" {
+			astr = "0"
+		}
+		after, err := strconv.Atoi(astr)
+		if err != nil {
+			root.setMessage(ErrInvalidNumber.Error())
+			return
+		}
+		root.AfterWriteOriginal = after
+	}
+	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
+	root.IsWriteOriginal = true
+	root.Quit()
+}
+
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
 	root.ViewSync()

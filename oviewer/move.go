@@ -62,9 +62,10 @@ func (root *Root) movePgUp() {
 
 // Moves down one screen.
 func (root *Root) movePgDn() {
+	m := root.Doc
 	root.resetSelect()
-	y := root.bottomLN - root.Doc.firstLine()
-	x := root.bottomLX
+	y := m.bottomLN - m.firstLine()
+	x := m.bottomLX
 	root.limitMoveDown(x, y)
 }
 

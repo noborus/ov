@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -75,6 +76,11 @@ type Document struct {
 	topLN int
 	// topLX represents the x position of the top line.
 	topLX int
+	// bottomLN is the last line number displayed.
+	bottomLN int
+	// bottomLX is the leftmost X position on the last line.
+	bottomLX int
+
 	// x is the starting position of the current x.
 	x int
 	// columnNum is the number of columns.
@@ -120,6 +126,21 @@ func (m *Document) GetLine(n int) string {
 		return ""
 	}
 	return m.lines[n]
+}
+
+// CurrentLN returns the currently displayed line number.
+func (m *Document) CurrentLN() int {
+	return m.topLN
+}
+
+// Export exports the document in the specified range.
+func (m *Document) Export(w io.Writer, start int, end int) {
+	for n := start; n <= end; n++ {
+		if n >= m.BufEndNum() {
+			break
+		}
+		fmt.Fprintln(w, m.GetLine(n))
+	}
 }
 
 // BufEndNum return last line number.
