@@ -276,7 +276,7 @@ func parseCSI(params string) ovStyle {
 			style.Background = colorName(int(tcell.Color(colorNumber - 92)))
 		case "38", "48":
 			var i int
-			i, style = csColor(style, fields)
+			i, style = csColor(style, fields[index:])
 			index += i
 		}
 	}
@@ -284,65 +284,30 @@ func parseCSI(params string) ovStyle {
 }
 
 func csColor(style ovStyle, fields []string) (int, ovStyle) {
-	var color string
-	var color2 string
-	var field2 string
+	if len(fields) < 2 {
+		return 1, style
+	}
 
-	field := fields[0]
+	var color string
 	index := 0
-	if len(fields) > index+1 {
+	fg := fields[index]
+	index++
+	if fields[index] == "5" && len(fields) > index+1 { // 8-bit colors.
 		index++
-		if fields[index] == "5" && len(fields) > index+1 { // 8-bit colors.
-			index++
-			c, _ := strconv.Atoi(fields[index])
-			color = colorName(c)
-			// both
-			if len(fields) > index+3 {
-				index++
-				field2 = fields[index]
-				index++
-				// fields[index] == 5
-				index++
-				c, _ := strconv.Atoi(fields[index])
-				color2 = colorName(c)
-			}
-		} else if fields[index] == "2" && len(fields) > index+3 { // 24-bit colors.
-			index++
-			red, _ := strconv.Atoi(fields[index])
-			index++
-			green, _ := strconv.Atoi(fields[index])
-			index++
-			blue, _ := strconv.Atoi(fields[index])
-			color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
-			// both
-			if len(fields) > index+5 {
-				index++
-				field2 = fields[index]
-				index++
-				// fields[index] == 2
-				index++
-				red, _ := strconv.Atoi(fields[index])
-				index++
-				green, _ := strconv.Atoi(fields[index])
-				index++
-				blue, _ := strconv.Atoi(fields[index])
-				color2 = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
-			}
-		}
+		c, _ := strconv.Atoi(fields[index])
+		color = colorName(c)
+	} else if fields[index] == "2" && len(fields) > index+3 { // 24-bit colors.
+		red, _ := strconv.Atoi(fields[index+1])
+		green, _ := strconv.Atoi(fields[index+2])
+		blue, _ := strconv.Atoi(fields[index+3])
+		index += 3
+		color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
 	}
 	if len(color) > 0 {
-		if field == "38" {
+		if fg == "38" {
 			style.Foreground = color
 		} else {
 			style.Background = color
-		}
-		// both
-		if len(color2) > 0 {
-			if field2 == "38" {
-				style.Foreground = color2
-			} else {
-				style.Background = color2
-			}
 		}
 	}
 	return index, style
