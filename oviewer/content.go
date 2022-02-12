@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -48,10 +49,12 @@ var EOFContent = content{
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
 
+var csiCache sync.Map
+
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
 func parseString(str string, tabWidth int) lineContents {
-	lc := lineContents{}
+	lc := make(lineContents, 0, len(str))
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
@@ -88,7 +91,7 @@ func parseString(str string, tabWidth int) lineContents {
 			continue
 		case ansiControlSequence:
 			if runeValue == 'm' {
-				style = csToStyle(style, csiParameter)
+				style = csToStyle(style, csiParameter.String())
 			} else if runeValue >= 'A' && runeValue <= 'T' {
 				// Ignore.
 			} else {
@@ -213,96 +216,122 @@ func lastContent(lc lineContents) content {
 }
 
 // csToStyle returns tcell.Style from the control sequence.
-func csToStyle(style tcell.Style, csiParameter *bytes.Buffer) tcell.Style {
-	fields := strings.Split(csiParameter.String(), ";")
-	if len(fields) == 1 {
-		if fields[0] == "0" || fields[0] == "" {
-			style = tcell.StyleDefault.Normal()
-		}
+func csToStyle(style tcell.Style, params string) tcell.Style {
+	if params == "0" || params == "" || params == ";" {
+		return tcell.StyleDefault.Normal()
 	}
-FieldLoop:
-	for index, field := range fields {
+	if s, ok := csiCache.Load(params); ok {
+		style = applyStyle(style, s.(ovStyle))
+		return style
+	}
+
+	s := parseCSI(params)
+	csiCache.Store(params, s)
+	style = applyStyle(style, s)
+	return style
+}
+
+func parseCSI(params string) ovStyle {
+	style := ovStyle{}
+	fields := strings.Split(params, ";")
+	fl := len(fields)
+	for index := 0; index < fl; index++ {
+		field := fields[index]
 		switch field {
 		case "1", "01":
-			style = style.Bold(true)
+			style.Bold = true
 		case "2", "02":
-			style = style.Dim(true)
+			style.Dim = true
 		case "3", "03":
-			style = style.Italic(true)
+			style.Italic = true
 		case "4", "04":
-			style = style.Underline(true)
+			style.Underline = true
 		case "5", "05":
-			style = style.Blink(true)
+			style.Blink = true
 		case "6", "06":
-			style = style.Blink(true)
+			style.Blink = true
 		case "7", "07":
-			style = style.Reverse(true)
+			style.Reverse = true
 		case "8", "08":
-			style = style.Reverse(true)
+			style.Reverse = true
 		case "9", "09":
-			style = style.StrikeThrough(true)
+			style.StrikeThrough = true
 		case "22", "24", "25", "27":
-			style = style.Normal()
+			style = ovStyle{}
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Foreground(tcell.ColorValid + tcell.Color(colorNumber-30))
+			style.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
 		case "39":
-			style = style.Foreground(tcell.ColorDefault)
+			style.Foreground = "default"
 		case "40", "41", "42", "43", "44", "45", "46", "47":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Background(tcell.ColorValid + tcell.Color(colorNumber-40))
+			style.Background = colorName(int(tcell.Color(colorNumber - 40)))
 		case "49":
-			style = style.Background(tcell.ColorDefault)
+			style.Background = "default"
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Foreground(tcell.ColorValid + tcell.Color(colorNumber-82))
+			style.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
 		case "100", "101", "102", "103", "104", "105", "106", "107":
 			colorNumber, _ := strconv.Atoi(field)
-			style = style.Background(tcell.ColorValid + tcell.Color(colorNumber-92))
+			style.Background = colorName(int(tcell.Color(colorNumber - 92)))
 		case "38", "48":
 			var color string
 			var color2 string
 			var field2 string
 			if len(fields) > index+1 {
-				if fields[index+1] == "5" && len(fields) > index+2 { // 8-bit colors.
-					c, _ := strconv.Atoi(fields[index+2])
+				index++
+				if fields[index] == "5" && len(fields) > index+1 { // 8-bit colors.
+					index++
+					c, _ := strconv.Atoi(fields[index])
 					color = colorName(c)
 					// both
-					if len(fields) > index+5 {
-						field2 = fields[index+3]
-						c, _ := strconv.Atoi(fields[index+5])
+					if len(fields) > index+3 {
+						index++
+						field2 = fields[index]
+						index++
+						// fields[index] == 5
+						index++
+						c, _ := strconv.Atoi(fields[index])
 						color2 = colorName(c)
 					}
-				} else if fields[index+1] == "2" && len(fields) > index+4 { // 24-bit colors.
-					red, _ := strconv.Atoi(fields[index+2])
-					green, _ := strconv.Atoi(fields[index+3])
-					blue, _ := strconv.Atoi(fields[index+4])
+				} else if fields[index] == "2" && len(fields) > index+3 { // 24-bit colors.
+					index++
+					red, _ := strconv.Atoi(fields[index])
+					index++
+					green, _ := strconv.Atoi(fields[index])
+					index++
+					blue, _ := strconv.Atoi(fields[index])
 					color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
 					// both
-					if len(fields) > index+9 {
-						field2 = fields[index+5]
-						red, _ := strconv.Atoi(fields[index+7])
-						green, _ := strconv.Atoi(fields[index+8])
-						blue, _ := strconv.Atoi(fields[index+9])
+					if len(fields) > index+5 {
+						index++
+						field2 = fields[index]
+						index++
+						// fields[index] == 2
+						index++
+						red, _ := strconv.Atoi(fields[index])
+						index++
+						green, _ := strconv.Atoi(fields[index])
+						index++
+						blue, _ := strconv.Atoi(fields[index])
 						color2 = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
 					}
 				}
 			}
 			if len(color) > 0 {
 				if field == "38" {
-					style = style.Foreground(tcell.GetColor(color))
+					style.Foreground = color
 				} else {
-					style = style.Background(tcell.GetColor(color))
+					style.Background = color
 				}
 				// both
 				if len(color2) > 0 {
 					if field2 == "38" {
-						style = style.Foreground(tcell.GetColor(color2))
+						style.Foreground = color2
 					} else {
-						style = style.Background(tcell.GetColor(color2))
+						style.Background = color2
 					}
 				}
-				break FieldLoop
 			}
 		}
 	}
