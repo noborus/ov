@@ -130,7 +130,7 @@ type general struct {
 	ColumnDelimiter string
 	// FollowMode is the follow mode.
 	FollowMode bool
-	//FollowAll is a follow mode for all documents.
+	// FollowAll is a follow mode for all documents.
 	FollowAll bool
 	// WatchInterval is the watch interval (seconds).
 	WatchInterval int
@@ -274,6 +274,8 @@ var (
 	ErrFailedKeyBind = errors.New("failed to set keybind")
 	// ErrSignalCatch indicates that the signal has been caught.
 	ErrSignalCatch = errors.New("signal catch")
+	// ErrAlreadyClose indicates that it is already closed.
+	ErrAlreadyClose = errors.New("already closed")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.

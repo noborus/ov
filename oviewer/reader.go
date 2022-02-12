@@ -167,7 +167,7 @@ func (m *Document) startFollowMode(ctx context.Context) {
 		// Wait for the file to open until it changes.
 		select {
 		case <-ctx.Done():
-			log.Println("context cancel")
+			log.Println("follow mode cancel")
 			return
 		case <-m.changCh:
 		}
@@ -176,7 +176,7 @@ func (m *Document) startFollowMode(ctx context.Context) {
 
 	r := compressedFormatReader(m.CFormat, m.file)
 	if err := m.ContinueReadAll(ctx, r); err != nil {
-		log.Printf("%s cannot open as follow mode %v", m.FileName, err)
+		log.Printf("%s follow mode read %v", m.FileName, err)
 	}
 }
 
@@ -254,8 +254,7 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Continue Read cancel")
-			return nil
+			return ctx.Err()
 		default:
 		}
 		if m.checkClose() {
@@ -304,7 +303,7 @@ func (m *Document) checkAndReset() {
 
 func (m *Document) reload() error {
 	if (m.file == os.Stdin && m.BufEOF()) || !m.seekable && m.checkClose() {
-		return fmt.Errorf("already closed %s", m.FileName)
+		return fmt.Errorf("%w %s", ErrAlreadyClose, m.FileName)
 	}
 
 	if m.seekable {
@@ -348,8 +347,5 @@ func (m *Document) reset() {
 }
 
 func (m *Document) checkClose() bool {
-	if atomic.LoadInt32(&m.closed) == 1 {
-		return true
-	}
-	return false
+	return atomic.LoadInt32(&m.closed) == 1
 }

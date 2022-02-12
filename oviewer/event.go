@@ -11,10 +11,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-var (
-	// UpdateInterval is the update interval that calls eventUpdate().
-	UpdateInterval time.Duration = 50
-)
+// UpdateInterval is the update interval that calls eventUpdate().
+var UpdateInterval time.Duration = 50
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
