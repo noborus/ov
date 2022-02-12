@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -51,6 +52,7 @@ type Document struct {
 	// notify when a file changes.
 	changCh chan struct{}
 
+	cancel context.CancelFunc
 	// 1 if there is a closed.
 	closed int32
 

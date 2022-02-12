@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -149,12 +150,14 @@ func (m *Document) onceFollowMode() {
 	if atomic.SwapInt32(&m.openFollow, 1) == 1 {
 		return
 	}
-	go m.startFollowMode()
+	ctx := context.Background()
+	ctx, m.cancel = context.WithCancel(ctx)
+	go m.startFollowMode(ctx)
 }
 
 // startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
-func (m *Document) startFollowMode() {
+func (m *Document) startFollowMode(ctx context.Context) {
 	if m.file == nil {
 		return
 	}
@@ -162,12 +165,17 @@ func (m *Document) startFollowMode() {
 	<-m.followCh
 	if m.seekable {
 		// Wait for the file to open until it changes.
-		<-m.changCh
+		select {
+		case <-ctx.Done():
+			log.Println("context cancel")
+			return
+		case <-m.changCh:
+		}
 		m.file = m.openFollowFile()
 	}
 
 	r := compressedFormatReader(m.CFormat, m.file)
-	if err := m.ContinueReadAll(r); err != nil {
+	if err := m.ContinueReadAll(ctx, r); err != nil {
 		log.Printf("%s cannot open as follow mode %v", m.FileName, err)
 	}
 }
@@ -241,9 +249,15 @@ func (m *Document) ReadAll(r io.Reader) error {
 }
 
 // ContinueReadAll continues to read even if it reaches EOF.
-func (m *Document) ContinueReadAll(r io.Reader) error {
+func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	reader := bufio.NewReader(r)
 	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Continue Read cancel")
+			return nil
+		default:
+		}
 		if m.checkClose() {
 			return nil
 		}
@@ -294,6 +308,9 @@ func (m *Document) reload() error {
 	}
 
 	if m.seekable {
+		if m.cancel != nil {
+			m.cancel()
+		}
 		if !m.checkClose() && m.file != nil {
 			if err := m.close(); err != nil {
 				log.Println(err)
