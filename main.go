@@ -285,7 +285,6 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("stream", "", false, "stream mode reset by delimiter")
 	_ = viper.BindPFlag("Stream", rootCmd.PersistentFlags().Lookup("stream"))
-
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -30,7 +30,6 @@ func Parse_Helper(b *testing.B, fileName string) {
 
 func BenchmarkDraw_Normal(b *testing.B) {
 	Draw_Helper(b, "../testdata/normal.txt")
-
 }
 
 func BenchmarkDraw_AnsiEscape(b *testing.B) {

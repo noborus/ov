@@ -64,17 +64,17 @@ func (root *Root) closeFile() {
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
-func (root *Root) reload(m *Document) error {
+func (root *Root) reload(m *Document) {
 	if m.preventReload {
-		return fmt.Errorf("cannot reload: %s", m.FileName)
+		root.setMessagef("cannot reload: %s", m.FileName)
+		return
 	}
 
 	if err := m.reload(); err != nil {
-		return fmt.Errorf("cannot reload: %w", err)
+		log.Printf("cannot reload: %s", err)
+		return
 	}
 	time.Sleep(100 * time.Millisecond)
-
-	return nil
 }
 
 func (root *Root) stream() {
