@@ -437,7 +437,7 @@ func Test_csToStyle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := csToStyle(tt.args.style, tt.args.csiParameter); !reflect.DeepEqual(got, tt.want) {
+			if got := csToStyle(tt.args.style, tt.args.csiParameter.String()); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("csToStyle() = %v, want %v", got, tt.want)
 				gfg, gbg, gattr := got.Decompose()
 				wfg, wbg, wattr := tt.want.Decompose()
