@@ -422,12 +422,14 @@ Flags:
   -i, --case-sensitive            case-sensitive in search
   -d, --column-delimiter string   column delimiter (default ",")
   -c, --column-mode               column mode
-      --completion                generate completion script [bash|zsh|fish|powershell]
+      --completion string         generate completion script [bash|zsh|fish|powershell]
       --config string             config file (default is $HOME/.ov.yaml)
       --debug                     debug mode
       --disable-mouse             disable mouse support
   -e, --exec                      exec command
   -X, --exit-write                output the current screen when exiting
+  -a, --exit-write-after int      NUM after the current lines when exiting
+  -b, --exit-write-before int     NUM before the current lines when exiting
   -A, --follow-all                follow all
   -f, --follow-mode               follow mode
   -H, --header int                number of header rows to fix
@@ -438,8 +440,10 @@ Flags:
   -F, --quit-if-one-screen        quit if the output fits on one screen
       --regexp-search             regular expression search
       --skip-lines int            skip the number of lines
+      --stream                    stream mode reset by delimiter
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information
+  -T, --watch int                 watch mode interval
   -w, --wrap                      wrap mode (default true)
 ```
 
@@ -451,6 +455,8 @@ It can also be changed after startup.
  [Escape], [q]                * quit
  [ctrl+c]                     * cancel
  [Q]                          * output screen and quit
+ [ctrl+q]                     * set output screen and quit
+ [ctrl+z]                     * suspend
  [h], [ctrl+f1], [ctrl+alt+c] * display help screen
  [ctrl+f2], [ctrl+alt+e]      * display log screen
  [ctrl+l]                     * screen sync
@@ -509,6 +515,14 @@ It can also be changed after startup.
  [H]                          * number of header lines
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
+
+	Close and reload
+
+ [ctrl+F9], [ctrl+alt+s]      * close file
+ [F5], [ctrl+alt+l]           * reload file
+ [F4], [ctrl+alt+w]           * watch mode
+ [ctrl+w]                     * set watch interval
+ [ctrl+alt+p], [F6]           * stream mode
 
 	Key binding when typing
 

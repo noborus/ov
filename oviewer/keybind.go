@@ -10,7 +10,7 @@ import (
 
 const (
 	actionExit           = "exit"
-	actionWriteBA        = "exitWriteBA"
+	actionWriteBA        = "set_write_exit"
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSuspend        = "suspend"
@@ -136,13 +136,13 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
 		actionFollowAll:      {"ctrl+a"},
-		actionCloseFile:      {"ctrl+alt+s", "ctrl+F9"},
-		actionReload:         {"ctrl+alt+l", "F5"},
-		actionWatch:          {"ctrl+alt+w", "F4"},
+		actionCloseFile:      {"ctrl+F9", "ctrl+alt+s"},
+		actionReload:         {"F5", "ctrl+alt+l"},
+		actionWatch:          {"F4", "ctrl+alt+w"},
 		actionWatchInterval:  {"ctrl+w"},
 		actionStream:         {"ctrl+alt+p", "F6"},
-		actionHelp:           {"h"},
-		actionLogDoc:         {"ctrl+alt+e"},
+		actionHelp:           {"h", "ctrl+f1", "ctrl+alt+c"},
+		actionLogDoc:         {"ctrl+f2", "ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
