@@ -49,6 +49,7 @@ var EOFContent = content{
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
 
+// csicache caches escape sequences.
 var csiCache sync.Map
 
 // parseString converts a string to lineContents.
@@ -65,7 +66,8 @@ func parseString(str string, tabWidth int) lineContents {
 
 	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {
-		runeValue := gr.Runes()[0]
+		runes := gr.Runes()
+		runeValue := runes[0]
 		c := DefaultContent
 		switch state {
 		case ansiEscape:
@@ -162,8 +164,8 @@ func parseString(str string, tabWidth int) lineContents {
 			}
 		case 1:
 			c.mainc = runeValue
-			if len(gr.Runes()) > 1 {
-				c.combc = gr.Runes()[1:]
+			if len(runes) > 1 {
+				c.combc = runes[1:]
 			}
 			c.width = 1
 			c.style = style
@@ -176,8 +178,8 @@ func parseString(str string, tabWidth int) lineContents {
 			tabX++
 		case 2:
 			c.mainc = runeValue
-			if len(gr.Runes()) > 1 {
-				c.combc = gr.Runes()[1:]
+			if len(runes) > 1 {
+				c.combc = runes[1:]
 			}
 			c.width = 2
 			c.style = style
@@ -231,6 +233,7 @@ func csToStyle(style tcell.Style, params string) tcell.Style {
 	return style
 }
 
+// parseCSI actually parses the style and returns ovStyle.
 func parseCSI(params string) ovStyle {
 	style := ovStyle{}
 	fields := strings.Split(params, ";")
@@ -283,6 +286,7 @@ func parseCSI(params string) ovStyle {
 	return style
 }
 
+// csColor parses 8-bit color and 24-bit color.
 func csColor(style ovStyle, fields []string) (int, ovStyle) {
 	if len(fields) < 2 {
 		return 1, style
@@ -313,6 +317,7 @@ func csColor(style ovStyle, fields []string) (int, ovStyle) {
 	return index, style
 }
 
+// colorName returns a string that can be used to specify the color of tcell.
 func colorName(colorNumber int) string {
 	if colorNumber <= 7 {
 		return lookupColor(colorNumber)

@@ -77,10 +77,6 @@ func (root *Root) reload(m *Document) {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func (root *Root) stream() {
-	root.Doc.Stream = !root.Doc.Stream
-}
-
 func (root *Root) watch() {
 	root.Doc.WatchMode = !root.Doc.WatchMode
 	if root.Doc.WatchMode {

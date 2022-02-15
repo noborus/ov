@@ -52,6 +52,10 @@ KeyBind:
         - "ctrl+c"
     write_exit:
         - "Q"
+    set_write_exit:
+        - "ctrl+q"
+    suspend:
+        - "ctrl+z"
     sync:
         - "r"
         - "ctrl+l"
@@ -63,9 +67,6 @@ KeyBind:
         - "ctrl+alt+w"
     watch_interval:
         - "ctrl+w"
-    stream:
-        - "S"
-        - "ctrl+alt+p"
     follow_mode:
         - "F"
     follow_all:

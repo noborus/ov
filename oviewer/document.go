@@ -69,8 +69,6 @@ type Document struct {
 	// WatchMode is watch mode.
 	WatchMode bool
 	ticker    *time.Ticker
-	// stream is stream mode.
-	Stream bool
 
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
@@ -111,7 +109,6 @@ func NewDocument() (*Document, error) {
 		lastContentsNum: -1,
 		seekable:        true,
 		preventReload:   false,
-		Stream:          StreamMode,
 	}
 
 	if err := m.NewCache(); err != nil {

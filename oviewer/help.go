@@ -34,6 +34,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionExit, "quit")
 	k.writeKeyBind(&b, actionCancel, "cancel")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
+	k.writeKeyBind(&b, actionWriteBA, "set output screen and quit")
 	k.writeKeyBind(&b, actionSuspend, "suspend")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
@@ -100,7 +101,6 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionReload, "reload file")
 	k.writeKeyBind(&b, actionWatch, "watch mode")
 	k.writeKeyBind(&b, actionWatchInterval, "set watch interval")
-	k.writeKeyBind(&b, actionStream, "stream mode")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tKey binding when typing\n"))
 	fmt.Fprint(&b, "\n")

@@ -284,21 +284,9 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 			continue
 		}
 
-		if m.Stream {
-			m.checkAndReset()
-		}
-
 		m.append(line.String())
 		line.Reset()
 	}
-}
-
-func (m *Document) checkAndReset() {
-	if m.endNum == 0 || m.lines[m.endNum-1] != "" {
-		return
-	}
-	m.Caption = strings.TrimSpace(m.lines[0])
-	m.reset()
 }
 
 func (m *Document) reload() error {

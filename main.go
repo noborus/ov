@@ -58,8 +58,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if config.General.ColumnDelimiter == "\\t" {
 			config.General.ColumnDelimiter = "\t"
 		}
-		// stream mode must be set first.
-		oviewer.StreamMode = config.Stream
 
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
@@ -282,9 +280,6 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
-
-	rootCmd.PersistentFlags().BoolP("stream", "", false, "stream mode reset by delimiter")
-	_ = viper.BindPFlag("Stream", rootCmd.PersistentFlags().Lookup("stream"))
 }
 
 // initConfig reads in config file and ENV variables if set.

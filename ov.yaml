@@ -55,6 +55,10 @@ KeyBind:
         - "ctrl+c"
     write_exit:
         - "Q"
+    set_write_exit:
+        - "ctrl+q"
+    suspend:
+        - "ctrl+z"
     sync:
         - "ctrl+l"
     reload:
@@ -65,9 +69,6 @@ KeyBind:
         - "F4"
     watch_interval:
         - "ctrl+w"
-    stream:
-        - "ctrl+alt+p"
-        - "F6"
     follow_mode:
         - "ctrl+f"
     follow_all:
@@ -75,6 +76,7 @@ KeyBind:
     help:
         - "h"
         - "ctrl+alt+c"
+        - "ctrl+f1"
     logdoc:
         - "ctrl+f2"
         - "ctrl+alt+e"
@@ -154,8 +156,6 @@ KeyBind:
     toggle_mouse:
         - "ctrl+f3"
         - "ctrl+alt+r"
-    suspend:
-        - "ctrl+z"
 
 Mode:
   Psql:
