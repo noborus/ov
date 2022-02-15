@@ -41,6 +41,11 @@ archives:
     builds:
     - ov-linux
     - ov-other
+    files:
+      - LICENSE
+      - README.md
+      - ov.yaml
+      - ov-less.yaml
     format: zip
 
 nfpms:
