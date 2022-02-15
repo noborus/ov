@@ -440,7 +440,6 @@ Flags:
   -F, --quit-if-one-screen        quit if the output fits on one screen
       --regexp-search             regular expression search
       --skip-lines int            skip the number of lines
-      --stream                    stream mode reset by delimiter
   -x, --tab-width int             tab stop width (default 8)
   -v, --version                   display version information
   -T, --watch int                 watch mode interval
@@ -522,7 +521,6 @@ It can also be changed after startup.
  [F5], [ctrl+alt+l]           * reload file
  [F4], [ctrl+alt+w]           * watch mode
  [ctrl+w]                     * set watch interval
- [ctrl+alt+p], [F6]           * stream mode
 
 	Key binding when typing
 

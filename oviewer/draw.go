@@ -300,9 +300,6 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 	if root.General.FollowAll {
 		modeStatus = "(Follow All)"
 	}
-	if root.Doc.Stream {
-		modeStatus += "(Stream)"
-	}
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
 	}

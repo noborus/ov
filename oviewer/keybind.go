@@ -21,7 +21,6 @@ const (
 	actionReload         = "reload"
 	actionWatch          = "watch"
 	actionWatchInterval  = "watch_interval"
-	actionStream         = "stream"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
 	actionMoveDown       = "down"
@@ -78,7 +77,6 @@ func (root *Root) setHandler() map[string]func() {
 		actionReload:         root.Reload,
 		actionWatch:          root.watch,
 		actionWatchInterval:  root.setWatchIntervalMode,
-		actionStream:         root.stream,
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
@@ -140,7 +138,6 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionReload:         {"F5", "ctrl+alt+l"},
 		actionWatch:          {"F4", "ctrl+alt+w"},
 		actionWatchInterval:  {"ctrl+w"},
-		actionStream:         {"ctrl+alt+p", "F6"},
 		actionHelp:           {"h", "ctrl+f1", "ctrl+alt+c"},
 		actionLogDoc:         {"ctrl+f2", "ctrl+alt+e"},
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},

@@ -101,7 +101,6 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionReload, "reload file")
 	k.writeKeyBind(&b, actionWatch, "watch mode")
 	k.writeKeyBind(&b, actionWatchInterval, "set watch interval")
-	k.writeKeyBind(&b, actionStream, "stream mode")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tKey binding when typing\n"))
 	fmt.Fprint(&b, "\n")

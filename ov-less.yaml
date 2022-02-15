@@ -67,9 +67,6 @@ KeyBind:
         - "ctrl+alt+w"
     watch_interval:
         - "ctrl+w"
-    stream:
-        - "S"
-        - "ctrl+alt+p"
     follow_mode:
         - "F"
     follow_all:
