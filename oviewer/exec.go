@@ -26,6 +26,7 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
+	docout.preventReload = true
 
 	docerr, err := NewDocument()
 	if err != nil {
@@ -36,6 +37,7 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
+	docerr.preventReload = true
 
 	if err := command.Start(); err != nil {
 		return nil, err
@@ -47,6 +49,8 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 		atomic.StoreInt32(&docerr.changed, 1)
 		docout.FileName = "STDOUT(done)"
 		docerr.FileName = "STDERR(done)"
+		atomic.StoreInt32(&docout.closed, 1)
+		atomic.StoreInt32(&docerr.closed, 1)
 	}()
 
 	var reader io.Reader
