@@ -733,7 +733,7 @@ func (root *Root) WriteOriginal() {
 	}
 
 	start := max(0, m.topLN-root.BeforeWriteOriginal)
-	end := m.bottomLN
+	end := m.bottomLN - 1
 	if root.AfterWriteOriginal != 0 {
 		end = m.topLN + root.AfterWriteOriginal - 1
 	}
