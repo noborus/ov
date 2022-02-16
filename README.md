@@ -12,8 +12,8 @@ ov is a terminal pager.
 ![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
 
 <!-- vscode-markdown-toc -->
-* 1. [feature](#feature)
-* 2. [install](#install)
+* 1. [Feature](#Feature)
+* 2. [Install](#Install)
 	* 2.1. [deb package](#debpackage)
 	* 2.2. [rpm package](#rpmpackage)
 	* 2.3. [MacPorts (macOS)](#MacPortsmacOS)
@@ -24,12 +24,14 @@ ov is a terminal pager.
 	* 2.8. [go get(details or developer version)](#gogetdetailsordeveloperversion)
 * 3. [Usage](#Usage)
 	* 3.1. [basic usage](#basicusage)
-	* 3.2. [follow mode](#followmode)
-	* 3.3. [follow all mode](#followallmode)
-	* 3.4. [exec mode](#execmode)
-	* 3.5. [Search](#Search)
-	* 3.6. [Mark](#Mark)
-	* 3.7. [Mouse support](#Mousesupport)
+	* 3.2. [config](#config)
+	* 3.3. [follow mode](#followmode)
+	* 3.4. [follow all mode](#followallmode)
+	* 3.5. [exec mode](#execmode)
+	* 3.6. [Search](#Search)
+	* 3.7. [Mark](#Mark)
+	* 3.8. [Watch](#Watch)
+	* 3.9. [Mouse support](#Mousesupport)
 * 4. [Called from other commands](#Calledfromothercommands)
 	* 4.1. [psql](#psql)
 		* 4.1.1. [pgcli](#pgcli)
@@ -40,12 +42,11 @@ ov is a terminal pager.
 	* 4.5. [procs](#procs)
 	* 4.6. [bat](#bat)
 	* 4.7. [csv](#csv)
-* 5. [command option](#commandoption)
+* 5. [Command option](#Commandoption)
 * 6. [Key bindings](#Keybindings)
-* 7. [config](#config)
-* 8. [Customize](#Customize)
-	* 8.1. [Style customization](#Stylecustomization)
-	* 8.2. [Key binding customization](#Keybindingcustomization)
+* 7. [Customize](#Customize)
+	* 7.1. [Style customization](#Stylecustomization)
+	* 7.2. [Key binding customization](#Keybindingcustomization)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -53,7 +54,7 @@ ov is a terminal pager.
 	/vscode-markdown-toc-config -->
 <!-- /vscode-markdown-toc -->
 
-##  1. <a name='feature'></a>feature
+##  1. <a name='Feature'></a>Feature
 
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
@@ -68,7 +69,7 @@ ov is a terminal pager.
 * Supports the execution of commands that toggle both stdout and stder for display.
 * Supports incremental search and regular expression search.
 
-##  2. <a name='install'></a>install
+##  2. <a name='Install'></a>Install
 
 ###  2.1. <a name='debpackage'></a>deb package
 
@@ -166,7 +167,29 @@ Used by other commands by setting the environment variable **PAGER**.
 export PAGER=ov
 ```
 
-###  3.2. <a name='followmode'></a>follow mode
+###  3.2. <a name='config'></a>config
+
+You can set style and key bindings in the setting file.
+
+Create a `.ov.yaml` file in your user's home directory.
+
+for example.
+
+```filepath
+$HOME/.ov.yaml
+```
+
+Windows.
+
+```filepath
+%USERPROFILE%/.ov.yaml
+```
+
+Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
+
+If you like `less` key bindings, copy  [ovless.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
+
+###  3.3. <a name='followmode'></a>follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -180,7 +203,7 @@ ov --follow-mode /var/log/syslog
 
 ![ov-tail.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-tail.gif)
 
-###  3.3. <a name='followallmode'></a>follow all mode
+###  3.4. <a name='followallmode'></a>follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -188,7 +211,7 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.4. <a name='execmode'></a>exec mode
+###  3.5. <a name='execmode'></a>exec mode
 
 Execute the command to display stdout / stderr.
 Arguments after (`--`) are interpreted as command arguments.
@@ -199,7 +222,7 @@ ov --follow-all --exec -- make
 
 ![ov-exec.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-exec.gif)
 
-###  3.5. <a name='Search'></a>Search
+###  3.6. <a name='Search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -211,7 +234,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.6. <a name='Mark'></a>Mark
+###  3.7. <a name='Mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -221,7 +244,23 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.7. <a name='Mousesupport'></a>Mouse support
+###  3.8. <a name='Watch'></a>Watch
+
+`ov` has a watch mode that reloads every N seconds.
+
+When started with --watch or -t and N(seconds) option, it reloads every N seconds.
+
+for example.
+
+```console
+ov --watch 1 /proc/meminfo
+```
+
+If you specify a file, it will be reloaded.
+
+For pipes such as standard input(including named pipe), the read amount is reset.
+
+###  3.9. <a name='Mousesupport'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
@@ -407,7 +446,7 @@ ov -H1 -C -d',' -c MOCK_DATA.csv
 
 ![ov-csv.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-csv.png)
 
-##  5. <a name='commandoption'></a>command option
+##  5. <a name='Commandoption'></a>Command option
 
 ```console
 $ ov --help
@@ -529,15 +568,9 @@ It can also be changed after startup.
  [alt+i]                      * incremental search toggle
 ```
 
-##  7. <a name='config'></a>config
+##  7. <a name='Customize'></a>Customize
 
-You can set style and key bindings in the setting file.
-
-Please refer to the sample [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) configuration file.
-
-##  8. <a name='Customize'></a>Customize
-
-###  8.1. <a name='Stylecustomization'></a>Style customization
+###  7.1. <a name='Stylecustomization'></a>Style customization
 
 You can customize the following items.
 
@@ -562,7 +595,7 @@ StyleAlternate:
   Underline: true
 ```
 
-###  8.2. <a name='Keybindingcustomization'></a>Key binding customization
+###  7.2. <a name='Keybindingcustomization'></a>Key binding customization
 
 You can customize key bindings.
 
