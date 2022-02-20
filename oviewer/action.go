@@ -411,6 +411,6 @@ func (root *Root) prepareStartX() {
 func (root *Root) updateEndNum() {
 	root.debugMessage(fmt.Sprintf("Update EndNum:%d", root.Doc.BufEndNum()))
 	root.prepareStartX()
-	root.statusDraw()
+	root.drawStatus()
 	root.Screen.Sync()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -112,6 +113,46 @@ func NewDocument() (*Document, error) {
 	}
 
 	if err := m.NewCache(); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// OpenDocument opens a file and returns a Document.
+func OpenDocument(fileName string) (*Document, error) {
+	fi, err := os.Stat(fileName)
+	if err != nil {
+		return nil, err
+	}
+	if fi.IsDir() {
+		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
+	}
+
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	// named pipe.
+	if fi.Mode()&fs.ModeNamedPipe != 0 {
+		m.seekable = false
+	}
+
+	if err := m.ReadFile(fileName); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// STDINDocument returns a Document that reads stdin.
+func STDINDocument() (*Document, error) {
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	m.seekable = false
+	if err := m.ReadFile(""); err != nil {
 		return nil, err
 	}
 	return m, nil

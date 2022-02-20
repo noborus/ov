@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"os/signal"
@@ -348,39 +347,6 @@ func NewConfig() Config {
 	}
 }
 
-// Open reads the file named of the argument and return the structure of oviewer.
-// If there is no file name, create Root from standard input.
-// If there is only one file name, create Root from that file,
-// but return an error if the open is an error.
-// If there is more than one file name, create Root from multiple files.
-func Open(fileNames ...string) (*Root, error) {
-	var root *Root
-	var err error
-	switch len(fileNames) {
-	case 0:
-		root, err = openSTDIN()
-		if err != nil {
-			return nil, err
-		}
-	case 1:
-		m, err := openFile(fileNames[0])
-		if err != nil {
-			return nil, err
-		}
-		root, err = NewOviewer(m)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		root, err = openFiles(fileNames)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return root, nil
-}
-
 // NewRoot returns the structure of the oviewer.
 // NewRoot is a simplified version that can be used externally.
 func NewRoot(read io.Reader) (*Root, error) {
@@ -394,48 +360,48 @@ func NewRoot(read io.Reader) (*Root, error) {
 	return NewOviewer(m)
 }
 
+// Open reads the file named of the argument and return the structure of oviewer.
+// If there is no file name, create Root from standard input.
+// If there is only one file name, create Root from that file,
+// but return an error if the open is an error.
+// If there is more than one file name, create Root from multiple files.
+func Open(fileNames ...string) (*Root, error) {
+	switch len(fileNames) {
+	case 0:
+		return openSTDIN()
+	case 1:
+		return openFile(fileNames[0])
+	default:
+		return openFiles(fileNames)
+	}
+}
+
+// openSTDIN creates root with standard input.
 func openSTDIN() (*Root, error) {
-	docList := make([]*Document, 0, 1)
-	m, err := NewDocument()
+	m, err := STDINDocument()
 	if err != nil {
 		return nil, err
 	}
-
-	m.seekable = false
-	if err := m.ReadFile(""); err != nil {
-		return nil, err
-	}
-	docList = append(docList, m)
-	return NewOviewer(docList...)
+	return NewOviewer(m)
 }
 
-func openFile(fileName string) (*Document, error) {
-	fi, err := os.Stat(fileName)
+// openFile creates root in one file.
+// If there is only one file, an error will occur if the file fails to open.
+func openFile(fileName string) (*Root, error) {
+	m, err := OpenDocument(fileName)
 	if err != nil {
 		return nil, err
 	}
-	if fi.IsDir() {
-		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
-	}
-	m, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-
-	if fi.Mode()&fs.ModeNamedPipe != 0 {
-		m.seekable = false
-	}
-	if err := m.ReadFile(fileName); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return NewOviewer(m)
 }
 
+// openFiles opens multiple files and creates root.
+// It will continue even if there are files that fail to open.
 func openFiles(fileNames []string) (*Root, error) {
 	errors := make([]string, 0)
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
-		m, err := openFile(fileName)
+		m, err := OpenDocument(fileName)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("open error: %s", err))
 			continue
@@ -513,12 +479,9 @@ func (root *Root) setKeyConfig() (map[string][]string, error) {
 	return keyBind, nil
 }
 
+// SetKeyHandler assigns a new key handler.
 func (root *Root) SetKeyHandler(name string, keys []string, handler func()) error {
-	c := root.keyConfig
-	if err := setHandler(c, name, keys, handler); err != nil {
-		return err
-	}
-	return nil
+	return setHandler(root.keyConfig, name, keys, handler)
 }
 
 // Run starts the terminal pager.
@@ -563,7 +526,6 @@ func (root *Root) Run() error {
 			doc.WatchMode = true
 		}
 	}
-	root.Screen.Clear()
 
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
@@ -621,7 +583,7 @@ func (root *Root) setMessage(msg string) {
 	}
 	root.message = msg
 	root.debugMessage(msg)
-	root.statusDraw()
+	root.drawStatus()
 	root.Show()
 }
 
