@@ -555,7 +555,6 @@ func (root *Root) Run() error {
 			doc.WatchMode = true
 		}
 	}
-	root.Screen.Clear()
 
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
