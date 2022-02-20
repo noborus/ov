@@ -3,11 +3,16 @@ package oviewer
 import (
 	"bytes"
 	"io"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
+
+const cwd = ".."
+
+var testdata = filepath.Join(cwd, "testdata")
 
 func fakeScreen() (tcell.Screen, error) {
 	return tcell.NewSimulationScreen(""), nil
@@ -64,7 +69,7 @@ func TestOpen(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				fileNames: []string{"../testdata/test.txt"},
+				fileNames: []string{filepath.Join(testdata, "/test.txt")},
 			},
 			wantErr: false,
 		},
@@ -72,8 +77,8 @@ func TestOpen(t *testing.T) {
 			name: "test2",
 			args: args{
 				fileNames: []string{
-					"../testdata/test.txt",
-					"../testdata/test2.txt",
+					filepath.Join(testdata, "test.txt"),
+					filepath.Join(testdata, "test2.txt"),
 				},
 			},
 			wantErr: false,
@@ -81,14 +86,14 @@ func TestOpen(t *testing.T) {
 		{
 			name: "testErr",
 			args: args{
-				fileNames: []string{"../testdata/err.txt"},
+				fileNames: []string{filepath.Join(testdata, "err.txt")},
 			},
 			wantErr: true,
 		},
 		{
 			name: "testDir",
 			args: args{
-				fileNames: []string{"../testdata/"},
+				fileNames: []string{testdata},
 			},
 			wantErr: true,
 		},
@@ -162,7 +167,7 @@ func TestRoot_Run(t *testing.T) {
 				TabWidth:       8,
 				MarkStyleWidth: 1,
 			},
-			ovArgs:  []string{"../testdata/test.txt"},
+			ovArgs:  []string{filepath.Join(testdata, "test.txt")},
 			wantErr: false,
 		},
 		{
@@ -172,7 +177,7 @@ func TestRoot_Run(t *testing.T) {
 				MarkStyleWidth: 1,
 				Header:         1,
 			},
-			ovArgs:  []string{"../testdata/test.txt"},
+			ovArgs:  []string{filepath.Join(testdata, "test.txt")},
 			wantErr: false,
 		},
 	}

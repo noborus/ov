@@ -348,39 +348,6 @@ func NewConfig() Config {
 	}
 }
 
-// Open reads the file named of the argument and return the structure of oviewer.
-// If there is no file name, create Root from standard input.
-// If there is only one file name, create Root from that file,
-// but return an error if the open is an error.
-// If there is more than one file name, create Root from multiple files.
-func Open(fileNames ...string) (*Root, error) {
-	var root *Root
-	var err error
-	switch len(fileNames) {
-	case 0:
-		root, err = openSTDIN()
-		if err != nil {
-			return nil, err
-		}
-	case 1:
-		m, err := openFile(fileNames[0])
-		if err != nil {
-			return nil, err
-		}
-		root, err = NewOviewer(m)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		root, err = openFiles(fileNames)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return root, nil
-}
-
 // NewRoot returns the structure of the oviewer.
 // NewRoot is a simplified version that can be used externally.
 func NewRoot(read io.Reader) (*Root, error) {
@@ -392,6 +359,22 @@ func NewRoot(read io.Reader) (*Root, error) {
 		return nil, err
 	}
 	return NewOviewer(m)
+}
+
+// Open reads the file named of the argument and return the structure of oviewer.
+// If there is no file name, create Root from standard input.
+// If there is only one file name, create Root from that file,
+// but return an error if the open is an error.
+// If there is more than one file name, create Root from multiple files.
+func Open(fileNames ...string) (*Root, error) {
+	switch len(fileNames) {
+	case 0:
+		return openSTDIN()
+	case 1:
+		return openFile(fileNames[0])
+	default:
+		return openFiles(fileNames)
+	}
 }
 
 func openSTDIN() (*Root, error) {
@@ -409,33 +392,20 @@ func openSTDIN() (*Root, error) {
 	return NewOviewer(docList...)
 }
 
-func openFile(fileName string) (*Document, error) {
-	fi, err := os.Stat(fileName)
+// If there is only one file, an error will occur if the file fails to open.
+func openFile(fileName string) (*Root, error) {
+	m, err := open(fileName)
 	if err != nil {
 		return nil, err
 	}
-	if fi.IsDir() {
-		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
-	}
-	m, err := NewDocument()
-	if err != nil {
-		return nil, err
-	}
-
-	if fi.Mode()&fs.ModeNamedPipe != 0 {
-		m.seekable = false
-	}
-	if err := m.ReadFile(fileName); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return NewOviewer(m)
 }
 
 func openFiles(fileNames []string) (*Root, error) {
 	errors := make([]string, 0)
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
-		m, err := openFile(fileName)
+		m, err := open(fileName)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("open error: %s", err))
 			continue
@@ -455,6 +425,28 @@ func openFiles(fileNames []string) (*Root, error) {
 		log.Println(e)
 	}
 	return root, err
+}
+
+func open(fileName string) (*Document, error) {
+	fi, err := os.Stat(fileName)
+	if err != nil {
+		return nil, err
+	}
+	if fi.IsDir() {
+		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
+	}
+	m, err := NewDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	if fi.Mode()&fs.ModeNamedPipe != 0 {
+		m.seekable = false
+	}
+	if err := m.ReadFile(fileName); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // SetConfig sets config.
@@ -621,7 +613,7 @@ func (root *Root) setMessage(msg string) {
 	}
 	root.message = msg
 	root.debugMessage(msg)
-	root.statusDraw()
+	root.drawStatus()
 	root.Show()
 }
 

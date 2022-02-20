@@ -14,10 +14,9 @@ const statusline = 1
 func (root *Root) draw() {
 	m := root.Doc
 
-	root.Screen.Clear()
 	if root.vHight == 0 {
 		m.topLN = 0
-		root.statusDraw()
+		root.drawStatus()
 		root.Show()
 		return
 	}
@@ -42,7 +41,7 @@ func (root *Root) draw() {
 		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
 	}
 
-	root.statusDraw()
+	root.drawStatus()
 	root.Show()
 }
 
@@ -210,6 +209,7 @@ func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
+			root.clearEOL(root.startX+x, y)
 			lX = 0
 			lY++
 			break
@@ -235,6 +235,7 @@ func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc lineContents) (int, i
 	for x := 0; root.startX+x < root.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
+			root.clearEOL(root.startX+x, y)
 			break
 		}
 		content := DefaultContent
@@ -270,8 +271,9 @@ func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
 	}
 }
 
-// statusDraw draws a status line.
-func (root *Root) statusDraw() {
+// drawStatus draws a status line.
+func (root *Root) drawStatus() {
+	root.clearEOL(0, root.statusPos)
 	leftContents, cursorPos := root.leftStatus()
 	root.setContentString(0, root.statusPos, leftContents)
 
@@ -359,4 +361,11 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
 	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
+}
+
+// clearEOL clears from the specified position to the right end.
+func (root *Root) clearEOL(x int, y int) {
+	for ; x < root.vWidth; x++ {
+		root.Screen.SetContent(root.startX+x, y, ' ', nil, tcell.StyleDefault)
+	}
 }
