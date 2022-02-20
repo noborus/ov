@@ -378,18 +378,11 @@ func Open(fileNames ...string) (*Root, error) {
 
 // openSTDIN creates root with standard input.
 func openSTDIN() (*Root, error) {
-	docList := make([]*Document, 0, 1)
-	m, err := NewDocument()
+	m, err := STDINDocument()
 	if err != nil {
 		return nil, err
 	}
-
-	m.seekable = false
-	if err := m.ReadFile(""); err != nil {
-		return nil, err
-	}
-	docList = append(docList, m)
-	return NewOviewer(docList...)
+	return NewOviewer(m)
 }
 
 // openFile creates root in one file.
