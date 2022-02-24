@@ -63,19 +63,19 @@ func stripEscapeSequence(s string) string {
 }
 
 // getSearchMatch returns the searchMatch interface suitable for the search term.
-func getSearchMatch(searhWord string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) searchMatch {
-	if regexpSearch && searhWord != regexp.QuoteMeta(searhWord) {
+func getSearchMatch(word string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) searchMatch {
+	if regexpSearch && word != regexp.QuoteMeta(word) {
 		return regexpWord{
 			word: searchReg,
 		}
 	}
 	if caseSensitive {
 		return sensitiveWord{
-			word: searhWord,
+			word: word,
 		}
 	}
 	return searchWord{
-		word: strings.ToLower(searhWord),
+		word: strings.ToLower(word),
 	}
 }
 
