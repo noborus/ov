@@ -64,6 +64,7 @@ func (root *Root) closeFile() {
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
+// reload reload a current document.
 func (root *Root) reload(m *Document) {
 	if m.preventReload {
 		root.setMessagef("cannot reload: %s", m.FileName)
@@ -74,16 +75,19 @@ func (root *Root) reload(m *Document) {
 		log.Printf("cannot reload: %s", err)
 		return
 	}
+	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)
 }
 
-func (root *Root) watch() {
+// toggleWatch toggles watch mode.
+func (root *Root) toggleWatch() {
 	root.Doc.WatchMode = !root.Doc.WatchMode
 	if root.Doc.WatchMode {
 		root.watchStart()
 	}
 }
 
+// watchStart starts watch mode.
 func (root *Root) watchStart() {
 	m := root.Doc
 	m.WatchInterval = max(m.WatchInterval, 1)

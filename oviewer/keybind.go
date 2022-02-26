@@ -75,7 +75,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
 		actionReload:         root.Reload,
-		actionWatch:          root.watch,
+		actionWatch:          root.toggleWatch,
 		actionWatchInterval:  root.setWatchIntervalMode,
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
