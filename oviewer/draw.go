@@ -216,7 +216,7 @@ func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int
 		}
 		content := lc[lX+x]
 		if x+content.width+root.startX > root.vWidth {
-			// EOL
+			// Right edge.
 			lX += x
 			break
 		}
@@ -273,7 +273,7 @@ func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
-	root.clearEOL(0, root.statusPos)
+	root.clearLine(root.statusPos)
 	leftContents, cursorPos := root.leftStatus()
 	root.setContentString(0, root.statusPos, leftContents)
 
@@ -366,6 +366,13 @@ func (root *Root) setContentString(vx int, vy int, lc lineContents) {
 // clearEOL clears from the specified position to the right end.
 func (root *Root) clearEOL(x int, y int) {
 	for ; x < root.vWidth; x++ {
-		root.Screen.SetContent(root.startX+x, y, ' ', nil, tcell.StyleDefault)
+		root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault)
+	}
+}
+
+// clearLine clear the specified line.
+func (root *Root) clearLine(y int) {
+	for x := 0; x < root.vWidth; x++ {
+		root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault)
 	}
 }
