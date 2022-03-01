@@ -150,6 +150,10 @@ func (m *Document) onceFollowMode() {
 	if atomic.SwapInt32(&m.openFollow, 1) == 1 {
 		return
 	}
+	if m.file == nil {
+		return
+	}
+
 	ctx := context.Background()
 	ctx, m.cancel = context.WithCancel(ctx)
 	go m.startFollowMode(ctx)
@@ -158,10 +162,7 @@ func (m *Document) onceFollowMode() {
 // startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
 func (m *Document) startFollowMode(ctx context.Context) {
-	if m.file == nil {
-		return
-	}
-
+	defer m.cancel()
 	<-m.followCh
 	if m.seekable {
 		// Wait for the file to open until it changes.
