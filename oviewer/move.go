@@ -98,6 +98,17 @@ func (root *Root) moveHfDn() {
 	root.moveNumDown((root.statusPos - root.headerLen) / 2)
 }
 
+// numOfWrap returns the number of wrap from lX and lY.
+func (root *Root) numOfWrap(lX int, lY int) int {
+	m := root.Doc
+	listX, err := root.leftMostX(m.topLN + m.firstLine() + lY)
+	if err != nil {
+		root.debugMessage(fmt.Sprintf("numOfWrap %d:%s", m.topLN+lY, err))
+	}
+	wrap := numOfSlice(listX, lX)
+	return wrap
+}
+
 // numOfSlice returns what number x is in slice.
 func numOfSlice(listX []int, x int) int {
 	for n, v := range listX {
@@ -409,4 +420,24 @@ func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
 		n--
 	}
 	return lX, lN
+}
+
+// leftMostX returns a list of left - most x positions when wrapping.
+func (root *Root) leftMostX(lN int) ([]int, error) {
+	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
+	if err != nil {
+		return nil, err
+	}
+
+	listX := make([]int, 0, (len(lc)/root.vWidth)+1)
+	width := (root.vWidth - root.startX)
+
+	listX = append(listX, 0)
+	for n := width; n < len(lc); n += width {
+		if lc[n-1].width == 2 {
+			n--
+		}
+		listX = append(listX, n)
+	}
+	return listX, nil
 }
