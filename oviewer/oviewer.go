@@ -511,13 +511,7 @@ func (root *Root) Run() error {
 		root.Screen.EnableMouse()
 	}
 
-	// Call from man command.
-	manPN := os.Getenv("MAN_PN")
-	if len(manPN) > 0 {
-		root.Doc.Caption = manPN
-		// Bug?? Clipboard fails when called by man.
-		root.Screen.DisableMouse()
-	}
+	root.optimizedMan()
 
 	for n, doc := range root.DocList {
 		log.Printf("open [%d]%s", n, doc.FileName)
@@ -527,12 +521,7 @@ func (root *Root) Run() error {
 		}
 	}
 
-	list := make([]string, 0, len(root.Config.Mode)+1)
-	list = append(list, "general")
-	for name := range root.Config.Mode {
-		list = append(list, name)
-	}
-	root.input.ModeCandidate.list = list
+	root.setModeConfig()
 
 	root.ViewSync()
 	// Exit if fits on screen
@@ -570,6 +559,27 @@ func (root *Root) Run() error {
 			return fmt.Errorf("%w [%s]", ErrSignalCatch, sig)
 		}
 	}
+}
+
+func (root *Root) optimizedMan() {
+	// Call from man command.
+	manPN := os.Getenv("MAN_PN")
+	if len(manPN) == 0 {
+		return
+	}
+
+	root.Doc.Caption = manPN
+	// Bug?? Clipboard fails when called by man.
+	root.Screen.DisableMouse()
+}
+
+func (root *Root) setModeConfig() {
+	list := make([]string, 0, len(root.Config.Mode)+1)
+	list = append(list, "general")
+	for name := range root.Config.Mode {
+		list = append(list, name)
+	}
+	root.input.ModeCandidate.list = list
 }
 
 // Close closes the oviewer.
@@ -659,7 +669,7 @@ func (root *Root) prepareView() {
 	root.vHight = max(root.vHight, 1)
 
 	root.lnumber = make([]lineNumber, root.vHight+1)
-	root.statusPos = root.vHight - statusline
+	root.statusPos = root.vHight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -709,24 +719,4 @@ func (root *Root) WriteLog() {
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
 	m.Export(os.Stdout, start, end)
-}
-
-// leftMostX returns a list of left - most x positions when wrapping.
-func (root *Root) leftMostX(lN int) ([]int, error) {
-	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
-	if err != nil {
-		return nil, err
-	}
-
-	listX := make([]int, 0, (len(lc)/root.vWidth)+1)
-	width := (root.vWidth - root.startX)
-
-	listX = append(listX, 0)
-	for n := width; n < len(lc); n += width {
-		if lc[n-1].width == 2 {
-			n--
-		}
-		listX = append(listX, n)
-	}
-	return listX, nil
 }
