@@ -138,7 +138,6 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	log.Println(lN)
 	nTh, err := strconv.Atoi(inputs[1])
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())

@@ -7,12 +7,18 @@ import (
 )
 
 // Go to the top line.
+// Called from a EventKey.
 func (root *Root) moveTop() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
 	root.moveLine(0)
 }
 
 // Go to the bottom line.
+// Called from a EventKey.
 func (root *Root) moveBottom() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
 	tx, tn := root.bottomLineNum(root.Doc.BufEndNum())
 	root.Doc.topLN = tn
 	root.Doc.topLX = tx
@@ -20,14 +26,8 @@ func (root *Root) moveBottom() {
 
 // Move to the specified line.
 func (root *Root) moveLine(lN int) int {
-	root.resetSelect()
-
-	if lN < 0 {
-		lN = 0
-	}
-	if lN > root.Doc.BufEndNum() {
-		lN = root.Doc.BufEndNum()
-	}
+	lN = max(lN, 0)
+	lN = min(lN, root.Doc.BufEndNum())
 	root.Doc.topLN = lN
 	root.Doc.topLX = 0
 	return lN
@@ -39,7 +39,7 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 	if !root.Doc.WrapMode {
 		return lN, 0
 	}
-	listX, err := root.leftMostX(lN)
+	listX, err := root.leftMostX(lN + root.Doc.firstLine())
 	if err != nil {
 		return lN, 0
 	}
@@ -55,15 +55,19 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 }
 
 // Move up one screen.
+// Called from a EventKey.
 func (root *Root) movePgUp() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 	root.moveNumUp(root.statusPos - root.headerLen)
 }
 
 // Moves down one screen.
+// Called from a EventKey.
 func (root *Root) movePgDn() {
-	m := root.Doc
 	root.resetSelect()
+	defer root.releaseEventBuffer()
+	m := root.Doc
 	y := m.bottomLN - m.firstLine()
 	x := m.bottomLX
 	root.limitMoveDown(x, y)
@@ -87,14 +91,18 @@ func (root *Root) limitMoveDown(x int, y int) {
 }
 
 // Moves up half a screen.
+// Called from a EventKey.
 func (root *Root) moveHfUp() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 	root.moveNumUp((root.statusPos - root.headerLen) / 2)
 }
 
 // Moves down half a screen.
+// Called from a EventKey.
 func (root *Root) moveHfDn() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 	root.moveNumDown((root.statusPos - root.headerLen) / 2)
 }
 
@@ -183,8 +191,10 @@ func (root *Root) moveNumDown(moveY int) {
 }
 
 // Move up one line.
+// Called from a EventKey.
 func (root *Root) moveUp() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 
 	m := root.Doc
 	if m.topLN == 0 && m.topLX == 0 {
@@ -233,8 +243,10 @@ func (root *Root) moveUp() {
 }
 
 // Move down one line.
+// Called from a EventKey.
 func (root *Root) moveDown() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 
 	m := root.Doc
 	num := m.topLN
@@ -266,8 +278,10 @@ func (root *Root) moveDown() {
 }
 
 // Move to the left.
+// Called from a EventKey.
 func (root *Root) moveLeft() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 
 	m := root.Doc
 	if m.ColumnMode {
@@ -287,8 +301,10 @@ func (root *Root) moveLeft() {
 }
 
 // Move to the right.
+// Called from a EventKey.
 func (root *Root) moveRight() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 
 	m := root.Doc
 	if m.ColumnMode {
@@ -337,13 +353,16 @@ func (root *Root) columnModeX() int {
 }
 
 // Move to the left by half a screen.
+// Called from a EventKey.
 func (root *Root) moveHfLeft() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
 	m := root.Doc
 
 	if m.WrapMode {
 		return
 	}
-	root.resetSelect()
 	moveSize := (root.vWidth / 2)
 	if m.x > 0 && (m.x-moveSize) < 0 {
 		m.x = 0
@@ -356,13 +375,16 @@ func (root *Root) moveHfLeft() {
 }
 
 // Move to the right by half a screen.
+// Called from a EventKey.
 func (root *Root) moveHfRight() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
 	m := root.Doc
 
 	if m.WrapMode {
 		return
 	}
-	root.resetSelect()
 	if m.x < 0 {
 		m.x = 0
 	} else {
