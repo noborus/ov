@@ -75,6 +75,7 @@ func (root *Root) reload(m *Document) {
 		log.Printf("cannot reload: %s", err)
 		return
 	}
+	root.releaseEventBuffer()
 	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)
 }
