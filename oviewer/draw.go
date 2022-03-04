@@ -74,6 +74,7 @@ func (root *Root) drawHeader() int {
 		root.blankLineNumber(hy)
 
 		lX, lY = root.drawLine(hy, lX, lY, lc)
+
 		// header style
 		root.lineStyle(hy, root.StyleHeader)
 
@@ -82,12 +83,12 @@ func (root *Root) drawHeader() int {
 		} else {
 			wrapNum = 0
 		}
-
 	}
 	root.headerLen = hy
 	return lY
 }
 
+// drawBody draws body.
 func (root *Root) drawBody(lX int, lY int) (int, int) {
 	m := root.Doc
 
@@ -105,8 +106,8 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		if lastLN != lY {
 			lc = m.getContents(lY, m.TabWidth)
 			lineStr, posCV = m.getContentsStr(lY, lc)
-			lastLN = lY
 			root.bodyStyle(lc, root.StyleBody)
+			lastLN = lY
 		}
 
 		root.lnumber[y] = lineNumber{
@@ -136,11 +137,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
 func (root *Root) drawLine(y int, lX int, lY int, lc lineContents) (int, int) {
-	if !root.Doc.WrapMode {
-		return root.drawNoWrapLine(y, root.Doc.x, lY, lc)
+	if root.Doc.WrapMode {
+		return root.drawWrapLine(y, lX, lY, lc)
 	}
 
-	return root.drawWrapLine(y, lX, lY, lc)
+	return root.drawNoWrapLine(y, root.Doc.x, lY, lc)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -281,7 +282,6 @@ func (root *Root) markStyle(lY int, y int, width int) {
 			root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
 		}
 	}
-
 }
 
 // drawStatus draws a status line.
