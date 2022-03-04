@@ -75,6 +75,7 @@ func (root *Root) reload(m *Document) {
 		log.Printf("cannot reload: %s", err)
 		return
 	}
+	root.releaseEventBuffer()
 	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)
 }
@@ -138,7 +139,6 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	log.Println(lN)
 	nTh, err := strconv.Atoi(inputs[1])
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())

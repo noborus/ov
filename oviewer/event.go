@@ -470,3 +470,10 @@ func (root *Root) Reload() {
 		log.Println(err)
 	}
 }
+
+// releaseEventBuffer will release all event buffers.
+func (root *Root) releaseEventBuffer() {
+	for root.HasPendingEvent() {
+		_ = root.Screen.PollEvent()
+	}
+}
