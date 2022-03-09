@@ -6,6 +6,38 @@ import (
 	"testing"
 )
 
+func TestOpenDocument(t *testing.T) {
+	type args struct {
+		fileName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Document
+		wantErr bool
+	}{
+		{
+			name:    "no file",
+			args:    args{fileName: "../testdata/nofile"},
+			wantErr: true,
+		},
+		{
+			name:    "normal.txt",
+			args:    args{fileName: "../testdata/normal.txt"},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := OpenDocument(tt.args.fileName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OpenDocument() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func TestDocument_lineToContents(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -108,6 +140,50 @@ func TestDocument_Export(t *testing.T) {
 			m.Export(w, tt.args.start, tt.args.end)
 			if gotW := w.String(); gotW != tt.wantW {
 				t.Errorf("Document.Export() = %v, want %v", gotW, tt.wantW)
+			}
+		})
+	}
+}
+
+func TestDocument_getContents(t *testing.T) {
+	type fields struct {
+		FileName string
+	}
+	type args struct {
+		lN       int
+		tabWidth int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   lineContents
+	}{
+		{
+			name: "test normal",
+			fields: fields{
+				FileName: "../testdata/normal.txt",
+			},
+			args: args{
+				lN:       0,
+				tabWidth: 8,
+			},
+			want: parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.FileName)
+			if err != nil {
+				t.Fatalf("OpenDocument %s", err)
+			}
+
+			for m.eof != 1 {
+			}
+			if got := m.getContents(tt.args.lN, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
+				g, _ := ContentsToStr(got)
+				w, _ := ContentsToStr(tt.want)
+				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
 			}
 		})
 	}

@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	os.Exit(ret)
 }
 
-func Test_parseString(t *testing.T) {
+func Test_parseStringNormal(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		line     string
@@ -37,59 +37,155 @@ func Test_parseString(t *testing.T) {
 				line: "test", tabWidth: 8,
 			},
 			want: lineContents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('s'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
+				{width: 1, mainc: rune('t')},
+				{width: 1, mainc: rune('e')},
+				{width: 1, mainc: rune('s')},
+				{width: 1, mainc: rune('t')},
 			},
 		},
 		{
 			name: "testASCII",
 			args: args{line: "abc", tabWidth: 4},
 			want: lineContents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: nil},
+				{width: 1, mainc: rune('a')},
+				{width: 1, mainc: rune('b')},
+				{width: 1, mainc: rune('c')},
 			},
 		},
 		{
 			name: "testHiragana",
 			args: args{line: "あ", tabWidth: 4},
 			want: lineContents{
-				{width: 2, style: tcell.StyleDefault, mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, mainc: rune('あ')},
+				{width: 0, mainc: 0},
 			},
 		},
 		{
 			name: "testKANJI",
 			args: args{line: "漢", tabWidth: 4},
 			want: lineContents{
-				{width: 2, style: tcell.StyleDefault, mainc: rune('漢'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, mainc: rune('漢')},
+				{width: 0, mainc: 0},
 			},
 		},
 		{
 			name: "testMIX",
 			args: args{line: "abc漢", tabWidth: 4},
 			want: lineContents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('c'), combc: nil},
-				{width: 2, style: tcell.StyleDefault, mainc: rune('漢'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 1, mainc: rune('a')},
+				{width: 1, mainc: rune('b')},
+				{width: 1, mainc: rune('c')},
+				{width: 2, mainc: rune('漢')},
+				{width: 0, mainc: 0},
 			},
 		},
 		{
 			name: "testTab",
 			args: args{line: "a\tb", tabWidth: 4},
 			want: lineContents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('\t'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune(0), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune(0), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('\t')},
+				{width: 1, style: tcell.StyleDefault, mainc: rune(0)},
+				{width: 1, style: tcell.StyleDefault, mainc: rune(0)},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('b')},
 			},
 		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseString(tt.args.line, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseStringOverlapping(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		line     string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want lineContents
+	}{
+		{
+			name: "testOverstrike",
+			args: args{line: "a\ba", tabWidth: 8},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
+			},
+		},
+		{
+			name: "testOverstrike2",
+			args: args{line: "\ba", tabWidth: 8},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
+			},
+		},
+		{
+			name: "testOverstrike3",
+			args: args{line: "あ\bあ", tabWidth: 8},
+			want: lineContents{
+				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+			},
+		},
+		{
+			name: "testOverstrike4",
+			args: args{line: "\a", tabWidth: 8},
+			want: lineContents{},
+		},
+		{
+			name: "testOverstrike5",
+			args: args{line: "あ\bああ\bあ", tabWidth: 8},
+			want: lineContents{
+				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+			},
+		},
+		{
+			name: "testOverstrikeUnderLine",
+			args: args{line: "_\ba", tabWidth: 8},
+			want: lineContents{
+				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
+			},
+		},
+		{
+			name: "testOverstrikeUnderLine2",
+			args: args{line: "_\bあ", tabWidth: 8},
+			want: lineContents{
+				{width: 2, style: tcell.StyleDefault.Underline(true), mainc: rune('あ'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseString(tt.args.line, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseStringStyle(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		line     string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want lineContents
+	}{
 		{
 			name: "testTabMinus",
 			args: args{line: "a\tb", tabWidth: -1},
@@ -222,58 +318,6 @@ func Test_parseString(t *testing.T) {
 			},
 			want: lineContents{
 				{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
-			},
-		},
-		{
-			name: "testOverstrike",
-			args: args{line: "a\ba", tabWidth: 8},
-			want: lineContents{
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
-			},
-		},
-		{
-			name: "testOverstrike2",
-			args: args{line: "\ba", tabWidth: 8},
-			want: lineContents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-			},
-		},
-		{
-			name: "testOverstrike3",
-			args: args{line: "あ\bあ", tabWidth: 8},
-			want: lineContents{
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
-			},
-		},
-		{
-			name: "testOverstrike4",
-			args: args{line: "\a", tabWidth: 8},
-			want: lineContents{},
-		},
-		{
-			name: "testOverstrike5",
-			args: args{line: "あ\bああ\bあ", tabWidth: 8},
-			want: lineContents{
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
-			},
-		},
-		{
-			name: "testOverstrikeUnderLine",
-			args: args{line: "_\ba", tabWidth: 8},
-			want: lineContents{
-				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
-			},
-		},
-		{
-			name: "testOverstrikeUnderLine2",
-			args: args{line: "_\bあ", tabWidth: 8},
-			want: lineContents{
-				{width: 2, style: tcell.StyleDefault.Underline(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 			},
 		},
 	}
