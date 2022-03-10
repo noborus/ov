@@ -269,3 +269,38 @@ func (m *Document) getContentsStr(lN int, lc lineContents) (string, map[int]int)
 func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
+
+// searchLine searches the document and returns the matching line.
+func (m *Document) searchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+	num = max(num, 0)
+
+	for n := num; n < m.BufEndNum(); n++ {
+		if search.match(m.GetLine(n)) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+
+	return 0, ErrNotFound
+}
+
+// backSearchLine does a backward search on the document and returns a matching line.
+func (m *Document) backSearchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+	num = min(num, m.BufEndNum()-1)
+
+	for n := num; n >= 0; n-- {
+		if search.match(m.GetLine(n)) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}

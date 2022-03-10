@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bytes"
+	"context"
 	"reflect"
 	"testing"
 )
@@ -184,6 +185,136 @@ func TestDocument_getContents(t *testing.T) {
 				g, _ := ContentsToStr(got)
 				w, _ := ContentsToStr(tt.want)
 				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
+			}
+		})
+	}
+}
+
+func TestDocument_searchLine(t *testing.T) {
+	type fields struct {
+		FileName string
+	}
+	type args struct {
+		ctx    context.Context
+		search searchMatch
+		num    int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "test forward search",
+			fields: fields{
+				FileName: "../testdata/normal.txt",
+			},
+			args: args{
+				ctx:    context.Background(),
+				search: getSearchMatch("a", nil, false, false),
+				num:    0,
+			},
+			want:    0,
+			wantErr: false,
+		},
+		{
+			name: "test forward search not found",
+			fields: fields{
+				FileName: "../testdata/normal.txt",
+			},
+			args: args{
+				ctx:    context.Background(),
+				search: getSearchMatch("notfoundnotfound", nil, false, false),
+				num:    0,
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.FileName)
+			if err != nil {
+				t.Fatalf("OpenDocument %s", err)
+			}
+
+			for m.eof != 1 {
+			}
+
+			got, err := m.searchLine(tt.args.ctx, tt.args.search, tt.args.num)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.searchLine() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.searchLine() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDocument_backSearchLine(t *testing.T) {
+	type fields struct {
+		FileName string
+	}
+	type args struct {
+		ctx    context.Context
+		search searchMatch
+		num    int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "test backword search",
+			fields: fields{
+				FileName: "../testdata/normal.txt",
+			},
+			args: args{
+				ctx:    context.Background(),
+				search: getSearchMatch("a", nil, false, false),
+				num:    100,
+			},
+			want:    39,
+			wantErr: false,
+		},
+		{
+			name: "test backword search not found",
+			fields: fields{
+				FileName: "../testdata/normal.txt",
+			},
+			args: args{
+				ctx:    context.Background(),
+				search: getSearchMatch("notfoundnotfound", nil, false, false),
+				num:    100,
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.FileName)
+			if err != nil {
+				t.Fatalf("OpenDocument %s", err)
+			}
+
+			for m.eof != 1 {
+			}
+
+			got, err := m.backSearchLine(tt.args.ctx, tt.args.search, tt.args.num)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.backSearchLine() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.backSearchLine() = %v, want %v", got, tt.want)
 			}
 		})
 	}

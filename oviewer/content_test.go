@@ -557,6 +557,12 @@ func Test_contentsToStr(t *testing.T) {
 			want1: "あいうえお倍",
 			want2: map[int]int{0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12},
 		},
+		{
+			name:  "testEmojiZWJSequence",
+			str:   string([]rune{'\U0001f468', '\u200d', '\U0001f468', '\u200d', '\U0001f466'}),
+			want1: "👨‍👨‍👦",
+			want2: map[int]int{0: 0, 18: 2},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
