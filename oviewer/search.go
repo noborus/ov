@@ -231,10 +231,11 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search s
 	eg.Go(func() error {
 		var err error
 		if forward {
-			lN, err = root.searchLine(ctx, search, lN)
+			lN, err = root.Doc.searchLine(ctx, search, lN)
 		} else {
-			lN, err = root.backSearchLine(ctx, search, lN)
+			lN, err = root.Doc.backSearchLine(ctx, search, lN)
 		}
+		root.searchQuit()
 		if err != nil {
 			return err
 		}
@@ -264,10 +265,11 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 		var lN int
 		var err error
 		if forward {
-			lN, err = root.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+			lN, err = root.Doc.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
 		} else {
-			lN, err = root.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+			lN, err = root.Doc.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
 		}
+		root.searchQuit()
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Println(err)
@@ -296,41 +298,4 @@ func (root *Root) returnStartPosition() int {
 	}
 	root.OriginStr = root.searchWord
 	return start
-}
-
-// searchLine is searches below from the specified line.
-func (root *Root) searchLine(ctx context.Context, search searchMatch, num int) (int, error) {
-	defer root.searchQuit()
-	num = max(num, 0)
-
-	for n := num; n < root.Doc.BufEndNum(); n++ {
-		if search.match(root.Doc.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
-	}
-
-	return 0, ErrNotFound
-}
-
-// backsearch is searches upward from the specified line.
-func (root *Root) backSearchLine(ctx context.Context, search searchMatch, num int) (int, error) {
-	defer root.searchQuit()
-	num = min(num, root.Doc.BufEndNum()-1)
-
-	for n := num; n >= 0; n-- {
-		if search.match(root.Doc.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
-	}
-	return 0, ErrNotFound
 }
