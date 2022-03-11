@@ -354,6 +354,9 @@ func NewRoot(read io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
+	go func() {
+		<-m.eofCh
+	}()
 	if err := m.ReadAll(read); err != nil {
 		return nil, err
 	}
