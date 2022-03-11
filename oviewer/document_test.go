@@ -195,9 +195,9 @@ func TestDocument_searchLine(t *testing.T) {
 		FileName string
 	}
 	type args struct {
-		ctx    context.Context
-		search searchMatch
-		num    int
+		ctx      context.Context
+		searcher Searcher
+		num      int
 	}
 	tests := []struct {
 		name    string
@@ -212,9 +212,9 @@ func TestDocument_searchLine(t *testing.T) {
 				FileName: "../testdata/normal.txt",
 			},
 			args: args{
-				ctx:    context.Background(),
-				search: getSearchMatch("a", nil, false, false),
-				num:    0,
+				ctx:      context.Background(),
+				searcher: NewSearcher("a", nil, false, false),
+				num:      0,
 			},
 			want:    0,
 			wantErr: false,
@@ -225,9 +225,9 @@ func TestDocument_searchLine(t *testing.T) {
 				FileName: "../testdata/normal.txt",
 			},
 			args: args{
-				ctx:    context.Background(),
-				search: getSearchMatch("notfoundnotfound", nil, false, false),
-				num:    0,
+				ctx:      context.Background(),
+				searcher: NewSearcher("notfoundnotfound", nil, false, false),
+				num:      0,
 			},
 			want:    0,
 			wantErr: true,
@@ -243,7 +243,7 @@ func TestDocument_searchLine(t *testing.T) {
 			for m.eof != 1 {
 			}
 
-			got, err := m.searchLine(tt.args.ctx, tt.args.search, tt.args.num)
+			got, err := m.SearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.searchLine() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -260,9 +260,9 @@ func TestDocument_backSearchLine(t *testing.T) {
 		FileName string
 	}
 	type args struct {
-		ctx    context.Context
-		search searchMatch
-		num    int
+		ctx      context.Context
+		searcher Searcher
+		num      int
 	}
 	tests := []struct {
 		name    string
@@ -277,9 +277,9 @@ func TestDocument_backSearchLine(t *testing.T) {
 				FileName: "../testdata/normal.txt",
 			},
 			args: args{
-				ctx:    context.Background(),
-				search: getSearchMatch("a", nil, false, false),
-				num:    100,
+				ctx:      context.Background(),
+				searcher: NewSearcher("a", nil, false, false),
+				num:      100,
 			},
 			want:    39,
 			wantErr: false,
@@ -290,9 +290,9 @@ func TestDocument_backSearchLine(t *testing.T) {
 				FileName: "../testdata/normal.txt",
 			},
 			args: args{
-				ctx:    context.Background(),
-				search: getSearchMatch("notfoundnotfound", nil, false, false),
-				num:    100,
+				ctx:      context.Background(),
+				searcher: NewSearcher("notfoundnotfound", nil, false, false),
+				num:      100,
 			},
 			want:    0,
 			wantErr: true,
@@ -308,7 +308,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 			for m.eof != 1 {
 			}
 
-			got, err := m.backSearchLine(tt.args.ctx, tt.args.search, tt.args.num)
+			got, err := m.BackSearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.backSearchLine() error = %v, wantErr %v", err, tt.wantErr)
 				return

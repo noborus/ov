@@ -265,17 +265,17 @@ func (m *Document) getContentsStr(lN int, lc lineContents) (string, map[int]int)
 	return m.lastContentsStr, m.lastContentsMap
 }
 
-// fistLine is the first line that excludes the SkipLines and Header.
+// firstLine is the first line that excludes the SkipLines and Header.
 func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
-// searchLine searches the document and returns the matching line.
-func (m *Document) searchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+// SearchLine searches the document and returns the matching line.
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, num int) (int, error) {
 	num = max(num, 0)
 
 	for n := num; n < m.BufEndNum(); n++ {
-		if search.match(m.GetLine(n)) {
+		if searcher.Match(m.GetLine(n)) {
 			return n, nil
 		}
 		select {
@@ -288,12 +288,12 @@ func (m *Document) searchLine(ctx context.Context, search searchMatch, num int) 
 	return 0, ErrNotFound
 }
 
-// backSearchLine does a backward search on the document and returns a matching line.
-func (m *Document) backSearchLine(ctx context.Context, search searchMatch, num int) (int, error) {
+// BackSearchLine does a backward search on the document and returns a matching line.
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, num int) (int, error) {
 	num = min(num, m.BufEndNum()-1)
 
 	for n := num; n >= 0; n-- {
-		if search.match(m.GetLine(n)) {
+		if searcher.Match(m.GetLine(n)) {
 			return n, nil
 		}
 		select {

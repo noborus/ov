@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_searchWord_match(t *testing.T) {
+func Test_searchWord_Match(t *testing.T) {
 	type fields struct {
 		word string
 	}
@@ -76,14 +76,14 @@ func Test_searchWord_match(t *testing.T) {
 			substr := searchWord{
 				word: tt.fields.word,
 			}
-			if got := substr.match(tt.args.s); got != tt.want {
-				t.Errorf("searchWord.match() = %v, want %v", got, tt.want)
+			if got := substr.Match(tt.args.s); got != tt.want {
+				t.Errorf("searchWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_sensitiveWord_match(t *testing.T) {
+func Test_sensitiveWord_Match(t *testing.T) {
 	type fields struct {
 		word string
 	}
@@ -122,14 +122,14 @@ func Test_sensitiveWord_match(t *testing.T) {
 			substr := sensitiveWord{
 				word: tt.fields.word,
 			}
-			if got := substr.match(tt.args.s); got != tt.want {
-				t.Errorf("sensitiveWord.match() = %v, want %v", got, tt.want)
+			if got := substr.Match(tt.args.s); got != tt.want {
+				t.Errorf("sensitiveWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_regexpWord_match(t *testing.T) {
+func Test_regexpWord_Match(t *testing.T) {
 	type fields struct {
 		word *regexp.Regexp
 	}
@@ -168,7 +168,7 @@ func Test_regexpWord_match(t *testing.T) {
 			substr := regexpWord{
 				word: tt.fields.word,
 			}
-			if got := substr.match(tt.args.s); got != tt.want {
+			if got := substr.Match(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -235,9 +235,8 @@ func Test_getSearchMatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			search := getSearchMatch(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
-
-			if got := search.match(tt.word); got != tt.want {
+			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
+			if got := searcher.Match(tt.word); got != tt.want {
 				t.Errorf("getSearchMatch() = %v, want %v", got, tt.want)
 			}
 		})
@@ -481,7 +480,7 @@ func Test_searchPositionReg(t *testing.T) {
 func Test_searchPosition(t *testing.T) {
 	type args struct {
 		caseSensitive bool
-		searchText    string
+		s             string
 		substr        string
 	}
 	tests := []struct {
@@ -493,7 +492,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testNil",
 			args: args{
 				caseSensitive: false,
-				searchText:    "t",
+				s:             "t",
 				substr:        "",
 			},
 			want: nil,
@@ -502,7 +501,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testTest",
 			args: args{
 				caseSensitive: false,
-				searchText:    "test",
+				s:             "test",
 				substr:        "t",
 			},
 			want: [][]int{
@@ -514,7 +513,7 @@ func Test_searchPosition(t *testing.T) {
 			name: "testNone",
 			args: args{
 				caseSensitive: false,
-				searchText:    "",
+				s:             "",
 				substr:        "test",
 			},
 			want: nil,
@@ -522,7 +521,7 @@ func Test_searchPosition(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := searchPositionStr(tt.args.caseSensitive, tt.args.searchText, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+			if got := searchPositionStr(tt.args.caseSensitive, tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
 		})
@@ -541,7 +540,7 @@ func TestRoot_setSearch(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   searchMatch
+		want   Searcher
 	}{
 		{
 			name: "testNil",
@@ -573,7 +572,7 @@ func TestRoot_setSearch(t *testing.T) {
 			root := &Root{
 				input: tt.fields.input,
 			}
-			if got := root.setSearch(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
+			if got := root.setSearcher(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Root.setSearch() = %v, want %v", got, tt.want)
 			}
 		})
