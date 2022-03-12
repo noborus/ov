@@ -249,6 +249,16 @@ func (m *Document) ReadAll(r io.Reader) error {
 	return nil
 }
 
+// ReadReader reads reader.
+// A wrapper for ReadAll, used when eofCh notifications are not needed.
+func (m *Document) ReadReader(r io.Reader) error {
+	go func() {
+		<-m.eofCh
+	}()
+
+	return m.ReadAll(r)
+}
+
 // ContinueReadAll continues to read even if it reaches EOF.
 func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	reader := bufio.NewReader(r)
