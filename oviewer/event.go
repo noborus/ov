@@ -57,19 +57,19 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			searchMatch := root.setSearch(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine()+1, searchMatch)
+			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine()+1, searcher)
 		case *eventBackSearch:
-			searchMatch := root.setSearch(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine()-1, searchMatch)
+			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine()-1, searcher)
 		case *viewModeInput:
 			root.setViewMode(ev.value)
 		case *searchInput:
-			searchMatch := root.setSearch(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine(), searchMatch)
+			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine(), searcher)
 		case *backSearchInput:
-			searchMatch := root.setSearch(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine(), searchMatch)
+			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine(), searcher)
 		case *gotoInput:
 			root.goLine(ev.value)
 		case *headerInput:

@@ -11,10 +11,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// searchMatch interface provides a match method that determines
+// Searcher interface provides a match method that determines
 // if the search word matches the argument string.
-type searchMatch interface {
-	match(string) bool
+type Searcher interface {
+	Match(string) bool
 }
 
 // searchWord is a case-insensitive search.
@@ -22,9 +22,21 @@ type searchWord struct {
 	word string
 }
 
+// searchWord Match is a case-insensitive search.
+func (substr searchWord) Match(s string) bool {
+	s = stripEscapeSequence(s)
+	return strings.Contains(strings.ToLower(s), substr.word)
+}
+
 // sensitiveWord is a case-sensitive search.
 type sensitiveWord struct {
 	word string
+}
+
+// sensitiveWord Match is a case-sensitive search.
+func (substr sensitiveWord) Match(s string) bool {
+	s = stripEscapeSequence(s)
+	return strings.Contains(s, substr.word)
 }
 
 // regexpWord is a regular expression search.
@@ -32,20 +44,8 @@ type regexpWord struct {
 	word *regexp.Regexp
 }
 
-// (searchWord) match is a case-insensitive search.
-func (substr searchWord) match(s string) bool {
-	s = stripEscapeSequence(s)
-	return strings.Contains(strings.ToLower(s), substr.word)
-}
-
-// (sensitiveWord) match is a case-sensitive search.
-func (substr sensitiveWord) match(s string) bool {
-	s = stripEscapeSequence(s)
-	return strings.Contains(s, substr.word)
-}
-
-// (regexpWord) match is a regular expression search.
-func (substr regexpWord) match(s string) bool {
+// regexpWord Match is a regular expression search.
+func (substr regexpWord) Match(s string) bool {
 	s = stripEscapeSequence(s)
 	return substr.word.MatchString(s)
 }
@@ -62,8 +62,8 @@ func stripEscapeSequence(s string) string {
 	return s
 }
 
-// getSearchMatch returns the searchMatch interface suitable for the search term.
-func getSearchMatch(word string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) searchMatch {
+// NewSearcher returns the Searcher interface suitable for the search term.
+func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) Searcher {
 	if regexpSearch && word != regexp.QuoteMeta(word) {
 		return regexpWord{
 			word: searchReg,
@@ -139,17 +139,12 @@ func rangePosition(s, substr string, number int) (int, int) {
 	return start, end
 }
 
+// searchPosition returns the position where the search in the argument line matched.
+// searchPosition uses cache.
 func (root *Root) searchPosition(lN int, lineStr string) [][]int {
 	m := root.Doc
-	s := "s"
-	if root.Config.RegexpSearch {
-		s += "r"
-	}
-	if root.Config.CaseSensitive {
-		s += "i"
-	}
+	key := root.searchKey(lN)
 
-	key := fmt.Sprintf("search:%d:%s:%s", lN, s, root.searchWord)
 	if value, found := m.cache.Get(key); found {
 		poss, ok := value.([][]int)
 		if !ok {
@@ -164,8 +159,21 @@ func (root *Root) searchPosition(lN int, lineStr string) [][]int {
 	} else {
 		poss = searchPositionStr(root.Config.CaseSensitive, lineStr, root.searchWord)
 	}
+
 	m.cache.Set(key, poss, 3)
 	return poss
+}
+
+// searcKey returns a search key for the cache.
+func (root *Root) searchKey(lN int) string {
+	s := "s"
+	if root.Config.RegexpSearch {
+		s += "r"
+	}
+	if root.Config.CaseSensitive {
+		s += "i"
+	}
+	return fmt.Sprintf("search:%d:%s:%s", lN, s, root.searchWord)
 }
 
 // searchPositionReg returns an array of the beginning and end of the search string.
@@ -177,30 +185,30 @@ func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 }
 
 // searchPosition returns an array of the beginning and end of the search string.
-func searchPositionStr(caseSensitive bool, searchText string, substr string) [][]int {
+func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 	if substr == "" {
 		return nil
 	}
 
 	var locs [][]int
 	if !caseSensitive {
-		searchText = strings.ToLower(searchText)
+		s = strings.ToLower(s)
 		substr = strings.ToLower(substr)
 	}
 	offSet := 0
-	loc := strings.Index(searchText, substr)
+	loc := strings.Index(s, substr)
 	for loc != -1 {
-		searchText = searchText[loc+len(substr):]
+		s = s[loc+len(substr):]
 		locs = append(locs, []int{loc + offSet, loc + offSet + len(substr)})
 		offSet += loc + len(substr)
-		loc = strings.Index(searchText, substr)
+		loc = strings.Index(s, substr)
 	}
 	return locs
 }
 
-// setSearch is a wrapper for getSearchMatch and returns a searchMatch interface.
+// setSearcher is a wrapper for NewSearcher and returns a Searcher interface.
 // Returns nil if there is no search term.
-func (root *Root) setSearch(word string, caseSensitive bool) searchMatch {
+func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	if word == "" {
 		root.searchWord = ""
 		root.searchReg = nil
@@ -210,12 +218,12 @@ func (root *Root) setSearch(word string, caseSensitive bool) searchMatch {
 	root.searchWord = word
 	root.searchReg = regexpCompile(root.searchWord, caseSensitive)
 
-	return getSearchMatch(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
+	return NewSearcher(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
 }
 
-// searchMove is forward/back search.
-func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search searchMatch) {
-	if search == nil {
+// searchMove searches forward/backward and moves to the nearest matching line.
+func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
+	if searcher == nil {
 		return
 	}
 	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
@@ -231,9 +239,9 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search s
 	eg.Go(func() error {
 		var err error
 		if forward {
-			lN, err = root.Doc.searchLine(ctx, search, lN)
+			lN, err = root.Doc.SearchLine(ctx, searcher, lN)
 		} else {
-			lN, err = root.Doc.backSearchLine(ctx, search, lN)
+			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
 		}
 		root.searchQuit()
 		if err != nil {
@@ -252,22 +260,22 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, search s
 
 // incSearch implements incremental forward/back search.
 func (root *Root) incSearch(ctx context.Context, forward bool) {
-	search := root.setSearch(root.input.value, root.CaseSensitive)
-	if search == nil {
+	root.Doc.topLN = root.returnStartPosition()
+
+	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	if searcher == nil {
 		return
 	}
 
 	ctx = root.cancelRestart(ctx)
 
-	root.Doc.topLN = root.returnStartPosition()
-
 	go func() {
-		var lN int
+		lN := root.Doc.topLN + root.Doc.firstLine()
 		var err error
 		if forward {
-			lN, err = root.Doc.searchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+			lN, err = root.Doc.SearchLine(ctx, searcher, lN)
 		} else {
-			lN, err = root.Doc.backSearchLine(ctx, search, root.Doc.topLN+root.Doc.firstLine())
+			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
 		}
 		root.searchQuit()
 		if err != nil {

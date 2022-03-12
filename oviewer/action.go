@@ -226,7 +226,6 @@ func (root *Root) setHeader(input string) {
 
 	root.Doc.Header = num
 	root.setMessagef("Set header lines %d", num)
-	root.Doc.ClearCache()
 }
 
 // setSkipLines sets the number of lines to skip.
@@ -246,7 +245,6 @@ func (root *Root) setSkipLines(input string) {
 
 	root.Doc.SkipLines = num
 	root.setMessagef("Set skip lines %d", num)
-	root.Doc.ClearCache()
 }
 
 // suspend suspends the current screen display and runs the shell.
