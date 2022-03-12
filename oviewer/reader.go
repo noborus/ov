@@ -125,7 +125,7 @@ func (m *Document) ReadFile(fileName string) error {
 		m.file = r
 	}
 
-	cFormat, reader := uncompressedReader(m.file)
+	cFormat, r := uncompressedReader(m.file)
 	m.CFormat = cFormat
 
 	go func() {
@@ -139,10 +139,49 @@ func (m *Document) ReadFile(fileName string) error {
 		m.followCh <- struct{}{}
 	}()
 	if STDOUTPIPE != nil {
-		reader = io.TeeReader(reader, STDOUTPIPE)
+		r = io.TeeReader(r, STDOUTPIPE)
 	}
 
-	return m.ReadAll(reader)
+	return m.ReadAll(r)
+}
+
+// ReadReader reads reader.
+// A wrapper for ReadAll, used when eofCh notifications are not needed.
+func (m *Document) ReadReader(r io.Reader) error {
+	go func() {
+		<-m.eofCh
+	}()
+
+	return m.ReadAll(r)
+}
+
+// ReadAll reads all from the reader.
+// And store it in the lines of the Document.
+// ReadAll needs to be notified on eofCh.
+func (m *Document) ReadAll(r io.Reader) error {
+	reader := bufio.NewReader(r)
+	go func() {
+		if m.checkClose() {
+			return
+		}
+
+		if err := m.readAll(reader); err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+				m.eofCh <- struct{}{}
+				atomic.StoreInt32(&m.eof, 1)
+				return
+			}
+			log.Printf("error: %v\n", err)
+			atomic.StoreInt32(&m.eof, 0)
+			return
+		}
+	}()
+
+	// Named pipes for continuous read.
+	if !m.seekable {
+		m.onceFollowMode()
+	}
+	return nil
 }
 
 // onceFollowMode opens the follow mode only once.
@@ -181,6 +220,7 @@ func (m *Document) startFollowMode(ctx context.Context) {
 	}
 }
 
+// openFollowFile opens a file in follow mode.
 func (m *Document) openFollowFile() *os.File {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -220,45 +260,6 @@ func (m *Document) close() error {
 	return nil
 }
 
-// ReadAll reads all from the reader to the buffer.
-// It returns if beforeSize is accumulated in buffer
-// before the end of read.
-func (m *Document) ReadAll(r io.Reader) error {
-	reader := bufio.NewReader(r)
-	go func() {
-		if m.checkClose() {
-			return
-		}
-
-		if err := m.readAll(reader); err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				m.eofCh <- struct{}{}
-				atomic.StoreInt32(&m.eof, 1)
-				return
-			}
-			log.Printf("error: %v\n", err)
-			atomic.StoreInt32(&m.eof, 0)
-			return
-		}
-	}()
-
-	// Named pipes for continuous read.
-	if !m.seekable {
-		m.onceFollowMode()
-	}
-	return nil
-}
-
-// ReadReader reads reader.
-// A wrapper for ReadAll, used when eofCh notifications are not needed.
-func (m *Document) ReadReader(r io.Reader) error {
-	go func() {
-		<-m.eofCh
-	}()
-
-	return m.ReadAll(r)
-}
-
 // ContinueReadAll continues to read even if it reaches EOF.
 func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	reader := bufio.NewReader(r)
@@ -282,6 +283,7 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	}
 }
 
+// readAll actually reads everything.
 func (m *Document) readAll(reader *bufio.Reader) error {
 	var line strings.Builder
 
@@ -298,6 +300,17 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		m.append(line.String())
 		line.Reset()
 	}
+}
+
+// append appends to the lines of the document.
+func (m *Document) append(lines ...string) {
+	m.mu.Lock()
+	for _, line := range lines {
+		m.lines = append(m.lines, line)
+		m.endNum++
+	}
+	m.mu.Unlock()
+	atomic.StoreInt32(&m.changed, 1)
 }
 
 func (m *Document) reload() error {
@@ -324,16 +337,6 @@ func (m *Document) reload() error {
 
 	atomic.StoreInt32(&m.closed, 0)
 	return m.ReadFile(m.FileName)
-}
-
-func (m *Document) append(lines ...string) {
-	m.mu.Lock()
-	for _, line := range lines {
-		m.lines = append(m.lines, line)
-		m.endNum++
-	}
-	m.mu.Unlock()
-	atomic.StoreInt32(&m.changed, 1)
 }
 
 func (m *Document) reset() {
