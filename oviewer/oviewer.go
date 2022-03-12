@@ -349,12 +349,12 @@ func NewConfig() Config {
 
 // NewRoot returns the structure of the oviewer.
 // NewRoot is a simplified version that can be used externally.
-func NewRoot(read io.Reader) (*Root, error) {
+func NewRoot(r io.Reader) (*Root, error) {
 	m, err := NewDocument()
 	if err != nil {
 		return nil, err
 	}
-	if err := m.ReadAll(read); err != nil {
+	if err := m.ReadReader(r); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
