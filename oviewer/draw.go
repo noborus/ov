@@ -319,11 +319,9 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 		modeStatus += "(Watch)"
 	}
 
-	caption := ""
+	caption := root.Doc.FileName
 	if root.Doc.Caption != "" {
 		caption = root.Doc.Caption
-	} else {
-		caption = root.Doc.FileName
 	}
 
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, caption, root.message)

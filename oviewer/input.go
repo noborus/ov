@@ -62,20 +62,12 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 
 	// Not confirmed or canceled.
 	if !ok {
-		if root.Config.Incsearch {
-			switch root.input.mode {
-			case Search:
-				root.incSearch(ctx, true)
-			case Backsearch:
-				root.incSearch(ctx, false)
-			}
-		}
+		root.incrementalSearch(ctx)
 		return
 	}
 
-	input := root.input
-
 	// confirmed.
+	input := root.input
 	nev := input.EventInput.Confirm(input.value)
 	err := root.Screen.PostEvent(nev)
 	if err != nil {
@@ -84,6 +76,20 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 
 	input.mode = Normal
 	input.EventInput = newNormalInput()
+}
+
+// incrementalSearch performs incremental search by setting and input mode.
+func (root *Root) incrementalSearch(ctx context.Context) {
+	if !root.Config.Incsearch {
+		return
+	}
+
+	switch root.input.mode {
+	case Search:
+		root.incSearch(ctx, true)
+	case Backsearch:
+		root.incSearch(ctx, false)
+	}
 }
 
 // inputKeyEvent handles the keystrokes of the input.

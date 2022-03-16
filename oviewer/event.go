@@ -12,7 +12,7 @@ import (
 )
 
 // UpdateInterval is the update interval that calls eventUpdate().
-var UpdateInterval time.Duration = 50
+var UpdateInterval = 50 * time.Millisecond
 
 // main is manages and executes events in the main routine.
 func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
@@ -211,7 +211,7 @@ func (root *Root) followAll() {
 
 // updateInterval calls eventUpdate at regular intervals.
 func (root *Root) updateInterval(ctx context.Context) {
-	timer := time.NewTicker(time.Millisecond * UpdateInterval)
+	timer := time.NewTicker(UpdateInterval)
 	for {
 		select {
 		case <-timer.C:
