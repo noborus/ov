@@ -160,8 +160,9 @@ func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int
 			break
 		}
 		content := lc[lX+x]
-		if x+content.width+root.startX > root.vWidth {
+		if x+root.startX+content.width > root.vWidth {
 			// Right edge.
+			root.clearEOL(root.startX+x, y)
 			lX += x
 			break
 		}
