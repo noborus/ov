@@ -215,7 +215,7 @@ func (m *Document) ClearCache() {
 }
 
 // contentsLN returns contents from line number and tabwidth.
-func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
+func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
@@ -223,7 +223,7 @@ func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
 	key := fmt.Sprintf("contents:%d", lN)
 	if value, found := m.cache.Get(key); found {
 		// It was cached.
-		lc, ok := value.(lineContents)
+		lc, ok := value.(contents)
 		if !ok {
 			return lc, ErrFatalCache
 		}
@@ -237,17 +237,17 @@ func (m *Document) contentsLN(lN int, tabWidth int) (lineContents, error) {
 	return lc, nil
 }
 
-// getContents returns lineContents from line number and tabwidth.
+// getContents returns contents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getContents(lN int, tabWidth int) lineContents {
+func (m *Document) getContents(lN int, tabWidth int) contents {
 	org, err := m.contentsLN(lN, tabWidth)
 	if err != nil {
 		// EOF
-		lc := make(lineContents, 1)
+		lc := make(contents, 1)
 		lc[0] = EOFContent
 		return lc
 	}
-	lc := make(lineContents, len(org))
+	lc := make(contents, len(org))
 	copy(lc, org)
 	return lc
 }
@@ -257,7 +257,7 @@ func (m *Document) getContents(lN int, tabWidth int) lineContents {
 // getContentsStr saves the last result
 // and reduces the number of executions of contentsToStr.
 // Because it takes time to analyze a line with a very long line.
-func (m *Document) getContentsStr(lN int, lc lineContents) (string, map[int]int) {
+func (m *Document) getContentsStr(lN int, lc contents) (string, map[int]int) {
 	if m.lastContentsNum != lN {
 		m.lastContentsStr, m.lastContentsMap = ContentsToStr(lc)
 		m.lastContentsNum = lN

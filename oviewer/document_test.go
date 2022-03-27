@@ -49,7 +49,7 @@ func TestDocument_lineToContents(t *testing.T) {
 		name    string
 		str     string
 		args    args
-		want    lineContents
+		want    contents
 		wantErr bool
 	}{
 		{
@@ -158,7 +158,7 @@ func TestDocument_getContents(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   lineContents
+		want   contents
 	}{
 		{
 			name: "test normal",

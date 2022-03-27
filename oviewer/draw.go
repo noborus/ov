@@ -99,7 +99,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	// lc, lineStr, byteMap store the previous value.
 	// Because it may be a continuation from the previous line in wrap mode.
 	lastLN := -1
-	var lc lineContents
+	var lc contents
 	var lineStr string
 	var posCV map[int]int
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
@@ -136,7 +136,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawLine(y int, lX int, lY int, lc lineContents) (int, int) {
+func (root *Root) drawLine(y int, lX int, lY int, lc contents) (int, int) {
 	if root.Doc.WrapMode {
 		return root.drawWrapLine(y, lX, lY, lc)
 	}
@@ -145,7 +145,7 @@ func (root *Root) drawLine(y int, lX int, lY int, lc lineContents) (int, int) {
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
+func (root *Root) drawWrapLine(y int, lX int, lY int, lc contents) (int, int) {
 	if lX < 0 {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
@@ -173,7 +173,7 @@ func (root *Root) drawWrapLine(y int, lX int, lY int, lc lineContents) (int, int
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc lineContents) (int, int) {
+func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc contents) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
@@ -197,13 +197,13 @@ func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc lineContents) (int, i
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.
 // Apply style to contents.
-func (root *Root) bodyStyle(lc lineContents, style ovStyle) {
+func (root *Root) bodyStyle(lc contents, style ovStyle) {
 	RangeStyle(lc, 0, len(lc), style)
 }
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lY int, lc lineContents, lineStr string, posCV map[int]int) {
+func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map[int]int) {
 	if root.searchWord == "" {
 		return
 	}
@@ -240,7 +240,7 @@ func (root *Root) drawLineNumber(lY int, y int) {
 }
 
 // columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(lc lineContents, str string, posCV map[int]int) {
+func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 	if !root.Doc.ColumnMode {
 		return
 	}
@@ -250,7 +250,7 @@ func (root *Root) columnHighlight(lc lineContents, str string, posCV map[int]int
 
 // RangeStyle applies the style to the specified range.
 // Apply style to contents.
-func RangeStyle(lc lineContents, start int, end int, style ovStyle) {
+func RangeStyle(lc contents, start int, end int, style ovStyle) {
 	for x := start; x < end; x++ {
 		lc[x].style = applyStyle(lc[x].style, style)
 	}
@@ -297,18 +297,19 @@ func (root *Root) drawStatus() {
 	root.Screen.ShowCursor(cursorPos, root.statusPos)
 }
 
-func (root *Root) leftStatus() (lineContents, int) {
+func (root *Root) leftStatus() (contents, int) {
 	if root.input.mode == Normal {
 		return root.normalLeftStatus()
 	}
 	return root.inputLeftStatus()
 }
 
-func (root *Root) normalLeftStatus() (lineContents, int) {
+func (root *Root) normalLeftStatus() (contents, int) {
 	number := ""
 	if root.DocumentLen() > 1 && root.screenMode == Docs {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
+
 	modeStatus := ""
 	if root.Doc.FollowMode {
 		modeStatus = "(Follow Mode)"
@@ -319,6 +320,9 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
 	}
+
+	//root.mu.Lock()
+	//defer root.mu.Unlock()
 
 	caption := root.Doc.FileName
 	if root.Doc.Caption != "" {
@@ -337,7 +341,7 @@ func (root *Root) normalLeftStatus() (lineContents, int) {
 	return leftContents, len(leftContents)
 }
 
-func (root *Root) inputLeftStatus() (lineContents, int) {
+func (root *Root) inputLeftStatus() (contents, int) {
 	input := root.input
 	searchMode := ""
 	if input.mode == Search || input.mode == Backsearch {
@@ -357,7 +361,7 @@ func (root *Root) inputLeftStatus() (lineContents, int) {
 	return leftContents, len(p) + input.cursorX
 }
 
-func (root *Root) rightStatus() lineContents {
+func (root *Root) rightStatus() contents {
 	next := ""
 	if !root.Doc.BufEOF() {
 		next = "..."
@@ -367,7 +371,7 @@ func (root *Root) rightStatus() lineContents {
 }
 
 // setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, lc lineContents) {
+func (root *Root) setContentString(vx int, vy int, lc contents) {
 	screen := root.Screen
 	for x, content := range lc {
 		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)

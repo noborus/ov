@@ -22,8 +22,8 @@ type content struct {
 	style tcell.Style
 }
 
-// lineContents represents one line of contents.
-type lineContents []content
+// contents represents one line of contents.
+type contents []content
 
 // The states of the ANSI escape code parser.
 const (
@@ -54,8 +54,8 @@ var csiCache sync.Map
 
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
-func parseString(str string, tabWidth int) lineContents {
-	lc := make(lineContents, 0, len(str))
+func parseString(str string, tabWidth int) contents {
+	lc := make(contents, 0, len(str))
 	state := ansiText
 	csiParameter := new(bytes.Buffer)
 	style := tcell.StyleDefault
@@ -147,7 +147,7 @@ func parseString(str string, tabWidth int) lineContents {
 					continue
 				}
 				bsFlag = true
-				bsContent = lastContent(lc)
+				bsContent = lc.last()
 				b -= (1 + len(string(bsContent.mainc)))
 				if bsContent.width > 1 {
 					lc = lc[:len(lc)-2]
@@ -156,7 +156,7 @@ func parseString(str string, tabWidth int) lineContents {
 				}
 				continue
 			}
-			lastC := lastContent(lc)
+			lastC := lc.last()
 			lastC.combc = append(lastC.combc, runeValue)
 			n := len(lc) - lastC.width
 			if n >= 0 && len(lc) > 0 {
@@ -205,8 +205,8 @@ func overstrike(p, m rune, style tcell.Style) tcell.Style {
 	return style
 }
 
-// lastContent returns the last character of Contents.
-func lastContent(lc lineContents) content {
+// last returns the last character of Contents.
+func (lc contents) last() content {
 	n := len(lc)
 	if n == 0 {
 		return content{}
@@ -363,13 +363,13 @@ func lookupColor(colorNumber int) string {
 // StrToContents converts a single-line string into a one line of contents.
 // Parse escape sequences, etc.
 // 1 Content matches the characters displayed on the screen.
-func StrToContents(str string, tabWidth int) lineContents {
+func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc lineContents) (string, map[int]int) {
+func ContentsToStr(lc contents) (string, map[int]int) {
 	var buff bytes.Buffer
 	posCV := make(map[int]int)
 

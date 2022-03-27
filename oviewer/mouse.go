@@ -275,7 +275,7 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 }
 
 // branchWidth returns the leftmost position of the number of wrapped line.
-func (root *Root) branchWidth(lc lineContents, branch int) int {
+func (root *Root) branchWidth(lc contents, branch int) int {
 	i := 0
 	w := root.startX
 	x := 0
