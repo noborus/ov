@@ -15,6 +15,9 @@ import (
 func (root *Root) toggleWrapMode() {
 	root.Doc.WrapMode = !root.Doc.WrapMode
 	root.Doc.x = 0
+	if root.Doc.ColumnMode {
+		root.Doc.x = root.columnModeX()
+	}
 	root.setMessagef("Set WrapMode %t", root.Doc.WrapMode)
 }
 
