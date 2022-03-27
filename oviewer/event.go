@@ -203,9 +203,8 @@ func (root *Root) followAll() {
 	root.mu.RUnlock()
 
 	if root.CurrentDoc != current {
-		root.CurrentDoc = current
 		log.Printf("switch document: %d", root.CurrentDoc)
-		root.SetDocument(root.CurrentDoc)
+		root.switchDocument(root.CurrentDoc)
 	}
 }
 
