@@ -321,9 +321,6 @@ func (root *Root) normalLeftStatus() (contents, int) {
 		modeStatus += "(Watch)"
 	}
 
-	//root.mu.Lock()
-	//defer root.mu.Unlock()
-
 	caption := root.Doc.FileName
 	if root.Doc.Caption != "" {
 		caption = root.Doc.Caption
