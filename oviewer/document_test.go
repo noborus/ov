@@ -179,8 +179,9 @@ func TestDocument_getContents(t *testing.T) {
 				t.Fatalf("OpenDocument %s", err)
 			}
 
-			for m.eof != 1 {
+			for !m.BufEOF() {
 			}
+
 			if got := m.getContents(tt.args.lN, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
 				g, _ := ContentsToStr(got)
 				w, _ := ContentsToStr(tt.want)
@@ -240,7 +241,7 @@ func TestDocument_searchLine(t *testing.T) {
 				t.Fatalf("OpenDocument %s", err)
 			}
 
-			for m.eof != 1 {
+			for !m.BufEOF() {
 			}
 
 			got, err := m.SearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
@@ -305,7 +306,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 				t.Fatalf("OpenDocument %s", err)
 			}
 
-			for m.eof != 1 {
+			for !m.BufEOF() {
 			}
 
 			got, err := m.BackSearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
