@@ -298,13 +298,7 @@ func (root *Root) Search(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	if str == "" {
-		root.searchWord = ""
-		root.searchReg = nil
-		return
-	}
-	root.searchWord = str
-	root.searchReg = regexpCompile(str, root.CaseSensitive)
+	root.input.value = str
 	ev := &eventSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
@@ -320,13 +314,7 @@ func (root *Root) BackSearch(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	if str == "" {
-		root.searchWord = ""
-		root.searchReg = nil
-		return
-	}
-	root.searchWord = str
-	root.searchReg = regexpCompile(str, root.CaseSensitive)
+	root.input.value = str
 	ev := &eventBackSearch{}
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)

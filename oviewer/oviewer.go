@@ -140,23 +140,23 @@ type general struct {
 // Config represents the settings of ov.
 type Config struct {
 	// StyleAlternate is a style that applies line by line.
-	StyleAlternate ovStyle
+	StyleAlternate OVStyle
 	// StyleHeader is the style that applies to the header.
-	StyleHeader ovStyle
+	StyleHeader OVStyle
 	// StyleHeader is the style that applies to the header.
-	StyleBody ovStyle
+	StyleBody OVStyle
 	// StyleOverStrike is a style that applies to overstrikes.
-	StyleOverStrike ovStyle
+	StyleOverStrike OVStyle
 	// OverLineS is a style that applies to overstrike underlines.
-	StyleOverLine ovStyle
+	StyleOverLine OVStyle
 	// StyleLineNumber is a style that applies line number.
-	StyleLineNumber ovStyle
+	StyleLineNumber OVStyle
 	// StyleSearchHighlight is the style that applies to the search highlight.
-	StyleSearchHighlight ovStyle
+	StyleSearchHighlight OVStyle
 	// StyleColumnHighlight is the style that applies to the column highlight.
-	StyleColumnHighlight ovStyle
+	StyleColumnHighlight OVStyle
 	// StyleMarkLine is a style that marked line.
-	StyleMarkLine ovStyle
+	StyleMarkLine OVStyle
 
 	// Old setting method.
 	// Alternating background color.
@@ -199,8 +199,8 @@ type Config struct {
 	Keybind map[string][]string
 }
 
-// ovStyle represents a style in addition to the original style.
-type ovStyle struct {
+// OVStyle represents a style in addition to the original style.
+type OVStyle struct {
 	// Background is a color name string.
 	Background string
 	// Foreground is a color name string.
@@ -316,28 +316,28 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 // NewConfig return the structure of Config with default values.
 func NewConfig() Config {
 	return Config{
-		StyleHeader: ovStyle{
+		StyleHeader: OVStyle{
 			Bold: true,
 		},
-		StyleAlternate: ovStyle{
+		StyleAlternate: OVStyle{
 			Background: "gray",
 		},
-		StyleOverStrike: ovStyle{
+		StyleOverStrike: OVStyle{
 			Bold: true,
 		},
-		StyleOverLine: ovStyle{
+		StyleOverLine: OVStyle{
 			Underline: true,
 		},
-		StyleLineNumber: ovStyle{
+		StyleLineNumber: OVStyle{
 			Bold: true,
 		},
-		StyleSearchHighlight: ovStyle{
+		StyleSearchHighlight: OVStyle{
 			Reverse: true,
 		},
-		StyleColumnHighlight: ovStyle{
+		StyleColumnHighlight: OVStyle{
 			Reverse: true,
 		},
-		StyleMarkLine: ovStyle{
+		StyleMarkLine: OVStyle{
 			Background: "darkgoldenrod",
 		},
 		General: general{
@@ -613,7 +613,7 @@ func (root *Root) debugMessage(msg string) {
 	log.Printf("%s:%s", root.Doc.FileName, msg)
 }
 
-func ToTcellStyle(s ovStyle) tcell.Style {
+func ToTcellStyle(s OVStyle) tcell.Style {
 	style := tcell.StyleDefault
 	style = style.Background(tcell.GetColor(s.Background))
 	style = style.Foreground(tcell.GetColor(s.Foreground))
@@ -628,7 +628,7 @@ func ToTcellStyle(s ovStyle) tcell.Style {
 	return style
 }
 
-func applyStyle(style tcell.Style, s ovStyle) tcell.Style {
+func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	if s.Background != "" {
 		style = style.Background(tcell.GetColor(s.Background))
 	}

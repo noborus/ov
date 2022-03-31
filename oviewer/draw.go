@@ -197,8 +197,8 @@ func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc contents) (int, int) 
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.
 // Apply style to contents.
-func (root *Root) bodyStyle(lc contents, style ovStyle) {
-	RangeStyle(lc, 0, len(lc), style)
+func (root *Root) bodyStyle(lc contents, s OVStyle) {
+	RangeStyle(lc, 0, len(lc), s)
 }
 
 // searchHighlight applies the style of the search highlight.
@@ -250,9 +250,9 @@ func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 
 // RangeStyle applies the style to the specified range.
 // Apply style to contents.
-func RangeStyle(lc contents, start int, end int, style ovStyle) {
+func RangeStyle(lc contents, start int, end int, s OVStyle) {
 	for x := start; x < end; x++ {
-		lc[x].style = applyStyle(lc[x].style, style)
+		lc[x].style = applyStyle(lc[x].style, s)
 	}
 }
 
@@ -267,10 +267,10 @@ func (root *Root) AlternateRowsStyle(lY int, y int) {
 
 // lineStyle applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
-func (root *Root) lineStyle(y int, style ovStyle) {
+func (root *Root) lineStyle(y int, s OVStyle) {
 	for x := 0; x < root.vWidth; x++ {
-		r, c, s, _ := root.GetContent(x, y)
-		root.Screen.SetContent(x, y, r, c, applyStyle(s, style))
+		r, c, ts, _ := root.GetContent(x, y)
+		root.Screen.SetContent(x, y, r, c, applyStyle(ts, s))
 	}
 }
 
