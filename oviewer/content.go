@@ -223,7 +223,7 @@ func csToStyle(style tcell.Style, params string) tcell.Style {
 		return tcell.StyleDefault.Normal()
 	}
 	if s, ok := csiCache.Load(params); ok {
-		style = applyStyle(style, s.(ovStyle))
+		style = applyStyle(style, s.(OVStyle))
 		return style
 	}
 
@@ -234,62 +234,62 @@ func csToStyle(style tcell.Style, params string) tcell.Style {
 }
 
 // parseCSI actually parses the style and returns ovStyle.
-func parseCSI(params string) ovStyle {
-	style := ovStyle{}
+func parseCSI(params string) OVStyle {
+	s := OVStyle{}
 	fields := strings.Split(params, ";")
 	fl := len(fields)
 	for index := 0; index < fl; index++ {
 		field := fields[index]
 		switch field {
 		case "1", "01":
-			style.Bold = true
+			s.Bold = true
 		case "2", "02":
-			style.Dim = true
+			s.Dim = true
 		case "3", "03":
-			style.Italic = true
+			s.Italic = true
 		case "4", "04":
-			style.Underline = true
+			s.Underline = true
 		case "5", "05":
-			style.Blink = true
+			s.Blink = true
 		case "6", "06":
-			style.Blink = true
+			s.Blink = true
 		case "7", "07":
-			style.Reverse = true
+			s.Reverse = true
 		case "8", "08":
-			style.Reverse = true
+			s.Reverse = true
 		case "9", "09":
-			style.StrikeThrough = true
+			s.StrikeThrough = true
 		case "22", "24", "25", "27":
-			style = ovStyle{}
+			s = OVStyle{}
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
-			style.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
+			s.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
 		case "39":
-			style.Foreground = "default"
+			s.Foreground = "default"
 		case "40", "41", "42", "43", "44", "45", "46", "47":
 			colorNumber, _ := strconv.Atoi(field)
-			style.Background = colorName(int(tcell.Color(colorNumber - 40)))
+			s.Background = colorName(int(tcell.Color(colorNumber - 40)))
 		case "49":
-			style.Background = "default"
+			s.Background = "default"
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
-			style.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
+			s.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
 		case "100", "101", "102", "103", "104", "105", "106", "107":
 			colorNumber, _ := strconv.Atoi(field)
-			style.Background = colorName(int(tcell.Color(colorNumber - 92)))
+			s.Background = colorName(int(tcell.Color(colorNumber - 92)))
 		case "38", "48":
 			var i int
-			i, style = csColor(style, fields[index:])
+			i, s = csColor(s, fields[index:])
 			index += i
 		}
 	}
-	return style
+	return s
 }
 
 // csColor parses 8-bit color and 24-bit color.
-func csColor(style ovStyle, fields []string) (int, ovStyle) {
+func csColor(s OVStyle, fields []string) (int, OVStyle) {
 	if len(fields) < 2 {
-		return 1, style
+		return 1, s
 	}
 
 	var color string
@@ -309,12 +309,12 @@ func csColor(style ovStyle, fields []string) (int, ovStyle) {
 	}
 	if len(color) > 0 {
 		if fg == "38" {
-			style.Foreground = color
+			s.Foreground = color
 		} else {
-			style.Background = color
+			s.Background = color
 		}
 	}
-	return index, style
+	return index, s
 }
 
 // colorName returns a string that can be used to specify the color of tcell.

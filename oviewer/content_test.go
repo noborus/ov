@@ -10,8 +10,8 @@ import (
 )
 
 func setup() {
-	OverStrikeStyle = ToTcellStyle(ovStyle{Bold: true})
-	OverLineStyle = ToTcellStyle(ovStyle{Underline: true})
+	OverStrikeStyle = ToTcellStyle(OVStyle{Bold: true})
+	OverLineStyle = ToTcellStyle(OVStyle{Underline: true})
 }
 
 func TestMain(m *testing.M) {

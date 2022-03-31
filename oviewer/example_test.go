@@ -58,3 +58,23 @@ func ExampleExecCommand() {
 		panic(err)
 	}
 }
+
+func ExampleSearch() {
+	doc, err := oviewer.NewDocument()
+	if err != nil {
+		panic(err)
+	}
+	s := "Hello, World!"
+	if err := doc.ReadAll(bytes.NewBufferString(s)); err != nil {
+		panic(err)
+	}
+
+	ov, err := oviewer.NewOviewer(doc)
+	if err != nil {
+		panic(err)
+	}
+	ov.Search("H")
+	if err := ov.Run(); err != nil {
+		panic(err)
+	}
+}

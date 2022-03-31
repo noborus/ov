@@ -201,7 +201,7 @@ func TestRoot_Run(t *testing.T) {
 func Test_applyStyle(t *testing.T) {
 	type args struct {
 		style tcell.Style
-		s     ovStyle
+		s     OVStyle
 	}
 	tests := []struct {
 		name string
@@ -212,7 +212,7 @@ func Test_applyStyle(t *testing.T) {
 			name: "test1",
 			args: args{
 				style: tcell.StyleDefault,
-				s: ovStyle{
+				s: OVStyle{
 					Background: "red",
 					Foreground: "white",
 				},
