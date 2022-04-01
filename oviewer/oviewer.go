@@ -437,7 +437,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
-				root.mu.RLock()
+				root.mu.Lock()
 				for _, doc := range root.DocList {
 					if doc.FileName == event.Name {
 						select {
@@ -446,7 +446,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 						}
 					}
 				}
-				root.mu.RUnlock()
+				root.mu.Unlock()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
