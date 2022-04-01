@@ -110,6 +110,8 @@ func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
 
 // ReadFile reads file.
 func (m *Document) ReadFile(fileName string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if fileName == "" {
 		if term.IsTerminal(0) {
 			return ErrMissingFile
@@ -193,15 +195,17 @@ func (m *Document) onceFollowMode() {
 		return
 	}
 
+	var cancel context.CancelFunc
 	ctx := context.Background()
-	ctx, m.cancel = context.WithCancel(ctx)
-	go m.startFollowMode(ctx)
+	ctx, cancel = context.WithCancel(ctx)
+	go m.startFollowMode(ctx, cancel)
+	m.cancel = cancel
 }
 
 // startFollowMode opens the file in follow mode.
 // Seek to the position where the file was closed, and then read.
-func (m *Document) startFollowMode(ctx context.Context) {
-	defer m.cancel()
+func (m *Document) startFollowMode(ctx context.Context, cancel context.CancelFunc) {
+	defer cancel()
 	<-m.followCh
 	if m.seekable {
 		// Wait for the file to open until it changes.
