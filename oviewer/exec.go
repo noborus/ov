@@ -47,8 +47,6 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 		<-docout.eofCh
 		atomic.StoreInt32(&docout.changed, 1)
 		atomic.StoreInt32(&docerr.changed, 1)
-		docout.FileName = "STDOUT(done)"
-		docerr.FileName = "STDERR(done)"
 		atomic.StoreInt32(&docout.closed, 1)
 		atomic.StoreInt32(&docerr.closed, 1)
 	}()
