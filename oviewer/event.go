@@ -57,10 +57,10 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			searcher := root.setSearcher(ev.str, root.CaseSensitive)
 			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine()+1, searcher)
 		case *eventBackSearch:
-			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+			searcher := root.setSearcher(ev.str, root.CaseSensitive)
 			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine()-1, searcher)
 		case *viewModeInput:
 			root.setViewMode(ev.value)
@@ -265,11 +265,13 @@ func (root *Root) MoveBottom() {
 
 // eventSearch represents search event.
 type eventSearch struct {
+	str string
 	tcell.EventTime
 }
 
 func (root *Root) eventNextSearch() {
 	ev := &eventSearch{}
+	ev.str = root.input.value
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
@@ -279,11 +281,13 @@ func (root *Root) eventNextSearch() {
 
 // eventBackSearch represents backward search event.
 type eventBackSearch struct {
+	str string
 	tcell.EventTime
 }
 
 func (root *Root) eventNextBackSearch() {
 	ev := &eventBackSearch{}
+	ev.str = root.input.value
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
@@ -298,8 +302,8 @@ func (root *Root) Search(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	root.input.value = str
 	ev := &eventSearch{}
+	ev.str = str
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
@@ -314,8 +318,8 @@ func (root *Root) BackSearch(str string) {
 	if !root.checkScreen() {
 		return
 	}
-	root.input.value = str
 	ev := &eventBackSearch{}
+	ev.str = str
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
