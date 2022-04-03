@@ -45,6 +45,7 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 
 	go func() {
 		<-docout.eofCh
+		<-docerr.eofCh
 		atomic.StoreInt32(&docout.changed, 1)
 		atomic.StoreInt32(&docerr.changed, 1)
 		atomic.StoreInt32(&docout.closed, 1)
