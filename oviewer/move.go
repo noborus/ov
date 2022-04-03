@@ -75,9 +75,8 @@ func (root *Root) movePgDn() {
 
 func (root *Root) limitMoveDown(x int, y int) {
 	m := root.Doc
-	endNum := root.Doc.BufEndNum()
-	if y+root.vHight >= endNum {
-		tx, tn := root.bottomLineNum(endNum)
+	if y+root.vHight >= root.Doc.BufEndNum()-root.Doc.SkipLines {
+		tx, tn := root.bottomLineNum(root.Doc.BufEndNum())
 		if y > tn || (y == tn && x > tx) {
 			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
 				m.topLN = tn
@@ -401,7 +400,7 @@ func (root *Root) bottomLineNum(lN int) (int, int) {
 
 	hight := (root.vHight - root.headerLen) - 2
 	if !root.Doc.WrapMode {
-		return 0, lN - (hight + root.headerLen)
+		return 0, lN - (hight + root.Doc.firstLine())
 	}
 	// WrapMode
 	lX, lN := root.findNumUp(0, lN, hight)
