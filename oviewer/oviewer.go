@@ -158,16 +158,6 @@ type Config struct {
 	// StyleMarkLine is a style that marked line.
 	StyleMarkLine OVStyle
 
-	// Old setting method.
-	// Alternating background color.
-	ColorAlternate string
-	// Header color.
-	ColorHeader string
-	// OverStrike color.
-	ColorOverStrike string
-	// OverLine color.
-	ColorOverLine string
-
 	// General represents the general behavior.
 	General general
 	// Mode represents the operation of the customized mode.
@@ -197,6 +187,17 @@ type Config struct {
 
 	// KeyBinding
 	Keybind map[string][]string
+
+	// Old setting.
+
+	// Deprecated: Alternating background color.
+	ColorAlternate string
+	// Deprecated: Header color.
+	ColorHeader string
+	// Deprecated: OverStrike color.
+	ColorOverStrike string
+	// Deprecated: OverLine color.
+	ColorOverLine string
 }
 
 // OVStyle represents a style in addition to the original style.
