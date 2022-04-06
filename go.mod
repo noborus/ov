@@ -8,7 +8,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/gdamore/tcell/v2 v2.4.0
+	github.com/gdamore/tcell/v2 v2.5.0
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.15.1
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
+	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/ini.v1 v1.66.4 // indirect
 )
