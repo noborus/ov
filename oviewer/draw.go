@@ -385,7 +385,5 @@ func (root *Root) clearEOL(x int, y int) {
 
 // clearLine clear the specified line.
 func (root *Root) clearLine(y int) {
-	for x := 0; x < root.vWidth; x++ {
-		root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault)
-	}
+	root.clearEOL(0, y)
 }
