@@ -13,65 +13,83 @@ import (
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
 func ExecCommand(command *exec.Cmd) (*Root, error) {
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		command.Stdin = os.Stdin
+	docout, docerr, err := newOutErrDocument()
+	if err != nil {
+		return nil, err
 	}
 
+	go finishCommand(docout, docerr)
+
+	so, se, err := commandStart(command)
+	if err != nil {
+		return nil, err
+	}
+
+	err = docout.ReadAll(so)
+	if err != nil {
+		log.Printf("%s", err)
+	}
+	err = docerr.ReadAll(se)
+	if err != nil {
+		log.Printf("%s", err)
+	}
+	return NewOviewer(docout, docerr)
+}
+
+func newOutErrDocument() (*Document, *Document, error) {
 	docout, err := NewDocument()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	docout.FileName = "STDOUT"
-	outReader, err := command.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
 	docout.preventReload = true
 
 	docerr, err := NewDocument()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	docerr.FileName = "STDERR"
-	errReader, err := command.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
 	docerr.preventReload = true
 
-	if err := command.Start(); err != nil {
-		return nil, err
+	return docout, docerr, nil
+}
+
+func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		command.Stdin = os.Stdin
 	}
 
-	go func() {
-		<-docout.eofCh
-		<-docerr.eofCh
-		atomic.StoreInt32(&docout.changed, 1)
-		atomic.StoreInt32(&docerr.changed, 1)
-		atomic.StoreInt32(&docout.closed, 1)
-		atomic.StoreInt32(&docerr.closed, 1)
-	}()
-
-	var reader io.Reader
-	reader = outReader
+	// STDOUT
+	outReader, err := command.StdoutPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+	var so io.Reader = outReader
 	if STDOUTPIPE != nil {
-		reader = io.TeeReader(reader, STDOUTPIPE)
+		so = io.TeeReader(so, STDOUTPIPE)
 	}
 
-	err = docout.ReadAll(reader)
+	// STDERR
+	errReader, err := command.StderrPipe()
 	if err != nil {
-		log.Printf("%s", err)
+		return nil, nil, err
 	}
-
-	var errreader io.Reader
-	errreader = errReader
+	var se io.Reader = errReader
 	if STDERRPIPE != nil {
-		errreader = io.TeeReader(errreader, STDERRPIPE)
-	}
-	err = docerr.ReadAll(errreader)
-	if err != nil {
-		log.Printf("%s", err)
+		se = io.TeeReader(se, STDERRPIPE)
 	}
 
-	return NewOviewer(docout, docerr)
+	if err := command.Start(); err != nil {
+		return nil, nil, err
+	}
+	return so, se, nil
+}
+
+func finishCommand(docout *Document, docerr *Document) {
+	<-docout.eofCh
+	<-docerr.eofCh
+	atomic.StoreInt32(&docout.changed, 1)
+	atomic.StoreInt32(&docerr.changed, 1)
+	atomic.StoreInt32(&docout.closed, 1)
+	atomic.StoreInt32(&docerr.closed, 1)
 }
