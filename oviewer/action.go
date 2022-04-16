@@ -187,7 +187,7 @@ func (root *Root) markPrev() {
 
 // addMark marks the current line number.
 func (root *Root) addMark() {
-	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.endNum)
+	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
 	root.Doc.marked = removeInt(root.Doc.marked, c)
 	root.Doc.marked = append(root.Doc.marked, c)
 	root.setMessagef("Marked to line %d", c-root.Doc.firstLine()+1)
@@ -334,6 +334,7 @@ func (root *Root) setTabWidth(input string) {
 	root.Doc.ClearCache()
 }
 
+// setWatchInterval sets the Watch interval.
 func (root *Root) setWatchInterval(input string) {
 	interval, err := strconv.Atoi(input)
 	if err != nil {
@@ -355,6 +356,8 @@ func (root *Root) setWatchInterval(input string) {
 	root.setMessagef("Set watch interval %d", interval)
 }
 
+// setWriteBA sets the number before and after the line
+// to be written at the end.
 func (root *Root) setWriteBA(input string) {
 	ba := strings.Split(input, ":")
 	bstr := ba[0]

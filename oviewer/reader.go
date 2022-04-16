@@ -288,6 +288,7 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 }
 
 // readAll actually reads everything.
+// The read lines are stored in the lines of the Document.
 func (m *Document) readAll(reader *bufio.Reader) error {
 	var line strings.Builder
 
@@ -317,6 +318,9 @@ func (m *Document) append(lines ...string) {
 	atomic.StoreInt32(&m.changed, 1)
 }
 
+// reload will read again.
+// Regular files are reopened and reread increase.
+// The pipe will reset what it has read.
 func (m *Document) reload() error {
 	if (m.file == os.Stdin && m.BufEOF()) || !m.seekable && m.checkClose() {
 		return fmt.Errorf("%w %s", ErrAlreadyClose, m.FileName)
@@ -343,6 +347,7 @@ func (m *Document) reload() error {
 	return m.ReadFile(m.FileName)
 }
 
+// reset clears all lines.
 func (m *Document) reset() {
 	m.mu.Lock()
 	m.endNum = 0
@@ -352,6 +357,7 @@ func (m *Document) reset() {
 	m.ClearCache()
 }
 
+// checkClose returns if the file is closed.
 func (m *Document) checkClose() bool {
 	return atomic.LoadInt32(&m.closed) == 1
 }
