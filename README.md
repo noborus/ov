@@ -34,14 +34,14 @@ ov is a terminal pager.
 	* 3.9. [Mouse support](#Mousesupport)
 * 4. [Called from other commands](#Calledfromothercommands)
 	* 4.1. [psql](#psql)
-		* 4.1.1. [pgcli](#pgcli)
-	* 4.2. [mysql](#mysql)
-		* 4.2.1. [mycli](#mycli)
-	* 4.3. [git](#git)
-	* 4.4. [man](#man)
-	* 4.5. [procs](#procs)
-	* 4.6. [bat](#bat)
-	* 4.7. [csv](#csv)
+	* 4.2. [pgcli](#pgcli)
+	* 4.3. [mysql](#mysql)
+	* 4.4. [mycli](#mycli)
+	* 4.5. [git](#git)
+	* 4.6. [man](#man)
+	* 4.7. [procs](#procs)
+	* 4.8. [bat](#bat)
+	* 4.9. [csv](#csv)
 * 5. [Command option](#Commandoption)
 * 6. [Key bindings](#Keybindings)
 * 7. [Customize](#Customize)
@@ -315,7 +315,7 @@ StyleColumnHighlight:
   Reverse: true
 ```
 
-####  4.1.1. <a name='pgcli'></a>pgcli
+###  4.2. <a name='pgcli'></a>pgcli
 
 `ov` can be set as a pager for [pgcli](https://github.com/dbcli/pgcli).
 
@@ -325,7 +325,7 @@ StyleColumnHighlight:
 pager = 'ov -C -d "|" --skip-lines 1 -H1'
 ```
 
-###  4.2. <a name='mysql'></a>mysql
+###  4.3. <a name='mysql'></a>mysql
 
 `ov` can be used as a pager for mysql or MySQL Shell.
 
@@ -366,7 +366,7 @@ SQL mode and Python mode.
 \option --persist pager "ov -w=f -H1 --skip-lines 1 -F -C -d '|'"
 ```
 
-####  4.2.1. <a name='mycli'></a>mycli
+###  4.4. <a name='mycli'></a>mycli
 
 `ov` can be set as a pager for [mycli](https://github.com/dbcli/mycli).
 
@@ -378,7 +378,7 @@ Please refer to [https://www.mycli.net/config](https://www.mycli.net/config).
 pager="ov -C --skip-lines 1 --header 1 -d'|'"
 ```
 
-###  4.3. <a name='git'></a>git
+###  4.5. <a name='git'></a>git
 
 `ov` can also be used as a git pager.
 
@@ -393,7 +393,7 @@ It can be used to display logs and diffs and can be searched for incremental sea
 
 ![ov-git.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-git.png)
 
-###  4.4. <a name='man'></a>man
+###  4.6. <a name='man'></a>man
 
 `ov` can also be used as a man pager.
 
@@ -414,7 +414,7 @@ StyleOverLine:
   Underline: true
 ```
 
-###  4.5. <a name='procs'></a>procs
+###  4.7. <a name='procs'></a>procs
 
 [procs](https://github.com/dalance/procs) supports pager.
 You can specify the pager in the [configuration file](https://github.com/dalance/procs#configuration).
@@ -426,7 +426,7 @@ It is convenient to set header(`-H`) to 1 or 2.
 command = "ov -H=1 -w=false -d=│"
 ```
 
-###  4.6. <a name='bat'></a>bat
+###  4.8. <a name='bat'></a>bat
 
 [bat](https://github.com/sharkdp/bat) supports pager.
 
@@ -436,7 +436,7 @@ You can use it by setting the environment variable PAGER or BAT_PAGER.
 export BAT_PAGER="ov -F"
 ```
 
-###  4.7. <a name='csv'></a>csv
+###  4.9. <a name='csv'></a>csv
 
 `ov` can also be used as a csv viewer.
 
