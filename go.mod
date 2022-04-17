@@ -9,7 +9,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/gdamore/tcell/v2 v2.5.0
+	github.com/gdamore/tcell/v2 v2.5.1
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.15.1

@@ -64,13 +64,13 @@ func (root *Root) drawHeader() int {
 		}
 
 		lc := m.getContents(lY, m.TabWidth)
-		str, posCV := ContentsToStr(lc)
+		lineStr, posCV := m.getContentsStr(lY, lc)
 		root.lnumber[hy] = lineNumber{
 			line: lY,
 			wrap: wrapNum,
 		}
 
-		root.columnHighlight(lc, str, posCV)
+		root.columnHighlight(lc, lineStr, posCV)
 		root.blankLineNumber(hy)
 
 		lX, lY = root.drawLine(hy, lX, lY, lc)
