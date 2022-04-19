@@ -55,12 +55,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if config.Debug {
 			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
-		if config.General.ColumnDelimiter == "\\t" {
-			config.General.ColumnDelimiter = "\t"
-		}
-
-		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
-		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
 
 		if ver {
 			fmt.Printf("ov version %s rev:%s\n", Version, Revision)
@@ -74,6 +68,14 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if completion != "" {
 			return Completion(cmd, completion)
 		}
+
+		if config.General.ColumnDelimiter == "\\t" {
+			config.General.ColumnDelimiter = "\t"
+		}
+
+		// Set a global variable to convert to a style before opening the file.
+		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
+		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
 
 		SetRedirect()
 
@@ -179,7 +181,7 @@ func SetRedirect() {
 		oviewer.STDOUTPIPE = os.Stdout
 	}
 
-	if term.IsTerminal(int(os.Stdout.Fd())) {
+	if term.IsTerminal(int(os.Stderr.Fd())) {
 		tmpStderr := os.Stderr
 		os.Stderr = nil
 		defer func() {
