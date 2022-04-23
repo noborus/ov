@@ -213,8 +213,10 @@ ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 
 ###  3.5. <a name='execmode'></a>exec mode
 
-Execute the command to display stdout / stderr.
+Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
+
+Shows the stderr screen as soon as an error occurs, when used with `--follow-all`.
 
 ```console
 ov --follow-all --exec -- make
@@ -584,7 +586,7 @@ You can customize the following items.
 * StyleMarkLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
-Specify bool values for Bold, Blink, Shaded, Italic, and Underline.
+Specify bool values for Reverse, Bold, Blink, Dim, Italic, and Underline.
 
 [Example]
 
@@ -594,6 +596,17 @@ StyleAlternate:
   Bold: true
   Underline: true
 ```
+
+| item name | value | example |
+|:----------|:------|:--------|
+| Foreground | "color name" or "rgb" | "red" |
+| Background | "color name" or "rgb" | "#2a2a2a" |
+| Reverse | true/false | true |
+| Bold | true/false | true |
+| Blink | true/false | true |
+| Dim | true/false | false |
+| Italic | true/false | false |
+| Underline | true/false | false |
 
 ###  7.2. <a name='Keybindingcustomization'></a>Key binding customization
 
