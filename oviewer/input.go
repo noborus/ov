@@ -18,13 +18,15 @@ type Input struct {
 	value   string
 	cursorX int
 
-	ModeCandidate      *candidate
-	SearchCandidate    *candidate
-	GoCandidate        *candidate
-	DelimiterCandidate *candidate
-	TabWidthCandidate  *candidate
-	WatchCandidate     *candidate
-	WriteBACandidate   *candidate
+	ModeCandidate        *candidate
+	SearchCandidate      *candidate
+	GoCandidate          *candidate
+	DelimiterCandidate   *candidate
+	TabWidthCandidate    *candidate
+	WatchCandidate       *candidate
+	WriteBACandidate     *candidate
+	SectionDelmCandidate *candidate
+	SectionPosCandidate  *candidate
 }
 
 // InputMode represents the state of the input.
@@ -53,6 +55,10 @@ const (
 	SkipLines
 	// WriteBA is the number of ranges to write at quit.
 	WriteBA
+	// SectionDelimiter is a section delimiter input mode.
+	SectionDelimiter
+	// SectionPosition is a section start position input mode.
+	SectionPosition
 )
 
 // InputEvent input key events.
@@ -268,6 +274,20 @@ func NewInput() *Input {
 			":",
 		},
 	}
+	i.SectionDelmCandidate = &candidate{
+		list: []string{
+			"^diff",
+			"^$",
+			"^" + FormFeed,
+		},
+	}
+	i.SectionPosCandidate = &candidate{
+		list: []string{
+			"2",
+			"1",
+			"0",
+		},
+	}
 	i.EventInput = &normalInput{}
 	return &i
 }
@@ -352,6 +372,23 @@ func (root *Root) setGoLineMode() {
 	input.cursorX = 0
 	input.mode = Goline
 	input.EventInput = newGotoInput(input.GoCandidate)
+}
+
+func (root *Root) setSectionDelimiterMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = SectionDelimiter
+	input.EventInput = newSectionDelimiterInput(input.SectionDelmCandidate)
+}
+
+func (root *Root) setSectionPosMode() {
+	log.Println("section pos")
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = SectionPosition
+	input.EventInput = newSectionPosInput(input.SectionPosCandidate)
 }
 
 // EventInput is a generic interface for inputs.
@@ -792,6 +829,78 @@ func (c *candidate) down() string {
 
 	c.p = 0
 	return c.list[c.p]
+}
+
+// delimiterInput represents the delimiter input mode.
+type sectionDelimiterInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+// newSectionDelimiterInput returns sectionDelimiterInput.
+func newSectionDelimiterInput(clist *candidate) *sectionDelimiterInput {
+	return &sectionDelimiterInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (d *sectionDelimiterInput) Prompt() string {
+	return "sectionDelimiter:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (d *sectionDelimiterInput) Confirm(str string) tcell.Event {
+	d.value = str
+	d.clist.list = toLast(d.clist.list, str)
+	d.clist.p = 0
+	d.SetEventNow()
+	return d
+}
+
+// Up returns strings when the up key is pressed during input.
+func (d *sectionDelimiterInput) Up(str string) string {
+	return d.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (d *sectionDelimiterInput) Down(str string) string {
+	return d.clist.down()
+}
+
+// sectionPosInput represents the section start position input mode.
+type sectionPosInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+// newSectionDelimiterInput returns sectionDelimiterInput.
+func newSectionPosInput(clist *candidate) *sectionPosInput {
+	return &sectionPosInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (d *sectionPosInput) Prompt() string {
+	return "section postion:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (d *sectionPosInput) Confirm(str string) tcell.Event {
+	d.value = str
+	d.clist.list = toLast(d.clist.list, str)
+	d.clist.p = 0
+	d.SetEventNow()
+	return d
+}
+
+// Up returns strings when the up key is pressed during input.
+func (d *sectionPosInput) Up(str string) string {
+	return d.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (d *sectionPosInput) Down(str string) string {
+	return d.clist.down()
 }
 
 func toLast(list []string, s string) []string {

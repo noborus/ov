@@ -50,6 +50,11 @@ func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
 }
 
+// toggleFollowSection toggles follow section mode.
+func (root *Root) toggleFollowSection() {
+	root.Doc.FollowSection = !root.Doc.FollowSection
+}
+
 // closeFile close the file.
 func (root *Root) closeFile() {
 	if root.screenMode != Docs {
@@ -85,7 +90,11 @@ func (root *Root) reload(m *Document) {
 
 // toggleWatch toggles watch mode.
 func (root *Root) toggleWatch() {
-	root.Doc.WatchMode = !root.Doc.WatchMode
+	if root.Doc.WatchMode {
+		root.Doc.unWatchMode()
+	} else {
+		root.Doc.watchMode()
+	}
 	if root.Doc.WatchMode {
 		root.watchStart()
 	}
@@ -386,6 +395,24 @@ func (root *Root) setWriteBA(input string) {
 	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
 	root.IsWriteOriginal = true
 	root.Quit()
+}
+
+// setSectionDelimiter sets the delimiter string.
+func (root *Root) setSectionDelimiter(input string) {
+	root.Doc.setSectionDelimiter(input)
+	root.setMessagef("Set section delimiter %s", input)
+}
+
+// setSectionPos sets the section start position.
+func (root *Root) setSectionPos(input string) {
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())
+		return
+	}
+
+	root.Doc.SectionStartPosition = num
+	root.setMessagef("Set section start position %s", input)
 }
 
 // resize is a wrapper function that calls viewSync.

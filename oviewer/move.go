@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -274,6 +275,70 @@ func (root *Root) moveDown() {
 	num++
 	m.topLX = 0
 	root.limitMoveDown(m.topLX, num)
+}
+
+func (root *Root) NextSction() {
+	if root.Doc.SectionDelimiter == "" {
+		return
+	}
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+	m := root.Doc
+	num := m.topLN + (1 + root.Doc.SectionStartPosition)
+
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.SearchLine(ctx, searcher, num)
+	if err != nil {
+		log.Printf("next section:%v", err)
+		return
+	}
+	root.moveLine(n + root.Doc.SectionStartPosition)
+}
+
+func (root *Root) PrevSection() {
+	if root.Doc.SectionDelimiter == "" {
+		return
+	}
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+	m := root.Doc
+	num := m.topLN - (1 + root.Doc.SectionStartPosition)
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.BackSearchLine(ctx, searcher, num)
+	if err != nil {
+		log.Printf("prev section:%v", err)
+		return
+	}
+	root.moveLine(n + root.Doc.SectionStartPosition)
+}
+
+func (root *Root) LastSection() {
+	root.lastSection()
+}
+
+func (root *Root) lastSection() int {
+	root.resetSelect()
+
+	m := root.Doc
+	num := m.BufEndNum() - (1 + root.Doc.SectionStartPosition)
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.BackSearchLine(ctx, searcher, num)
+	if err != nil {
+		log.Printf("last section:%v", err)
+		return 0
+	}
+	bottom := m.BufEndNum() - m.latestNum
+	top := m.topLN
+	root.moveLine(n + root.Doc.SectionStartPosition)
+	top = m.topLN - top
+
+	return bottom - top
 }
 
 // Move to the left.

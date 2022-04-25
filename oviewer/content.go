@@ -155,6 +155,10 @@ func parseString(str string, tabWidth int) contents {
 					lc = lc[:len(lc)-1]
 				}
 				continue
+			case '\f':
+				c.mainc = rune('\f')
+				lc = append(lc, c)
+				continue
 			}
 			lastC := lc.last()
 			lastC.combc = append(lastC.combc, runeValue)

@@ -17,6 +17,7 @@ const (
 	actionSync           = "sync"
 	actionFollow         = "follow_mode"
 	actionFollowAll      = "follow_all"
+	actionFollowSection  = "follow_section"
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
 	actionWatch          = "watch"
@@ -35,6 +36,11 @@ const (
 	actionMovePgDn       = "page_down"
 	actionMoveHfUp       = "page_half_up"
 	actionMoveHfDn       = "page_half_down"
+	actionSection        = "section_mode"
+	actionSectionPos     = "section_position_mode"
+	actionNextSection    = "next_section"
+	actionLastSection    = "last_section"
+	actionPrevSection    = "previous_section"
 	actionMark           = "mark"
 	actionRemoveMark     = "remove_mark"
 	actionRemoveAllMark  = "remove_all_mark"
@@ -74,6 +80,7 @@ func (root *Root) setHandler() map[string]func() {
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
+		actionFollowSection:  root.toggleFollowSection,
 		actionReload:         root.Reload,
 		actionWatch:          root.toggleWatch,
 		actionWatchInterval:  root.setWatchIntervalMode,
@@ -92,6 +99,11 @@ func (root *Root) setHandler() map[string]func() {
 		actionMoveRight:      root.moveRight,
 		actionMoveHfLeft:     root.moveHfLeft,
 		actionMoveHfRight:    root.moveHfRight,
+		actionSection:        root.setSectionDelimiterMode,
+		actionSectionPos:     root.setSectionPosMode,
+		actionNextSection:    root.NextSction,
+		actionPrevSection:    root.PrevSection,
+		actionLastSection:    root.LastSection,
 		actionMoveMark:       root.markNext,
 		actionMovePrevMark:   root.markPrev,
 		actionViewMode:       root.setViewInputMode,
@@ -134,6 +146,7 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
 		actionFollowAll:      {"ctrl+a"},
+		actionFollowSection:  {"ctrl+y"},
 		actionCloseFile:      {"ctrl+F9", "ctrl+alt+s"},
 		actionReload:         {"F5", "ctrl+alt+l"},
 		actionWatch:          {"F4", "ctrl+alt+w"},
@@ -152,6 +165,11 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		actionMoveRight:      {"right"},
 		actionMoveHfLeft:     {"ctrl+left"},
 		actionMoveHfRight:    {"ctrl+right"},
+		actionSection:        {"-"},
+		actionSectionPos:     {"0"},
+		actionNextSection:    {"space"},
+		actionPrevSection:    {"ctrl+Up"},
+		actionLastSection:    {"9"},
 		actionMoveMark:       {">"},
 		actionMovePrevMark:   {"<"},
 		actionViewMode:       {"p", "P"},
