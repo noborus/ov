@@ -297,7 +297,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		buf, isPrefix, err := reader.ReadLine()
 		if err != nil {
 			// Insert formfeed instead of EOF.
-			m.append(FormFeed)
+			m.appendFormFeed()
 			return err
 		}
 		line.Write(buf)
@@ -319,6 +319,20 @@ func (m *Document) append(lines ...string) {
 	}
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
+}
+
+func (m *Document) appendFormFeed() {
+	line := ""
+	m.mu.Lock()
+	if m.endNum > 0 {
+		line = m.lines[m.endNum-1]
+	}
+	m.mu.Unlock()
+
+	// Do not add if the previous is FormFeed.
+	if line != FormFeed {
+		m.append(FormFeed)
+	}
 }
 
 // reload will read again.

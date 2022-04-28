@@ -278,7 +278,7 @@ func NewInput() *Input {
 		list: []string{
 			"^diff",
 			"^$",
-			"^" + FormFeed,
+			"^\\f",
 		},
 	}
 	i.SectionPosCandidate = &candidate{
@@ -845,7 +845,7 @@ func newSectionDelimiterInput(clist *candidate) *sectionDelimiterInput {
 
 // Prompt returns the prompt string in the input field.
 func (d *sectionDelimiterInput) Prompt() string {
-	return "sectionDelimiter:"
+	return "Section delimiter:"
 }
 
 // Confirm returns the event when the input is confirmed.
@@ -881,7 +881,7 @@ func newSectionPosInput(clist *candidate) *sectionPosInput {
 
 // Prompt returns the prompt string in the input field.
 func (d *sectionPosInput) Prompt() string {
-	return "section postion:"
+	return "Section postion:"
 }
 
 // Confirm returns the event when the input is confirmed.

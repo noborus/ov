@@ -277,10 +277,13 @@ func (root *Root) moveDown() {
 	root.limitMoveDown(m.topLX, num)
 }
 
-func (root *Root) NextSction() {
+func (root *Root) nextSction() {
+	// Move by page, if there is no section delimiter.
 	if root.Doc.SectionDelimiter == "" {
+		root.movePgDn()
 		return
 	}
+
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 	m := root.Doc
@@ -291,14 +294,16 @@ func (root *Root) NextSction() {
 	defer ctx.Done()
 	n, err := m.SearchLine(ctx, searcher, num)
 	if err != nil {
-		log.Printf("next section:%v", err)
+		root.movePgDn()
 		return
 	}
 	root.moveLine(n + root.Doc.SectionStartPosition)
 }
 
-func (root *Root) PrevSection() {
+func (root *Root) prevSection() {
+	// Move by page, if there is no section delimiter.
 	if root.Doc.SectionDelimiter == "" {
+		root.movePgUp()
 		return
 	}
 	root.resetSelect()
@@ -310,17 +315,17 @@ func (root *Root) PrevSection() {
 	defer ctx.Done()
 	n, err := m.BackSearchLine(ctx, searcher, num)
 	if err != nil {
-		log.Printf("prev section:%v", err)
+		root.moveLine(0)
 		return
 	}
 	root.moveLine(n + root.Doc.SectionStartPosition)
 }
 
-func (root *Root) LastSection() {
-	root.lastSection()
+func (root *Root) lastSection() {
+	root.lastSectionPos()
 }
 
-func (root *Root) lastSection() int {
+func (root *Root) lastSectionPos() int {
 	root.resetSelect()
 
 	m := root.Doc
@@ -331,6 +336,11 @@ func (root *Root) lastSection() int {
 	n, err := m.BackSearchLine(ctx, searcher, num)
 	if err != nil {
 		log.Printf("last section:%v", err)
+		return 0
+	}
+	if n == num {
+		// Does not move if section starts at the bottom line.
+		// (it is already the last section).
 		return 0
 	}
 	bottom := m.BufEndNum() - m.latestNum

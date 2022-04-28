@@ -313,7 +313,9 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, num in
 
 func (m *Document) watchMode() {
 	m.WatchMode = true
-	m.setSectionDelimiter("^" + FormFeed)
+	if m.SectionDelimiter == "" {
+		m.setSectionDelimiter("^" + FormFeed)
+	}
 	m.SectionStartPosition = 1
 	m.FollowSection = true
 }
