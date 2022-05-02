@@ -25,13 +25,15 @@ ov is a terminal pager.
 * 3. [Usage](#Usage)
 	* 3.1. [basic usage](#basicusage)
 	* 3.2. [config](#config)
-	* 3.3. [follow mode](#followmode)
-	* 3.4. [follow all mode](#followallmode)
-	* 3.5. [exec mode](#execmode)
-	* 3.6. [Search](#Search)
-	* 3.7. [Mark](#Mark)
-	* 3.8. [Watch](#Watch)
-	* 3.9. [Mouse support](#Mousesupport)
+	* 3.3. [section](#section)
+	* 3.4. [follow mode](#followmode)
+	* 3.5. [follow all mode](#followallmode)
+	* 3.6. [follow section mode](#followsectionmode)
+	* 3.7. [exec mode](#execmode)
+	* 3.8. [Search](#Search)
+	* 3.9. [Mark](#Mark)
+	* 3.10. [Watch](#Watch)
+	* 3.11. [Mouse support](#Mousesupport)
 * 4. [Called from other commands](#Calledfromothercommands)
 	* 4.1. [psql](#psql)
 	* 4.2. [pgcli](#pgcli)
@@ -189,7 +191,18 @@ Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/o
 
 If you like `less` key bindings, copy  [ovless.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
-###  3.3. <a name='followmode'></a>follow mode
+###  3.3. <a name='section'></a>section
+
+You specify `--section-delimiter`, you can move up and down in section units.
+The start of the section can be adjusted with `--section-start`.
+
+The section-delimiter is written in a regular expression (for example: "^#").
+(Line breaks are not included in matching lines).
+
+For example, if you specify "^diff" for a diff that contains multiple files,
+you can move the diff for each file.
+
+###  3.4. <a name='followmode'></a>follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -203,7 +216,7 @@ ov --follow-mode /var/log/syslog
 
 ![ov-tail.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-tail.gif)
 
-###  3.4. <a name='followallmode'></a>follow all mode
+###  3.5. <a name='followallmode'></a>follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -211,7 +224,20 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.5. <a name='execmode'></a>exec mode
+###  3.6. <a name='followsectionmode'></a>follow section mode
+
+Follow mode is line-by-line, while follow section mode is section-by-section.
+Follow section mode displays the bottom section.
+The following example is displayed from the header (#) at the bottom.
+
+```console
+ov --section-delimiter "^#" --follow-section README.md
+```
+
+ [Watch](#Watch) mode is a mode in which `--follow-section` and
+ `--section-delimiter "^\f"` are automatically set.
+
+###  3.7. <a name='execmode'></a>exec mode
 
 Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -224,7 +250,7 @@ ov --follow-all --exec -- make
 
 ![ov-exec.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-exec.gif)
 
-###  3.6. <a name='Search'></a>Search
+###  3.8. <a name='Search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -236,7 +262,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.7. <a name='Mark'></a>Mark
+###  3.9. <a name='Mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -246,11 +272,12 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.8. <a name='Watch'></a>Watch
+###  3.10. <a name='Watch'></a>Watch
 
-`ov` has a watch mode that reloads every N seconds.
-
-When started with --watch or -t and N(seconds) option, it reloads every N seconds.
+`ov` has a watch mode that reads the file every N seconds and adds it to the end.
+When you reach EOF, add '\f' instead.
+Go further to the last section.
+The default is'section-delimiter', so the last loaded content is displayed.
 
 for example.
 
@@ -258,11 +285,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-If you specify a file, it will be reloaded.
-
-For pipes such as standard input(including named pipe), the read amount is reset.
-
-###  3.9. <a name='Mousesupport'></a>Mouse support
+###  3.11. <a name='Mousesupport'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
