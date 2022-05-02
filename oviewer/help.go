@@ -99,7 +99,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionSection, "section delimiter string")
-	k.writeKeyBind(&b, actionSectionPos, "section start position")
+	k.writeKeyBind(&b, actionSectionStart, "section start position")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tClose and reload\n"))
 	fmt.Fprint(&b, "\n")

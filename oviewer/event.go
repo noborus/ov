@@ -86,8 +86,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setWriteBA(ev.value)
 		case *sectionDelimiterInput:
 			root.setSectionDelimiter(ev.value)
-		case *sectionPosInput:
-			root.setSectionPos(ev.value)
+		case *sectionStartInput:
+			root.setSectionStart(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:

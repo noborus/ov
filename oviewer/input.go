@@ -18,15 +18,15 @@ type Input struct {
 	value   string
 	cursorX int
 
-	ModeCandidate        *candidate
-	SearchCandidate      *candidate
-	GoCandidate          *candidate
-	DelimiterCandidate   *candidate
-	TabWidthCandidate    *candidate
-	WatchCandidate       *candidate
-	WriteBACandidate     *candidate
-	SectionDelmCandidate *candidate
-	SectionPosCandidate  *candidate
+	ModeCandidate         *candidate
+	SearchCandidate       *candidate
+	GoCandidate           *candidate
+	DelimiterCandidate    *candidate
+	TabWidthCandidate     *candidate
+	WatchCandidate        *candidate
+	WriteBACandidate      *candidate
+	SectionDelmCandidate  *candidate
+	SectionStartCandidate *candidate
 }
 
 // InputMode represents the state of the input.
@@ -57,8 +57,8 @@ const (
 	WriteBA
 	// SectionDelimiter is a section delimiter input mode.
 	SectionDelimiter
-	// SectionPosition is a section start position input mode.
-	SectionPosition
+	// SectionStart is a section start position input mode.
+	SectionStart
 )
 
 // InputEvent input key events.
@@ -281,7 +281,7 @@ func NewInput() *Input {
 			"^\\f",
 		},
 	}
-	i.SectionPosCandidate = &candidate{
+	i.SectionStartCandidate = &candidate{
 		list: []string{
 			"2",
 			"1",
@@ -382,13 +382,12 @@ func (root *Root) setSectionDelimiterMode() {
 	input.EventInput = newSectionDelimiterInput(input.SectionDelmCandidate)
 }
 
-func (root *Root) setSectionPosMode() {
-	log.Println("section pos")
+func (root *Root) setSectionStartMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = SectionPosition
-	input.EventInput = newSectionPosInput(input.SectionPosCandidate)
+	input.mode = SectionStart
+	input.EventInput = newSectionStartInput(input.SectionStartCandidate)
 }
 
 // EventInput is a generic interface for inputs.
@@ -867,25 +866,25 @@ func (d *sectionDelimiterInput) Down(str string) string {
 	return d.clist.down()
 }
 
-// sectionPosInput represents the section start position input mode.
-type sectionPosInput struct {
+// sectionStartInput represents the section start position input mode.
+type sectionStartInput struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newSectionDelimiterInput returns sectionDelimiterInput.
-func newSectionPosInput(clist *candidate) *sectionPosInput {
-	return &sectionPosInput{clist: clist}
+func newSectionStartInput(clist *candidate) *sectionStartInput {
+	return &sectionStartInput{clist: clist}
 }
 
 // Prompt returns the prompt string in the input field.
-func (d *sectionPosInput) Prompt() string {
-	return "Section postion:"
+func (d *sectionStartInput) Prompt() string {
+	return "Section start:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (d *sectionPosInput) Confirm(str string) tcell.Event {
+func (d *sectionStartInput) Confirm(str string) tcell.Event {
 	d.value = str
 	d.clist.list = toLast(d.clist.list, str)
 	d.clist.p = 0
@@ -894,12 +893,12 @@ func (d *sectionPosInput) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (d *sectionPosInput) Up(str string) string {
+func (d *sectionStartInput) Up(str string) string {
 	return d.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (d *sectionPosInput) Down(str string) string {
+func (d *sectionStartInput) Down(str string) string {
 	return d.clist.down()
 }
 

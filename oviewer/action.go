@@ -403,8 +403,8 @@ func (root *Root) setSectionDelimiter(input string) {
 	root.setMessagef("Set section delimiter %s", input)
 }
 
-// setSectionPos sets the section start position.
-func (root *Root) setSectionPos(input string) {
+// setSectionStart sets the section start position.
+func (root *Root) setSectionStart(input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())
