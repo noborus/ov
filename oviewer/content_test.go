@@ -137,7 +137,9 @@ func Test_parseStringOverlapping(t *testing.T) {
 		{
 			name: "testOverstrike4",
 			args: args{line: "\a", tabWidth: 8},
-			want: contents{},
+			want: contents{
+				{width: 0, style: tcell.StyleDefault, mainc: '\a', combc: nil},
+			},
 		},
 		{
 			name: "testOverstrike5",

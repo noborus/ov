@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -274,6 +275,80 @@ func (root *Root) moveDown() {
 	num++
 	m.topLX = 0
 	root.limitMoveDown(m.topLX, num)
+}
+
+func (root *Root) nextSction() {
+	// Move by page, if there is no section delimiter.
+	if root.Doc.SectionDelimiter == "" {
+		root.movePgDn()
+		return
+	}
+
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+	m := root.Doc
+	num := m.topLN + (1 + root.Doc.SectionStartPosition)
+
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.SearchLine(ctx, searcher, num)
+	if err != nil {
+		root.movePgDn()
+		return
+	}
+	root.moveLine(n + root.Doc.SectionStartPosition)
+}
+
+func (root *Root) prevSection() {
+	// Move by page, if there is no section delimiter.
+	if root.Doc.SectionDelimiter == "" {
+		root.movePgUp()
+		return
+	}
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+	m := root.Doc
+	num := m.topLN - (1 + root.Doc.SectionStartPosition)
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.BackSearchLine(ctx, searcher, num)
+	if err != nil {
+		root.moveLine(0)
+		return
+	}
+	root.moveLine(n + root.Doc.SectionStartPosition)
+}
+
+func (root *Root) lastSection() {
+	root.lastSectionPos()
+}
+
+func (root *Root) lastSectionPos() int {
+	root.resetSelect()
+
+	m := root.Doc
+	num := m.BufEndNum() - (1 + root.Doc.SectionStartPosition)
+	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	ctx := context.Background()
+	defer ctx.Done()
+	n, err := m.BackSearchLine(ctx, searcher, num)
+	if err != nil {
+		log.Printf("last section:%v", err)
+		return 0
+	}
+	if n == num {
+		// Does not move if section starts at the bottom line.
+		// (it is already the last section).
+		return 0
+	}
+	bottom := m.BufEndNum() - m.latestNum
+	top := m.topLN
+	root.moveLine(n + root.Doc.SectionStartPosition)
+	top = m.topLN - top
+
+	return bottom - top
 }
 
 // Move to the left.

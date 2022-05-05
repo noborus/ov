@@ -56,7 +56,7 @@ func TestDocument_lineToContents(t *testing.T) {
 			name: "testEmpty",
 			str:  ``,
 			args: args{
-				lN:       0,
+				lN:       1,
 				tabWidth: 4,
 			},
 			want:    nil,

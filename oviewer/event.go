@@ -22,7 +22,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 	go root.updateInterval(ctx)
 
 	for {
-		if root.General.FollowAll || root.Doc.FollowMode {
+		if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 			root.follow()
 		}
 
@@ -84,6 +84,10 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setWatchInterval(ev.value)
 		case *writeBAInput:
 			root.setWriteBA(ev.value)
+		case *sectionDelimiterInput:
+			root.setSectionDelimiter(ev.value)
+		case *sectionStartInput:
+			root.setSectionStart(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -180,7 +184,14 @@ func (root *Root) follow() {
 	}
 
 	root.skipDraw = false
-	root.TailSync()
+	if root.Doc.FollowSection {
+		pos := root.lastSectionPos()
+		if pos > 0 && (root.Doc.topLN+pos) < root.Doc.BufEndNum() {
+			root.moveLine(root.Doc.topLN + pos)
+		}
+	} else {
+		root.TailSync()
+	}
 	root.Doc.latestNum = num
 }
 

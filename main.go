@@ -246,11 +246,20 @@ func init() {
 		return []string{",\tcomma", "|\tvertical line", "\\\\t\ttab", "│\tbox"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	rootCmd.PersistentFlags().StringP("section-delimiter", "", "", "section delimiter")
+	_ = viper.BindPFlag("general.SectionDelimiter", rootCmd.PersistentFlags().Lookup("section-delimiter"))
+
+	rootCmd.PersistentFlags().IntP("section-start", "", 0, "section start position")
+	_ = viper.BindPFlag("general.SectionStartPosition", rootCmd.PersistentFlags().Lookup("section-start"))
+
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
 
 	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow all")
 	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
+
+	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "follow section")
+	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval")
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))

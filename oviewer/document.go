@@ -162,6 +162,7 @@ func STDINDocument() (*Document, error) {
 func (m *Document) GetLine(n int) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	if n < 0 || n >= m.endNum {
 		return ""
 	}
@@ -186,8 +187,13 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.endNum
+	endNum := m.endNum
+	m.mu.Unlock()
+
+	if m.BufEOF() {
+		endNum--
+	}
+	return endNum
 }
 
 // BufEOF return true if EOF is reached.
@@ -303,4 +309,23 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, num in
 		}
 	}
 	return 0, ErrNotFound
+}
+
+func (m *Document) watchMode() {
+	m.WatchMode = true
+	if m.SectionDelimiter == "" {
+		m.setSectionDelimiter("^" + FormFeed)
+	}
+	m.SectionStartPosition = 1
+	m.FollowSection = true
+}
+
+func (m *Document) unWatchMode() {
+	m.WatchMode = false
+	m.FollowSection = false
+}
+
+func (m *Document) setSectionDelimiter(delm string) {
+	m.SectionDelimiter = delm
+	m.SectionDelimiterReg = regexpCompile(delm, true)
 }

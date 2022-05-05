@@ -38,6 +38,8 @@ const (
 	XZ
 )
 
+const FormFeed = "\f"
+
 func compressType(header []byte) Compressed {
 	switch {
 	case bytes.Equal(header[:3], []byte{0x1f, 0x8b, 0x8}):
@@ -211,7 +213,6 @@ func (m *Document) startFollowMode(ctx context.Context, cancel context.CancelFun
 		// Wait for the file to open until it changes.
 		select {
 		case <-ctx.Done():
-			log.Println("follow mode cancel")
 			return
 		case <-m.changCh:
 		}
@@ -295,6 +296,8 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	for {
 		buf, isPrefix, err := reader.ReadLine()
 		if err != nil {
+			// Insert formfeed instead of EOF.
+			m.appendFormFeed()
 			return err
 		}
 		line.Write(buf)
@@ -318,6 +321,20 @@ func (m *Document) append(lines ...string) {
 	atomic.StoreInt32(&m.changed, 1)
 }
 
+func (m *Document) appendFormFeed() {
+	line := ""
+	m.mu.Lock()
+	if m.endNum > 0 {
+		line = m.lines[m.endNum-1]
+	}
+	m.mu.Unlock()
+
+	// Do not add if the previous is FormFeed.
+	if line != FormFeed {
+		m.append(FormFeed)
+	}
+}
+
 // reload will read again.
 // Regular files are reopened and reread increase.
 // The pipe will reset what it has read.
@@ -337,7 +354,10 @@ func (m *Document) reload() error {
 		}
 	}
 
-	m.reset()
+	if !m.WatchMode {
+		m.reset()
+		m.topLN = 0
+	}
 
 	if !m.seekable {
 		return nil

@@ -131,10 +131,18 @@ type general struct {
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool
+	// FollowSection is a follow mode that uses section instead of line.
+	FollowSection bool
 	// WatchInterval is the watch interval (seconds).
 	WatchInterval int
 	// MarkStyleWidth is width to apply the style of the marked line.
 	MarkStyleWidth int
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter string
+	// SectionDelimiterReg is a section delimiter.
+	SectionDelimiterReg *regexp.Regexp
+	// SectionStartPosition is a section start position.
+	SectionStartPosition int
 }
 
 // Config represents the settings of ov.
@@ -157,6 +165,8 @@ type Config struct {
 	StyleColumnHighlight OVStyle
 	// StyleMarkLine is a style that marked line.
 	StyleMarkLine OVStyle
+	// StyleSectionLine is a style that section delimiter line.
+	StyleSectionLine OVStyle
 
 	// General represents the general behavior.
 	General general
@@ -341,9 +351,13 @@ func NewConfig() Config {
 		StyleMarkLine: OVStyle{
 			Background: "darkgoldenrod",
 		},
+		StyleSectionLine: OVStyle{
+			Background: "#ff",
+		},
 		General: general{
-			TabWidth:       8,
-			MarkStyleWidth: 1,
+			TabWidth:             8,
+			MarkStyleWidth:       1,
+			SectionStartPosition: 0,
 		},
 	}
 }
@@ -511,15 +525,18 @@ func (root *Root) Run() error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse()
 	}
+	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
 
 	root.optimizedMan()
 
 	for n, doc := range root.DocList {
-		log.Printf("open [%d]%s", n, doc.FileName)
 		doc.general = root.Config.General
+		w := ""
 		if doc.general.WatchInterval > 0 {
-			doc.WatchMode = true
+			doc.watchMode()
+			w = "(watch)"
 		}
+		log.Printf("open [%d]%s%s", n, doc.FileName, w)
 	}
 
 	root.setModeConfig()

@@ -116,8 +116,8 @@ func parseString(str string, tabWidth int) contents {
 
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
-			switch runeValue {
-			case '\t': // TAB
+			switch {
+			case runeValue == '\t': // TAB
 				switch {
 				case tabWidth > 0:
 					tabStop := tabWidth - (tabX % tabWidth)
@@ -142,7 +142,7 @@ func parseString(str string, tabWidth int) contents {
 				default:
 				}
 				continue
-			case '\b': // BackSpace
+			case runeValue == '\b': // BackSpace
 				if len(lc) == 0 {
 					continue
 				}
@@ -155,11 +155,16 @@ func parseString(str string, tabWidth int) contents {
 					lc = lc[:len(lc)-1]
 				}
 				continue
+			case runeValue < 0x20:
+				c.mainc = runeValue
+				c.width = 0
+				lc = append(lc, c)
+				continue
 			}
 			lastC := lc.last()
 			lastC.combc = append(lastC.combc, runeValue)
 			n := len(lc) - lastC.width
-			if n >= 0 && len(lc) > 0 {
+			if n >= 0 && len(lc) > n {
 				lc[n] = lastC
 			}
 		case 1:

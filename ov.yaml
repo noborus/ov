@@ -36,6 +36,8 @@ StyleColumnHighlight:
   Reverse: true
 StyleMarkLine:
   Background: "darkgoldenrod"
+StyleSectionLine:
+  Background: "gray"
 
 # Keybind
 # Special key

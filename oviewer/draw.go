@@ -122,8 +122,9 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		currentY := lY
 		lX, lY = root.drawLine(y, lX, lY, lc)
 
-		root.AlternateRowsStyle(currentY, y)
+		root.alternateRowsStyle(currentY, y)
 		root.markStyle(currentY, y, markStyleWidth)
+		root.sectionLineHighlight(y, lc, lineStr)
 
 		if lX > 0 {
 			wrapNum++
@@ -256,8 +257,8 @@ func RangeStyle(lc contents, start int, end int, s OVStyle) {
 	}
 }
 
-// AlternateRowsStyle applies from beginning to end of line.
-func (root *Root) AlternateRowsStyle(lY int, y int) {
+// alternateRowsStyle applies from beginning to end of line.
+func (root *Root) alternateRowsStyle(lY int, y int) {
 	if root.Doc.AlternateRows {
 		if (lY)%2 == 1 {
 			root.lineStyle(y, root.StyleAlternate)
@@ -317,10 +318,12 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	if root.General.FollowAll {
 		modeStatus = "(Follow All)"
 	}
+	// Watch mode doubles as FollowSection mode.
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
+	} else if root.Doc.FollowSection {
+		modeStatus = "(Follow Section)"
 	}
-
 	caption := root.Doc.FileName
 	if root.Doc.Caption != "" {
 		caption = root.Doc.Caption
@@ -386,4 +389,15 @@ func (root *Root) clearEOL(x int, y int) {
 // clearLine clear the specified line.
 func (root *Root) clearLine(y int) {
 	root.clearEOL(0, y)
+}
+
+// columnHighlight applies the style of the column highlight.
+func (root *Root) sectionLineHighlight(y int, lc contents, str string) {
+	if root.Doc.SectionDelimiter == "" {
+		return
+	}
+	if !root.Doc.SectionDelimiterReg.MatchString(str) {
+		return
+	}
+	root.lineStyle(y, root.StyleSectionLine)
 }
