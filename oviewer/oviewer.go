@@ -677,6 +677,39 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	return style
 }
 
+// overwriteGeneral overwrites a general structure with a struct.
+func overwriteGeneral(a general, b general) general {
+	if b.TabWidth != 0 {
+		a.TabWidth = b.TabWidth
+	}
+	if b.Header != 0 {
+		a.Header = b.Header
+	}
+	if b.SkipLines != 0 {
+		a.SkipLines = b.SkipLines
+	}
+	a.AlternateRows = b.AlternateRows
+	a.ColumnMode = b.ColumnMode
+	a.LineNumMode = b.LineNumMode
+	a.WrapMode = b.WrapMode
+	if b.ColumnDelimiter != "" {
+		a.ColumnDelimiter = b.ColumnDelimiter
+	}
+	if b.WatchInterval != 0 {
+		a.WatchInterval = b.WatchInterval
+	}
+	if b.MarkStyleWidth != 0 {
+		a.MarkStyleWidth = b.MarkStyleWidth
+	}
+	if b.SectionDelimiter != "" {
+		a.SectionDelimiter = b.SectionDelimiter
+	}
+	if b.SectionStartPosition != 0 {
+		a.SectionStartPosition = b.SectionStartPosition
+	}
+	return a
+}
+
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
