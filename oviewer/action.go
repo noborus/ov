@@ -316,6 +316,7 @@ func (root *Root) setViewMode(input string) {
 	}
 
 	root.Doc.general = c
+	root.Doc.setSectionDelimiter(root.Doc.SectionDelimiter)
 	root.Doc.ClearCache()
 	root.ViewSync()
 	root.setMessagef("Set mode %s", input)

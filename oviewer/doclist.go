@@ -30,6 +30,7 @@ func (root *Root) hasDocChanged() bool {
 func (root *Root) addDocument(m *Document) {
 	root.setMessagef("add %s", m.FileName)
 	m.general = root.Config.General
+	m.setSectionDelimiter(m.SectionDelimiter)
 
 	root.mu.Lock()
 	root.DocList = append(root.DocList, m)
