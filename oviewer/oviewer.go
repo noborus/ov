@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"regexp"
 	"sync"
-	"sync/atomic"
 	"syscall"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -534,7 +533,6 @@ func (root *Root) Run() error {
 		doc.general = root.Config.General
 		w := ""
 		if doc.general.WatchInterval > 0 {
-			atomic.StoreInt32(&doc.formfeed, 1)
 			doc.watchMode()
 			w = "(watch)"
 		}

@@ -362,9 +362,7 @@ func (m *Document) reload() error {
 	}
 
 	atomic.StoreInt32(&m.closed, 0)
-	if atomic.LoadInt32(&m.formfeed) == 1 {
-		m.appendFormFeed()
-	}
+	m.appendFormFeed()
 	return m.ReadFile(m.FileName)
 }
 

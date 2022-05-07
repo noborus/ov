@@ -81,8 +81,6 @@ type Document struct {
 	bottomLN int
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
-	// if formfeed is 1, add formfeed at EOF.
-	formfeed int32
 
 	// x is the starting position of the current x.
 	x int
