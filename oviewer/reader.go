@@ -352,7 +352,9 @@ func (m *Document) reload() error {
 		}
 	}
 
-	if !m.WatchMode {
+	if m.WatchMode {
+		m.appendFormFeed()
+	} else {
 		m.reset()
 		m.topLN = 0
 	}
@@ -362,7 +364,6 @@ func (m *Document) reload() error {
 	}
 
 	atomic.StoreInt32(&m.closed, 0)
-	m.appendFormFeed()
 	return m.ReadFile(m.FileName)
 }
 
