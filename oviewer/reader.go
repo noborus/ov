@@ -296,8 +296,6 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	for {
 		buf, isPrefix, err := reader.ReadLine()
 		if err != nil {
-			// Insert formfeed instead of EOF.
-			m.appendFormFeed()
 			return err
 		}
 		line.Write(buf)
@@ -364,6 +362,9 @@ func (m *Document) reload() error {
 	}
 
 	atomic.StoreInt32(&m.closed, 0)
+	if atomic.LoadInt32(&m.formfeed) == 1 {
+		m.appendFormFeed()
+	}
 	return m.ReadFile(m.FileName)
 }
 

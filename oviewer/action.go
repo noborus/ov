@@ -117,8 +117,7 @@ func (root *Root) watchStart() {
 				ev := &eventReload{}
 				ev.SetEventNow()
 				ev.m = m
-				err := root.Screen.PostEvent(ev)
-				if err != nil {
+				if err := root.Screen.PostEvent(ev); err != nil {
 					log.Println(err)
 				}
 			} else {
