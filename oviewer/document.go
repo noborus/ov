@@ -81,6 +81,8 @@ type Document struct {
 	bottomLN int
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
+	// if formfeed is 1, add formfeed at EOF.
+	formfeed int32
 
 	// x is the starting position of the current x.
 	x int
@@ -187,13 +189,8 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
 	m.mu.Lock()
-	endNum := m.endNum
-	m.mu.Unlock()
-
-	if m.BufEOF() {
-		endNum--
-	}
-	return endNum
+	defer m.mu.Unlock()
+	return m.endNum
 }
 
 // BufEOF return true if EOF is reached.

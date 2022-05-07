@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -533,6 +534,7 @@ func (root *Root) Run() error {
 		doc.general = root.Config.General
 		w := ""
 		if doc.general.WatchInterval > 0 {
+			atomic.StoreInt32(&doc.formfeed, 1)
 			doc.watchMode()
 			w = "(watch)"
 		}
@@ -692,6 +694,9 @@ func overwriteGeneral(a general, b general) general {
 	a.ColumnMode = b.ColumnMode
 	a.LineNumMode = b.LineNumMode
 	a.WrapMode = b.WrapMode
+	a.FollowMode = b.FollowMode
+	a.FollowAll = b.FollowAll
+	a.FollowSection = b.FollowSection
 	if b.ColumnDelimiter != "" {
 		a.ColumnDelimiter = b.ColumnDelimiter
 	}
