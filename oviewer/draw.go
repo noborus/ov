@@ -396,6 +396,12 @@ func (root *Root) sectionLineHighlight(y int, lc contents, str string) {
 	if root.Doc.SectionDelimiter == "" {
 		return
 	}
+
+	if root.Doc.SectionDelimiterReg == nil {
+		log.Printf("Regular expression is not set: %s", root.Doc.SectionDelimiter)
+		return
+	}
+
 	if !root.Doc.SectionDelimiterReg.MatchString(str) {
 		return
 	}

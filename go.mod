@@ -12,7 +12,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.5.1
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.15.2
+	github.com/klauspost/compress v1.15.3
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -23,6 +23,6 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba // indirect
+	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171
 )
