@@ -287,8 +287,7 @@ func (root *Root) nextSction() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 	m := root.Doc
-	num := m.topLN + (1 + root.Doc.SectionStartPosition)
-
+	num := m.topLN + (1 - root.Doc.SectionStartPosition)
 	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
