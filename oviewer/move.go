@@ -287,7 +287,7 @@ func (root *Root) nextSction() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 	m := root.Doc
-	num := m.topLN + (1 - root.Doc.SectionStartPosition)
+	num := m.topLN + m.firstLine() + (1 - root.Doc.SectionStartPosition)
 	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
@@ -296,7 +296,7 @@ func (root *Root) nextSction() {
 		root.movePgDn()
 		return
 	}
-	root.moveLine(n + root.Doc.SectionStartPosition)
+	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
 }
 
 func (root *Root) prevSection() {
@@ -317,7 +317,7 @@ func (root *Root) prevSection() {
 		root.moveLine(0)
 		return
 	}
-	root.moveLine(n + root.Doc.SectionStartPosition)
+	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
 }
 
 func (root *Root) lastSection() {
@@ -328,7 +328,8 @@ func (root *Root) lastSectionPos() int {
 	root.resetSelect()
 
 	m := root.Doc
-	num := m.BufEndNum() - (1 + root.Doc.SectionStartPosition)
+	// +1 to avoid if the bottom line is a session delimiter.
+	num := m.BufEndNum() - 2
 	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
@@ -342,11 +343,15 @@ func (root *Root) lastSectionPos() int {
 		// (it is already the last section).
 		return 0
 	}
+
 	bottom := m.BufEndNum() - m.latestNum
 	top := m.topLN
-	root.moveLine(n + root.Doc.SectionStartPosition)
-	top = m.topLN - top
+	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
+	if top == 0 {
+		return 0
+	}
 
+	top = m.topLN - top
 	return bottom - top
 }
 
