@@ -41,7 +41,6 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionSync, "screen sync")
 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
 	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
-	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tMoving\n"))
@@ -59,9 +58,6 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
 	k.writeKeyBind(&b, actionGoLine, "number of go to line")
-	k.writeKeyBind(&b, actionNextSection, "next section")
-	k.writeKeyBind(&b, actionPrevSection, "previous section")
-	k.writeKeyBind(&b, actionLastSection, "last section")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tMove document\n"))
 	fmt.Fprint(&b, "\n")
@@ -98,8 +94,15 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHeader, "number of header lines")
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
+
+	fmt.Fprint(&b, gchalk.Bold("\n\tSection\n"))
+	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, actionSection, "section delimiter string")
 	k.writeKeyBind(&b, actionSectionStart, "section start position")
+	k.writeKeyBind(&b, actionNextSection, "next section")
+	k.writeKeyBind(&b, actionPrevSection, "previous section")
+	k.writeKeyBind(&b, actionLastSection, "last section")
+	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tClose and reload\n"))
 	fmt.Fprint(&b, "\n")
