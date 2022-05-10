@@ -246,7 +246,7 @@ func (root *Root) setSkipLines(input string) {
 		root.setMessagef("Set skip line: %s", ErrInvalidNumber.Error())
 		return
 	}
-	if num < 0 || num > root.vHight-1 {
+	if num < 0 {
 		root.setMessagef("Set skip line: %s", ErrOutOfRange.Error())
 		return
 	}
