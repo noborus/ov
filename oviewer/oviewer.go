@@ -352,7 +352,7 @@ func NewConfig() Config {
 			Background: "darkgoldenrod",
 		},
 		StyleSectionLine: OVStyle{
-			Background: "#ff",
+			Background: "green",
 		},
 		General: general{
 			TabWidth:             8,

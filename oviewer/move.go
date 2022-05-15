@@ -293,6 +293,8 @@ func (root *Root) nextSction() {
 	defer ctx.Done()
 	n, err := m.SearchLine(ctx, searcher, num)
 	if err != nil {
+		// Last section or no section.
+		root.setMessage("no next section")
 		root.movePgDn()
 		return
 	}
