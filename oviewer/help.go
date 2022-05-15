@@ -97,7 +97,7 @@ func KeyBindString(k KeyBind) string {
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tSection\n"))
 	fmt.Fprint(&b, "\n")
-	k.writeKeyBind(&b, actionSection, "section delimiter string")
+	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")
 	k.writeKeyBind(&b, actionSectionStart, "section start position")
 	k.writeKeyBind(&b, actionNextSection, "next section")
 	k.writeKeyBind(&b, actionPrevSection, "previous section")
