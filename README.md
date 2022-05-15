@@ -484,32 +484,35 @@ Usage:
   ov [flags]
 
 Flags:
-  -C, --alternate-rows            alternately change the line color
-  -i, --case-sensitive            case-sensitive in search
-  -d, --column-delimiter string   column delimiter (default ",")
-  -c, --column-mode               column mode
-      --completion string         generate completion script [bash|zsh|fish|powershell]
-      --config string             config file (default is $HOME/.ov.yaml)
-      --debug                     debug mode
-      --disable-mouse             disable mouse support
-  -e, --exec                      exec command
-  -X, --exit-write                output the current screen when exiting
-  -a, --exit-write-after int      NUM after the current lines when exiting
-  -b, --exit-write-before int     NUM before the current lines when exiting
-  -A, --follow-all                follow all
-  -f, --follow-mode               follow mode
-  -H, --header int                number of header rows to fix
-  -h, --help                      help for ov
-      --help-key                  display key bind information
-      --incsearch                 incremental search (default true)
-  -n, --line-number               line number mode
-  -F, --quit-if-one-screen        quit if the output fits on one screen
-      --regexp-search             regular expression search
-      --skip-lines int            skip the number of lines
-  -x, --tab-width int             tab stop width (default 8)
-  -v, --version                   display version information
-  -T, --watch int                 watch mode interval
-  -w, --wrap                      wrap mode (default true)
+  -C, --alternate-rows             alternately change the line color
+  -i, --case-sensitive             case-sensitive in search
+  -d, --column-delimiter string    column delimiter (default ",")
+  -c, --column-mode                column mode
+      --completion string          generate completion script [bash|zsh|fish|powershell]
+      --config string              config file (default is $HOME/.ov.yaml)
+      --debug                      debug mode
+      --disable-mouse              disable mouse support
+  -e, --exec                       exec command
+  -X, --exit-write                 output the current screen when exiting
+  -a, --exit-write-after int       NUM after the current lines when exiting
+  -b, --exit-write-before int      NUM before the current lines when exiting
+  -A, --follow-all                 follow all
+  -f, --follow-mode                follow mode
+      --follow-section             follow section
+  -H, --header int                 number of header rows to fix
+  -h, --help                       help for ov
+      --help-key                   display key bind information
+      --incsearch                  incremental search (default true)
+  -n, --line-number                line number mode
+  -F, --quit-if-one-screen         quit if the output fits on one screen
+      --regexp-search              regular expression search
+      --section-delimiter string   section delimiter
+      --section-start int          section start position
+      --skip-lines int             skip the number of lines
+  -x, --tab-width int              tab stop width (default 8)
+  -v, --version                    display version information
+  -T, --watch int                  watch mode interval
+  -w, --wrap                       wrap mode (default true)
 ```
 
 It can also be changed after startup.
@@ -522,8 +525,8 @@ It can also be changed after startup.
  [Q]                          * output screen and quit
  [ctrl+q]                     * set output screen and quit
  [ctrl+z]                     * suspend
- [h], [ctrl+f1], [ctrl+alt+c] * display help screen
- [ctrl+f2], [ctrl+alt+e]      * display log screen
+ [h], [ctrl+F1], [ctrl+alt+c] * display help screen
+ [ctrl+F2], [ctrl+alt+e]      * display log screen
  [ctrl+l]                     * screen sync
  [ctrl+f]                     * follow mode toggle
  [ctrl+a]                     * follow all mode toggle
@@ -581,6 +584,15 @@ It can also be changed after startup.
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
 
+	Section
+
+ [alt+d]                      * section delimiter regular expression
+ [ctrl+F3], [alt+s]           * section start position
+ [space]                      * next section
+ [^]                          * previous section
+ [9]                          * last section
+ [F2]                         * follow section mode toggle
+
 	Close and reload
 
  [ctrl+F9], [ctrl+alt+s]      * close file
@@ -609,6 +621,7 @@ You can customize the following items.
 * StyleSearchHighlight
 * StyleColumnHighlight
 * StyleMarkLine
+* StyleSectionLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
 Specify bool values for Reverse, Bold, Blink, Dim, Italic, and Underline.
