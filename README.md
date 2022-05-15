@@ -196,6 +196,8 @@ If you like `less` key bindings, copy  [ovless.yaml](https://raw.githubuserconte
 You specify `--section-delimiter`, you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`.
 
+![section.png](docs/section.png)
+
 The section-delimiter is written in a regular expression (for example: "^#").
 (Line breaks are not included in matching lines).
 
