@@ -293,6 +293,8 @@ func (root *Root) nextSction() {
 	defer ctx.Done()
 	n, err := m.SearchLine(ctx, searcher, num)
 	if err != nil {
+		// Last section or no section.
+		root.setMessage("no next section")
 		root.movePgDn()
 		return
 	}
@@ -328,6 +330,7 @@ func (root *Root) lastSectionPos() int {
 	root.resetSelect()
 
 	m := root.Doc
+	top := m.topLN + m.firstLine()
 	// +1 to avoid if the bottom line is a session delimiter.
 	num := m.BufEndNum() - 2
 	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
@@ -338,14 +341,12 @@ func (root *Root) lastSectionPos() int {
 		log.Printf("last section:%v", err)
 		return 0
 	}
-	if n == num {
+	if top > n {
 		// Does not move if section starts at the bottom line.
 		// (it is already the last section).
 		return 0
 	}
-
 	bottom := m.BufEndNum() - m.latestNum
-	top := m.topLN
 	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
 	if top == 0 {
 		return 0
