@@ -91,6 +91,9 @@ type Document struct {
 	marked      []int
 	markedPoint int
 
+	// Last moved Section position.
+	lastSectionPosNum int
+
 	// mu controls the mutex.
 	mu sync.Mutex
 }
