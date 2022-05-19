@@ -434,6 +434,17 @@ func (root *Root) TailSync() {
 	root.ViewSync()
 }
 
+// tailSection moves to the last section
+// and adjusts to its original position.
+func (root *Root) tailSection() {
+	moved := root.Doc.topLN - root.Doc.lastSectionPosNum
+	root.lastSection()
+	if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
+		root.moveLine(root.Doc.topLN + moved)
+	}
+	root.Doc.lastSectionPosNum = root.Doc.topLN
+}
+
 // prepareStartX prepares startX.
 func (root *Root) prepareStartX() {
 	root.startX = 0

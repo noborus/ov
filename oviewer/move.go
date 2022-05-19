@@ -337,7 +337,6 @@ func (root *Root) lastSection() {
 		return
 	}
 	n = (n - root.Doc.firstLine()) + root.Doc.SectionStartPosition
-	m.lastSectionPosNum = n
 	root.moveLine(n)
 }
 
