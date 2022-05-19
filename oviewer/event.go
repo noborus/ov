@@ -185,11 +185,7 @@ func (root *Root) follow() {
 
 	root.skipDraw = false
 	if root.Doc.FollowSection {
-		moved := root.Doc.topLN - root.Doc.lastSectionPosNum
-		root.lastSection()
-		if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
-			root.moveLine(root.Doc.topLN + moved)
-		}
+		root.tailSection()
 	} else {
 		root.TailSync()
 	}
