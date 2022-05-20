@@ -276,7 +276,9 @@ func NewInput() *Input {
 	}
 	i.SectionDelmCandidate = &candidate{
 		list: []string{
+			"^commit",
 			"^diff",
+			"^#",
 			"^$",
 			"^\\f",
 		},
