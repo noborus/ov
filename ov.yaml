@@ -118,9 +118,9 @@ KeyBind:
     section_start:
         - "ctrl+F3"
         - "alt+s"
-	next_section:
+    next_section:
         - "space"
-	last_section:
+    last_section:
         - "9"
     previous_section:
         - "^"
