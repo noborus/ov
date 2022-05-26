@@ -171,6 +171,8 @@ KeyBind:
     toggle_mouse:
         - "ctrl+f3"
         - "ctrl+alt+r"
+    suspend:
+        - "ctrl+z"
 
 Mode:
   Psql:
