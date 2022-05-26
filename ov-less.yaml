@@ -74,7 +74,7 @@ KeyBind:
     follow_all:
         - "ctrl+a"
     follow_section:
-        -  "F2"
+        - "F2"
     help:
         - "h"
         - "ctrl+alt+c"
@@ -127,14 +127,14 @@ KeyBind:
     page_half_down:
         - "d"
         - "ctrl+d"
-    section_mode:
+    section_delimiter:
         - "alt+d"
     section_start:
         - "ctrl+F3"
         - "alt+s"
-	next_section:
+    next_section:
         - "space"
-	last_section:
+    last_section:
         - "9"
     previous_section:
         - "^"

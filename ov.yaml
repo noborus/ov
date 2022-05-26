@@ -113,14 +113,14 @@ KeyBind:
         - "ctrl+u"
     page_half_down:
         - "ctrl+d"
-    section_mode:
+    section_delimiter:
         - "alt+d"
     section_start:
         - "ctrl+F3"
         - "alt+s"
-	next_section:
+    next_section:
         - "space"
-	last_section:
+    last_section:
         - "9"
     previous_section:
         - "^"
@@ -171,6 +171,8 @@ KeyBind:
     toggle_mouse:
         - "ctrl+f3"
         - "ctrl+alt+r"
+    suspend:
+        - "ctrl+z"
 
 Mode:
   Psql:
