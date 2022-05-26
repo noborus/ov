@@ -314,8 +314,10 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	_ = viper.ReadInConfig()
-
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("%s: %s\n", viper.ConfigFileUsed(), err.Error())
+		os.Exit(1)
+	}
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
