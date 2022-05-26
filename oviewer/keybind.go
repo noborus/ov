@@ -36,7 +36,7 @@ const (
 	actionMovePgDn       = "page_down"
 	actionMoveHfUp       = "page_half_up"
 	actionMoveHfDn       = "page_half_down"
-	actionSection        = "section_mode"
+	actionSection        = "section_delimiter"
 	actionSectionStart   = "section_start"
 	actionNextSection    = "next_section"
 	actionLastSection    = "last_section"

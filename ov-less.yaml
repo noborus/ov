@@ -127,7 +127,7 @@ KeyBind:
     page_half_down:
         - "d"
         - "ctrl+d"
-    section_mode:
+    section_delimiter:
         - "alt+d"
     section_start:
         - "ctrl+F3"
