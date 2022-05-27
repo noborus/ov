@@ -34,13 +34,11 @@ ov is a terminal pager.
 	* 3.9. [Mark](#Mark)
 	* 3.10. [Watch](#Watch)
 	* 3.11. [Mouse support](#Mousesupport)
-* 4. [Called from other commands](#Calledfromothercommands)
-	* 4.1. [psql](#psql)
-* 5. [Command option](#Commandoption)
-* 6. [Key bindings](#Keybindings)
-* 7. [Customize](#Customize)
-	* 7.1. [Style customization](#Stylecustomization)
-	* 7.2. [Key binding customization](#Keybindingcustomization)
+* 4. [Command option](#Commandoption)
+* 5. [Key bindings](#Keybindings)
+* 6. [Customize](#Customize)
+	* 6.1. [Style customization](#Stylecustomization)
+	* 6.2. [Key binding customization](#Keybindingcustomization)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -161,6 +159,8 @@ Used by other commands by setting the environment variable **PAGER**.
 export PAGER=ov
 ```
 
+See the [ov site](https://noborus.github.io/ov/) for more use cases.
+
 ###  3.2. <a name='config'></a>config
 
 You can set style and key bindings in the setting file.
@@ -208,8 +208,6 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-![ov-tail.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-tail.gif)
-
 ###  3.5. <a name='followallmode'></a>follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
@@ -241,8 +239,6 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ```console
 ov --follow-all --exec -- make
 ```
-
-![ov-exec.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-exec.gif)
 
 ###  3.8. <a name='Search'></a>Search
 
@@ -294,49 +290,7 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-##  4. <a name='Calledfromothercommands'></a>Called from other commands
-
-###  4.1. <a name='psql'></a>psql
-
-`ov` can be used as a pager for psql output.
-
-Set environment variable `PSQL_PAGER`(PostgreSQL 11 or later).
-
-```console
-export PSQL_PAGER='ov -w=f -H2 -F -C -d "|"'
-```
-
-You can also write in `~/.psqlrc` in previous versions.
-
-```text
-\setenv PAGER 'ov -w=f -H2 -F -C -d "|"'
-```
-
-The header(`-H1`) may be 1, because the second line of the header is a separator line.
-In that case, it is a good idea to set the header style of `ov.yaml`.
-
-```yaml
-StyleHeader:
-  Background: "darkcyan"
-```
-
-![ov-psql.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov-psql.png)
-
-Select a column in column mode to quickly find long rows. The columns are clear even in wrapping.
-
-![ovcolumn.gif](https://raw.githubusercontent.com/noborus/ov/master/docs/ovcolumn.gif)
-
-Note that the column selection style is reverse by default. Therefore, specify a color for Foreground and reverse it.
-
-```yaml
-StyleColumnHighlight:
-  Foreground: "lightcyan"
-  Reverse: true
-```
-
-See the [ov site](https://noborus.github.io/ov/) for more use cases
-
-##  5. <a name='Commandoption'></a>Command option
+##  4. <a name='Commandoption'></a>Command option
 
 ```console
 $ ov --help
@@ -380,7 +334,7 @@ Flags:
 
 It can also be changed after startup.
 
-##  6. <a name='Keybindings'></a>Key bindings
+##  5. <a name='Keybindings'></a>Key bindings
 
 ```console
  [Escape], [q]                * quit
@@ -470,9 +424,9 @@ It can also be changed after startup.
  [alt+i]                      * incremental search toggle
 ```
 
-##  7. <a name='Customize'></a>Customize
+##  6. <a name='Customize'></a>Customize
 
-###  7.1. <a name='Stylecustomization'></a>Style customization
+###  6.1. <a name='Stylecustomization'></a>Style customization
 
 You can customize the following items.
 
@@ -509,7 +463,7 @@ StyleAlternate:
 | Italic | true/false | false |
 | Underline | true/false | false |
 
-###  7.2. <a name='Keybindingcustomization'></a>Key binding customization
+###  6.2. <a name='Keybindingcustomization'></a>Key binding customization
 
 You can customize key bindings.
 
