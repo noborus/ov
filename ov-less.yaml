@@ -184,8 +184,6 @@ KeyBind:
         - "["
     toggle_mouse:
         - "ctrl+alt+r"
-    suspend:
-        - "ctrl+z"
 
 Mode:
   psql:
