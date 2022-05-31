@@ -19,17 +19,17 @@ ov is a terminal pager.
 	* 2.3. [MacPorts (macOS)](#MacPortsmacOS)
 	* 2.4. [Homebrew(macOS or Linux)](#HomebrewmacOSorLinux)
 	* 2.5. [pkg (FreeBSD)](#pkgFreeBSD)
-	* 2.6. [binary](#binary)
+	* 2.6. [Binary](#Binary)
 	* 2.7. [go install](#goinstall)
 	* 2.8. [go get(details or developer version)](#gogetdetailsordeveloperversion)
 * 3. [Usage](#Usage)
-	* 3.1. [basic usage](#basicusage)
-	* 3.2. [config](#config)
-	* 3.3. [section](#section)
-	* 3.4. [follow mode](#followmode)
-	* 3.5. [follow all mode](#followallmode)
-	* 3.6. [follow section mode](#followsectionmode)
-	* 3.7. [exec mode](#execmode)
+	* 3.1. [Basic usage](#Basicusage)
+	* 3.2. [Config](#Config)
+	* 3.3. [Section](#Section)
+	* 3.4. [Follow mode](#Followmode)
+	* 3.5. [Follow all mode](#Followallmode)
+	* 3.6. [Follow section mode](#Followsectionmode)
+	* 3.7. [Exec mode](#Execmode)
 	* 3.8. [Search](#Search)
 	* 3.9. [Mark](#Mark)
 	* 3.10. [Watch](#Watch)
@@ -98,7 +98,7 @@ brew install noborus/tap/ov
 pkg install ov
 ```
 
-###  2.6. <a name='binary'></a>binary
+###  2.6. <a name='Binary'></a>Binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
 
@@ -141,7 +141,7 @@ sudo install ov /usr/local/bin
 
 ##  3. <a name='Usage'></a>Usage
 
-###  3.1. <a name='basicusage'></a>basic usage
+###  3.1. <a name='Basicusage'></a>Basic usage
 
 ov supports open file name or standard input.
 
@@ -161,7 +161,7 @@ export PAGER=ov
 
 See the [ov site](https://noborus.github.io/ov/) for more use cases.
 
-###  3.2. <a name='config'></a>config
+###  3.2. <a name='Config'></a>Config
 
 You can set style and key bindings in the setting file.
 
@@ -181,9 +181,9 @@ Windows.
 
 Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
 
-If you like `less` key bindings, copy  [ovless.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
+If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
-###  3.3. <a name='section'></a>section
+###  3.3. <a name='Section'></a>Section
 
 You specify `--section-delimiter`, you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`.
@@ -196,7 +196,7 @@ The section-delimiter is written in a regular expression (for example: "^#").
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-###  3.4. <a name='followmode'></a>follow mode
+###  3.4. <a name='Followmode'></a>Follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -208,7 +208,7 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.5. <a name='followallmode'></a>follow all mode
+###  3.5. <a name='Followallmode'></a>Follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -216,7 +216,7 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.6. <a name='followsectionmode'></a>follow section mode
+###  3.6. <a name='Followsectionmode'></a>Follow section mode
 
 Follow mode is line-by-line, while follow section mode is section-by-section.
 Follow section mode displays the bottom section.
@@ -229,7 +229,7 @@ ov --section-delimiter "^#" --follow-section README.md
  [Watch](#Watch) mode is a mode in which `--follow-section` and
  `--section-delimiter "^\f"` are automatically set.
 
-###  3.7. <a name='execmode'></a>exec mode
+###  3.7. <a name='Execmode'></a>Exec mode
 
 Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
