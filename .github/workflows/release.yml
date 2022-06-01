@@ -22,3 +22,14 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      - name: Generate release tarball
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          tar czf ov-${VERSION}.tar.gz --transform "s,^,ov-${VERSION}/," --exclude dist *
+      - name: Upload release tarball
+        uses: softprops/action-gh-release@master
+        with:
+          files: ov-*.tar.gz
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
