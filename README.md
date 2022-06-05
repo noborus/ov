@@ -25,15 +25,19 @@ ov is a terminal pager.
 * 3. [Usage](#Usage)
 	* 3.1. [Basic usage](#Basicusage)
 	* 3.2. [Config](#Config)
-	* 3.3. [Section](#Section)
-	* 3.4. [Follow mode](#Followmode)
-	* 3.5. [Follow all mode](#Followallmode)
-	* 3.6. [Follow section mode](#Followsectionmode)
-	* 3.7. [Exec mode](#Execmode)
-	* 3.8. [Search](#Search)
-	* 3.9. [Mark](#Mark)
-	* 3.10. [Watch](#Watch)
-	* 3.11. [Mouse support](#Mousesupport)
+	* 3.3. [Header](#Header)
+	* 3.4. [Column Mode](#ColumnMode)
+	* 3.5. [Wrap/NoWrap](#WrapNoWrap)
+	* 3.6. [Alternate-Rows](#Alternate-Rows)
+	* 3.7. [Section](#Section)
+	* 3.8. [Follow mode](#Followmode)
+	* 3.9. [Follow all mode](#Followallmode)
+	* 3.10. [Follow section mode](#Followsectionmode)
+	* 3.11. [Exec mode](#Execmode)
+	* 3.12. [Search](#Search)
+	* 3.13. [Mark](#Mark)
+	* 3.14. [Watch](#Watch)
+	* 3.15. [Mouse support](#Mousesupport)
 * 4. [Command option](#Commandoption)
 * 5. [Key bindings](#Keybindings)
 * 6. [Customize](#Customize)
@@ -48,18 +52,22 @@ ov is a terminal pager.
 
 ##  1. <a name='Feature'></a>Feature
 
+* Supports fixed [header](#Header) line display (both wrap/nowrap).
+* Supports [column mode](#ColumnMode), which recognizes columns by delimiter.
+* Supports section-by-section movement, splitting [sections](#Section) by delimiter.
+* Dynamic [wrap/nowrap](#WrapNoWrap) switchable.
+* Supports alternating row styling.
+* Shortcut keys are [customizable](#Keybindingcustomization).
+* The style of the effect is [customizable](#Stylecustomization).
+* Supports [follow-mode](#Followmode) (like tail -f).
+* Supports [follow-section](#Followsectionmode), which is displayed when the section is updated.
+* Supports following multiple files and switching when updated([follow-all](#Followallmode)).
+* Supports the [execution](#Execmode) of commands that toggle both stdout and stder for display.
+* Supports [watch](#Watch) mode, which reads files on a regular basis.
+* Supports incremental [search](#Search) and regular expression search.
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
-* Columns support column mode that can be selected by delimiter.
-* The header row can always be displayed.
-* Dynamic wrap/nowrap switchable.
-* Supports alternating row style changes.
-* Shortcut keys are customizable.
-* The style of the effect is customizable.
-* Supports follow-mode (like tail -f).
-* Supports following multiple files and switching when updated.
-* Supports the execution of commands that toggle both stdout and stder for display.
-* Supports incremental search and regular expression search.
+* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), etc...
 
 ##  2. <a name='Install'></a>Install
 
@@ -183,7 +191,45 @@ Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/o
 
 If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
-###  3.3. <a name='Section'></a>Section
+###  3.3. <a name='Header'></a>Header
+
+The `--header` (`-H`) option fixedly displays the specified number of lines.
+
+```console
+ov --header 1 README.md
+```
+
+When used with the `--skip-lines` option, it hides the number of lines specified by skip and then displays the header.
+
+```console
+ov --skip-lines 1 --header 1 README.md
+```
+
+###  3.4. <a name='ColumnMode'></a>Column Mode
+
+Specify the delimiter with `--column-delimiter` and set it to `--column-mode` to highlight the column.
+
+```console
+ov --column-delimiter "," --column-mode test.csv
+```
+
+###  3.5. <a name='WrapNoWrap'></a>Wrap/NoWrap
+
+Supports switching between wrapping and not wrapping lines.
+
+The option is `--wrap`, specify `--wrap=false` if you do not want to wrap.
+After startup, toggle display with wrap (default key `w`).
+
+###  3.6. <a name='Alternate-Rows'></a>Alternate-Rows
+
+Alternate row styles with the `--alternate-rows`(`-C`) option
+The style can be set with [Style customization](#Stylecustomization).
+
+```console
+ov --alternate-rows test.csv
+```
+
+###  3.7. <a name='Section'></a>Section
 
 You specify `--section-delimiter`, you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`.
@@ -196,7 +242,7 @@ The section-delimiter is written in a regular expression (for example: "^#").
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-###  3.4. <a name='Followmode'></a>Follow mode
+###  3.8. <a name='Followmode'></a>Follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -208,7 +254,7 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.5. <a name='Followallmode'></a>Follow all mode
+###  3.9. <a name='Followallmode'></a>Follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -216,7 +262,7 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.6. <a name='Followsectionmode'></a>Follow section mode
+###  3.10. <a name='Followsectionmode'></a>Follow section mode
 
 Follow mode is line-by-line, while follow section mode is section-by-section.
 Follow section mode displays the bottom section.
@@ -229,7 +275,7 @@ ov --section-delimiter "^#" --follow-section README.md
  [Watch](#Watch) mode is a mode in which `--follow-section` and
  `--section-delimiter "^\f"` are automatically set.
 
-###  3.7. <a name='Execmode'></a>Exec mode
+###  3.11. <a name='Execmode'></a>Exec mode
 
 Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -240,7 +286,7 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
-###  3.8. <a name='Search'></a>Search
+###  3.12. <a name='Search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -252,7 +298,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.9. <a name='Mark'></a>Mark
+###  3.13. <a name='Mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -262,7 +308,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.10. <a name='Watch'></a>Watch
+###  3.14. <a name='Watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -275,7 +321,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.11. <a name='Mousesupport'></a>Mouse support
+###  3.15. <a name='Mousesupport'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
