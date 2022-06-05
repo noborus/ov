@@ -155,7 +155,7 @@ func parseString(str string, tabWidth int) contents {
 					lc = lc[:len(lc)-1]
 				}
 				continue
-			case runeValue < 0x20:
+			case runeValue < 0x20: // control character
 				c.mainc = runeValue
 				c.width = 0
 				lc = append(lc, c)

@@ -90,6 +90,23 @@ func Test_parseStringNormal(t *testing.T) {
 				{width: 1, style: tcell.StyleDefault, mainc: rune('b')},
 			},
 		},
+		{
+			name: "testFormFeed",
+			args: args{line: "a\fa", tabWidth: 4},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+				{width: 0, style: tcell.StyleDefault, mainc: rune('\f')},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+			},
+		},
+		{
+			name: "testDEL",
+			args: args{line: "a\u007fa", tabWidth: 4},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: []rune{0x7f}},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

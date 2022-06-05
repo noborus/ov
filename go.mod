@@ -11,15 +11,15 @@ require (
 	github.com/gdamore/tcell/v2 v2.5.1
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.15.5
+	github.com/klauspost/compress v1.15.6
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.2.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.12.0
+	github.com/subosito/gotenv v1.4.0 // indirect
 	github.com/ulikunitz/xz v0.5.10
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	gopkg.in/ini.v1 v1.66.6 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
