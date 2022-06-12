@@ -124,7 +124,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 
 		root.alternateRowsStyle(currentY, y)
 		root.markStyle(currentY, y, markStyleWidth)
-		root.sectionLineHighlight(y, lc, lineStr)
+		root.sectionLineHighlight(y, lineStr)
 
 		if lX > 0 {
 			wrapNum++
@@ -391,8 +391,8 @@ func (root *Root) clearLine(y int) {
 	root.clearEOL(0, y)
 }
 
-// columnHighlight applies the style of the column highlight.
-func (root *Root) sectionLineHighlight(y int, lc contents, str string) {
+// sectionLineHighlight applies the style of the section line highlight.
+func (root *Root) sectionLineHighlight(y int, str string) {
 	if root.Doc.SectionDelimiter == "" {
 		return
 	}
@@ -402,8 +402,7 @@ func (root *Root) sectionLineHighlight(y int, lc contents, str string) {
 		return
 	}
 
-	if !root.Doc.SectionDelimiterReg.MatchString(str) {
-		return
+	if root.Doc.SectionDelimiterReg.MatchString(str) {
+		root.lineStyle(y, root.StyleSectionLine)
 	}
-	root.lineStyle(y, root.StyleSectionLine)
 }
