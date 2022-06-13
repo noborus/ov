@@ -67,7 +67,7 @@ ov is a terminal pager.
 * Supports incremental [search](#Search) and regular expression search.
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
-* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), etc...
+* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
 
 ##  2. <a name='Install'></a>Install
 
