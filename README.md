@@ -399,8 +399,8 @@ It can also be changed after startup.
 
  [Enter], [Down], [ctrl+N]    * forward by one line
  [Up], [ctrl+p]               * backward by one line
- [Home]                       * go to begin of line
- [End]                        * go to end of line
+ [Home]                       * go to top of document
+ [End]                        * go to end of document
  [PageDown], [ctrl+v]         * forward by page
  [PageUp], [ctrl+b]           * backward by page
  [ctrl+d]                     * forward a half page
@@ -409,7 +409,7 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
- [g]                          * number of go to line
+ [g]                          * go to line(input number)
 
 	Move document
 
@@ -436,13 +436,13 @@ It can also be changed after startup.
 
  [w], [W]                     * wrap/nowrap toggle
  [c]                          * column mode toggle
- [C]                          * color to alternate rows toggle
+ [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
 
 	Change Display with Input
 
  [p], [P]                     * view mode selection
- [d]                          * delimiter string
+ [d]                          * column delimiter string
  [H]                          * number of header lines
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
@@ -525,4 +525,4 @@ You can customize key bindings.
         - "ctrl+p"
 ```
 
-See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information..
+See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
