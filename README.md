@@ -388,12 +388,12 @@ It can also be changed after startup.
  [Q]                          * output screen and quit
  [ctrl+q]                     * set output screen and quit
  [ctrl+z]                     * suspend
- [h], [ctrl+alt+c], [ctrl+f1] * display help screen
- [ctrl+f2], [ctrl+alt+e]      * display log screen
+ [h], [ctrl+F1], [ctrl+alt+c] * display help screen
+ [ctrl+F2], [ctrl+alt+e]      * display log screen
  [ctrl+l]                     * screen sync
  [ctrl+f]                     * follow mode toggle
  [ctrl+a]                     * follow all mode toggle
- [ctrl+f3], [ctrl+alt+r]      * enable/disable mouse
+ [ctrl+alt+r]                 * enable/disable mouse
 
 	Moving
 
@@ -451,16 +451,16 @@ It can also be changed after startup.
 
  [alt+d]                      * section delimiter regular expression
  [ctrl+F3], [alt+s]           * section start position
- [space], [ctrl+down]         * next section
- [^], [ctrl+up]               * previous section
+ [space]                      * next section
+ [^]                          * previous section
  [9]                          * last section
  [F2]                         * follow section mode toggle
 
 	Close and reload
 
  [ctrl+F9], [ctrl+alt+s]      * close file
- [ctrl+alt+l], [F5]           * reload file
- [ctrl+alt+w], [F4]           * watch mode
+ [F5], [ctrl+alt+l]           * reload file
+ [F4], [ctrl+alt+w]           * watch mode
  [ctrl+w]                     * set watch interval
 
 	Key binding when typing
