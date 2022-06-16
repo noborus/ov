@@ -302,8 +302,8 @@ func initConfig() {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			fmt.Fprintln(os.Stderr, err)
+			return
 		}
 
 		// Search config in home directory with name ".ov" (without extension).
@@ -315,12 +315,12 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("%s: %s\n", viper.ConfigFileUsed(), err.Error())
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", viper.ConfigFileUsed(), err.Error())
+		return
 	}
 	if err := viper.Unmarshal(&config); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
 }
 
