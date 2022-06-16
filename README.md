@@ -388,19 +388,19 @@ It can also be changed after startup.
  [Q]                          * output screen and quit
  [ctrl+q]                     * set output screen and quit
  [ctrl+z]                     * suspend
- [h], [ctrl+F1], [ctrl+alt+c] * display help screen
- [ctrl+F2], [ctrl+alt+e]      * display log screen
+ [h], [ctrl+alt+c], [ctrl+f1] * display help screen
+ [ctrl+f2], [ctrl+alt+e]      * display log screen
  [ctrl+l]                     * screen sync
  [ctrl+f]                     * follow mode toggle
  [ctrl+a]                     * follow all mode toggle
- [ctrl+alt+r]                 * enable/disable mouse
+ [ctrl+f3], [ctrl+alt+r]      * enable/disable mouse
 
 	Moving
 
  [Enter], [Down], [ctrl+N]    * forward by one line
  [Up], [ctrl+p]               * backward by one line
- [Home]                       * go to begin of line
- [End]                        * go to end of line
+ [Home]                       * go to top of document
+ [End]                        * go to end of document
  [PageDown], [ctrl+v]         * forward by page
  [PageUp], [ctrl+b]           * backward by page
  [ctrl+d]                     * forward a half page
@@ -409,7 +409,7 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
- [g]                          * number of go to line
+ [g]                          * go to line(input number)
 
 	Move document
 
@@ -436,13 +436,13 @@ It can also be changed after startup.
 
  [w], [W]                     * wrap/nowrap toggle
  [c]                          * column mode toggle
- [C]                          * color to alternate rows toggle
+ [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
 
 	Change Display with Input
 
  [p], [P]                     * view mode selection
- [d]                          * delimiter string
+ [d]                          * column delimiter string
  [H]                          * number of header lines
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
@@ -451,16 +451,16 @@ It can also be changed after startup.
 
  [alt+d]                      * section delimiter regular expression
  [ctrl+F3], [alt+s]           * section start position
- [space]                      * next section
- [^]                          * previous section
+ [space], [ctrl+down]         * next section
+ [^], [ctrl+up]               * previous section
  [9]                          * last section
  [F2]                         * follow section mode toggle
 
 	Close and reload
 
  [ctrl+F9], [ctrl+alt+s]      * close file
- [F5], [ctrl+alt+l]           * reload file
- [F4], [ctrl+alt+w]           * watch mode
+ [ctrl+alt+l], [F5]           * reload file
+ [ctrl+alt+w], [F4]           * watch mode
  [ctrl+w]                     * set watch interval
 
 	Key binding when typing
@@ -525,4 +525,4 @@ You can customize key bindings.
         - "ctrl+p"
 ```
 
-See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information..
+See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
