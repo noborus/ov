@@ -53,7 +53,12 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if config.Debug {
-			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+			cfg := viper.ConfigFileUsed()
+			if cfg != "" {
+				fmt.Fprintln(os.Stderr, "Using config file:", cfg)
+			} else {
+				fmt.Fprintln(os.Stderr, "config file not found")
+			}
 		}
 
 		if ver {
@@ -302,8 +307,8 @@ func initConfig() {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			fmt.Fprintln(os.Stderr, err)
+			return
 		}
 
 		// Search config in home directory with name ".ov" (without extension).
@@ -314,13 +319,10 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("%s: %s\n", viper.ConfigFileUsed(), err.Error())
-		os.Exit(1)
-	}
+	_ = viper.ReadInConfig()
 	if err := viper.Unmarshal(&config); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
 }
 
