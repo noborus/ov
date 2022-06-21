@@ -73,7 +73,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if completion != "" {
 			return Completion(cmd, completion)
 		}
-
+		// Actually tabs when "\t" is specified as an option.
 		if config.General.ColumnDelimiter == "\\t" {
 			config.General.ColumnDelimiter = "\t"
 		}
@@ -85,26 +85,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		SetRedirect()
 
 		if execCommand {
-			return ExecCommand(cmd, args)
+			return ExecCommand(args)
 		}
-
-		ov, err := oviewer.Open(args...)
-		if err != nil {
-			return err
-		}
-		ov.SetConfig(config)
-
-		if err := ov.Run(); err != nil {
-			return err
-		}
-
-		if ov.IsWriteOriginal {
-			ov.WriteOriginal()
-		}
-		if ov.Debug {
-			ov.WriteLog()
-		}
-		return nil
+		return RunOviewer(args)
 	},
 }
 
@@ -131,8 +114,30 @@ func Completion(cmd *cobra.Command, arg string) error {
 	return ErrCompletion
 }
 
+// RunOviewer displays the argument file.
+func RunOviewer(args []string) error {
+	ov, err := oviewer.Open(args...)
+	if err != nil {
+		return err
+	}
+
+	ov.SetConfig(config)
+
+	if err := ov.Run(); err != nil {
+		return err
+	}
+
+	if ov.IsWriteOriginal {
+		ov.WriteOriginal()
+	}
+	if ov.Debug {
+		ov.WriteLog()
+	}
+	return nil
+}
+
 // ExecCommand targets the output of command execution (stdout/stderr).
-func ExecCommand(cmd *cobra.Command, args []string) error {
+func ExecCommand(args []string) error {
 	if len(args) == 0 {
 		return ErrNoArgument
 	}
@@ -167,12 +172,10 @@ func ExecCommand(cmd *cobra.Command, args []string) error {
 	if ov.Debug {
 		ov.WriteLog()
 	}
-
 	return nil
 }
 
-// Run is a wrapper for oviewer.Run.
-// Evacuate stdout and stderr during the run.
+// SetRedirect saves stdout and stderr during execution.
 func SetRedirect() {
 	// Suppress the output of os.Stdout and os.Stderr
 	// because the screen collapses.
