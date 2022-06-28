@@ -111,6 +111,7 @@ func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
 }
 
 // ReadFile reads file.
+// If the file name is empty, read from standard input.
 func (m *Document) ReadFile(fileName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

@@ -64,10 +64,8 @@ const (
 // InputEvent input key events.
 func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
-	ok := root.inputKeyEvent(ev)
-
 	// Not confirmed or canceled.
-	if !ok {
+	if ok := root.inputKeyEvent(ev); !ok {
 		root.incrementalSearch(ctx)
 		return
 	}
@@ -75,8 +73,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// confirmed.
 	input := root.input
 	nev := input.EventInput.Confirm(input.value)
-	err := root.Screen.PostEvent(nev)
-	if err != nil {
+	if err := root.Screen.PostEvent(nev); err != nil {
 		log.Println(err)
 	}
 
