@@ -429,11 +429,12 @@ func (root *Root) moveHfLeft() {
 	moveSize := (root.vWidth / 2)
 	if m.x > 0 && (m.x-moveSize) < 0 {
 		m.x = 0
-	} else {
-		m.x -= moveSize
-		if m.x < root.minStartX {
-			m.x = root.minStartX
-		}
+		return
+	}
+
+	m.x -= moveSize
+	if m.x < root.minStartX {
+		m.x = root.minStartX
 	}
 }
 
@@ -450,9 +451,10 @@ func (root *Root) moveHfRight() {
 	}
 	if m.x < 0 {
 		m.x = 0
-	} else {
-		m.x += (root.vWidth / 2)
+		return
 	}
+
+	m.x += (root.vWidth / 2)
 }
 
 // bottomLineNum returns the display start line

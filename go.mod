@@ -25,6 +25,6 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/subosito/gotenv v1.4.0 // indirect
-	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
+	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
 	gopkg.in/ini.v1 v1.66.6 // indirect
 )
