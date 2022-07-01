@@ -25,10 +25,12 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 		return nil, err
 	}
 
+	docout.Caption = "(" + command.Args[0] + ")" + docout.FileName
 	err = docout.ReadAll(so)
 	if err != nil {
 		log.Printf("%s", err)
 	}
+	docerr.Caption = "(" + command.Args[0] + ")" + docerr.FileName
 	err = docerr.ReadAll(se)
 	if err != nil {
 		log.Printf("%s", err)

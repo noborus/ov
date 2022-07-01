@@ -21,39 +21,51 @@ const FormFeed = "\f"
 func (m *Document) ReadFile(fileName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if fileName == "" {
-		if term.IsTerminal(0) {
-			return ErrMissingFile
-		}
-		m.file = os.Stdin
-		m.FileName = "(STDIN)"
-	} else {
-		m.FileName = fileName
-		r, err := os.Open(fileName)
-		if err != nil {
-			return err
-		}
-		m.file = r
+
+	f, err := open(fileName)
+	if err != nil {
+		return err
 	}
+	m.file = f
+	m.FileName = fileName
 
 	cFormat, r := uncompressedReader(m.file)
 	m.CFormat = cFormat
 
-	go func() {
-		<-m.eofCh
-		if m.seekable {
-			if err := m.close(); err != nil {
-				log.Printf("ReadFile: %s", err)
-			}
-		}
-		atomic.StoreInt32(&m.changed, 1)
-		m.followCh <- struct{}{}
-	}()
+	go m.waitEOF()
+
 	if STDOUTPIPE != nil {
 		r = io.TeeReader(r, STDOUTPIPE)
 	}
 
 	return m.ReadAll(r)
+}
+
+func open(fileName string) (*os.File, error) {
+	if fileName == "" {
+		if term.IsTerminal(0) {
+			return nil, ErrMissingFile
+		}
+		return os.Stdin, nil
+	}
+
+	f, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+// waitEOF waits until EOF is reached before closing.
+func (m *Document) waitEOF() {
+	<-m.eofCh
+	if m.seekable {
+		if err := m.close(); err != nil {
+			log.Printf("EOF: %s", err)
+		}
+	}
+	atomic.StoreInt32(&m.changed, 1)
+	m.followCh <- struct{}{}
 }
 
 // ReadReader reads reader.

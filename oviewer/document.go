@@ -155,6 +155,7 @@ func STDINDocument() (*Document, error) {
 	}
 
 	m.seekable = false
+	m.Caption = "(STDIN)"
 	if err := m.ReadFile(""); err != nil {
 		return nil, err
 	}
