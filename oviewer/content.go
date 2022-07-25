@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strconv"
@@ -57,7 +56,7 @@ var csiCache sync.Map
 func parseString(str string, tabWidth int) contents {
 	lc := make(contents, 0, len(str))
 	state := ansiText
-	csiParameter := new(bytes.Buffer)
+	var csiParameter strings.Builder
 	style := tcell.StyleDefault
 	tabX := 0
 	b := 0
@@ -375,7 +374,7 @@ func StrToContents(str string, tabWidth int) contents {
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
 func ContentsToStr(lc contents) (string, map[int]int) {
-	var buff bytes.Buffer
+	var buff strings.Builder
 	posCV := make(map[int]int)
 
 	bn := 0
@@ -384,17 +383,17 @@ func ContentsToStr(lc contents) (string, map[int]int) {
 			continue
 		}
 		posCV[bn] = n
-		_, err := buff.WriteRune(c.mainc)
+		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
 		}
-		bn += len(string(c.mainc))
+		bn += mn
 		for _, r := range c.combc {
-			_, err := buff.WriteRune(r)
+			cn, err := buff.WriteRune(r)
 			if err != nil {
 				log.Println(err)
 			}
-			bn += len(string(r))
+			bn += cn
 		}
 	}
 	str := buff.String()
