@@ -9,20 +9,20 @@ So if you want to do something in concurrent, you need to use goroutine.
 There is also a simple usage example below:
 https://github.com/noborus/mdviewer/
 
-  package main
+	package main
 
-  import (
-      "github.com/noborus/ov/oviewer"
-  )
+	import (
+	    "github.com/noborus/ov/oviewer"
+	)
 
-  func main() {
-      ov, err := oviewer.Open("main.go")
-      if err != nil {
-        panic(err)
-      }
-      if err := ov.Run(); err != nil {
-        panic(err)
-      }
-  }
+	func main() {
+	    ov, err := oviewer.Open("main.go")
+	    if err != nil {
+	      panic(err)
+	    }
+	    if err := ov.Run(); err != nil {
+	      panic(err)
+	    }
+	}
 */
 package oviewer
