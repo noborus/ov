@@ -136,9 +136,8 @@ func (root *Root) setHandler() map[string]func() {
 // KeyBind is the mapping of action and key.
 type KeyBind map[string][]string
 
-// GetKeyBinds returns the current key mapping.
-func GetKeyBinds(bind map[string][]string) map[string][]string {
-	keyBind := map[string][]string{
+func defaultKeyBinds() map[string][]string {
+	return map[string][]string{
 		actionExit:           {"Escape", "q"},
 		actionWriteBA:        {"ctrl+q"},
 		actionCancel:         {"ctrl+c"},
@@ -199,11 +198,22 @@ func GetKeyBinds(bind map[string][]string) map[string][]string {
 		inputIncSearch:     {"alt+i"},
 		inputRegexpSearch:  {"alt+r"},
 	}
+}
 
+// GetKeyBinds returns the current key mapping.
+func GetKeyBinds(config Config) map[string][]string {
+	keyBind := make(map[string][]string)
+	if strings.ToLower(config.DefaultKeyBind) != "disable" {
+		keyBind = defaultKeyBinds()
+	}
+	keyBind = updateKeyBind(keyBind, config.Keybind)
+	return keyBind
+}
+
+func updateKeyBind(keyBind map[string][]string, bind map[string][]string) map[string][]string {
 	for k, v := range bind {
 		keyBind[k] = v
 	}
-
 	return keyBind
 }
 
