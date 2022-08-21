@@ -21,7 +21,7 @@ func (root *Root) toggleWrapMode() {
 	root.setMessagef("Set WrapMode %t", root.Doc.WrapMode)
 }
 
-//  toggleColumnMode toggles ColumnMode each time it is called.
+// toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)

@@ -1,0 +1,11 @@
+# Disable the default keybindings.
+# Only keybindings set here will be enabled.
+DefaultKeyBind: "disable"
+KeyBind:
+    exit:
+        - "Escape"
+        - "q"
+    down:
+        - "Down"
+    up:
+        - "Up"

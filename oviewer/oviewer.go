@@ -195,6 +195,8 @@ type Config struct {
 	// Debug represents whether to enable the debug output.
 	Debug bool
 
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
 	// KeyBinding
 	Keybind map[string][]string
 
@@ -480,7 +482,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 }
 
 func (root *Root) setKeyConfig() (map[string][]string, error) {
-	keyBind := GetKeyBinds(root.Config.Keybind)
+	keyBind := GetKeyBinds(root.Config)
 	if err := root.setKeyBind(keyBind); err != nil {
 		return nil, err
 	}
