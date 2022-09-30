@@ -102,8 +102,8 @@ func Test_removeStr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := removeStr(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("removeStr() = %v, want %v", got, tt.want)
+			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -146,8 +146,8 @@ func Test_removeInt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := removeInt(tt.args.list, tt.args.c); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("removeInt() = %v, want %v", got, tt.want)
+			if got := remove(tt.args.list, tt.args.c); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
 		})
 	}
