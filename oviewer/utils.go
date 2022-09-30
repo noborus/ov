@@ -1,7 +1,9 @@
 package oviewer
 
+import "golang.org/x/exp/constraints"
+
 // max returns the larger value of the argument.
-func max(a, b int) int {
+func max[T constraints.Ordered](a, b T) T {
 	if a > b {
 		return a
 	}
@@ -9,31 +11,17 @@ func max(a, b int) int {
 }
 
 // min returns the smaller value of the argument.
-func min(a, b int) int {
+func min[T constraints.Ordered](a, b T) T {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-// removeStr removes the value of the specified string from slice.
-func removeStr(list []string, s string) []string {
-	if len(s) == 0 {
-		return list
-	}
-
+// remove removes the value of the specified string from slice.
+func remove[T comparable](list []T, s T) []T {
 	for n, l := range list {
 		if l == s {
-			list = append(list[:n], list[n+1:]...)
-		}
-	}
-	return list
-}
-
-// removeStr removes the specified int value from slice.
-func removeInt(list []int, c int) []int {
-	for n, l := range list {
-		if l == c {
 			list = append(list[:n], list[n+1:]...)
 		}
 	}

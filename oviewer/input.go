@@ -906,7 +906,7 @@ func toLast(list []string, s string) []string {
 		return list
 	}
 
-	list = removeStr(list, s)
+	list = remove(list, s)
 	list = append(list, s)
 	return list
 }

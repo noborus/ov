@@ -196,7 +196,7 @@ func (root *Root) markPrev() {
 // addMark marks the current line number.
 func (root *Root) addMark() {
 	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
-	root.Doc.marked = removeInt(root.Doc.marked, c)
+	root.Doc.marked = remove(root.Doc.marked, c)
 	root.Doc.marked = append(root.Doc.marked, c)
 	root.setMessagef("Marked to line %d", c-root.Doc.firstLine()+1)
 }
@@ -204,7 +204,7 @@ func (root *Root) addMark() {
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark() {
 	c := root.Doc.topLN + root.Doc.firstLine()
-	marked := removeInt(root.Doc.marked, c)
+	marked := remove(root.Doc.marked, c)
 	if len(root.Doc.marked) == len(marked) {
 		root.setMessagef("Not marked line %d", c-root.Doc.firstLine()+1)
 		return
