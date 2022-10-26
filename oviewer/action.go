@@ -297,7 +297,7 @@ func (root *Root) toggleMouse() {
 		root.Screen.DisableMouse()
 		root.setMessage("Disable Mouse")
 	} else {
-		root.Screen.EnableMouse()
+		root.Screen.EnableMouse(MouseFlags)
 		root.setMessage("Enable Mouse")
 	}
 }
