@@ -80,3 +80,8 @@ brews:
       system "#{bin}/ov --version"
     install:
       bin.install "ov"
+
+source:
+  enabled: true
+  files:
+    - vendor
