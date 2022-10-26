@@ -263,6 +263,10 @@ const (
 	LogDoc
 )
 
+// Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
+// Does not track mouse movements except when dragging.
+const MouseFlags = tcell.MouseDragEvents
+
 const MaxWriteLog int = 10
 
 var (
@@ -525,7 +529,7 @@ func (root *Root) Run() error {
 	root.helpDoc = help
 
 	if !root.Config.DisableMouse {
-		root.Screen.EnableMouse()
+		root.Screen.EnableMouse(MouseFlags)
 	}
 	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
 
