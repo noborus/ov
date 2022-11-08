@@ -167,6 +167,8 @@ type Config struct {
 	StyleMarkLine OVStyle
 	// StyleSectionLine is a style that section delimiter line.
 	StyleSectionLine OVStyle
+	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
+	StyleMultiColorHighlight []OVStyle
 
 	// General represents the general behavior.
 	General general
@@ -359,6 +361,15 @@ func NewConfig() Config {
 		},
 		StyleSectionLine: OVStyle{
 			Background: "green",
+		},
+		StyleMultiColorHighlight: []OVStyle{
+			{Foreground: "maroon"},
+			{Foreground: "green"},
+			{Foreground: "olive"},
+			{Foreground: "navy"},
+			{Foreground: "purple"},
+			{Foreground: "teal"},
+			{Foreground: "silver"},
 		},
 		General: general{
 			TabWidth:             8,

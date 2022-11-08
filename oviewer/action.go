@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -413,6 +414,29 @@ func (root *Root) setSectionStart(input string) {
 
 	root.Doc.SectionStartPosition = num
 	root.setMessagef("Set section start position %s", input)
+}
+
+// setMultiColor set multiple strings to highlight with multiple colors.
+func (root *Root) setMultiColor(input string) {
+	quoted := false
+	f := strings.FieldsFunc(input, func(r rune) bool {
+		if r == '"' {
+			quoted = !quoted
+		}
+		return !quoted && r == ' '
+	})
+
+	regs := make([]*regexp.Regexp, 0)
+	for _, w := range f {
+		s, err := strconv.Unquote(w)
+		if err != nil {
+			s = w
+		}
+		reg := regexpCompile(s, false)
+		regs = append(regs, reg)
+	}
+	root.Doc.stringsMultiColor = regs
+	root.setMessagef("Set multicolor strings [%s]", input)
 }
 
 // resize is a wrapper function that calls viewSync.

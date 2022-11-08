@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,6 +94,8 @@ type Document struct {
 
 	// Last moved Section position.
 	lastSectionPosNum int
+	// Multiple strings with multicolor highlighting.
+	stringsMultiColor []*regexp.Regexp
 
 	// mu controls the mutex.
 	mu sync.Mutex

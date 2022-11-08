@@ -116,6 +116,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		root.columnHighlight(lc, lineStr, posCV)
+		root.multiColorHighlight(lc, lineStr, posCV)
 		root.searchHighlight(lY, lc, lineStr, posCV)
 		root.drawLineNumber(lY, y)
 
@@ -212,6 +213,16 @@ func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map
 	poss := root.searchPosition(lY, lineStr)
 	for _, r := range poss {
 		RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleSearchHighlight)
+	}
+}
+
+func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int) {
+	numC := len(root.StyleMultiColorHighlight)
+	for n, w := range root.Doc.stringsMultiColor {
+		poss := searchPositionReg(str, w)
+		for _, r := range poss {
+			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[n%numC])
+		}
 	}
 }
 

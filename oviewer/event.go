@@ -88,6 +88,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setSectionDelimiter(ev.value)
 		case *sectionStartInput:
 			root.setSectionStart(ev.value)
+		case *multiColorInput:
+			root.setMultiColor(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:

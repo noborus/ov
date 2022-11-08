@@ -94,6 +94,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionHeader, "number of header lines")
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
+	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tSection\n"))
 	fmt.Fprint(&b, "\n")

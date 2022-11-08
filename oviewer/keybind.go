@@ -64,6 +64,7 @@ const (
 	actionPreviousDoc    = "previous_doc"
 	actionCloseDoc       = "close_doc"
 	actionToggleMouse    = "toggle_mouse"
+	actionMultiColor     = "multi_color"
 
 	inputCaseSensitive = "input_casesensitive"
 	inputIncSearch     = "input_incsearch"
@@ -127,9 +128,11 @@ func (root *Root) setHandler() map[string]func() {
 		actionPreviousDoc:    root.previousDoc,
 		actionCloseDoc:       root.closeDocument,
 		actionToggleMouse:    root.toggleMouse,
-		inputCaseSensitive:   root.inputCaseSensitive,
-		inputIncSearch:       root.inputIncSearch,
-		inputRegexpSearch:    root.inputRegexpSearch,
+		actionMultiColor:     root.setMultiColorMode,
+
+		inputCaseSensitive: root.inputCaseSensitive,
+		inputIncSearch:     root.inputIncSearch,
+		inputRegexpSearch:  root.inputRegexpSearch,
 	}
 }
 
@@ -193,6 +196,7 @@ func defaultKeyBinds() map[string][]string {
 		actionCloseDoc:       {"ctrl+k"},
 		actionToggleMouse:    {"ctrl+alt+r"},
 		actionSuspend:        {"ctrl+z"},
+		actionMultiColor:     {"."},
 
 		inputCaseSensitive: {"alt+c"},
 		inputIncSearch:     {"alt+i"},
