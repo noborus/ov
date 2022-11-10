@@ -27,6 +27,7 @@ type Input struct {
 	WriteBACandidate      *candidate
 	SectionDelmCandidate  *candidate
 	SectionStartCandidate *candidate
+	MultiColorCandidate   *candidate
 }
 
 // InputMode represents the state of the input.
@@ -59,6 +60,8 @@ const (
 	SectionDelimiter
 	// SectionStart is a section start position input mode.
 	SectionStart
+
+	MultiColor
 )
 
 // InputEvent input key events.
@@ -287,6 +290,12 @@ func NewInput() *Input {
 			"0",
 		},
 	}
+	i.MultiColorCandidate = &candidate{
+		list: []string{
+			"error info warn debug",
+			"ERROR WARNING NOTICE INFO PANIC FATAL LOG",
+		},
+	}
 	i.EventInput = &normalInput{}
 	return &i
 }
@@ -387,6 +396,14 @@ func (root *Root) setSectionStartMode() {
 	input.cursorX = 0
 	input.mode = SectionStart
 	input.EventInput = newSectionStartInput(input.SectionStartCandidate)
+}
+
+func (root *Root) setMultiColorMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = MultiColor
+	input.EventInput = newMultiColorInput(input.MultiColorCandidate)
 }
 
 // EventInput is a generic interface for inputs.
@@ -898,6 +915,41 @@ func (d *sectionStartInput) Up(str string) string {
 
 // Down returns strings when the down key is pressed during input.
 func (d *sectionStartInput) Down(str string) string {
+	return d.clist.down()
+}
+
+// multiColorInput represents the multi color input mode.
+type multiColorInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+func newMultiColorInput(clist *candidate) *multiColorInput {
+	return &multiColorInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (d *multiColorInput) Prompt() string {
+	return "multicolor:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (d *multiColorInput) Confirm(str string) tcell.Event {
+	d.value = str
+	d.clist.list = toLast(d.clist.list, str)
+	d.clist.p = 0
+	d.SetEventNow()
+	return d
+}
+
+// Up returns strings when the up key is pressed during input.
+func (d *multiColorInput) Up(str string) string {
+	return d.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (d *multiColorInput) Down(str string) string {
 	return d.clist.down()
 }
 

@@ -415,6 +415,31 @@ func (root *Root) setSectionStart(input string) {
 	root.setMessagef("Set section start position %s", input)
 }
 
+// setMultiColor set multiple strings to highlight with multiple colors.
+func (root *Root) setMultiColor(input string) {
+	m := root.Doc
+
+	quoted := false
+	f := strings.FieldsFunc(input, func(r rune) bool {
+		if r == '"' {
+			quoted = !quoted
+		}
+		return !quoted && r == ' '
+	})
+
+	m.stringsMultiColor = nil
+	for _, w := range f {
+		s, err := strconv.Unquote(w)
+		if err != nil {
+			s = w
+		}
+		reg := regexpCompile(s, true)
+		m.stringsMultiColor = append(m.stringsMultiColor, reg)
+	}
+
+	root.setMessagef("Set multicolor strings [%s]", input)
+}
+
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
 	root.ViewSync()

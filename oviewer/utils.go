@@ -1,6 +1,8 @@
 package oviewer
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+)
 
 // max returns the larger value of the argument.
 func max[T constraints.Ordered](a, b T) T {

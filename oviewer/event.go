@@ -88,6 +88,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setSectionDelimiter(ev.value)
 		case *sectionStartInput:
 			root.setSectionStart(ev.value)
+		case *multiColorInput:
+			root.setMultiColor(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -279,7 +281,7 @@ type eventSearch struct {
 
 func (root *Root) eventNextSearch() {
 	ev := &eventSearch{}
-	ev.str = root.input.value
+	ev.str = root.searchWord
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
@@ -295,7 +297,7 @@ type eventBackSearch struct {
 
 func (root *Root) eventNextBackSearch() {
 	ev := &eventBackSearch{}
-	ev.str = root.input.value
+	ev.str = root.searchWord
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
