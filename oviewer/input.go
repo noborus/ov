@@ -291,7 +291,10 @@ func NewInput() *Input {
 		},
 	}
 	i.MultiColorCandidate = &candidate{
-		list: []string{},
+		list: []string{
+			"error info warn debug",
+			"ERROR WARNING NOTICE INFO PANIC FATAL LOG",
+		},
 	}
 	i.EventInput = &normalInput{}
 	return &i
@@ -949,6 +952,7 @@ func (d *multiColorInput) Up(str string) string {
 func (d *multiColorInput) Down(str string) string {
 	return d.clist.down()
 }
+
 func toLast(list []string, s string) []string {
 	if len(s) == 0 {
 		return list
