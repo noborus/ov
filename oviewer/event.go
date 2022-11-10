@@ -281,7 +281,7 @@ type eventSearch struct {
 
 func (root *Root) eventNextSearch() {
 	ev := &eventSearch{}
-	ev.str = root.input.value
+	ev.str = root.searchWord
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
@@ -297,7 +297,7 @@ type eventBackSearch struct {
 
 func (root *Root) eventNextBackSearch() {
 	ev := &eventBackSearch{}
-	ev.str = root.input.value
+	ev.str = root.searchWord
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
