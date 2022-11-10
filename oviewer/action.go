@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -418,6 +417,8 @@ func (root *Root) setSectionStart(input string) {
 
 // setMultiColor set multiple strings to highlight with multiple colors.
 func (root *Root) setMultiColor(input string) {
+	m := root.Doc
+
 	quoted := false
 	f := strings.FieldsFunc(input, func(r rune) bool {
 		if r == '"' {
@@ -426,16 +427,16 @@ func (root *Root) setMultiColor(input string) {
 		return !quoted && r == ' '
 	})
 
-	regs := make([]*regexp.Regexp, 0)
+	m.stringsMultiColor = nil
 	for _, w := range f {
 		s, err := strconv.Unquote(w)
 		if err != nil {
 			s = w
 		}
-		reg := regexpCompile(s, false)
-		regs = append(regs, reg)
+		reg := regexpCompile(s, true)
+		m.stringsMultiColor = append(m.stringsMultiColor, reg)
 	}
-	root.Doc.stringsMultiColor = regs
+
 	root.setMessagef("Set multicolor strings [%s]", input)
 }
 
