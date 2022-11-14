@@ -55,6 +55,11 @@ func (root *Root) toggleFollowSection() {
 	root.Doc.FollowSection = !root.Doc.FollowSection
 }
 
+// togglePlain toggles follow section mode.
+func (root *Root) togglePlain() {
+	root.Doc.PlainMode = !root.Doc.PlainMode
+}
+
 // closeFile close the file.
 func (root *Root) closeFile() {
 	if root.screenMode != Docs {

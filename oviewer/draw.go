@@ -116,6 +116,9 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		root.columnHighlight(lc, lineStr, posCV)
+		if root.Doc.PlainMode {
+			root.plainMode(lc)
+		}
 		root.multiColorHighlight(lc, lineStr, posCV)
 		root.searchHighlight(lY, lc, lineStr, posCV)
 		root.drawLineNumber(lY, y)
@@ -213,6 +216,12 @@ func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map
 	poss := root.searchPosition(lY, lineStr)
 	for _, r := range poss {
 		RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleSearchHighlight)
+	}
+}
+
+func (root *Root) plainMode(lc contents) {
+	for x := 0; x < len(lc); x++ {
+		lc[x].style = tcell.StyleDefault
 	}
 }
 
