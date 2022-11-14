@@ -248,6 +248,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("general.WrapMode", rootCmd.PersistentFlags().Lookup("wrap"))
 
+	rootCmd.PersistentFlags().BoolP("plain", "", true, "plain mode")
+	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))
+
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("column-delimiter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {

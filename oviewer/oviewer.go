@@ -133,6 +133,8 @@ type general struct {
 	FollowAll bool
 	// FollowSection is a follow mode that uses section instead of line.
 	FollowSection bool
+	// PlainMode is whether to enable the original character decoration.
+	PlainMode bool
 	// WatchInterval is the watch interval (seconds).
 	WatchInterval int
 	// MarkStyleWidth is width to apply the style of the marked line.

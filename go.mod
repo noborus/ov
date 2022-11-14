@@ -16,7 +16,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/ulikunitz/xz v0.5.10
-	golang.org/x/exp v0.0.0-20221106115401-f9659909a136
+	golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab
 	golang.org/x/sync v0.1.0
 	golang.org/x/term v0.2.0
 )
