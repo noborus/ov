@@ -367,6 +367,7 @@ Flags:
       --help-key                   display key bind information
       --incsearch                  incremental search (default true)
   -n, --line-number                line number mode
+  -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
       --regexp-search              regular expression search
       --section-delimiter string   section delimiter
