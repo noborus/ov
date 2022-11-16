@@ -86,6 +86,7 @@ func KeyBindString(k KeyBind) string {
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
+	k.writeKeyBind(&b, actionPlain, "original decoration toggle")
 
 	fmt.Fprint(&b, gchalk.Bold("\n\tChange Display with Input\n"))
 	fmt.Fprint(&b, "\n")

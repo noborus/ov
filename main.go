@@ -248,7 +248,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
 	_ = viper.BindPFlag("general.WrapMode", rootCmd.PersistentFlags().Lookup("wrap"))
 
-	rootCmd.PersistentFlags().BoolP("plain", "", false, "plain mode")
+	rootCmd.PersistentFlags().BoolP("plain", "p", false, "disable original decoration")
 	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
