@@ -38,6 +38,8 @@ ov is a terminal pager.
 	* 3.13. [Mark](#Mark)
 	* 3.14. [Watch](#Watch)
 	* 3.15. [Mouse support](#Mousesupport)
+	* 3.16. [Multi Color Highlight](#MultiColorHighlight)
+	* 3.17. [Plain](#Plain)
 * 4. [Command option](#Commandoption)
 * 5. [Key bindings](#Keybindings)
 * 6. [Customize](#Customize)
@@ -335,6 +337,20 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
+
+###  3.16. <a name='MultiColorHighlight'></a>Multi Color Highlight
+
+This feature styles multiple words individually.
+`.`key(defualt) enters multi-word input mode.
+Enter multiple words (regular expressions) separated by spaces.
+
+For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
+
+###  3.17. <a name='Plain'></a>Plain
+
+Supports undecorating ANSI escape sequences.
+The option is `--plain` (or `-p`).
+After startup, toggle the original decoration (default key `ctrl+e`).
 
 ##  4. <a name='Commandoption'></a>Command option
 
