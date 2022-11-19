@@ -366,10 +366,10 @@ func NewConfig() Config {
 		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
-			{Foreground: "cyan"},
+			{Foreground: "aqua"},
 			{Foreground: "yellow"},
-			{Foreground: "magenta"},
-			{Foreground: "green"},
+			{Foreground: "fuchsia"},
+			{Foreground: "lime"},
 			{Foreground: "blue"},
 			{Foreground: "grey"},
 		},
