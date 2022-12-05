@@ -29,7 +29,6 @@ func (root *Root) draw() {
 		lX = m.topLX
 	}
 
-	m.topLN = max(m.topLN, 0)
 	lY = m.topLN + lY
 	// Body
 	lX, lY = root.drawBody(lX, lY)

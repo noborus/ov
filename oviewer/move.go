@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 )
@@ -27,7 +26,6 @@ func (root *Root) moveBottom() {
 
 // Move to the specified line.
 func (root *Root) moveLine(lN int) int {
-	lN = max(lN, 0)
 	lN = min(lN, root.Doc.BufEndNum())
 	root.Doc.topLN = lN
 	root.Doc.topLX = 0
@@ -40,8 +38,8 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 	if !root.Doc.WrapMode {
 		return lN, 0
 	}
-	listX, err := root.leftMostX(lN + root.Doc.firstLine())
-	if err != nil {
+	listX := root.leftMostX(lN + root.Doc.firstLine())
+	if len(listX) == 0 {
 		return lN, 0
 	}
 
@@ -109,9 +107,9 @@ func (root *Root) moveHfDn() {
 // numOfWrap returns the number of wrap from lX and lY.
 func (root *Root) numOfWrap(lX int, lY int) int {
 	m := root.Doc
-	listX, err := root.leftMostX(m.topLN + m.firstLine() + lY)
-	if err != nil {
-		root.debugMessage(fmt.Sprintf("numOfWrap %d:%s", m.topLN+lY, err))
+	listX := root.leftMostX(m.topLN + m.firstLine() + lY)
+	if len(listX) == 0 {
+		return 0
 	}
 	wrap := numOfSlice(listX, lX)
 	return wrap
@@ -161,10 +159,7 @@ func (root *Root) moveNumDown(moveY int) {
 
 	// WrapMode
 	x := m.topLX
-	listX, err := root.leftMostX(num)
-	if err != nil {
-		return
-	}
+	listX := root.leftMostX(num)
 	n := numOfReverseSlice(listX, x)
 
 	for y := 0; y < moveY; y++ {
@@ -173,11 +168,7 @@ func (root *Root) moveNumDown(moveY int) {
 			if num > m.BufEndNum() {
 				break
 			}
-			listX, err = root.leftMostX(num)
-			if err != nil {
-				log.Printf("moveNumDown: %d %s", num, err.Error())
-				return
-			}
+			listX = root.leftMostX(num)
 			n = 0
 		}
 		x = 0
@@ -210,11 +201,7 @@ func (root *Root) moveUp() {
 	// WrapMode.
 	// Same line.
 	if m.topLX > 0 {
-		listX, err := root.leftMostX(m.topLN + m.firstLine())
-		if err != nil {
-			log.Println(err)
-			return
-		}
+		listX := root.leftMostX(m.topLN + m.firstLine())
 		for n, x := range listX {
 			if x >= m.topLX {
 				m.topLX = listX[n-1]
@@ -230,11 +217,7 @@ func (root *Root) moveUp() {
 		m.topLX = 0
 		return
 	}
-	listX, err := root.leftMostX(m.topLN + m.firstLine())
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	listX := root.leftMostX(m.topLN + m.firstLine())
 	if len(listX) > 0 {
 		m.topLX = listX[len(listX)-1]
 		return
@@ -258,11 +241,7 @@ func (root *Root) moveDown() {
 	}
 
 	// WrapMode
-	listX, err := root.leftMostX(m.topLN + m.firstLine())
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	listX := root.leftMostX(m.topLN + m.firstLine())
 
 	for _, x := range listX {
 		if x > m.topLX {
@@ -475,28 +454,13 @@ func (root *Root) bottomLineNum(lN int) (int, int) {
 
 // findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
 func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
-	listX, err := root.leftMostX(lN)
-	n := 0
-	if err != nil {
-		// lN has no lines.
-		root.debugMessage(fmt.Sprintf("%s:%d", err.Error(), lN))
-	} else {
-		n = numOfSlice(listX, lX)
-	}
+	listX := root.leftMostX(lN)
+	n := numOfSlice(listX, lX)
 
 	for y := upY; y > 0; y-- {
 		if n <= 0 {
 			lN--
-			if lN < root.Doc.Header {
-				lN = 0
-				lX = 0
-				break
-			}
-			listX, err = root.leftMostX(lN)
-			if err != nil {
-				log.Println(err, "findNumUp", lN)
-				return 0, 0
-			}
+			listX = root.leftMostX(lN)
 			n = len(listX)
 		}
 		if n > 0 {
@@ -510,10 +474,11 @@ func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
 }
 
 // leftMostX returns a list of left - most x positions when wrapping.
-func (root *Root) leftMostX(lN int) ([]int, error) {
+// Returns nil if there is no line number.
+func (root *Root) leftMostX(lN int) []int {
 	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	listX := make([]int, 0, (len(lc)/root.vWidth)+1)
@@ -526,5 +491,5 @@ func (root *Root) leftMostX(lN int) ([]int, error) {
 		}
 		listX = append(listX, n)
 	}
-	return listX, nil
+	return listX
 }
