@@ -801,3 +801,10 @@ func (root *Root) WriteLog() {
 	end := m.BufEndNum()
 	m.Export(os.Stdout, start, end)
 }
+
+func (root *Root) lineNumber(y int) lineNumber {
+	if y >= 0 && y <= len(root.lnumber) {
+		return root.lnumber[y]
+	}
+	return root.lnumber[0]
+}

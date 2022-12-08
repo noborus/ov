@@ -58,11 +58,11 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.getClipboard(ctx)
 		case *eventSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lnumber[root.headerLen+root.Doc.JumpTarget]
+			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
 			root.searchMove(ctx, true, l.line+1, searcher)
 		case *eventBackSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lnumber[root.headerLen+root.Doc.JumpTarget]
+			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
 			root.searchMove(ctx, false, l.line-1, searcher)
 		case *viewModeInput:
 			root.setViewMode(ev.value)

@@ -192,14 +192,14 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 
 	var buff strings.Builder
 
-	ln1 := root.lnumber[y1]
+	ln1 := root.lineNumber(y1)
 	lc1, err := root.Doc.contentsLN(ln1.line, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
 	}
 	wx1 := root.branchWidth(lc1, ln1.wrap)
 
-	ln2 := root.lnumber[y2]
+	ln2 := root.lineNumber(y2)
 	lc2, err := root.Doc.contentsLN(ln2.line, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
@@ -227,7 +227,7 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 
 	lnumber := []int{}
 	for y := y1 + 1; y < y2; y++ {
-		l := root.lnumber[y]
+		l := root.lineNumber(y)
 		if l.line == ln1.line || l.line == ln2.line || l.wrap > 0 {
 			continue
 		}
@@ -256,7 +256,7 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
 
 	for y := y1; y <= y2; y++ {
-		ln := root.lnumber[y]
+		ln := root.lineNumber(y)
 		lc, err := root.Doc.contentsLN(ln.line, root.Doc.TabWidth)
 		if err != nil {
 			return "", err
