@@ -275,6 +275,9 @@ func init() {
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval")
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))
 
+	rootCmd.PersistentFlags().IntP("jump-target", "j", 0, "jump-target")
+	_ = viper.BindPFlag("general.JumpTarget", rootCmd.PersistentFlags().Lookup("jump-target"))
+
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
 	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))

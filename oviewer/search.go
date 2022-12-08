@@ -247,7 +247,9 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		if err != nil {
 			return err
 		}
-		root.moveLine(lN - root.Doc.firstLine())
+		root.Doc.topLN = lN - root.Doc.firstLine()
+		root.Doc.topLX = 0
+		root.moveNumUp(root.Doc.JumpTarget)
 		return nil
 	})
 
@@ -284,7 +286,9 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 			}
 			return
 		}
-		root.MoveLine(lN - root.Doc.firstLine() + 1)
+		root.Doc.topLN = lN - root.Doc.firstLine()
+		root.Doc.topLX = 0
+		root.moveNumUp(root.Doc.JumpTarget)
 	}()
 }
 

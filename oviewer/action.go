@@ -445,6 +445,26 @@ func (root *Root) setMultiColor(input string) {
 	root.setMessagef("Set multicolor strings [%s]", input)
 }
 
+// setJumpTarget sets the position of the search result.
+func (root *Root) setJumpTarget(input string) {
+	log.Println("setJump")
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessagef("Set JumpTarget: %s", ErrInvalidNumber.Error())
+		return
+	}
+	if num < 0 || num > root.vHight-1 {
+		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
+		return
+	}
+	if root.Doc.JumpTarget == num {
+		return
+	}
+
+	root.Doc.JumpTarget = num
+	root.setMessagef("Set JumpTarget %d", num)
+}
+
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
 	root.ViewSync()
