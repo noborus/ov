@@ -145,6 +145,10 @@ type general struct {
 	SectionDelimiterReg *regexp.Regexp
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
+	// Specified string for jumpTarget.
+	JumpTargetString string
+	// JumpTarget is the display position of search results.
+	JumpTarget int
 }
 
 // Config represents the settings of ov.
@@ -171,6 +175,8 @@ type Config struct {
 	StyleSectionLine OVStyle
 	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
 	StyleMultiColorHighlight []OVStyle
+	// StyleJumpTargetLine is the line that displays the search results.
+	StyleJumpTargetLine OVStyle
 
 	// General represents the general behavior.
 	General general
@@ -364,6 +370,9 @@ func NewConfig() Config {
 		StyleSectionLine: OVStyle{
 			Background: "green",
 		},
+		StyleJumpTargetLine: OVStyle{
+			Underline: true,
+		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
 			{Foreground: "aqua"},
@@ -377,6 +386,7 @@ func NewConfig() Config {
 			TabWidth:             8,
 			MarkStyleWidth:       1,
 			SectionStartPosition: 0,
+			JumpTarget:           0,
 		},
 	}
 }
@@ -792,4 +802,11 @@ func (root *Root) WriteLog() {
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
 	m.Export(os.Stdout, start, end)
+}
+
+func (root *Root) lineNumber(y int) lineNumber {
+	if y >= 0 && y <= len(root.lnumber) {
+		return root.lnumber[y]
+	}
+	return root.lnumber[0]
 }

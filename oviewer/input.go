@@ -28,6 +28,7 @@ type Input struct {
 	SectionDelmCandidate  *candidate
 	SectionStartCandidate *candidate
 	MultiColorCandidate   *candidate
+	JumpTargetCandidate   *candidate
 }
 
 // InputMode represents the state of the input.
@@ -60,8 +61,10 @@ const (
 	SectionDelimiter
 	// SectionStart is a section start position input mode.
 	SectionStart
-
+	// MultiColor is multi-word coloring.
 	MultiColor
+	// JumpTarget is the position to display the search results.
+	JumpTarget
 )
 
 // InputEvent input key events.
@@ -296,6 +299,9 @@ func NewInput() *Input {
 			"ERROR WARNING NOTICE INFO PANIC FATAL LOG",
 		},
 	}
+	i.JumpTargetCandidate = &candidate{
+		list: []string{},
+	}
 	i.EventInput = &normalInput{}
 	return &i
 }
@@ -404,6 +410,14 @@ func (root *Root) setMultiColorMode() {
 	input.cursorX = 0
 	input.mode = MultiColor
 	input.EventInput = newMultiColorInput(input.MultiColorCandidate)
+}
+
+func (root *Root) setJumpTargetMode() {
+	input := root.input
+	input.value = ""
+	input.cursorX = 0
+	input.mode = JumpTarget
+	input.EventInput = newJumpTargetInput(input.JumpTargetCandidate)
 }
 
 // EventInput is a generic interface for inputs.
@@ -541,10 +555,8 @@ func (g *gotoInput) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (g *gotoInput) Confirm(str string) tcell.Event {
 	g.value = str
-	if _, err := strconv.Atoi(str); err == nil {
-		g.clist.list = toLast(g.clist.list, str)
-		g.clist.p = 0
-	}
+	g.clist.list = toLast(g.clist.list, str)
+	g.clist.p = 0
 	g.SetEventNow()
 	return g
 }
@@ -953,12 +965,38 @@ func (d *multiColorInput) Down(str string) string {
 	return d.clist.down()
 }
 
-func toLast(list []string, s string) []string {
-	if len(s) == 0 {
-		return list
-	}
+// jumpTargetInput represents the jump target input mode.
+type jumpTargetInput struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
 
-	list = remove(list, s)
-	list = append(list, s)
-	return list
+// newJumpTargetInput returns JumpTargetInput.
+func newJumpTargetInput(clist *candidate) *jumpTargetInput {
+	return &jumpTargetInput{clist: clist}
+}
+
+// Prompt returns the prompt string in the input field.
+func (j *jumpTargetInput) Prompt() string {
+	return "Jump Target line:"
+}
+
+// Confirm returns the event when the input is confirmed.
+func (j *jumpTargetInput) Confirm(str string) tcell.Event {
+	j.value = str
+	j.clist.list = toLast(j.clist.list, str)
+	j.clist.p = 0
+	j.SetEventNow()
+	return j
+}
+
+// Up returns strings when the up key is pressed during input.
+func (g *jumpTargetInput) Up(str string) string {
+	return g.clist.up()
+}
+
+// Down returns strings when the down key is pressed during input.
+func (g *jumpTargetInput) Down(str string) string {
+	return g.clist.down()
 }

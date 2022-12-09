@@ -58,10 +58,12 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.getClipboard(ctx)
 		case *eventSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine()+1, searcher)
+			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
+			root.searchMove(ctx, true, l.line+1, searcher)
 		case *eventBackSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine()-1, searcher)
+			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
+			root.searchMove(ctx, false, l.line-1, searcher)
 		case *viewModeInput:
 			root.setViewMode(ev.value)
 		case *searchInput:
@@ -90,6 +92,8 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setSectionStart(ev.value)
 		case *multiColorInput:
 			root.setMultiColor(ev.value)
+		case *jumpTargetInput:
+			root.setJumpTarget(ev.value)
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:

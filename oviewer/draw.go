@@ -128,6 +128,9 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		root.alternateRowsStyle(currentY, y)
 		root.markStyle(currentY, y, markStyleWidth)
 		root.sectionLineHighlight(y, lineStr)
+		if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
+			root.lineStyle(y, root.StyleJumpTargetLine)
+		}
 
 		if lX > 0 {
 			wrapNum++
