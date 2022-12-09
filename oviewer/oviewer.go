@@ -145,7 +145,9 @@ type general struct {
 	SectionDelimiterReg *regexp.Regexp
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
-	// JumpTarget
+	// Specified string for jumpTarget.
+	JumpTargetString string
+	// JumpTarget is the display position of search results.
 	JumpTarget int
 }
 

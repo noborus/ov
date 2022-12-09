@@ -39,3 +39,14 @@ func containsInt(list []int, e int) bool {
 	}
 	return false
 }
+
+// toLast toLast moves the specified string to the end.
+func toLast(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+
+	list = remove(list, s)
+	list = append(list, s)
+	return list
+}

@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"runtime"
@@ -136,9 +137,14 @@ func (root *Root) watchStart() {
 
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
-	if !strings.Contains(input, ".") {
+	if len(input) == 0 {
+		return
+	}
+	num := targetToN(root.Doc.endNum, input)
+	str := strconv.FormatFloat(num, 'f', 1, 64)
+	if strings.HasSuffix(str, ".0") {
 		// Line number only.
-		lN, err := strconv.Atoi(input)
+		lN, err := strconv.Atoi(str[:len(str)-2])
 		if err != nil {
 			root.setMessage(ErrInvalidNumber.Error())
 			return
@@ -149,7 +155,7 @@ func (root *Root) goLine(input string) {
 	}
 
 	// Line number and number of wrapping lines.
-	inputs := strings.Split(input, ".")
+	inputs := strings.Split(str, ".")
 	lN, err := strconv.Atoi(inputs[0])
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
@@ -447,12 +453,7 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	log.Println("setJump")
-	num, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessagef("Set JumpTarget: %s", ErrInvalidNumber.Error())
-		return
-	}
+	num := int(math.Round(strToPosition(root.vHight, input)))
 	if num < 0 || num > root.vHight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
@@ -460,14 +461,65 @@ func (root *Root) setJumpTarget(input string) {
 	if root.Doc.JumpTarget == num {
 		return
 	}
-
+	root.Doc.JumpTargetString = input
 	root.Doc.JumpTarget = num
 	root.setMessagef("Set JumpTarget %d", num)
 }
 
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
+	root.Doc.JumpTarget = int(math.Round(strToPosition(root.vHight, root.Doc.JumpTargetString)))
 	root.ViewSync()
+}
+
+// strToPositon determines the position of the jump.
+func strToPosition(hight int, str string) float64 {
+	num := targetToN(hight, str)
+	if num < 0 {
+		return (float64(hight) - 1) + num
+	}
+	return num
+}
+
+// targetToN returns
+// the number of lines from the top for positive numbers (1),
+// dot.number for percentages (.5) = 50%,
+// and % after the number for percentages (50%).
+func targetToN(hight int, str string) float64 {
+	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return 0
+	}
+
+	var p float64 = 0
+	if strings.HasPrefix(str, ".") {
+		str = strings.TrimLeft(str, ".")
+		i, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return 0
+		}
+		p = i / 10
+	}
+	if strings.HasSuffix(str, "%") {
+		str = strings.TrimRight(str, "%")
+		i, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return 0
+		}
+		p = i / 100
+	}
+
+	if p != 0 {
+		return float64(hight) * p
+	}
+
+	num, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	return num
 }
 
 // ViewSync redraws the whole thing.

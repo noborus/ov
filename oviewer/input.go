@@ -555,10 +555,8 @@ func (g *gotoInput) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (g *gotoInput) Confirm(str string) tcell.Event {
 	g.value = str
-	if _, err := strconv.Atoi(str); err == nil {
-		g.clist.list = toLast(g.clist.list, str)
-		g.clist.p = 0
-	}
+	g.clist.list = toLast(g.clist.list, str)
+	g.clist.p = 0
 	g.SetEventNow()
 	return g
 }
@@ -987,10 +985,8 @@ func (j *jumpTargetInput) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (j *jumpTargetInput) Confirm(str string) tcell.Event {
 	j.value = str
-	if _, err := strconv.Atoi(str); err == nil {
-		j.clist.list = toLast(j.clist.list, str)
-		j.clist.p = 0
-	}
+	j.clist.list = toLast(j.clist.list, str)
+	j.clist.p = 0
 	j.SetEventNow()
 	return j
 }
@@ -1003,14 +999,4 @@ func (g *jumpTargetInput) Up(str string) string {
 // Down returns strings when the down key is pressed during input.
 func (g *jumpTargetInput) Down(str string) string {
 	return g.clist.down()
-}
-
-func toLast(list []string, s string) []string {
-	if len(s) == 0 {
-		return list
-	}
-
-	list = remove(list, s)
-	list = append(list, s)
-	return list
 }
