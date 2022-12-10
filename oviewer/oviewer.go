@@ -370,9 +370,6 @@ func NewConfig() Config {
 		StyleSectionLine: OVStyle{
 			Background: "green",
 		},
-		StyleJumpTargetLine: OVStyle{
-			Underline: true,
-		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
 			{Foreground: "aqua"},
@@ -381,6 +378,9 @@ func NewConfig() Config {
 			{Foreground: "lime"},
 			{Foreground: "blue"},
 			{Foreground: "grey"},
+		},
+		StyleJumpTargetLine: OVStyle{
+			Underline: true,
 		},
 		General: general{
 			TabWidth:             8,

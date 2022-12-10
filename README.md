@@ -40,6 +40,7 @@ ov is a terminal pager.
 	* 3.15. [Mouse support](#Mousesupport)
 	* 3.16. [Multi Color Highlight](#MultiColorHighlight)
 	* 3.17. [Plain](#Plain)
+	* 3.18. [Jump Target](#JumpTarget)
 * 4. [Command option](#Commandoption)
 * 5. [Key bindings](#Keybindings)
 * 6. [Customize](#Customize)
@@ -352,6 +353,18 @@ Supports undecorating ANSI escape sequences.
 The option is `--plain` (or `-p`).
 After startup, toggle the original decoration (default key `ctrl+e`).
 
+###  3.18. <a name='JumpTarget'></a>Jump Target
+
+You can specify the lines to be displayed in the search results.
+This function is similar to `--jump-target` of `less`.
+Positive numbers are displayed downwards by the number of lines from the top(1).
+Negative numbers are displayed up by the number of lines from the bottom(-1).
+. (dot) can be used to specify a percentage. .5 is the middle of the screen(.5).
+You can also specify a percentage, such as (50%).
+
+This option can be specified with `--jump-target`(or `-j`).
+It can be entered after startup (default key `j`).
+
 ##  4. <a name='Commandoption'></a>Command option
 
 ```console
@@ -382,6 +395,7 @@ Flags:
   -h, --help                       help for ov
       --help-key                   display key bind information
       --incsearch                  incremental search (default true)
+  -j, --jump-target string         jump-target
   -n, --line-number                line number mode
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
@@ -405,12 +419,12 @@ It can also be changed after startup.
  [Q]                          * output screen and quit
  [ctrl+q]                     * set output screen and quit
  [ctrl+z]                     * suspend
- [h], [ctrl+F1], [ctrl+alt+c] * display help screen
- [ctrl+F2], [ctrl+alt+e]      * display log screen
+ [h], [ctrl+alt+c], [ctrl+f1] * display help screen
+ [ctrl+f2], [ctrl+alt+e]      * display log screen
  [ctrl+l]                     * screen sync
  [ctrl+f]                     * follow mode toggle
  [ctrl+a]                     * follow all mode toggle
- [ctrl+alt+r]                 * enable/disable mouse
+ [ctrl+f3], [ctrl+alt+r]      * enable/disable mouse
 
 	Moving
 
@@ -455,6 +469,7 @@ It can also be changed after startup.
  [c]                          * column mode toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
+ [ctrl+e]                     * original decoration toggle
 
 	Change Display with Input
 
@@ -463,21 +478,22 @@ It can also be changed after startup.
  [H]                          * number of header lines
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
+ [.]                          * multi color highlight
 
 	Section
 
  [alt+d]                      * section delimiter regular expression
  [ctrl+F3], [alt+s]           * section start position
- [space]                      * next section
- [^]                          * previous section
+ [space], [ctrl+down]         * next section
+ [^], [ctrl+up]               * previous section
  [9]                          * last section
  [F2]                         * follow section mode toggle
 
 	Close and reload
 
  [ctrl+F9], [ctrl+alt+s]      * close file
- [F5], [ctrl+alt+l]           * reload file
- [F4], [ctrl+alt+w]           * watch mode
+ [ctrl+alt+l], [F5]           * reload file
+ [ctrl+alt+w], [F4]           * watch mode
  [ctrl+w]                     * set watch interval
 
 	Key binding when typing
@@ -502,6 +518,8 @@ You can customize the following items.
 * StyleColumnHighlight
 * StyleMarkLine
 * StyleSectionLine
+* StyleMultiColorHighlight
+* StyleJumpTargetLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
 Specify bool values for Reverse, Bold, Blink, Dim, Italic, and Underline.
