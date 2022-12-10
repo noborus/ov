@@ -38,6 +38,16 @@ StyleMarkLine:
   Background: "darkgoldenrod"
 StyleSectionLine:
   Background: "green"
+StyleMultiColorHighlight:
+  - Foreground: "red"
+  - Foreground: "aqua"
+  - Foreground: "yellow"
+  - Foreground: "fuchsia"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "grey"
+StyleJumpTargetLine:
+  Underline: true
 
 # Keybind
 # Special key
@@ -171,6 +181,10 @@ KeyBind:
     toggle_mouse:
         - "ctrl+f3"
         - "ctrl+alt+r"
+    multi_color:
+        - "."
+    jump_target:
+        - "j"
 
 Mode:
   Psql:
