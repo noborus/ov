@@ -193,6 +193,8 @@ type Config struct {
 	// AfterWriteOriginal specifies the number of lines after the current position.
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
 
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
@@ -554,6 +556,11 @@ func (root *Root) Run() error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
 	}
+
+	if root.Config.MultiColorWords != nil {
+		root.setMultiColorWords(root.Config.MultiColorWords)
+	}
+
 	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
 
 	root.optimizedMan()

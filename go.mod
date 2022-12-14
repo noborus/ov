@@ -9,14 +9,14 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gdamore/tcell/v2 v2.5.3
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.15.12
+	github.com/klauspost/compress v1.15.13
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.4.3
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
-	github.com/ulikunitz/xz v0.5.10
-	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a
+	github.com/ulikunitz/xz v0.5.11
+	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338
 	golang.org/x/sync v0.1.0
 	golang.org/x/term v0.3.0
 )

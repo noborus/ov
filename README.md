@@ -347,6 +347,17 @@ Enter multiple words (regular expressions) separated by spaces.
 
 For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
 
+It can also be specified with the command line option `--multicolor`(oor `-M`).
+For command line options, pass them separated by ,(comma).
+
+For example:
+
+```console
+$ ov --multicolr "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
+```
+
+![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
+
 ###  3.17. <a name='Plain'></a>Plain
 
 Supports undecorating ANSI escape sequences.
