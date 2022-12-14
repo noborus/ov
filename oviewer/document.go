@@ -94,8 +94,8 @@ type Document struct {
 
 	// Last moved Section position.
 	lastSectionPosNum int
-	// Multiple strings with multicolor highlighting.
-	stringsMultiColor []*regexp.Regexp
+	// multiColorRegexps holds multicolor regular expressions in slices.
+	multiColorRegexps []*regexp.Regexp
 
 	// mu controls the mutex.
 	mu sync.Mutex

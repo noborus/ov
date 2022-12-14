@@ -428,8 +428,6 @@ func (root *Root) setSectionStart(input string) {
 
 // setMultiColor set multiple strings to highlight with multiple colors.
 func (root *Root) setMultiColor(input string) {
-	m := root.Doc
-
 	quoted := false
 	f := strings.FieldsFunc(input, func(r rune) bool {
 		if r == '"' {
@@ -438,17 +436,23 @@ func (root *Root) setMultiColor(input string) {
 		return !quoted && r == ' '
 	})
 
-	m.stringsMultiColor = nil
-	for _, w := range f {
+	root.setMultiColorWords(f)
+	root.setMessagef("Set multicolor strings [%s]", input)
+}
+
+// setMultiColor set multiple strings to highlight with multiple colors.
+func (root *Root) setMultiColorWords(words []string) {
+	m := root.Doc
+
+	m.multiColorRegexps = nil
+	for _, w := range words {
 		s, err := strconv.Unquote(w)
 		if err != nil {
 			s = w
 		}
 		reg := regexpCompile(s, true)
-		m.stringsMultiColor = append(m.stringsMultiColor, reg)
+		m.multiColorRegexps = append(m.multiColorRegexps, reg)
 	}
-
-	root.setMessagef("Set multicolor strings [%s]", input)
 }
 
 // setJumpTarget sets the position of the search result.

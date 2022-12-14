@@ -229,7 +229,7 @@ func (root *Root) plainMode(lc contents) {
 
 func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int) {
 	numC := len(root.StyleMultiColorHighlight)
-	for n, w := range root.Doc.stringsMultiColor {
+	for n, w := range root.Doc.multiColorRegexps {
 		poss := searchPositionReg(str, w)
 		for _, r := range poss {
 			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[n%numC])
