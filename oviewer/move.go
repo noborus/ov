@@ -59,6 +59,10 @@ func (root *Root) movePgUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 	root.moveNumUp(root.statusPos - root.headerLen)
+	if root.Doc.topLN < 0 {
+		root.Doc.topLN = 0
+		root.Doc.topLX = 0
+	}
 }
 
 // Moves down one screen.
@@ -94,6 +98,10 @@ func (root *Root) moveHfUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 	root.moveNumUp((root.statusPos - root.headerLen) / 2)
+	if root.Doc.topLN < 0 {
+		root.Doc.topLN = 0
+		root.Doc.topLX = 0
+	}
 }
 
 // Moves down half a screen.
@@ -298,7 +306,9 @@ func (root *Root) prevSection() {
 		root.moveLine(0)
 		return
 	}
-	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
+	n = (n - root.Doc.firstLine()) + root.Doc.SectionStartPosition
+	n = max(n, 0)
+	root.moveLine(n)
 }
 
 func (root *Root) lastSection() {
