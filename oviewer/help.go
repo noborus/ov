@@ -23,6 +23,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.eof = 1
 	m.preventReload = true
 	m.seekable = false
+	m.setSectionDelimiter("\t")
 	return m, err
 }
 
