@@ -370,7 +370,7 @@ func NewConfig() Config {
 			Background: "darkgoldenrod",
 		},
 		StyleSectionLine: OVStyle{
-			Background: "green",
+			Background: "slateblue",
 		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
