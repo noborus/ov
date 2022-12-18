@@ -12,40 +12,40 @@ ov is a terminal pager.
 ![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
 
 <!-- vscode-markdown-toc -->
-* 1. [Feature](#Feature)
-* 2. [Install](#Install)
-	* 2.1. [deb package](#debpackage)
-	* 2.2. [rpm package](#rpmpackage)
-	* 2.3. [MacPorts (macOS)](#MacPortsmacOS)
-	* 2.4. [Homebrew(macOS or Linux)](#HomebrewmacOSorLinux)
-	* 2.5. [pkg (FreeBSD)](#pkgFreeBSD)
-	* 2.6. [Binary](#Binary)
-	* 2.7. [go install](#goinstall)
-	* 2.8. [go get(details or developer version)](#gogetdetailsordeveloperversion)
-* 3. [Usage](#Usage)
-	* 3.1. [Basic usage](#Basicusage)
-	* 3.2. [Config](#Config)
-	* 3.3. [Header](#Header)
-	* 3.4. [Column Mode](#ColumnMode)
-	* 3.5. [Wrap/NoWrap](#WrapNoWrap)
-	* 3.6. [Alternate-Rows](#Alternate-Rows)
-	* 3.7. [Section](#Section)
-	* 3.8. [Follow mode](#Followmode)
-	* 3.9. [Follow all mode](#Followallmode)
-	* 3.10. [Follow section mode](#Followsectionmode)
-	* 3.11. [Exec mode](#Execmode)
-	* 3.12. [Search](#Search)
-	* 3.13. [Mark](#Mark)
-	* 3.14. [Watch](#Watch)
-	* 3.15. [Mouse support](#Mousesupport)
-	* 3.16. [Multi Color Highlight](#MultiColorHighlight)
-	* 3.17. [Plain](#Plain)
-	* 3.18. [Jump Target](#JumpTarget)
-* 4. [Command option](#Commandoption)
-* 5. [Key bindings](#Keybindings)
-* 6. [Customize](#Customize)
-	* 6.1. [Style customization](#Stylecustomization)
-	* 6.2. [Key binding customization](#Keybindingcustomization)
+* 1. [Feature](#feature)
+* 2. [Install](#install)
+  * 2.1. [deb package](#deb-package)
+  * 2.2. [rpm package](#rpm-package)
+  * 2.3. [MacPorts (macOS)](#macports-(macos))
+  * 2.4. [Homebrew(macOS or Linux)](#homebrew(macos-or-linux))
+  * 2.5. [pkg (FreeBSD)](#pkg-(freebsd))
+  * 2.6. [Binary](#binary)
+  * 2.7. [go install](#go-install)
+  * 2.8. [go get(details or developer version)](#go-get(details-or-developer-version))
+* 3. [Usage](#usage)
+  * 3.1. [Basic usage](#basic-usage)
+  * 3.2. [Config](#config)
+  * 3.3. [Header](#header)
+  * 3.4. [Column Mode](#column-mode)
+  * 3.5. [Wrap/NoWrap](#wrap/nowrap)
+  * 3.6. [Alternate-Rows](#alternate-rows)
+  * 3.7. [Section](#section)
+  * 3.8. [Follow mode](#follow-mode)
+  * 3.9. [Follow all mode](#follow-all-mode)
+  * 3.10. [Follow section mode](#follow-section-mode)
+  * 3.11. [Exec mode](#exec-mode)
+  * 3.12. [Search](#search)
+  * 3.13. [Mark](#mark)
+  * 3.14. [Watch](#watch)
+  * 3.15. [Mouse support](#mouse-support)
+  * 3.16. [Multi Color Highlight](#multi-color-highlight)
+  * 3.17. [Plain](#plain)
+  * 3.18. [Jump Target](#jump-target)
+* 4. [Command option](#command-option)
+* 5. [Key bindings](#key-bindings)
+* 6. [Customize](#customize)
+  * 6.1. [Style customization](#style-customization)
+  * 6.2. [Key binding customization](#key-binding-customization)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -53,7 +53,7 @@ ov is a terminal pager.
 	/vscode-markdown-toc-config -->
 <!-- /vscode-markdown-toc -->
 
-##  1. <a name='Feature'></a>Feature
+##  1. <a name='feature'></a>Feature
 
 * Supports fixed [header](#Header) line display (both wrap/nowrap).
 * Supports [column mode](#ColumnMode), which recognizes columns by delimiter.
@@ -72,9 +72,9 @@ ov is a terminal pager.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
 
-##  2. <a name='Install'></a>Install
+##  2. <a name='install'></a>Install
 
-###  2.1. <a name='debpackage'></a>deb package
+###  2.1. <a name='deb-package'></a>deb package
 
 You can download the package from [releases](https://github.com/noborus/ov/releases).
 
@@ -83,7 +83,7 @@ curl -L -O https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd
 sudo dpkg -i ov_x.x.x-1_amd64.deb
 ```
 
-###  2.2. <a name='rpmpackage'></a>rpm package
+###  2.2. <a name='rpm-package'></a>rpm package
 
 You can download the package from [releases](https://github.com/noborus/ov/releases).
 
@@ -91,25 +91,25 @@ You can download the package from [releases](https://github.com/noborus/ov/relea
 sudo rpm -ivh https://github.com/noborus/ov/releases/download/vx.x.x/ov_x.x.x-1_amd64.rpm
 ```
 
-###  2.3. <a name='MacPortsmacOS'></a>MacPorts (macOS)
+###  2.3. <a name='macports-(macos)'></a>MacPorts (macOS)
 
 ```console
 sudo port install ov
 ```
 
-###  2.4. <a name='HomebrewmacOSorLinux'></a>Homebrew(macOS or Linux)
+###  2.4. <a name='homebrew(macos-or-linux)'></a>Homebrew(macOS or Linux)
 
 ```console
 brew install noborus/tap/ov
 ```
 
-###  2.5. <a name='pkgFreeBSD'></a>pkg (FreeBSD)
+###  2.5. <a name='pkg-(freebsd)'></a>pkg (FreeBSD)
 
 ```console
 pkg install ov
 ```
 
-###  2.6. <a name='Binary'></a>Binary
+###  2.6. <a name='binary'></a>Binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
 
@@ -119,7 +119,7 @@ unzip ov_x.x.x_linux_amd64.zip
 sudo install ov /usr/local/bin
 ```
 
-###  2.7. <a name='goinstall'></a>go install
+###  2.7. <a name='go-install'></a>go install
 
 It will be installed in $GOPATH/bin by the following command.
 
@@ -127,7 +127,7 @@ It will be installed in $GOPATH/bin by the following command.
 go install github.com/noborus/ov@latest
 ```
 
-###  2.8. <a name='gogetdetailsordeveloperversion'></a>go get(details or developer version)
+###  2.8. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
 
 First of all, download only with the following command without installing it.
 
@@ -150,9 +150,9 @@ make
 sudo install ov /usr/local/bin
 ```
 
-##  3. <a name='Usage'></a>Usage
+##  3. <a name='usage'></a>Usage
 
-###  3.1. <a name='Basicusage'></a>Basic usage
+###  3.1. <a name='basic-usage'></a>Basic usage
 
 ov supports open file name or standard input.
 
@@ -172,7 +172,7 @@ export PAGER=ov
 
 See the [ov site](https://noborus.github.io/ov/) for more use cases.
 
-###  3.2. <a name='Config'></a>Config
+###  3.2. <a name='config'></a>Config
 
 You can set style and key bindings in the setting file.
 
@@ -194,7 +194,7 @@ Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/o
 
 If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
-###  3.3. <a name='Header'></a>Header
+###  3.3. <a name='header'></a>Header
 
 The `--header` (`-H`) option fixedly displays the specified number of lines.
 
@@ -208,7 +208,7 @@ When used with the `--skip-lines` option, it hides the number of lines specified
 ov --skip-lines 1 --header 1 README.md
 ```
 
-###  3.4. <a name='ColumnMode'></a>Column Mode
+###  3.4. <a name='column-mode'></a>Column Mode
 
 Specify the delimiter with `--column-delimiter` and set it to `--column-mode` to highlight the column.
 
@@ -216,14 +216,14 @@ Specify the delimiter with `--column-delimiter` and set it to `--column-mode` to
 ov --column-delimiter "," --column-mode test.csv
 ```
 
-###  3.5. <a name='WrapNoWrap'></a>Wrap/NoWrap
+###  3.5. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
 
 The option is `--wrap`, specify `--wrap=false` if you do not want to wrap.
 After startup, toggle display with wrap (default key `w`).
 
-###  3.6. <a name='Alternate-Rows'></a>Alternate-Rows
+###  3.6. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) option
 The style can be set with [Style customization](#Stylecustomization).
@@ -232,7 +232,7 @@ The style can be set with [Style customization](#Stylecustomization).
 ov --alternate-rows test.csv
 ```
 
-###  3.7. <a name='Section'></a>Section
+###  3.7. <a name='section'></a>Section
 
 You specify `--section-delimiter`, you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`.
@@ -245,7 +245,7 @@ The section-delimiter is written in a regular expression (for example: "^#").
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-###  3.8. <a name='Followmode'></a>Follow mode
+###  3.8. <a name='follow-mode'></a>Follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -257,7 +257,7 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.9. <a name='Followallmode'></a>Follow all mode
+###  3.9. <a name='follow-all-mode'></a>Follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -265,7 +265,7 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.10. <a name='Followsectionmode'></a>Follow section mode
+###  3.10. <a name='follow-section-mode'></a>Follow section mode
 
 Follow mode is line-by-line, while follow section mode is section-by-section.
 Follow section mode displays the bottom section.
@@ -278,7 +278,7 @@ ov --section-delimiter "^#" --follow-section README.md
  [Watch](#Watch) mode is a mode in which `--follow-section` and
  `--section-delimiter "^\f"` are automatically set.
 
-###  3.11. <a name='Execmode'></a>Exec mode
+###  3.11. <a name='exec-mode'></a>Exec mode
 
 Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -289,7 +289,7 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
-###  3.12. <a name='Search'></a>Search
+###  3.12. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -301,7 +301,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.13. <a name='Mark'></a>Mark
+###  3.13. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -311,7 +311,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.14. <a name='Watch'></a>Watch
+###  3.14. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -324,7 +324,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.15. <a name='Mousesupport'></a>Mouse support
+###  3.15. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
@@ -339,7 +339,7 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-###  3.16. <a name='MultiColorHighlight'></a>Multi Color Highlight
+###  3.16. <a name='multi-color-highlight'></a>Multi Color Highlight
 
 This feature styles multiple words individually.
 `.`key(defualt) enters multi-word input mode.
@@ -358,13 +358,13 @@ $ ov --multicolr "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
 
-###  3.17. <a name='Plain'></a>Plain
+###  3.17. <a name='plain'></a>Plain
 
 Supports undecorating ANSI escape sequences.
 The option is `--plain` (or `-p`).
 After startup, toggle the original decoration (default key `ctrl+e`).
 
-###  3.18. <a name='JumpTarget'></a>Jump Target
+###  3.18. <a name='jump-target'></a>Jump Target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -376,7 +376,7 @@ You can also specify a percentage, such as (50%).
 This option can be specified with `--jump-target`(or `-j`).
 It can be entered after startup (default key `j`).
 
-##  4. <a name='Commandoption'></a>Command option
+##  4. <a name='command-option'></a>Command option
 
 ```console
 $ ov --help
@@ -422,7 +422,7 @@ Flags:
 
 It can also be changed after startup.
 
-##  5. <a name='Keybindings'></a>Key bindings
+##  5. <a name='key-bindings'></a>Key bindings
 
 ```console
  [Escape], [q]                * quit
@@ -514,9 +514,9 @@ It can also be changed after startup.
  [alt+i]                      * incremental search toggle
 ```
 
-##  6. <a name='Customize'></a>Customize
+##  6. <a name='customize'></a>Customize
 
-###  6.1. <a name='Stylecustomization'></a>Style customization
+###  6.1. <a name='style-customization'></a>Style customization
 
 You can customize the following items.
 
@@ -555,7 +555,7 @@ StyleAlternate:
 | Italic | true/false | false |
 | Underline | true/false | false |
 
-###  6.2. <a name='Keybindingcustomization'></a>Key binding customization
+###  6.2. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
 
