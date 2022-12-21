@@ -280,10 +280,10 @@ func (m *Document) firstLine() int {
 }
 
 // SearchLine searches the document and returns the matching line.
-func (m *Document) SearchLine(ctx context.Context, searcher Searcher, num int) (int, error) {
-	num = max(num, 0)
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = max(lN, 0)
 
-	for n := num; n < m.BufEndNum(); n++ {
+	for n := lN; n < m.BufEndNum(); n++ {
 		if searcher.Match(m.GetLine(n)) {
 			return n, nil
 		}
@@ -298,10 +298,10 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, num int) (
 }
 
 // BackSearchLine does a backward search on the document and returns a matching line.
-func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, num int) (int, error) {
-	num = min(num, m.BufEndNum()-1)
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = min(lN, m.BufEndNum()-1)
 
-	for n := num; n >= 0; n-- {
+	for n := lN; n >= 0; n-- {
 		if searcher.Match(m.GetLine(n)) {
 			return n, nil
 		}

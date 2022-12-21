@@ -261,7 +261,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 }
 
 // incSearch implements incremental forward/back search.
-func (root *Root) incSearch(ctx context.Context, forward bool) {
+func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 	root.Doc.topLN = root.returnStartPosition()
 
 	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
@@ -270,9 +270,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 	}
 
 	ctx = root.cancelRestart(ctx)
-
 	go func() {
-		lN := root.Doc.topLN + root.Doc.firstLine()
 		var err error
 		if forward {
 			lN, err = root.Doc.SearchLine(ctx, searcher, lN)

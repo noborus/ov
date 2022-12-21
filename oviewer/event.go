@@ -68,10 +68,15 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.setViewMode(ev.value)
 		case *searchInput:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, true, root.Doc.topLN+root.Doc.firstLine(), searcher)
+			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
+			if l.line-root.Doc.topLN > root.Doc.topLN {
+				l.line = 0
+			}
+			root.searchMove(ctx, true, l.line, searcher)
 		case *backSearchInput:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			root.searchMove(ctx, false, root.Doc.topLN+root.Doc.firstLine(), searcher)
+			l := root.lineNumber(root.headerLen)
+			root.searchMove(ctx, false, l.line, searcher)
 		case *gotoInput:
 			root.goLine(ev.value)
 		case *headerInput:

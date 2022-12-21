@@ -10,13 +10,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v3
     - name: Install Go
       if: success()
       uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
+        cache: true
 
     - name: Run tests
       run: make test
