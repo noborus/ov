@@ -93,11 +93,15 @@ func (root *Root) incrementalSearch(ctx context.Context) {
 		return
 	}
 
+	l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
+	if l.line-root.Doc.topLN > root.Doc.topLN {
+		l.line = 0
+	}
 	switch root.input.mode {
 	case Search:
-		root.incSearch(ctx, true)
+		root.incSearch(ctx, true, l.line)
 	case Backsearch:
-		root.incSearch(ctx, false)
+		root.incSearch(ctx, false, l.line)
 	}
 }
 
