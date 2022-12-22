@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -331,4 +332,17 @@ func (m *Document) unWatchMode() {
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm
 	m.SectionDelimiterReg = regexpCompile(delm, true)
+}
+
+// setMultiColor set multiple strings to highlight with multiple colors.
+func (m *Document) setMultiColorWords(words []string) {
+	m.multiColorRegexps = nil
+	for _, w := range words {
+		s, err := strconv.Unquote(w)
+		if err != nil {
+			s = w
+		}
+		reg := regexpCompile(s, true)
+		m.multiColorRegexps = append(m.multiColorRegexps, reg)
+	}
 }

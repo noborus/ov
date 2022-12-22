@@ -557,16 +557,17 @@ func (root *Root) Run() error {
 		root.Screen.EnableMouse(MouseFlags)
 	}
 
-	if root.Config.MultiColorWords != nil {
-		root.setMultiColorWords(root.Config.MultiColorWords)
-	}
-
 	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
 
 	root.optimizedMan()
 
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General
+
+		if root.Config.MultiColorWords != nil {
+			doc.setMultiColorWords(root.Config.MultiColorWords)
+		}
+
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()

@@ -436,23 +436,8 @@ func (root *Root) setMultiColor(input string) {
 		return !quoted && r == ' '
 	})
 
-	root.setMultiColorWords(f)
+	root.Doc.setMultiColorWords(f)
 	root.setMessagef("Set multicolor strings [%s]", input)
-}
-
-// setMultiColor set multiple strings to highlight with multiple colors.
-func (root *Root) setMultiColorWords(words []string) {
-	m := root.Doc
-
-	m.multiColorRegexps = nil
-	for _, w := range words {
-		s, err := strconv.Unquote(w)
-		if err != nil {
-			s = w
-		}
-		reg := regexpCompile(s, true)
-		m.multiColorRegexps = append(m.multiColorRegexps, reg)
-	}
 }
 
 // setJumpTarget sets the position of the search result.
