@@ -279,11 +279,11 @@ func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
-// SearchLine searches the document and returns the matching line.
+// SearchLine searches the document and returns the matching line number.
 func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = max(lN, 0)
-
-	for n := lN; n < m.BufEndNum(); n++ {
+	end := m.BufEndNum()
+	for n := lN; n < end; n++ {
 		if searcher.Match(m.GetLine(n)) {
 			return n, nil
 		}
@@ -297,7 +297,7 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 	return 0, ErrNotFound
 }
 
-// BackSearchLine does a backward search on the document and returns a matching line.
+// BackSearchLine does a backward search on the document and returns a matching line number.
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
 
