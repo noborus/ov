@@ -652,7 +652,7 @@ func (root *Root) setMessage(msg string) {
 	root.Show()
 }
 
-func (root *Root) setMessagef(format string, a ...interface{}) {
+func (root *Root) setMessagef(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	root.setMessage(msg)
 }
