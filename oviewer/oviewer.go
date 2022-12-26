@@ -624,8 +624,6 @@ func (root *Root) optimizedMan() {
 	}
 
 	root.Doc.Caption = manPN
-	// Bug?? Clipboard fails when called by man.
-	root.Screen.DisableMouse()
 }
 
 func (root *Root) setModeConfig() {
