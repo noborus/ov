@@ -344,7 +344,7 @@ func (root *Root) Paste() {
 // getClipboard writes a string from the clipboard.
 func (root *Root) getClipboard(_ context.Context) {
 	input := root.input
-	switch input.mode {
+	switch input.Event.Mode() {
 	case Normal:
 		return
 	}

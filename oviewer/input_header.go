@@ -11,35 +11,39 @@ func (root *Root) setHeaderMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = Header
-	input.EventInput = newHeaderInput()
+	input.Event = newHeaderEvent()
 }
 
-// headerInput represents the goto input mode.
-type headerInput struct {
+// headerEvent represents the goto input mode.
+type headerEvent struct {
 	value string
 	tcell.EventTime
 }
 
-// newHeaderInput returns HeaderInput.
-func newHeaderInput() *headerInput {
-	return &headerInput{}
+// newHeaderEvent returns headerEvent.
+func newHeaderEvent() *headerEvent {
+	return &headerEvent{}
+}
+
+// Mode returns InputMode.
+func (e *headerEvent) Mode() InputMode {
+	return Header
 }
 
 // Prompt returns the prompt string in the input field.
-func (h *headerInput) Prompt() string {
+func (e *headerEvent) Prompt() string {
 	return "Header length:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (h *headerInput) Confirm(str string) tcell.Event {
-	h.value = str
-	h.SetEventNow()
-	return h
+func (e *headerEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (h *headerInput) Up(str string) string {
+func (e *headerEvent) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -48,7 +52,7 @@ func (h *headerInput) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (h *headerInput) Down(str string) string {
+func (e *headerEvent) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

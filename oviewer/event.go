@@ -64,40 +64,40 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
 			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
 			root.searchMove(ctx, false, l.line-1, searcher)
-		case *viewModeInput:
+		case *viewModeEvent:
 			root.setViewMode(ev.value)
-		case *searchInput:
+		case *searchEvent:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
 			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
 			if l.line-root.Doc.topLN > root.Doc.topLN {
 				l.line = 0
 			}
 			root.searchMove(ctx, true, l.line, searcher)
-		case *backSearchInput:
+		case *backSearchEvent:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
 			l := root.lineNumber(root.headerLen)
 			root.searchMove(ctx, false, l.line, searcher)
-		case *gotoInput:
+		case *gotoEvent:
 			root.goLine(ev.value)
-		case *headerInput:
+		case *headerEvent:
 			root.setHeader(ev.value)
-		case *skipLinesInput:
+		case *skipLinesEvent:
 			root.setSkipLines(ev.value)
-		case *delimiterInput:
+		case *delimiterEvent:
 			root.setDelimiter(ev.value)
-		case *tabWidthInput:
+		case *tabWidthEvent:
 			root.setTabWidth(ev.value)
-		case *watchIntervalInput:
+		case *watchIntervalEvent:
 			root.setWatchInterval(ev.value)
-		case *writeBAInput:
+		case *writeBAEvent:
 			root.setWriteBA(ev.value)
-		case *sectionDelimiterInput:
+		case *sectionDelimiterEvent:
 			root.setSectionDelimiter(ev.value)
-		case *sectionStartInput:
+		case *sectionStartEvent:
 			root.setSectionStart(ev.value)
-		case *multiColorInput:
+		case *multiColorEvent:
 			root.setMultiColor(ev.value)
-		case *jumpTargetInput:
+		case *jumpTargetEvent:
 			root.setJumpTarget(ev.value)
 		case *tcell.EventResize:
 			root.resize()
@@ -105,7 +105,7 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.mouseEvent(ev)
 		case *tcell.EventKey:
 			root.setMessage("")
-			switch root.input.mode {
+			switch root.input.Event.Mode() {
 			case Normal:
 				root.keyCapture(ev)
 			default:
@@ -263,7 +263,7 @@ func (root *Root) MoveLine(num int) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &gotoInput{}
+	ev := &gotoEvent{}
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)

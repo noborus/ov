@@ -7,8 +7,7 @@ func (root *Root) setJumpTargetMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = JumpTarget
-	input.EventInput = newJumpTargetInput(input.JumpTargetCandidate)
+	input.Event = newJumpTargetEvent(input.JumpTargetCandidate)
 }
 
 // jumpTargetCandidate returns the candidate to set to default.
@@ -18,38 +17,43 @@ func jumpTargetCandidate() *candidate {
 	}
 }
 
-// jumpTargetInput represents the jump target input mode.
-type jumpTargetInput struct {
+// jumpTargetEvent represents the jump target input mode.
+type jumpTargetEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newJumpTargetInput returns JumpTargetInput.
-func newJumpTargetInput(clist *candidate) *jumpTargetInput {
-	return &jumpTargetInput{clist: clist}
+// newJumpTargetEvent returns jumpTargetEvent.
+func newJumpTargetEvent(clist *candidate) *jumpTargetEvent {
+	return &jumpTargetEvent{clist: clist}
+}
+
+// Mode returns InputMode.
+func (e *jumpTargetEvent) Mode() InputMode {
+	return JumpTarget
 }
 
 // Prompt returns the prompt string in the input field.
-func (j *jumpTargetInput) Prompt() string {
+func (e *jumpTargetEvent) Prompt() string {
 	return "Jump Target line:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (j *jumpTargetInput) Confirm(str string) tcell.Event {
-	j.value = str
-	j.clist.list = toLast(j.clist.list, str)
-	j.clist.p = 0
-	j.SetEventNow()
-	return j
+func (e *jumpTargetEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (g *jumpTargetInput) Up(str string) string {
-	return g.clist.up()
+func (e *jumpTargetEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (g *jumpTargetInput) Down(str string) string {
-	return g.clist.down()
+func (e *jumpTargetEvent) Down(str string) string {
+	return e.clist.down()
 }

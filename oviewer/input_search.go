@@ -7,8 +7,7 @@ func (root *Root) setSearchMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = Search
-	input.EventInput = newSearchInput(input.SearchCandidate)
+	input.Event = newSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
 
@@ -19,51 +18,49 @@ func searchCandidate() *candidate {
 	}
 }
 
-// searchInput represents the search input mode.
-type searchInput struct {
+// searchEvent represents the search input mode.
+type searchEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newSearchInput returns SearchInput.
-func newSearchInput(clist *candidate) *searchInput {
-	return &searchInput{
+// newSearchEvent returns SearchInput.
+func newSearchEvent(clist *candidate) *searchEvent {
+	return &searchEvent{
 		value:     "",
 		clist:     clist,
 		EventTime: tcell.EventTime{},
 	}
 }
 
+// Mode returns InputMode.
+func (e *searchEvent) Mode() InputMode {
+	return Search
+}
+
 // Prompt returns the prompt string in the input field.
-func (s *searchInput) Prompt() string {
+func (e *searchEvent) Prompt() string {
 	return "/"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (s *searchInput) Confirm(str string) tcell.Event {
-	s.value = str
-	s.clist.list = toLast(s.clist.list, str)
-	s.clist.p = 0
-	s.SetEventNow()
-	return s
+func (e *searchEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (s *searchInput) Up(str string) string {
-	return s.clist.up()
+func (e *searchEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (s *searchInput) Down(str string) string {
-	return s.clist.down()
-}
-
-// backSearchInput represents the back search input mode.
-type backSearchInput struct {
-	value string
-	clist *candidate
-	tcell.EventTime
+func (e *searchEvent) Down(str string) string {
+	return e.clist.down()
 }
 
 // setBackSearchMode sets the inputMode to Backsearch.
@@ -71,36 +68,46 @@ func (root *Root) setBackSearchMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = Backsearch
-	input.EventInput = newBackSearchInput(input.SearchCandidate)
+	input.Event = newBackSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
 
-// newBackSearchInput returns BackSearchInput.
-func newBackSearchInput(clist *candidate) *backSearchInput {
-	return &backSearchInput{clist: clist}
+// backSearchEvent represents the back search input mode.
+type backSearchEvent struct {
+	value string
+	clist *candidate
+	tcell.EventTime
+}
+
+// newBackSearchEvent returns backSearchEvent.
+func newBackSearchEvent(clist *candidate) *backSearchEvent {
+	return &backSearchEvent{clist: clist}
+}
+
+func (e *backSearchEvent) Mode() InputMode {
+	return Backsearch
 }
 
 // Prompt returns the prompt string in the input field.
-func (b *backSearchInput) Prompt() string {
+func (e *backSearchEvent) Prompt() string {
 	return "?"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (b *backSearchInput) Confirm(str string) tcell.Event {
-	b.value = str
-	b.clist.list = toLast(b.clist.list, str)
-	b.clist.p = 0
-	b.SetEventNow()
-	return b
+func (e *backSearchEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (b *backSearchInput) Up(str string) string {
-	return b.clist.up()
+func (e *backSearchEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (b *backSearchInput) Down(str string) string {
-	return b.clist.down()
+func (e *backSearchEvent) Down(str string) string {
+	return e.clist.down()
 }

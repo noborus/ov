@@ -7,8 +7,7 @@ func (root *Root) setWatchIntervalMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = Watch
-	input.EventInput = newWatchIntevalInput(input.WatchCandidate)
+	input.Event = newWatchIntevalEvent(input.WatchCandidate)
 }
 
 // watchCandidate returns the candidate to set to default.
@@ -22,38 +21,43 @@ func watchCandidate() *candidate {
 	}
 }
 
-// watchIntervalInput represents the WatchInteval input mode.
-type watchIntervalInput struct {
+// watchIntervalEvent represents the WatchInteval input mode.
+type watchIntervalEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newWatchIntevalInputt returns WatchIntevalInput.
-func newWatchIntevalInput(clist *candidate) *watchIntervalInput {
-	return &watchIntervalInput{clist: clist}
+// newWatchIntevalInputt returns watchIntervalEvent.
+func newWatchIntevalEvent(clist *candidate) *watchIntervalEvent {
+	return &watchIntervalEvent{clist: clist}
+}
+
+// Mode returns InputMode.
+func (e *watchIntervalEvent) Mode() InputMode {
+	return Watch
 }
 
 // Prompt returns the prompt string in the input field.
-func (t *watchIntervalInput) Prompt() string {
+func (e *watchIntervalEvent) Prompt() string {
 	return "Watch interval:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (t *watchIntervalInput) Confirm(str string) tcell.Event {
-	t.value = str
-	t.clist.list = toLast(t.clist.list, str)
-	t.clist.p = 0
-	t.SetEventNow()
-	return t
+func (e *watchIntervalEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (t *watchIntervalInput) Up(str string) string {
-	return t.clist.up()
+func (e *watchIntervalEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (t *watchIntervalInput) Down(str string) string {
-	return t.clist.down()
+func (e *watchIntervalEvent) Down(str string) string {
+	return e.clist.down()
 }

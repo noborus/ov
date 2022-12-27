@@ -7,8 +7,8 @@ func (root *Root) setTabWidthMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = TabWidth
-	input.EventInput = newTabWidthInput(input.TabWidthCandidate)
+
+	input.Event = newTabWidthEvent(input.TabWidthCandidate)
 }
 
 // tabWidthCandidate returns the candidate to set to default.
@@ -23,38 +23,43 @@ func tabWidthCandidate() *candidate {
 	}
 }
 
-// tabWidthInput represents the TABWidth input mode.
-type tabWidthInput struct {
+// tabWidthEvent represents the TABWidth input mode.
+type tabWidthEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newTabWidthInput returns TABWidthInput.
-func newTabWidthInput(clist *candidate) *tabWidthInput {
-	return &tabWidthInput{clist: clist}
+// newTabWidthEvent returns tabWidthEvent.
+func newTabWidthEvent(clist *candidate) *tabWidthEvent {
+	return &tabWidthEvent{clist: clist}
+}
+
+// Mode returns InputMode.
+func (e *tabWidthEvent) Mode() InputMode {
+	return TabWidth
 }
 
 // Prompt returns the prompt string in the input field.
-func (t *tabWidthInput) Prompt() string {
+func (e *tabWidthEvent) Prompt() string {
 	return "TAB width:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (t *tabWidthInput) Confirm(str string) tcell.Event {
-	t.value = str
-	t.clist.list = toLast(t.clist.list, str)
-	t.clist.p = 0
-	t.SetEventNow()
-	return t
+func (e *tabWidthEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (t *tabWidthInput) Up(str string) string {
-	return t.clist.up()
+func (e *tabWidthEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (t *tabWidthInput) Down(str string) string {
-	return t.clist.down()
+func (e *tabWidthEvent) Down(str string) string {
+	return e.clist.down()
 }
