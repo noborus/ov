@@ -11,35 +11,39 @@ func (root *Root) setSkipLinesMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = SkipLines
-	input.EventInput = newSkipLinesInput()
+	input.Event = newSkipLinesEvent()
 }
 
-// skipLinesInput represents the goto input mode.
-type skipLinesInput struct {
+// skipLinesEvent represents the goto input mode.
+type skipLinesEvent struct {
 	value string
 	tcell.EventTime
 }
 
+// newSkipLinesEvent returns skipLinesEvent.
+func newSkipLinesEvent() *skipLinesEvent {
+	return &skipLinesEvent{}
+}
+
+// Mode returns InputMode.
+func (e *skipLinesEvent) Mode() InputMode {
+	return SkipLines
+}
+
 // Prompt returns the prompt string in the input field.
-func (h *skipLinesInput) Prompt() string {
+func (e *skipLinesEvent) Prompt() string {
 	return "Skip lines:"
 }
 
-// newSkipLinesInput returns SkipLinesInput.
-func newSkipLinesInput() *skipLinesInput {
-	return &skipLinesInput{}
-}
-
 // Confirm returns the event when the input is confirmed.
-func (h *skipLinesInput) Confirm(str string) tcell.Event {
-	h.value = str
-	h.SetEventNow()
-	return h
+func (e *skipLinesEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (h *skipLinesInput) Up(str string) string {
+func (e *skipLinesEvent) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -48,7 +52,7 @@ func (h *skipLinesInput) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (h *skipLinesInput) Down(str string) string {
+func (e *skipLinesEvent) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

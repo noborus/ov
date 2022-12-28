@@ -7,8 +7,7 @@ func (root *Root) setSectionDelimiterMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = SectionDelimiter
-	input.EventInput = newSectionDelimiterInput(input.SectionDelmCandidate)
+	input.Event = newSectionDelimiterEvent(input.SectionDelmCandidate)
 }
 
 // sectionDelimiterCandidate returns the candidate to set to default.
@@ -25,37 +24,42 @@ func sectionDelimiterCandidate() *candidate {
 }
 
 // delimiterInput represents the delimiter input mode.
-type sectionDelimiterInput struct {
+type sectionDelimiterEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newSectionDelimiterInput returns sectionDelimiterInput.
-func newSectionDelimiterInput(clist *candidate) *sectionDelimiterInput {
-	return &sectionDelimiterInput{clist: clist}
+// newSectionDelimiterEvent returns sectionDelimiterInput.
+func newSectionDelimiterEvent(clist *candidate) *sectionDelimiterEvent {
+	return &sectionDelimiterEvent{clist: clist}
+}
+
+// Mode returns InputMode.
+func (e *sectionDelimiterEvent) Mode() InputMode {
+	return SectionDelimiter
 }
 
 // Prompt returns the prompt string in the input field.
-func (d *sectionDelimiterInput) Prompt() string {
+func (e *sectionDelimiterEvent) Prompt() string {
 	return "Section delimiter:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (d *sectionDelimiterInput) Confirm(str string) tcell.Event {
-	d.value = str
-	d.clist.list = toLast(d.clist.list, str)
-	d.clist.p = 0
-	d.SetEventNow()
-	return d
+func (e *sectionDelimiterEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (d *sectionDelimiterInput) Up(str string) string {
-	return d.clist.up()
+func (e *sectionDelimiterEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (d *sectionDelimiterInput) Down(str string) string {
-	return d.clist.down()
+func (e *sectionDelimiterEvent) Down(str string) string {
+	return e.clist.down()
 }

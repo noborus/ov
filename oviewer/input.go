@@ -33,9 +33,8 @@ const (
 // Input represents the status of various inputs.
 // Retain each input list to save the input history.
 type Input struct {
-	EventInput EventInput
+	Event Eventer
 
-	mode    InputMode
 	value   string
 	cursorX int
 
@@ -70,7 +69,7 @@ func NewInput() *Input {
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
 
-	i.EventInput = &normalInput{}
+	i.Event = &normalEvent{}
 	return &i
 }
 
@@ -85,13 +84,12 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 
 	// confirmed.
 	input := root.input
-	nev := input.EventInput.Confirm(input.value)
+	nev := input.Event.Confirm(input.value)
 	if err := root.Screen.PostEvent(nev); err != nil {
 		log.Println(err)
 	}
 
-	input.mode = Normal
-	input.EventInput = newNormalInput()
+	input.Event = normal()
 }
 
 // incrementalSearch performs incremental search by setting and input mode.
@@ -104,7 +102,7 @@ func (root *Root) incrementalSearch(ctx context.Context) {
 	if l.line-root.Doc.topLN > root.Doc.topLN {
 		l.line = 0
 	}
-	switch root.input.mode {
+	switch root.input.Event.Mode() {
 	case Search:
 		root.incSearch(ctx, true, l.line)
 	case Backsearch:
@@ -122,7 +120,7 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 	switch evKey.Key() {
 	case tcell.KeyEscape:
 		input.value = ""
-		input.mode = Normal
+		input.Event = normal()
 		return false
 	case tcell.KeyEnter:
 		return true
@@ -173,11 +171,11 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes[:pos+1]))
 	case tcell.KeyUp:
-		input.value = input.EventInput.Up(input.value)
+		input.value = input.Event.Up(input.value)
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyDown:
-		input.value = input.EventInput.Down(input.value)
+		input.value = input.Event.Down(input.value)
 		runes := []rune(input.value)
 		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyTAB:
@@ -240,8 +238,10 @@ func runeWidth(str string) int {
 	return width
 }
 
-// EventInput is a generic interface for inputs.
-type EventInput interface {
+// Eventer is a generic interface for inputs.
+type Eventer interface {
+	// Mode returns the input mode.
+	Mode() InputMode
 	// Prompt returns the prompt string in the input field.
 	Prompt() string
 	// Confirm returns the event when the input is confirmed.

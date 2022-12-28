@@ -321,7 +321,7 @@ func (root *Root) drawStatus() {
 }
 
 func (root *Root) leftStatus() (contents, int) {
-	if root.input.mode == Normal {
+	if root.input.Event.Mode() == Normal {
 		return root.normalLeftStatus()
 	}
 	return root.inputLeftStatus()
@@ -365,8 +365,9 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 func (root *Root) inputLeftStatus() (contents, int) {
 	input := root.input
+	mode := input.Event.Mode()
 	searchMode := ""
-	if input.mode == Search || input.mode == Backsearch {
+	if mode == Search || mode == Backsearch {
 		if root.Config.RegexpSearch {
 			searchMode += "(R)"
 		}
@@ -377,7 +378,7 @@ func (root *Root) inputLeftStatus() (contents, int) {
 			searchMode += "(Aa)"
 		}
 	}
-	p := searchMode + input.EventInput.Prompt()
+	p := searchMode + input.Event.Prompt()
 	leftStatus := p + input.value
 	leftContents := StrToContents(leftStatus, -1)
 	return leftContents, len(p) + input.cursorX

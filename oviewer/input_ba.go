@@ -2,13 +2,12 @@ package oviewer
 
 import "github.com/gdamore/tcell/v2"
 
-// setJumpWriteBAMode sets the inputMode to WriteBA.
+// setWriteBAMode sets the inputMode to WriteBA.
 func (root *Root) setWriteBAMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.mode = WriteBA
-	input.EventInput = newWriteBAInput(input.WriteBACandidate)
+	input.Event = newWriteBAEvent(input.WriteBACandidate)
 }
 
 // baCandidate returns the candidate to set to default.
@@ -18,38 +17,43 @@ func baCandidate() *candidate {
 	}
 }
 
-// writeBAInput represents the WatchInteval input mode.
-type writeBAInput struct {
+// writeBAEvent represents the WatchInteval input mode.
+type writeBAEvent struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
-// newWatchIntevalInputt returns WatchIntevalInput.
-func newWriteBAInput(clist *candidate) *writeBAInput {
-	return &writeBAInput{clist: clist}
+// newWriteBAEvent returns writeBAEvent.
+func newWriteBAEvent(clist *candidate) *writeBAEvent {
+	return &writeBAEvent{clist: clist}
+}
+
+// Mode returns InputMode.
+func (e *writeBAEvent) Mode() InputMode {
+	return WriteBA
 }
 
 // Prompt returns the prompt string in the input field.
-func (t *writeBAInput) Prompt() string {
+func (e *writeBAEvent) Prompt() string {
 	return "WriteAndQuit Before:After:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (t *writeBAInput) Confirm(str string) tcell.Event {
-	t.value = str
-	t.clist.list = toLast(t.clist.list, str)
-	t.clist.p = 0
-	t.SetEventNow()
-	return t
+func (e *writeBAEvent) Confirm(str string) tcell.Event {
+	e.value = str
+	e.clist.list = toLast(e.clist.list, str)
+	e.clist.p = 0
+	e.SetEventNow()
+	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (t *writeBAInput) Up(str string) string {
-	return t.clist.up()
+func (e *writeBAEvent) Up(str string) string {
+	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (t *writeBAInput) Down(str string) string {
-	return t.clist.down()
+func (e *writeBAEvent) Down(str string) string {
+	return e.clist.down()
 }

@@ -67,7 +67,7 @@ func (root *Root) closeDocument() {
 // nextDoc displays the next document.
 func (root *Root) nextDoc() {
 	root.setDocumentNum(root.CurrentDoc + 1)
-	root.input.mode = Normal
+	root.input.Event = normal()
 	root.debugMessage("next document")
 	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
@@ -75,7 +75,7 @@ func (root *Root) nextDoc() {
 // previouseDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
-	root.input.mode = Normal
+	root.input.Event = normal()
 	root.debugMessage("previous document")
 	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
