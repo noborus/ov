@@ -334,15 +334,15 @@ func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiterReg = regexpCompile(delm, true)
 }
 
-// setMultiColor set multiple strings to highlight with multiple colors.
+// setMultiColorWords set multiple strings to highlight with multiple colors.
 func (m *Document) setMultiColorWords(words []string) {
-	m.multiColorRegexps = nil
-	for _, w := range words {
+	regexps := make([]*regexp.Regexp, len(words))
+	for n, w := range words {
 		s, err := strconv.Unquote(w)
 		if err != nil {
 			s = w
 		}
-		reg := regexpCompile(s, true)
-		m.multiColorRegexps = append(m.multiColorRegexps, reg)
+		regexps[n] = regexpCompile(s, true)
 	}
+	m.multiColorRegexps = regexps
 }

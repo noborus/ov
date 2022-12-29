@@ -114,10 +114,10 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			wrap: wrapNum,
 		}
 
-		root.columnHighlight(lc, lineStr, posCV)
 		if root.Doc.PlainMode {
-			root.plainMode(lc)
+			root.plainStyle(lc)
 		}
+		root.columnHighlight(lc, lineStr, posCV)
 		root.multiColorHighlight(lc, lineStr, posCV)
 		root.searchHighlight(lY, lc, lineStr, posCV)
 		root.drawLineNumber(lY, y)
@@ -221,18 +221,21 @@ func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map
 	}
 }
 
-func (root *Root) plainMode(lc contents) {
+// plainStyle defaults to the original style.
+func (root *Root) plainStyle(lc contents) {
 	for x := 0; x < len(lc); x++ {
 		lc[x].style = tcell.StyleDefault
 	}
 }
 
+// multiColorHighlight applies styles to multiple words (regular expressions) individually.
+// The style of the first specified word takes precedence.
 func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int) {
 	numC := len(root.StyleMultiColorHighlight)
-	for n, w := range root.Doc.multiColorRegexps {
-		poss := searchPositionReg(str, w)
+	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
+		poss := searchPositionReg(str, root.Doc.multiColorRegexps[i])
 		for _, r := range poss {
-			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[n%numC])
+			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[i%numC])
 		}
 	}
 }
