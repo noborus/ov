@@ -276,7 +276,7 @@ func init() {
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))
 
 	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "multi-color")
-	_ = viper.BindPFlag("MultiColorWords", rootCmd.PersistentFlags().Lookup("multi-color"))
+	_ = viper.BindPFlag("general.MultiColorWords", rootCmd.PersistentFlags().Lookup("multi-color"))
 
 	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump-target")
 	_ = viper.BindPFlag("general.JumpTargetString", rootCmd.PersistentFlags().Lookup("jump-target"))

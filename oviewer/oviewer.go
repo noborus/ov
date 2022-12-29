@@ -149,6 +149,8 @@ type general struct {
 	JumpTargetString string
 	// JumpTarget is the display position of search results.
 	JumpTarget int
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
 }
 
 // Config represents the settings of ov.
@@ -193,8 +195,6 @@ type Config struct {
 	// AfterWriteOriginal specifies the number of lines after the current position.
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
-	// MultiColorWords specifies words to color separated by spaces.
-	MultiColorWords []string
 
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
@@ -564,8 +564,8 @@ func (root *Root) Run() error {
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General
 
-		if root.Config.MultiColorWords != nil {
-			doc.setMultiColorWords(root.Config.MultiColorWords)
+		if root.General.MultiColorWords != nil {
+			doc.setMultiColorWords(root.General.MultiColorWords)
 		}
 
 		w := ""
