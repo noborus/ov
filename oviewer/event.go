@@ -14,8 +14,8 @@ import (
 // UpdateInterval is the update interval that calls eventUpdate().
 var UpdateInterval = 50 * time.Millisecond
 
-// main is manages and executes events in the main routine.
-func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
+// eventLoop is manages and executes events in the eventLoop routine.
+func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
 		root.watchStart()
 	}
@@ -34,12 +34,12 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
-			if root.screenMode != Docs {
-				root.toNormal()
-				continue
+			if root.screenMode == Docs {
+				close(quitChan)
+				return
 			}
-			close(quitChan)
-			return
+			// Help and logDoc return to Doc display.
+			root.toNormal()
 		case *eventReload:
 			root.reload(ev.m)
 		case *eventAppSuspend:
@@ -57,26 +57,15 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventPaste:
 			root.getClipboard(ctx)
 		case *eventSearch:
-			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			root.searchMove(ctx, true, l.line+1, searcher)
+			root.forwardSearch(ctx, ev.str)
 		case *eventBackSearch:
-			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			root.searchMove(ctx, false, l.line-1, searcher)
+			root.backwardSearch(ctx, ev.str)
 		case *viewModeEvent:
 			root.setViewMode(ev.value)
-		case *searchEvent:
-			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			if l.line-root.Doc.topLN > root.Doc.topLN {
-				l.line = 0
-			}
-			root.searchMove(ctx, true, l.line, searcher)
-		case *backSearchEvent:
-			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen)
-			root.searchMove(ctx, false, l.line, searcher)
+		case *inputSearch:
+			root.inputSearch(ctx)
+		case *inputBackSearch:
+			root.inputBackSearch(ctx)
 		case *gotoEvent:
 			root.goLine(ev.value)
 		case *headerEvent:
@@ -104,17 +93,48 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 		case *tcell.EventMouse:
 			root.mouseEvent(ev)
 		case *tcell.EventKey:
-			root.setMessage("")
-			switch root.input.Event.Mode() {
-			case Normal:
-				root.keyCapture(ev)
-			default:
-				root.inputEvent(ctx, ev)
-			}
+			root.keyEvent(ctx, ev)
 		case nil:
 			close(quitChan)
 			return
 		}
+	}
+}
+
+func (root *Root) inputSearch(ctx context.Context) {
+	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	if l.number-root.Doc.topLN > root.Doc.topLN {
+		l.number = 0
+	}
+	root.searchMove(ctx, true, l.number, searcher)
+}
+
+func (root *Root) inputBackSearch(ctx context.Context) {
+	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen)
+	root.searchMove(ctx, false, l.number, searcher)
+}
+
+func (root *Root) forwardSearch(ctx context.Context, str string) {
+	searcher := root.setSearcher(str, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	root.searchMove(ctx, true, l.number+1, searcher)
+}
+
+func (root *Root) backwardSearch(ctx context.Context, str string) {
+	searcher := root.setSearcher(str, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	root.searchMove(ctx, false, l.number-1, searcher)
+}
+
+func (root *Root) keyEvent(ctx context.Context, ev *tcell.EventKey) {
+	root.setMessage("")
+	switch root.input.Event.Mode() {
+	case Normal:
+		root.keyCapture(ev)
+	default:
+		root.inputEvent(ctx, ev)
 	}
 }
 

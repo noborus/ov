@@ -192,22 +192,22 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 
 	var buff strings.Builder
 
-	ln1 := root.lineNumber(y1)
-	lc1, err := root.Doc.contentsLN(ln1.line, root.Doc.TabWidth)
+	l1 := root.lineInfo(y1)
+	lc1, err := root.Doc.contentsLN(l1.number, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
 	}
-	wx1 := root.branchWidth(lc1, ln1.wrap)
+	wx1 := root.branchWidth(lc1, l1.wrap)
 
-	ln2 := root.lineNumber(y2)
-	lc2, err := root.Doc.contentsLN(ln2.line, root.Doc.TabWidth)
+	l2 := root.lineInfo(y2)
+	lc2, err := root.Doc.contentsLN(l2.number, root.Doc.TabWidth)
 	if err != nil {
 		return "", err
 	}
-	wx2 := root.branchWidth(lc2, ln2.wrap)
+	wx2 := root.branchWidth(lc2, l2.wrap)
 
-	if ln1.line == ln2.line {
-		str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
+	if l1.number == l2.number {
+		str := root.selectLine(l1.number, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
 		if len(str) == 0 {
 			return buff.String(), nil
 		}
@@ -217,25 +217,21 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 		return buff.String(), nil
 	}
 
-	str := root.selectLine(ln1.line, root.Doc.x+x1+wx1, -1)
-	if _, err := buff.WriteString(str); err != nil {
+	first := root.selectLine(l1.number, root.Doc.x+x1+wx1, -1)
+	if _, err := buff.WriteString(first); err != nil {
 		return "", err
 	}
 	if err := buff.WriteByte('\n'); err != nil {
 		return "", err
 	}
 
-	lnumber := []int{}
 	for y := y1 + 1; y < y2; y++ {
-		l := root.lineNumber(y)
-		if l.line == ln1.line || l.line == ln2.line || l.wrap > 0 {
+		l := root.lineInfo(y)
+		if l.number == l1.number || l.number == l2.number || l.wrap > 0 {
 			continue
 		}
-		lnumber = append(lnumber, l.line)
-	}
-	for _, ln := range lnumber {
-		line := root.selectLine(ln, 0, -1)
-		if _, err := buff.WriteString(line); err != nil {
+		str := root.selectLine(l.number, 0, -1)
+		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
 		if err := buff.WriteByte('\n'); err != nil {
@@ -243,8 +239,8 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 		}
 	}
 
-	str = root.selectLine(ln2.line, 0, root.Doc.x+x2+wx2+1)
-	if _, err := buff.WriteString(str); err != nil {
+	last := root.selectLine(l2.number, 0, root.Doc.x+x2+wx2+1)
+	if _, err := buff.WriteString(last); err != nil {
 		return "", err
 	}
 
@@ -256,15 +252,15 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
 
 	for y := y1; y <= y2; y++ {
-		ln := root.lineNumber(y)
-		lc, err := root.Doc.contentsLN(ln.line, root.Doc.TabWidth)
+		ln := root.lineInfo(y)
+		lc, err := root.Doc.contentsLN(ln.number, root.Doc.TabWidth)
 		if err != nil {
 			return "", err
 		}
 		wx := root.branchWidth(lc, ln.wrap)
-		line := root.selectLine(ln.line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
+		str := root.selectLine(ln.number, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
 
-		if _, err := buff.WriteString(line); err != nil {
+		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
 		if err := buff.WriteByte('\n'); err != nil {

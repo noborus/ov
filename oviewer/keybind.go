@@ -8,6 +8,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// The name of the action to assign the key to.
+// The string is displayed in help.
 const (
 	actionExit           = "exit"
 	actionWriteBA        = "set_write_exit"
@@ -73,7 +75,8 @@ const (
 	inputRegexpSearch  = "input_regexp_search"
 )
 
-func (root *Root) setHandler() map[string]func() {
+// handlerMap returns a map of the action's handlers.
+func (root *Root) handlerMap() map[string]func() {
 	return map[string]func(){
 		actionExit:           root.Quit,
 		actionWriteBA:        root.setWriteBAMode,
@@ -143,6 +146,7 @@ func (root *Root) setHandler() map[string]func() {
 // KeyBind is the mapping of action and key.
 type KeyBind map[string][]string
 
+// defaultKeyBinds are the default keybindings.
 func defaultKeyBinds() map[string][]string {
 	return map[string][]string{
 		actionExit:           {"Escape", "q"},
@@ -231,7 +235,7 @@ func (root *Root) setKeyBind(keyBind map[string][]string) error {
 	c := root.keyConfig
 	in := root.inputKeyConfig
 
-	actionHandlers := root.setHandler()
+	actionHandlers := root.handlerMap()
 
 	for name, keys := range keyBind {
 		handler := actionHandlers[name]
