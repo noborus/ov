@@ -17,30 +17,30 @@ func jumpTargetCandidate() *candidate {
 	}
 }
 
-// jumpTargetEvent represents the jump target input mode.
-type jumpTargetEvent struct {
+// eventJumpTarget represents the jump target input mode.
+type eventJumpTarget struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newJumpTargetEvent returns jumpTargetEvent.
-func newJumpTargetEvent(clist *candidate) *jumpTargetEvent {
-	return &jumpTargetEvent{clist: clist}
+func newJumpTargetEvent(clist *candidate) *eventJumpTarget {
+	return &eventJumpTarget{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *jumpTargetEvent) Mode() InputMode {
+func (e *eventJumpTarget) Mode() InputMode {
 	return JumpTarget
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *jumpTargetEvent) Prompt() string {
+func (e *eventJumpTarget) Prompt() string {
 	return "Jump Target line:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *jumpTargetEvent) Confirm(str string) tcell.Event {
+func (e *eventJumpTarget) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -49,11 +49,11 @@ func (e *jumpTargetEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *jumpTargetEvent) Up(str string) string {
+func (e *eventJumpTarget) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *jumpTargetEvent) Down(str string) string {
+func (e *eventJumpTarget) Down(str string) string {
 	return e.clist.down()
 }

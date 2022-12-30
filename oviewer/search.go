@@ -8,8 +8,23 @@ import (
 	"regexp"
 	"strings"
 
+	"code.rocketnine.space/tslocum/cbind"
+	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sync/errgroup"
 )
+
+//  1. serch key event(/)		back search key event(?)
+//  2. actionSearch				setBackSearchMode			(key event)
+//  3. root.setSearchMode()		root.setBackSearchMode()
+//  4. input...confirm			input...confirm
+//  5. *eventInputSearch		*eventInputBackSearch		(event)
+//  6. root.firstSearch()		root.firstBackSearch()
+//
+//  7. next search key event(n)	next backsearch key event(N)
+//  8. actionNextSearch			actionNextBackSearch		(key event)
+//  9. root.setNextSearch()		root.setNextBackSearch()
+// 10. *eventNextSearch			eventNextBackSearch			(event)
+// 11. root.nextSearch()		root.nextBackSearch()
 
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
@@ -221,6 +236,11 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	return NewSearcher(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
 }
 
+// eventSearchQuit represents a search quit event.
+type eventSearchQuit struct {
+	tcell.EventTime
+}
+
 // searchMove searches forward/backward and moves to the nearest matching line.
 func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
 	if searcher == nil {
@@ -258,6 +278,55 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		return
 	}
 	root.setMessagef("search:%v", root.searchWord)
+}
+
+// cancelWait waits for key to cancel.
+func (root *Root) cancelWait() error {
+	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
+		if root.cancelFunc != nil {
+			root.cancelFunc()
+			root.setMessage("cancel")
+			root.cancelFunc = nil
+		}
+		return nil
+	}
+
+	c := cbind.NewConfiguration()
+
+	for _, k := range root.cancelKeys {
+		mod, key, ch, err := cbind.Decode(k)
+		if err != nil {
+			return fmt.Errorf("%w [%s] for cancel: %s", ErrFailedKeyBind, k, err)
+		}
+		if key == tcell.KeyRune {
+			c.SetRune(mod, ch, cancelApp)
+		} else {
+			c.SetKey(mod, key, cancelApp)
+		}
+	}
+
+	for {
+		ev := root.Screen.PollEvent()
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			c.Capture(ev)
+		case *eventSearchQuit:
+			return nil
+		}
+	}
+}
+
+// searchQuit executes a quit event.
+func (root *Root) searchQuit() {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventSearchQuit{}
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // incSearch implements incremental forward/back search.
@@ -308,4 +377,99 @@ func (root *Root) returnStartPosition() int {
 	}
 	root.OriginStr = root.searchWord
 	return start
+}
+
+// firstSearch performs the first search immediately after the input.
+func (root *Root) firstSearch(ctx context.Context) {
+	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	if l.number-root.Doc.topLN > root.Doc.topLN {
+		l.number = 0
+	}
+	root.searchMove(ctx, true, l.number, searcher)
+}
+
+// nextSearch performs the next search.
+func (root *Root) nextSearch(ctx context.Context, str string) {
+	searcher := root.setSearcher(str, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	root.searchMove(ctx, true, l.number+1, searcher)
+}
+
+// firstBackSearch performs the first back search immediately after the input.
+func (root *Root) firstBackSearch(ctx context.Context) {
+	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen)
+	root.searchMove(ctx, false, l.number, searcher)
+}
+
+// nextBackSearch performs the next back search.
+func (root *Root) nextBackSearch(ctx context.Context, str string) {
+	searcher := root.setSearcher(str, root.CaseSensitive)
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	root.searchMove(ctx, false, l.number-1, searcher)
+}
+
+// eventNextSearch represents search event.
+type eventNextSearch struct {
+	str string
+	tcell.EventTime
+}
+
+func (root *Root) setNextSearch() {
+	ev := &eventNextSearch{}
+	ev.str = root.searchWord
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// eventNextBackSearch represents backward search event.
+type eventNextBackSearch struct {
+	str string
+	tcell.EventTime
+}
+
+func (root *Root) setNextBackSearch() {
+	ev := &eventNextBackSearch{}
+	ev.str = root.searchWord
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// Search fires a forward search event.
+// This is for calling Search from the outside.
+// Normally, the event is executed from Confirm.
+func (root *Root) Search(str string) {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventNextSearch{}
+	ev.str = str
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// BackSearch fires a backward search event.
+// This is for calling Search from the outside.
+// Normally, the event is executed from Confirm.
+func (root *Root) BackSearch(str string) {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventNextBackSearch{}
+	ev.str = str
+	ev.SetEventNow()
+	err := root.Screen.PostEvent(ev)
+	if err != nil {
+		log.Println(err)
+	}
 }

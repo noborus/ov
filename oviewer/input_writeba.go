@@ -17,30 +17,30 @@ func baCandidate() *candidate {
 	}
 }
 
-// writeBAEvent represents the WatchInteval input mode.
-type writeBAEvent struct {
+// eventWriteBA represents the WatchInteval input mode.
+type eventWriteBA struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newWriteBAEvent returns writeBAEvent.
-func newWriteBAEvent(clist *candidate) *writeBAEvent {
-	return &writeBAEvent{clist: clist}
+func newWriteBAEvent(clist *candidate) *eventWriteBA {
+	return &eventWriteBA{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *writeBAEvent) Mode() InputMode {
+func (e *eventWriteBA) Mode() InputMode {
 	return WriteBA
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *writeBAEvent) Prompt() string {
+func (e *eventWriteBA) Prompt() string {
 	return "WriteAndQuit Before:After:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *writeBAEvent) Confirm(str string) tcell.Event {
+func (e *eventWriteBA) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -49,11 +49,11 @@ func (e *writeBAEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *writeBAEvent) Up(str string) string {
+func (e *eventWriteBA) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *writeBAEvent) Down(str string) string {
+func (e *eventWriteBA) Down(str string) string {
 	return e.clist.down()
 }

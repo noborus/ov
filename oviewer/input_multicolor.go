@@ -20,30 +20,30 @@ func multiColorCandidate() *candidate {
 	}
 }
 
-// multiColorEvent represents the multi color input mode.
-type multiColorEvent struct {
+// eventMultiColor represents the multi color input mode.
+type eventMultiColor struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newMultiColorEvent returns multiColorEvent.
-func newMultiColorEvent(clist *candidate) *multiColorEvent {
-	return &multiColorEvent{clist: clist}
+func newMultiColorEvent(clist *candidate) *eventMultiColor {
+	return &eventMultiColor{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *multiColorEvent) Mode() InputMode {
+func (e *eventMultiColor) Mode() InputMode {
 	return MultiColor
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *multiColorEvent) Prompt() string {
+func (e *eventMultiColor) Prompt() string {
 	return "multicolor:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *multiColorEvent) Confirm(str string) tcell.Event {
+func (e *eventMultiColor) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -52,11 +52,11 @@ func (e *multiColorEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *multiColorEvent) Up(str string) string {
+func (e *eventMultiColor) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *multiColorEvent) Down(str string) string {
+func (e *eventMultiColor) Down(str string) string {
 	return e.clist.down()
 }

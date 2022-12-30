@@ -22,30 +22,30 @@ func delimiterCandidate() *candidate {
 	}
 }
 
-// delimiterEvent represents the delimiter input mode.
-type delimiterEvent struct {
+// eventDelimiter represents the delimiter input mode.
+type eventDelimiter struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newDelimiterEvent returns delimiterEvent.
-func newDelimiterEvent(clist *candidate) *delimiterEvent {
-	return &delimiterEvent{clist: clist}
+func newDelimiterEvent(clist *candidate) *eventDelimiter {
+	return &eventDelimiter{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *delimiterEvent) Mode() InputMode {
+func (e *eventDelimiter) Mode() InputMode {
 	return Delimiter
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *delimiterEvent) Prompt() string {
+func (e *eventDelimiter) Prompt() string {
 	return "Delimiter:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *delimiterEvent) Confirm(str string) tcell.Event {
+func (e *eventDelimiter) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -54,11 +54,11 @@ func (e *delimiterEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *delimiterEvent) Up(str string) string {
+func (e *eventDelimiter) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *delimiterEvent) Down(str string) string {
+func (e *eventDelimiter) Down(str string) string {
 	return e.clist.down()
 }

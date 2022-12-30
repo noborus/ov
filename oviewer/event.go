@@ -2,12 +2,10 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 	"time"
 
-	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -56,38 +54,40 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.putClipboard(ctx)
 		case *eventPaste:
 			root.getClipboard(ctx)
-		case *eventSearch:
-			root.forwardSearch(ctx, ev.str)
-		case *eventBackSearch:
-			root.backwardSearch(ctx, ev.str)
-		case *viewModeEvent:
+		case *eventViewMode:
 			root.setViewMode(ev.value)
-		case *inputSearch:
-			root.inputSearch(ctx)
-		case *inputBackSearch:
-			root.inputBackSearch(ctx)
-		case *gotoEvent:
+		case *eventInputSearch:
+			root.firstSearch(ctx)
+		case *eventNextSearch:
+			root.nextSearch(ctx, ev.str)
+		case *eventInputBackSearch:
+			root.firstBackSearch(ctx)
+		case *eventNextBackSearch:
+			root.nextBackSearch(ctx, ev.str)
+		case *eventGoto:
 			root.goLine(ev.value)
-		case *headerEvent:
+		case *eventHeader:
 			root.setHeader(ev.value)
-		case *skipLinesEvent:
+		case *eventSkipLines:
 			root.setSkipLines(ev.value)
-		case *delimiterEvent:
+		case *eventDelimiter:
 			root.setDelimiter(ev.value)
-		case *tabWidthEvent:
+		case *eventTabWidth:
 			root.setTabWidth(ev.value)
-		case *watchIntervalEvent:
+		case *eventWatchInterval:
 			root.setWatchInterval(ev.value)
-		case *writeBAEvent:
+		case *eventWriteBA:
 			root.setWriteBA(ev.value)
-		case *sectionDelimiterEvent:
+		case *eventSectionDelimiter:
 			root.setSectionDelimiter(ev.value)
-		case *sectionStartEvent:
+		case *eventSectionStart:
 			root.setSectionStart(ev.value)
-		case *multiColorEvent:
+		case *eventMultiColor:
 			root.setMultiColor(ev.value)
-		case *jumpTargetEvent:
+		case *eventJumpTarget:
 			root.setJumpTarget(ev.value)
+
+		// tcell events
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -101,33 +101,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	}
 }
 
-func (root *Root) inputSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	if l.number-root.Doc.topLN > root.Doc.topLN {
-		l.number = 0
-	}
-	root.searchMove(ctx, true, l.number, searcher)
-}
-
-func (root *Root) inputBackSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen)
-	root.searchMove(ctx, false, l.number, searcher)
-}
-
-func (root *Root) forwardSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	root.searchMove(ctx, true, l.number+1, searcher)
-}
-
-func (root *Root) backwardSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	root.searchMove(ctx, false, l.number-1, searcher)
-}
-
+// keyEvent processes key events.
 func (root *Root) keyEvent(ctx context.Context, ev *tcell.EventKey) {
 	root.setMessage("")
 	switch root.input.Event.Mode() {
@@ -283,7 +257,7 @@ func (root *Root) MoveLine(num int) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &gotoEvent{}
+	ev := &eventGoto{}
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
 	err := root.Screen.PostEvent(ev)
@@ -300,70 +274,6 @@ func (root *Root) MoveTop() {
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
-}
-
-// eventSearch represents search event.
-type eventSearch struct {
-	str string
-	tcell.EventTime
-}
-
-func (root *Root) eventNextSearch() {
-	ev := &eventSearch{}
-	ev.str = root.searchWord
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// eventBackSearch represents backward search event.
-type eventBackSearch struct {
-	str string
-	tcell.EventTime
-}
-
-func (root *Root) eventNextBackSearch() {
-	ev := &eventBackSearch{}
-	ev.str = root.searchWord
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// Search fires a forward search event.
-// This is for calling Search from the outside.
-// Normally, the event is executed from Confirm.
-func (root *Root) Search(str string) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventSearch{}
-	ev.str = str
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// BackSearch fires a backward search event.
-// This is for calling Search from the outside.
-// Normally, the event is executed from Confirm.
-func (root *Root) BackSearch(str string) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventBackSearch{}
-	ev.str = str
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
 }
 
 // eventDocument represents a set document event.
@@ -423,59 +333,6 @@ func (root *Root) CloseDocument(m *Document) {
 	err := root.Screen.PostEvent(ev)
 	if err != nil {
 		log.Println(err)
-	}
-}
-
-// eventSearchQuit represents a search quit event.
-type eventSearchQuit struct {
-	tcell.EventTime
-}
-
-// searchQuit executes a quit event.
-func (root *Root) searchQuit() {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventSearchQuit{}
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func (root *Root) cancelWait() error {
-	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
-		if root.cancelFunc != nil {
-			root.cancelFunc()
-			root.setMessage("cancel")
-			root.cancelFunc = nil
-		}
-		return nil
-	}
-
-	c := cbind.NewConfiguration()
-
-	for _, k := range root.cancelKeys {
-		mod, key, ch, err := cbind.Decode(k)
-		if err != nil {
-			return fmt.Errorf("%w [%s] for cancel: %s", ErrFailedKeyBind, k, err)
-		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, cancelApp)
-		} else {
-			c.SetKey(mod, key, cancelApp)
-		}
-	}
-
-	for {
-		ev := root.Screen.PollEvent()
-		switch ev := ev.(type) {
-		case *tcell.EventKey:
-			c.Capture(ev)
-		case *eventSearchQuit:
-			return nil
-		}
 	}
 }
 

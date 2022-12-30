@@ -69,7 +69,7 @@ func NewInput() *Input {
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
 
-	i.Event = &normalEvent{}
+	i.Event = &eventNormal{}
 	return &i
 }
 
