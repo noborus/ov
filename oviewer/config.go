@@ -1,0 +1,52 @@
+package oviewer
+
+// NewConfig return the structure of Config with default values.
+func NewConfig() Config {
+	return Config{
+		StyleHeader: OVStyle{
+			Bold: true,
+		},
+		StyleAlternate: OVStyle{
+			Background: "gray",
+		},
+		StyleOverStrike: OVStyle{
+			Bold: true,
+		},
+		StyleOverLine: OVStyle{
+			Underline: true,
+		},
+		StyleLineNumber: OVStyle{
+			Bold: true,
+		},
+		StyleSearchHighlight: OVStyle{
+			Reverse: true,
+		},
+		StyleColumnHighlight: OVStyle{
+			Reverse: true,
+		},
+		StyleMarkLine: OVStyle{
+			Background: "darkgoldenrod",
+		},
+		StyleSectionLine: OVStyle{
+			Background: "slateblue",
+		},
+		StyleMultiColorHighlight: []OVStyle{
+			{Foreground: "red"},
+			{Foreground: "aqua"},
+			{Foreground: "yellow"},
+			{Foreground: "fuchsia"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "grey"},
+		},
+		StyleJumpTargetLine: OVStyle{
+			Underline: true,
+		},
+		General: general{
+			TabWidth:             8,
+			MarkStyleWidth:       1,
+			SectionStartPosition: 0,
+			JumpTarget:           0,
+		},
+	}
+}

@@ -14,8 +14,8 @@ import (
 // UpdateInterval is the update interval that calls eventUpdate().
 var UpdateInterval = 50 * time.Millisecond
 
-// main is manages and executes events in the main routine.
-func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
+// eventLoop is manages and executes events in the eventLoop routine.
+func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
 		root.watchStart()
 	}
@@ -58,25 +58,25 @@ func (root *Root) main(ctx context.Context, quitChan chan<- struct{}) {
 			root.getClipboard(ctx)
 		case *eventSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			root.searchMove(ctx, true, l.line+1, searcher)
+			l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+			root.searchMove(ctx, true, l.number+1, searcher)
 		case *eventBackSearch:
 			searcher := root.setSearcher(ev.str, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			root.searchMove(ctx, false, l.line-1, searcher)
+			l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+			root.searchMove(ctx, false, l.number-1, searcher)
 		case *viewModeEvent:
 			root.setViewMode(ev.value)
 		case *searchEvent:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen + root.Doc.JumpTarget)
-			if l.line-root.Doc.topLN > root.Doc.topLN {
-				l.line = 0
+			l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+			if l.number-root.Doc.topLN > root.Doc.topLN {
+				l.number = 0
 			}
-			root.searchMove(ctx, true, l.line, searcher)
+			root.searchMove(ctx, true, l.number, searcher)
 		case *backSearchEvent:
 			searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-			l := root.lineNumber(root.headerLen)
-			root.searchMove(ctx, false, l.line, searcher)
+			l := root.lineInfo(root.headerLen)
+			root.searchMove(ctx, false, l.number, searcher)
 		case *gotoEvent:
 			root.goLine(ev.value)
 		case *headerEvent:

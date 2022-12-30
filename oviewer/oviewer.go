@@ -69,9 +69,9 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
-	// lnumber is an array that returns
-	// lineNumber (number of logical lines and number of wrapping lines) from y on the screen.
-	lnumber []lineNumber
+	// lines is the line information of the currently displayed screen.
+	// lines (number of logical lines and number of wrapping lines) from y on the screen.
+	lines []line
 
 	// skipDraw skips draw once when true.
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
@@ -102,10 +102,10 @@ type Root struct {
 	cancelKeys []string
 }
 
-// LineNumber is Number of logical lines and number of wrapping lines on the screen.
-type lineNumber struct {
-	line int
-	wrap int
+// Line is Number of logical lines and number of wrapping lines on the screen.
+type line struct {
+	number int
+	wrap   int
 }
 
 // general structure contains the general of the display.
@@ -342,57 +342,6 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	return root, nil
 }
 
-// NewConfig return the structure of Config with default values.
-func NewConfig() Config {
-	return Config{
-		StyleHeader: OVStyle{
-			Bold: true,
-		},
-		StyleAlternate: OVStyle{
-			Background: "gray",
-		},
-		StyleOverStrike: OVStyle{
-			Bold: true,
-		},
-		StyleOverLine: OVStyle{
-			Underline: true,
-		},
-		StyleLineNumber: OVStyle{
-			Bold: true,
-		},
-		StyleSearchHighlight: OVStyle{
-			Reverse: true,
-		},
-		StyleColumnHighlight: OVStyle{
-			Reverse: true,
-		},
-		StyleMarkLine: OVStyle{
-			Background: "darkgoldenrod",
-		},
-		StyleSectionLine: OVStyle{
-			Background: "slateblue",
-		},
-		StyleMultiColorHighlight: []OVStyle{
-			{Foreground: "red"},
-			{Foreground: "aqua"},
-			{Foreground: "yellow"},
-			{Foreground: "fuchsia"},
-			{Foreground: "lime"},
-			{Foreground: "blue"},
-			{Foreground: "grey"},
-		},
-		StyleJumpTargetLine: OVStyle{
-			Underline: true,
-		},
-		General: general{
-			TabWidth:             8,
-			MarkStyleWidth:       1,
-			SectionStartPosition: 0,
-			JumpTarget:           0,
-		},
-	}
-}
-
 // NewRoot returns the structure of the oviewer.
 // NewRoot is a simplified version that can be used externally.
 func NewRoot(r io.Reader) (*Root, error) {
@@ -601,7 +550,7 @@ func (root *Root) Run() error {
 		defer func() {
 			root.Close()
 		}()
-		root.main(ctx, quitChan)
+		root.eventLoop(ctx, quitChan)
 	}()
 
 	for {
@@ -666,6 +615,7 @@ func (root *Root) debugMessage(msg string) {
 	log.Printf("%s:%s", root.Doc.FileName, msg)
 }
 
+// ToTcellStyle convert from ovStyle to tcell style.
 func ToTcellStyle(s OVStyle) tcell.Style {
 	style := tcell.StyleDefault
 	style = style.Background(tcell.GetColor(s.Background))
@@ -745,6 +695,15 @@ func overwriteGeneral(a general, b general) general {
 	if b.SectionStartPosition != 0 {
 		a.SectionStartPosition = b.SectionStartPosition
 	}
+	if b.JumpTargetString != "" {
+		a.JumpTargetString = b.JumpTargetString
+	}
+	if b.JumpTarget != 0 {
+		a.JumpTarget = b.JumpTarget
+	}
+	if b.MultiColorWords != nil {
+		a.MultiColorWords = b.MultiColorWords
+	}
 	return a
 }
 
@@ -757,7 +716,7 @@ func (root *Root) prepareView() {
 	root.vWidth = max(root.vWidth, 1)
 	root.vHight = max(root.vHight, 1)
 
-	root.lnumber = make([]lineNumber, root.vHight+1)
+	root.lines = make([]line, root.vHight+1)
 	root.statusPos = root.vHight - statusLine
 }
 
@@ -810,9 +769,10 @@ func (root *Root) WriteLog() {
 	m.Export(os.Stdout, start, end)
 }
 
-func (root *Root) lineNumber(y int) lineNumber {
-	if y >= 0 && y <= len(root.lnumber) {
-		return root.lnumber[y]
+// lineInfo returns the line information from y on the screen.
+func (root *Root) lineInfo(y int) line {
+	if y >= 0 && y <= len(root.lines) {
+		return root.lines[y]
 	}
-	return root.lnumber[0]
+	return root.lines[0]
 }

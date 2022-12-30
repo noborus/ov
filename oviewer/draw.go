@@ -64,9 +64,9 @@ func (root *Root) drawHeader() int {
 
 		lc := m.getContents(lY, m.TabWidth)
 		lineStr, posCV := m.getContentsStr(lY, lc)
-		root.lnumber[hy] = lineNumber{
-			line: lY,
-			wrap: wrapNum,
+		root.lines[hy] = line{
+			number: lY,
+			wrap:   wrapNum,
 		}
 
 		root.columnHighlight(lc, lineStr, posCV)
@@ -109,9 +109,9 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			lastLN = lY
 		}
 
-		root.lnumber[y] = lineNumber{
-			line: lY,
-			wrap: wrapNum,
+		root.lines[y] = line{
+			number: lY,
+			wrap:   wrapNum,
 		}
 
 		if root.Doc.PlainMode {
