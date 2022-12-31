@@ -457,7 +457,6 @@ func (root *Root) setJumpTarget(input string) {
 
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
-	root.Doc.JumpTarget = jumpPosition(root.vHight, root.Doc.JumpTargetString)
 	root.ViewSync()
 }
 
@@ -517,6 +516,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
+	root.Doc.JumpTarget = jumpPosition(root.vHight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.

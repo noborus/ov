@@ -23,7 +23,7 @@ import (
 //  7. next search key event(n)	next backsearch key event(N)
 //  8. actionNextSearch			actionNextBackSearch		(key event)
 //  9. root.setNextSearch()		root.setNextBackSearch()
-// 10. *eventNextSearch			eventNextBackSearch			(event)
+// 10. *eventNextSearch			*eventNextBackSearch		(event)
 // 11. root.nextSearch()		root.nextBackSearch()
 
 // Searcher interface provides a match method that determines
@@ -316,17 +316,14 @@ func (root *Root) cancelWait() error {
 	}
 }
 
-// searchQuit executes a quit event.
+// searchQuit fires the eventSearchQuit event.
 func (root *Root) searchQuit() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // incSearch implements incremental forward/back search.
@@ -416,14 +413,12 @@ type eventNextSearch struct {
 	tcell.EventTime
 }
 
+// setNextSearch fires the exntNextSearch event.
 func (root *Root) setNextSearch() {
 	ev := &eventNextSearch{}
 	ev.str = root.searchWord
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventNextBackSearch represents backward search event.
@@ -432,14 +427,12 @@ type eventNextBackSearch struct {
 	tcell.EventTime
 }
 
+// setNextBackSearch fires the exntNextBackSearch event.
 func (root *Root) setNextBackSearch() {
 	ev := &eventNextBackSearch{}
 	ev.str = root.searchWord
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // Search fires a forward search event.
@@ -452,10 +445,7 @@ func (root *Root) Search(str string) {
 	ev := &eventNextSearch{}
 	ev.str = str
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // BackSearch fires a backward search event.
@@ -468,8 +458,5 @@ func (root *Root) BackSearch(str string) {
 	ev := &eventNextBackSearch{}
 	ev.str = str
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }

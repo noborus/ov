@@ -127,17 +127,14 @@ type eventAppQuit struct {
 	tcell.EventTime
 }
 
-// Quit executes a quit event.
+// Quit fires the eventAppQuit event.
 func (root *Root) Quit() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventAppSuspend represents a suspend event.
@@ -145,7 +142,7 @@ type eventAppSuspend struct {
 	tcell.EventTime
 }
 
-// Quit executes a quit event.
+// Suspend fires the eventAppsuspend event.
 func (root *Root) Suspend() {
 	if !root.checkScreen() {
 		return
@@ -168,11 +165,6 @@ func (root *Root) Cancel() {
 func (root *Root) WriteQuit() {
 	root.IsWriteOriginal = true
 	root.Quit()
-}
-
-// eventUpdateEndNum represents a timer event.
-type eventUpdateEndNum struct {
-	tcell.EventTime
 }
 
 // follow updates the document in follow mode.
@@ -227,15 +219,20 @@ func (root *Root) updateInterval(ctx context.Context) {
 	for {
 		select {
 		case <-timer.C:
-			root.eventUpdate()
+			root.regularUpdate()
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
-// eventUpdate fires the event if it needs to be updated.
-func (root *Root) eventUpdate() {
+// eventUpdateEndNum represents a timer event.
+type eventUpdateEndNum struct {
+	tcell.EventTime
+}
+
+// regularUpdate fires an eventUpdateEndNum event when an update is required.
+func (root *Root) regularUpdate() {
 	if !root.checkScreen() {
 		return
 	}
@@ -246,13 +243,10 @@ func (root *Root) eventUpdate() {
 
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
-// MoveLine fires an event that moves to the specified line.
+// MoveLine fires an eventGoto event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
 	if !root.checkScreen() {
 		return
@@ -260,10 +254,7 @@ func (root *Root) MoveLine(num int) {
 	ev := &eventGoto{}
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // MoveTop fires the event of moving to top.
@@ -282,7 +273,7 @@ type eventDocument struct {
 	tcell.EventTime
 }
 
-// SetDocument fires a set document event.
+// SetDocument fires the eventDocument event.
 func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
@@ -292,10 +283,7 @@ func (root *Root) SetDocument(docNum int) {
 		ev.docNum = docNum
 	}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventAddDocument represents a set document event.
@@ -304,7 +292,7 @@ type eventAddDocument struct {
 	tcell.EventTime
 }
 
-// AddDocument fires a add document event.
+// AddDocument fires the eventAddDocument event.
 func (root *Root) AddDocument(m *Document) {
 	if !root.checkScreen() {
 		return
@@ -312,10 +300,7 @@ func (root *Root) AddDocument(m *Document) {
 	ev := &eventAddDocument{}
 	ev.m = m
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventCloseDocument represents a close document event.
@@ -323,17 +308,14 @@ type eventCloseDocument struct {
 	tcell.EventTime
 }
 
-// CloseDocument fires a del document event.
+// CloseDocument fires the eventCloseDocument event.
 func (root *Root) CloseDocument(m *Document) {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventCloseDocument{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventReload represents a reload event.
@@ -342,7 +324,7 @@ type eventReload struct {
 	tcell.EventTime
 }
 
-// Reload executes a reload event.
+// Reload fires the eventReload event.
 func (root *Root) Reload() {
 	if !root.checkScreen() {
 		return
@@ -352,15 +334,20 @@ func (root *Root) Reload() {
 	ev := &eventReload{}
 	ev.SetEventNow()
 	ev.m = root.Doc
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	ev.SetEventNow()
+	root.postEvent(ev)
 }
 
 // releaseEventBuffer will release all event buffers.
 func (root *Root) releaseEventBuffer() {
 	for root.HasPendingEvent() {
 		_ = root.Screen.PollEvent()
+	}
+}
+
+// postEvent is a wrapper for tcell.Event.
+func (root *Root) postEvent(ev tcell.Event) {
+	if err := root.Screen.PostEvent(ev); err != nil {
+		log.Println(err)
 	}
 }
