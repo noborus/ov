@@ -21,6 +21,7 @@ const (
 	actionFollowAll      = "follow_all"
 	actionFollowSection  = "follow_section"
 	actionPlain          = "plain_mode"
+	actionRainbow        = "rainbow_mode"
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
 	actionWatch          = "watch"
@@ -88,6 +89,7 @@ func (root *Root) handlerMap() map[string]func() {
 		actionFollowAll:      root.toggleFollowAll,
 		actionFollowSection:  root.toggleFollowSection,
 		actionPlain:          root.togglePlain,
+		actionRainbow:        root.toggleRainbow,
 		actionReload:         root.Reload,
 		actionWatch:          root.toggleWatch,
 		actionWatchInterval:  root.setWatchIntervalMode,
@@ -158,6 +160,7 @@ func defaultKeyBinds() map[string][]string {
 		actionFollowAll:      {"ctrl+a"},
 		actionFollowSection:  {"F2"},
 		actionPlain:          {"ctrl+e"},
+		actionRainbow:        {"ctrl+r"},
 		actionCloseFile:      {"ctrl+F9", "ctrl+alt+s"},
 		actionReload:         {"F5", "ctrl+alt+l"},
 		actionWatch:          {"F4", "ctrl+alt+w"},

@@ -270,8 +270,31 @@ func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 	if !root.Doc.ColumnMode {
 		return
 	}
-	start, end := rangePosition(str, root.Doc.ColumnDelimiter, root.Doc.columnNum)
-	RangeStyle(lc, posCV[start], posCV[end], root.StyleColumnHighlight)
+
+	delm := root.Doc.ColumnDelimiter
+	numC := len(root.StyleColumnRainbow)
+	c := 0
+	offset := 0
+	for i := strings.Index(str, delm); i >= 0; i = strings.Index(str[offset:], delm) {
+		if root.Doc.ColumnRainbow {
+			RangeStyle(lc, posCV[offset], posCV[offset+i], root.StyleColumnRainbow[c%numC])
+		}
+		if c == root.Doc.columnNum {
+			RangeStyle(lc, posCV[offset], posCV[offset+i], root.StyleColumnHighlight)
+		}
+		offset = offset + i + len(delm)
+		if offset != 1 {
+			c++
+		}
+	}
+	if offset < len(str) {
+		if root.Doc.ColumnRainbow {
+			RangeStyle(lc, posCV[offset], posCV[len(str)], root.StyleColumnRainbow[c%numC])
+		}
+		if c == root.Doc.columnNum && offset != 0 {
+			RangeStyle(lc, posCV[offset], posCV[len(str)], root.StyleColumnHighlight)
+		}
+	}
 }
 
 // RangeStyle applies the style to the specified range.
