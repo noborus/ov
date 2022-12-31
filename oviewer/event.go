@@ -2,12 +2,10 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 	"time"
 
-	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -56,38 +54,40 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.putClipboard(ctx)
 		case *eventPaste:
 			root.getClipboard(ctx)
-		case *eventSearch:
-			root.forwardSearch(ctx, ev.str)
-		case *eventBackSearch:
-			root.backwardSearch(ctx, ev.str)
-		case *viewModeEvent:
+		case *eventViewMode:
 			root.setViewMode(ev.value)
-		case *inputSearch:
-			root.inputSearch(ctx)
-		case *inputBackSearch:
-			root.inputBackSearch(ctx)
-		case *gotoEvent:
+		case *eventInputSearch:
+			root.firstSearch(ctx)
+		case *eventNextSearch:
+			root.nextSearch(ctx, ev.str)
+		case *eventInputBackSearch:
+			root.firstBackSearch(ctx)
+		case *eventNextBackSearch:
+			root.nextBackSearch(ctx, ev.str)
+		case *eventGoto:
 			root.goLine(ev.value)
-		case *headerEvent:
+		case *eventHeader:
 			root.setHeader(ev.value)
-		case *skipLinesEvent:
+		case *eventSkipLines:
 			root.setSkipLines(ev.value)
-		case *delimiterEvent:
+		case *eventDelimiter:
 			root.setDelimiter(ev.value)
-		case *tabWidthEvent:
+		case *eventTabWidth:
 			root.setTabWidth(ev.value)
-		case *watchIntervalEvent:
+		case *eventWatchInterval:
 			root.setWatchInterval(ev.value)
-		case *writeBAEvent:
+		case *eventWriteBA:
 			root.setWriteBA(ev.value)
-		case *sectionDelimiterEvent:
+		case *eventSectionDelimiter:
 			root.setSectionDelimiter(ev.value)
-		case *sectionStartEvent:
+		case *eventSectionStart:
 			root.setSectionStart(ev.value)
-		case *multiColorEvent:
+		case *eventMultiColor:
 			root.setMultiColor(ev.value)
-		case *jumpTargetEvent:
+		case *eventJumpTarget:
 			root.setJumpTarget(ev.value)
+
+		// tcell events
 		case *tcell.EventResize:
 			root.resize()
 		case *tcell.EventMouse:
@@ -101,33 +101,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	}
 }
 
-func (root *Root) inputSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	if l.number-root.Doc.topLN > root.Doc.topLN {
-		l.number = 0
-	}
-	root.searchMove(ctx, true, l.number, searcher)
-}
-
-func (root *Root) inputBackSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen)
-	root.searchMove(ctx, false, l.number, searcher)
-}
-
-func (root *Root) forwardSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	root.searchMove(ctx, true, l.number+1, searcher)
-}
-
-func (root *Root) backwardSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	root.searchMove(ctx, false, l.number-1, searcher)
-}
-
+// keyEvent processes key events.
 func (root *Root) keyEvent(ctx context.Context, ev *tcell.EventKey) {
 	root.setMessage("")
 	switch root.input.Event.Mode() {
@@ -153,17 +127,14 @@ type eventAppQuit struct {
 	tcell.EventTime
 }
 
-// Quit executes a quit event.
+// Quit fires the eventAppQuit event.
 func (root *Root) Quit() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventAppSuspend represents a suspend event.
@@ -171,7 +142,7 @@ type eventAppSuspend struct {
 	tcell.EventTime
 }
 
-// Quit executes a quit event.
+// Suspend fires the eventAppsuspend event.
 func (root *Root) Suspend() {
 	if !root.checkScreen() {
 		return
@@ -194,11 +165,6 @@ func (root *Root) Cancel() {
 func (root *Root) WriteQuit() {
 	root.IsWriteOriginal = true
 	root.Quit()
-}
-
-// eventUpdateEndNum represents a timer event.
-type eventUpdateEndNum struct {
-	tcell.EventTime
 }
 
 // follow updates the document in follow mode.
@@ -253,15 +219,20 @@ func (root *Root) updateInterval(ctx context.Context) {
 	for {
 		select {
 		case <-timer.C:
-			root.eventUpdate()
+			root.regularUpdate()
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
-// eventUpdate fires the event if it needs to be updated.
-func (root *Root) eventUpdate() {
+// eventUpdateEndNum represents a timer event.
+type eventUpdateEndNum struct {
+	tcell.EventTime
+}
+
+// regularUpdate fires an eventUpdateEndNum event when an update is required.
+func (root *Root) regularUpdate() {
 	if !root.checkScreen() {
 		return
 	}
@@ -272,24 +243,18 @@ func (root *Root) eventUpdate() {
 
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
-// MoveLine fires an event that moves to the specified line.
+// MoveLine fires an eventGoto event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &gotoEvent{}
+	ev := &eventGoto{}
 	ev.value = strconv.Itoa(num)
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // MoveTop fires the event of moving to top.
@@ -302,77 +267,13 @@ func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
 }
 
-// eventSearch represents search event.
-type eventSearch struct {
-	str string
-	tcell.EventTime
-}
-
-func (root *Root) eventNextSearch() {
-	ev := &eventSearch{}
-	ev.str = root.searchWord
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// eventBackSearch represents backward search event.
-type eventBackSearch struct {
-	str string
-	tcell.EventTime
-}
-
-func (root *Root) eventNextBackSearch() {
-	ev := &eventBackSearch{}
-	ev.str = root.searchWord
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// Search fires a forward search event.
-// This is for calling Search from the outside.
-// Normally, the event is executed from Confirm.
-func (root *Root) Search(str string) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventSearch{}
-	ev.str = str
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// BackSearch fires a backward search event.
-// This is for calling Search from the outside.
-// Normally, the event is executed from Confirm.
-func (root *Root) BackSearch(str string) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventBackSearch{}
-	ev.str = str
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
 // eventDocument represents a set document event.
 type eventDocument struct {
 	docNum int
 	tcell.EventTime
 }
 
-// SetDocument fires a set document event.
+// SetDocument fires the eventDocument event.
 func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
@@ -382,10 +283,7 @@ func (root *Root) SetDocument(docNum int) {
 		ev.docNum = docNum
 	}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventAddDocument represents a set document event.
@@ -394,7 +292,7 @@ type eventAddDocument struct {
 	tcell.EventTime
 }
 
-// AddDocument fires a add document event.
+// AddDocument fires the eventAddDocument event.
 func (root *Root) AddDocument(m *Document) {
 	if !root.checkScreen() {
 		return
@@ -402,10 +300,7 @@ func (root *Root) AddDocument(m *Document) {
 	ev := &eventAddDocument{}
 	ev.m = m
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // eventCloseDocument represents a close document event.
@@ -413,70 +308,14 @@ type eventCloseDocument struct {
 	tcell.EventTime
 }
 
-// CloseDocument fires a del document event.
+// CloseDocument fires the eventCloseDocument event.
 func (root *Root) CloseDocument(m *Document) {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventCloseDocument{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// eventSearchQuit represents a search quit event.
-type eventSearchQuit struct {
-	tcell.EventTime
-}
-
-// searchQuit executes a quit event.
-func (root *Root) searchQuit() {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventSearchQuit{}
-	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func (root *Root) cancelWait() error {
-	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
-		if root.cancelFunc != nil {
-			root.cancelFunc()
-			root.setMessage("cancel")
-			root.cancelFunc = nil
-		}
-		return nil
-	}
-
-	c := cbind.NewConfiguration()
-
-	for _, k := range root.cancelKeys {
-		mod, key, ch, err := cbind.Decode(k)
-		if err != nil {
-			return fmt.Errorf("%w [%s] for cancel: %s", ErrFailedKeyBind, k, err)
-		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, cancelApp)
-		} else {
-			c.SetKey(mod, key, cancelApp)
-		}
-	}
-
-	for {
-		ev := root.Screen.PollEvent()
-		switch ev := ev.(type) {
-		case *tcell.EventKey:
-			c.Capture(ev)
-		case *eventSearchQuit:
-			return nil
-		}
-	}
+	root.postEvent(ev)
 }
 
 // eventReload represents a reload event.
@@ -485,7 +324,7 @@ type eventReload struct {
 	tcell.EventTime
 }
 
-// Reload executes a reload event.
+// Reload fires the eventReload event.
 func (root *Root) Reload() {
 	if !root.checkScreen() {
 		return
@@ -495,15 +334,20 @@ func (root *Root) Reload() {
 	ev := &eventReload{}
 	ev.SetEventNow()
 	ev.m = root.Doc
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	ev.SetEventNow()
+	root.postEvent(ev)
 }
 
 // releaseEventBuffer will release all event buffers.
 func (root *Root) releaseEventBuffer() {
 	for root.HasPendingEvent() {
 		_ = root.Screen.PollEvent()
+	}
+}
+
+// postEvent is a wrapper for tcell.Event.
+func (root *Root) postEvent(ev tcell.Event) {
+	if err := root.Screen.PostEvent(ev); err != nil {
+		log.Println(err)
 	}
 }

@@ -69,7 +69,7 @@ func NewInput() *Input {
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
 
-	i.Event = &normalEvent{}
+	i.Event = &eventNormal{}
 	return &i
 }
 
@@ -82,7 +82,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 		return
 	}
 
-	// confirmed.
+	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
 	if err := root.Screen.PostEvent(nev); err != nil {

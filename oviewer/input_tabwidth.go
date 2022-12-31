@@ -23,30 +23,30 @@ func tabWidthCandidate() *candidate {
 	}
 }
 
-// tabWidthEvent represents the TABWidth input mode.
-type tabWidthEvent struct {
+// eventTabWidth represents the TABWidth input mode.
+type eventTabWidth struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newTabWidthEvent returns tabWidthEvent.
-func newTabWidthEvent(clist *candidate) *tabWidthEvent {
-	return &tabWidthEvent{clist: clist}
+func newTabWidthEvent(clist *candidate) *eventTabWidth {
+	return &eventTabWidth{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *tabWidthEvent) Mode() InputMode {
+func (e *eventTabWidth) Mode() InputMode {
 	return TabWidth
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *tabWidthEvent) Prompt() string {
+func (e *eventTabWidth) Prompt() string {
 	return "TAB width:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *tabWidthEvent) Confirm(str string) tcell.Event {
+func (e *eventTabWidth) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -55,11 +55,11 @@ func (e *tabWidthEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *tabWidthEvent) Up(str string) string {
+func (e *eventTabWidth) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *tabWidthEvent) Down(str string) string {
+func (e *eventTabWidth) Down(str string) string {
 	return e.clist.down()
 }

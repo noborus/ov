@@ -14,36 +14,36 @@ func (root *Root) setHeaderMode() {
 	input.Event = newHeaderEvent()
 }
 
-// headerEvent represents the goto input mode.
-type headerEvent struct {
+// eventHeader represents the goto input mode.
+type eventHeader struct {
 	value string
 	tcell.EventTime
 }
 
 // newHeaderEvent returns headerEvent.
-func newHeaderEvent() *headerEvent {
-	return &headerEvent{}
+func newHeaderEvent() *eventHeader {
+	return &eventHeader{}
 }
 
 // Mode returns InputMode.
-func (e *headerEvent) Mode() InputMode {
+func (e *eventHeader) Mode() InputMode {
 	return Header
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *headerEvent) Prompt() string {
+func (e *eventHeader) Prompt() string {
 	return "Header length:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *headerEvent) Confirm(str string) tcell.Event {
+func (e *eventHeader) Confirm(str string) tcell.Event {
 	e.value = str
 	e.SetEventNow()
 	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *headerEvent) Up(str string) string {
+func (e *eventHeader) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -52,7 +52,7 @@ func (e *headerEvent) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *headerEvent) Down(str string) string {
+func (e *eventHeader) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

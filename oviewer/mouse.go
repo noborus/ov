@@ -96,19 +96,14 @@ type eventCopySelect struct {
 	tcell.EventTime
 }
 
-// CopySelect executes a copy select event.
+// CopySelect fires the eventCopySelect event.
 func (root *Root) CopySelect() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventCopySelect{}
 	ev.SetEventNow()
-	go func() {
-		err := root.Screen.PostEvent(ev)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	root.postEvent(ev)
 }
 
 // drawSelect highlights the selection.
@@ -322,19 +317,14 @@ type eventPaste struct {
 	tcell.EventTime
 }
 
-// Paste executes the mouse paste event.
+// Paste fires the eventPaste event.
 func (root *Root) Paste() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventPaste{}
 	ev.SetEventNow()
-	go func() {
-		err := root.Screen.PostEvent(ev)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	root.postEvent(ev)
 }
 
 // getClipboard writes a string from the clipboard.

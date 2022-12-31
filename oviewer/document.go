@@ -315,6 +315,7 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int
 	return 0, ErrNotFound
 }
 
+// watchMode sets the document to watch mode.
 func (m *Document) watchMode() {
 	m.WatchMode = true
 	if m.SectionDelimiter == "" {
@@ -324,11 +325,13 @@ func (m *Document) watchMode() {
 	m.FollowSection = true
 }
 
+// unwatchMode unwatch mode for the document.
 func (m *Document) unWatchMode() {
 	m.WatchMode = false
 	m.FollowSection = false
 }
 
+// setSectionDelimiter sets the document section delimiter.
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm
 	m.SectionDelimiterReg = regexpCompile(delm, true)

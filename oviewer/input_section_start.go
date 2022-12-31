@@ -21,30 +21,30 @@ func sectionStartCandidate() *candidate {
 	}
 }
 
-// sectionStartEvent represents the section start position input mode.
-type sectionStartEvent struct {
+// eventSectionStart represents the section start position input mode.
+type eventSectionStart struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newSectionStartEvent returns sectionDelimiterEvent.
-func newSectionStartEvent(clist *candidate) *sectionStartEvent {
-	return &sectionStartEvent{clist: clist}
+func newSectionStartEvent(clist *candidate) *eventSectionStart {
+	return &eventSectionStart{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *sectionStartEvent) Mode() InputMode {
+func (e *eventSectionStart) Mode() InputMode {
 	return SectionStart
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *sectionStartEvent) Prompt() string {
+func (e *eventSectionStart) Prompt() string {
 	return "Section start:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *sectionStartEvent) Confirm(str string) tcell.Event {
+func (e *eventSectionStart) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -53,11 +53,11 @@ func (e *sectionStartEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *sectionStartEvent) Up(str string) string {
+func (e *eventSectionStart) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *sectionStartEvent) Down(str string) string {
+func (e *eventSectionStart) Down(str string) string {
 	return e.clist.down()
 }

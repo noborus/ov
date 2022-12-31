@@ -21,30 +21,30 @@ func watchCandidate() *candidate {
 	}
 }
 
-// watchIntervalEvent represents the WatchInteval input mode.
-type watchIntervalEvent struct {
+// eventWatchInterval represents the WatchInteval input mode.
+type eventWatchInterval struct {
 	value string
 	clist *candidate
 	tcell.EventTime
 }
 
 // newWatchIntevalInputt returns watchIntervalEvent.
-func newWatchIntevalEvent(clist *candidate) *watchIntervalEvent {
-	return &watchIntervalEvent{clist: clist}
+func newWatchIntevalEvent(clist *candidate) *eventWatchInterval {
+	return &eventWatchInterval{clist: clist}
 }
 
 // Mode returns InputMode.
-func (e *watchIntervalEvent) Mode() InputMode {
+func (e *eventWatchInterval) Mode() InputMode {
 	return Watch
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *watchIntervalEvent) Prompt() string {
+func (e *eventWatchInterval) Prompt() string {
 	return "Watch interval:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *watchIntervalEvent) Confirm(str string) tcell.Event {
+func (e *eventWatchInterval) Confirm(str string) tcell.Event {
 	e.value = str
 	e.clist.list = toLast(e.clist.list, str)
 	e.clist.p = 0
@@ -53,11 +53,11 @@ func (e *watchIntervalEvent) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *watchIntervalEvent) Up(str string) string {
+func (e *eventWatchInterval) Up(str string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *watchIntervalEvent) Down(str string) string {
+func (e *eventWatchInterval) Down(str string) string {
 	return e.clist.down()
 }

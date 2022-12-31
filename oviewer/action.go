@@ -140,7 +140,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := targetToN(root.Doc.endNum, input)
+	num := position(root.Doc.endNum, input)
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
@@ -442,7 +442,7 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := int(math.Round(strToPosition(root.vHight, input)))
+	num := jumpPosition(root.vHight, input)
 	if num < 0 || num > root.vHight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
@@ -457,24 +457,23 @@ func (root *Root) setJumpTarget(input string) {
 
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize() {
-	root.Doc.JumpTarget = int(math.Round(strToPosition(root.vHight, root.Doc.JumpTargetString)))
 	root.ViewSync()
 }
 
-// strToPositon determines the position of the jump.
-func strToPosition(hight int, str string) float64 {
-	num := targetToN(hight, str)
+// jumpPosition determines the position of the jump.
+func jumpPosition(hight int, str string) int {
+	num := int(math.Round(position(hight, str)))
 	if num < 0 {
-		return (float64(hight) - 1) + num
+		return (hight - 1) + num
 	}
 	return num
 }
 
-// targetToN returns
+// position returns
 // the number of lines from the top for positive numbers (1),
 // dot.number for percentages (.5) = 50%,
 // and % after the number for percentages (50%).
-func targetToN(hight int, str string) float64 {
+func position(hight int, str string) float64 {
 	str = strings.TrimSpace(str)
 	if len(str) == 0 {
 		return 0
@@ -517,6 +516,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
+	root.Doc.JumpTarget = jumpPosition(root.vHight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.
