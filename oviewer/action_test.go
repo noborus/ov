@@ -7,59 +7,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func TestRoot_toggleWrapMode(t *testing.T) {
-	tests := []struct {
-		name       string
-		wrapMode   bool
-		columnMode bool
-		x          int
-		wantx      int
-	}{
-		{
-			name:       "test1",
-			wrapMode:   true,
-			columnMode: false,
-			x:          0,
-			wantx:      0,
-		},
-		{
-			name:       "test2",
-			wrapMode:   false,
-			columnMode: false,
-			x:          10,
-			wantx:      0,
-		},
-		{
-			name:       "test3",
-			wrapMode:   false,
-			columnMode: true,
-			x:          10,
-			wantx:      10,
-		},
-	}
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			root.Doc.WrapMode = tt.wrapMode
-			root.Doc.ColumnMode = tt.columnMode
-			root.toggleWrapMode()
-			if root.Doc.WrapMode == tt.wrapMode {
-				t.Errorf("root.toggleWrapMode() = %v, want %v", root.Doc.WrapMode, !tt.wrapMode)
-			}
-			if root.Doc.x != tt.wantx {
-				t.Errorf("root.toggleWrapMode() = %v, want %v", root.Doc.x, tt.wantx)
-			}
-		})
-	}
-}
-
 func TestRoot_toggleColumnMode(t *testing.T) {
 	tests := []struct {
 		name       string
