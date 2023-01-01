@@ -41,6 +41,18 @@ func (root *Root) toggleLineNumMode() {
 	root.setMessagef("Set LineNumMode %t", root.Doc.LineNumMode)
 }
 
+// togglePlain toggles plain mode.
+func (root *Root) togglePlain() {
+	root.Doc.PlainMode = !root.Doc.PlainMode
+	root.setMessagef("Set PrainMode %t", root.Doc.PlainMode)
+}
+
+// togglePlain toggles column rainbow mode.
+func (root *Root) toggleRainbow() {
+	root.Doc.ColumnRainbow = !root.Doc.ColumnRainbow
+	root.setMessagef("Set Column Rainbow Mode %t", root.Doc.ColumnRainbow)
+}
+
 // toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
@@ -54,11 +66,6 @@ func (root *Root) toggleFollowAll() {
 // toggleFollowSection toggles follow section mode.
 func (root *Root) toggleFollowSection() {
 	root.Doc.FollowSection = !root.Doc.FollowSection
-}
-
-// togglePlain toggles follow section mode.
-func (root *Root) togglePlain() {
-	root.Doc.PlainMode = !root.Doc.PlainMode
 }
 
 // closeFile close the file.
@@ -315,11 +322,11 @@ func (root *Root) toggleMouse() {
 
 // setViewMode switches to the preset display mode.
 // Set header lines and columMode together.
-func (root *Root) setViewMode(input string) {
-	c, ok := root.Config.Mode[input]
+func (root *Root) setViewMode(modeName string) {
+	c, ok := root.Config.Mode[modeName]
 	if !ok {
-		if input != "general" {
-			root.setMessagef("%s mode not found", input)
+		if modeName != "general" {
+			root.setMessagef("%s mode not found", modeName)
 			return
 		}
 		c = root.General
@@ -329,7 +336,7 @@ func (root *Root) setViewMode(input string) {
 	root.Doc.setSectionDelimiter(root.Doc.SectionDelimiter)
 	root.Doc.ClearCache()
 	root.ViewSync()
-	root.setMessagef("Set mode %s", input)
+	root.setMessagef("Set mode %s", modeName)
 }
 
 // setDelimiter sets the delimiter string.

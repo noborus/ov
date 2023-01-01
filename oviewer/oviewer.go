@@ -121,6 +121,8 @@ type general struct {
 	AlternateRows bool
 	// ColumnMode is column mode.
 	ColumnMode bool
+	// ColumnRainbow is column rainbow.
+	ColumnRainbow bool
 	// LineNumMode displays line numbers.
 	LineNumMode bool
 	// Wrap is Wrap mode.
@@ -177,6 +179,8 @@ type Config struct {
 	StyleSectionLine OVStyle
 	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
 	StyleMultiColorHighlight []OVStyle
+	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
+	StyleColumnRainbow []OVStyle
 	// StyleJumpTargetLine is the line that displays the search results.
 	StyleJumpTargetLine OVStyle
 
@@ -212,8 +216,11 @@ type Config struct {
 	// KeyBinding
 	Keybind map[string][]string
 
-	// Old setting.
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
 
+	// Old setting.
 	// Deprecated: Alternating background color.
 	ColorAlternate string
 	// Deprecated: Header color.
@@ -509,10 +516,13 @@ func (root *Root) Run() error {
 	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
 
 	root.optimizedMan()
-
+	root.setModeConfig()
+	viewMode, overwrite := root.Config.Mode[root.Config.ViewMode]
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General
-
+		if overwrite {
+			doc.general = overwriteGeneral(doc.general, viewMode)
+		}
 		if root.General.MultiColorWords != nil {
 			doc.setMultiColorWords(root.General.MultiColorWords)
 		}
@@ -524,8 +534,6 @@ func (root *Root) Run() error {
 		}
 		log.Printf("open [%d]%s%s", n, doc.FileName, w)
 	}
-
-	root.setModeConfig()
 
 	root.ViewSync()
 	// Exit if fits on screen
@@ -675,6 +683,7 @@ func overwriteGeneral(a general, b general) general {
 	}
 	a.AlternateRows = b.AlternateRows
 	a.ColumnMode = b.ColumnMode
+	a.ColumnRainbow = b.ColumnRainbow
 	a.LineNumMode = b.LineNumMode
 	a.WrapMode = b.WrapMode
 	a.FollowMode = b.FollowMode

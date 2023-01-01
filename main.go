@@ -242,6 +242,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
 	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
+	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "column rainbow")
+	_ = viper.BindPFlag("general.ColumnRainbow", rootCmd.PersistentFlags().Lookup("column-rainbow"))
+
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
@@ -305,6 +308,9 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
 	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
+
+	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
+	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))

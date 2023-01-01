@@ -39,6 +39,15 @@ func NewConfig() Config {
 			{Foreground: "blue"},
 			{Foreground: "grey"},
 		},
+		StyleColumnRainbow: []OVStyle{
+			{Foreground: "white"},
+			{Foreground: "crimson"},
+			{Foreground: "aqua"},
+			{Foreground: "lightsalmon"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "yellowgreen"},
+		},
 		StyleJumpTargetLine: OVStyle{
 			Underline: true,
 		},
