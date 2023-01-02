@@ -7,7 +7,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/gdamore/tcell/v2 v2.5.3
+	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.15.13
 	github.com/mattn/go-runewidth v0.0.14
