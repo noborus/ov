@@ -19,9 +19,9 @@ func gotoCandidate() *candidate {
 
 // eventGoto represents the goto input mode.
 type eventGoto struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newGotoEvent returns gotoEvent.

@@ -16,8 +16,8 @@ func (root *Root) setHeaderMode() {
 
 // eventHeader represents the goto input mode.
 type eventHeader struct {
-	value string
 	tcell.EventTime
+	value string
 }
 
 // newHeaderEvent returns headerEvent.

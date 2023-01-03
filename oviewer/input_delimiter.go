@@ -24,9 +24,9 @@ func delimiterCandidate() *candidate {
 
 // eventDelimiter represents the delimiter input mode.
 type eventDelimiter struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newDelimiterEvent returns delimiterEvent.

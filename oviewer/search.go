@@ -409,8 +409,8 @@ func (root *Root) nextBackSearch(ctx context.Context, str string) {
 
 // eventNextSearch represents search event.
 type eventNextSearch struct {
-	str string
 	tcell.EventTime
+	str string
 }
 
 // setNextSearch fires the exntNextSearch event.
@@ -423,8 +423,8 @@ func (root *Root) setNextSearch() {
 
 // eventNextBackSearch represents backward search event.
 type eventNextBackSearch struct {
-	str string
 	tcell.EventTime
+	str string
 }
 
 // setNextBackSearch fires the exntNextBackSearch event.

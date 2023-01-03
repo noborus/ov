@@ -35,15 +35,12 @@ const (
 type Input struct {
 	Event Eventer
 
-	value   string
-	cursorX int
-
 	// Candidate is prepared when the history is used as an input candidate.
 	// Header and SkipLines use numbers up and down instead of candidate.
+	DelimiterCandidate    *candidate
 	ModeCandidate         *candidate
 	SearchCandidate       *candidate
 	GoCandidate           *candidate
-	DelimiterCandidate    *candidate
 	TabWidthCandidate     *candidate
 	WatchCandidate        *candidate
 	WriteBACandidate      *candidate
@@ -51,6 +48,9 @@ type Input struct {
 	SectionStartCandidate *candidate
 	MultiColorCandidate   *candidate
 	JumpTargetCandidate   *candidate
+
+	value   string
+	cursorX int
 }
 
 // NewInput returns all the various inputs.

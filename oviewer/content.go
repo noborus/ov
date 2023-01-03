@@ -15,10 +15,10 @@ import (
 // content represents one character on the terminal.
 // content is a value that can be set in SetContent() of tcell.
 type content struct {
+	style tcell.Style
+	combc []rune
 	width int
 	mainc rune
-	combc []rune
-	style tcell.Style
 }
 
 // contents represents one line of contents.

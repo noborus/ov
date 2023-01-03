@@ -23,9 +23,9 @@ func watchCandidate() *candidate {
 
 // eventWatchInterval represents the WatchInteval input mode.
 type eventWatchInterval struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newWatchIntevalInputt returns watchIntervalEvent.

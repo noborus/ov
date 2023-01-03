@@ -23,9 +23,9 @@ func sectionStartCandidate() *candidate {
 
 // eventSectionStart represents the section start position input mode.
 type eventSectionStart struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newSectionStartEvent returns sectionDelimiterEvent.

@@ -16,8 +16,8 @@ func (root *Root) setSkipLinesMode() {
 
 // eventSkipLines represents the goto input mode.
 type eventSkipLines struct {
-	value string
 	tcell.EventTime
+	value string
 }
 
 // newSkipLinesEvent returns skipLinesEvent.
