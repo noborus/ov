@@ -334,6 +334,7 @@ func (root *Root) setViewMode(modeName string) {
 
 	root.Doc.general = overwriteGeneral(root.Doc.general, c)
 	root.Doc.setSectionDelimiter(root.Doc.SectionDelimiter)
+	root.Doc.setMultiColorWords(root.Doc.MultiColorWords)
 	root.Doc.ClearCache()
 	root.ViewSync()
 	root.setMessagef("Set mode %s", modeName)
