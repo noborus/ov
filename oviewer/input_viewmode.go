@@ -21,9 +21,9 @@ func viewModeCandidate() *candidate {
 
 // eventViewMode represents the mode input mode.
 type eventViewMode struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newViewModeEvent returns viewModeEvent.

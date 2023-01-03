@@ -19,9 +19,9 @@ func jumpTargetCandidate() *candidate {
 
 // eventJumpTarget represents the jump target input mode.
 type eventJumpTarget struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newJumpTargetEvent returns jumpTargetEvent.

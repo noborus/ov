@@ -25,9 +25,9 @@ func tabWidthCandidate() *candidate {
 
 // eventTabWidth represents the TABWidth input mode.
 type eventTabWidth struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newTabWidthEvent returns tabWidthEvent.

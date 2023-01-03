@@ -269,8 +269,8 @@ func (root *Root) MoveBottom() {
 
 // eventDocument represents a set document event.
 type eventDocument struct {
-	docNum int
 	tcell.EventTime
+	docNum int
 }
 
 // SetDocument fires the eventDocument event.

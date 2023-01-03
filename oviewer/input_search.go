@@ -20,9 +20,9 @@ func searchCandidate() *candidate {
 
 // eventInputSearch represents the search input mode.
 type eventInputSearch struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newSearchEvent returns SearchInput.
@@ -74,9 +74,9 @@ func (root *Root) setBackSearchMode() {
 
 // eventInputBackSearch represents the back search input mode.
 type eventInputBackSearch struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newBackSearchEvent returns backSearchEvent.

@@ -22,9 +22,9 @@ func multiColorCandidate() *candidate {
 
 // eventMultiColor represents the multi color input mode.
 type eventMultiColor struct {
-	value string
-	clist *candidate
 	tcell.EventTime
+	clist *candidate
+	value string
 }
 
 // newMultiColorEvent returns multiColorEvent.
