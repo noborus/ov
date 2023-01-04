@@ -22,6 +22,7 @@ ov is a terminal pager.
   * 2.6. [Binary](#binary)
   * 2.7. [go install](#go-install)
   * 2.8. [go get(details or developer version)](#go-get(details-or-developer-version))
+  * 2.9. [Arch Linux](#arch-linux)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -149,6 +150,12 @@ Or, install it in a PATH location for other users to use
 make
 sudo install ov /usr/local/bin
 ```
+
+### 2.9. <a name='arch-linux'></a>Arch Linux
+
+You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
+
+AUR package: https://aur.archlinux.org/packages/ov-bin
 
 ##  3. <a name='usage'></a>Usage
 
