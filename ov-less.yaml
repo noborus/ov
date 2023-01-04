@@ -108,6 +108,7 @@ KeyBind:
         - "Up"
     top:
         - "Home"
+        - "g"
         - "<"
     bottom:
         - "End"
@@ -183,7 +184,7 @@ KeyBind:
     tabwidth:
         - "t"
     goto:
-        - "g"
+        - ":"
     next_search:
         - "n"
     next_backsearch:
