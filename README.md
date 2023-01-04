@@ -6,7 +6,7 @@
 
 ov is a terminal pager.
 
-* Can be used instead of `less` or `more`.  It can also be used instead of `tail -f`.
+* `ov` be used instead of `less` or `more` or `tail -f`.
 * `ov` also has an effective function for tabular text.
 
 ![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
