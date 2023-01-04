@@ -360,7 +360,7 @@ For command line options, pass them separated by ,(comma).
 For example:
 
 ```console
-$ ov --multicolr "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
+$ ov --multicolor "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 ```
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
