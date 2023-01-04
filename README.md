@@ -23,6 +23,7 @@ ov is a terminal pager.
   * 2.7. [go install](#go-install)
   * 2.8. [go get(details or developer version)](#go-get(details-or-developer-version))
   * 2.9. [Arch Linux](#arch-linux)
+  * 2.10. [nix (nixOS, Linux, or macOS)](#nix)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -156,6 +157,20 @@ sudo install ov /usr/local/bin
 You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
 
 AUR package: https://aur.archlinux.org/packages/ov-bin
+
+### 2.10 <a name='nix'></a>nix (nixOS, Linux, or macOS)
+
+ov is available as a nix package. You can install it with
+
+```console
+nix profile install nixpkgs#ov
+```
+
+if you use flakes, or using nix-env otherwise:
+
+```console
+nix-env -iA nixpkgs.ov
+```
 
 ##  3. <a name='usage'></a>Usage
 
