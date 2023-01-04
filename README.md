@@ -369,7 +369,7 @@ Enter multiple words (regular expressions) separated by spaces.
 
 For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
 
-It can also be specified with the command line option `--multi-color`(oor `-M`).
+It can also be specified with the command line option `--multi-color`(or `-M`).
 For command line options, pass them separated by ,(comma).
 
 For example:
