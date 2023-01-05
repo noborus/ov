@@ -19,30 +19,32 @@ ov is a terminal pager.
   * 2.3. [MacPorts (macOS)](#macports-(macos))
   * 2.4. [Homebrew(macOS or Linux)](#homebrew(macos-or-linux))
   * 2.5. [pkg (FreeBSD)](#pkg-(freebsd))
-  * 2.6. [Binary](#binary)
-  * 2.7. [go install](#go-install)
-  * 2.8. [go get(details or developer version)](#go-get(details-or-developer-version))
-  * 2.9. [Arch Linux](#arch-linux)
-  * 2.10. [nix (nixOS, Linux, or macOS)](#nix)
+  * 2.6. [Arch Linux](#arch-linux)
+  * 2.7. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
+  * 2.8. [Binary](#binary)
+  * 2.9. [go install](#go-install)
+  * 2.10. [go get(details or developer version)](#go-get(details-or-developer-version))
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
   * 3.3. [Header](#header)
-  * 3.4. [Column Mode](#column-mode)
-  * 3.5. [Wrap/NoWrap](#wrap/nowrap)
-  * 3.6. [Alternate-Rows](#alternate-rows)
-  * 3.7. [Section](#section)
-  * 3.8. [Follow mode](#follow-mode)
-  * 3.9. [Follow all mode](#follow-all-mode)
-  * 3.10. [Follow section mode](#follow-section-mode)
-  * 3.11. [Exec mode](#exec-mode)
-  * 3.12. [Search](#search)
-  * 3.13. [Mark](#mark)
-  * 3.14. [Watch](#watch)
-  * 3.15. [Mouse support](#mouse-support)
-  * 3.16. [Multi Color Highlight](#multi-color-highlight)
-  * 3.17. [Plain](#plain)
-  * 3.18. [Jump Target](#jump-target)
+  * 3.4. [Column mode](#column-mode)
+  * 3.5. [Column rainbow mode](#column-rainbow-mode)
+  * 3.6. [Wrap/NoWrap](#wrap/nowrap)
+  * 3.7. [Alternate-Rows](#alternate-rows)
+  * 3.8. [Section](#section)
+  * 3.9. [Follow mode](#follow-mode)
+  * 3.10. [Follow all mode](#follow-all-mode)
+  * 3.11. [Follow section mode](#follow-section-mode)
+  * 3.12. [Exec mode](#exec-mode)
+  * 3.13. [Search](#search)
+  * 3.14. [Mark](#mark)
+  * 3.15. [Watch](#watch)
+  * 3.16. [Mouse support](#mouse-support)
+  * 3.17. [Multi Color Highlight](#multi-color-highlight)
+  * 3.18. [Plain](#plain)
+  * 3.19. [Jump Target](#jump-target)
+  * 3.20. [Vide Mode](#vide-mode)
 * 4. [Command option](#command-option)
 * 5. [Key bindings](#key-bindings)
 * 6. [Customize](#customize)
@@ -111,7 +113,27 @@ brew install noborus/tap/ov
 pkg install ov
 ```
 
-###  2.6. <a name='binary'></a>Binary
+###  2.6. <a name='arch-linux'></a>Arch Linux
+
+You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
+
+AUR package: https://aur.archlinux.org/packages/ov-bin
+
+###  2.7. <a name='nix-(nixos,-linux,-or-macos)'></a>nix (nixOS, Linux, or macOS)
+
+ov is available as a nix package. You can install it with
+
+```console
+nix profile install nixpkgs#ov
+```
+
+if you use flakes, or using nix-env otherwise:
+
+```console
+nix-env -iA nixpkgs.ov
+```
+
+###  2.8. <a name='binary'></a>Binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
 
@@ -121,7 +143,7 @@ unzip ov_x.x.x_linux_amd64.zip
 sudo install ov /usr/local/bin
 ```
 
-###  2.7. <a name='go-install'></a>go install
+###  2.9. <a name='go-install'></a>go install
 
 It will be installed in $GOPATH/bin by the following command.
 
@@ -129,7 +151,7 @@ It will be installed in $GOPATH/bin by the following command.
 go install github.com/noborus/ov@latest
 ```
 
-###  2.8. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
+###  2.10. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
 
 First of all, download only with the following command without installing it.
 
@@ -150,26 +172,6 @@ Or, install it in a PATH location for other users to use
 ```console
 make
 sudo install ov /usr/local/bin
-```
-
-### 2.9. <a name='arch-linux'></a>Arch Linux
-
-You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
-
-AUR package: https://aur.archlinux.org/packages/ov-bin
-
-### 2.10 <a name='nix'></a>nix (nixOS, Linux, or macOS)
-
-ov is available as a nix package. You can install it with
-
-```console
-nix profile install nixpkgs#ov
-```
-
-if you use flakes, or using nix-env otherwise:
-
-```console
-nix-env -iA nixpkgs.ov
 ```
 
 ##  3. <a name='usage'></a>Usage
@@ -230,22 +232,32 @@ When used with the `--skip-lines` option, it hides the number of lines specified
 ov --skip-lines 1 --header 1 README.md
 ```
 
-###  3.4. <a name='column-mode'></a>Column Mode
+###  3.4. <a name='column-mode'></a>Column mode
 
 Specify the delimiter with `--column-delimiter` and set it to `--column-mode` to highlight the column.
+
+After startup, switch the display in column mode (default key is `c`).
+You can also enter a column-delimiter after startup (default key is `d`).
 
 ```console
 ov --column-delimiter "," --column-mode test.csv
 ```
 
-###  3.5. <a name='wrap/nowrap'></a>Wrap/NoWrap
+###  3.5. <a name='column-rainbow-mode'></a>Column rainbow mode
+
+You can also color each column individually in column mode.
+Specify `--column-rainbow` in addition to the `--column-mode` option.
+
+After startup, switch the display with column rainbow (default key is `ctrl+r`).
+
+###  3.6. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
 
 The option is `--wrap`, specify `--wrap=false` if you do not want to wrap.
 After startup, toggle display with wrap (default key `w`).
 
-###  3.6. <a name='alternate-rows'></a>Alternate-Rows
+###  3.7. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) option
 The style can be set with [Style customization](#Stylecustomization).
@@ -254,7 +266,7 @@ The style can be set with [Style customization](#Stylecustomization).
 ov --alternate-rows test.csv
 ```
 
-###  3.7. <a name='section'></a>Section
+###  3.8. <a name='section'></a>Section
 
 You specify `--section-delimiter`, you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`.
@@ -267,7 +279,7 @@ The section-delimiter is written in a regular expression (for example: "^#").
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-###  3.8. <a name='follow-mode'></a>Follow mode
+###  3.9. <a name='follow-mode'></a>Follow mode
 
 Output appended data and move it to the bottom line (like `tail -f`).
 
@@ -279,7 +291,7 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.9. <a name='follow-all-mode'></a>Follow all mode
+###  3.10. <a name='follow-all-mode'></a>Follow all mode
 
 Same as follow-mode, and switches to the last updated file when there are multiple files.
 
@@ -287,7 +299,7 @@ Same as follow-mode, and switches to the last updated file when there are multip
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.10. <a name='follow-section-mode'></a>Follow section mode
+###  3.11. <a name='follow-section-mode'></a>Follow section mode
 
 Follow mode is line-by-line, while follow section mode is section-by-section.
 Follow section mode displays the bottom section.
@@ -300,7 +312,7 @@ ov --section-delimiter "^#" --follow-section README.md
  [Watch](#Watch) mode is a mode in which `--follow-section` and
  `--section-delimiter "^\f"` are automatically set.
 
-###  3.11. <a name='exec-mode'></a>Exec mode
+###  3.12. <a name='exec-mode'></a>Exec mode
 
 Execute the command to display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -311,7 +323,7 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
-###  3.12. <a name='search'></a>Search
+###  3.13. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -323,7 +335,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.13. <a name='mark'></a>Mark
+###  3.14. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -333,7 +345,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.14. <a name='watch'></a>Watch
+###  3.15. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -346,7 +358,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.15. <a name='mouse-support'></a>Mouse support
+###  3.16. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`.
@@ -361,7 +373,7 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-###  3.16. <a name='multi-color-highlight'></a>Multi Color Highlight
+###  3.17. <a name='multi-color-highlight'></a>Multi Color Highlight
 
 This feature styles multiple words individually.
 `.`key(defualt) enters multi-word input mode.
@@ -380,13 +392,13 @@ $ ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
 
-###  3.17. <a name='plain'></a>Plain
+###  3.18. <a name='plain'></a>Plain
 
 Supports undecorating ANSI escape sequences.
 The option is `--plain` (or `-p`).
 After startup, toggle the original decoration (default key `ctrl+e`).
 
-###  3.18. <a name='jump-target'></a>Jump Target
+###  3.19. <a name='jump-target'></a>Jump Target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -397,6 +409,47 @@ You can also specify a percentage, such as (50%).
 
 This option can be specified with `--jump-target`(or `-j`).
 It can be entered after startup (default key `j`).
+
+###  3.20. <a name='vide-mode'></a>Vide Mode
+
+You may want to use some modes in combination.
+In that case, you can set it in advance and specify the combined mode at once.
+
+For example, if you write the following settings in ov.yaml,
+ the csv mode will be set with `--view-mode csv`.
+
+ ```console
+ ov --view-mode csv test.csv
+ ```
+
+After startup, you can enter view-mode with (default key `p`).
+
+```ov.yaml
+Mode:
+  p:
+    Header: 2
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    WrapMode: true
+    ColumnDelimiter: "|"
+    ColumnRainbow: true
+  m:
+    Header: 3
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    WrapMode: true
+    ColumnDelimiter: "|"
+  csv:
+    Header: 1
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    WrapMode: true
+    ColumnDelimiter: ","
+    ColumnRainbow: true
+```
 
 ##  4. <a name='command-option'></a>Command option
 
@@ -413,6 +466,7 @@ Flags:
   -i, --case-sensitive             case-sensitive in search
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
+      --column-rainbow             column rainbow
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $HOME/.ov.yaml)
       --debug                      debug mode
@@ -430,6 +484,7 @@ Flags:
       --incsearch                  incremental search (default true)
   -j, --jump-target string         jump-target
   -n, --line-number                line number mode
+  -M, --multi-color strings        multi-color
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
       --regexp-search              regular expression search
@@ -438,6 +493,7 @@ Flags:
       --skip-lines int             skip the number of lines
   -x, --tab-width int              tab stop width (default 8)
   -v, --version                    display version information
+      --view-mode string           view mode
   -T, --watch int                  watch mode interval
   -w, --wrap                       wrap mode (default true)
 ```
@@ -500,6 +556,7 @@ It can also be changed after startup.
 
  [w], [W]                     * wrap/nowrap toggle
  [c]                          * column mode toggle
+ [ctrl+r]                     * column rainbow toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
  [ctrl+e]                     * original decoration toggle
@@ -512,6 +569,7 @@ It can also be changed after startup.
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
  [.]                          * multi color highlight
+ [j]                          * jump target
 
 	Section
 
