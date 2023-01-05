@@ -181,21 +181,24 @@ See the [ov site](https://noborus.github.io/ov/) for more use cases.
 
 ###  3.2. <a name='config'></a>Config
 
-You can set style and key bindings in the setting file.
+You can set style and key bindings in the configuration file.
 
-Create a `.ov.yaml` file in your user's home directory.
-
-for example.
+ov will look for a configuration file in the following paths in descending order:
 
 ```filepath
+$XDG_CONFIG_HOME/ov/config.yaml
+$HOME/.config/ov/config.yaml
 $HOME/.ov.yaml
 ```
 
-Windows.
+On Windows:
 
 ```filepath
+%USERPROFILE%/.config/ov/config.yaml
 %USERPROFILE%/.ov.yaml
 ```
+
+Create a `config.yaml` file in one of the above directories. If the file is in the user home directory, it should be named `.ov.yaml`.
 
 Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
 
@@ -399,7 +402,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --completion string          generate completion script [bash|zsh|fish|powershell]
-      --config string              config file (default is $HOME/.ov.yaml)
+      --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
       --disable-mouse              disable mouse support
   -e, --exec                       exec command

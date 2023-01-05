@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
@@ -204,7 +205,7 @@ func init() {
 	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ov.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/ov/config.yaml)")
 	_ = rootCmd.RegisterFlagCompletionFunc("config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"yaml"}, cobra.ShellCompDirectiveFilterFileExt
 	})
@@ -322,16 +323,37 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
+		// Get home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return
 		}
 
-		// Search config in home directory with name ".ov" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".ov")
+		// Get XDG config directory.
+		xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
+
+		var defaultConfigPath string
+
+		if xdgConfigHome != "" {
+			// If set, use it for the default configuration path.
+			defaultConfigPath = filepath.Join(xdgConfigHome, "ov")
+		} else {
+			// If not set, use the default `$HOME/.config/ov`.
+			defaultConfigPath = filepath.Join(home, ".config", "ov")
+		}
+
+		// Set the default configuration path and file name.
+		viper.AddConfigPath(defaultConfigPath)
+		viper.SetConfigName("config")
+
+		// If the default config file does not exist but the legacy config file does exist,
+		// then fallback to the legacy config path and file name.
+		if !fileExists(filepath.Join(defaultConfigPath, "config.yaml")) &&
+			fileExists(filepath.Join(home, ".ov.yaml")) {
+			viper.AddConfigPath(home)
+			viper.SetConfigName(".ov")
+		}
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -342,6 +364,13 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
+}
+
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+	return true
 }
 
 func main() {
