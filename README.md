@@ -41,10 +41,10 @@ ov is a terminal pager.
   * 3.14. [Mark](#mark)
   * 3.15. [Watch](#watch)
   * 3.16. [Mouse support](#mouse-support)
-  * 3.17. [Multi Color Highlight](#multi-color-highlight)
+  * 3.17. [Multi color highlight](#multi-color-highlight)
   * 3.18. [Plain](#plain)
-  * 3.19. [Jump Target](#jump-target)
-  * 3.20. [Vide Mode](#vide-mode)
+  * 3.19. [Jump target](#jump-target)
+  * 3.20. [View mode](#view-mode)
 * 4. [Command option](#command-option)
 * 5. [Key bindings](#key-bindings)
 * 6. [Customize](#customize)
@@ -373,7 +373,7 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-###  3.17. <a name='multi-color-highlight'></a>Multi Color Highlight
+###  3.17. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(defualt) enters multi-word input mode.
@@ -387,7 +387,7 @@ For command line options, pass them separated by ,(comma).
 For example:
 
 ```console
-$ ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
+ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 ```
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
@@ -398,7 +398,7 @@ Supports undecorating ANSI escape sequences.
 The option is `--plain` (or `-p`).
 After startup, toggle the original decoration (default key `ctrl+e`).
 
-###  3.19. <a name='jump-target'></a>Jump Target
+###  3.19. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -410,7 +410,7 @@ You can also specify a percentage, such as (50%).
 This option can be specified with `--jump-target`(or `-j`).
 It can be entered after startup (default key `j`).
 
-###  3.20. <a name='vide-mode'></a>Vide Mode
+###  3.20. <a name='view-mode'></a>View mode
 
 You may want to use some modes in combination.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -418,9 +418,9 @@ In that case, you can set it in advance and specify the combined mode at once.
 For example, if you write the following settings in ov.yaml,
  the csv mode will be set with `--view-mode csv`.
 
- ```console
- ov --view-mode csv test.csv
- ```
+```console
+ov --view-mode csv test.csv
+```
 
 After startup, you can enter view-mode with (default key `p`).
 
