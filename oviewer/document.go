@@ -331,6 +331,14 @@ func (m *Document) unWatchMode() {
 	m.FollowSection = false
 }
 
+// regexpCompile compiles the new document's regular expressions.
+func (m *Document) regexpCompile() {
+	m.setSectionDelimiter(m.SectionDelimiter)
+	if m.MultiColorWords != nil {
+		m.setMultiColorWords(m.MultiColorWords)
+	}
+}
+
 // setSectionDelimiter sets the document section delimiter.
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm

@@ -513,8 +513,6 @@ func (root *Root) Run() error {
 		root.Screen.EnableMouse(MouseFlags)
 	}
 
-	root.Config.General.SectionDelimiterReg = regexpCompile(root.Config.General.SectionDelimiter, true)
-
 	root.optimizedMan()
 	root.setModeConfig()
 	viewMode, overwrite := root.Config.Mode[root.Config.ViewMode]
@@ -523,9 +521,7 @@ func (root *Root) Run() error {
 		if overwrite {
 			doc.general = overwriteGeneral(doc.general, viewMode)
 		}
-		if root.General.MultiColorWords != nil {
-			doc.setMultiColorWords(root.General.MultiColorWords)
-		}
+		doc.regexpCompile()
 
 		w := ""
 		if doc.general.WatchInterval > 0 {
