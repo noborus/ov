@@ -85,6 +85,7 @@ func KeyBindString(k KeyBind) string {
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
+	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle")
