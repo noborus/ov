@@ -113,47 +113,6 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 	return re
 }
 
-// rangePosition returns the range starting and ending from the s,substr string.
-func rangePosition(s, substr string, number int) (int, int) {
-	left := strings.Index(s, substr)
-	// If left == 0
-	// | a | b | c |
-	// If left > 0
-	// a | b | c
-	if left > 0 {
-		if number == 0 {
-			return 0, left
-		}
-		number--
-	}
-
-	i := 0
-	for n := 0; n < number; n++ {
-		j := strings.Index(s[i:], substr)
-		if j < 0 {
-			return -1, -1
-		}
-		i += j + len(substr)
-	}
-
-	ds := strings.Index(s[i:], substr)
-	if ds < 0 {
-		return -1, -1
-	}
-	start := i + ds + len(substr)
-	de := -1
-	if start < len(s) {
-		de = strings.Index(s[start:], substr)
-	}
-
-	end := start + de
-	if de < 0 {
-		end = len(s)
-	}
-
-	return start, end
-}
-
 // searchPosition returns the position where the search in the argument line matched.
 // searchPosition uses cache.
 func (root *Root) searchPosition(lN int, lineStr string) [][]int {
@@ -205,20 +164,11 @@ func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 		return nil
 	}
 
-	var locs [][]int
 	if !caseSensitive {
 		s = strings.ToLower(s)
 		substr = strings.ToLower(substr)
 	}
-	offSet := 0
-	loc := strings.Index(s, substr)
-	for loc != -1 {
-		s = s[loc+len(substr):]
-		locs = append(locs, []int{loc + offSet, loc + offSet + len(substr)})
-		offSet += loc + len(substr)
-		loc = strings.Index(s, substr)
-	}
-	return locs
+	return allIndex(s, substr)
 }
 
 // setSearcher is a wrapper for NewSearcher and returns a Searcher interface.
@@ -330,7 +280,7 @@ func (root *Root) searchQuit() {
 func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 	root.Doc.topLN = root.returnStartPosition()
 
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	if searcher == nil {
 		return
 	}
@@ -378,7 +328,7 @@ func (root *Root) returnStartPosition() int {
 
 // firstSearch performs the first search immediately after the input.
 func (root *Root) firstSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
 	if l.number-root.Doc.topLN > root.Doc.topLN {
 		l.number = 0
@@ -388,21 +338,21 @@ func (root *Root) firstSearch(ctx context.Context) {
 
 // nextSearch performs the next search.
 func (root *Root) nextSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
+	searcher := root.setSearcher(str, root.Config.CaseSensitive)
 	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, true, l.number+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
 func (root *Root) firstBackSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.CaseSensitive)
+	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	l := root.lineInfo(root.headerLen)
 	root.searchMove(ctx, false, l.number, searcher)
 }
 
 // nextBackSearch performs the next back search.
 func (root *Root) nextBackSearch(ctx context.Context, str string) {
-	searcher := root.setSearcher(str, root.CaseSensitive)
+	searcher := root.setSearcher(str, root.Config.CaseSensitive)
 	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, false, l.number-1, searcher)
 }
