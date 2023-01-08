@@ -427,6 +427,10 @@ func openFiles(fileNames []string) (*Root, error) {
 
 // SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
+	viewMode, overwrite := config.Mode[config.ViewMode]
+	if overwrite {
+		config.General = mergeGeneral(config.General, viewMode)
+	}
 	root.Config = config
 }
 
@@ -515,12 +519,8 @@ func (root *Root) Run() error {
 
 	root.optimizedMan()
 	root.setModeConfig()
-	viewMode, overwrite := root.Config.Mode[root.Config.ViewMode]
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General
-		if overwrite {
-			doc.general = overwriteGeneral(doc.general, viewMode)
-		}
 		doc.regexpCompile()
 
 		w := ""
@@ -666,50 +666,66 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	return style
 }
 
-// overwriteGeneral overwrites a general structure with a struct.
-func overwriteGeneral(a general, b general) general {
-	if b.TabWidth != 0 {
-		a.TabWidth = b.TabWidth
+// mergeGeneral overwrites a general structure with a struct.
+func mergeGeneral(src general, dst general) general {
+	if dst.TabWidth != 0 {
+		src.TabWidth = dst.TabWidth
 	}
-	if b.Header != 0 {
-		a.Header = b.Header
+	if dst.Header != 0 {
+		src.Header = dst.Header
 	}
-	if b.SkipLines != 0 {
-		a.SkipLines = b.SkipLines
+	if dst.SkipLines != 0 {
+		src.SkipLines = dst.SkipLines
 	}
-	a.AlternateRows = b.AlternateRows
-	a.ColumnMode = b.ColumnMode
-	a.ColumnRainbow = b.ColumnRainbow
-	a.LineNumMode = b.LineNumMode
-	a.WrapMode = b.WrapMode
-	a.FollowMode = b.FollowMode
-	a.FollowAll = b.FollowAll
-	a.FollowSection = b.FollowSection
-	if b.ColumnDelimiter != "" {
-		a.ColumnDelimiter = b.ColumnDelimiter
+	if dst.AlternateRows {
+		src.AlternateRows = dst.AlternateRows
 	}
-	if b.WatchInterval != 0 {
-		a.WatchInterval = b.WatchInterval
+	if dst.ColumnMode {
+		src.ColumnMode = dst.ColumnMode
 	}
-	if b.MarkStyleWidth != 0 {
-		a.MarkStyleWidth = b.MarkStyleWidth
+	if dst.ColumnRainbow {
+		src.ColumnRainbow = dst.ColumnRainbow
 	}
-	if b.SectionDelimiter != "" {
-		a.SectionDelimiter = b.SectionDelimiter
+	if dst.LineNumMode {
+		src.LineNumMode = dst.LineNumMode
 	}
-	if b.SectionStartPosition != 0 {
-		a.SectionStartPosition = b.SectionStartPosition
+	if !dst.WrapMode { // Because wrap mode defaults to true.
+		src.WrapMode = dst.WrapMode
 	}
-	if b.JumpTargetString != "" {
-		a.JumpTargetString = b.JumpTargetString
+	if dst.FollowMode {
+		src.FollowMode = dst.FollowMode
 	}
-	if b.JumpTarget != 0 {
-		a.JumpTarget = b.JumpTarget
+	if dst.FollowAll {
+		src.FollowAll = dst.FollowAll
 	}
-	if b.MultiColorWords != nil {
-		a.MultiColorWords = b.MultiColorWords
+	if dst.FollowSection {
+		src.FollowSection = dst.FollowSection
 	}
-	return a
+	if dst.ColumnDelimiter != "" {
+		src.ColumnDelimiter = dst.ColumnDelimiter
+	}
+	if dst.WatchInterval != 0 {
+		src.WatchInterval = dst.WatchInterval
+	}
+	if dst.MarkStyleWidth != 0 {
+		src.MarkStyleWidth = dst.MarkStyleWidth
+	}
+	if dst.SectionDelimiter != "" {
+		src.SectionDelimiter = dst.SectionDelimiter
+	}
+	if dst.SectionStartPosition != 0 {
+		src.SectionStartPosition = dst.SectionStartPosition
+	}
+	if dst.JumpTargetString != "" {
+		src.JumpTargetString = dst.JumpTargetString
+	}
+	if dst.JumpTarget != 0 {
+		src.JumpTarget = dst.JumpTarget
+	}
+	if dst.MultiColorWords != nil {
+		src.MultiColorWords = dst.MultiColorWords
+	}
+	return src
 }
 
 // prepareView prepares when the screen size is changed.

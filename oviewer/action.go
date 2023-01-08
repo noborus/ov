@@ -332,7 +332,7 @@ func (root *Root) setViewMode(modeName string) {
 		c = root.General
 	}
 
-	root.Doc.general = overwriteGeneral(root.Doc.general, c)
+	root.Doc.general = mergeGeneral(root.Doc.general, c)
 	root.Doc.setSectionDelimiter(root.Doc.SectionDelimiter)
 	root.Doc.setMultiColorWords(root.Doc.MultiColorWords)
 	root.Doc.ClearCache()
