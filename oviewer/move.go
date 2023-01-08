@@ -372,6 +372,7 @@ func (root *Root) moveRight() {
 // columnModeX returns the actual x from m.columnNum.
 func (root *Root) columnModeX() int {
 	m := root.Doc
+	maxNum := 0
 	// m.firstLine()+10 = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+10; i++ {
 		lc, err := m.contentsLN(m.topLN+m.firstLine()+i, m.TabWidth)
@@ -379,19 +380,22 @@ func (root *Root) columnModeX() int {
 			continue
 		}
 		lineStr, posCV := ContentsToStr(lc)
-
 		idx := allIndex(lineStr, m.ColumnDelimiter)
+		maxNum = max(maxNum, len(idx))
 		if len(idx) < m.columnNum {
 			continue
 		}
+
+		sx, ex := 0, 0
 		if len(idx) == m.columnNum {
 			pos := idx[m.columnNum-1]
-			sx := posCV[pos[1]+len(m.ColumnDelimiter)]
-			return sx
+			sx = posCV[pos[1]+len(m.ColumnDelimiter)]
+			ex = posCV[len(lineStr)]
+		} else {
+			pos := idx[m.columnNum]
+			sx = posCV[pos[0]]
+			ex = posCV[pos[1]]
 		}
-		pos := idx[m.columnNum]
-		sx := posCV[pos[0]]
-		ex := posCV[pos[1]]
 		if root.vWidth > ex {
 			return 0
 		}
@@ -400,8 +404,13 @@ func (root *Root) columnModeX() int {
 		}
 		return sx
 	}
-	m.columnNum--
-	return m.x
+	if maxNum > 0 {
+		m.columnNum--
+		return m.x
+	}
+	log.Println("noidx")
+	m.columnNum = 0
+	return 0
 }
 
 // Move to the left by half a screen.
