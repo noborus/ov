@@ -188,3 +188,86 @@ func Test_containsInt(t *testing.T) {
 		})
 	}
 }
+
+func Test_toLast(t *testing.T) {
+	type args struct {
+		list []string
+		s    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test1",
+			args: args{
+				list: []string{"a", "b", "c"},
+				s:    "a",
+			},
+			want: []string{"b", "c", "a"},
+		},
+		{
+			name: "testAdd",
+			args: args{
+				list: []string{"a", "b", "c"},
+				s:    "x",
+			},
+			want: []string{"a", "b", "c", "x"},
+		},
+		{
+			name: "testNoAdd",
+			args: args{
+				list: []string{"a", "b", "c"},
+				s:    "",
+			},
+			want: []string{"a", "b", "c"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toLast(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("toLast() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_allIndex(t *testing.T) {
+	type args struct {
+		s      string
+		substr string
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:      "a,b,c",
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testNone",
+			args: args{
+				s:      "a,b,c",
+				substr: "@",
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("allIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

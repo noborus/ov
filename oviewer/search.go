@@ -276,6 +276,20 @@ func (root *Root) searchQuit() {
 	root.postEvent(ev)
 }
 
+// incrementalSearch performs incremental search by setting and input mode.
+func (root *Root) incrementalSearch(ctx context.Context) {
+	if !root.Config.Incsearch {
+		return
+	}
+
+	switch root.input.Event.Mode() {
+	case Search:
+		root.incSearch(ctx, true, root.startSearchLN())
+	case Backsearch:
+		root.incSearch(ctx, false, root.startSearchLN())
+	}
+}
+
 // incSearch implements incremental forward/back search.
 func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 	root.Doc.topLN = root.returnStartPosition()
@@ -326,14 +340,19 @@ func (root *Root) returnStartPosition() int {
 	return start
 }
 
+// startSearchLN returns the start position of the search.
+func (root *Root) startSearchLN() int {
+	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	if l.number-root.Doc.topLN > root.Doc.topLN {
+		return 0
+	}
+	return l.number
+}
+
 // firstSearch performs the first search immediately after the input.
 func (root *Root) firstSearch(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	if l.number-root.Doc.topLN > root.Doc.topLN {
-		l.number = 0
-	}
-	root.searchMove(ctx, true, l.number, searcher)
+	root.searchMove(ctx, true, root.startSearchLN(), searcher)
 }
 
 // nextSearch performs the next search.
