@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"log"
-	"strings"
 )
 
 // Go to the top line.
@@ -380,18 +379,19 @@ func (root *Root) columnModeX() int {
 			continue
 		}
 		lineStr, posCV := ContentsToStr(lc)
-		// Skip lines that do not contain a delimiter.
-		if !strings.Contains(lineStr, m.ColumnDelimiter) {
+
+		idx := allIndex(lineStr, m.ColumnDelimiter)
+		if len(idx) < m.columnNum {
 			continue
 		}
-
-		start, end := rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
-		if start < 0 || end < 0 || (start == len(lineStr)) {
-			m.columnNum--
-			start, end = rangePosition(lineStr, m.ColumnDelimiter, m.columnNum)
+		if len(idx) == m.columnNum {
+			pos := idx[m.columnNum-1]
+			sx := posCV[pos[1]+len(m.ColumnDelimiter)]
+			return sx
 		}
-		sx := posCV[start]
-		ex := posCV[end] + 10
+		pos := idx[m.columnNum]
+		sx := posCV[pos[0]]
+		ex := posCV[pos[1]]
 		if root.vWidth > ex {
 			return 0
 		}
@@ -400,8 +400,8 @@ func (root *Root) columnModeX() int {
 		}
 		return sx
 	}
-	m.columnNum = 0
-	return 0
+	m.columnNum--
+	return m.x
 }
 
 // Move to the left by half a screen.

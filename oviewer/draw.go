@@ -271,28 +271,29 @@ func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 		return
 	}
 
-	delm := root.Doc.ColumnDelimiter
 	numC := len(root.StyleColumnRainbow)
+	delm := root.Doc.ColumnDelimiter
 	c := 0
-	offset := 0
-	for i := strings.Index(str, delm); i >= 0; i = strings.Index(str[offset:], delm) {
+	start := 0
+	idxs := allIndex(str, delm)
+	for _, idx := range idxs {
 		if root.Doc.ColumnRainbow {
-			RangeStyle(lc, posCV[offset], posCV[offset+i], root.StyleColumnRainbow[c%numC])
+			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnRainbow[c%numC])
 		}
 		if c == root.Doc.columnNum {
-			RangeStyle(lc, posCV[offset], posCV[offset+i], root.StyleColumnHighlight)
+			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnHighlight)
 		}
-		offset = offset + i + len(delm)
-		if offset != 1 {
+		start = idx[1]
+		if start != 1 {
 			c++
 		}
 	}
-	if offset < len(str) {
+	if start < len(str) {
 		if root.Doc.ColumnRainbow {
-			RangeStyle(lc, posCV[offset], posCV[len(str)], root.StyleColumnRainbow[c%numC])
+			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnRainbow[c%numC])
 		}
-		if c == root.Doc.columnNum && offset != 0 {
-			RangeStyle(lc, posCV[offset], posCV[len(str)], root.StyleColumnHighlight)
+		if c == root.Doc.columnNum && start != 0 {
+			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnHighlight)
 		}
 	}
 }
@@ -391,23 +392,27 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 func (root *Root) inputLeftStatus() (contents, int) {
 	input := root.input
-	mode := input.Event.Mode()
-	searchMode := ""
-	if mode == Search || mode == Backsearch {
-		if root.Config.RegexpSearch {
-			searchMode += "(R)"
-		}
-		if root.Config.Incsearch {
-			searchMode += "(I)"
-		}
-		if root.CaseSensitive {
-			searchMode += "(Aa)"
-		}
-	}
-	p := searchMode + input.Event.Prompt()
+	p := root.inputOpts() + input.Event.Prompt()
 	leftStatus := p + input.value
 	leftContents := StrToContents(leftStatus, -1)
 	return leftContents, len(p) + input.cursorX
+}
+
+func (root *Root) inputOpts() string {
+	opt := ""
+	switch root.input.Event.Mode() {
+	case Search, Backsearch:
+		if root.Config.RegexpSearch {
+			opt += "(R)"
+		}
+		if root.Config.Incsearch {
+			opt += "(I)"
+		}
+		if root.Config.CaseSensitive {
+			opt += "(Aa)"
+		}
+	}
+	return opt
 }
 
 func (root *Root) rightStatus() contents {

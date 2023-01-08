@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"strings"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -49,4 +51,16 @@ func toLast(list []string, s string) []string {
 	list = remove(list, s)
 	list = append(list, s)
 	return list
+}
+
+// allIndex returns all matching string positions.
+func allIndex(s string, substr string) [][]int {
+	var result [][]int
+	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
+		s = s[pos+len(substr):]
+		result = append(result, []int{pos + offSet, pos + offSet + len(substr)})
+		offSet += pos + len(substr)
+		pos = strings.Index(s, substr)
+	}
+	return result
 }

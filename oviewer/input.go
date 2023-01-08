@@ -77,7 +77,8 @@ func NewInput() *Input {
 func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
 	// Not confirmed or canceled.
-	if ok := root.inputKeyEvent(ev); !ok {
+	evKey := root.inputKeyConfig.Capture(ev)
+	if ok := root.input.keyEvent(evKey); !ok {
 		root.incrementalSearch(ctx)
 		return
 	}
@@ -92,28 +93,8 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	input.Event = normal()
 }
 
-// incrementalSearch performs incremental search by setting and input mode.
-func (root *Root) incrementalSearch(ctx context.Context) {
-	if !root.Config.Incsearch {
-		return
-	}
-
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
-	if l.number-root.Doc.topLN > root.Doc.topLN {
-		l.number = 0
-	}
-	switch root.input.Event.Mode() {
-	case Search:
-		root.incSearch(ctx, true, l.number)
-	case Backsearch:
-		root.incSearch(ctx, false, l.number)
-	}
-}
-
-// inputKeyEvent handles the keystrokes of the input.
-func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
-	input := root.input
-	evKey := root.inputKeyConfig.Capture(ev)
+// keyEvent handles the keystrokes of the input.
+func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	if evKey == nil {
 		return false
 	}
@@ -189,7 +170,7 @@ func (root *Root) inputKeyEvent(ev *tcell.EventKey) bool {
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)
 		input.value = string(runes[:pos])
-		r := ev.Rune()
+		r := evKey.Rune()
 		input.value += string(r)
 		input.value += string(runes[pos:])
 		input.cursorX += runewidth.RuneWidth(r)
