@@ -380,19 +380,19 @@ func (root *Root) columnModeX() int {
 			continue
 		}
 		lineStr, posCV := ContentsToStr(lc)
-		idx := allIndex(lineStr, m.ColumnDelimiter)
-		maxNum = max(maxNum, len(idx))
-		if len(idx) < m.columnNum {
+		idxs := allIndex(lineStr, m.ColumnDelimiter)
+		maxNum = max(maxNum, len(idxs))
+		if len(idxs) < m.columnNum {
 			continue
 		}
 
 		sx, ex := 0, 0
-		if len(idx) == m.columnNum {
-			pos := idx[m.columnNum-1]
+		if len(idxs) == m.columnNum {
+			pos := idxs[m.columnNum-1]
 			sx = posCV[pos[1]+len(m.ColumnDelimiter)]
 			ex = posCV[len(lineStr)]
 		} else {
-			pos := idx[m.columnNum]
+			pos := idxs[m.columnNum]
 			sx = posCV[pos[0]]
 			ex = posCV[pos[1]]
 		}

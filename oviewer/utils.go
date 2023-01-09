@@ -55,6 +55,9 @@ func toLast(list []string, s string) []string {
 
 // allIndex returns all matching string positions.
 func allIndex(s string, substr string) [][]int {
+	if len(substr) == 0 {
+		return nil
+	}
 	var result [][]int
 	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
 		s = s[pos+len(substr):]
