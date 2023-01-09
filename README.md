@@ -59,19 +59,21 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
-* Supports fixed [header](#Header) line display (both wrap/nowrap).
-* Supports [column mode](#ColumnMode), which recognizes columns by delimiter.
-* Supports section-by-section movement, splitting [sections](#Section) by delimiter.
-* Dynamic [wrap/nowrap](#WrapNoWrap) switchable.
+* Supports fixed [header](#header) line display (both wrap/nowrap).
+* Supports [column mode](#column-mode), which recognizes columns by delimiter.
+* Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
+* Supports section-by-section movement, splitting [sections](#section) by delimiter.
+* Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
 * Supports alternating row styling.
-* Shortcut keys are [customizable](#Keybindingcustomization).
-* The style of the effect is [customizable](#Stylecustomization).
-* Supports [follow-mode](#Followmode) (like tail -f).
-* Supports [follow-section](#Followsectionmode), which is displayed when the section is updated.
-* Supports following multiple files and switching when updated([follow-all](#Followallmode)).
-* Supports the [execution](#Execmode) of commands that toggle both stdout and stder for display.
-* Supports [watch](#Watch) mode, which reads files on a regular basis.
-* Supports incremental [search](#Search) and regular expression search.
+* Shortcut keys are [customizable](#key-binding-customization).
+* The style of the effect is [customizable](#style-customization).
+* Supports [follow-mode](#follow-mode) (like tail -f).
+* Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
+* Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
+* Supports the [execution](#exec-mode) of commands that toggle both stdout and stder for display.
+* Supports [watch](#watch) mode, which reads files on a regular basis.
+* Supports incremental [search](#search) and regular expression search.
+* Supports [multi-color](#multi-color-highlight) to color each after multiple.
 * Better support for Unicode and East Asian Width.
 * Support for compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
@@ -117,7 +119,7 @@ pkg install ov
 
 You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
 
-AUR package: https://aur.archlinux.org/packages/ov-bin
+AUR package: [https://aur.archlinux.org/packages/ov-bin](https://aur.archlinux.org/packages/ov-bin)
 
 ###  2.7. <a name='nix-(nixos,-linux,-or-macos)'></a>nix (nixOS, Linux, or macOS)
 
@@ -263,7 +265,7 @@ After startup, toggle display with wrap (default key `w`).
 ###  3.7. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) option
-The style can be set with [Style customization](#Stylecustomization).
+The style can be set with [Style customization](#style-customization).
 
 ```console
 ov --alternate-rows test.csv
@@ -312,7 +314,7 @@ The following example is displayed from the header (#) at the bottom.
 ov --section-delimiter "^#" --follow-section README.md
 ```
 
- [Watch](#Watch) mode is a mode in which `--follow-section` and
+ [Watch](#watch) mode is a mode in which `--follow-section` and
  `--section-delimiter "^\f"` are automatically set.
 
 ###  3.12. <a name='exec-mode'></a>Exec mode
