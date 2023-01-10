@@ -13,6 +13,7 @@ ov is a terminal pager.
 
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
+  * 1.1. [Not supported](#not-supported)
 * 2. [Install](#install)
   * 2.1. [deb package](#deb-package)
   * 2.2. [rpm package](#rpm-package)
@@ -75,8 +76,15 @@ ov is a terminal pager.
 * Supports incremental [search](#search) and regular expression search.
 * Supports [multi-color](#multi-color-highlight) to color each after multiple.
 * Better support for Unicode and East Asian Width.
-* Support for compressed files (gzip, bzip2, zstd, lz4, xz).
+* Supports compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
+  
+###  1.1. <a name='not-supported'></a>Not supported
+
+* Does not support syntax highlighting for file types (source code, markdown, etc.)
+* Does not support Filter function (`&pattern` equivalent of `less`)
+* Does not support files that are too large to fit in memory
+* Does not support follow by file name when the file descriptor changes(equivalent to `tail -F`)
 
 ##  2. <a name='install'></a>Install
 
