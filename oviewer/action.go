@@ -156,7 +156,7 @@ func (root *Root) goLine(input string) {
 			root.setMessage(ErrInvalidNumber.Error())
 			return
 		}
-		lN = root.moveLine(lN - 1)
+		lN = root.Doc.moveLine(lN - 1)
 		root.setMessagef("Moved to line %d", lN+1)
 		return
 	}
@@ -179,7 +179,7 @@ func (root *Root) goLine(input string) {
 
 // goLineNumber moves to the specified line number.
 func (root *Root) goLineNumber(ln int) {
-	ln = root.moveLine(ln - root.Doc.firstLine())
+	ln = root.Doc.moveLine(ln - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", ln+1)
 }
 
@@ -539,7 +539,7 @@ func (root *Root) tailSection() {
 	moved := root.Doc.topLN - root.Doc.lastSectionPosNum
 	root.lastSection()
 	if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
-		root.moveLine(root.Doc.topLN + moved)
+		root.Doc.moveLine(root.Doc.topLN + moved)
 	}
 	root.Doc.lastSectionPosNum = root.Doc.topLN
 }

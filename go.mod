@@ -9,16 +9,16 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.15.13
+	github.com/klauspost/compress v1.15.14
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.4.3
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/exp v0.0.0-20221230185412-738e83a70c30
+	golang.org/x/exp v0.0.0-20230108222341-4b8118a2686a
 	golang.org/x/sync v0.1.0
-	golang.org/x/term v0.3.0
+	golang.org/x/term v0.4.0
 )
 
 require (
@@ -41,8 +41,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
