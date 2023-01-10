@@ -5,12 +5,26 @@ import (
 	"log"
 )
 
+// moveLine moves to the specified line.
+func (m *Document) moveLine(lN int) int {
+	lN = min(lN, m.BufEndNum())
+	m.topLN = lN
+	m.topLX = 0
+	return lN
+}
+
+// moveTop moves to the top.
+func (m *Document) moveTop() {
+	m.moveLine(0)
+}
+
 // Go to the top line.
 // Called from a EventKey.
 func (root *Root) moveTop() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
-	root.moveLine(0)
+
+	root.Doc.moveTop()
 }
 
 // Go to the bottom line.
@@ -18,22 +32,13 @@ func (root *Root) moveTop() {
 func (root *Root) moveBottom() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
-	tx, tn := root.bottomLineNum(root.Doc.BufEndNum())
-	root.Doc.topLN = tn
-	root.Doc.topLX = tx
-}
 
-// Move to the specified line.
-func (root *Root) moveLine(lN int) int {
-	lN = min(lN, root.Doc.BufEndNum())
-	root.Doc.topLN = lN
-	root.Doc.topLX = 0
-	return lN
+	root.Doc.topLX, root.Doc.topLN = root.bottomLineNum(root.Doc.BufEndNum())
 }
 
 // Move to the nth wrapping line of the specified line.
 func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
-	lN = root.moveLine(lN)
+	lN = root.Doc.moveLine(lN)
 	if !root.Doc.WrapMode {
 		return lN, 0
 	}
@@ -57,10 +62,10 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 func (root *Root) movePgUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	root.moveNumUp(root.statusPos - root.headerLen)
 	if root.Doc.topLN < 0 {
-		root.Doc.topLN = 0
-		root.Doc.topLX = 0
+		root.Doc.moveTop()
 	}
 }
 
@@ -69,6 +74,7 @@ func (root *Root) movePgUp() {
 func (root *Root) movePgDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	m := root.Doc
 	y := m.bottomLN - m.firstLine()
 	x := m.bottomLX
@@ -77,8 +83,8 @@ func (root *Root) movePgDn() {
 
 func (root *Root) limitMoveDown(x int, y int) {
 	m := root.Doc
-	if y+root.vHight >= root.Doc.BufEndNum()-root.Doc.SkipLines {
-		tx, tn := root.bottomLineNum(root.Doc.BufEndNum())
+	if y+root.vHight >= m.BufEndNum()-m.SkipLines {
+		tx, tn := root.bottomLineNum(m.BufEndNum())
 		if y > tn || (y == tn && x > tx) {
 			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
 				m.topLN = tn
@@ -96,10 +102,10 @@ func (root *Root) limitMoveDown(x int, y int) {
 func (root *Root) moveHfUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	root.moveNumUp((root.statusPos - root.headerLen) / 2)
 	if root.Doc.topLN < 0 {
-		root.Doc.topLN = 0
-		root.Doc.topLX = 0
+		root.Doc.moveTop()
 	}
 }
 
@@ -108,6 +114,7 @@ func (root *Root) moveHfUp() {
 func (root *Root) moveHfDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	root.moveNumDown((root.statusPos - root.headerLen) / 2)
 }
 
@@ -118,8 +125,7 @@ func (root *Root) numOfWrap(lX int, lY int) int {
 	if len(listX) == 0 {
 		return 0
 	}
-	wrap := numOfSlice(listX, lX)
-	return wrap
+	return numOfSlice(listX, lX)
 }
 
 // numOfSlice returns what number x is in slice.
@@ -144,15 +150,16 @@ func numOfReverseSlice(listX []int, x int) int {
 
 // Moves up by the specified number of y.
 func (root *Root) moveNumUp(moveY int) {
-	if !root.Doc.WrapMode {
-		root.Doc.topLN -= moveY
+	m := root.Doc
+	if !m.WrapMode {
+		m.topLN -= moveY
 		return
 	}
 
 	// WrapMode
-	num := root.Doc.topLN + root.Doc.firstLine()
-	root.Doc.topLX, num = root.findNumUp(root.Doc.topLX, num, moveY)
-	root.Doc.topLN = num - root.Doc.firstLine()
+	num := m.topLN + m.firstLine()
+	m.topLX, num = root.findNumUp(m.topLX, num, moveY)
+	m.topLN = num - m.firstLine()
 }
 
 // Moves down by the specified number of y.
@@ -272,9 +279,10 @@ func (root *Root) nextSction() {
 
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	m := root.Doc
-	num := m.topLN + m.firstLine() + (1 - root.Doc.SectionStartPosition)
-	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	num := m.topLN + m.firstLine() + (1 - m.SectionStartPosition)
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
 	n, err := m.SearchLine(ctx, searcher, num)
@@ -284,7 +292,7 @@ func (root *Root) nextSction() {
 		root.movePgDn()
 		return
 	}
-	root.moveLine((n - root.Doc.firstLine()) + root.Doc.SectionStartPosition)
+	root.Doc.moveLine((n - m.firstLine()) + m.SectionStartPosition)
 }
 
 func (root *Root) prevSection() {
@@ -293,21 +301,23 @@ func (root *Root) prevSection() {
 		root.movePgUp()
 		return
 	}
+
 	root.resetSelect()
 	defer root.releaseEventBuffer()
+
 	m := root.Doc
-	num := m.topLN + m.firstLine() - (1 + root.Doc.SectionStartPosition)
-	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	num := m.topLN + m.firstLine() - (1 + m.SectionStartPosition)
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
 	n, err := m.BackSearchLine(ctx, searcher, num)
 	if err != nil {
-		root.moveLine(0)
+		m.moveTop()
 		return
 	}
-	n = (n - root.Doc.firstLine()) + root.Doc.SectionStartPosition
+	n = (n - m.firstLine()) + m.SectionStartPosition
 	n = max(n, 0)
-	root.moveLine(n)
+	m.moveLine(n)
 }
 
 func (root *Root) lastSection() {
@@ -316,7 +326,7 @@ func (root *Root) lastSection() {
 	m := root.Doc
 	// +1 to avoid if the bottom line is a session delimiter.
 	num := m.BufEndNum() - 2
-	searcher := NewSearcher(root.Doc.SectionDelimiter, root.Doc.SectionDelimiterReg, true, true)
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
 	n, err := m.BackSearchLine(ctx, searcher, num)
@@ -324,8 +334,8 @@ func (root *Root) lastSection() {
 		log.Printf("last section:%v", err)
 		return
 	}
-	n = (n - root.Doc.firstLine()) + root.Doc.SectionStartPosition
-	root.moveLine(n)
+	n = (n - m.firstLine()) + m.SectionStartPosition
+	m.moveLine(n)
 }
 
 // Move to the left.
@@ -408,7 +418,6 @@ func (root *Root) columnModeX() int {
 		m.columnNum--
 		return m.x
 	}
-	log.Println("noidx")
 	m.columnNum = 0
 	return 0
 }
