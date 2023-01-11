@@ -113,7 +113,7 @@ func NewDocument() (*Document, error) {
 			ColumnDelimiter: "",
 			TabWidth:        8,
 			MarkStyleWidth:  1,
-			PlainMode:       true,
+			PlainMode:       false,
 		},
 		lastContentsNum: -1,
 		seekable:        true,
