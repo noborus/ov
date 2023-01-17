@@ -267,20 +267,21 @@ func (root *Root) drawLineNumber(lY int, y int) {
 
 // columnHighlight applies the style of the column highlight.
 func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
-	if !root.Doc.ColumnMode {
+	m := root.Doc
+	if !m.ColumnMode {
 		return
 	}
 
 	numC := len(root.StyleColumnRainbow)
-	delm := root.Doc.ColumnDelimiter
+	delm := m.ColumnDelimiter
 	c := 0
 	start := 0
 	idxs := allIndex(str, delm)
 	for _, idx := range idxs {
-		if root.Doc.ColumnRainbow {
+		if m.ColumnRainbow {
 			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnRainbow[c%numC])
 		}
-		if c == root.Doc.columnNum {
+		if c == m.columnCursor {
 			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnHighlight)
 		}
 		start = idx[1]
@@ -289,10 +290,10 @@ func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 		}
 	}
 	if start < len(str) {
-		if root.Doc.ColumnRainbow {
+		if m.ColumnRainbow {
 			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnRainbow[c%numC])
 		}
-		if c == root.Doc.columnNum && start != 0 {
+		if c == m.columnCursor && start != 0 {
 			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnHighlight)
 		}
 	}
