@@ -317,21 +317,20 @@ func (k KeyBind) String() string {
 // GetKeyBinds returns the current key mapping.
 func GetKeyBinds(config Config) KeyBind {
 	keyBind := make(map[string][]string)
+
 	if strings.ToLower(config.DefaultKeyBind) != "disable" {
 		keyBind = defaultKeyBinds()
 	}
-	keyBind = updateKeyBind(keyBind, config.Keybind)
-	return keyBind
-}
 
-func updateKeyBind(keyBind KeyBind, bind KeyBind) KeyBind {
-	for k, v := range bind {
+	// Overwrite with config file.
+	for k, v := range config.Keybind {
 		keyBind[k] = v
 	}
 	return keyBind
 }
 
-func (root *Root) setKeyBind(keyBind KeyBind) error {
+// setHandlers sets keys to action handlers.
+func (root *Root) setHandlers(keyBind KeyBind) error {
 	c := root.keyConfig
 	in := root.inputKeyConfig
 
@@ -356,6 +355,7 @@ func (root *Root) setKeyBind(keyBind KeyBind) error {
 	return nil
 }
 
+// setHandler sets multiple keys in one action handler.
 func setHandler(c *cbind.Configuration, name string, keys []string, handler func()) error {
 	for _, k := range keys {
 		mod, key, ch, err := cbind.Decode(k)
@@ -375,6 +375,7 @@ func setHandler(c *cbind.Configuration, name string, keys []string, handler func
 	return nil
 }
 
+// wrapEventHandler is a wrapper for matching func types.
 func wrapEventHandler(f func()) func(_ *tcell.EventKey) *tcell.EventKey {
 	return func(_ *tcell.EventKey) *tcell.EventKey {
 		f()
@@ -382,6 +383,7 @@ func wrapEventHandler(f func()) func(_ *tcell.EventKey) *tcell.EventKey {
 	}
 }
 
+// keyCapture does the actual key action.
 func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	root.keyConfig.Capture(ev)
 	return true

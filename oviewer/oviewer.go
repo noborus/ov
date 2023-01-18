@@ -472,7 +472,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 
 func (root *Root) setKeyConfig() (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config)
-	if err := root.setKeyBind(keyBind); err != nil {
+	if err := root.setHandlers(keyBind); err != nil {
 		return nil, err
 	}
 
