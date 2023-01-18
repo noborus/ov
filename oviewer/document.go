@@ -86,8 +86,8 @@ type Document struct {
 
 	// x is the starting position of the current x.
 	x int
-	// columnNum is the number of columns.
-	columnNum int
+	// columnCursor is the number of columns.
+	columnCursor int
 
 	// marked is a list of marked line numbers.
 	marked      []int

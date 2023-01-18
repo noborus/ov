@@ -14,12 +14,13 @@ import (
 
 // toggleWrapMode toggles wrapMode each time it is called.
 func (root *Root) toggleWrapMode() {
-	root.Doc.WrapMode = !root.Doc.WrapMode
-	root.Doc.x = 0
-	if root.Doc.ColumnMode {
-		root.Doc.x = root.columnModeX()
+	m := root.Doc
+	m.WrapMode = !m.WrapMode
+	m.x = 0
+	if m.ColumnMode {
+		m.columnCursor, m.x = root.columnModeX(m.columnCursor)
 	}
-	root.setMessagef("Set WrapMode %t", root.Doc.WrapMode)
+	root.setMessagef("Set WrapMode %t", m.WrapMode)
 }
 
 // toggleColumnMode toggles ColumnMode each time it is called.

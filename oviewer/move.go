@@ -346,9 +346,8 @@ func (root *Root) moveLeft() {
 
 	m := root.Doc
 	if m.ColumnMode {
-		if m.columnNum > 0 {
-			m.columnNum--
-			m.x = root.columnModeX()
+		if m.columnCursor > 0 {
+			m.columnCursor, m.x = root.columnModeX(m.columnCursor - 1)
 		}
 		return
 	}
@@ -369,8 +368,7 @@ func (root *Root) moveRight() {
 
 	m := root.Doc
 	if m.ColumnMode {
-		m.columnNum++
-		m.x = root.columnModeX()
+		m.columnCursor, m.x = root.columnModeX(m.columnCursor + 1)
 		return
 	}
 	if m.WrapMode {
@@ -379,9 +377,13 @@ func (root *Root) moveRight() {
 	m.x++
 }
 
-// columnModeX returns the actual x from m.columnNum.
-func (root *Root) columnModeX() int {
+// columnModeX returns the actual x from m.columnCursor.
+func (root *Root) columnModeX(cursor int) (int, int) {
 	m := root.Doc
+	if cursor <= 0 {
+		return cursor, 0
+	}
+
 	maxNum := 0
 	// m.firstLine()+10 = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+10; i++ {
@@ -392,34 +394,34 @@ func (root *Root) columnModeX() int {
 		lineStr, posCV := ContentsToStr(lc)
 		idxs := allIndex(lineStr, m.ColumnDelimiter)
 		maxNum = max(maxNum, len(idxs))
-		if len(idxs) < m.columnNum {
+		if len(idxs) < cursor {
 			continue
 		}
 
 		sx, ex := 0, 0
-		if len(idxs) == m.columnNum {
-			pos := idxs[m.columnNum-1]
+		if len(idxs) == cursor {
+			// right edge.
+			pos := idxs[cursor-1]
 			sx = posCV[pos[1]+len(m.ColumnDelimiter)]
 			ex = posCV[len(lineStr)]
 		} else {
-			pos := idxs[m.columnNum]
+			pos := idxs[cursor]
 			sx = posCV[pos[0]]
 			ex = posCV[pos[1]]
 		}
-		if root.vWidth > ex {
-			return 0
+		if root.vWidth > ex { // don't scroll.
+			return cursor, 0
 		}
 		if ex-root.vWidth > 0 {
-			return ex - root.vWidth
+			return cursor, ex - root.vWidth
 		}
-		return sx
+		return cursor, sx
 	}
+
 	if maxNum > 0 {
-		m.columnNum--
-		return m.x
+		return cursor - 1, m.x
 	}
-	m.columnNum = 0
-	return 0
+	return 0, 0
 }
 
 // Move to the left by half a screen.
