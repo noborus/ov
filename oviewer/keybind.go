@@ -110,7 +110,7 @@ func (root *Root) handlers() map[string]func() {
 		actionMoveHfRight:    root.moveHfRight,
 		actionSection:        root.setSectionDelimiterMode,
 		actionSectionStart:   root.setSectionStartMode,
-		actionNextSection:    root.nextSction,
+		actionNextSection:    root.nextSection,
 		actionPrevSection:    root.prevSection,
 		actionLastSection:    root.lastSection,
 		actionMoveMark:       root.markNext,

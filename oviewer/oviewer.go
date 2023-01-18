@@ -309,6 +309,10 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
+	// ErrNoColumn indicates that cusror specified a nonexistent column.
+	ErrNoColumn = errors.New("no column")
+	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
+	ErrNoDelimiter = errors.New("no delimiter")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
