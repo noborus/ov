@@ -270,7 +270,8 @@ func (root *Root) moveDown() {
 	root.limitMoveDown(m.topLX, num)
 }
 
-func (root *Root) nextSction() {
+// nextSection moves down to the next section's delimiter.
+func (root *Root) nextSection() {
 	// Move by page, if there is no section delimiter.
 	if root.Doc.SectionDelimiter == "" {
 		root.movePgDn()
@@ -295,6 +296,7 @@ func (root *Root) nextSction() {
 	root.Doc.moveLine((n - m.firstLine()) + m.SectionStartPosition)
 }
 
+// prevSection moves up to the delimiter of the previous section.
 func (root *Root) prevSection() {
 	// Move by page, if there is no section delimiter.
 	if root.Doc.SectionDelimiter == "" {
@@ -320,6 +322,7 @@ func (root *Root) prevSection() {
 	m.moveLine(n)
 }
 
+// lastSection moves to the last section.
 func (root *Root) lastSection() {
 	root.resetSelect()
 
@@ -345,18 +348,26 @@ func (root *Root) moveLeft() {
 	defer root.releaseEventBuffer()
 
 	m := root.Doc
-	if m.ColumnMode {
-		if m.columnCursor > 0 {
-			m.columnCursor, m.x = root.columnModeX(m.columnCursor - 1)
+	if !m.ColumnMode {
+		if m.WrapMode {
+			return
+		}
+		m.x--
+		if m.x < root.minStartX {
+			m.x = root.minStartX
 		}
 		return
 	}
-	if m.WrapMode {
-		return
-	}
-	m.x--
-	if m.x < root.minStartX {
-		m.x = root.minStartX
+
+	if m.columnCursor > 0 {
+		cursor := m.columnCursor - 1
+		x, err := root.columnX(cursor)
+		if err != nil {
+			root.debugMessage(err.Error())
+			return
+		}
+		m.x = x
+		m.columnCursor = cursor
 	}
 }
 
@@ -367,24 +378,32 @@ func (root *Root) moveRight() {
 	defer root.releaseEventBuffer()
 
 	m := root.Doc
-	if m.ColumnMode {
-		m.columnCursor, m.x = root.columnModeX(m.columnCursor + 1)
+	if !m.ColumnMode {
+		if m.WrapMode {
+			return
+		}
+		m.x++
 		return
 	}
-	if m.WrapMode {
+
+	cursor := m.columnCursor + 1
+	x, err := root.columnX(cursor)
+	if err != nil {
+		root.debugMessage(err.Error())
 		return
 	}
-	m.x++
+	m.x = x
+	m.columnCursor = cursor
 }
 
-// columnModeX returns the actual x from m.columnCursor.
-func (root *Root) columnModeX(cursor int) (int, int) {
+// columnX returns the columnCursor and actual x from columnCursor.
+func (root *Root) columnX(cursor int) (int, error) {
 	m := root.Doc
 	if cursor <= 0 {
-		return cursor, 0
+		return 0, nil
 	}
 
-	maxNum := 0
+	maxCursor := 0
 	// m.firstLine()+10 = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+10; i++ {
 		lc, err := m.contentsLN(m.topLN+m.firstLine()+i, m.TabWidth)
@@ -393,7 +412,7 @@ func (root *Root) columnModeX(cursor int) (int, int) {
 		}
 		lineStr, posCV := ContentsToStr(lc)
 		idxs := allIndex(lineStr, m.ColumnDelimiter)
-		maxNum = max(maxNum, len(idxs))
+		maxCursor = max(maxCursor, len(idxs))
 		if len(idxs) < cursor {
 			continue
 		}
@@ -410,18 +429,18 @@ func (root *Root) columnModeX(cursor int) (int, int) {
 			ex = posCV[pos[1]]
 		}
 		if root.vWidth > ex { // don't scroll.
-			return cursor, 0
+			return 0, nil
 		}
 		if ex-root.vWidth > 0 {
-			return cursor, ex - root.vWidth
+			return ex - root.vWidth, nil
 		}
-		return cursor, sx
+		return sx, nil
 	}
 
-	if maxNum > 0 {
-		return cursor - 1, m.x
+	if maxCursor > 0 {
+		return m.x, ErrNoColumn
 	}
-	return 0, 0
+	return 0, ErrNoDelimiter
 }
 
 // Move to the left by half a screen.
