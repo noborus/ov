@@ -150,7 +150,9 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	case tcell.KeyRight:
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)
-		input.cursorX = runeWidth(string(runes[:pos+1]))
+		if len(runes) > pos {
+			input.cursorX = runeWidth(string(runes[:pos+1]))
+		}
 	case tcell.KeyUp:
 		input.value = input.Event.Up(input.value)
 		runes := []rune(input.value)
