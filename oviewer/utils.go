@@ -32,14 +32,36 @@ func remove[T comparable](list []T, s T) []T {
 	return list
 }
 
-// containsInt returns true if the specified int is included.
-func containsInt(list []int, e int) bool {
+// contains returns true if the specified value is included.
+func contains[T comparable](list []T, e T) bool {
 	for _, n := range list {
 		if e == n {
 			return true
 		}
 	}
 	return false
+}
+
+// toAddTop adds the string if it is not in list.
+func toAddTop(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+	if !contains(list, s) {
+		list = append([]string{s}, list...)
+	}
+	return list
+}
+
+// toAddLast adds a string to the end if it is not in list.
+func toAddLast(list []string, s string) []string {
+	if len(s) == 0 {
+		return list
+	}
+	if !contains(list, s) {
+		list = append(list, s)
+	}
+	return list
 }
 
 // toLast toLast moves the specified string to the end.

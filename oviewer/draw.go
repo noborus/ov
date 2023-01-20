@@ -328,7 +328,7 @@ func (root *Root) lineStyle(y int, s OVStyle) {
 // markStyle applies the style from the left edge to the specified width.
 func (root *Root) markStyle(lY int, y int, width int) {
 	m := root.Doc
-	if containsInt(m.marked, lY) {
+	if contains(m.marked, lY) {
 		for x := 0; x < width; x++ {
 			r, c, style, _ := root.GetContent(x, y)
 			root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
