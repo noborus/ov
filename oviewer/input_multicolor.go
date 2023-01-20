@@ -53,10 +53,12 @@ func (e *eventMultiColor) Confirm(str string) tcell.Event {
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventMultiColor) Up(str string) string {
+	e.clist.list = toAddLast(e.clist.list, str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventMultiColor) Down(str string) string {
+	e.clist.list = toAddTop(e.clist.list, str)
 	return e.clist.down()
 }

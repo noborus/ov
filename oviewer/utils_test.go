@@ -182,8 +182,44 @@ func Test_containsInt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := containsInt(tt.args.list, tt.args.e); got != tt.want {
+			if got := contains(tt.args.list, tt.args.e); got != tt.want {
 				t.Errorf("containsInt() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_toTop(t *testing.T) {
+	type args struct {
+		list []string
+		s    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test1",
+			args: args{
+				list: []string{"a", "b", "c"},
+				s:    "f",
+			},
+			want: []string{"f", "a", "b", "c"},
+		},
+		{
+			name: "test2",
+			args: args{
+				list: []string{},
+				s:    "f",
+			},
+			want: []string{"f"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toAddTop(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("toTop() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -275,6 +311,38 @@ func Test_allIndex(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := allIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("allIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_remove(t *testing.T) {
+	type args struct {
+		list []string
+		s    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test1",
+			args: args{
+				list: []string{
+					"a",
+				},
+				s: "b",
+			},
+			want: []string{
+				"a",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
 		})
 	}

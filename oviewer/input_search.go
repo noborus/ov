@@ -55,11 +55,13 @@ func (e *eventInputSearch) Confirm(str string) tcell.Event {
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventInputSearch) Up(str string) string {
+	e.clist.list = toAddLast(e.clist.list, str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventInputSearch) Down(str string) string {
+	e.clist.list = toAddTop(e.clist.list, str)
 	return e.clist.down()
 }
 
@@ -104,10 +106,12 @@ func (e *eventInputBackSearch) Confirm(str string) tcell.Event {
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventInputBackSearch) Up(str string) string {
+	e.clist.list = toAddLast(e.clist.list, str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventInputBackSearch) Down(str string) string {
+	e.clist.list = toAddTop(e.clist.list, str)
 	return e.clist.down()
 }
