@@ -21,18 +21,12 @@ func (m *Document) moveTop() {
 // Go to the top line.
 // Called from a EventKey.
 func (root *Root) moveTop() {
-	root.resetSelect()
-	defer root.releaseEventBuffer()
-
 	root.Doc.moveTop()
 }
 
 // Go to the bottom line.
 // Called from a EventKey.
 func (root *Root) moveBottom() {
-	root.resetSelect()
-	defer root.releaseEventBuffer()
-
 	root.Doc.topLX, root.Doc.topLN = root.bottomLineNum(root.Doc.BufEndNum())
 }
 
