@@ -511,3 +511,100 @@ func TestRoot_setSearch(t *testing.T) {
 		})
 	}
 }
+
+func Test_multiRegexpCompile(t *testing.T) {
+	type args struct {
+		words []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*regexp.Regexp
+	}{
+		{
+			name: "test1",
+			args: args{
+				[]string{".", "["},
+			},
+			want: []*regexp.Regexp{
+				regexp.MustCompile("."),
+				regexp.MustCompile(`\[`),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := multiRegexpCompile(tt.args.words); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("multiRegexpCompile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_condRegexpCompile(t *testing.T) {
+	type args struct {
+		in string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *regexp.Regexp
+	}{
+		{
+			name: "testRegexpCompile",
+			args: args{
+				in: "/[,|;]/",
+			},
+			want: regexp.MustCompile(`[,|;]`),
+		},
+		{
+			name: "testString1",
+			args: args{
+				in: ",",
+			},
+			want: nil,
+		},
+		{
+			name: "testString2",
+			args: args{
+				in: "/",
+			},
+			want: nil,
+		},
+		{
+			name: "testString4",
+			args: args{
+				in: "/end",
+			},
+			want: nil,
+		},
+		{
+			name: "testString5",
+			args: args{
+				in: "s/e",
+			},
+			want: nil,
+		},
+		{
+			name: "testString6",
+			args: args{
+				in: `\/\/`,
+			},
+			want: nil,
+		},
+		{
+			name: "testString7",
+			args: args{
+				in: `//`,
+			},
+			want: regexp.MustCompile(``),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := condRegexpCompile(tt.args.in); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("condRegexpCompile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

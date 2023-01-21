@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -189,7 +190,7 @@ func Test_containsInt(t *testing.T) {
 	}
 }
 
-func Test_toTop(t *testing.T) {
+func Test_toAddTop(t *testing.T) {
 	type args struct {
 		list []string
 		s    string
@@ -215,11 +216,80 @@ func Test_toTop(t *testing.T) {
 			},
 			want: []string{"f"},
 		},
+		{
+			name: "testNoAdd",
+			args: args{
+				list: []string{"a", "b", "c"},
+				s:    "",
+			},
+			want: []string{"a", "b", "c"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := toAddTop(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("toTop() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_toAddLast(t *testing.T) {
+	type args struct {
+		list []string
+		s    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test1",
+			args: args{
+				list: []string{
+					"a",
+				},
+				s: "b",
+			},
+			want: []string{
+				"a",
+				"b",
+			},
+		},
+		{
+			name: "test2",
+			args: args{
+				list: []string{
+					"a",
+					"b",
+				},
+				s: "a",
+			},
+			want: []string{
+				"a",
+				"b",
+			},
+		},
+		{
+			name: "testNoAdd",
+			args: args{
+				list: []string{
+					"a",
+					"b",
+				},
+				s: "",
+			},
+			want: []string{
+				"a",
+				"b",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toAddLast(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("toAddLast() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -269,7 +339,84 @@ func Test_toLast(t *testing.T) {
 	}
 }
 
+func Test_remove(t *testing.T) {
+	type args struct {
+		list []string
+		s    string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test1",
+			args: args{
+				list: []string{
+					"a",
+				},
+				s: "b",
+			},
+			want: []string{
+				"a",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("remove() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_allIndex(t *testing.T) {
+	type args struct {
+		s      string
+		substr string
+		reg    *regexp.Regexp
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:      "a,b,c",
+				substr: ",",
+				reg:    nil,
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testRegex",
+			args: args{
+				s:      "a  b c",
+				substr: `/\s+/`,
+				reg:    regexp.MustCompile(`\s+`),
+			},
+			want: [][]int{
+				{1, 3},
+				{4, 5},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allIndex(tt.args.s, tt.args.substr, tt.args.reg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("allIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_allStringIndex(t *testing.T) {
 	type args struct {
 		s      string
 		substr string
@@ -309,40 +456,8 @@ func Test_allIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := allIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+			if got := allStringIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("allIndex() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_remove(t *testing.T) {
-	type args struct {
-		list []string
-		s    string
-	}
-	tests := []struct {
-		name string
-		args args
-		want []string
-	}{
-		{
-			name: "test1",
-			args: args{
-				list: []string{
-					"a",
-				},
-				s: "b",
-			},
-			want: []string{
-				"a",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
 		})
 	}

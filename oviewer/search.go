@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -113,6 +114,36 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 	return re
 }
 
+// multiRegexpCompile compiles multi-word regular expressions.
+func multiRegexpCompile(words []string) []*regexp.Regexp {
+	regexps := make([]*regexp.Regexp, len(words))
+	for n, w := range words {
+		s, err := strconv.Unquote(w)
+		if err != nil {
+			s = w
+		}
+		regexps[n] = regexpCompile(s, true)
+	}
+	return regexps
+}
+
+// condRegexpCompile conditionally compiles a regular expression.
+func condRegexpCompile(in string) *regexp.Regexp {
+	if len(in) < 2 {
+		return nil
+	}
+
+	if in[0] != '/' || in[len(in)-1] != '/' {
+		return nil
+	}
+
+	re, err := regexp.Compile(in[1 : len(in)-1])
+	if err != nil {
+		return nil
+	}
+	return re
+}
+
 // searchPosition returns the position where the search in the argument line matched.
 // searchPosition uses cache.
 func (root *Root) searchPosition(lN int, lineStr string) [][]int {
@@ -168,7 +199,7 @@ func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 		s = strings.ToLower(s)
 		substr = strings.ToLower(substr)
 	}
-	return allIndex(s, substr)
+	return allStringIndex(s, substr)
 }
 
 // setSearcher is a wrapper for NewSearcher and returns a Searcher interface.

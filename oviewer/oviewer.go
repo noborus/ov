@@ -129,6 +129,8 @@ type general struct {
 	WrapMode bool
 	// ColumnDelimiter is a column delimiter.
 	ColumnDelimiter string
+	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
+	ColumnDelimiterReg *regexp.Regexp
 	// FollowMode is the follow mode.
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.

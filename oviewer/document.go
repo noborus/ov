@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -333,10 +332,17 @@ func (m *Document) unWatchMode() {
 
 // regexpCompile compiles the new document's regular expressions.
 func (m *Document) regexpCompile() {
+	m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 	m.setSectionDelimiter(m.SectionDelimiter)
 	if m.MultiColorWords != nil {
 		m.setMultiColorWords(m.MultiColorWords)
 	}
+}
+
+// setDelimiter sets the delimiter string.
+func (m *Document) setDelimiter(delm string) {
+	m.ColumnDelimiter = delm
+	m.ColumnDelimiterReg = condRegexpCompile(delm)
 }
 
 // setSectionDelimiter sets the document section delimiter.
@@ -347,13 +353,5 @@ func (m *Document) setSectionDelimiter(delm string) {
 
 // setMultiColorWords set multiple strings to highlight with multiple colors.
 func (m *Document) setMultiColorWords(words []string) {
-	regexps := make([]*regexp.Regexp, len(words))
-	for n, w := range words {
-		s, err := strconv.Unquote(w)
-		if err != nil {
-			s = w
-		}
-		regexps[n] = regexpCompile(s, true)
-	}
-	m.multiColorRegexps = regexps
+	m.multiColorRegexps = multiRegexpCompile(words)
 }
