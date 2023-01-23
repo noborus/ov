@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/jwalton/gchalk"
@@ -41,8 +40,4 @@ func KeyBindString(k KeyBind) string {
 		fmt.Fprintln(&buf, line)
 	}
 	return buf.String()
-}
-
-func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
-	fmt.Fprintf(w, " %-28s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
