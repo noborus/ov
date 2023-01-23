@@ -75,6 +75,8 @@ const (
 	inputCaseSensitive = "input_casesensitive"
 	inputIncSearch     = "input_incsearch"
 	inputRegexpSearch  = "input_regexp_search"
+	inputPrevious      = "input_previous"
+	inputNext          = "input_next"
 )
 
 // handlers returns a map of the action's handlers.
@@ -143,6 +145,8 @@ func (root *Root) handlers() map[string]func() {
 		inputCaseSensitive: root.inputCaseSensitive,
 		inputIncSearch:     root.inputIncSearch,
 		inputRegexpSearch:  root.inputRegexpSearch,
+		inputPrevious:      root.inputPrevious,
+		inputNext:          root.inputNext,
 	}
 }
 
@@ -215,6 +219,8 @@ func defaultKeyBinds() KeyBind {
 		inputCaseSensitive: {"alt+c"},
 		inputIncSearch:     {"alt+i"},
 		inputRegexpSearch:  {"alt+r"},
+		inputPrevious:      {"Up"},
+		inputNext:          {"Down"},
 	}
 }
 
@@ -312,22 +318,13 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
-
-	k.writeKeyString(&b, "[Up]", "previous candidate")
-	k.writeKeyString(&b, "[Down]", "next candidate")
+	k.writeKeyBind(&b, inputPrevious, "previous candidate")
+	k.writeKeyBind(&b, inputNext, "next candidate")
 	return b.String()
 }
 
 func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
-	k.writeKeyString(w, k.keyString(action), detail)
-}
-
-func (k KeyBind) keyString(action string) string {
-	return "[" + strings.Join(k[action], "], [") + "]"
-}
-
-func (k KeyBind) writeKeyString(w io.Writer, keyString string, detail string) {
-	fmt.Fprintf(w, " %-28s * %s\n", keyString, detail)
+	fmt.Fprintf(w, " %-28s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
 
 // GetKeyBinds returns the current key mapping.

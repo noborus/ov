@@ -153,14 +153,6 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		if len(runes) > pos {
 			input.cursorX = runeWidth(string(runes[:pos+1]))
 		}
-	case tcell.KeyUp:
-		input.value = input.Event.Up(input.value)
-		runes := []rune(input.value)
-		input.cursorX = runeWidth(string(runes))
-	case tcell.KeyDown:
-		input.value = input.Event.Down(input.value)
-		runes := []rune(input.value)
-		input.cursorX = runeWidth(string(runes))
 	case tcell.KeyTAB:
 		pos := stringWidth(input.value, input.cursorX+1)
 		runes := []rune(input.value)
@@ -190,6 +182,20 @@ func (root *Root) inputIncSearch() {
 
 func (root *Root) inputRegexpSearch() {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
+}
+
+func (root *Root) inputPrevious() {
+	input := root.input
+	input.value = input.Event.Up(input.value)
+	runes := []rune(input.value)
+	input.cursorX = runeWidth(string(runes))
+}
+
+func (root *Root) inputNext() {
+	input := root.input
+	input.value = input.Event.Down(input.value)
+	runes := []rune(input.value)
+	input.cursorX = runeWidth(string(runes))
 }
 
 // stringWidth returns the number of characters in the input.
