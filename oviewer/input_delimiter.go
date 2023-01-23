@@ -18,6 +18,7 @@ func delimiterCandidate() *candidate {
 			"\t",
 			"|",
 			",",
+			`/\s+/`,
 		},
 	}
 }
