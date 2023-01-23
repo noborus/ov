@@ -273,10 +273,9 @@ func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
 	}
 
 	numC := len(root.StyleColumnRainbow)
-	delm := m.ColumnDelimiter
 	c := 0
 	start := 0
-	idxs := allIndex(str, delm)
+	idxs := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 	for _, idx := range idxs {
 		if m.ColumnRainbow {
 			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnRainbow[c%numC])

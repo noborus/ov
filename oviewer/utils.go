@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"regexp"
 	"strings"
 
 	"golang.org/x/exp/constraints"
@@ -75,8 +76,16 @@ func toLast(list []string, s string) []string {
 	return list
 }
 
-// allIndex returns all matching string positions.
-func allIndex(s string, substr string) [][]int {
+// allIndex is a wrapper that returns either a regular expression index or a string index.
+func allIndex(s string, substr string, reg *regexp.Regexp) [][]int {
+	if reg != nil {
+		return reg.FindAllStringIndex(s, -1)
+	}
+	return allStringIndex(s, substr)
+}
+
+// allStringIndex returns all matching string positions.
+func allStringIndex(s string, substr string) [][]int {
 	if len(substr) == 0 {
 		return nil
 	}

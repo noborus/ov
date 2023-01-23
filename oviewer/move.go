@@ -405,7 +405,7 @@ func (root *Root) columnX(cursor int) (int, error) {
 			continue
 		}
 		lineStr, posCV := ContentsToStr(lc)
-		idxs := allIndex(lineStr, m.ColumnDelimiter)
+		idxs := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		maxCursor = max(maxCursor, len(idxs))
 		if len(idxs) < cursor {
 			continue

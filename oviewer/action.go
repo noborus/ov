@@ -338,8 +338,7 @@ func (root *Root) setViewMode(modeName string) {
 	}
 
 	root.Doc.general = mergeGeneral(root.Doc.general, c)
-	root.Doc.setSectionDelimiter(root.Doc.SectionDelimiter)
-	root.Doc.setMultiColorWords(root.Doc.MultiColorWords)
+	root.Doc.regexpCompile()
 	root.Doc.ClearCache()
 	root.ViewSync()
 	root.setMessagef("Set mode %s", modeName)
@@ -347,7 +346,7 @@ func (root *Root) setViewMode(modeName string) {
 
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
-	root.Doc.ColumnDelimiter = input
+	root.Doc.setDelimiter(input)
 	root.setMessagef("Set delimiter %s", input)
 }
 
