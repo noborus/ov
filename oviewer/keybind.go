@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -248,7 +249,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
-	k.writeKeyBind(&b, actionGoLine, "go to line(input number)")
+	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")
 	fmt.Fprint(&b, "\n")
@@ -278,7 +279,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
-	k.writeKeyBind(&b, actionPlain, "original decoration toggle")
+	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
 
 	fmt.Fprint(&b, "\n\tChange Display with Input\n")
 	fmt.Fprint(&b, "\n")
@@ -288,7 +289,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
-	k.writeKeyBind(&b, actionJumpTarget, "jump target")
+	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` and `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tSection\n")
 	fmt.Fprint(&b, "\n")
@@ -311,7 +312,22 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
+
+	k.writeKeyString(&b, "[Up]", "previous candidate")
+	k.writeKeyString(&b, "[Down]", "next candidate")
 	return b.String()
+}
+
+func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
+	k.writeKeyString(w, k.keyString(action), detail)
+}
+
+func (k KeyBind) keyString(action string) string {
+	return "[" + strings.Join(k[action], "], [") + "]"
+}
+
+func (k KeyBind) writeKeyString(w io.Writer, keyString string, detail string) {
+	fmt.Fprintf(w, " %-28s * %s\n", keyString, detail)
 }
 
 // GetKeyBinds returns the current key mapping.
