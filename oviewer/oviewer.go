@@ -253,6 +253,24 @@ type OVStyle struct {
 	Underline bool
 	// If true, add strikethrough.
 	StrikeThrough bool
+	// If true, add overline (not yet supported).
+	OverLine bool
+	// If true, sub blink.
+	UnBlink bool
+	// If true, sub bold.
+	UnBold bool
+	// If true, sub dim.
+	UnDim bool
+	// If true, sub italic.
+	UnItalic bool
+	// If true, sub reverse.
+	UnReverse bool
+	// If true, sub underline.
+	UnUnderline bool
+	// If true, sub strikethrough.
+	UnStrikeThrough bool
+	// if true, sub underline (not yet supported).
+	UnOverLine bool
 }
 
 var (
@@ -649,25 +667,46 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Foreground(tcell.GetColor(s.Foreground))
 	}
 	if s.Blink {
-		style = style.Blink(s.Blink)
+		style = style.Blink(true)
 	}
 	if s.Bold {
-		style = style.Bold(s.Bold)
+		style = style.Bold(true)
 	}
 	if s.Dim {
-		style = style.Dim(s.Dim)
+		style = style.Dim(true)
 	}
 	if s.Italic {
-		style = style.Italic(s.Italic)
+		style = style.Italic(true)
 	}
 	if s.Reverse {
-		style = style.Reverse(s.Reverse)
+		style = style.Reverse(true)
 	}
 	if s.Underline {
-		style = style.Underline(s.Underline)
+		style = style.Underline(true)
 	}
 	if s.StrikeThrough {
-		style = style.StrikeThrough(s.StrikeThrough)
+		style = style.StrikeThrough(true)
+	}
+	if s.UnBlink {
+		style = style.Blink(false)
+	}
+	if s.UnBold {
+		style = style.Bold(false)
+	}
+	if s.UnDim {
+		style = style.Dim(false)
+	}
+	if s.UnItalic {
+		style = style.Italic(false)
+	}
+	if s.UnReverse {
+		style = style.Reverse(false)
+	}
+	if s.UnUnderline {
+		style = style.Underline(false)
+	}
+	if s.UnStrikeThrough {
+		style = style.StrikeThrough(false)
 	}
 	return style
 }
