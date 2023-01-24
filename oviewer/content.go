@@ -260,11 +260,23 @@ func parseCSI(params string) OVStyle {
 		case "7", "07":
 			s.Reverse = true
 		case "8", "08":
-			s.Reverse = true
+			// Invisible On (not implemented)
 		case "9", "09":
 			s.StrikeThrough = true
-		case "22", "24", "25", "27":
-			s = OVStyle{}
+		case "22":
+			s.UnBold = true
+		case "23:":
+			s.UnItalic = true
+		case "24":
+			s.UnUnderline = true
+		case "25":
+			s.UnBlink = true
+		case "27":
+			s.UnReverse = true
+		case "28":
+			// Invisible Off (not implemented)
+		case "29":
+			s.UnStrikeThrough = true
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
 			s.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
@@ -275,6 +287,10 @@ func parseCSI(params string) OVStyle {
 			s.Background = colorName(int(tcell.Color(colorNumber - 40)))
 		case "49":
 			s.Background = "default"
+		case "53":
+			s.OverLine = true
+		case "55":
+			s.UnOverLine = true
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
 			s.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
