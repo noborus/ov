@@ -62,7 +62,7 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		lc := m.getContents(lY, m.TabWidth)
+		lc, _ := m.getContents(lY, m.TabWidth)
 		lineStr, posCV := m.getContentsStr(lY, lc)
 		root.lines[hy] = line{
 			number: lY,
@@ -92,18 +92,18 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	m := root.Doc
 
 	wrapNum := root.numOfWrap(lX, lY)
-	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
 	root.Doc.lastContentsNum = -1
 
 	// lc, lineStr, byteMap store the previous value.
 	// Because it may be a continuation from the previous line in wrap mode.
 	lastLN := -1
 	var lc contents
+	var valid bool
 	var lineStr string
 	var posCV map[int]int
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
 		if lastLN != lY {
-			lc = m.getContents(lY, m.TabWidth)
+			lc, valid = m.getContents(lY, m.TabWidth)
 			lineStr, posCV = m.getContentsStr(lY, lc)
 			root.bodyStyle(lc, root.StyleBody)
 			lastLN = lY
@@ -114,22 +114,21 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			wrap:   wrapNum,
 		}
 
-		if root.Doc.PlainMode {
-			root.plainStyle(lc)
+		if valid {
+			root.styleContent(lY, lc, lineStr, posCV)
 		}
-		root.columnHighlight(lc, lineStr, posCV)
-		root.multiColorHighlight(lc, lineStr, posCV)
-		root.searchHighlight(lY, lc, lineStr, posCV)
-		root.drawLineNumber(lY, y)
+
+		if valid {
+			root.drawLineNumber(lY, y)
+		} else {
+			root.blankLineNumber(y)
+		}
 
 		currentY := lY
 		lX, lY = root.drawLine(y, lX, lY, lc)
 
-		root.alternateRowsStyle(currentY, y)
-		root.markStyle(currentY, y, markStyleWidth)
-		root.sectionLineHighlight(y, lineStr)
-		if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
-			root.lineStyle(y, root.StyleJumpTargetLine)
+		if valid {
+			root.styleLine(y, currentY, lc, lineStr)
 		}
 
 		if lX > 0 {
@@ -140,6 +139,25 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	}
 
 	return lX, lY
+}
+
+func (root *Root) styleContent(lY int, lc contents, lineStr string, posCV map[int]int) {
+	if root.Doc.PlainMode {
+		root.plainStyle(lc)
+	}
+	root.columnHighlight(lc, lineStr, posCV)
+	root.multiColorHighlight(lc, lineStr, posCV)
+	root.searchHighlight(lY, lc, lineStr, posCV)
+}
+
+func (root *Root) styleLine(currentY int, y int, lc contents, lineStr string) {
+	root.alternateRowsStyle(currentY, y)
+	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
+	root.markStyle(currentY, y, markStyleWidth)
+	root.sectionLineHighlight(y, lineStr)
+	if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
+		root.lineStyle(y, root.StyleJumpTargetLine)
+	}
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
