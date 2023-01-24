@@ -542,7 +542,7 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
- [g]                          * go to line(input number)
+ [g]                          * go to line(input number and `.n` and `n%` allowed)
 
 	Move document
 
@@ -572,7 +572,7 @@ It can also be changed after startup.
  [ctrl+r]                     * column rainbow toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
- [ctrl+e]                     * original decoration toggle
+ [ctrl+e]                     * original decoration toggle(plain)
 
 	Change Display with Input
 
@@ -582,7 +582,7 @@ It can also be changed after startup.
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
  [.]                          * multi color highlight
- [j]                          * jump target
+ [j]                          * jump target(`.n` and `n%` allowed)
 
 	Section
 
@@ -605,6 +605,8 @@ It can also be changed after startup.
  [alt+c]                      * case-sensitive toggle
  [alt+r]                      * regular expression search toggle
  [alt+i]                      * incremental search toggle
+ [Up]                         * previous candidate
+ [Down]                       * next candidate
 ```
 
 ##  6. <a name='customize'></a>Customize

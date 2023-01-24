@@ -17,6 +17,7 @@ const (
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSuspend        = "suspend"
+	actionEdit           = "edit"
 	actionSync           = "sync"
 	actionFollow         = "follow_mode"
 	actionFollowAll      = "follow_all"
@@ -87,6 +88,7 @@ func (root *Root) handlers() map[string]func() {
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSuspend:        root.suspend,
+		actionEdit:           root.edit,
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
@@ -213,6 +215,7 @@ func defaultKeyBinds() KeyBind {
 		actionCloseDoc:       {"ctrl+k"},
 		actionToggleMouse:    {"ctrl+alt+r"},
 		actionSuspend:        {"ctrl+z"},
+		actionEdit:           {"E"},
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
 
@@ -234,6 +237,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
 	k.writeKeyBind(&b, actionWriteBA, "set output screen and quit")
 	k.writeKeyBind(&b, actionSuspend, "suspend")
+	k.writeKeyBind(&b, actionEdit, "edit the current file")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")

@@ -312,6 +312,35 @@ func (root *Root) suspend() {
 	log.Println("Resume")
 }
 
+func (root *Root) edit() {
+	if !root.Doc.seekable {
+		root.setMessage("cannot edit this document")
+		return
+	}
+	log.Println("Edit")
+	if err := root.Screen.Suspend(); err != nil {
+		log.Println(err)
+		return
+	}
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi"
+	}
+	c := exec.Command(editor, root.Doc.FileName)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		log.Println(err)
+	}
+	if err := root.Screen.Resume(); err != nil {
+		log.Println(err)
+	}
+	if err := root.Doc.reload(); err != nil {
+		log.Println(err)
+	}
+}
+
 // toggleMouse toggles mouse control.
 // When disabled, the mouse is controlled on the terminal side.
 func (root *Root) toggleMouse() {

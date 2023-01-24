@@ -124,11 +124,11 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			root.blankLineNumber(y)
 		}
 
-		currentY := lY
+		currentlY := lY
 		lX, lY = root.drawLine(y, lX, lY, lc)
 
 		if valid {
-			root.styleLine(y, currentY, lc, lineStr)
+			root.styleLine(currentlY, y, lc, lineStr)
 		}
 
 		if lX > 0 {

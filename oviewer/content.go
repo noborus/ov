@@ -67,7 +67,6 @@ func parseString(str string, tabWidth int) contents {
 	for gr.Next() {
 		runes := gr.Runes()
 		runeValue := runes[0]
-		c := DefaultContent
 		switch state {
 		case ansiEscape:
 			switch runeValue {
@@ -113,6 +112,7 @@ func parseString(str string, tabWidth int) contents {
 			continue
 		}
 
+		c := DefaultContent
 		switch runewidth.RuneWidth(runeValue) {
 		case 0:
 			switch {
