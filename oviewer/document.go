@@ -248,17 +248,17 @@ func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
 
 // getContents returns contents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getContents(lN int, tabWidth int) contents {
+func (m *Document) getContents(lN int, tabWidth int) (contents, bool) {
 	org, err := m.contentsLN(lN, tabWidth)
 	if err != nil {
 		// EOF
 		lc := make(contents, 1)
 		lc[0] = EOFContent
-		return lc
+		return lc, false
 	}
 	lc := make(contents, len(org))
 	copy(lc, org)
-	return lc
+	return lc, true
 }
 
 // getContentsStr is returns a converted string
