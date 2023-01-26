@@ -256,6 +256,13 @@ You can also enter a column-delimiter after startup (default key is `d`).
 ov --column-delimiter "," --column-mode test.csv
 ```
 
+Regular expressions can be used for the `--column-delimiter`.
+Enclose in '/' when using regular expressions.
+
+```console
+ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
+```
+
 ###  3.5. <a name='column-rainbow-mode'></a>Column rainbow mode
 
 You can also color each column individually in column mode.
