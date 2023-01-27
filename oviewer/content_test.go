@@ -533,6 +533,16 @@ func Test_parseStringHyperlink(t *testing.T) {
 				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: rune('k'), combc: nil},
 			},
 		},
+		{
+			name: "testHyperLinkfile",
+			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\a", tabWidth: 8},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('f'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('i'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('l'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('e'), combc: nil},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
