@@ -220,6 +220,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			// unknown but for compatibility.
 			es.state = ansiControlSequence
 			return true
+		case 0x07:
+			es.state = ansiText
+			return true
 		}
 		log.Printf("invalid char %c", mainc)
 		return true
@@ -244,13 +247,19 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 		es.state = oscURL
 		return true
 	case oscURL:
-		if mainc != 0x1b {
-			es.url.WriteRune(mainc)
+		switch mainc {
+		case 0x1b:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = systemSequence
+			return true
+		case 0x07:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = ansiText
 			return true
 		}
-		es.style = es.style.Url(es.url.String())
-		es.url.Reset()
-		es.state = systemSequence
+		es.url.WriteRune(mainc)
 		return true
 	}
 	switch mainc {
