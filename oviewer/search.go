@@ -158,15 +158,15 @@ func (root *Root) searchPosition(lN int, lineStr string) [][]int {
 		return poss
 	}
 
-	var poss [][]int
+	var indexes [][]int
 	if root.Config.RegexpSearch {
-		poss = searchPositionReg(lineStr, root.searchReg)
+		indexes = searchPositionReg(lineStr, root.searchReg)
 	} else {
-		poss = searchPositionStr(root.Config.CaseSensitive, lineStr, root.searchWord)
+		indexes = searchPositionStr(root.Config.CaseSensitive, lineStr, root.searchWord)
 	}
 
-	m.cache.Set(key, poss, 3)
-	return poss
+	m.cache.Set(key, indexes, 3)
+	return indexes
 }
 
 // searcKey returns a search key for the cache.

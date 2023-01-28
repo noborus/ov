@@ -63,7 +63,7 @@ type Document struct {
 
 	lastContentsNum int
 	lastContentsStr string
-	lastContentsMap map[int]int
+	lastPos         contentsPos
 
 	// status is the display status of the document.
 	general
@@ -266,12 +266,12 @@ func (m *Document) getContents(lN int, tabWidth int) (contents, bool) {
 // getContentsStr saves the last result
 // and reduces the number of executions of contentsToStr.
 // Because it takes time to analyze a line with a very long line.
-func (m *Document) getContentsStr(lN int, lc contents) (string, map[int]int) {
+func (m *Document) getContentsStr(lN int, lc contents) (string, contentsPos) {
 	if m.lastContentsNum != lN {
-		m.lastContentsStr, m.lastContentsMap = ContentsToStr(lc)
+		m.lastContentsStr, m.lastPos = ContentsToStr(lc)
 		m.lastContentsNum = lN
 	}
-	return m.lastContentsStr, m.lastContentsMap
+	return m.lastContentsStr, m.lastPos
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.

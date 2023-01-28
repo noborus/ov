@@ -466,18 +466,20 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
+type contentsPos map[int]int
+
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc contents) (string, map[int]int) {
+func ContentsToStr(lc contents) (string, contentsPos) {
 	var buff strings.Builder
-	posCV := make(map[int]int)
+	pos := make(contentsPos)
 
 	bn := 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		posCV[bn] = n
+		pos[bn] = n
 		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -492,6 +494,10 @@ func ContentsToStr(lc contents) (string, map[int]int) {
 		}
 	}
 	str := buff.String()
-	posCV[bn] = len(lc)
-	return str, posCV
+	pos[bn] = len(lc)
+	return str, pos
+}
+
+func (p contentsPos) lx(x int) int {
+	return p[x]
 }
