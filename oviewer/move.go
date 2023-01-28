@@ -411,24 +411,24 @@ func (root *Root) columnX(cursor int) (int, error) {
 			continue
 		}
 
-		sx, ex := 0, 0
+		start, end := 0, 0
 		if len(indexes) == cursor {
 			// right edge.
 			idx := indexes[cursor-1]
-			sx = pos.lx(idx[1] + len(m.ColumnDelimiter))
-			ex = pos.lx(len(lineStr))
+			start = pos.x(idx[1] + len(m.ColumnDelimiter))
+			end = pos.x(len(lineStr))
 		} else {
 			idx := indexes[cursor]
-			sx = pos.lx(idx[0])
-			ex = pos.lx(idx[1])
+			start = pos.x(idx[0])
+			end = pos.x(idx[1])
 		}
-		if root.vWidth > ex { // don't scroll.
+		if root.vWidth > end { // don't scroll.
 			return 0, nil
 		}
-		if ex-root.vWidth > 0 {
-			return ex - root.vWidth, nil
+		if end-root.vWidth > 0 {
+			return end - root.vWidth, nil
 		}
-		return sx, nil
+		return start, nil
 	}
 
 	if maxCursor > 0 {

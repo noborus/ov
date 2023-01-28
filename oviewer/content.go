@@ -469,13 +469,13 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
-type contentsPos []int
+type screenPos []int
 
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc contents) (string, contentsPos) {
+func ContentsToStr(lc contents) (string, screenPos) {
 	var buff strings.Builder
-	pos := make(contentsPos, 0, len(lc)*4)
+	pos := make(screenPos, 0, len(lc)*4)
 
 	i, bn := 0, 0
 	for n, c := range lc {
@@ -505,6 +505,10 @@ func ContentsToStr(lc contents) (string, contentsPos) {
 	return str, pos
 }
 
-func (p contentsPos) lx(x int) int {
-	return p[x]
+// x returns the x position on the screen.
+func (pos screenPos) x(x int) int {
+	if x < len(pos) {
+		return pos[x]
+	}
+	return pos[len(pos)-1]
 }

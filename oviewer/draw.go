@@ -104,14 +104,14 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lc contents
 	var valid bool
 	var lineStr string
-	var pos contentsPos
+	var pos screenPos
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
 		if lastLN != lY {
 			lc, valid = m.getContents(lY, m.TabWidth)
 			if valid {
 				lineStr, pos = m.getContentsStr(lY, lc)
 			} else {
-				lineStr, pos = string(EOFC), contentsPos{0: 0, 1: 1}
+				lineStr, pos = string(EOFC), screenPos{0: 0, 1: 1}
 			}
 
 			root.bodyStyle(lc, root.StyleBody)
@@ -152,7 +152,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) styleContent(lY int, lc contents, lineStr string, pos contentsPos) {
+func (root *Root) styleContent(lY int, lc contents, lineStr string, pos screenPos) {
 	if root.Doc.PlainMode {
 		root.plainStyle(lc)
 	}
@@ -241,14 +241,14 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lY int, lc contents, lineStr string, pos contentsPos) {
+func (root *Root) searchHighlight(lY int, lc contents, lineStr string, pos screenPos) {
 	if root.searchWord == "" {
 		return
 	}
 
 	indexes := root.searchPosition(lY, lineStr)
 	for _, idx := range indexes {
-		RangeStyle(lc, pos.lx(idx[0]), pos.lx(idx[1]), root.StyleSearchHighlight)
+		RangeStyle(lc, pos.x(idx[0]), pos.x(idx[1]), root.StyleSearchHighlight)
 	}
 }
 
@@ -261,12 +261,12 @@ func (root *Root) plainStyle(lc contents) {
 
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
 // The style of the first specified word takes precedence.
-func (root *Root) multiColorHighlight(lc contents, str string, pos contentsPos) {
+func (root *Root) multiColorHighlight(lc contents, str string, pos screenPos) {
 	numC := len(root.StyleMultiColorHighlight)
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
 		indexes := searchPositionReg(str, root.Doc.multiColorRegexps[i])
 		for _, idx := range indexes {
-			RangeStyle(lc, pos.lx(idx[0]), pos.lx(idx[1]), root.StyleMultiColorHighlight[i%numC])
+			RangeStyle(lc, pos.x(idx[0]), pos.x(idx[1]), root.StyleMultiColorHighlight[i%numC])
 		}
 	}
 }
@@ -290,7 +290,7 @@ func (root *Root) drawLineNumber(lY int, y int) {
 }
 
 // columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(lc contents, str string, pos contentsPos) {
+func (root *Root) columnHighlight(lc contents, str string, pos screenPos) {
 	m := root.Doc
 
 	indexes := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -299,26 +299,26 @@ func (root *Root) columnHighlight(lc contents, str string, pos contentsPos) {
 	}
 	numC := len(root.StyleColumnRainbow)
 
-	var start, end int
+	var iStart, iEnd int
 	for c := 0; c < len(indexes)+1; c++ {
 		switch {
 		case c == 0:
-			start = 0
-			end = indexes[0][1] - 1
+			iStart = 0
+			iEnd = indexes[0][1] - 1
 		case c < len(indexes):
-			start = end + 1
-			end = indexes[c][0]
+			iStart = iEnd + 1
+			iEnd = indexes[c][0]
 		case c == len(indexes):
-			start = end + 1
-			end = len(str)
+			iStart = iEnd + 1
+			iEnd = len(str)
 		}
 
-		lStart, lEnd := pos.lx(start), pos.lx(end)
+		start, end := pos.x(iStart), pos.x(iEnd)
 		if m.ColumnRainbow {
-			RangeStyle(lc, lStart, lEnd, root.StyleColumnRainbow[c%numC])
+			RangeStyle(lc, start, end, root.StyleColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
-			RangeStyle(lc, lStart, lEnd, root.StyleColumnHighlight)
+			RangeStyle(lc, start, end, root.StyleColumnHighlight)
 		}
 	}
 }
