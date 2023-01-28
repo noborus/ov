@@ -104,14 +104,14 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lc contents
 	var valid bool
 	var lineStr string
-	var pos screenPos
+	var pos widthPos
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
 		if lastLN != lY {
 			lc, valid = m.getContents(lY, m.TabWidth)
 			if valid {
 				lineStr, pos = m.getContentsStr(lY, lc)
 			} else {
-				lineStr, pos = string(EOFC), screenPos{0: 0, 1: 1}
+				lineStr, pos = string(EOFC), widthPos{0: 0, 1: 1}
 			}
 
 			root.bodyStyle(lc, root.StyleBody)
@@ -152,7 +152,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) styleContent(lY int, lc contents, lineStr string, pos screenPos) {
+func (root *Root) styleContent(lY int, lc contents, lineStr string, pos widthPos) {
 	if root.Doc.PlainMode {
 		root.plainStyle(lc)
 	}
@@ -241,7 +241,7 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lY int, lc contents, lineStr string, pos screenPos) {
+func (root *Root) searchHighlight(lY int, lc contents, lineStr string, pos widthPos) {
 	if root.searchWord == "" {
 		return
 	}
@@ -261,7 +261,7 @@ func (root *Root) plainStyle(lc contents) {
 
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
 // The style of the first specified word takes precedence.
-func (root *Root) multiColorHighlight(lc contents, str string, pos screenPos) {
+func (root *Root) multiColorHighlight(lc contents, str string, pos widthPos) {
 	numC := len(root.StyleMultiColorHighlight)
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
 		indexes := searchPositionReg(str, root.Doc.multiColorRegexps[i])
@@ -290,7 +290,7 @@ func (root *Root) drawLineNumber(lY int, y int) {
 }
 
 // columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(lc contents, str string, pos screenPos) {
+func (root *Root) columnHighlight(lc contents, str string, pos widthPos) {
 	m := root.Doc
 
 	indexes := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)

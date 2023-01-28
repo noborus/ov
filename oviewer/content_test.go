@@ -689,43 +689,43 @@ func Test_contentsToStr(t *testing.T) {
 		name  string
 		str   string
 		want1 string
-		want2 screenPos
+		want2 widthPos
 	}{
 		{
 			name:  "test1",
 			str:   "test",
 			want1: "test",
-			want2: screenPos{0, 1, 2, 3, 4},
+			want2: widthPos{0, 1, 2, 3, 4},
 		},
 		{
 			name:  "testTab",
 			str:   "t\test",
 			want1: "t\test",
-			want2: screenPos{0, 1, 8, 9, 10, 11},
+			want2: widthPos{0, 1, 8, 9, 10, 11},
 		},
 		{
 			name:  "testBackSpace",
 			str:   "t\btest",
 			want1: "test",
-			want2: screenPos{0, 1, 2, 3, 4},
+			want2: widthPos{0, 1, 2, 3, 4},
 		},
 		{
 			name:  "testEscape",
 			str:   "\x1b[40;38;5;82mHello \x1b[30;48;5;82mWorld\x1b[0m",
 			want1: "Hello World",
-			want2: screenPos{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+			want2: widthPos{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
 		},
 		{
 			name:  "testMultiByte",
 			str:   "あいうえお倍",
 			want1: "あいうえお倍",
-			want2: screenPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10, 12, 12, 12},
+			want2: widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10, 12, 12, 12},
 		},
 		{
 			name:  "testEmojiZWJSequence",
 			str:   string([]rune{'\U0001f468', '\u200d', '\U0001f468', '\u200d', '\U0001f466'}),
 			want1: "👨‍👨‍👦",
-			want2: screenPos{0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+			want2: widthPos{0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
 		},
 	}
 	for _, tt := range tests {

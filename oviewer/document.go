@@ -63,7 +63,7 @@ type Document struct {
 
 	lastContentsNum int
 	lastContentsStr string
-	lastPos         screenPos
+	lastPos         widthPos
 
 	// status is the display status of the document.
 	general
@@ -266,7 +266,7 @@ func (m *Document) getContents(lN int, tabWidth int) (contents, bool) {
 // getContentsStr saves the last result
 // and reduces the number of executions of contentsToStr.
 // Because it takes time to analyze a line with a very long line.
-func (m *Document) getContentsStr(lN int, lc contents) (string, screenPos) {
+func (m *Document) getContentsStr(lN int, lc contents) (string, widthPos) {
 	if m.lastContentsNum != lN {
 		m.lastContentsStr, m.lastPos = ContentsToStr(lc)
 		m.lastContentsNum = lN
