@@ -404,31 +404,31 @@ func (root *Root) columnX(cursor int) (int, error) {
 		if err != nil {
 			continue
 		}
-		lineStr, posCV := ContentsToStr(lc)
-		idxs := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
-		maxCursor = max(maxCursor, len(idxs))
-		if len(idxs) < cursor {
+		lineStr, pos := ContentsToStr(lc)
+		indexes := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		maxCursor = max(maxCursor, len(indexes))
+		if len(indexes) < cursor {
 			continue
 		}
 
-		sx, ex := 0, 0
-		if len(idxs) == cursor {
+		start, end := 0, 0
+		if len(indexes) == cursor {
 			// right edge.
-			pos := idxs[cursor-1]
-			sx = posCV[pos[1]+len(m.ColumnDelimiter)]
-			ex = posCV[len(lineStr)]
+			idx := indexes[cursor-1]
+			start = pos.x(idx[1] + len(m.ColumnDelimiter))
+			end = pos.x(len(lineStr))
 		} else {
-			pos := idxs[cursor]
-			sx = posCV[pos[0]]
-			ex = posCV[pos[1]]
+			idx := indexes[cursor]
+			start = pos.x(idx[0])
+			end = pos.x(idx[1])
 		}
-		if root.vWidth > ex { // don't scroll.
+		if root.vWidth > end { // don't scroll.
 			return 0, nil
 		}
-		if ex-root.vWidth > 0 {
-			return ex - root.vWidth, nil
+		if end-root.vWidth > 0 {
+			return end - root.vWidth, nil
 		}
-		return sx, nil
+		return start, nil
 	}
 
 	if maxCursor > 0 {

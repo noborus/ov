@@ -63,14 +63,18 @@ func (root *Root) drawHeader() int {
 		}
 
 		lc, _ := m.getContents(lY, m.TabWidth)
-		lineStr, posCV := m.getContentsStr(lY, lc)
+		lineStr, pos := m.getContentsStr(lY, lc)
 		root.lines[hy] = line{
 			number: lY,
 			wrap:   wrapNum,
 		}
 
-		root.columnHighlight(lc, lineStr, posCV)
-		root.blankLineNumber(hy)
+		if root.Doc.ColumnMode {
+			root.columnHighlight(lc, lineStr, pos)
+		}
+		if root.Doc.LineNumMode {
+			root.blankLineNumber(hy)
+		}
 
 		lX, lY = root.drawLine(hy, lX, lY, lc)
 
@@ -100,11 +104,16 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var lc contents
 	var valid bool
 	var lineStr string
-	var posCV map[int]int
+	var pos widthPos
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
 		if lastLN != lY {
 			lc, valid = m.getContents(lY, m.TabWidth)
-			lineStr, posCV = m.getContentsStr(lY, lc)
+			if valid {
+				lineStr, pos = m.getContentsStr(lY, lc)
+			} else {
+				lineStr, pos = string(EOFC), widthPos{0: 0, 1: 1}
+			}
+
 			root.bodyStyle(lc, root.StyleBody)
 			lastLN = lY
 		}
@@ -115,13 +124,15 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 		}
 
 		if valid {
-			root.styleContent(lY, lc, lineStr, posCV)
+			root.styleContent(lY, lc, lineStr, pos)
 		}
 
-		if valid {
-			root.drawLineNumber(lY, y)
-		} else {
-			root.blankLineNumber(y)
+		if root.Doc.LineNumMode {
+			if valid {
+				root.drawLineNumber(lY, y)
+			} else {
+				root.blankLineNumber(y)
+			}
 		}
 
 		currentlY := lY
@@ -141,13 +152,15 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	return lX, lY
 }
 
-func (root *Root) styleContent(lY int, lc contents, lineStr string, posCV map[int]int) {
+func (root *Root) styleContent(lY int, lc contents, lineStr string, pos widthPos) {
 	if root.Doc.PlainMode {
 		root.plainStyle(lc)
 	}
-	root.columnHighlight(lc, lineStr, posCV)
-	root.multiColorHighlight(lc, lineStr, posCV)
-	root.searchHighlight(lY, lc, lineStr, posCV)
+	if root.Doc.ColumnMode {
+		root.columnHighlight(lc, lineStr, pos)
+	}
+	root.multiColorHighlight(lc, lineStr, pos)
+	root.searchHighlight(lY, lc, lineStr, pos)
 }
 
 func (root *Root) styleLine(currentY int, y int, lc contents, lineStr string) {
@@ -228,14 +241,14 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map[int]int) {
+func (root *Root) searchHighlight(lY int, lc contents, lineStr string, pos widthPos) {
 	if root.searchWord == "" {
 		return
 	}
 
-	poss := root.searchPosition(lY, lineStr)
-	for _, r := range poss {
-		RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleSearchHighlight)
+	indexes := root.searchPosition(lY, lineStr)
+	for _, idx := range indexes {
+		RangeStyle(lc, pos.x(idx[0]), pos.x(idx[1]), root.StyleSearchHighlight)
 	}
 }
 
@@ -248,12 +261,12 @@ func (root *Root) plainStyle(lc contents) {
 
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
 // The style of the first specified word takes precedence.
-func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int) {
+func (root *Root) multiColorHighlight(lc contents, str string, pos widthPos) {
 	numC := len(root.StyleMultiColorHighlight)
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
-		poss := searchPositionReg(str, root.Doc.multiColorRegexps[i])
-		for _, r := range poss {
-			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[i%numC])
+		indexes := searchPositionReg(str, root.Doc.multiColorRegexps[i])
+		for _, idx := range indexes {
+			RangeStyle(lc, pos.x(idx[0]), pos.x(idx[1]), root.StyleMultiColorHighlight[i%numC])
 		}
 	}
 }
@@ -261,10 +274,6 @@ func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int
 // blankLineNumber should be blank for the line number.
 func (root *Root) blankLineNumber(y int) {
 	m := root.Doc
-	// line number mode
-	if !root.Doc.LineNumMode {
-		return
-	}
 	numC := StrToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
 	root.setContentString(0, y, numC)
 }
@@ -272,9 +281,6 @@ func (root *Root) blankLineNumber(y int) {
 // drawLineNumber draws the line number.
 func (root *Root) drawLineNumber(lY int, y int) {
 	m := root.Doc
-	if !m.LineNumMode {
-		return
-	}
 	// Line numbers start at 1 except for skip and header lines.
 	numC := StrToContents(fmt.Sprintf("%*d", root.startX-1, lY-m.firstLine()+1), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
@@ -284,34 +290,35 @@ func (root *Root) drawLineNumber(lY int, y int) {
 }
 
 // columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
+func (root *Root) columnHighlight(lc contents, str string, pos widthPos) {
 	m := root.Doc
-	if !m.ColumnMode {
+
+	indexes := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+	if len(indexes) == 0 {
 		return
 	}
-
 	numC := len(root.StyleColumnRainbow)
-	c := 0
-	start := 0
-	idxs := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-	for _, idx := range idxs {
+
+	var iStart, iEnd int
+	for c := 0; c < len(indexes)+1; c++ {
+		switch {
+		case c == 0:
+			iStart = 0
+			iEnd = indexes[0][1] - 1
+		case c < len(indexes):
+			iStart = iEnd + 1
+			iEnd = indexes[c][0]
+		case c == len(indexes):
+			iStart = iEnd + 1
+			iEnd = len(str)
+		}
+
+		start, end := pos.x(iStart), pos.x(iEnd)
 		if m.ColumnRainbow {
-			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnRainbow[c%numC])
+			RangeStyle(lc, start, end, root.StyleColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
-			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnHighlight)
-		}
-		start = idx[1]
-		if start != 1 {
-			c++
-		}
-	}
-	if start < len(str) {
-		if m.ColumnRainbow {
-			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnRainbow[c%numC])
-		}
-		if c == m.columnCursor && start != 0 {
-			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnHighlight)
+			RangeStyle(lc, start, end, root.StyleColumnHighlight)
 		}
 	}
 }

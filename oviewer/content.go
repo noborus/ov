@@ -44,9 +44,12 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
-// EOFContent is "~" only.
+// EOFC is the EOF character.
+const EOFC rune = '~'
+
+// EOFContent is EOFC only.
 var EOFContent = content{
-	mainc: '~',
+	mainc: EOFC,
 	combc: nil,
 	width: 1,
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
@@ -466,18 +469,22 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
+type widthPos []int
+
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc contents) (string, map[int]int) {
+func ContentsToStr(lc contents) (string, widthPos) {
 	var buff strings.Builder
-	posCV := make(map[int]int)
+	pos := make(widthPos, 0, len(lc)*4)
 
-	bn := 0
+	i, bn := 0, 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		posCV[bn] = n
+		for ; i <= bn; i++ {
+			pos = append(pos, n)
+		}
 		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -492,6 +499,16 @@ func ContentsToStr(lc contents) (string, map[int]int) {
 		}
 	}
 	str := buff.String()
-	posCV[bn] = len(lc)
-	return str, posCV
+	for ; i <= bn; i++ {
+		pos = append(pos, len(lc))
+	}
+	return str, pos
+}
+
+// x returns the x position on the screen.
+func (pos widthPos) x(x int) int {
+	if x < len(pos) {
+		return pos[x]
+	}
+	return pos[len(pos)-1]
 }
