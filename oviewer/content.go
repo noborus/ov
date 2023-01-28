@@ -44,9 +44,12 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
-// EOFContent is "~" only.
+// EOFC is the EOF character.
+const EOFC rune = '~'
+
+// EOFContent is EOFC only.
 var EOFContent = content{
-	mainc: '~',
+	mainc: EOFC,
 	combc: nil,
 	width: 1,
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
@@ -466,20 +469,22 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
-type contentsPos map[int]int
+type contentsPos []int
 
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
 func ContentsToStr(lc contents) (string, contentsPos) {
 	var buff strings.Builder
-	pos := make(contentsPos)
+	pos := make(contentsPos, 0, len(lc)*4)
 
-	bn := 0
+	i, bn := 0, 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		pos[bn] = n
+		for ; i <= bn; i++ {
+			pos = append(pos, n)
+		}
 		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -494,7 +499,9 @@ func ContentsToStr(lc contents) (string, contentsPos) {
 		}
 	}
 	str := buff.String()
-	pos[bn] = len(lc)
+	for ; i <= bn; i++ {
+		pos = append(pos, len(lc))
+	}
 	return str, pos
 }
 

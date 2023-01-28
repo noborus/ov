@@ -108,7 +108,12 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	for y := root.headerLen; y < root.vHight-statusLine; y++ {
 		if lastLN != lY {
 			lc, valid = m.getContents(lY, m.TabWidth)
-			lineStr, pos = m.getContentsStr(lY, lc)
+			if valid {
+				lineStr, pos = m.getContentsStr(lY, lc)
+			} else {
+				lineStr, pos = string(EOFC), contentsPos{0: 0, 1: 1}
+			}
+
 			root.bodyStyle(lc, root.StyleBody)
 			lastLN = lY
 		}
