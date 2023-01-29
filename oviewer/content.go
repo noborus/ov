@@ -30,6 +30,7 @@ const (
 	ansiEscape
 	ansiSubstring
 	ansiControlSequence
+	otherSequence
 	systemSequence
 	oscHyperLink
 	oscParameter
@@ -190,6 +191,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 		case 'P', 'X', '^', '_': // Substrings and commands.
 			es.state = ansiSubstring
 			return true
+		case '(':
+			es.state = otherSequence
+			return true
 		default: // Ignore.
 			es.state = ansiText
 		}
@@ -210,6 +214,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			}
 		}
 		es.state = ansiText
+		return true
+	case otherSequence:
+		es.state = ansiEscape
 		return true
 	case systemSequence:
 		switch mainc {
