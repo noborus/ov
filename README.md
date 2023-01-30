@@ -270,6 +270,19 @@ Specify `--column-rainbow` in addition to the `--column-mode` option.
 
 After startup, switch the display with column rainbow (default key is `ctrl+r`).
 
+Color customization is possible. Please specify 7 or more colors in `config.yaml`.
+
+```yaml
+StyleColumnRainbow:
+  - Foreground: "white"
+  - Foreground: "aqua"
+  - Foreground: "lightsalmon"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "yellowgreen"
+  - Foreground: "red"
+```
+
 ###  3.6. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
@@ -411,6 +424,20 @@ ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 ```
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
+
+Color customization is possible. Please specify 7 or more colors in config.yaml.
+
+```yaml
+StyleMultiColorHighlight:
+  - Foreground: "red"
+    Reverse: true
+  - Foreground: "aqua"
+  - Foreground: "yellow"
+  - Foreground: "fuchsia"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "grey"
+```
 
 ###  3.18. <a name='plain'></a>Plain
 
@@ -632,6 +659,7 @@ You can customize the following items.
 * StyleMarkLine
 * StyleSectionLine
 * StyleMultiColorHighlight
+* StyleColumnRainbow
 * StyleJumpTargetLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
