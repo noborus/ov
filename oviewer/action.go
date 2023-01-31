@@ -152,7 +152,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := position(root.Doc.endNum, input)
+	num := position(root.Doc.BufEndNum(), input)
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
