@@ -77,6 +77,8 @@ const (
 	inputRegexpSearch  = "input_regexp_search"
 	inputPrevious      = "input_previous"
 	inputNext          = "input_next"
+	inputCopy          = "input_copy"
+	inputPaste         = "input_paste"
 )
 
 // handlers returns a map of the action's handlers.
@@ -147,6 +149,8 @@ func (root *Root) handlers() map[string]func() {
 		inputRegexpSearch:  root.inputRegexpSearch,
 		inputPrevious:      root.inputPrevious,
 		inputNext:          root.inputNext,
+		inputCopy:          root.CopySelect,
+		inputPaste:         root.Paste,
 	}
 }
 
@@ -221,6 +225,8 @@ func defaultKeyBinds() KeyBind {
 		inputRegexpSearch:  {"alt+r"},
 		inputPrevious:      {"Up"},
 		inputNext:          {"Down"},
+		inputCopy:          {"ctrl+c"},
+		inputPaste:         {"ctrl+v"},
 	}
 }
 
@@ -320,6 +326,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")
 	k.writeKeyBind(&b, inputNext, "next candidate")
+	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
+	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
 	return b.String()
 }
 
