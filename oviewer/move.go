@@ -192,6 +192,11 @@ func (root *Root) moveNumDown(moveY int) {
 // Move up one line.
 // Called from a EventKey.
 func (root *Root) moveUp() {
+	root.moveUpN(1)
+}
+
+// Move up by n amount.
+func (root *Root) moveUpN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -201,7 +206,7 @@ func (root *Root) moveUp() {
 	}
 
 	if !m.WrapMode {
-		m.topLN--
+		m.topLN -= n
 		m.topLX = 0
 		return
 	}
@@ -219,7 +224,7 @@ func (root *Root) moveUp() {
 	}
 
 	// Previous line.
-	m.topLN--
+	m.topLN -= n
 	if m.topLN < 0 {
 		m.topLN = 0
 		m.topLX = 0
@@ -236,6 +241,11 @@ func (root *Root) moveUp() {
 // Move down one line.
 // Called from a EventKey.
 func (root *Root) moveDown() {
+	root.moveDownN(1)
+}
+
+// Move down by n amount.
+func (root *Root) moveDownN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -243,7 +253,7 @@ func (root *Root) moveDown() {
 	num := m.topLN
 
 	if !m.WrapMode {
-		num++
+		num += n
 		root.limitMoveDown(0, num)
 		return
 	}
@@ -259,7 +269,7 @@ func (root *Root) moveDown() {
 	}
 
 	// Next line.
-	num++
+	num += n
 	m.topLX = 0
 	root.limitMoveDown(m.topLX, num)
 }
@@ -338,6 +348,11 @@ func (root *Root) lastSection() {
 // Move to the left.
 // Called from a EventKey.
 func (root *Root) moveLeft() {
+	root.moveLeftN(1)
+}
+
+// Move left by n amount.
+func (root *Root) moveLeftN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -346,28 +361,34 @@ func (root *Root) moveLeft() {
 		if m.WrapMode {
 			return
 		}
-		m.x--
+		m.x -= n
 		if m.x < root.minStartX {
 			m.x = root.minStartX
 		}
 		return
 	}
 
-	if m.columnCursor > 0 {
-		cursor := m.columnCursor - 1
-		x, err := root.columnX(cursor)
-		if err != nil {
-			root.debugMessage(err.Error())
-			return
-		}
-		m.x = x
-		m.columnCursor = cursor
+	if m.columnCursor <= 0 {
+		return
 	}
+	cursor := m.columnCursor - n
+	x, err := root.columnX(cursor)
+	if err != nil {
+		root.debugMessage(err.Error())
+		return
+	}
+	m.x = x
+	m.columnCursor = cursor
 }
 
 // Move to the right.
 // Called from a EventKey.
 func (root *Root) moveRight() {
+	root.moveRightN(1)
+}
+
+// Move right by n amount.
+func (root *Root) moveRightN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -376,11 +397,11 @@ func (root *Root) moveRight() {
 		if m.WrapMode {
 			return
 		}
-		m.x++
+		m.x += n
 		return
 	}
 
-	cursor := m.columnCursor + 1
+	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
 		root.debugMessage(err.Error())
