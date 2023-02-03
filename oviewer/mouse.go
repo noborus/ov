@@ -182,11 +182,16 @@ func (root *Root) drawRectangle(x1, y1, x2, y2 int, sel bool) {
 
 // reverseLine reverses one line.
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
+	if start >= end {
+		return
+	}
 	for x := start; x < end; x++ {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		style = style.Reverse(sel)
 		root.Screen.SetContent(x, y, mainc, combc, style)
-		x += width - 1
+		if width == 2 {
+			x++
+		}
 	}
 }
 
