@@ -77,7 +77,7 @@ ov is a terminal pager.
 * Supports [multi-color](#multi-color-highlight) to color each after multiple.
 * Better support for Unicode and East Asian Width.
 * Supports compressed files (gzip, bzip2, zstd, lz4, xz).
-* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
+* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
   
 ###  1.1. <a name='not-supported'></a>Not supported
 
@@ -229,7 +229,8 @@ Create a `config.yaml` file in one of the above directories. If the file is in t
 
 Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
 
-If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
+> **Note**
+> If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
 ###  3.3. <a name='header'></a>Header
 
@@ -342,8 +343,8 @@ The following example is displayed from the header (#) at the bottom.
 ov --section-delimiter "^#" --follow-section README.md
 ```
 
- [Watch](#watch) mode is a mode in which `--follow-section` and
- `--section-delimiter "^\f"` are automatically set.
+> **Note**
+> [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
 ###  3.12. <a name='exec-mode'></a>Exec mode
 
