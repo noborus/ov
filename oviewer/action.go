@@ -250,7 +250,7 @@ func (root *Root) setHeader(input string) {
 		root.setMessagef("Set header: %s", ErrInvalidNumber.Error())
 		return
 	}
-	if num < 0 || num > root.vHight-1 {
+	if num < 0 || num > root.vHeight-1 {
 		root.setMessagef("Set header %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -454,8 +454,8 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := jumpPosition(root.vHight, input)
-	if num < 0 || num > root.vHight-1 {
+	num := jumpPosition(root.vHeight, input)
+	if num < 0 || num > root.vHeight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -473,10 +473,10 @@ func (root *Root) resize() {
 }
 
 // jumpPosition determines the position of the jump.
-func jumpPosition(hight int, str string) int {
-	num := int(math.Round(position(hight, str)))
+func jumpPosition(height int, str string) int {
+	num := int(math.Round(position(height, str)))
 	if num < 0 {
-		return (hight - 1) + num
+		return (height - 1) + num
 	}
 	return num
 }
@@ -485,7 +485,7 @@ func jumpPosition(hight int, str string) int {
 // the number of lines from the top for positive numbers (1),
 // dot.number for percentages (.5) = 50%,
 // and % after the number for percentages (50%).
-func position(hight int, str string) float64 {
+func position(height int, str string) float64 {
 	str = strings.TrimSpace(str)
 	if len(str) == 0 {
 		return 0
@@ -510,7 +510,7 @@ func position(hight int, str string) float64 {
 	}
 
 	if p != 0 {
-		return float64(hight) * p
+		return float64(height) * p
 	}
 
 	num, err := strconv.ParseFloat(str, 64)
@@ -528,7 +528,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget = jumpPosition(root.vHight, root.Doc.JumpTargetString)
+	root.Doc.JumpTarget = jumpPosition(root.vHeight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.

@@ -14,7 +14,7 @@ const statusLine = 1
 func (root *Root) draw() {
 	m := root.Doc
 
-	if root.vHight == 0 {
+	if root.vHeight == 0 {
 		m.topLN = 0
 		root.drawStatus()
 		root.Show()
@@ -58,7 +58,7 @@ func (root *Root) drawHeader() int {
 	// hy is the drawing line.
 	hy := 0
 	for ; lY < m.firstLine(); hy++ {
-		if hy > root.vHight {
+		if hy > root.vHeight {
 			break
 		}
 
@@ -105,7 +105,7 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 	var valid bool
 	var lineStr string
 	var pos widthPos
-	for y := root.headerLen; y < root.vHight-statusLine; y++ {
+	for y := root.headerLen; y < root.vHeight-statusLine; y++ {
 		if lastLN != lY {
 			lc, valid = m.getContents(lY, m.TabWidth)
 			if valid {
