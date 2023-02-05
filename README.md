@@ -577,8 +577,8 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
- [ctrl+Home]                  * move to beginning of line
- [ctrl+End]                   * move to end of line
+ [shift+Home]                 * go to beginning of line
+ [shift+End]                  * go to end of line
  [g]                          * go to line(input number and `.n` and `n%` allowed)
 
 	Move document
