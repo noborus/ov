@@ -397,7 +397,12 @@ func (root *Root) moveRightN(n int) {
 		if m.WrapMode {
 			return
 		}
-		m.x += n
+		end := root.endRight()
+		if end < m.x+n {
+			m.x = end
+		} else {
+			m.x += n
+		}
 		return
 	}
 
@@ -498,6 +503,40 @@ func (root *Root) moveHfRight() {
 	}
 
 	m.x += (root.vWidth / 2)
+}
+
+// moveBeginLeft moves to the beginning of the line.
+func (root *Root) moveBeginLeft() {
+	m := root.Doc
+
+	if m.WrapMode {
+		return
+	}
+	m.x = 0
+}
+
+// moveEndRight moves to the end of the line.
+// Move so that the end of the currently displayed line is visible.
+func (root *Root) moveEndRight() {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	m.x = root.endRight()
+}
+
+func (root *Root) endRight() int {
+	m := root.Doc
+	x := 0
+	for _, line := range root.lines {
+		lY := line.number
+		lc, err := m.contentsLN(lY, m.TabWidth)
+		if err != nil {
+			continue
+		}
+		x = max(x, len(lc))
+	}
+	return x - ((root.vWidth - root.startX) - 1)
 }
 
 // bottomLineNum returns the display start line

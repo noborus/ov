@@ -577,6 +577,8 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
+ [shift+Home]                 * go to beginning of line
+ [shift+End]                  * go to end of line
  [g]                          * go to line(input number and `.n` and `n%` allowed)
 
 	Move document
@@ -642,6 +644,8 @@ It can also be changed after startup.
  [alt+i]                      * incremental search toggle
  [Up]                         * previous candidate
  [Down]                       * next candidate
+ [ctrl+c]                     * copy to clipboard.
+ [ctrl+v]                     * paste from clipboard
 ```
 
 ##  6. <a name='customize'></a>Customize
