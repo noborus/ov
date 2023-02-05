@@ -63,8 +63,8 @@ type Root struct {
 
 	// vWidth represents the screen width.
 	vWidth int
-	// vHight represents the screen height.
-	vHight int
+	// vHeight represents the screen height.
+	vHeight int
 
 	// startX is the start position of x.
 	startX int
@@ -776,14 +776,14 @@ func mergeGeneral(src general, dst general) general {
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
-	root.vWidth, root.vHight = screen.Size()
+	root.vWidth, root.vHeight = screen.Size()
 
 	// Do not allow size 0.
 	root.vWidth = max(root.vWidth, 1)
-	root.vHight = max(root.vHight, 1)
+	root.vHeight = max(root.vHeight, 1)
 
-	root.lines = make([]line, root.vHight+1)
-	root.statusPos = root.vHight - statusLine
+	root.lines = make([]line, root.vHeight+1)
+	root.statusPos = root.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -796,15 +796,15 @@ func (root *Root) docSmall() bool {
 	if !m.BufEOF() {
 		return false
 	}
-	hight := 0
+	height := 0
 	for y := 0; y < m.BufEndNum(); y++ {
 		lc, err := m.contentsLN(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
-		hight += 1 + (len(lc) / root.vWidth)
-		if hight > root.vHight {
+		height += 1 + (len(lc) / root.vWidth)
+		if height > root.vHeight {
 			return false
 		}
 	}
