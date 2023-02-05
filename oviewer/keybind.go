@@ -36,6 +36,8 @@ const (
 	actionMoveRight      = "right"
 	actionMoveHfLeft     = "half_left"
 	actionMoveHfRight    = "half_right"
+	actionMoveBeginLeft  = "begin_left"
+	actionMoveEndRight   = "end_right"
 	actionMoveBottom     = "bottom"
 	actionMovePgUp       = "page_up"
 	actionMovePgDn       = "page_down"
@@ -113,6 +115,8 @@ func (root *Root) handlers() map[string]func() {
 		actionMoveRight:      root.moveRight,
 		actionMoveHfLeft:     root.moveHfLeft,
 		actionMoveHfRight:    root.moveHfRight,
+		actionMoveBeginLeft:  root.moveBeginLeft,
+		actionMoveEndRight:   root.moveEndRight,
 		actionSection:        root.setSectionDelimiterMode,
 		actionSectionStart:   root.setSectionStartMode,
 		actionNextSection:    root.nextSection,
@@ -188,6 +192,8 @@ func defaultKeyBinds() KeyBind {
 		actionMoveRight:      {"right"},
 		actionMoveHfLeft:     {"ctrl+left"},
 		actionMoveHfRight:    {"ctrl+right"},
+		actionMoveBeginLeft:  {"ctrl+Home"},
+		actionMoveEndRight:   {"ctrl+End"},
 		actionSection:        {"alt+d"},
 		actionSectionStart:   {"ctrl+F3", "alt+s"},
 		actionNextSection:    {"space"},
@@ -261,6 +267,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
+	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
+	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
 	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")

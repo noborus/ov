@@ -500,6 +500,38 @@ func (root *Root) moveHfRight() {
 	m.x += (root.vWidth / 2)
 }
 
+// moveBeginLeft moves to the beginning of the line.
+func (root *Root) moveBeginLeft() {
+	m := root.Doc
+
+	if m.WrapMode {
+		return
+	}
+	m.x = 0
+}
+
+// moveEndRight moves to the end of the line.
+// Move so that the end of the currently displayed line is visible.
+func (root *Root) moveEndRight() {
+	m := root.Doc
+
+	if m.WrapMode {
+		return
+	}
+	maxX := 0
+	for _, line := range root.lines {
+		lY := line.number
+		lc, err := m.contentsLN(lY, m.TabWidth)
+		if err != nil {
+			continue
+		}
+		_, pos := ContentsToStr(lc)
+		maxX = max(pos[len(pos)-1], maxX)
+	}
+	log.Println(maxX)
+	m.x = maxX - ((root.vWidth - root.startX) - 1)
+}
+
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(lN int) (int, int) {
