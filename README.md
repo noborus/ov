@@ -503,7 +503,7 @@ Mode:
 
 ###  3.21. <a name='output-on-exit'></a>Output on exit
 
-`--exit-write` `-X`(default key 'Q') option prints the current screen on exit.
+`--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
 
 By default, it outputs the amount of the displayed screen and exits.
