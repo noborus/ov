@@ -636,6 +636,9 @@ func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
 	}
+	if root.Doc == root.logDoc {
+		return
+	}
 	root.message = msg
 	if len(msg) == 0 {
 		return

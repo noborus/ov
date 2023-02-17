@@ -61,13 +61,13 @@ var csiCache sync.Map
 
 // parseState represents the affected state after parsing.
 type parseState struct {
-	state     int
+	style     tcell.Style
 	parameter strings.Builder
 	url       strings.Builder
-	style     tcell.Style
+	bsContent content
+	state     int
 	tabx      int
 	bsFlag    bool // backspace(^H) flag
-	bsContent content
 }
 
 // parseString converts a string to lineContents.

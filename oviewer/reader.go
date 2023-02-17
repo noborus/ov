@@ -168,13 +168,7 @@ func (m *Document) close() error {
 		return nil
 	}
 
-	if m.seekable {
-		pos, err := m.file.Seek(0, io.SeekCurrent)
-		if err != nil {
-			return fmt.Errorf("close: %w", err)
-		}
-		m.offset = pos
-	}
+	m.offset = m.size
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
@@ -210,46 +204,76 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 // readAll actually reads everything.
 // The read lines are stored in the lines of the Document.
 func (m *Document) readAll(reader *bufio.Reader) error {
-	var line strings.Builder
-
+	chunk := m.chunks[len(m.chunks)-1]
 	for {
-		buf, isPrefix, err := reader.ReadLine()
-		if err != nil {
+		if err := m.readChunk(chunk, reader); err != nil {
 			return err
 		}
-		line.Write(buf)
-		if isPrefix {
-			continue
+		chunk = NewChunk(m.size)
+		m.chunks = append(m.chunks, chunk)
+	}
+}
+
+func (m *Document) readChunk(chunk *chunk, reader *bufio.Reader) error {
+	var line strings.Builder
+	var isPrefix bool
+
+	for i := 0; i < ChunkSize; i++ {
+		buf, err := reader.ReadSlice('\n')
+		if err == bufio.ErrBufferFull {
+			isPrefix = true
+			err = nil
 		}
 
-		m.append(line.String())
+		line.Write(buf)
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+		atomic.StoreInt32(&m.changed, 1)
+		if err != nil {
+			if line.Len() != 0 {
+				m.append(chunk, line.String())
+			}
+			return err
+		}
+		m.append(chunk, line.String())
 		line.Reset()
 	}
+	return nil
 }
 
 // append appends to the lines of the document.
-func (m *Document) append(lines ...string) {
+func (m *Document) append(chunk *chunk, line string) {
 	m.mu.Lock()
-	for _, line := range lines {
-		m.lines = append(m.lines, line)
-		m.endNum++
-	}
+	size := len(line)
+	chunk.lines = append(chunk.lines, line)
+	m.size += int64(size)
+	m.endNum++
 	m.mu.Unlock()
-	atomic.StoreInt32(&m.changed, 1)
 }
 
-func (m *Document) appendFormFeed() {
+func (m *Document) appendFormFeed(chunk *chunk) {
 	line := ""
 	m.mu.Lock()
 	if m.endNum > 0 {
-		line = m.lines[m.endNum-1]
+		line = chunk.lines[m.endNum-1]
 	}
 	m.mu.Unlock()
 
 	// Do not add if the previous is FormFeed.
 	if line != FormFeed {
-		m.append(FormFeed)
+		m.append(chunk, FormFeed)
 	}
+}
+
+func (m *Document) lastChunk() *chunk {
+	if m.endNum < len(m.chunks)*ChunkSize {
+		return m.chunks[len(m.chunks)-1]
+	}
+	chunk := NewChunk(m.size)
+	m.chunks = append(m.chunks, chunk)
+	return chunk
 }
 
 // reload will read again.
@@ -272,7 +296,8 @@ func (m *Document) reload() error {
 	}
 
 	if m.WatchMode {
-		m.appendFormFeed()
+		chunk := m.lastChunk()
+		m.appendFormFeed(chunk)
 	} else {
 		m.reset()
 		m.topLN = 0
@@ -290,7 +315,9 @@ func (m *Document) reload() error {
 func (m *Document) reset() {
 	m.mu.Lock()
 	m.endNum = 0
-	m.lines = m.lines[:0]
+	m.chunks = []*chunk{
+		NewChunk(0),
+	}
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 	m.ClearCache()

@@ -14,6 +14,9 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
+// ChunkSize is the unit of number of lines to split the file.
+var ChunkSize = 10000
+
 // The Document structure contains the values
 // for the logical screen.
 type Document struct {
@@ -34,9 +37,11 @@ type Document struct {
 	// Is it possible to seek.
 	seekable bool
 
-	// lines stores the contents of the file in slices of strings.
-	// lines,endNum and eof is updated by reader goroutine.
-	lines []string
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
+
+	// size is the number of bytes read.
+	size int64
 	// endNum is the number of the last line read.
 	endNum int
 
@@ -101,10 +106,18 @@ type Document struct {
 	mu sync.Mutex
 }
 
+// chunk stores the contents of the split file as slices of strings.
+type chunk struct {
+	// lines stores the contents of the file in slices of strings.
+	// lines,endNum and eof is updated by reader goroutine.
+	lines []string
+	// start is the first position of the number of bytes read.
+	start int64
+}
+
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		lines:    make([]string, 0),
 		eofCh:    make(chan struct{}),
 		followCh: make(chan struct{}),
 		changCh:  make(chan struct{}),
@@ -117,12 +130,21 @@ func NewDocument() (*Document, error) {
 		lastContentsNum: -1,
 		seekable:        true,
 		preventReload:   false,
+		chunks: []*chunk{
+			NewChunk(0),
+		},
 	}
-
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
 	return m, nil
+}
+
+func NewChunk(start int64) *chunk {
+	return &chunk{
+		lines: make([]string, 0, ChunkSize),
+		start: start,
+	}
 }
 
 // OpenDocument opens a file and returns a Document.
@@ -174,7 +196,9 @@ func (m *Document) GetLine(n int) string {
 	if n < 0 || n >= m.endNum {
 		return ""
 	}
-	return m.lines[n]
+	chunkNum := n / ChunkSize
+	chunk := m.chunks[chunkNum]
+	return chunk.lines[n%ChunkSize]
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -188,7 +212,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprintln(w, m.GetLine(n))
+		fmt.Fprint(w, m.GetLine(n))
 	}
 }
 
