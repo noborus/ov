@@ -256,8 +256,8 @@ func (m *Document) append(chunk *chunk, line string) {
 func (m *Document) appendFormFeed(chunk *chunk) {
 	line := ""
 	m.mu.Lock()
-	if m.endNum > 0 {
-		line = chunk.lines[m.endNum-1]
+	if len(chunk.lines) > 0 {
+		line = chunk.lines[len(chunk.lines)-1]
 	}
 	m.mu.Unlock()
 
