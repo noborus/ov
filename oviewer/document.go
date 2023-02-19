@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -196,9 +197,20 @@ func (m *Document) GetLine(n int) string {
 	if n < 0 || n >= m.endNum {
 		return ""
 	}
+
 	chunkNum := n / ChunkSize
+	chunkLine := n % ChunkSize
+	if len(m.chunks)-1 < chunkNum {
+		log.Println("over chunk size: ", chunkNum)
+		return ""
+	}
 	chunk := m.chunks[chunkNum]
-	return chunk.lines[n%ChunkSize]
+	if len(chunk.lines)-1 < chunkLine {
+		log.Printf("over lines size: chunk[%d]:%d < %d", chunkNum, len(chunk.lines)-1, chunkLine)
+		return ""
+	}
+
+	return chunk.lines[chunkLine]
 }
 
 // CurrentLN returns the currently displayed line number.

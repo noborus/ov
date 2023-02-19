@@ -205,20 +205,23 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 // The read lines are stored in the lines of the Document.
 func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.chunks[len(m.chunks)-1]
+	start := len(chunk.lines)
 	for {
-		if err := m.readChunk(chunk, reader); err != nil {
+		if err := m.packChunk(chunk, start, reader); err != nil {
 			return err
 		}
 		chunk = NewChunk(m.size)
 		m.chunks = append(m.chunks, chunk)
+		start = 0
 	}
 }
 
-func (m *Document) readChunk(chunk *chunk, reader *bufio.Reader) error {
+// packChunk packs lines read from reader into chunks.
+func (m *Document) packChunk(chunk *chunk, start int, reader *bufio.Reader) error {
 	var line strings.Builder
 	var isPrefix bool
 
-	for i := 0; i < ChunkSize; i++ {
+	for i := start; i < ChunkSize; i++ {
 		buf, err := reader.ReadSlice('\n')
 		if err == bufio.ErrBufferFull {
 			isPrefix = true
@@ -243,7 +246,7 @@ func (m *Document) readChunk(chunk *chunk, reader *bufio.Reader) error {
 	return nil
 }
 
-// append appends to the lines of the document.
+// append appends to the line of the chunk.
 func (m *Document) append(chunk *chunk, line string) {
 	m.mu.Lock()
 	size := len(line)
