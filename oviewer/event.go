@@ -28,7 +28,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.draw()
 		}
 		root.skipDraw = false
-		if root.watchRestart.Swap(false) {
+		if root.Doc.WatchMode && root.watchRestart.Load() {
+			root.watchRestart.Store(false)
 			root.watchStart()
 		}
 		ev := root.Screen.PollEvent()

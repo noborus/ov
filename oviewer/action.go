@@ -123,7 +123,7 @@ func (root *Root) watchStart() {
 	m := root.Doc
 	m.WatchInterval = max(m.WatchInterval, 1)
 	if m.ticker != nil {
-		log.Println("watch stop")
+		log.Println("already watch stop")
 		m.ticker.Stop()
 	}
 	log.Printf("watch start at interval %d", m.WatchInterval)
