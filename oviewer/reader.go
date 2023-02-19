@@ -211,7 +211,9 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 			return err
 		}
 		chunk = NewChunk(m.size)
+		m.mu.Lock()
 		m.chunks = append(m.chunks, chunk)
+		m.mu.Unlock()
 		start = 0
 	}
 }
@@ -271,6 +273,8 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 }
 
 func (m *Document) lastChunk() *chunk {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.endNum < len(m.chunks)*ChunkSize {
 		return m.chunks[len(m.chunks)-1]
 	}

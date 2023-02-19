@@ -114,7 +114,7 @@ func (root *Root) toggleWatch() {
 		root.Doc.watchMode()
 	}
 	if root.Doc.WatchMode {
-		root.watchStart()
+		root.watchRestart.Store(true)
 	}
 }
 
@@ -384,7 +384,7 @@ func (root *Root) setWatchInterval(input string) {
 	}
 
 	root.Doc.WatchMode = true
-	root.watchStart()
+	root.watchRestart.Store(true)
 	root.setMessagef("Set watch interval %d", interval)
 }
 

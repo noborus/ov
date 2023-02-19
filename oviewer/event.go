@@ -15,7 +15,7 @@ var UpdateInterval = 50 * time.Millisecond
 // eventLoop is manages and executes events in the eventLoop routine.
 func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
-		root.watchStart()
+		root.watchRestart.Store(true)
 	}
 	go root.updateInterval(ctx)
 
@@ -28,7 +28,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.draw()
 		}
 		root.skipDraw = false
-
+		if root.watchRestart.Swap(false) {
+			root.watchStart()
+		}
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:

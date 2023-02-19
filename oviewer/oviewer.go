@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"code.rocketnine.space/tslocum/cbind"
@@ -77,6 +78,7 @@ type Root struct {
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
 
+	watchRestart atomic.Bool
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
