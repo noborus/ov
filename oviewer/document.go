@@ -16,7 +16,7 @@ import (
 )
 
 // ChunkSize is the unit of number of lines to split the file.
-var ChunkSize = 10
+var ChunkSize = 10000
 
 // The Document structure contains the values
 // for the logical screen.
