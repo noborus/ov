@@ -75,9 +75,11 @@ type Document struct {
 	general
 
 	// WatchMode is watch mode.
-	WatchMode bool
-	ticker    *time.Ticker
-
+	WatchMode    bool
+	ticker       *time.Ticker
+	tickerDone   chan struct{}
+	watchRestart atomic.Bool
+	tickerState  atomic.Bool
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
@@ -119,9 +121,10 @@ type chunk struct {
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		eofCh:    make(chan struct{}),
-		followCh: make(chan struct{}),
-		changCh:  make(chan struct{}),
+		eofCh:      make(chan struct{}),
+		followCh:   make(chan struct{}),
+		changCh:    make(chan struct{}),
+		tickerDone: make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,

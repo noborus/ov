@@ -104,7 +104,6 @@ func (root *Root) setDocumentNum(docNum int) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
-	root.watchRestart.Store(true)
 	root.ViewSync()
 }
 

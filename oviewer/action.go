@@ -113,35 +113,39 @@ func (root *Root) toggleWatch() {
 	} else {
 		root.Doc.watchMode()
 	}
-	if root.Doc.WatchMode {
-		root.watchRestart.Store(true)
-	}
+	root.Doc.watchRestart.Store(true)
 }
 
-// watchStart starts watch mode.
-func (root *Root) watchStart() {
+// watchControl start/stop watch mode.
+func (root *Root) watchControl() {
 	m := root.Doc
 	m.WatchInterval = max(m.WatchInterval, 1)
-	if m.ticker != nil {
-		log.Println("already watch stop")
-		m.ticker.Stop()
+	if m.tickerState.Load() == true {
+		m.tickerDone <- struct{}{}
+		<-m.tickerDone
+	}
+	if !root.Doc.WatchMode {
+		return
 	}
 	log.Printf("watch start at interval %d", m.WatchInterval)
 	m.ticker = time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
+	m.tickerState.Store(true)
 	go func() {
 		for {
-			<-m.ticker.C
-			if m.WatchMode {
+			select {
+			case <-m.tickerDone:
+				log.Println("watch stop")
+				m.ticker.Stop()
+				m.tickerState.Store(false)
+				m.tickerDone <- struct{}{}
+				return
+			case <-m.ticker.C:
 				ev := &eventReload{}
 				ev.SetEventNow()
 				ev.m = m
 				if err := root.Screen.PostEvent(ev); err != nil {
 					log.Println(err)
 				}
-			} else {
-				log.Println("watch stop")
-				m.ticker.Stop()
-				return
 			}
 		}
 	}()
@@ -379,12 +383,12 @@ func (root *Root) setWatchInterval(input string) {
 
 	root.Doc.WatchInterval = interval
 	if root.Doc.WatchInterval == 0 {
-		root.Doc.WatchMode = false
-		return
+		root.Doc.unWatchMode()
+	} else {
+		root.Doc.watchMode()
 	}
-
-	root.Doc.WatchMode = true
-	root.watchRestart.Store(true)
+	root.Doc.watchRestart.Store(true)
+	log.Printf("Set watch interval %d", interval)
 	root.setMessagef("Set watch interval %d", interval)
 }
 
