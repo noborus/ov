@@ -67,6 +67,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.firstBackSearch(ctx)
 		case *eventNextBackSearch:
 			root.nextBackSearch(ctx, ev.str)
+		case *eventSearchMove:
+			root.searchGoLine(ev.value)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:
@@ -343,7 +345,7 @@ func (root *Root) Reload() {
 
 // releaseEventBuffer will release all event buffers.
 func (root *Root) releaseEventBuffer() {
-	for root.HasPendingEvent() {
+	for root.Screen.HasPendingEvent() {
 		_ = root.Screen.PollEvent()
 	}
 }

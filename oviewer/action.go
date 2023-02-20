@@ -151,6 +151,12 @@ func (root *Root) watchControl() {
 	}()
 }
 
+func (root *Root) searchGoLine(lN int) {
+	root.Doc.topLN = lN - root.Doc.firstLine()
+	root.Doc.topLX = 0
+	root.moveNumUp(root.Doc.JumpTarget)
+}
+
 // goLine will move to the specified line.
 func (root *Root) goLine(input string) {
 	if len(input) == 0 {
