@@ -353,6 +353,7 @@ func (root *Root) releaseEventBuffer() {
 // postEvent is a wrapper for tcell.Event.
 func (root *Root) postEvent(ev tcell.Event) {
 	if err := root.Screen.PostEvent(ev); err != nil {
-		log.Println(err)
+		log.Printf("postEvent %s", err)
+		root.releaseEventBuffer()
 	}
 }

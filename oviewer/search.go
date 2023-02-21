@@ -278,7 +278,6 @@ func (root *Root) cancelWait() error {
 			c.SetKey(mod, key, cancelApp)
 		}
 	}
-
 	// Allow only some events while searching.
 	for {
 		ev := root.Screen.PollEvent()
@@ -355,7 +354,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 		root.searchQuit()
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
+				log.Printf("incSearch %s", err)
 			}
 			return
 		}
