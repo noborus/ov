@@ -78,8 +78,8 @@ type Document struct {
 	WatchMode    bool
 	ticker       *time.Ticker
 	tickerDone   chan struct{}
-	watchRestart atomic.Bool
-	tickerState  atomic.Bool
+	watchRestart int32
+	tickerState  int32
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
