@@ -16,10 +16,13 @@ func NewHelp(k KeyBind) (*Document, error) {
 		return nil, err
 	}
 
-	m.append("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
+	m.append(m.chunks[len(m.chunks)-1], "\t\t\t"+gchalk.WithUnderline().Bold("ov help"))
 
 	str := strings.Split(KeyBindString(k), "\n")
-	m.append(str...)
+	for _, s := range str {
+		m.append(m.chunks[len(m.chunks)-1], s)
+	}
+
 	m.FileName = "Help"
 	m.eof = 1
 	m.preventReload = true

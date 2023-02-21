@@ -217,11 +217,6 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	return NewSearcher(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
 }
 
-// eventSearchQuit represents a search quit event.
-type eventSearchQuit struct {
-	tcell.EventTime
-}
-
 // searchMove searches forward/backward and moves to the nearest matching line.
 func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
 	if searcher == nil {
@@ -248,9 +243,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		if err != nil {
 			return err
 		}
-		root.Doc.topLN = lN - root.Doc.firstLine()
-		root.Doc.topLX = 0
-		root.moveNumUp(root.Doc.JumpTarget)
+		root.searchGo(lN)
 		return nil
 	})
 
@@ -285,25 +278,45 @@ func (root *Root) cancelWait() error {
 			c.SetKey(mod, key, cancelApp)
 		}
 	}
-
+	// Allow only some events while searching.
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
-		case *tcell.EventKey:
+		case *tcell.EventKey: // cancel key?
 			c.Capture(ev)
-		case *eventSearchQuit:
+		case *eventSearchQuit: // found
+			return nil
+		case *eventUpdateEndNum:
+			root.updateEndNum()
+		default:
+			log.Printf("unexpected event %#v", ev)
 			return nil
 		}
 	}
 }
 
+// eventSearchQuit represents a search quit event.
+type eventSearchQuit struct {
+	tcell.EventTime
+}
+
 // searchQuit fires the eventSearchQuit event.
 func (root *Root) searchQuit() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// eventSearchMove represents the moveo input mode.
+type eventSearchMove struct {
+	tcell.EventTime
+	value int
+}
+
+func (root *Root) searchGo(lN int) {
+	ev := &eventSearchMove{}
+	ev.SetEventNow()
+	ev.value = lN
 	root.postEvent(ev)
 }
 
@@ -341,13 +354,11 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 		root.searchQuit()
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
+				log.Printf("incSearch %s", err)
 			}
 			return
 		}
-		root.Doc.topLN = lN - root.Doc.firstLine()
-		root.Doc.topLX = 0
-		root.moveNumUp(root.Doc.JumpTarget)
+		root.searchGo(lN)
 	}()
 }
 
