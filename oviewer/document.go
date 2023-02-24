@@ -28,53 +28,46 @@ type Document struct {
 
 	// File is the os.File.
 	file *os.File
-	// offset
-	offset int64
-	// CFormat is a compressed format.
-	CFormat Compressed
-
-	// preventReload is true to prevent reload.
-	preventReload bool
-	// Is it possible to seek.
-	seekable bool
 
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 
-	// size is the number of bytes read.
-	size int64
-	// endNum is the number of the last line read.
-	endNum int
-
-	// 1 if EOF is reached.
-	eof int32
 	// notify when eof is reached.
 	eofCh chan struct{}
 	// notify when reopening.
 	followCh chan struct{}
-	// openFollow represents the open followMode file.
-	openFollow int32
 
-	// 1 if there is a changed.
-	changed int32
 	// notify when a file changes.
 	changCh chan struct{}
 
 	cancel context.CancelFunc
-	// 1 if there is a closed.
-	closed int32
 
 	cache *lru.Cache
+
+	ticker     *time.Ticker
+	tickerDone chan struct{}
+
+	// multiColorRegexps holds multicolor regular expressions in slices.
+	multiColorRegexps []*regexp.Regexp
+
+	// marked is a list of marked line numbers.
+	marked []int
 
 	// status is the display status of the document.
 	general
 
-	// WatchMode is watch mode.
-	WatchMode    bool
-	ticker       *time.Ticker
-	tickerDone   chan struct{}
-	watchRestart int32
-	tickerState  int32
+	// size is the number of bytes read.
+	size int64
+	// offset
+	offset int64
+
+	// endNum is the number of the last line read.
+	endNum int
+
+	markedPoint int
+
+	// Last moved Section position.
+	lastSectionPosNum int
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
@@ -91,17 +84,30 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
-	// marked is a list of marked line numbers.
-	marked      []int
-	markedPoint int
-
-	// Last moved Section position.
-	lastSectionPosNum int
-	// multiColorRegexps holds multicolor regular expressions in slices.
-	multiColorRegexps []*regexp.Regexp
+	// CFormat is a compressed format.
+	CFormat Compressed
 
 	// mu controls the mutex.
 	mu sync.Mutex
+
+	watchRestart int32
+	tickerState  int32
+
+	// 1 if EOF is reached.
+	eof int32
+	// openFollow represents the open followMode file.
+	openFollow int32
+	// 1 if there is a changed.
+	changed int32
+	// 1 if there is a closed.
+	closed int32
+
+	// WatchMode is watch mode.
+	WatchMode bool
+	// preventReload is true to prevent reload.
+	preventReload bool
+	// Is it possible to seek.
+	seekable bool
 }
 
 type lineC struct {

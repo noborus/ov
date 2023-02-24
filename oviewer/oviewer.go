@@ -21,8 +21,6 @@ import (
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
-	// Config contains settings that determine the behavior of ov.
-	Config
 
 	// Doc contains the model of ov
 	Doc *Document
@@ -31,25 +29,12 @@ type Root struct {
 	// log
 	logDoc *Document
 
-	// DocList
-	DocList    []*Document
-	CurrentDoc int
-	// mu controls the RWMutex.
-	mu sync.RWMutex
-
-	// screenMode represents the mode of screen.
-	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
-	// Original position at the start of search.
-	OriginPos int
-	// Original string.
-	OriginStr string
+
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchWord for on-screen highlighting.
-	searchWord string
 	// searchReg for on-screen highlighting.
 	searchReg *regexp.Regexp
 
@@ -58,8 +43,35 @@ type Root struct {
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
+	// searchWord for on-screen highlighting.
+	searchWord string
+	// Original string.
+	OriginStr string
+
 	// message is the message to display.
 	message string
+
+	// DocList
+	DocList []*Document
+	// numbers is the line information of the currently displayed screen.
+	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
+	numbers []LineNumber
+	// cancelKeys represents the cancellation key string.
+	cancelKeys []string
+
+	// Config contains settings that determine the behavior of ov.
+	Config
+
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
+
+	// mu controls the RWMutex.
+	mu sync.RWMutex
+
+	// Original position at the start of search.
+	OriginPos int
+
+	CurrentDoc int
 
 	// vWidth represents the screen width.
 	vWidth int
@@ -69,26 +81,11 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
-	// numbers is the line information of the currently displayed screen.
-	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
-	numbers []LineNumber
-
-	// skipDraw skips draw once when true.
-	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
-	skipDraw bool
-
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
 	x2 int
 	y2 int
-
-	// mousePressed is a flag when the mouse selection button is pressed.
-	mousePressed bool
-	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
-	// mouseRectangle is a flag for rectangle selection.
-	mouseRectangle bool
 
 	// headerLen is the actual header length when wrapped.
 	headerLen int
@@ -98,8 +95,15 @@ type Root struct {
 	// minStartX is the minimum start position of x.
 	minStartX int
 
-	// cancelKeys represents the cancellation key string.
-	cancelKeys []string
+	// skipDraw skips draw once when true.
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
+	skipDraw bool
+	// mousePressed is a flag when the mouse selection button is pressed.
+	mousePressed bool
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+	// mouseRectangle is a flag for rectangle selection.
+	mouseRectangle bool
 }
 
 // Line is Number of logical lines and number of wrapping lines on the screen.
@@ -111,12 +115,33 @@ type LineNumber struct {
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {
+	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
+	ColumnDelimiterReg *regexp.Regexp
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter string
+	// SectionDelimiterReg is a section delimiter.
+	SectionDelimiterReg *regexp.Regexp
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter string
+	// Specified string for jumpTarget.
+	JumpTargetString string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
+
 	// TabWidth is tab stop num.
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
 	// SkipLines is the rows to skip.
 	SkipLines int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition int
+	// JumpTarget is the display position of search results.
+	JumpTarget int
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -127,10 +152,6 @@ type general struct {
 	LineNumMode bool
 	// Wrap is Wrap mode.
 	WrapMode bool
-	// ColumnDelimiter is a column delimiter.
-	ColumnDelimiter string
-	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
-	ColumnDelimiterReg *regexp.Regexp
 	// FollowMode is the follow mode.
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.
@@ -139,26 +160,22 @@ type general struct {
 	FollowSection bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
-	// WatchInterval is the watch interval (seconds).
-	WatchInterval int
-	// MarkStyleWidth is width to apply the style of the marked line.
-	MarkStyleWidth int
-	// SectionDelimiter is a section delimiter.
-	SectionDelimiter string
-	// SectionDelimiterReg is a section delimiter.
-	SectionDelimiterReg *regexp.Regexp
-	// SectionStartPosition is a section start position.
-	SectionStartPosition int
-	// Specified string for jumpTarget.
-	JumpTargetString string
-	// JumpTarget is the display position of search results.
-	JumpTarget int
-	// MultiColorWords specifies words to color separated by spaces.
-	MultiColorWords []string
 }
 
 // Config represents the settings of ov.
 type Config struct {
+	// KeyBinding
+	Keybind map[string][]string
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
+
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+
 	// StyleAlternate is a style that applies line by line.
 	StyleAlternate OVStyle
 	// StyleHeader is the style that applies to the header.
@@ -188,13 +205,7 @@ type Config struct {
 
 	// General represents the general behavior.
 	General general
-	// Mode represents the operation of the customized mode.
-	Mode map[string]general
 
-	// Mouse support disable.
-	DisableMouse bool
-	// IsWriteOriginal is true, write the current screen on quit.
-	IsWriteOriginal bool
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
@@ -202,6 +213,10 @@ type Config struct {
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
 
+	// Mouse support disable.
+	DisableMouse bool
+	// IsWriteOriginal is true, write the current screen on quit.
+	IsWriteOriginal bool
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
@@ -212,25 +227,6 @@ type Config struct {
 	Incsearch bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-	// KeyBinding
-	Keybind map[string][]string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
-	// Old setting.
-	// Deprecated: Alternating background color.
-	ColorAlternate string
-	// Deprecated: Header color.
-	ColorHeader string
-	// Deprecated: OverStrike color.
-	ColorOverStrike string
-	// Deprecated: OverLine color.
-	ColorOverLine string
 }
 
 // OVStyle represents a style in addition to the original style.
