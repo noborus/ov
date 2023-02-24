@@ -153,11 +153,13 @@ func TestDocument_reload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &Document{
-				FileName:  tt.fields.FileName,
-				WatchMode: tt.fields.WatchMode,
-				seekable:  tt.fields.seekable,
+			m, err := NewDocument()
+			if err != nil {
+				t.Fatal("NewDocument error")
 			}
+			m.FileName = tt.fields.FileName
+			m.WatchMode = tt.fields.WatchMode
+			m.seekable = tt.fields.seekable
 			if err := m.reload(); (err != nil) != tt.wantErr {
 				t.Errorf("Document.reload() error = %v, wantErr %v", err, tt.wantErr)
 			}

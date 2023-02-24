@@ -146,56 +146,6 @@ func TestDocument_Export(t *testing.T) {
 	}
 }
 
-func TestDocument_getContents(t *testing.T) {
-	type fields struct {
-		FileName string
-	}
-	type args struct {
-		lN       int
-		tabWidth int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   contents
-		want1  bool
-	}{
-		{
-			name: "test normal",
-			fields: fields{
-				FileName: "../testdata/normal.txt",
-			},
-			args: args{
-				lN:       0,
-				tabWidth: 8,
-			},
-			want:  parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
-			want1: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-
-			for !m.BufEOF() {
-			}
-			got, ok := m.getContents(tt.args.lN, tt.args.tabWidth)
-			if !reflect.DeepEqual(got, tt.want) {
-				g, _ := ContentsToStr(got)
-				w, _ := ContentsToStr(tt.want)
-				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
-			}
-			if ok != tt.want1 {
-				t.Errorf("Document.getContents() ok = %v, want %v", ok, tt.want1)
-			}
-		})
-	}
-}
-
 func TestDocument_searchLine(t *testing.T) {
 	type fields struct {
 		FileName string

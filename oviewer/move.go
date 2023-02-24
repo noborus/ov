@@ -528,7 +528,7 @@ func (root *Root) moveEndRight() {
 func (root *Root) endRight() int {
 	m := root.Doc
 	x := 0
-	for _, line := range root.lines {
+	for _, line := range root.numbers {
 		lY := line.number
 		lc, err := m.contentsLN(lY, m.TabWidth)
 		if err != nil {

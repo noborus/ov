@@ -69,9 +69,9 @@ type Root struct {
 	// startX is the start position of x.
 	startX int
 
-	// lines is the line information of the currently displayed screen.
-	// lines (number of logical lines and number of wrapping lines) from y on the screen.
-	lines []line
+	// numbers is the line information of the currently displayed screen.
+	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
+	numbers []LineNumber
 
 	// skipDraw skips draw once when true.
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
@@ -103,7 +103,7 @@ type Root struct {
 }
 
 // Line is Number of logical lines and number of wrapping lines on the screen.
-type line struct {
+type LineNumber struct {
 	number int
 	wrap   int
 }
@@ -487,8 +487,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		err := watcher.Add(doc.FileName)
-		if err != nil {
+		if err := watcher.Add(doc.FileName); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
 	}
@@ -785,7 +784,7 @@ func (root *Root) prepareView() {
 	root.vWidth = max(root.vWidth, 1)
 	root.vHeight = max(root.vHeight, 1)
 
-	root.lines = make([]line, root.vHeight+1)
+	root.numbers = make([]LineNumber, root.vHeight+1)
 	root.statusPos = root.vHeight - statusLine
 }
 
@@ -838,10 +837,10 @@ func (root *Root) WriteLog() {
 	m.Export(os.Stdout, start, end)
 }
 
-// lineInfo returns the line information from y on the screen.
-func (root *Root) lineInfo(y int) line {
-	if y >= 0 && y <= len(root.lines) {
-		return root.lines[y]
+// lineNumber returns the line information from y on the screen.
+func (root *Root) lineNumber(y int) LineNumber {
+	if y >= 0 && y <= len(root.numbers) {
+		return root.numbers[y]
 	}
-	return root.lines[0]
+	return root.numbers[0]
 }

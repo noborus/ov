@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dgraph-io/ristretto"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // ChunkSize is the unit of number of lines to split the file.
@@ -64,12 +64,7 @@ type Document struct {
 	// 1 if there is a closed.
 	closed int32
 
-	// cache represents a cache of contents.
-	cache *ristretto.Cache
-
-	lastContentsNum int
-	lastContentsStr string
-	lastPos         widthPos
+	cache *lru.Cache
 
 	// status is the display status of the document.
 	general
@@ -109,6 +104,12 @@ type Document struct {
 	mu sync.Mutex
 }
 
+type lineC struct {
+	str string
+	lc  contents
+	pos widthPos
+}
+
 // chunk stores the contents of the split file as slices of strings.
 type chunk struct {
 	// lines stores the contents of the file in slices of strings.
@@ -120,6 +121,10 @@ type chunk struct {
 
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
+	cache, err := lru.New(1024)
+	if err != nil {
+		return nil, err
+	}
 	m := &Document{
 		eofCh:      make(chan struct{}),
 		followCh:   make(chan struct{}),
@@ -131,15 +136,12 @@ func NewDocument() (*Document, error) {
 			MarkStyleWidth:  1,
 			PlainMode:       false,
 		},
-		lastContentsNum: -1,
-		seekable:        true,
-		preventReload:   false,
+		seekable:      true,
+		preventReload: false,
 		chunks: []*chunk{
 			NewChunk(0),
 		},
-	}
-	if err := m.NewCache(); err != nil {
-		return nil, err
+		cache: cache,
 	}
 	return m, nil
 }
@@ -243,23 +245,9 @@ func (m *Document) BufEOF() bool {
 	return atomic.LoadInt32(&m.eof) == 1
 }
 
-// NewCache creates a new cache.
-func (m *Document) NewCache() error {
-	cache, err := ristretto.NewCache(&ristretto.Config{
-		NumCounters: 10000, // number of keys to track frequency of.
-		MaxCost:     1000,  // maximum cost of cache.
-		BufferItems: 64,    // number of keys per Get buffer.
-	})
-	if err != nil {
-		return err
-	}
-	m.cache = cache
-	return nil
-}
-
 // ClearCache clears the cache.
 func (m *Document) ClearCache() {
-	m.cache.Clear()
+	m.cache.Purge()
 }
 
 // contentsLN returns contents from line number and tabwidth.
@@ -268,49 +256,45 @@ func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	key := fmt.Sprintf("contents:%d", lN)
-	if value, found := m.cache.Get(key); found {
-		// It was cached.
-		lc, ok := value.(contents)
-		if !ok {
-			return lc, ErrFatalCache
-		}
-		return lc, nil
-	}
-
-	// It wasn't cached.
 	str := m.GetLine(lN)
 	lc := parseString(str, tabWidth)
-	m.cache.Set(key, lc, 1)
 	return lc, nil
 }
 
 // getContents returns contents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getContents(lN int, tabWidth int) (contents, bool) {
+func (m *Document) getContents(lN int, tabWidth int) (lineC, bool) {
+	if v, ok := m.cache.Get(lN); ok {
+		line := v.(lineC)
+		lc := make(contents, len(line.lc))
+		copy(lc, line.lc)
+		line.lc = lc
+		return line, true
+	}
+
 	org, err := m.contentsLN(lN, tabWidth)
 	if err != nil {
 		// EOF
 		lc := make(contents, 1)
 		lc[0] = EOFContent
-		return lc, false
+		return lineC{
+			lc:  lc,
+			str: string(EOFC),
+			pos: widthPos{0: 0, 1: 1},
+		}, false
 	}
+	str, pos := ContentsToStr(org)
+	line := lineC{
+		lc:  org,
+		str: str,
+		pos: pos,
+	}
+	m.cache.Add(lN, line)
+
 	lc := make(contents, len(org))
 	copy(lc, org)
-	return lc, true
-}
-
-// getContentsStr is returns a converted string
-// and byte length and contents length conversion table.
-// getContentsStr saves the last result
-// and reduces the number of executions of contentsToStr.
-// Because it takes time to analyze a line with a very long line.
-func (m *Document) getContentsStr(lN int, lc contents) (string, widthPos) {
-	if m.lastContentsNum != lN {
-		m.lastContentsStr, m.lastPos = ContentsToStr(lc)
-		m.lastContentsNum = lN
-	}
-	return m.lastContentsStr, m.lastPos
+	line.lc = lc
+	return line, true
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.
