@@ -110,9 +110,11 @@ type Document struct {
 	seekable bool
 }
 
-type lineC struct {
-	str string
+// LineC is one line of information.
+// Contains content, string, location information.
+type LineC struct {
 	lc  contents
+	str string
 	pos widthPos
 }
 
@@ -256,8 +258,8 @@ func (m *Document) ClearCache() {
 	m.cache.Purge()
 }
 
-// contentsLN returns contents from line number and tabwidth.
-func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
+// contents returns contents from line number and tabwidth.
+func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
@@ -267,30 +269,30 @@ func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
 	return lc, nil
 }
 
-// getContents returns contents from line number and tabwidth.
+// getLineC returns contents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getContents(lN int, tabWidth int) (lineC, bool) {
+func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 	if v, ok := m.cache.Get(lN); ok {
-		line := v.(lineC)
+		line := v.(LineC)
 		lc := make(contents, len(line.lc))
 		copy(lc, line.lc)
 		line.lc = lc
 		return line, true
 	}
 
-	org, err := m.contentsLN(lN, tabWidth)
+	org, err := m.contents(lN, tabWidth)
 	if err != nil {
 		// EOF
 		lc := make(contents, 1)
 		lc[0] = EOFContent
-		return lineC{
+		return LineC{
 			lc:  lc,
 			str: string(EOFC),
 			pos: widthPos{0: 0, 1: 1},
 		}, false
 	}
 	str, pos := ContentsToStr(org)
-	line := lineC{
+	line := LineC{
 		lc:  org,
 		str: str,
 		pos: pos,

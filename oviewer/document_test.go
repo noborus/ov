@@ -84,7 +84,7 @@ func TestDocument_lineToContents(t *testing.T) {
 			}
 			<-m.eofCh
 			t.Logf("num:%d", m.BufEndNum())
-			got, err := m.contentsLN(tt.args.lN, tt.args.tabWidth)
+			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.lineToContents() error = %v, wantErr %v", err, tt.wantErr)
 				return

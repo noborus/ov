@@ -158,17 +158,18 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 
 	if y2 < y1 {
 		y1, y2 = y2, y1
+	}
+	if x2 < x1 {
 		x1, x2 = x2, x1
 	}
-
 	if root.mouseRectangle {
 		root.drawRectangle(x1, y1, x2, y2, sel)
 		return
 	}
 
-	root.reverseLine(y1, x1, root.vWidth, sel)
+	root.reverseLine(y1, x1, root.scr.vWidth, sel)
 	for y := y1 + 1; y < y2; y++ {
-		root.reverseLine(y, 0, root.vWidth, sel)
+		root.reverseLine(y, 0, root.scr.vWidth, sel)
 	}
 	root.reverseLine(y2, 0, x2+1, sel)
 }
@@ -206,7 +207,6 @@ func (root *Root) putClipboard(_ context.Context) {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
 	}
-
 	buff, err := root.rangeToString(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("putClipboard: %s", err.Error()))
@@ -227,35 +227,48 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if root.mouseRectangle {
 		return root.rectangleToString(x1, y1, x2, y2)
 	}
-
 	var buff strings.Builder
-
 	l1 := root.lineNumber(y1)
-	lc1, err := root.Doc.contentsLN(l1.number, root.Doc.TabWidth)
-	if err != nil {
-		return "", err
+	var l2 LineNumber
+	for y := y2; ; y-- {
+		l := root.lineNumber(y)
+		if l.number < root.Doc.BufEndNum() {
+			l2 = l
+			y2 = y
+			break
+		}
 	}
-	wx1 := root.branchWidth(lc1, l1.wrap)
 
-	l2 := root.lineNumber(y2)
-	lc2, err := root.Doc.contentsLN(l2.number, root.Doc.TabWidth)
-	if err != nil {
-		return "", err
+	line1, valid := root.Doc.getLineC(l1.number, root.Doc.TabWidth)
+	if !valid {
+		return "", ErrOutOfRange
 	}
-	wx2 := root.branchWidth(lc2, l2.wrap)
+	wx1 := root.scr.branchWidth(line1.lc, l1.wrap)
+
+	line2, valid := root.Doc.getLineC(l2.number, root.Doc.TabWidth)
+	if !valid {
+		return "", ErrOutOfRange
+	}
+	wx2 := root.scr.branchWidth(line2.lc, l2.wrap)
 
 	if l1.number == l2.number {
-		str := root.selectLine(l1.number, root.Doc.x+x1+wx1, root.Doc.x+x2+wx2+1)
+		x1 := root.Doc.x + x1 + wx1
+		x2 := root.Doc.x + x2 + wx2
+		if x1 > x2 {
+			x1, x2 = x2, x1
+		}
+		str := root.scr.selectLine(line1, x1, x2+1)
 		if len(str) == 0 {
 			return buff.String(), nil
 		}
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
+
 		return buff.String(), nil
 	}
 
-	first := root.selectLine(l1.number, root.Doc.x+x1+wx1, -1)
+	first := root.scr.selectLine(line1, root.Doc.x+x1+wx1, -1)
 	if _, err := buff.WriteString(first); err != nil {
 		return "", err
 	}
@@ -264,11 +277,15 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	}
 
 	for y := y1 + 1; y < y2; y++ {
-		l := root.lineNumber(y)
-		if l.number == l1.number || l.number == l2.number || l.wrap > 0 {
+		ln := root.lineNumber(y)
+		if ln.number == l1.number || ln.number == l2.number || ln.wrap > 0 {
 			continue
 		}
-		str := root.selectLine(l.number, 0, -1)
+		line, valid := root.Doc.getLineC(ln.number, root.Doc.TabWidth)
+		if !valid {
+			break
+		}
+		str := root.scr.selectLine(line, 0, -1)
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
@@ -277,7 +294,7 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 		}
 	}
 
-	last := root.selectLine(l2.number, 0, root.Doc.x+x2+wx2+1)
+	last := root.scr.selectLine(line2, 0, root.Doc.x+x2+wx2+1)
 	if _, err := buff.WriteString(last); err != nil {
 		return "", err
 	}
@@ -291,12 +308,17 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 
 	for y := y1; y <= y2; y++ {
 		ln := root.lineNumber(y)
-		lc, err := root.Doc.contentsLN(ln.number, root.Doc.TabWidth)
-		if err != nil {
-			return "", err
+		line, valid := root.Doc.getLineC(ln.number, root.Doc.TabWidth)
+		if !valid {
+			return "", ErrOutOfRange
 		}
-		wx := root.branchWidth(lc, ln.wrap)
-		str := root.selectLine(ln.number, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
+		wx := root.scr.branchWidth(line.lc, ln.wrap)
+		x1 := root.Doc.x + x1 + wx
+		x2 := root.Doc.x + x2 + wx
+		if x1 > x2 {
+			x1, x2 = x2, x1
+		}
+		str := root.scr.selectLine(line, x1, x2+1)
 
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
@@ -309,15 +331,15 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 }
 
 // branchWidth returns the leftmost position of the number of wrapped line.
-func (root *Root) branchWidth(lc contents, branch int) int {
+func (scr SCR) branchWidth(lc contents, branch int) int {
 	i := 0
-	w := root.startX
+	w := scr.startX
 	x := 0
 	for n := 0; n < len(lc); n++ {
 		c := lc[n]
-		if w+c.width > root.vWidth {
+		if w+c.width > scr.vWidth {
 			i++
-			w = root.startX
+			w = scr.startX
 		}
 		if i >= branch {
 			break
@@ -329,21 +351,14 @@ func (root *Root) branchWidth(lc contents, branch int) int {
 }
 
 // selectLine returns a string in the specified range on one line.
-func (root *Root) selectLine(ly int, x1 int, x2 int) string {
-	lc, err := root.Doc.contentsLN(ly, root.Doc.TabWidth)
-	if err != nil {
-		root.debugMessage(fmt.Sprintf("%s", err))
-		return ""
-	}
-
-	size := len(lc)
+func (scr SCR) selectLine(line LineC, x1 int, x2 int) string {
+	size := len(line.lc)
 	// -1 is a special max value.
 	if x2 == -1 {
 		x2 = size
 	}
-
-	x1 -= root.startX
-	x2 -= root.startX
+	x1 -= scr.startX
+	x2 -= scr.startX
 	x1 = max(0, x1)
 	x2 = max(0, x2)
 	x1 = min(x1, size)
@@ -351,9 +366,10 @@ func (root *Root) selectLine(ly int, x1 int, x2 int) string {
 	if x1 > x2 {
 		x1, x2 = x2, x1
 	}
+	start := line.pos.x(x1)
+	end := line.pos.x(x2)
 
-	str, _ := ContentsToStr(lc[x1:x2])
-	return str
+	return line.str[start:end]
 }
 
 type eventPaste struct {

@@ -73,14 +73,7 @@ type Root struct {
 
 	CurrentDoc int
 
-	// vWidth represents the screen width.
-	vWidth int
-	// vHeight represents the screen height.
-	vHeight int
-
-	// startX is the start position of x.
-	startX int
-
+	scr SCR
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
@@ -104,6 +97,15 @@ type Root struct {
 	mouseSelect bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
+}
+
+type SCR struct {
+	// vWidth represents the screen width.
+	vWidth int
+	// vHeight represents the screen height.
+	vHeight int
+	// startX is the start position of x.
+	startX int
 }
 
 // Line is Number of logical lines and number of wrapping lines on the screen.
@@ -774,14 +776,14 @@ func mergeGeneral(src general, dst general) general {
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
-	root.vWidth, root.vHeight = screen.Size()
+	root.scr.vWidth, root.scr.vHeight = screen.Size()
 
 	// Do not allow size 0.
-	root.vWidth = max(root.vWidth, 1)
-	root.vHeight = max(root.vHeight, 1)
+	root.scr.vWidth = max(root.scr.vWidth, 1)
+	root.scr.vHeight = max(root.scr.vHeight, 1)
 
-	root.numbers = make([]LineNumber, root.vHeight+1)
-	root.statusPos = root.vHeight - statusLine
+	root.numbers = make([]LineNumber, root.scr.vHeight+1)
+	root.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -796,13 +798,13 @@ func (root *Root) docSmall() bool {
 	}
 	height := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		lc, err := m.contentsLN(y, root.Doc.TabWidth)
+		lc, err := m.contents(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
-		height += 1 + (len(lc) / root.vWidth)
-		if height > root.vHeight {
+		height += 1 + (len(lc) / root.scr.vWidth)
+		if height > root.scr.vHeight {
 			return false
 		}
 	}
