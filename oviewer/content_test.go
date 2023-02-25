@@ -741,3 +741,55 @@ func Test_contentsToStr(t *testing.T) {
 		})
 	}
 }
+
+func Test_widthPos_x(t *testing.T) {
+	type args struct {
+		x int
+	}
+	tests := []struct {
+		name string
+		pos  widthPos
+		args args
+		want int
+	}{
+		{
+			name: "\ttest",
+			pos:  widthPos{0, 1, 8, 9, 10, 11},
+			args: args{2},
+			want: 8,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.pos.x(tt.args.x); got != tt.want {
+				t.Errorf("widthPos.x() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_widthPos_n(t *testing.T) {
+	type args struct {
+		w int
+	}
+	tests := []struct {
+		name string
+		pos  widthPos
+		args args
+		want int
+	}{
+		{
+			name: "\ttest",
+			pos:  widthPos{0, 1, 8, 9, 10, 11},
+			args: args{8},
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.pos.n(tt.args.w); got != tt.want {
+				t.Errorf("widthPos.n() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

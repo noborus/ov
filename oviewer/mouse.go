@@ -144,17 +144,12 @@ func (root *Root) CopySelect() {
 	root.postEvent(ev)
 }
 
-// drawSelect highlights the selection.
-// Multi-line selection is included until the end of the line,
-// but if the rectangle flag is true, the rectangle will be the range.
-func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
-	if y1 == y2 {
-		if x2 < x1 {
-			x1, x2 = x2, x1
-		}
-		root.reverseLine(y1, x1, x2+1, sel)
-		return
-	}
+// putClipboard writes the selection to the clipboard.
+func (root *Root) putClipboard(_ context.Context) {
+	x1 := root.x1
+	x2 := root.x2
+	y1 := root.y1
+	y2 := root.y2
 
 	if y2 < y1 {
 		y1, y2 = y2, y1
@@ -162,8 +157,76 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 	if x2 < x1 {
 		x1, x2 = x2, x1
 	}
+
+	buff, err := root.rangeToString(x1, y1, x2, y2)
+	if err != nil {
+		root.debugMessage(fmt.Sprintf("putClipboard: %s", err.Error()))
+		return
+	}
+
+	if len(buff) == 0 {
+		return
+	}
+	if err := clipboard.WriteAll(buff); err != nil {
+		log.Printf("putClipboard: %v", err)
+	}
+	root.setMessage("Copy")
+}
+
+type eventPaste struct {
+	tcell.EventTime
+}
+
+// Paste fires the eventPaste event.
+func (root *Root) Paste() {
+	if !root.checkScreen() {
+		return
+	}
+	ev := &eventPaste{}
+	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// getClipboard writes a string from the clipboard.
+func (root *Root) getClipboard(_ context.Context) {
+	input := root.input
+	switch input.Event.Mode() {
+	case Normal:
+		return
+	}
+
+	str, err := clipboard.ReadAll()
+	if err != nil {
+		log.Printf("getClipboard: %v", err)
+		return
+	}
+
+	pos := stringWidth(input.value, input.cursorX+1)
+	runes := []rune(input.value)
+	input.value = string(runes[:pos])
+	input.value += str
+	input.value += string(runes[pos:])
+	input.cursorX += runewidth.StringWidth(str)
+}
+
+// drawSelect highlights the selection.
+// Multi-line selection is included until the end of the line,
+// but if the rectangle flag is true, the rectangle will be the range.
+func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
+	if x2 < x1 {
+		x1, x2 = x2, x1
+	}
+	if y2 < y1 {
+		y1, y2 = y2, y1
+	}
+	if y1 == y2 {
+		root.reverseLine(y1, x1, x2+1, sel)
+		return
+	}
 	if root.mouseRectangle {
-		root.drawRectangle(x1, y1, x2, y2, sel)
+		for y := y1; y <= y2; y++ {
+			root.reverseLine(y, x1, x2+1, sel)
+		}
 		return
 	}
 
@@ -172,13 +235,6 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		root.reverseLine(y, 0, root.scr.vWidth, sel)
 	}
 	root.reverseLine(y2, 0, x2+1, sel)
-}
-
-// drawRectangle highlights the rectangular area.
-func (root *Root) drawRectangle(x1, y1, x2, y2 int, sel bool) {
-	for y := y1; y <= y2; y++ {
-		root.reverseLine(y, x1, x2+1, sel)
-	}
 }
 
 // reverseLine reverses one line.
@@ -196,39 +252,22 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	}
 }
 
-// putClipboard writes the selection to the clipboard.
-func (root *Root) putClipboard(_ context.Context) {
-	y1 := root.y1
-	y2 := root.y2
-	x1 := root.x1
-	x2 := root.x2
-
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
-	}
-	buff, err := root.rangeToString(x1, y1, x2, y2)
-	if err != nil {
-		root.debugMessage(fmt.Sprintf("putClipboard: %s", err.Error()))
-		return
-	}
-
-	if len(buff) == 0 {
-		return
-	}
-	if err := clipboard.WriteAll(buff); err != nil {
-		log.Printf("putClipboard: %v", err)
-	}
-	root.setMessage("Copy")
-}
-
 // rangeToString returns the selection.
+// The arguments must be x1 <= x2 and y1 <= y2.
 func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if root.mouseRectangle {
 		return root.rectangleToString(x1, y1, x2, y2)
 	}
+
 	var buff strings.Builder
+
 	l1 := root.lineNumber(y1)
+	line1, valid := root.Doc.getLineC(l1.number, root.Doc.TabWidth)
+	if !valid {
+		return "", ErrOutOfRange
+	}
+	wx1 := root.scr.branchWidth(line1.lc, l1.wrap)
+
 	var l2 LineNumber
 	for y := y2; ; y-- {
 		l := root.lineNumber(y)
@@ -238,13 +277,6 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 			break
 		}
 	}
-
-	line1, valid := root.Doc.getLineC(l1.number, root.Doc.TabWidth)
-	if !valid {
-		return "", ErrOutOfRange
-	}
-	wx1 := root.scr.branchWidth(line1.lc, l1.wrap)
-
 	line2, valid := root.Doc.getLineC(l2.number, root.Doc.TabWidth)
 	if !valid {
 		return "", ErrOutOfRange
@@ -254,9 +286,6 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if l1.number == l2.number {
 		x1 := root.Doc.x + x1 + wx1
 		x2 := root.Doc.x + x2 + wx2
-		if x1 > x2 {
-			x1, x2 = x2, x1
-		}
 		str := root.scr.selectLine(line1, x1, x2+1)
 		if len(str) == 0 {
 			return buff.String(), nil
@@ -303,9 +332,9 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 }
 
 // rectangleToByte returns a rectangular range.
+// The arguments must be x1 <= x2 and y1 <= y2.
 func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
-
 	for y := y1; y <= y2; y++ {
 		ln := root.lineNumber(y)
 		line, valid := root.Doc.getLineC(ln.number, root.Doc.TabWidth)
@@ -313,13 +342,7 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 			return "", ErrOutOfRange
 		}
 		wx := root.scr.branchWidth(line.lc, ln.wrap)
-		x1 := root.Doc.x + x1 + wx
-		x2 := root.Doc.x + x2 + wx
-		if x1 > x2 {
-			x1, x2 = x2, x1
-		}
-		str := root.scr.selectLine(line, x1, x2+1)
-
+		str := root.scr.selectLine(line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
@@ -351,59 +374,25 @@ func (scr SCR) branchWidth(lc contents, branch int) int {
 }
 
 // selectLine returns a string in the specified range on one line.
+// The arguments must be x1 <= x2.
 func (scr SCR) selectLine(line LineC, x1 int, x2 int) string {
-	size := len(line.lc)
+	maxX := len(line.lc)
 	// -1 is a special max value.
 	if x2 == -1 {
-		x2 = size
+		x2 = maxX
 	}
 	x1 -= scr.startX
 	x2 -= scr.startX
 	x1 = max(0, x1)
 	x2 = max(0, x2)
-	x1 = min(x1, size)
-	x2 = min(x2, size)
-	if x1 > x2 {
-		x1, x2 = x2, x1
-	}
-	start := line.pos.x(x1)
-	end := line.pos.x(x2)
+	x1 = min(x1, maxX)
+	x2 = min(x2, maxX)
+	start := line.pos.n(x1)
+	end := line.pos.n(x2)
 
+	if start > len(line.str) || end > len(line.str) {
+		log.Printf("selectLine:len(%d):start(%d):end(%d)", len(line.str), start, end)
+		return ""
+	}
 	return line.str[start:end]
-}
-
-type eventPaste struct {
-	tcell.EventTime
-}
-
-// Paste fires the eventPaste event.
-func (root *Root) Paste() {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventPaste{}
-	ev.SetEventNow()
-	root.postEvent(ev)
-}
-
-// getClipboard writes a string from the clipboard.
-func (root *Root) getClipboard(_ context.Context) {
-	input := root.input
-	switch input.Event.Mode() {
-	case Normal:
-		return
-	}
-
-	str, err := clipboard.ReadAll()
-	if err != nil {
-		log.Printf("getClipboard: %v", err)
-		return
-	}
-
-	pos := stringWidth(input.value, input.cursorX+1)
-	runes := []rune(input.value)
-	input.value = string(runes[:pos])
-	input.value += str
-	input.value += string(runes[pos:])
-	input.cursorX += runewidth.StringWidth(str)
 }
