@@ -522,10 +522,18 @@ func (pos widthPos) x(x int) int {
 
 // n return string position from content.
 func (pos widthPos) n(w int) int {
-	for n, x := range pos {
-		if x >= w {
-			return n
+	var x int
+	for _, c := range pos {
+		if c >= w {
+			x = c
+			break
 		}
 	}
-	return len(pos)
+
+	for i := len(pos) - 1; i >= 0; i-- {
+		if pos[i] == x {
+			return i
+		}
+	}
+	return len(pos) - 1
 }
