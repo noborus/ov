@@ -129,10 +129,6 @@ type chunk struct {
 
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
-	cache, err := lru.New(1024)
-	if err != nil {
-		return nil, err
-	}
 	m := &Document{
 		eofCh:      make(chan struct{}),
 		followCh:   make(chan struct{}),
@@ -149,7 +145,9 @@ func NewDocument() (*Document, error) {
 		chunks: []*chunk{
 			NewChunk(0),
 		},
-		cache: cache,
+	}
+	if err := m.NewCache(); err != nil {
+		return nil, err
 	}
 	return m, nil
 }
@@ -159,6 +157,16 @@ func NewChunk(start int64) *chunk {
 		lines: make([]string, 0, ChunkSize),
 		start: start,
 	}
+}
+
+// NewCache creates a new cache.
+func (m *Document) NewCache() error {
+	cache, err := lru.New(1024)
+	if err != nil {
+		return err
+	}
+	m.cache = cache
+	return nil
 }
 
 // OpenDocument opens a file and returns a Document.
