@@ -53,9 +53,7 @@ type Root struct {
 
 	// DocList
 	DocList []*Document
-	// numbers is the line information of the currently displayed screen.
-	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
-	numbers []LineNumber
+
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
 
@@ -100,6 +98,9 @@ type Root struct {
 }
 
 type SCR struct {
+	// numbers is the line information of the currently displayed screen.
+	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
+	numbers []LineNumber
 	// vWidth represents the screen width.
 	vWidth int
 	// vHeight represents the screen height.
@@ -781,8 +782,7 @@ func (root *Root) prepareView() {
 	// Do not allow size 0.
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
-
-	root.numbers = make([]LineNumber, root.scr.vHeight+1)
+	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	root.statusPos = root.scr.vHeight - statusLine
 }
 
@@ -836,9 +836,9 @@ func (root *Root) WriteLog() {
 }
 
 // lineNumber returns the line information from y on the screen.
-func (root *Root) lineNumber(y int) LineNumber {
-	if y >= 0 && y <= len(root.numbers) {
-		return root.numbers[y]
+func (scr SCR) lineNumber(y int) LineNumber {
+	if y >= 0 && y <= len(scr.numbers) {
+		return scr.numbers[y]
 	}
-	return root.numbers[0]
+	return scr.numbers[0]
 }

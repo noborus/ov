@@ -63,7 +63,7 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		root.numbers[y] = LineNumber{
+		root.scr.numbers[y] = LineNumber{
 			number: lN,
 			wrap:   wrapNum,
 		}
@@ -106,7 +106,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	root.bodyStyle(line.lc, root.StyleBody)
 	root.styleContent(lN, line)
 	for y := root.headerLen; y < root.scr.vHeight-statusLine; y++ {
-		root.numbers[y] = LineNumber{
+		root.scr.numbers[y] = LineNumber{
 			number: lN,
 			wrap:   wrapNum,
 		}
@@ -139,7 +139,6 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 			wrapNum = 0
 		}
 	}
-
 	return lX, lN
 }
 

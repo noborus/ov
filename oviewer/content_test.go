@@ -758,6 +758,12 @@ func Test_widthPos_x(t *testing.T) {
 			args: args{2},
 			want: 8,
 		},
+		{
+			name: "testあいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{12},
+			want: 8,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -783,6 +789,18 @@ func Test_widthPos_n(t *testing.T) {
 			pos:  widthPos{0, 1, 8, 9, 10, 11},
 			args: args{8},
 			want: 2,
+		},
+		{
+			name: "testあいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{8},
+			want: 12,
+		},
+		{
+			name: "test2あいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{9},
+			want: 15,
 		},
 	}
 	for _, tt := range tests {

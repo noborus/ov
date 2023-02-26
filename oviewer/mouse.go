@@ -252,41 +252,47 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 	}
 }
 
-// rangeToString returns the selection.
-// The arguments must be x1 <= x2 and y1 <= y2.
 func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if root.mouseRectangle {
-		return root.rectangleToString(x1, y1, x2, y2)
+		return root.scr.rectangleToString(root.Doc, x1, y1, x2, y2)
 	}
+	return root.scr.lineRangeToString(root.Doc, x1, y1, x2, y2)
+}
 
+// lineRangeToString returns the selection.
+// The arguments must be x1 <= x2 and y1 <= y2.
+// ...◼◻◻◻◻◻
+// ◻◻◻◻◻◻◻◻
+// ◻◻◻◼......
+func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
 
-	l1 := root.lineNumber(y1)
-	line1, valid := root.Doc.getLineC(l1.number, root.Doc.TabWidth)
+	l1 := scr.lineNumber(y1)
+	line1, valid := m.getLineC(l1.number, m.TabWidth)
 	if !valid {
 		return "", ErrOutOfRange
 	}
-	wx1 := root.scr.branchWidth(line1.lc, l1.wrap)
+	wx1 := scr.branchWidth(line1.lc, l1.wrap)
 
 	var l2 LineNumber
 	for y := y2; ; y-- {
-		l := root.lineNumber(y)
-		if l.number < root.Doc.BufEndNum() {
+		l := scr.lineNumber(y)
+		if l.number < m.BufEndNum() {
 			l2 = l
 			y2 = y
 			break
 		}
 	}
-	line2, valid := root.Doc.getLineC(l2.number, root.Doc.TabWidth)
+	line2, valid := m.getLineC(l2.number, m.TabWidth)
 	if !valid {
 		return "", ErrOutOfRange
 	}
-	wx2 := root.scr.branchWidth(line2.lc, l2.wrap)
+	wx2 := scr.branchWidth(line2.lc, l2.wrap)
 
 	if l1.number == l2.number {
-		x1 := root.Doc.x + x1 + wx1
-		x2 := root.Doc.x + x2 + wx2
-		str := root.scr.selectLine(line1, x1, x2+1)
+		x1 := m.x + x1 + wx1
+		x2 := m.x + x2 + wx2
+		str := scr.selectLine(line1, x1, x2+1)
 		if len(str) == 0 {
 			return buff.String(), nil
 		}
@@ -297,7 +303,7 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 		return buff.String(), nil
 	}
 
-	first := root.scr.selectLine(line1, root.Doc.x+x1+wx1, -1)
+	first := scr.selectLine(line1, m.x+x1+wx1, -1)
 	if _, err := buff.WriteString(first); err != nil {
 		return "", err
 	}
@@ -306,15 +312,15 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	}
 
 	for y := y1 + 1; y < y2; y++ {
-		ln := root.lineNumber(y)
+		ln := scr.lineNumber(y)
 		if ln.number == l1.number || ln.number == l2.number || ln.wrap > 0 {
 			continue
 		}
-		line, valid := root.Doc.getLineC(ln.number, root.Doc.TabWidth)
+		line, valid := m.getLineC(ln.number, m.TabWidth)
 		if !valid {
 			break
 		}
-		str := root.scr.selectLine(line, 0, -1)
+		str := scr.selectLine(line, 0, -1)
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
@@ -323,7 +329,7 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 		}
 	}
 
-	last := root.scr.selectLine(line2, 0, root.Doc.x+x2+wx2+1)
+	last := scr.selectLine(line2, 0, m.x+x2+wx2+1)
 	if _, err := buff.WriteString(last); err != nil {
 		return "", err
 	}
@@ -333,16 +339,19 @@ func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 
 // rectangleToByte returns a rectangular range.
 // The arguments must be x1 <= x2 and y1 <= y2.
-func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
+// ...◼◻◻...
+// ...◻◻◻...
+// ...◻◻◼...
+func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error) {
 	var buff strings.Builder
 	for y := y1; y <= y2; y++ {
-		ln := root.lineNumber(y)
-		line, valid := root.Doc.getLineC(ln.number, root.Doc.TabWidth)
+		ln := scr.lineNumber(y)
+		line, valid := m.getLineC(ln.number, m.TabWidth)
 		if !valid {
 			return "", ErrOutOfRange
 		}
-		wx := root.scr.branchWidth(line.lc, ln.wrap)
-		str := root.scr.selectLine(line, root.Doc.x+x1+wx, root.Doc.x+x2+wx+1)
+		wx := scr.branchWidth(line.lc, ln.wrap)
+		str := scr.selectLine(line, m.x+x1+wx, m.x+x2+wx+1)
 		if _, err := buff.WriteString(str); err != nil {
 			return "", err
 		}
@@ -354,6 +363,7 @@ func (root *Root) rectangleToString(x1, y1, x2, y2 int) (string, error) {
 }
 
 // branchWidth returns the leftmost position of the number of wrapped line.
+// If the wide character is at the right end, it may wrap one character forward.
 func (scr SCR) branchWidth(lc contents, branch int) int {
 	i := 0
 	w := scr.startX
