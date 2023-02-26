@@ -77,7 +77,7 @@ func (root *Root) movePgDn() {
 
 func (root *Root) limitMoveDown(x int, y int) {
 	m := root.Doc
-	if y+root.vHeight >= m.BufEndNum()-m.SkipLines {
+	if y+root.scr.vHeight >= m.BufEndNum()-m.SkipLines {
 		tx, tn := root.bottomLineNum(m.BufEndNum())
 		if y > tn || (y == tn && x > tx) {
 			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
@@ -426,12 +426,11 @@ func (root *Root) columnX(cursor int) (int, error) {
 	maxCursor := 0
 	// m.firstLine()+10 = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+10; i++ {
-		lc, err := m.contentsLN(m.topLN+m.firstLine()+i, m.TabWidth)
-		if err != nil {
+		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !valid {
 			continue
 		}
-		lineStr, pos := ContentsToStr(lc)
-		indexes := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		maxCursor = max(maxCursor, len(indexes))
 		if len(indexes) < cursor {
 			continue
@@ -441,18 +440,18 @@ func (root *Root) columnX(cursor int) (int, error) {
 		if len(indexes) == cursor {
 			// right edge.
 			idx := indexes[cursor-1]
-			start = pos.x(idx[1] + len(m.ColumnDelimiter))
-			end = pos.x(len(lineStr))
+			start = line.pos.x(idx[1] + len(m.ColumnDelimiter))
+			end = line.pos.x(len(line.str))
 		} else {
 			idx := indexes[cursor]
-			start = pos.x(idx[0])
-			end = pos.x(idx[1])
+			start = line.pos.x(idx[0])
+			end = line.pos.x(idx[1])
 		}
-		if root.vWidth > end { // don't scroll.
+		if root.scr.vWidth > end { // don't scroll.
 			return 0, nil
 		}
-		if end-root.vWidth > 0 {
-			return end - root.vWidth, nil
+		if end-root.scr.vWidth > 0 {
+			return end - root.scr.vWidth, nil
 		}
 		return start, nil
 	}
@@ -474,7 +473,7 @@ func (root *Root) moveHfLeft() {
 	if m.WrapMode {
 		return
 	}
-	moveSize := (root.vWidth / 2)
+	moveSize := (root.scr.vWidth / 2)
 	if m.x > 0 && (m.x-moveSize) < 0 {
 		m.x = 0
 		return
@@ -502,7 +501,7 @@ func (root *Root) moveHfRight() {
 		return
 	}
 
-	m.x += (root.vWidth / 2)
+	m.x += (root.scr.vWidth / 2)
 }
 
 // moveBeginLeft moves to the beginning of the line.
@@ -528,15 +527,15 @@ func (root *Root) moveEndRight() {
 func (root *Root) endRight() int {
 	m := root.Doc
 	x := 0
-	for _, line := range root.lines {
+	for _, line := range root.scr.numbers {
 		lY := line.number
-		lc, err := m.contentsLN(lY, m.TabWidth)
+		lc, err := m.contents(lY, m.TabWidth)
 		if err != nil {
 			continue
 		}
 		x = max(x, len(lc))
 	}
-	return x - ((root.vWidth - root.startX) - 1)
+	return x - ((root.scr.vWidth - root.scr.startX) - 1)
 }
 
 // bottomLineNum returns the display start line
@@ -546,7 +545,7 @@ func (root *Root) bottomLineNum(lN int) (int, int) {
 		return 0, 0
 	}
 
-	height := (root.vHeight - root.headerLen) - 2
+	height := (root.scr.vHeight - root.headerLen) - 2
 	if !root.Doc.WrapMode {
 		return 0, lN - (height + root.Doc.firstLine())
 	}
@@ -579,13 +578,13 @@ func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
 // leftMostX returns a list of left - most x positions when wrapping.
 // Returns nil if there is no line number.
 func (root *Root) leftMostX(lN int) []int {
-	lc, err := root.Doc.contentsLN(lN, root.Doc.TabWidth)
+	lc, err := root.Doc.contents(lN, root.Doc.TabWidth)
 	if err != nil {
 		return nil
 	}
 
-	listX := make([]int, 0, (len(lc)/root.vWidth)+1)
-	width := (root.vWidth - root.startX)
+	listX := make([]int, 0, (len(lc)/root.scr.vWidth)+1)
+	width := (root.scr.vWidth - root.scr.startX)
 
 	listX = append(listX, 0)
 	for n := width; n < len(lc); n += width {

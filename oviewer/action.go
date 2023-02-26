@@ -261,7 +261,7 @@ func (root *Root) setHeader(input string) {
 		root.setMessagef("Set header: %s", ErrInvalidNumber.Error())
 		return
 	}
-	if num < 0 || num > root.vHeight-1 {
+	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set header %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -465,8 +465,8 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := jumpPosition(root.vHeight, input)
-	if num < 0 || num > root.vHeight-1 {
+	num := jumpPosition(root.scr.vHeight, input)
+	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -539,7 +539,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget = jumpPosition(root.vHeight, root.Doc.JumpTargetString)
+	root.Doc.JumpTarget = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.
@@ -561,9 +561,9 @@ func (root *Root) tailSection() {
 
 // prepareStartX prepares startX.
 func (root *Root) prepareStartX() {
-	root.startX = 0
+	root.scr.startX = 0
 	if root.Doc.LineNumMode {
-		root.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
+		root.scr.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
 	}
 }
 

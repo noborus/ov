@@ -519,3 +519,21 @@ func (pos widthPos) x(x int) int {
 	}
 	return pos[len(pos)-1]
 }
+
+// n return string position from content.
+func (pos widthPos) n(w int) int {
+	var x int
+	for _, c := range pos {
+		if c >= w {
+			x = c
+			break
+		}
+	}
+	// It should return the last byte of a multibyte character.
+	for i := len(pos) - 1; i >= 0; i-- {
+		if pos[i] == x {
+			return i
+		}
+	}
+	return len(pos) - 1
+}
