@@ -207,7 +207,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.chunks[len(m.chunks)-1]
 	start := len(chunk.lines)
 	for {
-		if err := m.packChunk(chunk, start, reader); err != nil {
+		if err := m.packChunk(chunk, reader, start, true); err != nil {
 			return err
 		}
 		chunk = NewChunk(m.size)
@@ -218,43 +218,61 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	}
 }
 
-// packChunk packs lines read from reader into chunks.
-func (m *Document) packChunk(chunk *chunk, start int, reader *bufio.Reader) error {
+// packChunk append lines read from reader into chunks.
+func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
 	var line strings.Builder
 	var isPrefix bool
-
-	for i := start; i < ChunkSize; i++ {
+	i := start
+	for i < ChunkSize {
 		buf, err := reader.ReadSlice('\n')
 		if err == bufio.ErrBufferFull {
 			isPrefix = true
 			err = nil
 		}
-
 		line.Write(buf)
 		if isPrefix {
 			isPrefix = false
 			continue
 		}
+
+		i++
 		atomic.StoreInt32(&m.changed, 1)
 		if err != nil {
 			if line.Len() != 0 {
-				m.append(chunk, line.String())
+				if isCount {
+					m.append(chunk, line.String())
+				} else {
+					m.appendOnly(chunk, line.String())
+				}
 			}
 			return err
 		}
-		m.append(chunk, line.String())
+		if isCount {
+			m.append(chunk, line.String())
+		} else {
+			m.appendOnly(chunk, line.String())
+		}
 		line.Reset()
 	}
 	return nil
 }
 
+// appendOnly appends to the line of the chunk.
+// appendOnly does not updates the number of lines and size.
+func (m *Document) appendOnly(chunk *chunk, line string) {
+	m.mu.Lock()
+	chunk.lines = append(chunk.lines, line)
+	m.mu.Unlock()
+}
+
 // append appends to the line of the chunk.
+// append updates the number of lines and size.
 func (m *Document) append(chunk *chunk, line string) {
 	m.mu.Lock()
 	size := len(line)
-	chunk.lines = append(chunk.lines, line)
 	m.size += int64(size)
 	m.endNum++
+	chunk.lines = append(chunk.lines, line)
 	m.mu.Unlock()
 }
 

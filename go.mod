@@ -9,14 +9,14 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.15.15
+	github.com/klauspost/compress v1.16.0
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.4.4
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	golang.org/x/sync v0.1.0
 	golang.org/x/term v0.5.0
 )
@@ -31,7 +31,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/spf13/afero v1.9.3 // indirect
+	github.com/spf13/afero v1.9.4 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
