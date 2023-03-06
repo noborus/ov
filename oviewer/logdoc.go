@@ -23,5 +23,11 @@ func NewLogDoc() (*Document, error) {
 func (m *Document) Write(p []byte) (int, error) {
 	chunk := m.lastChunk()
 	m.append(chunk, string(p))
+	if len(chunk.lines) >= ChunkSize {
+		chunk = NewChunk(m.size)
+		m.mu.Lock()
+		m.chunks = append(m.chunks, chunk)
+		m.mu.Unlock()
+	}
 	return len(p), nil
 }
