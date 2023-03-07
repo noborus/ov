@@ -16,29 +16,241 @@ import (
 
 const FormFeed = "\f"
 
-// ReadFile reads file.
-// If the file name is empty, read from standard input.
-func (m *Document) ReadFile(fileName string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+// ControlFile controls file read and loads in chunks.
+func (m *Document) ControlFile(fileName string) error {
+	go func() error {
+		r, err := m.openFile(fileName)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		atomic.StoreInt32(&m.eof, 0)
+		reader := bufio.NewReader(r)
+		for sc := range m.ctlCh {
+			switch sc.control {
+			case firstControl:
+				reader, err = m.firstControl(reader)
+			case countControl:
+				reader, err = m.countControl(reader)
+			case followControl:
+				reader, err = m.followControl(reader)
+			case reloadControl:
+				reader, err = m.reloadControl(reader)
+			case readControl:
+				reader, err = m.readControl(reader, sc.chunkNum)
+			default:
+				panic(fmt.Sprintf("unexpected %s", sc.control))
+			}
 
+			if sc.done != nil {
+				close(sc.done)
+			}
+			if err != nil {
+				log.Println(err)
+				close(m.ctlCh)
+			}
+		}
+		log.Println("close m.ctlCh")
+		return nil
+	}()
+
+	m.ctlCh <- controlSpecifier{
+		control:  firstControl,
+		chunkNum: 0,
+		done:     nil,
+	}
+	return nil
+}
+
+// ControlNonFile only supports reload.
+func (m *Document) ControlNonFile() error {
+	go func() error {
+		var err error
+		for sc := range m.ctlCh {
+			switch sc.control {
+			case reloadControl:
+				m.reset()
+			case readControl:
+				chunk := m.chunks[sc.chunkNum]
+				chunk.lines = make([]string, ChunkSize)
+			default:
+				panic(fmt.Sprintf("unexpected %s", sc.control))
+			}
+			if err != nil {
+				log.Println(err)
+			}
+			if sc.done != nil {
+				close(sc.done)
+			}
+		}
+		log.Println("close ctlCh")
+		return nil
+	}()
+	return nil
+}
+
+func (m *Document) firstControl(reader *bufio.Reader) (*bufio.Reader, error) {
+	if err := m.firstRead(reader); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+	if m.BufEOF() {
+		return reader, nil
+	}
+	go func() {
+		m.ctlCh <- controlSpecifier{
+			control:  countControl,
+			chunkNum: 0,
+			done:     nil,
+		}
+	}()
+
+	return reader, nil
+}
+
+func (m *Document) countControl(reader *bufio.Reader) (*bufio.Reader, error) {
+	if m.seekable {
+		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
+			return nil, err
+		}
+		reader.Reset(m.file)
+	}
+	chunk := m.lastChunk()
+	start := 0
+	if err := m.countChunk(chunk, reader, start); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+	if !m.BufEOF() {
+		chunk := NewChunk(m.size)
+		m.mu.Lock()
+		m.chunks = append(m.chunks, chunk)
+		m.mu.Unlock()
+		go func() {
+			m.ctlCh <- controlSpecifier{
+				control:  countControl,
+				chunkNum: 0,
+				done:     nil,
+			}
+		}()
+	}
+	return reader, nil
+}
+
+func (m *Document) followControl(reader *bufio.Reader) (*bufio.Reader, error) {
+	if !m.FollowMode && !m.FollowAll {
+		return reader, nil
+	}
+	if m.seekable {
+		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
+			return nil, fmt.Errorf("seek:%w", err)
+		}
+		reader = bufio.NewReader(m.file)
+	}
+	if err := m.readAll(reader); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+	return reader, nil
+}
+
+func (m *Document) readControl(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+	chunk := m.chunks[chunkNum]
+	start := 0
+	if m.seekable {
+		if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+			return nil, err
+		}
+		reader.Reset(m.file)
+	}
+	if err := m.packChunk(chunk, reader, start, false); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+	return reader, nil
+}
+
+func (m *Document) reloadControl(reader *bufio.Reader) (*bufio.Reader, error) {
+	if !m.WatchMode {
+		m.reset()
+	} else {
+		chunk := m.lastChunk()
+		m.appendFormFeed(chunk)
+	}
+	var err error
+	reader, err = m.reloadFile(reader)
+	if err != nil {
+		return nil, err
+	}
+	err = m.firstRead(reader)
+	if err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+
+	return reader, nil
+}
+
+func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
+	if !m.seekable {
+		m.ClearCache()
+		return reader, nil
+	}
+	if err := m.file.Close(); err != nil {
+		log.Printf("read: %s", err)
+	}
+	m.ClearCache()
+	r, err := m.openFile(m.FileName)
+	if err != nil {
+		str := fmt.Sprintf("Access is no longer possible: %s", err)
+		reader = bufio.NewReader(strings.NewReader(str))
+		return reader, nil
+	}
+	reader = bufio.NewReader(r)
+	return reader, nil
+}
+
+func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
+	m.offset = m.size
+	atomic.StoreInt32(&m.eof, 1)
+	if !m.seekable { // for NamedPipe.
+		return bufio.NewReader(m.file)
+	}
+	return reader
+}
+
+func (m *Document) openFile(fileName string) (io.Reader, error) {
 	f, err := open(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	m.mu.Lock()
 	m.file = f
-	m.FileName = fileName
 
-	cFormat, r := uncompressedReader(m.file)
+	cFormat, r := uncompressedReader(m.file, m.seekable)
+	if cFormat == UNCOMPRESSED {
+		if m.seekable {
+			f.Seek(0, io.SeekStart)
+			r = f
+		}
+	}
 	m.CFormat = cFormat
-
-	go m.waitEOF()
-
 	if STDOUTPIPE != nil {
 		r = io.TeeReader(r, STDOUTPIPE)
 	}
+	m.mu.Unlock()
 
-	return m.ReadAll(r)
+	return r, nil
 }
 
 func open(fileName string) (*os.File, error) {
@@ -56,149 +268,11 @@ func open(fileName string) (*os.File, error) {
 	return f, nil
 }
 
-// waitEOF waits until EOF is reached before closing.
-func (m *Document) waitEOF() {
-	<-m.eofCh
-	if m.seekable {
-		if err := m.close(); err != nil {
-			log.Printf("EOF: %s", err)
-		}
+func (m *Document) firstRead(reader *bufio.Reader) error {
+	if !m.seekable || m.CFormat != UNCOMPRESSED {
+		return m.readAll(reader)
 	}
-	atomic.StoreInt32(&m.changed, 1)
-	m.followCh <- struct{}{}
-}
-
-// ReadReader reads reader.
-// A wrapper for ReadAll, used when eofCh notifications are not needed.
-func (m *Document) ReadReader(r io.Reader) error {
-	go func() {
-		<-m.eofCh
-	}()
-
-	return m.ReadAll(r)
-}
-
-// ReadAll reads all from the reader.
-// And store it in the lines of the Document.
-// ReadAll needs to be notified on eofCh.
-func (m *Document) ReadAll(r io.Reader) error {
-	reader := bufio.NewReader(r)
-	go func() {
-		if m.checkClose() {
-			return
-		}
-
-		if err := m.readAll(reader); err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				m.eofCh <- struct{}{}
-				atomic.StoreInt32(&m.eof, 1)
-				return
-			}
-			log.Printf("error: %v\n", err)
-			atomic.StoreInt32(&m.eof, 0)
-			return
-		}
-	}()
-
-	// Named pipes for continuous read.
-	if !m.seekable {
-		m.onceFollowMode()
-	}
-	return nil
-}
-
-// onceFollowMode opens the follow mode only once.
-func (m *Document) onceFollowMode() {
-	if atomic.SwapInt32(&m.openFollow, 1) == 1 {
-		return
-	}
-	if m.file == nil {
-		return
-	}
-
-	var cancel context.CancelFunc
-	ctx := context.Background()
-	ctx, cancel = context.WithCancel(ctx)
-	go m.startFollowMode(ctx, cancel)
-	m.cancel = cancel
-}
-
-// startFollowMode opens the file in follow mode.
-// Seek to the position where the file was closed, and then read.
-func (m *Document) startFollowMode(ctx context.Context, cancel context.CancelFunc) {
-	defer cancel()
-	<-m.followCh
-	if m.seekable {
-		// Wait for the file to open until it changes.
-		select {
-		case <-ctx.Done():
-			return
-		case <-m.changCh:
-		}
-		m.file = m.openFollowFile()
-	}
-
-	r := compressedFormatReader(m.CFormat, m.file)
-	if err := m.ContinueReadAll(ctx, r); err != nil {
-		log.Printf("%s follow mode read %v", m.FileName, err)
-	}
-}
-
-// openFollowFile opens a file in follow mode.
-func (m *Document) openFollowFile() *os.File {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	r, err := os.Open(m.FileName)
-	if err != nil {
-		log.Printf("openFollowFile: %s", err)
-		return m.file
-	}
-	atomic.StoreInt32(&m.closed, 0)
-	atomic.StoreInt32(&m.eof, 0)
-	if _, err := r.Seek(m.offset, io.SeekStart); err != nil {
-		log.Printf("openFollowMode: %s", err)
-	}
-	return r
-}
-
-// Close closes the File.
-// Record the last read position.
-func (m *Document) close() error {
-	if m.checkClose() {
-		return nil
-	}
-
-	m.offset = m.size
-	if err := m.file.Close(); err != nil {
-		return fmt.Errorf("close: %w", err)
-	}
-	atomic.StoreInt32(&m.openFollow, 0)
-	atomic.StoreInt32(&m.closed, 1)
-	atomic.StoreInt32(&m.changed, 1)
-	return nil
-}
-
-// ContinueReadAll continues to read even if it reaches EOF.
-func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
-	reader := bufio.NewReader(r)
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-		if m.checkClose() {
-			return nil
-		}
-
-		if err := m.readAll(reader); err != nil {
-			if errors.Is(err, io.EOF) {
-				<-m.changCh
-				continue
-			}
-			return err
-		}
-	}
+	return m.readFirstOnly(reader)
 }
 
 // readAll actually reads everything.
@@ -216,6 +290,17 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		m.mu.Unlock()
 		start = 0
 	}
+}
+
+// readAll actually reads everything.
+// The read lines are stored in the lines of the Document.
+func (m *Document) readFirstOnly(reader *bufio.Reader) error {
+	chunk := m.chunks[0]
+	start := 0
+	if err := m.packChunk(chunk, reader, start, true); err != nil {
+		return err
+	}
+	return nil
 }
 
 // packChunk append lines read from reader into chunks.
@@ -241,6 +326,7 @@ func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 			if line.Len() != 0 {
 				if isCount {
 					m.append(chunk, line.String())
+					m.offset = m.size
 				} else {
 					m.appendOnly(chunk, line.String())
 				}
@@ -249,10 +335,39 @@ func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 		}
 		if isCount {
 			m.append(chunk, line.String())
+			m.offset = m.size
 		} else {
 			m.appendOnly(chunk, line.String())
 		}
 		line.Reset()
+	}
+	return nil
+}
+
+func (m *Document) countChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+	var isPrefix bool
+	i := start
+	for i < ChunkSize {
+		buf, err := reader.ReadSlice('\n')
+		if err == bufio.ErrBufferFull {
+			isPrefix = true
+			err = nil
+		}
+		m.size += int64(len(buf))
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+
+		i++
+		if len(buf) != 0 {
+			m.endNum++
+		}
+		m.offset = m.size
+		atomic.StoreInt32(&m.changed, 1)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -283,7 +398,6 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		line = chunk.lines[len(chunk.lines)-1]
 	}
 	m.mu.Unlock()
-
 	// Do not add if the previous is FormFeed.
 	if line != FormFeed {
 		m.append(chunk, FormFeed)
@@ -305,40 +419,25 @@ func (m *Document) lastChunk() *chunk {
 // Regular files are reopened and reread increase.
 // The pipe will reset what it has read.
 func (m *Document) reload() error {
-	if (m.file == os.Stdin && m.BufEOF()) || !m.seekable && m.checkClose() {
-		return fmt.Errorf("%w %s", ErrAlreadyClose, m.FileName)
+	sc := controlSpecifier{
+		control: reloadControl,
+		done:    make(chan struct{}),
 	}
-
-	if m.seekable {
-		if m.cancel != nil {
-			m.cancel()
-		}
-		if !m.checkClose() && m.file != nil {
-			if err := m.close(); err != nil {
-				log.Println(err)
-			}
-		}
-	}
-
-	if m.WatchMode {
-		chunk := m.lastChunk()
-		m.appendFormFeed(chunk)
-	} else {
-		m.reset()
+	log.Println("reload send")
+	m.ctlCh <- sc
+	<-sc.done
+	log.Println("receive done")
+	if !m.WatchMode {
 		m.topLN = 0
 	}
 
-	if !m.seekable {
-		return nil
-	}
-
-	atomic.StoreInt32(&m.closed, 0)
-	return m.ReadFile(m.FileName)
+	return nil
 }
 
 // reset clears all lines.
 func (m *Document) reset() {
 	m.mu.Lock()
+	m.size = 0
 	m.endNum = 0
 	m.chunks = []*chunk{
 		NewChunk(0),
@@ -351,4 +450,71 @@ func (m *Document) reset() {
 // checkClose returns if the file is closed.
 func (m *Document) checkClose() bool {
 	return atomic.LoadInt32(&m.closed) == 1
+}
+
+// Close closes the File.
+// Record the last read position.
+func (m *Document) close() error {
+	if m.checkClose() {
+		return nil
+	}
+	log.Println("close")
+	if err := m.file.Close(); err != nil {
+		return fmt.Errorf("close: %w", err)
+	}
+	atomic.StoreInt32(&m.closed, 1)
+	atomic.StoreInt32(&m.changed, 1)
+	return nil
+}
+
+// ReadFile reads file.
+// If the file name is empty, read from standard input.
+//
+// Deprecated:
+func (m *Document) ReadFile(fileName string) error {
+	r, err := m.openFile(fileName)
+	if err != nil {
+		return err
+	}
+	return m.ReadAll(r)
+}
+
+// ContinueReadAll continues to read even if it reaches EOF.
+//
+// Deprecated:
+func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
+	return m.ReadAll(r)
+}
+
+// ReadReader reads reader.
+// A wrapper for ReadAll.
+//
+// Deprecated:
+func (m *Document) ReadReader(r io.Reader) error {
+	return m.ReadAll(r)
+}
+
+// ReadAll reads all from the reader.
+// And store it in the lines of the Document.
+// ReadAll needs to be notified on eofCh.
+//
+// Deprecated:
+func (m *Document) ReadAll(r io.Reader) error {
+	reader := bufio.NewReader(r)
+	go func() {
+		if m.checkClose() {
+			return
+		}
+
+		if err := m.readAll(reader); err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
+				m.offset = m.size
+				atomic.StoreInt32(&m.eof, 1)
+				return
+			}
+			log.Printf("error: %v\n", err)
+			return
+		}
+	}()
+	return nil
 }

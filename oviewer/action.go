@@ -67,6 +67,11 @@ func (root *Root) toggleFollowMode() {
 // toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll() {
 	root.General.FollowAll = !root.General.FollowAll
+	root.mu.Lock()
+	for _, doc := range root.DocList {
+		doc.latestNum = doc.BufEndNum()
+	}
+	root.mu.Unlock()
 }
 
 // toggleFollowSection toggles follow section mode.
@@ -98,10 +103,12 @@ func (root *Root) reload(m *Document) {
 		return
 	}
 
+	root.mu.Lock()
 	if err := m.reload(); err != nil {
 		log.Printf("cannot reload: %s", err)
 		return
 	}
+	root.mu.Unlock()
 	root.releaseEventBuffer()
 	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)

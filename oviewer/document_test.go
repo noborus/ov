@@ -82,7 +82,8 @@ func TestDocument_lineToContents(t *testing.T) {
 			if err := m.ReadAll(bytes.NewBufferString(tt.str)); err != nil {
 				t.Fatal(err)
 			}
-			<-m.eofCh
+			for !m.BufEOF() {
+			}
 			t.Logf("num:%d", m.BufEndNum())
 			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
 			if (err != nil) != tt.wantErr {
@@ -136,7 +137,8 @@ func TestDocument_Export(t *testing.T) {
 				t.Fatal(err)
 			}
 			w := &bytes.Buffer{}
-			<-m.eofCh
+			for !m.BufEOF() {
+			}
 			m.bottomLN = m.BufEndNum()
 			m.Export(w, tt.args.start, tt.args.end)
 			if gotW := w.String(); gotW != tt.wantW {

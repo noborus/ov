@@ -25,20 +25,16 @@ type Document struct {
 	FileName string
 	// Caption is an additional caption to display after the file name.
 	Caption string
-
+	// filepath stores the absolute pathname for file watching.
+	filepath string
 	// File is the os.File.
 	file *os.File
 
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 
-	// notify when eof is reached.
-	eofCh chan struct{}
-	// notify when reopening.
-	followCh chan struct{}
-
-	// notify when a file changes.
-	changCh chan struct{}
+	// Specifies the chunk to read. -1 reads the new last line.
+	ctlCh chan controlSpecifier
 
 	cancel context.CancelFunc
 
@@ -61,6 +57,7 @@ type Document struct {
 	// offset
 	offset int64
 
+	startNum int
 	// endNum is the number of the last line read.
 	endNum int
 
@@ -127,12 +124,26 @@ type chunk struct {
 	start int64
 }
 
+type controlSpecifier struct {
+	chunkNum int
+	done     chan struct{}
+	control  control
+}
+
+type control string
+
+const (
+	firstControl  = "first"
+	countControl  = "count"
+	followControl = "follow"
+	closeControl  = "close"
+	reloadControl = "reload"
+	readControl   = "read"
+)
+
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		eofCh:      make(chan struct{}),
-		followCh:   make(chan struct{}),
-		changCh:    make(chan struct{}),
 		tickerDone: make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
@@ -140,6 +151,7 @@ func NewDocument() (*Document, error) {
 			MarkStyleWidth:  1,
 			PlainMode:       false,
 		},
+		ctlCh:         make(chan controlSpecifier, 10),
 		seekable:      true,
 		preventReload: false,
 		chunks: []*chunk{
@@ -189,7 +201,8 @@ func OpenDocument(fileName string) (*Document, error) {
 		m.seekable = false
 	}
 
-	if err := m.ReadFile(fileName); err != nil {
+	m.FileName = fileName
+	if err := m.ControlFile(fileName); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -204,7 +217,7 @@ func STDINDocument() (*Document, error) {
 
 	m.seekable = false
 	m.Caption = "(STDIN)"
-	if err := m.ReadFile(""); err != nil {
+	if err := m.ControlFile(""); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -212,26 +225,37 @@ func STDINDocument() (*Document, error) {
 
 // GetLine returns one line from buffer.
 func (m *Document) GetLine(n int) string {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if n < 0 || n >= m.endNum {
+	if n < m.startNum || n >= m.endNum {
 		return ""
 	}
-
 	chunkNum := n / ChunkSize
-	chunkLine := n % ChunkSize
 	if len(m.chunks)-1 < chunkNum {
 		log.Println("over chunk size: ", chunkNum)
 		return ""
 	}
 	chunk := m.chunks[chunkNum]
-	if len(chunk.lines)-1 < chunkLine {
-		log.Printf("over lines size: chunk[%d]:%d < %d", chunkNum, len(chunk.lines)-1, chunkLine)
-		return ""
+
+	if len(chunk.lines) == 0 {
+		log.Println("not in memory", chunkNum)
+		sc := controlSpecifier{
+			control:  readControl,
+			chunkNum: chunkNum,
+			done:     make(chan struct{}),
+		}
+		m.ctlCh <- sc
+		<-sc.done
+		log.Println("load chunk", chunkNum)
 	}
 
-	return chunk.lines[chunkLine]
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	cn := n % ChunkSize
+	if cn < len(chunk.lines) {
+		return chunk.lines[cn]
+	}
+	log.Println("not load", n, m.endNum)
+	return ""
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -305,7 +329,9 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 		str: str,
 		pos: pos,
 	}
-	m.cache.Add(lN, line)
+	if len(org) != 0 {
+		m.cache.Add(lN, line)
+	}
 
 	lc := make(contents, len(org))
 	copy(lc, org)

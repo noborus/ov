@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"syscall"
@@ -310,6 +311,8 @@ const MaxWriteLog int = 10
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
+	// ErrNotInMemory indicates that value is not in memory.
+	ErrNotInMemory = errors.New("not in memory")
 	// ErrFatalCache indicates that the cache value had a fatal error.
 	ErrFatalCache = errors.New("fatal error in cache value")
 	// ErrMissingFile indicates that the file does not exist.
@@ -468,10 +471,23 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				}
 				root.mu.Lock()
 				for _, doc := range root.DocList {
-					if doc.FileName == event.Name {
-						select {
-						case doc.changCh <- struct{}{}:
-						default:
+					if doc.filepath == event.Name {
+						switch event.Op {
+						case fsnotify.Write:
+							select {
+							case doc.ctlCh <- controlSpecifier{control: followControl}:
+								log.Printf("notify send %v", event)
+							default:
+								log.Println("???", len(doc.ctlCh))
+							}
+						case fsnotify.Remove, fsnotify.Create:
+							select {
+							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
+								log.Printf("notify send %v", event)
+							default:
+								log.Println("???", len(doc.ctlCh))
+							}
+
 						}
 					}
 				}
@@ -486,7 +502,15 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		if err := watcher.Add(doc.FileName); err != nil {
+		fileName, err := filepath.Abs(doc.FileName)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		doc.filepath = fileName
+
+		path := filepath.Dir(fileName)
+		if err := watcher.Add(path); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
 	}

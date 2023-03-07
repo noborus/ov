@@ -62,7 +62,7 @@ func (c Compressed) String() string {
 	return "UNCOMPRESSED"
 }
 
-func uncompressedReader(reader io.Reader) (Compressed, io.Reader) {
+func uncompressedReader(reader io.Reader, seekable bool) (Compressed, io.Reader) {
 	buf := [7]byte{}
 	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
 	if err != nil {
@@ -72,10 +72,13 @@ func uncompressedReader(reader io.Reader) (Compressed, io.Reader) {
 		return UNCOMPRESSED, bytes.NewReader(nil)
 	}
 
-	mr := io.MultiReader(bytes.NewReader(buf[:n]), reader)
 	cFormat := compressType(buf[:7])
-	r := compressedFormatReader(cFormat, mr)
+	if seekable && cFormat == UNCOMPRESSED {
+		return UNCOMPRESSED, nil
+	}
 
+	mr := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+	r := compressedFormatReader(cFormat, mr)
 	return cFormat, r
 }
 

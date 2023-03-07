@@ -177,9 +177,6 @@ func (root *Root) follow() {
 	if root.General.FollowAll {
 		root.followAll()
 	}
-
-	root.Doc.onceFollowMode()
-
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum == num {
 		return
@@ -202,10 +199,8 @@ func (root *Root) followAll() {
 	}
 
 	current := root.CurrentDoc
-
 	root.mu.RLock()
 	for n, doc := range root.DocList {
-		doc.onceFollowMode()
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
@@ -213,7 +208,6 @@ func (root *Root) followAll() {
 	root.mu.RUnlock()
 
 	if root.CurrentDoc != current {
-		log.Printf("switch document: %d", current)
 		root.switchDocument(current)
 	}
 }
