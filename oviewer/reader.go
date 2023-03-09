@@ -14,6 +14,24 @@ import (
 	"golang.org/x/term"
 )
 
+type controlSpecifier struct {
+	chunkNum int
+	done     chan struct{}
+	control  control
+}
+
+type control string
+
+const (
+	firstControl  = "first"
+	readControl   = "read"
+	followControl = "follow"
+	closeControl  = "close"
+	reloadControl = "reload"
+	loadControl   = "load"
+	searchControl = "search"
+)
+
 const FormFeed = "\f"
 
 // ControlFile controls file read and loads in chunks.
@@ -30,14 +48,16 @@ func (m *Document) ControlFile(fileName string) error {
 			switch sc.control {
 			case firstControl:
 				reader, err = m.firstControl(reader)
-			case countControl:
-				reader, err = m.countControl(reader)
+			case readControl:
+				reader, err = m.readControl(reader)
 			case followControl:
 				reader, err = m.followControl(reader)
 			case reloadControl:
 				reader, err = m.reloadControl(reader)
-			case readControl:
-				reader, err = m.readControl(reader, sc.chunkNum)
+			case loadControl:
+				reader, err = m.loadControl(reader, sc.chunkNum)
+			case searchControl:
+				err = m.searchControl(reader, sc.chunkNum)
 			default:
 				panic(fmt.Sprintf("unexpected %s", sc.control))
 			}
@@ -70,7 +90,7 @@ func (m *Document) ControlNonFile() error {
 			switch sc.control {
 			case reloadControl:
 				m.reset()
-			case readControl:
+			case loadControl:
 				chunk := m.chunks[sc.chunkNum]
 				chunk.lines = make([]string, ChunkSize)
 			default:
@@ -89,6 +109,8 @@ func (m *Document) ControlNonFile() error {
 	return nil
 }
 
+// firstControl is executed first.
+// Open the file and read the first chunk.
 func (m *Document) firstControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if err := m.firstRead(reader); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -99,48 +121,45 @@ func (m *Document) firstControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.BufEOF() {
 		return reader, nil
 	}
-	go func() {
-		m.ctlCh <- controlSpecifier{
-			control:  countControl,
-			chunkNum: 0,
-			done:     nil,
-		}
-	}()
+	m.ctlCh <- controlSpecifier{
+		control: readControl,
+	}
 
 	return reader, nil
 }
 
-func (m *Document) countControl(reader *bufio.Reader) (*bufio.Reader, error) {
+// readControl is executed after the second
+// and only reads the file or counts the lines of the file.
+func (m *Document) readControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
 			return nil, err
 		}
 		reader.Reset(m.file)
 	}
+
 	chunk := m.lastChunk()
 	start := 0
-	if err := m.countChunk(chunk, reader, start); err != nil {
+	if err := m.readOrCountChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
 		reader = m.afterEOF(reader)
 	}
+
 	if !m.BufEOF() {
 		chunk := NewChunk(m.size)
 		m.mu.Lock()
 		m.chunks = append(m.chunks, chunk)
 		m.mu.Unlock()
-		go func() {
-			m.ctlCh <- controlSpecifier{
-				control:  countControl,
-				chunkNum: 0,
-				done:     nil,
-			}
-		}()
+		m.ctlCh <- controlSpecifier{
+			control: readControl,
+		}
 	}
 	return reader, nil
 }
 
+// followControl reads lines added to the file while in follow-mode.
 func (m *Document) followControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.FollowMode && !m.FollowAll {
 		return reader, nil
@@ -160,7 +179,8 @@ func (m *Document) followControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	return reader, nil
 }
 
-func (m *Document) readControl(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+// loadControl loads the read contents into chunks.
+func (m *Document) loadControl(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	chunk := m.chunks[chunkNum]
 	start := 0
 	if m.seekable {
@@ -178,6 +198,25 @@ func (m *Document) readControl(reader *bufio.Reader, chunkNum int) (*bufio.Reade
 	return reader, nil
 }
 
+func (m *Document) searchControl(reader *bufio.Reader, chunkNum int) error {
+	chunk := m.chunks[chunkNum]
+	start := 0
+	if m.seekable {
+		if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+			return err
+		}
+		reader.Reset(m.file)
+	}
+	if err := m.packChunk(chunk, reader, start, false); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return err
+		}
+		reader = m.afterEOF(reader)
+	}
+	return nil
+}
+
+// reloadControl performs reload processing
 func (m *Document) reloadControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.WatchMode {
 		m.reset()
@@ -199,6 +238,15 @@ func (m *Document) reloadControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 
 	return reader, nil
+}
+
+func (m *Document) readOrCountChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+	if !m.seekable {
+		log.Println("pack", len(m.chunks))
+		return m.packChunk(chunk, reader, start, true)
+	}
+	log.Println("count", len(m.chunks))
+	return m.countChunk(chunk, reader, start)
 }
 
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
@@ -243,6 +291,8 @@ func (m *Document) openFile(fileName string) (io.Reader, error) {
 			f.Seek(0, io.SeekStart)
 			r = f
 		}
+	} else {
+		m.seekable = false
 	}
 	m.CFormat = cFormat
 	if STDOUTPIPE != nil {
@@ -269,8 +319,8 @@ func open(fileName string) (*os.File, error) {
 }
 
 func (m *Document) firstRead(reader *bufio.Reader) error {
-	if !m.seekable || m.CFormat != UNCOMPRESSED {
-		return m.readAll(reader)
+	if m.seekable {
+		return m.readFirstOnly(reader)
 	}
 	return m.readFirstOnly(reader)
 }
@@ -281,6 +331,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.chunks[len(m.chunks)-1]
 	start := len(chunk.lines)
 	for {
+		log.Println("loop?")
 		if err := m.packChunk(chunk, reader, start, true); err != nil {
 			return err
 		}

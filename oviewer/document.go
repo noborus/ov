@@ -124,23 +124,6 @@ type chunk struct {
 	start int64
 }
 
-type controlSpecifier struct {
-	chunkNum int
-	done     chan struct{}
-	control  control
-}
-
-type control string
-
-const (
-	firstControl  = "first"
-	countControl  = "count"
-	followControl = "follow"
-	closeControl  = "close"
-	reloadControl = "reload"
-	readControl   = "read"
-)
-
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
@@ -236,15 +219,7 @@ func (m *Document) GetLine(n int) string {
 	chunk := m.chunks[chunkNum]
 
 	if len(chunk.lines) == 0 {
-		log.Println("not in memory", chunkNum)
-		sc := controlSpecifier{
-			control:  readControl,
-			chunkNum: chunkNum,
-			done:     make(chan struct{}),
-		}
-		m.ctlCh <- sc
-		<-sc.done
-		log.Println("load chunk", chunkNum)
+		m.loadChunk(chunkNum)
 	}
 
 	m.mu.Lock()
@@ -256,6 +231,17 @@ func (m *Document) GetLine(n int) string {
 	}
 	log.Println("not load", n, m.endNum)
 	return ""
+}
+
+// loadChunk loads a chunk into memory.
+func (m *Document) loadChunk(chunkNum int) {
+	sc := controlSpecifier{
+		control:  loadControl,
+		chunkNum: chunkNum,
+		done:     make(chan struct{}),
+	}
+	m.ctlCh <- sc
+	<-sc.done
 }
 
 // CurrentLN returns the currently displayed line number.
