@@ -48,12 +48,19 @@ func (m *Document) ControlFile(fileName string) error {
 			switch sc.control {
 			case firstControl:
 				reader, err = m.firstControl(reader)
+				if !m.BufEOF() {
+					m.continueRead()
+				}
 			case readControl:
 				reader, err = m.readControl(reader)
+				if !m.BufEOF() {
+					m.continueRead()
+				}
 			case followControl:
 				reader, err = m.followControl(reader)
 			case reloadControl:
 				reader, err = m.reloadControl(reader)
+				m.startRead()
 			case loadControl:
 				reader, err = m.loadControl(reader, sc.chunkNum)
 			case searchControl:
@@ -74,12 +81,24 @@ func (m *Document) ControlFile(fileName string) error {
 		return nil
 	}()
 
-	m.ctlCh <- controlSpecifier{
-		control:  firstControl,
-		chunkNum: 0,
-		done:     nil,
-	}
+	m.startRead()
 	return nil
+}
+
+func (m *Document) startRead() {
+	go func() {
+		m.ctlCh <- controlSpecifier{
+			control: firstControl,
+		}
+	}()
+}
+
+func (m *Document) continueRead() {
+	go func() {
+		m.ctlCh <- controlSpecifier{
+			control: readControl,
+		}
+	}()
 }
 
 // ControlNonFile only supports reload.
@@ -118,13 +137,6 @@ func (m *Document) firstControl(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 		reader = m.afterEOF(reader)
 	}
-	if m.BufEOF() {
-		return reader, nil
-	}
-	m.ctlCh <- controlSpecifier{
-		control: readControl,
-	}
-
 	return reader, nil
 }
 
@@ -145,16 +157,6 @@ func (m *Document) readControl(reader *bufio.Reader) (*bufio.Reader, error) {
 			return nil, err
 		}
 		reader = m.afterEOF(reader)
-	}
-
-	if !m.BufEOF() {
-		chunk := NewChunk(m.size)
-		m.mu.Lock()
-		m.chunks = append(m.chunks, chunk)
-		m.mu.Unlock()
-		m.ctlCh <- controlSpecifier{
-			control: readControl,
-		}
 	}
 	return reader, nil
 }
@@ -181,14 +183,17 @@ func (m *Document) followControl(reader *bufio.Reader) (*bufio.Reader, error) {
 
 // loadControl loads the read contents into chunks.
 func (m *Document) loadControl(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
-	chunk := m.chunks[chunkNum]
-	start := 0
-	if m.seekable {
-		if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-			return nil, err
-		}
-		reader.Reset(m.file)
+	// non-seekable files are all in memory, so loadControl should not be called.
+	if !m.seekable {
+		return nil, fmt.Errorf("cannot be loaded")
 	}
+
+	chunk := m.chunks[chunkNum]
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return nil, err
+	}
+	reader.Reset(m.file)
+	start := 0
 	if err := m.packChunk(chunk, reader, start, false); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
@@ -229,14 +234,6 @@ func (m *Document) reloadControl(reader *bufio.Reader) (*bufio.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = m.firstRead(reader)
-	if err != nil {
-		if !errors.Is(err, io.EOF) {
-			return nil, err
-		}
-		reader = m.afterEOF(reader)
-	}
-
 	return reader, nil
 }
 
@@ -258,6 +255,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 		log.Printf("read: %s", err)
 	}
 	m.ClearCache()
+	atomic.StoreInt32(&m.eof, 0)
 	r, err := m.openFile(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)
@@ -319,10 +317,9 @@ func open(fileName string) (*os.File, error) {
 }
 
 func (m *Document) firstRead(reader *bufio.Reader) error {
-	if m.seekable {
-		return m.readFirstOnly(reader)
-	}
-	return m.readFirstOnly(reader)
+	chunk := m.chunks[0]
+	start := 0
+	return m.packChunk(chunk, reader, start, true)
 }
 
 // readAll actually reads everything.
@@ -331,7 +328,6 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.chunks[len(m.chunks)-1]
 	start := len(chunk.lines)
 	for {
-		log.Println("loop?")
 		if err := m.packChunk(chunk, reader, start, true); err != nil {
 			return err
 		}
@@ -341,17 +337,6 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		m.mu.Unlock()
 		start = 0
 	}
-}
-
-// readAll actually reads everything.
-// The read lines are stored in the lines of the Document.
-func (m *Document) readFirstOnly(reader *bufio.Reader) error {
-	chunk := m.chunks[0]
-	start := 0
-	if err := m.packChunk(chunk, reader, start, true); err != nil {
-		return err
-	}
-	return nil
 }
 
 // packChunk append lines read from reader into chunks.

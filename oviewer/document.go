@@ -134,7 +134,7 @@ func NewDocument() (*Document, error) {
 			MarkStyleWidth:  1,
 			PlainMode:       false,
 		},
-		ctlCh:         make(chan controlSpecifier, 10),
+		ctlCh:         make(chan controlSpecifier),
 		seekable:      true,
 		preventReload: false,
 		chunks: []*chunk{
