@@ -169,6 +169,9 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 
 // followRead reads lines added to the file while in follow-mode.
 func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
+	if m.checkClose() {
+		return reader, nil
+	}
 	if !m.FollowMode && !m.FollowAll {
 		return reader, nil
 	}
@@ -253,6 +256,7 @@ func (m *Document) readOrCountChunk(chunk *chunk, reader *bufio.Reader, start in
 }
 
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
+	atomic.StoreInt32(&m.closed, 1)
 	if !m.seekable {
 		m.ClearCache()
 		return reader, nil
@@ -261,6 +265,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 		log.Printf("read: %s", err)
 	}
 	m.ClearCache()
+	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
 	r, err := m.openFile(m.FileName)
 	if err != nil {
