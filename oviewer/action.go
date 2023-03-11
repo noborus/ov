@@ -89,6 +89,10 @@ func (root *Root) closeFile() {
 		root.setMessage("already closed")
 		return
 	}
+	if root.Doc.seekable {
+		root.setMessage("cannnot close")
+		return
+	}
 	root.Doc.closeControl()
 	root.setMessagef("close file %s", root.Doc.FileName)
 	log.Printf("close file %s", root.Doc.FileName)

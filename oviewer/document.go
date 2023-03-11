@@ -221,7 +221,7 @@ func (m *Document) GetLine(n int) string {
 	}
 	chunk := m.chunks[chunkNum]
 
-	if len(chunk.lines) == 0 {
+	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
 		m.loadControl(chunkNum)
 	}
 
