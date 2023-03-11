@@ -89,9 +89,7 @@ func (root *Root) closeFile() {
 		root.setMessage("already closed")
 		return
 	}
-	if err := root.Doc.close(); err != nil {
-		log.Printf("closeFile: %s", err)
-	}
+	root.Doc.closeControl()
 	root.setMessagef("close file %s", root.Doc.FileName)
 	log.Printf("close file %s", root.Doc.FileName)
 }

@@ -99,6 +99,9 @@ type Document struct {
 	// 1 if there is a closed.
 	closed int32
 
+	// 1 if there is a read cancel.
+	readCancel int32
+
 	// WatchMode is watch mode.
 	WatchMode bool
 	// preventReload is true to prevent reload.
@@ -219,7 +222,7 @@ func (m *Document) GetLine(n int) string {
 	chunk := m.chunks[chunkNum]
 
 	if len(chunk.lines) == 0 {
-		m.loadChunk(chunkNum)
+		m.loadControl(chunkNum)
 	}
 
 	m.mu.Lock()
@@ -233,8 +236,8 @@ func (m *Document) GetLine(n int) string {
 	return ""
 }
 
-// loadChunk loads a chunk into memory.
-func (m *Document) loadChunk(chunkNum int) {
+// loadControl sends instructions to load chunks into memory.
+func (m *Document) loadControl(chunkNum int) {
 	sc := controlSpecifier{
 		control:  loadControl,
 		chunkNum: chunkNum,
@@ -242,6 +245,20 @@ func (m *Document) loadChunk(chunkNum int) {
 	}
 	m.ctlCh <- sc
 	<-sc.done
+}
+
+func (m *Document) closeControl() {
+	atomic.StoreInt32(&m.readCancel, 1)
+	sc := controlSpecifier{
+		control: closeControl,
+		done:    make(chan struct{}),
+	}
+
+	log.Println("close send")
+	m.ctlCh <- sc
+	<-sc.done
+	log.Println("receive done")
+	atomic.StoreInt32(&m.readCancel, 0)
 }
 
 // CurrentLN returns the currently displayed line number.

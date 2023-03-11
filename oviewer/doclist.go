@@ -50,9 +50,7 @@ func (root *Root) closeDocument() {
 	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	log.Printf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
-	if err := root.DocList[root.CurrentDoc].close(); err != nil {
-		log.Printf("%s:%s", root.Doc.FileName, err)
-	}
+	root.DocList[root.CurrentDoc].closeControl()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
