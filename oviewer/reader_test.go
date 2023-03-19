@@ -160,8 +160,12 @@ func TestDocument_reload(t *testing.T) {
 			m.FileName = tt.fields.FileName
 			m.WatchMode = tt.fields.WatchMode
 			m.seekable = tt.fields.seekable
-			if err := m.ControlFile(tt.fields.FileName); err != nil {
-				t.Fatal("ControlFile error")
+			f, err := open(tt.fields.FileName)
+			if err != nil {
+				t.Fatal("open error", tt.fields.FileName)
+			}
+			if err := m.ControlFile(f); err != nil {
+				t.Fatal("ControlFile error", tt.fields.FileName)
 			}
 			if err := m.reload(); (err != nil) != tt.wantErr {
 				t.Errorf("Document.reload() error = %v, wantErr %v", err, tt.wantErr)

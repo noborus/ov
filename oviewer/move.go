@@ -202,7 +202,6 @@ func (root *Root) moveUpN(n int) {
 
 	m := root.Doc
 	if m.topLN <= m.startNum && m.topLX == 0 {
-		root.setMessage("Out of bounds")
 		return
 	}
 

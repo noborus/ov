@@ -187,8 +187,12 @@ func OpenDocument(fileName string) (*Document, error) {
 		m.seekable = false
 	}
 
+	f, err := open(fileName)
+	if err != nil {
+		return nil, err
+	}
 	m.FileName = fileName
-	if err := m.ControlFile(fileName); err != nil {
+	if err := m.ControlFile(f); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -203,7 +207,11 @@ func STDINDocument() (*Document, error) {
 
 	m.seekable = false
 	m.Caption = "(STDIN)"
-	if err := m.ControlFile(""); err != nil {
+	f, err := open("")
+	if err != nil {
+		return nil, err
+	}
+	if err := m.ControlFile(f); err != nil {
 		return nil, err
 	}
 	return m, nil

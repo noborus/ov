@@ -35,15 +35,40 @@ const (
 const FormFeed = "\f"
 
 // ControlFile controls file read and loads in chunks.
-func (m *Document) ControlFile(fileName string) error {
+// ControlFile can be reloaded by file name.
+func (m *Document) ControlFile(file *os.File) error {
 	go func() error {
-		r, err := m.openFile(fileName)
+		atomic.StoreInt32(&m.closed, 0)
+		r, err := m.openFile(file)
 		if err != nil {
+			atomic.StoreInt32(&m.closed, 1)
 			log.Println(err)
-			return err
 		}
 		atomic.StoreInt32(&m.eof, 0)
 		reader := bufio.NewReader(r)
+		for sc := range m.ctlCh {
+			err := m.control(sc, reader)
+			if err != nil {
+				log.Println(err)
+			}
+			if sc.done != nil {
+				close(sc.done)
+			}
+		}
+		log.Println("close m.ctlCh")
+		return nil
+	}()
+
+	m.startControl()
+	return nil
+}
+
+// controlreader is the controller for io.Reader.
+// Assuming call from Exec. reload executes the argument function.
+func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
+	reader := bufio.NewReader(r)
+	go func() error {
+		var err error
 		for sc := range m.ctlCh {
 			switch sc.control {
 			case firstControl:
@@ -56,36 +81,61 @@ func (m *Document) ControlFile(fileName string) error {
 				if !m.BufEOF() {
 					m.continueControl()
 				}
-			case followControl:
-				reader, err = m.followRead(reader)
-			case loadControl:
-				reader, err = m.readChunk(reader, sc.chunkNum)
-			case searchControl:
-				err = m.searchChunk(reader, sc.chunkNum)
 			case reloadControl:
-				reader, err = m.reloadRead(reader)
+				log.Println("reset")
+				reader = reload()
 				m.startControl()
-			case closeControl:
-				err = m.close()
-				log.Println(err)
-				err = nil
 			default:
 				panic(fmt.Sprintf("unexpected %s", sc.control))
 			}
-
+			if err != nil {
+				log.Println(err)
+			}
 			if sc.done != nil {
 				close(sc.done)
 			}
-			if err != nil {
-				log.Println(err)
-				close(m.ctlCh)
-			}
 		}
-		log.Println("close m.ctlCh")
+		log.Println("close ctlCh")
 		return nil
 	}()
 
 	m.startControl()
+	return nil
+}
+
+func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) error {
+	if atomic.LoadInt32(&m.closed) == 1 && sc.control != reloadControl {
+		return fmt.Errorf("closed %s", sc.control)
+	}
+
+	var err error
+	switch sc.control {
+	case firstControl:
+		reader, err = m.firstRead(reader)
+		if !m.BufEOF() {
+			m.continueControl()
+		}
+	case continueControl:
+		reader, err = m.continueRead(reader)
+		if !m.BufEOF() {
+			m.continueControl()
+		}
+	case followControl:
+		reader, err = m.followRead(reader)
+	case loadControl:
+		reader, err = m.readChunk(reader, sc.chunkNum)
+	case searchControl:
+		err = m.searchChunk(reader, sc.chunkNum)
+	case reloadControl:
+		reader, err = m.reloadRead(reader)
+		m.startControl()
+	case closeControl:
+		err = m.close()
+		log.Println(err)
+		err = nil
+	default:
+		panic(fmt.Sprintf("unexpected %s", sc.control))
+	}
 	return nil
 }
 
@@ -105,33 +155,6 @@ func (m *Document) continueControl() {
 	}()
 }
 
-// ControlNonFile only supports reload.
-func (m *Document) ControlNonFile() error {
-	go func() error {
-		var err error
-		for sc := range m.ctlCh {
-			switch sc.control {
-			case reloadControl:
-				m.reset()
-			case loadControl:
-				chunk := m.chunks[sc.chunkNum]
-				chunk.lines = make([]string, ChunkSize)
-			default:
-				panic(fmt.Sprintf("unexpected %s", sc.control))
-			}
-			if err != nil {
-				log.Println(err)
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close ctlCh")
-		return nil
-	}()
-	return nil
-}
-
 // firstRead first reads the file.
 // Packs the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
@@ -139,6 +162,7 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	start := 0
 	if err := m.packChunk(chunk, reader, start, true); err != nil {
 		if !errors.Is(err, io.EOF) {
+			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
 		}
 		reader = m.afterEOF(reader)
@@ -151,6 +175,7 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
+			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
 		}
 		reader.Reset(m.file)
@@ -267,7 +292,13 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	m.ClearCache()
 	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
-	r, err := m.openFile(m.FileName)
+	f, err := open(m.FileName)
+	if err != nil {
+		str := fmt.Sprintf("Access is no longer possible: %s", err)
+		reader = bufio.NewReader(strings.NewReader(str))
+		return reader, nil
+	}
+	r, err := m.openFile(f)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)
 		reader = bufio.NewReader(strings.NewReader(str))
@@ -286,11 +317,7 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	return reader
 }
 
-func (m *Document) openFile(fileName string) (io.Reader, error) {
-	f, err := open(fileName)
-	if err != nil {
-		return nil, err
-	}
+func (m *Document) openFile(f *os.File) (io.Reader, error) {
 	m.mu.Lock()
 	m.file = f
 
@@ -519,7 +546,11 @@ func (m *Document) close() error {
 //
 // Deprecated:
 func (m *Document) ReadFile(fileName string) error {
-	r, err := m.openFile(fileName)
+	f, err := open(fileName)
+	if err != nil {
+		return err
+	}
+	r, err := m.openFile(f)
 	if err != nil {
 		return err
 	}

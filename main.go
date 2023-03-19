@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/noborus/ov/oviewer"
@@ -142,23 +140,14 @@ func ExecCommand(args []string) error {
 	if len(args) == 0 {
 		return ErrNoArgument
 	}
-
-	command := exec.Command(args[0], args[1:]...)
-	ov, err := oviewer.ExecCommand(command)
+	cmd := oviewer.NewCommand(args)
+	ov, err := cmd.Exec()
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		if command == nil || command.Process == nil {
-			return
-		}
-		if err := command.Process.Kill(); err != nil {
-			log.Println(err)
-		}
-		if err := command.Wait(); err != nil {
-			log.Println(err)
-		}
+		cmd.Wait()
 	}()
 
 	ov.SetConfig(config)

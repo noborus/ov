@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"log"
+	"sync/atomic"
 )
 
 // NewLogDoc generates a document for log.
@@ -15,7 +16,8 @@ func NewLogDoc() (*Document, error) {
 	m.Caption = "Log"
 	m.seekable = false
 	log.SetOutput(m)
-	if err := m.ControlNonFile(); err != nil {
+	atomic.StoreInt32(&m.closed, 1)
+	if err := m.ControlFile(nil); err != nil {
 		return nil, err
 	}
 	return m, nil
