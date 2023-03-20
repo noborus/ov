@@ -17,7 +17,7 @@ func NewLogDoc() (*Document, error) {
 	m.seekable = false
 	log.SetOutput(m)
 	atomic.StoreInt32(&m.closed, 1)
-	if err := m.ControlFile(nil); err != nil {
+	if err := m.ControlLog(); err != nil {
 		return nil, err
 	}
 	return m, nil

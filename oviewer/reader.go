@@ -63,6 +63,25 @@ func (m *Document) ControlFile(file *os.File) error {
 	return nil
 }
 
+func (m *Document) ControlLog() error {
+	go func() error {
+		for sc := range m.ctlCh {
+			switch sc.control {
+			case reloadControl:
+				m.reset()
+			default:
+				panic(fmt.Sprintf("unexpected %s", sc.control))
+			}
+			if sc.done != nil {
+				close(sc.done)
+			}
+		}
+		log.Println("close m.ctlCh")
+		return nil
+	}()
+	return nil
+}
+
 // controlreader is the controller for io.Reader.
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
