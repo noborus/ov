@@ -162,6 +162,8 @@ type general struct {
 	FollowAll bool
 	// FollowSection is a follow mode that uses section instead of line.
 	FollowSection bool
+	// FollowName is the mode to follow files by name.
+	FollowName bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
 }
@@ -481,6 +483,9 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 								log.Println("???", len(doc.ctlCh))
 							}
 						case fsnotify.Remove, fsnotify.Create:
+							if !doc.FollowName {
+								continue
+							}
 							select {
 							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
 								log.Printf("notify send %v", event)
@@ -569,6 +574,9 @@ func (root *Root) Run() error {
 		doc.general = root.Config.General
 		doc.regexpCompile()
 
+		if doc.FollowName {
+			doc.FollowMode = true
+		}
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()
@@ -770,6 +778,9 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if dst.FollowSection {
 		src.FollowSection = dst.FollowSection
+	}
+	if dst.FollowName {
+		src.FollowName = dst.FollowName
 	}
 	if dst.ColumnDelimiter != "" {
 		src.ColumnDelimiter = dst.ColumnDelimiter

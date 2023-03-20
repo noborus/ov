@@ -47,7 +47,7 @@ func (m *Document) ControlFile(file *os.File) error {
 		atomic.StoreInt32(&m.eof, 0)
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
-			err := m.control(sc, reader)
+			reader, err = m.control(sc, reader)
 			if err != nil {
 				log.Println(err)
 			}
@@ -103,9 +103,9 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 	return nil
 }
 
-func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) error {
+func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
 	if atomic.LoadInt32(&m.closed) == 1 && sc.control != reloadControl {
-		return fmt.Errorf("closed %s", sc.control)
+		return nil, fmt.Errorf("closed %s", sc.control)
 	}
 
 	var err error
@@ -128,6 +128,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) error {
 		err = m.searchChunk(reader, sc.chunkNum)
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
+		log.Println("start")
 		m.startControl()
 	case closeControl:
 		err = m.close()
@@ -136,7 +137,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) error {
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.control))
 	}
-	return nil
+	return reader, nil
 }
 
 func (m *Document) startControl() {
@@ -287,11 +288,12 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, nil
 	}
 	if err := m.file.Close(); err != nil {
-		log.Printf("read: %s", err)
+		log.Printf("reload: %s", err)
 	}
 	m.ClearCache()
 	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
+	log.Println("reload", m.FileName)
 	f, err := open(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)

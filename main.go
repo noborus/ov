@@ -265,6 +265,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "follow section")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
+	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow name mode")
+	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
+
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval")
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))
 

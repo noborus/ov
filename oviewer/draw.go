@@ -383,6 +383,9 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	if root.General.FollowAll {
 		modeStatus = "(Follow All)"
 	}
+	if root.Doc.FollowName {
+		modeStatus = "(Follow Name)"
+	}
 	// Watch mode doubles as FollowSection mode.
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
