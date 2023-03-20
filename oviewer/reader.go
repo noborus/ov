@@ -282,15 +282,16 @@ func (m *Document) readOrCountChunk(chunk *chunk, reader *bufio.Reader, start in
 }
 
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
-	atomic.StoreInt32(&m.closed, 1)
 	if !m.seekable {
 		m.ClearCache()
 		return reader, nil
 	}
+	atomic.StoreInt32(&m.closed, 1)
 	if err := m.file.Close(); err != nil {
 		log.Printf("reload: %s", err)
 	}
 	m.ClearCache()
+
 	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
 	log.Println("reload", m.FileName)
