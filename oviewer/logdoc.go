@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"log"
+	"sync/atomic"
 )
 
 // NewLogDoc generates a document for log.
@@ -12,9 +13,13 @@ func NewLogDoc() (*Document, error) {
 		return nil, err
 	}
 	m.FollowMode = true
-	m.FileName = "Log"
+	m.Caption = "Log"
 	m.seekable = false
 	log.SetOutput(m)
+	atomic.StoreInt32(&m.closed, 1)
+	if err := m.ControlLog(); err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
@@ -26,6 +31,10 @@ func (m *Document) Write(p []byte) (int, error) {
 	if len(chunk.lines) >= ChunkSize {
 		chunk = NewChunk(m.size)
 		m.mu.Lock()
+		if len(m.chunks) > 2 {
+			m.chunks[len(m.chunks)-2].lines = nil
+			m.startNum = ChunkSize * (len(m.chunks) - 1)
+		}
 		m.chunks = append(m.chunks, chunk)
 		m.mu.Unlock()
 	}

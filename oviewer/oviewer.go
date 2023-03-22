@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"syscall"
@@ -161,6 +162,8 @@ type general struct {
 	FollowAll bool
 	// FollowSection is a follow mode that uses section instead of line.
 	FollowSection bool
+	// FollowName is the mode to follow files by name.
+	FollowName bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
 }
@@ -310,6 +313,8 @@ const MaxWriteLog int = 10
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
+	// ErrNotInMemory indicates that value is not in memory.
+	ErrNotInMemory = errors.New("not in memory")
 	// ErrFatalCache indicates that the cache value had a fatal error.
 	ErrFatalCache = errors.New("fatal error in cache value")
 	// ErrMissingFile indicates that the file does not exist.
@@ -468,10 +473,26 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				}
 				root.mu.Lock()
 				for _, doc := range root.DocList {
-					if doc.FileName == event.Name {
-						select {
-						case doc.changCh <- struct{}{}:
-						default:
+					if doc.filepath == event.Name {
+						switch event.Op {
+						case fsnotify.Write:
+							select {
+							case doc.ctlCh <- controlSpecifier{control: followControl}:
+								root.debugMessage(fmt.Sprintf("notify send %v", event))
+							default:
+								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+							}
+						case fsnotify.Remove, fsnotify.Create:
+							if !doc.FollowName {
+								continue
+							}
+							select {
+							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
+								root.debugMessage(fmt.Sprintf("notify send %v", event))
+							default:
+								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+							}
+
 						}
 					}
 				}
@@ -486,7 +507,15 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		if err := watcher.Add(doc.FileName); err != nil {
+		fileName, err := filepath.Abs(doc.FileName)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		doc.filepath = fileName
+
+		path := filepath.Dir(fileName)
+		if err := watcher.Add(path); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
 	}
@@ -545,6 +574,9 @@ func (root *Root) Run() error {
 		doc.general = root.Config.General
 		doc.regexpCompile()
 
+		if doc.FollowName {
+			doc.FollowMode = true
+		}
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()
@@ -746,6 +778,9 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if dst.FollowSection {
 		src.FollowSection = dst.FollowSection
+	}
+	if dst.FollowName {
+		src.FollowName = dst.FollowName
 	}
 	if dst.ColumnDelimiter != "" {
 		src.ColumnDelimiter = dst.ColumnDelimiter
