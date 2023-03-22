@@ -23,7 +23,7 @@ type Command struct {
 	docerr  *Document
 }
 
-func NewCommand(args []string) *Command {
+func NewCommand(args ...string) *Command {
 	return &Command{
 		args: args,
 	}

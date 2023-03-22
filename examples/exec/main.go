@@ -1,17 +1,18 @@
 package main
 
 import (
-	"os/exec"
-
 	"github.com/noborus/ov/oviewer"
 )
 
 func main() {
-	command := exec.Command("/usr/bin/time", "--verbose", "ls", "-alF")
-	ov, err := oviewer.ExecCommand(command)
+	cmd := oviewer.NewCommand("/usr/bin/time", "--verbose", "ls", "-alF")
+	ov, err := cmd.Exec()
 	if err != nil {
 		panic(err)
 	}
+	defer func() {
+		cmd.Wait()
+	}()
 	ov.General.FollowAll = true
 	if err := ov.Run(); err != nil {
 		panic(err)
