@@ -515,6 +515,13 @@ func (m *Document) lastChunk() *chunk {
 // Regular files are reopened and reread increase.
 // The pipe will reset what it has read.
 func (m *Document) reload() error {
+	if m.FileName == "" && m.BufEOF() {
+		return fmt.Errorf("EOF reachede")
+	}
+	if m.preventReload {
+		return fmt.Errorf("prevent reload")
+	}
+
 	atomic.StoreInt32(&m.readCancel, 1)
 	sc := controlSpecifier{
 		control: reloadControl,
