@@ -71,6 +71,7 @@ brews:
     tap:
       owner: noborus
       name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     commit_author:
       name: noborus
       email: noborusai@gmail.com
