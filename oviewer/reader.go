@@ -39,7 +39,7 @@ const FormFeed = "\f"
 func (m *Document) ControlFile(file *os.File) error {
 	go func() error {
 		atomic.StoreInt32(&m.closed, 0)
-		r, err := m.openFile(file)
+		r, err := m.fileReader(file)
 		if err != nil {
 			atomic.StoreInt32(&m.closed, 1)
 			log.Println(err)
@@ -147,7 +147,6 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		err = m.searchChunk(reader, sc.chunkNum)
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
-		log.Println("start")
 		m.startControl()
 	case closeControl:
 		err = m.close()
@@ -293,10 +292,8 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 
 func (m *Document) readOrCountChunk(chunk *chunk, reader *bufio.Reader, start int) error {
 	if !m.seekable {
-		//log.Println("pack", len(m.chunks))
 		return m.packChunk(chunk, reader, start, true)
 	}
-	log.Println("count", len(m.chunks))
 	return m.countChunk(chunk, reader, start)
 }
 
@@ -314,13 +311,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
 	log.Println("reload", m.FileName)
-	f, err := open(m.FileName)
-	if err != nil {
-		str := fmt.Sprintf("Access is no longer possible: %s", err)
-		reader = bufio.NewReader(strings.NewReader(str))
-		return reader, nil
-	}
-	r, err := m.openFile(f)
+	r, err := m.openFileReader(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)
 		reader = bufio.NewReader(strings.NewReader(str))
@@ -339,7 +330,7 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	return reader
 }
 
-func (m *Document) openFile(f *os.File) (io.Reader, error) {
+func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.mu.Lock()
 	m.file = f
 
@@ -358,6 +349,18 @@ func (m *Document) openFile(f *os.File) (io.Reader, error) {
 	}
 	m.mu.Unlock()
 
+	return r, nil
+}
+
+func (m *Document) openFileReader(fileName string) (io.Reader, error) {
+	f, err := open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	r, err := m.fileReader(f)
+	if err != nil {
+		return nil, err
+	}
 	return r, nil
 }
 
@@ -517,11 +520,9 @@ func (m *Document) reload() error {
 		control: reloadControl,
 		done:    make(chan struct{}),
 	}
-	log.Println("reload send")
 	m.ctlCh <- sc
 	<-sc.done
 	atomic.StoreInt32(&m.readCancel, 0)
-	log.Println("receive done")
 	if !m.WatchMode {
 		m.topLN = 0
 	}
@@ -568,11 +569,7 @@ func (m *Document) close() error {
 //
 // Deprecated:
 func (m *Document) ReadFile(fileName string) error {
-	f, err := open(fileName)
-	if err != nil {
-		return err
-	}
-	r, err := m.openFile(f)
+	r, err := m.openFileReader(fileName)
 	if err != nil {
 		return err
 	}

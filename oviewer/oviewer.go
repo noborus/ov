@@ -478,9 +478,9 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 						case fsnotify.Write:
 							select {
 							case doc.ctlCh <- controlSpecifier{control: followControl}:
-								log.Printf("notify send %v", event)
+								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								log.Println("???", len(doc.ctlCh))
+								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
 							}
 						case fsnotify.Remove, fsnotify.Create:
 							if !doc.FollowName {
@@ -488,9 +488,9 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 							}
 							select {
 							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
-								log.Printf("notify send %v", event)
+								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								log.Println("???", len(doc.ctlCh))
+								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
 							}
 
 						}
