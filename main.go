@@ -140,7 +140,7 @@ func ExecCommand(args []string) error {
 	if len(args) == 0 {
 		return ErrNoArgument
 	}
-	cmd := oviewer.NewCommand(args)
+	cmd := oviewer.NewCommand(args...)
 	ov, err := cmd.Exec()
 	if err != nil {
 		return err
