@@ -100,17 +100,10 @@ func (root *Root) closeFile() {
 
 // reload reload a current document.
 func (root *Root) reload(m *Document) {
-	if m.preventReload {
-		root.setMessagef("cannot reload: %s", m.FileName)
-		return
-	}
-
-	root.mu.Lock()
 	if err := m.reload(); err != nil {
-		log.Printf("cannot reload: %s", err)
+		root.setMessagef("cannot reload: %s", err)
 		return
 	}
-	root.mu.Unlock()
 	root.releaseEventBuffer()
 	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)
