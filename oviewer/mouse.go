@@ -153,11 +153,13 @@ func (root *Root) putClipboard(_ context.Context) {
 
 	if y2 < y1 {
 		y1, y2 = y2, y1
-	}
-	if x2 < x1 {
 		x1, x2 = x2, x1
 	}
-
+	if y1 == y2 {
+		if x2 < x1 {
+			x1, x2 = x2, x1
+		}
+	}
 	buff, err := root.rangeToString(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("putClipboard: %s", err.Error()))
@@ -213,13 +215,14 @@ func (root *Root) getClipboard(_ context.Context) {
 // Multi-line selection is included until the end of the line,
 // but if the rectangle flag is true, the rectangle will be the range.
 func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
-	if x2 < x1 {
-		x1, x2 = x2, x1
-	}
 	if y2 < y1 {
 		y1, y2 = y2, y1
+		x1, x2 = x2, x1
 	}
 	if y1 == y2 {
+		if x2 < x1 {
+			x1, x2 = x2, x1
+		}
 		root.reverseLine(y1, x1, x2+1, sel)
 		return
 	}
