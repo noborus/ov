@@ -232,6 +232,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
 	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
+	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column widht mode")
+	_ = viper.BindPFlag("general.ColumnWidth", rootCmd.PersistentFlags().Lookup("column-width"))
+
 	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "column rainbow")
 	_ = viper.BindPFlag("general.ColumnRainbow", rootCmd.PersistentFlags().Lookup("column-rainbow"))
 

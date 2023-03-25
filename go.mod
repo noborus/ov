@@ -11,6 +11,7 @@ require (
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.16.3
 	github.com/mattn/go-runewidth v0.0.14
+	github.com/noborus/guesswidth v0.3.2
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/rivo/uniseg v0.4.4
 	github.com/spf13/cobra v1.6.1

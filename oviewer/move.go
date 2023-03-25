@@ -416,8 +416,29 @@ func (root *Root) moveRightN(n int) {
 	m.columnCursor = cursor
 }
 
-// columnX returns the columnCursor and actual x from columnCursor.
+// columnDelimiterX returns the columnCursor and actual x from columnCursor.
 func (root *Root) columnX(cursor int) (int, error) {
+	if root.Doc.ColumnWidth {
+		return root.columnWidthX(cursor)
+	}
+	return root.columnDelimiterX(cursor)
+}
+
+// columnWidthX returns the columnCursor and actual x from columnCursor.
+func (root *Root) columnWidthX(cursor int) (int, error) {
+	m := root.Doc
+	if cursor <= 0 {
+		return 0, nil
+	}
+	if len(m.columnWidths) >= cursor {
+		x := m.columnWidths[cursor-1]
+		return x, nil
+	}
+	return 0, ErrNoDelimiter
+}
+
+// columnDelimiterX returns the columnCursor and actual x from columnCursor.
+func (root *Root) columnDelimiterX(cursor int) (int, error) {
 	m := root.Doc
 	if cursor <= 0 {
 		return 0, nil

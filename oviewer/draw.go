@@ -21,6 +21,10 @@ func (root *Root) draw() {
 		return
 	}
 
+	if m.ColumnWidth && m.columnWidths == nil {
+		m.setColumnWidths()
+	}
+
 	// Header
 	lN := root.drawHeader()
 
@@ -104,7 +108,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	wrapNum := root.numOfWrap(lX, lN)
 	line, valid := m.getLineC(lN, m.TabWidth)
 	root.bodyStyle(line.lc, root.StyleBody)
-	root.styleContent(lN, line)
+	if valid {
+		root.styleContent(lN, line)
+	}
 	for y := root.headerLen; y < root.scr.vHeight-statusLine; y++ {
 		root.scr.numbers[y] = LineNumber{
 			number: lN,
@@ -130,7 +136,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 			lN = nextY
 			line, valid = m.getLineC(lN, m.TabWidth)
 			root.bodyStyle(line.lc, root.StyleBody)
-			root.styleContent(lN, line)
+			if valid {
+				root.styleContent(lN, line)
+			}
 		}
 
 		if lX > 0 {
@@ -282,8 +290,16 @@ func (root *Root) drawLineNumber(lN int, y int) {
 
 // columnHighlight applies the style of the column highlight.
 func (root *Root) columnHighlight(line LineC) {
-	m := root.Doc
+	if root.Doc.ColumnWidth {
+		root.columnWidthHighlight(line)
+		return
+	}
+	root.columnDelimiterHighlight(line)
+}
 
+// columnHighlight applies the style of the column highlight.
+func (root *Root) columnDelimiterHighlight(line LineC) {
+	m := root.Doc
 	indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 	if len(indexes) == 0 {
 		return
@@ -296,6 +312,9 @@ func (root *Root) columnHighlight(line LineC) {
 		case c == 0:
 			iStart = 0
 			iEnd = indexes[0][1] - 1
+			if iEnd < 0 {
+				iEnd = 0
+			}
 		case c < len(indexes):
 			iStart = iEnd + 1
 			iEnd = indexes[c][0]
@@ -304,6 +323,10 @@ func (root *Root) columnHighlight(line LineC) {
 			iEnd = len(line.str)
 		}
 
+		log.Println(c, indexes)
+		if iStart < 0 || iEnd < 0 {
+			return
+		}
 		start, end := line.pos.x(iStart), line.pos.x(iEnd)
 		if m.ColumnRainbow {
 			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
@@ -312,6 +335,73 @@ func (root *Root) columnHighlight(line LineC) {
 			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 		}
 	}
+}
+
+func (root *Root) columnWidthHighlight(line LineC) {
+	m := root.Doc
+	indexes := m.columnWidths
+	if len(indexes) == 0 {
+		return
+	}
+	iStart, iEnd := 0, 0
+	numC := len(root.StyleColumnRainbow)
+	for c := 0; c < len(indexes)+1; c++ {
+		switch {
+		case c == 0:
+			iStart = 0
+			iEnd = findBounds(line.lc, indexes[0]-1, indexes, c)
+		case c < len(indexes):
+			iStart = iEnd + 1
+			iEnd = findBounds(line.lc, indexes[c], indexes, c)
+		case c == len(indexes):
+			iStart = iEnd + 1
+			iEnd = len(line.str)
+		}
+		iEnd = min(iEnd, len(line.lc))
+
+		if m.ColumnRainbow {
+			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnRainbow[c%numC])
+		}
+
+		if c == m.columnCursor {
+			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnHighlight)
+		}
+	}
+}
+
+// findBounds finds the bounds of values that extend beyond the column position.
+func findBounds(lc contents, p int, pos []int, n int) int {
+	if lc[p].mainc == ' ' {
+		return p
+	}
+	log.Println("shift", p)
+	f := p
+	fp := 0
+	for ; f < len(lc) && lc[f].mainc != ' '; f++ {
+		fp++
+	}
+
+	b := p
+	bp := 0
+	for ; b > 0 && lc[b].mainc != ' '; b-- {
+		bp++
+	}
+
+	if b == pos[n] {
+		return f
+	}
+	if n < len(pos)-1 {
+		if f == pos[n+1] {
+			return b
+		}
+		if b == pos[n] {
+			return f
+		}
+		if b > pos[n] && b < pos[n+1] {
+			return b
+		}
+	}
+	return f
 }
 
 // RangeStyle applies the style to the specified range.

@@ -272,6 +272,7 @@ func (root *Root) setHeader(input string) {
 	}
 
 	root.Doc.Header = num
+	root.Doc.columnWidths = nil
 	root.setMessagef("Set header lines %d", num)
 }
 
