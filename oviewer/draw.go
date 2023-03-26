@@ -187,7 +187,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 		return 0, 0
 	}
 
-	//log.Println("len", root.scr.vHeight*root.scr.vWidth, len(lc))
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
@@ -322,8 +321,6 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 			iStart = iEnd + 1
 			iEnd = len(line.str)
 		}
-
-		log.Println(c, indexes)
 		if iStart < 0 || iEnd < 0 {
 			return
 		}
