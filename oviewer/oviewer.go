@@ -579,6 +579,9 @@ func (root *Root) Run() error {
 		if doc.FollowName {
 			doc.FollowMode = true
 		}
+		if doc.ColumnWidth {
+			doc.ColumnMode = true
+		}
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()

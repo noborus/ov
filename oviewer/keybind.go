@@ -59,6 +59,7 @@ const (
 	actionSearch         = "search"
 	actionWrap           = "wrap_mode"
 	actionColumnMode     = "column_mode"
+	actionColumnWidth    = "column_width"
 	actionBackSearch     = "backsearch"
 	actionDelimiter      = "delimiter"
 	actionHeader         = "header"
@@ -127,6 +128,7 @@ func (root *Root) handlers() map[string]func() {
 		actionViewMode:       root.setViewInputMode,
 		actionWrap:           root.toggleWrapMode,
 		actionColumnMode:     root.toggleColumnMode,
+		actionColumnWidth:    root.toggleColumnWidth,
 		actionAlternate:      root.toggleAlternateRows,
 		actionLineNumMode:    root.toggleLineNumMode,
 		actionMark:           root.addMark,
@@ -204,6 +206,7 @@ func defaultKeyBinds() KeyBind {
 		actionViewMode:       {"p", "P"},
 		actionWrap:           {"w", "W"},
 		actionColumnMode:     {"c"},
+		actionColumnWidth:    {"ctrl+x"},
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionMark:           {"m"},
@@ -296,6 +299,7 @@ func (k KeyBind) String() string {
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
+	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")

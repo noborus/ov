@@ -371,10 +371,12 @@ func (root *Root) columnWidthHighlight(line LineC) {
 
 // findBounds finds the bounds of values that extend beyond the column position.
 func findBounds(lc contents, p int, pos []int, n int) int {
+	if len(lc) < p {
+		return p
+	}
 	if lc[p].mainc == ' ' {
 		return p
 	}
-	log.Println("shift", p)
 	f := p
 	fp := 0
 	for ; f < len(lc) && lc[f].mainc != ' '; f++ {

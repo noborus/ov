@@ -110,6 +110,8 @@ type Document struct {
 	preventReload bool
 	// Is it possible to seek.
 	seekable bool
+	// formfeedtime adds time on formfeed.
+	formfeedTime bool
 }
 
 // LineC is one line of information.
@@ -434,12 +436,18 @@ func (m *Document) setMultiColorWords(words []string) {
 	m.multiColorRegexps = multiRegexpCompile(words)
 }
 
+// setColumnWidths sets the column widths.
+// Guess the width of the columns using the first 1000 lines (maximum) and the headers.
 func (m *Document) setColumnWidths() {
-	th := 0
-	if m.Header > 0 {
-		th = m.Header - 1
+	if m.BufEndNum() == 0 {
+		return
 	}
-	tl := 1000
-	tl = min(tl, len(m.chunks[0].lines)-1)
-	m.columnWidths = guesswidth.Positions(m.chunks[0].lines[m.SkipLines:tl], th, 2)
+	heaader := 0
+	if m.Header > 0 {
+		heaader = m.Header - 1
+	}
+	tl := min(1000, len(m.chunks[0].lines)-1)
+	lines := m.chunks[0].lines[m.SkipLines:tl]
+
+	m.columnWidths = guesswidth.Positions(lines, heaader, 2)
 }
