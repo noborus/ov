@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"golang.org/x/term"
 )
@@ -48,6 +47,8 @@ func (cmd *Command) Exec() (*Root, error) {
 	cmd.docout.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docout.FileName
 	atomic.StoreInt32(&cmd.docout.closed, 0)
 	atomic.StoreInt32(&cmd.docerr.closed, 0)
+	cmd.docout.formfeedTime = true
+	cmd.docerr.formfeedTime = true
 	err = cmd.docout.ControlReader(so, cmd.Reload)
 	if err != nil {
 		log.Printf("%s", err)
@@ -171,9 +172,7 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if STDOUTPIPE != nil {
 		so = io.TeeReader(so, STDOUTPIPE)
 	}
-	if _, err := fmt.Fprintf(command.Stdout, "Time: %s\n", time.Now().Format(time.RFC3339)); err != nil {
-		log.Println(err)
-	}
+
 	// STDERR
 	errReader, err := command.StderrPipe()
 	if err != nil {
