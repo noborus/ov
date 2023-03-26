@@ -206,7 +206,7 @@ func defaultKeyBinds() KeyBind {
 		actionViewMode:       {"p", "P"},
 		actionWrap:           {"w", "W"},
 		actionColumnMode:     {"c"},
-		actionColumnWidth:    {"ctrl+x"},
+		actionColumnWidth:    {"alt+o"},
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionMark:           {"m"},
