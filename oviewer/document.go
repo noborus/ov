@@ -442,12 +442,10 @@ func (m *Document) setColumnWidths() {
 	if m.BufEndNum() == 0 {
 		return
 	}
-	heaader := 0
-	if m.Header > 0 {
-		heaader = m.Header - 1
-	}
-	tl := min(1000, len(m.chunks[0].lines)-1)
-	lines := m.chunks[0].lines[m.SkipLines:tl]
 
-	m.columnWidths = guesswidth.Positions(lines, heaader, 2)
+	header := m.Header - 1
+	header = max(header, 0)
+	tl := min(1000, len(m.chunks[0].lines))
+	lines := m.chunks[0].lines[m.SkipLines:tl]
+	m.columnWidths = guesswidth.Positions(lines, header, 2)
 }
