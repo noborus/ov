@@ -150,6 +150,8 @@ type general struct {
 	AlternateRows bool
 	// ColumnMode is column mode.
 	ColumnMode bool
+	// ColumnWidth is column width mode.
+	ColumnWidth bool
 	// ColumnRainbow is column rainbow.
 	ColumnRainbow bool
 	// LineNumMode displays line numbers.
@@ -577,6 +579,9 @@ func (root *Root) Run() error {
 		if doc.FollowName {
 			doc.FollowMode = true
 		}
+		if doc.ColumnWidth {
+			doc.ColumnMode = true
+		}
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()
@@ -760,6 +765,9 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if dst.ColumnMode {
 		src.ColumnMode = dst.ColumnMode
+	}
+	if dst.ColumnWidth {
+		src.ColumnWidth = dst.ColumnWidth
 	}
 	if dst.ColumnRainbow {
 		src.ColumnRainbow = dst.ColumnRainbow

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/noborus/guesswidth"
 )
 
 // ChunkSize is the unit of number of lines to split the file.
@@ -48,7 +49,8 @@ type Document struct {
 
 	// marked is a list of marked line numbers.
 	marked []int
-
+	// columnWidths is a slice of column widths.
+	columnWidths []int
 	// status is the display status of the document.
 	general
 
@@ -108,6 +110,8 @@ type Document struct {
 	preventReload bool
 	// Is it possible to seek.
 	seekable bool
+	// formfeedtime adds time on formfeed.
+	formfeedTime bool
 }
 
 // LineC is one line of information.
@@ -430,4 +434,20 @@ func (m *Document) setSectionDelimiter(delm string) {
 // setMultiColorWords set multiple strings to highlight with multiple colors.
 func (m *Document) setMultiColorWords(words []string) {
 	m.multiColorRegexps = multiRegexpCompile(words)
+}
+
+// setColumnWidths sets the column widths.
+// Guess the width of the columns using the first 1000 lines (maximum) and the headers.
+func (m *Document) setColumnWidths() {
+	if m.BufEndNum() == 0 {
+		return
+	}
+	heaader := 0
+	if m.Header > 0 {
+		heaader = m.Header - 1
+	}
+	tl := min(1000, len(m.chunks[0].lines)-1)
+	lines := m.chunks[0].lines[m.SkipLines:tl]
+
+	m.columnWidths = guesswidth.Positions(lines, heaader, 2)
 }

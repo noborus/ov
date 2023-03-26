@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/term"
 )
@@ -494,9 +495,13 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		line = chunk.lines[len(chunk.lines)-1]
 	}
 	m.mu.Unlock()
-	// Do not add if the previous is FormFeed.
+	// Do not add if the previous is FormFeed(always add for formfeedtime).
 	if line != FormFeed {
-		m.append(chunk, FormFeed)
+		feed := FormFeed
+		if m.formfeedTime {
+			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
+		}
+		m.append(chunk, feed)
 	}
 }
 

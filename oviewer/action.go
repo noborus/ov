@@ -34,6 +34,19 @@ func (root *Root) toggleColumnMode() {
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }
 
+// toggleColumnWidth toggles ColumnWidth each time it is called.
+func (root *Root) toggleColumnWidth() {
+	if root.Doc.ColumnWidth {
+		root.Doc.ColumnWidth = false
+		root.Doc.ColumnMode = false
+	} else {
+		root.Doc.ColumnWidth = true
+		root.Doc.ColumnMode = true
+	}
+	root.Doc.columnWidths = nil
+	root.setMessagef("Set ColumnWidth %t", root.Doc.ColumnWidth)
+}
+
 // toggleAlternateRows toggles the AlternateRows each time it is called.
 func (root *Root) toggleAlternateRows() {
 	root.Doc.AlternateRows = !root.Doc.AlternateRows
@@ -272,6 +285,7 @@ func (root *Root) setHeader(input string) {
 	}
 
 	root.Doc.Header = num
+	root.Doc.columnWidths = nil
 	root.setMessagef("Set header lines %d", num)
 }
 
