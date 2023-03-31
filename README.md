@@ -14,6 +14,7 @@ ov is a terminal pager.
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
   * 1.1. [Not supported](#not-supported)
+  * 1.2. [TODO](#todo)
 * 2. [Install](#install)
   * 2.1. [deb package](#deb-package)
   * 2.2. [rpm package](#rpm-package)
@@ -85,8 +86,11 @@ ov is a terminal pager.
 
 * Does not support syntax highlighting for file types (source code, markdown, etc.)
 * Does not support Filter function (`&pattern` equivalent of `less`)
-* Does not support files that are too large to fit in memory
-* Does not support follow by file name when the file descriptor changes(equivalent to `tail -F`)
+
+###  1.2. <a name='todo'></a>TODO
+
+* Allow opening files larger than memory
+* Enable follow by file name (equivalent to `tail -F`)
 
 ##  2. <a name='install'></a>Install
 
