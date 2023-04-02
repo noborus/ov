@@ -91,6 +91,8 @@ ov is a terminal pager.
 
 * Allow opening files larger than memory
 * Enable follow by file name (equivalent to `tail -F`)
+* Support columns with fixed widths instead of delimiters
+* Support watch in exec mode (equivalent to `watch` command)
 
 ##  2. <a name='install'></a>Install
 
