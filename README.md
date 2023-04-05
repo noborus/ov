@@ -77,7 +77,7 @@ ov is a terminal pager.
 * Supports the [execution](#exec-mode) of commands that toggle both stdout and stder for display.
 * Supports [watch](#watch) mode, which reads files on a regular basis.
 * Supports incremental [search](#search) and regular expression search.
-* Supports [multi-color](#multi-color-highlight) to color each after multiple.
+* Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
 * Better support for Unicode and East Asian Width.
 * Supports compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
