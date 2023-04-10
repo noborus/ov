@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -30,7 +31,8 @@ import (
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
 type Searcher interface {
-	Match(string) bool
+	Match([]byte) bool
+	MatchString(string) bool
 }
 
 // searchWord is a case-insensitive search.
@@ -39,8 +41,14 @@ type searchWord struct {
 }
 
 // searchWord Match is a case-insensitive search.
-func (substr searchWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr searchWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
+}
+
+// searchWord Match is a case-insensitive search.
+func (substr searchWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(strings.ToLower(s), substr.word)
 }
 
@@ -50,8 +58,14 @@ type sensitiveWord struct {
 }
 
 // sensitiveWord Match is a case-sensitive search.
-func (substr sensitiveWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr sensitiveWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(s, []byte(substr.word))
+}
+
+// sensitiveWord Match is a case-sensitive search.
+func (substr sensitiveWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(s, substr.word)
 }
 
@@ -61,19 +75,34 @@ type regexpWord struct {
 }
 
 // regexpWord Match is a regular expression search.
-func (substr regexpWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr regexpWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return substr.word.Match(s)
+}
+
+// regexpWord Match is a regular expression search.
+func (substr regexpWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return substr.word.MatchString(s)
 }
 
 // stripRegexpES is a regular expression that excludes escape sequences.
 var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
-// stripEscapeSequence strips if it contains escape sequences.
-func stripEscapeSequence(s string) string {
+// stripEscapeSequenceString strips if it contains escape sequences.
+func stripEscapeSequenceString(s string) string {
 	// Remove EscapeSequence.
 	if strings.ContainsAny(s, "\x1b\b") {
 		s = stripRegexpES.ReplaceAllString(s, "")
+	}
+	return s
+}
+
+// stripEscapeSequence strips if it contains escape sequences.
+func stripEscapeSequenceBytes(s []byte) []byte {
+	// Remove EscapeSequence.
+	if bytes.ContainsAny(s, "\x1b\b") {
+		s = stripRegexpES.ReplaceAll(s, []byte(""))
 	}
 	return s
 }

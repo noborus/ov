@@ -364,7 +364,7 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 	lN = max(lN, 0)
 	end := m.BufEndNum()
 	for n := lN; n < end; n++ {
-		if searcher.Match(m.GetLine(n)) {
+		if searcher.MatchString(m.GetLine(n)) {
 			return n, nil
 		}
 		select {
@@ -382,7 +382,7 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int
 	lN = min(lN, m.BufEndNum()-1)
 
 	for n := lN; n >= 0; n-- {
-		if searcher.Match(m.GetLine(n)) {
+		if searcher.MatchString(m.GetLine(n)) {
 			return n, nil
 		}
 		select {

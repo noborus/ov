@@ -121,7 +121,7 @@ func Test_searchWord_Match(t *testing.T) {
 			substr := searchWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("searchWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -167,7 +167,7 @@ func Test_sensitiveWord_Match(t *testing.T) {
 			substr := sensitiveWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("sensitiveWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -213,7 +213,7 @@ func Test_regexpWord_Match(t *testing.T) {
 			substr := regexpWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -281,7 +281,7 @@ func Test_getSearchMatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
-			if got := searcher.Match(tt.word); got != tt.want {
+			if got := searcher.MatchString(tt.word); got != tt.want {
 				t.Errorf("getSearchMatch() = %v, want %v", got, tt.want)
 			}
 		})
