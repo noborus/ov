@@ -51,8 +51,8 @@ func (m *Document) ControlFile(file *os.File) error {
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
 			reader, err = m.control(sc, reader)
-			if err != nil {
-				log.Println(err)
+			if sc.control != searchControl && err != nil {
+				log.Println(sc.control, err)
 			}
 			if sc.done != nil {
 				if err != nil {
