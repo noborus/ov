@@ -248,8 +248,13 @@ func (m *Document) Line(n int) []byte {
 	return nil
 }
 
-// GetLine returns one line from buffer.
+// Deprecated: GetLine returns one line from buffer.
 func (m *Document) GetLine(n int) string {
+	return string(m.Line(n))
+}
+
+// LineString returns one line from buffer.
+func (m *Document) LineString(n int) string {
 	return string(m.Line(n))
 }
 
@@ -301,7 +306,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.Line(n))
+		fmt.Fprint(w, m.LineString(n))
 	}
 }
 
@@ -328,9 +333,8 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	str := m.GetLine(lN)
-	lc := parseString(str, tabWidth)
-	return lc, nil
+	str := m.LineString(lN)
+	return parseString(str, tabWidth), nil
 }
 
 // getLineC returns contents from line number and tabwidth.
