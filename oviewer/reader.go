@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -16,9 +17,10 @@ import (
 )
 
 type controlSpecifier struct {
-	done     chan struct{}
+	searcher Searcher
 	control  control
 	chunkNum int
+	done     chan bool
 }
 
 type control string
@@ -53,6 +55,11 @@ func (m *Document) ControlFile(file *os.File) error {
 				log.Println(err)
 			}
 			if sc.done != nil {
+				if err != nil {
+					sc.done <- false
+				} else {
+					sc.done <- true
+				}
 				close(sc.done)
 			}
 		}
@@ -145,7 +152,8 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case loadControl:
 		reader, err = m.readChunk(reader, sc.chunkNum)
 	case searchControl:
-		err = m.searchChunk(reader, sc.chunkNum)
+		err = m.searchChunk(reader, sc.chunkNum, sc.searcher)
+		return reader, err
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
 		m.startControl()
@@ -257,15 +265,51 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 	return reader, nil
 }
 
-func (m *Document) searchChunk(reader *bufio.Reader, chunkNum int) error {
+func (m *Document) searchReadChunk(chunkNum int, searcher Searcher) error {
 	chunk := m.chunks[chunkNum]
-	start := 0
-	if m.seekable {
-		if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-			return err
-		}
-		reader.Reset(m.file)
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return err
 	}
+	reader := bufio.NewReader(m.file)
+	var line strings.Builder
+	var isPrefix bool
+	i := 0
+
+	for i < ChunkSize {
+		buf, err := reader.ReadSlice('\n')
+		if err == bufio.ErrBufferFull {
+			isPrefix = true
+			err = nil
+		}
+		if searcher.Match(buf) {
+			return nil
+		}
+
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+		i++
+		line.Reset()
+	}
+
+	return ErrNotFound
+}
+
+func (m *Document) searchChunk(reader *bufio.Reader, chunkNum int, searcher Searcher) error {
+	if !m.seekable {
+		return fmt.Errorf("cannot be loaded")
+	}
+	if err := m.searchReadChunk(chunkNum, searcher); err != nil {
+		return err
+	}
+	chunk := m.chunks[chunkNum]
+
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return err
+	}
+	reader.Reset(m.file)
+	start := 0
 	if err := m.packChunk(chunk, reader, start, false); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return err
@@ -399,7 +443,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 
 // packChunk append lines read from reader into chunks.
 func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
-	var line strings.Builder
+	var line bytes.Buffer
 	var isPrefix bool
 	i := start
 	for i < ChunkSize {
@@ -422,19 +466,19 @@ func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 		if err != nil {
 			if line.Len() != 0 {
 				if isCount {
-					m.append(chunk, line.String())
+					m.append(chunk, line.Bytes())
 					m.offset = m.size
 				} else {
-					m.appendOnly(chunk, line.String())
+					m.appendOnly(chunk, line.Bytes())
 				}
 			}
 			return err
 		}
 		if isCount {
-			m.append(chunk, line.String())
+			m.append(chunk, line.Bytes())
 			m.offset = m.size
 		} else {
-			m.appendOnly(chunk, line.String())
+			m.appendOnly(chunk, line.Bytes())
 		}
 		line.Reset()
 	}
@@ -471,20 +515,25 @@ func (m *Document) countChunk(chunk *chunk, reader *bufio.Reader, start int) err
 
 // appendOnly appends to the line of the chunk.
 // appendOnly does not updates the number of lines and size.
-func (m *Document) appendOnly(chunk *chunk, line string) {
+func (m *Document) appendOnly(chunk *chunk, line []byte) {
 	m.mu.Lock()
-	chunk.lines = append(chunk.lines, line)
+	size := len(line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
 	m.mu.Unlock()
 }
 
 // append appends to the line of the chunk.
 // append updates the number of lines and size.
-func (m *Document) append(chunk *chunk, line string) {
+func (m *Document) append(chunk *chunk, line []byte) {
 	m.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
 	m.endNum++
-	chunk.lines = append(chunk.lines, line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
 	m.mu.Unlock()
 }
 
@@ -492,7 +541,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 	line := ""
 	m.mu.Lock()
 	if len(chunk.lines) > 0 {
-		line = chunk.lines[len(chunk.lines)-1]
+		line = string(chunk.lines[len(chunk.lines)-1])
 	}
 	m.mu.Unlock()
 	// Do not add if the previous is FormFeed(always add for formfeedtime).
@@ -501,7 +550,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		if m.formfeedTime {
 			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
 		}
-		m.append(chunk, feed)
+		m.append(chunk, []byte(feed))
 	}
 }
 
@@ -530,7 +579,7 @@ func (m *Document) reload() error {
 	atomic.StoreInt32(&m.readCancel, 1)
 	sc := controlSpecifier{
 		control: reloadControl,
-		done:    make(chan struct{}),
+		done:    make(chan bool),
 	}
 	m.ctlCh <- sc
 	<-sc.done

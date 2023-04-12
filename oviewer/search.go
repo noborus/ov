@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
@@ -256,6 +257,93 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		return
 	}
 	root.setMessagef("search:%v", root.searchWord)
+}
+
+func (m *Document) loadedSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	for n := line; n < ChunkSize; n++ {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, err
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+func (m *Document) unloadSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+		if !m.searchControl(chunkNum, searcher) {
+			return 0, ErrNotFound
+		}
+	}
+
+	for n := line; n < ChunkSize; n++ {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, err
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+// SearchLine searches the document and returns the matching line number.
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = max(lN, 0)
+	end := m.BufEndNum()
+
+	startChunk, sn := chunkLine(lN)
+	endChunk, _ := chunkLine(end)
+
+	for cn := startChunk; cn <= endChunk; cn++ {
+		chunk := m.chunks[cn]
+		if len(chunk.lines) > 0 {
+			n, err := m.loadedSearch(ctx, searcher, cn, sn)
+			if err == nil {
+				return cn*ChunkSize + n, nil
+			}
+		} else {
+			n, err := m.unloadSearch(ctx, searcher, cn, sn)
+			if err == nil {
+				return cn*ChunkSize + n, nil
+			}
+		}
+		sn = 0
+	}
+
+	return 0, ErrNotFound
+}
+
+// BackSearchLine does a backward search on the document and returns a matching line number.
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = min(lN, m.BufEndNum()-1)
+
+	for n := lN; n >= 0; n-- {
+		if searcher.Match(m.Line(n)) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
 }
 
 // cancelWait waits for key to cancel.
