@@ -323,6 +323,11 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 				return cn*ChunkSize + n, nil
 			}
 		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
 		sn = 0
 	}
 

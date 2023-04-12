@@ -271,26 +271,28 @@ func (m *Document) searchReadChunk(chunkNum int, searcher Searcher) error {
 		return err
 	}
 	reader := bufio.NewReader(m.file)
-	var line strings.Builder
+	var line bytes.Buffer
 	var isPrefix bool
 	i := 0
-
 	for i < ChunkSize {
 		buf, err := reader.ReadSlice('\n')
 		if err == bufio.ErrBufferFull {
 			isPrefix = true
 			err = nil
 		}
-		if searcher.Match(buf) {
-			return nil
-		}
-
+		line.Write(buf)
 		if isPrefix {
 			isPrefix = false
 			continue
 		}
+		if searcher.Match(line.Bytes()) {
+			return nil
+		}
 		i++
 		line.Reset()
+		if err != nil {
+			break
+		}
 	}
 
 	return ErrNotFound

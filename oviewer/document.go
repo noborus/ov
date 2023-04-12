@@ -250,29 +250,7 @@ func (m *Document) Line(n int) []byte {
 
 // GetLine returns one line from buffer.
 func (m *Document) GetLine(n int) string {
-	if n < m.startNum || n >= m.endNum {
-		return ""
-	}
-	chunkNum := n / ChunkSize
-	if len(m.chunks)-1 < chunkNum {
-		log.Println("over chunk size: ", chunkNum)
-		return ""
-	}
-	chunk := m.chunks[chunkNum]
-
-	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
-		m.loadControl(chunkNum)
-	}
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	cn := n % ChunkSize
-	if cn < len(chunk.lines) {
-		return string(chunk.lines[cn])
-	}
-	log.Println("not load", n, m.endNum)
-	return ""
+	return string(m.Line(n))
 }
 
 // loadControl sends instructions to load chunks into memory.
@@ -412,7 +390,6 @@ func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 		return nil, fmt.Errorf("not load %d:%d", chunkNum, cn)
 	}
 	return chunk.lines[cn], nil
-
 }
 
 func chunkLine(n int) (int, int) {
