@@ -156,7 +156,6 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		if err != nil {
 			return reader, err
 		}
-		log.Println("hit read", sc.chunkNum)
 		return m.readChunk(reader, sc.chunkNum)
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
