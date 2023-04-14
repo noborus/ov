@@ -152,8 +152,12 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case loadControl:
 		reader, err = m.readChunk(reader, sc.chunkNum)
 	case searchControl:
-		err = m.searchChunk(reader, sc.chunkNum, sc.searcher)
-		return reader, err
+		_, err = m.searchChunk(sc.chunkNum, sc.searcher)
+		if err != nil {
+			return reader, err
+		}
+		log.Println("hit read", sc.chunkNum)
+		return m.readChunk(reader, sc.chunkNum)
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
 		m.startControl()
@@ -265,10 +269,10 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 	return reader, nil
 }
 
-func (m *Document) searchReadChunk(chunkNum int, searcher Searcher) error {
+func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return err
+		return 0, err
 	}
 	reader := bufio.NewReader(m.file)
 	var line bytes.Buffer
@@ -286,7 +290,7 @@ func (m *Document) searchReadChunk(chunkNum int, searcher Searcher) error {
 			continue
 		}
 		if searcher.Match(line.Bytes()) {
-			return nil
+			return i, nil
 		}
 		i++
 		line.Reset()
@@ -294,31 +298,7 @@ func (m *Document) searchReadChunk(chunkNum int, searcher Searcher) error {
 			break
 		}
 	}
-
-	return ErrNotFound
-}
-
-func (m *Document) searchChunk(reader *bufio.Reader, chunkNum int, searcher Searcher) error {
-	if !m.seekable {
-		return fmt.Errorf("cannot be loaded")
-	}
-	if err := m.searchReadChunk(chunkNum, searcher); err != nil {
-		return err
-	}
-	chunk := m.chunks[chunkNum]
-
-	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return err
-	}
-	reader.Reset(m.file)
-	start := 0
-	if err := m.packChunk(chunk, reader, start, false); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return err
-		}
-		reader = m.afterEOF(reader)
-	}
-	return nil
+	return 0, ErrNotFound
 }
 
 // reloadRead performs reload processing

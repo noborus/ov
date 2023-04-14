@@ -120,6 +120,12 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 			word: word,
 		}
 	}
+	// Use sensitiveWord when not needed.
+	if strings.ToLower(word) == strings.ToUpper(word) {
+		return sensitiveWord{
+			word: word,
+		}
+	}
 	return searchWord{
 		word: strings.ToLower(word),
 	}
@@ -259,7 +265,13 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	root.setMessagef("search:%v", root.searchWord)
 }
 
-func (m *Document) loadedSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+			return 0, ErrNotFound
+		}
+	}
 	for n := line; n < ChunkSize; n++ {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
@@ -276,16 +288,14 @@ func (m *Document) loadedSearch(ctx context.Context, searcher Searcher, chunkNum
 	}
 	return 0, ErrNotFound
 }
-
-func (m *Document) unloadSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	chunk := m.chunks[chunkNum]
-	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
-		if !m.searchControl(chunkNum, searcher) {
+	if len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
 			return 0, ErrNotFound
 		}
 	}
-
-	for n := line; n < ChunkSize; n++ {
+	for n := line; n >= 0; n-- {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
 			return n, err
@@ -300,6 +310,16 @@ func (m *Document) unloadSearch(ctx context.Context, searcher Searcher, chunkNum
 		}
 	}
 	return 0, ErrNotFound
+}
+
+func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+		if m.searchControl(chunkNum, searcher) {
+			return true
+		}
+	}
+	return false
 }
 
 // SearchLine searches the document and returns the matching line number.
@@ -311,17 +331,9 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 	endChunk, _ := chunkLine(end)
 
 	for cn := startChunk; cn <= endChunk; cn++ {
-		chunk := m.chunks[cn]
-		if len(chunk.lines) > 0 {
-			n, err := m.loadedSearch(ctx, searcher, cn, sn)
-			if err == nil {
-				return cn*ChunkSize + n, nil
-			}
-		} else {
-			n, err := m.unloadSearch(ctx, searcher, cn, sn)
-			if err == nil {
-				return cn*ChunkSize + n, nil
-			}
+		n, err := m.Search(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
 		}
 		select {
 		case <-ctx.Done():
@@ -337,16 +349,18 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 // BackSearchLine does a backward search on the document and returns a matching line number.
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
-
-	for n := lN; n >= 0; n-- {
-		if searcher.Match(m.Line(n)) {
-			return n, nil
+	startChunk, sn := chunkLine(lN)
+	for cn := startChunk; cn >= 0; cn-- {
+		n, err := m.BackSearch(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
 		}
 		select {
 		case <-ctx.Done():
 			return 0, ErrCancel
 		default:
 		}
+		sn = ChunkSize - 1
 	}
 	return 0, ErrNotFound
 }
