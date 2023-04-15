@@ -18,7 +18,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-//  1. serch key event(/)		back search key event(?)
+//  1. search key event(/)		back search key event(?)
 //  2. actionSearch				setBackSearchMode			(key event)
 //  3. root.setSearchMode()		root.setBackSearchMode()
 //  4. input...confirm			input...confirm
@@ -420,7 +420,7 @@ func (root *Root) searchQuit() {
 	root.postEvent(ev)
 }
 
-// eventSearchMove represents the moveo input mode.
+// eventSearchMove represents the move input mode.
 type eventSearchMove struct {
 	tcell.EventTime
 	value int
@@ -537,7 +537,7 @@ type eventNextSearch struct {
 	str string
 }
 
-// setNextSearch fires the exntNextSearch event.
+// setNextSearch fires the eventNextSearch event.
 func (root *Root) setNextSearch() {
 	ev := &eventNextSearch{}
 	ev.str = root.searchWord
@@ -551,7 +551,7 @@ type eventNextBackSearch struct {
 	str string
 }
 
-// setNextBackSearch fires the exntNextBackSearch event.
+// setNextBackSearch fires the eventNextBackSearch event.
 func (root *Root) setNextBackSearch() {
 	ev := &eventNextBackSearch{}
 	ev.str = root.searchWord

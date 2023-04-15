@@ -107,7 +107,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 }
 
 // ControlLog controls log.
-// Controllog is only supported reload.
+// ControlLog is only supported reload.
 func (m *Document) ControlLog() error {
 	go func() error {
 		for sc := range m.ctlCh {
