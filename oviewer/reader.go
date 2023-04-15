@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -15,172 +16,14 @@ import (
 	"golang.org/x/term"
 )
 
-type controlSpecifier struct {
-	done     chan struct{}
-	control  control
-	chunkNum int
-}
-
-type control string
-
-const (
-	firstControl    = "first"
-	continueControl = "read"
-	followControl   = "follow"
-	closeControl    = "close"
-	reloadControl   = "reload"
-	loadControl     = "load"
-	searchControl   = "search"
-)
-
 const FormFeed = "\f"
-
-// ControlFile controls file read and loads in chunks.
-// ControlFile can be reloaded by file name.
-func (m *Document) ControlFile(file *os.File) error {
-	go func() error {
-		atomic.StoreInt32(&m.closed, 0)
-		r, err := m.fileReader(file)
-		if err != nil {
-			atomic.StoreInt32(&m.closed, 1)
-			log.Println(err)
-		}
-		atomic.StoreInt32(&m.eof, 0)
-		reader := bufio.NewReader(r)
-		for sc := range m.ctlCh {
-			reader, err = m.control(sc, reader)
-			if err != nil {
-				log.Println(err)
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close m.ctlCh")
-		return nil
-	}()
-
-	m.startControl()
-	return nil
-}
-
-func (m *Document) ControlLog() error {
-	go func() error {
-		for sc := range m.ctlCh {
-			switch sc.control {
-			case reloadControl:
-				m.reset()
-			default:
-				panic(fmt.Sprintf("unexpected %s", sc.control))
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close m.ctlCh")
-		return nil
-	}()
-	return nil
-}
-
-// controlreader is the controller for io.Reader.
-// Assuming call from Exec. reload executes the argument function.
-func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
-	reader := bufio.NewReader(r)
-	go func() error {
-		var err error
-		for sc := range m.ctlCh {
-			switch sc.control {
-			case firstControl:
-				reader, err = m.firstRead(reader)
-				if !m.BufEOF() {
-					m.continueControl()
-				}
-			case continueControl:
-				reader, err = m.continueRead(reader)
-				if !m.BufEOF() {
-					m.continueControl()
-				}
-			case reloadControl:
-				log.Println("reset")
-				reader = reload()
-				m.startControl()
-			default:
-				panic(fmt.Sprintf("unexpected %s", sc.control))
-			}
-			if err != nil {
-				log.Println(err)
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close ctlCh")
-		return nil
-	}()
-
-	m.startControl()
-	return nil
-}
-
-func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
-	if atomic.LoadInt32(&m.closed) == 1 && sc.control != reloadControl {
-		return nil, fmt.Errorf("closed %s", sc.control)
-	}
-
-	var err error
-	switch sc.control {
-	case firstControl:
-		reader, err = m.firstRead(reader)
-		if !m.BufEOF() {
-			m.continueControl()
-		}
-	case continueControl:
-		reader, err = m.continueRead(reader)
-		if !m.BufEOF() {
-			m.continueControl()
-		}
-	case followControl:
-		reader, err = m.followRead(reader)
-	case loadControl:
-		reader, err = m.readChunk(reader, sc.chunkNum)
-	case searchControl:
-		err = m.searchChunk(reader, sc.chunkNum)
-	case reloadControl:
-		reader, err = m.reloadRead(reader)
-		m.startControl()
-	case closeControl:
-		err = m.close()
-		log.Println(err)
-		err = nil
-	default:
-		panic(fmt.Sprintf("unexpected %s", sc.control))
-	}
-	return reader, nil
-}
-
-func (m *Document) startControl() {
-	go func() {
-		m.ctlCh <- controlSpecifier{
-			control: firstControl,
-		}
-	}()
-}
-
-func (m *Document) continueControl() {
-	go func() {
-		m.ctlCh <- controlSpecifier{
-			control: continueControl,
-		}
-	}()
-}
 
 // firstRead first reads the file.
 // Packs the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	chunk := m.chunks[0]
-	start := 0
-	if err := m.packChunk(chunk, reader, start, true); err != nil {
+	err := m.fillChunk(chunk, reader, 0, true)
+	if err != nil {
 		if !errors.Is(err, io.EOF) {
 			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
@@ -203,7 +46,7 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 
 	chunk := m.lastChunk()
 	start := len(chunk.lines)
-	if err := m.readOrCountChunk(chunk, reader, start); err != nil {
+	if err := m.addChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
@@ -248,31 +91,13 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 	}
 	reader.Reset(m.file)
 	start := 0
-	if err := m.packChunk(chunk, reader, start, false); err != nil {
+	if err := m.fillChunk(chunk, reader, start, false); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
 		reader = m.afterEOF(reader)
 	}
 	return reader, nil
-}
-
-func (m *Document) searchChunk(reader *bufio.Reader, chunkNum int) error {
-	chunk := m.chunks[chunkNum]
-	start := 0
-	if m.seekable {
-		if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-			return err
-		}
-		reader.Reset(m.file)
-	}
-	if err := m.packChunk(chunk, reader, start, false); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return err
-		}
-		reader = m.afterEOF(reader)
-	}
-	return nil
 }
 
 // reloadRead performs reload processing
@@ -291,11 +116,12 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	return reader, nil
 }
 
-func (m *Document) readOrCountChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+// addChunk fills or reserves a chunk.
+func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error {
 	if !m.seekable {
-		return m.packChunk(chunk, reader, start, true)
+		return m.fillChunk(chunk, reader, start, true)
 	}
-	return m.countChunk(chunk, reader, start)
+	return m.reserveChunk(chunk, reader, start)
 }
 
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
@@ -386,7 +212,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.lastChunk()
 	start := len(chunk.lines)
 	for {
-		if err := m.packChunk(chunk, reader, start, true); err != nil {
+		if err := m.fillChunk(chunk, reader, start, true); err != nil {
 			return err
 		}
 		chunk = NewChunk(m.size)
@@ -397,9 +223,9 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	}
 }
 
-// packChunk append lines read from reader into chunks.
-func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
-	var line strings.Builder
+// fillChunk append lines read from reader into chunks.
+func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
+	var line bytes.Buffer
 	var isPrefix bool
 	i := start
 	for i < ChunkSize {
@@ -422,26 +248,27 @@ func (m *Document) packChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 		if err != nil {
 			if line.Len() != 0 {
 				if isCount {
-					m.append(chunk, line.String())
+					m.append(chunk, line.Bytes())
 					m.offset = m.size
 				} else {
-					m.appendOnly(chunk, line.String())
+					m.appendOnly(chunk, line.Bytes())
 				}
 			}
 			return err
 		}
 		if isCount {
-			m.append(chunk, line.String())
+			m.append(chunk, line.Bytes())
 			m.offset = m.size
 		} else {
-			m.appendOnly(chunk, line.String())
+			m.appendOnly(chunk, line.Bytes())
 		}
 		line.Reset()
 	}
 	return nil
 }
 
-func (m *Document) countChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+// reserveChunk reserves ChunkSize lines.
+func (m *Document) reserveChunk(chunk *chunk, reader *bufio.Reader, start int) error {
 	var isPrefix bool
 	i := start
 	for i < ChunkSize {
@@ -471,20 +298,25 @@ func (m *Document) countChunk(chunk *chunk, reader *bufio.Reader, start int) err
 
 // appendOnly appends to the line of the chunk.
 // appendOnly does not updates the number of lines and size.
-func (m *Document) appendOnly(chunk *chunk, line string) {
+func (m *Document) appendOnly(chunk *chunk, line []byte) {
 	m.mu.Lock()
-	chunk.lines = append(chunk.lines, line)
+	size := len(line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
 	m.mu.Unlock()
 }
 
 // append appends to the line of the chunk.
 // append updates the number of lines and size.
-func (m *Document) append(chunk *chunk, line string) {
+func (m *Document) append(chunk *chunk, line []byte) {
 	m.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
 	m.endNum++
-	chunk.lines = append(chunk.lines, line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
 	m.mu.Unlock()
 }
 
@@ -492,7 +324,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 	line := ""
 	m.mu.Lock()
 	if len(chunk.lines) > 0 {
-		line = chunk.lines[len(chunk.lines)-1]
+		line = string(chunk.lines[len(chunk.lines)-1])
 	}
 	m.mu.Unlock()
 	// Do not add if the previous is FormFeed(always add for formfeedtime).
@@ -501,7 +333,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		if m.formfeedTime {
 			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
 		}
-		m.append(chunk, feed)
+		m.append(chunk, []byte(feed))
 	}
 }
 
@@ -530,7 +362,7 @@ func (m *Document) reload() error {
 	atomic.StoreInt32(&m.readCancel, 1)
 	sc := controlSpecifier{
 		control: reloadControl,
-		done:    make(chan struct{}),
+		done:    make(chan bool),
 	}
 	m.ctlCh <- sc
 	<-sc.done

@@ -1,13 +1,17 @@
 package oviewer
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
@@ -30,7 +34,8 @@ import (
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
 type Searcher interface {
-	Match(string) bool
+	Match([]byte) bool
+	MatchString(string) bool
 }
 
 // searchWord is a case-insensitive search.
@@ -39,8 +44,14 @@ type searchWord struct {
 }
 
 // searchWord Match is a case-insensitive search.
-func (substr searchWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr searchWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
+}
+
+// searchWord Match is a case-insensitive search.
+func (substr searchWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(strings.ToLower(s), substr.word)
 }
 
@@ -50,8 +61,14 @@ type sensitiveWord struct {
 }
 
 // sensitiveWord Match is a case-sensitive search.
-func (substr sensitiveWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr sensitiveWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(s, []byte(substr.word))
+}
+
+// sensitiveWord Match is a case-sensitive search.
+func (substr sensitiveWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(s, substr.word)
 }
 
@@ -61,19 +78,34 @@ type regexpWord struct {
 }
 
 // regexpWord Match is a regular expression search.
-func (substr regexpWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr regexpWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return substr.word.Match(s)
+}
+
+// regexpWord Match is a regular expression search.
+func (substr regexpWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return substr.word.MatchString(s)
 }
 
 // stripRegexpES is a regular expression that excludes escape sequences.
 var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
-// stripEscapeSequence strips if it contains escape sequences.
-func stripEscapeSequence(s string) string {
+// stripEscapeSequenceString strips if it contains escape sequences.
+func stripEscapeSequenceString(s string) string {
 	// Remove EscapeSequence.
 	if strings.ContainsAny(s, "\x1b\b") {
 		s = stripRegexpES.ReplaceAllString(s, "")
+	}
+	return s
+}
+
+// stripEscapeSequence strips if it contains escape sequences.
+func stripEscapeSequenceBytes(s []byte) []byte {
+	// Remove EscapeSequence.
+	if bytes.ContainsAny(s, "\x1b\b") {
+		s = stripRegexpES.ReplaceAll(s, []byte(""))
 	}
 	return s
 }
@@ -86,6 +118,12 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 		}
 	}
 	if caseSensitive {
+		return sensitiveWord{
+			word: word,
+		}
+	}
+	// Use sensitiveWord when not needed.
+	if strings.ToLower(word) == strings.ToUpper(word) {
 		return sensitiveWord{
 			word: word,
 		}
@@ -227,6 +265,106 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		return
 	}
 	root.setMessagef("search:%v", root.searchWord)
+}
+
+func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+			return 0, ErrNotFound
+		}
+	}
+	for n := line; n < ChunkSize; n++ {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, err
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+			return 0, ErrNotFound
+		}
+	}
+	for n := line; n >= 0; n-- {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, err
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+		if m.searchControl(chunkNum, searcher) {
+			return true
+		}
+	}
+	return false
+}
+
+// SearchLine searches the document and returns the matching line number.
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = max(lN, 0)
+	end := m.BufEndNum()
+
+	startChunk, sn := chunkLine(lN)
+	endChunk, _ := chunkLine(end)
+
+	for cn := startChunk; cn <= endChunk; cn++ {
+		n, err := m.Search(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+		sn = 0
+	}
+
+	return 0, ErrNotFound
+}
+
+// BackSearchLine does a backward search on the document and returns a matching line number.
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = min(lN, m.BufEndNum()-1)
+	startChunk, sn := chunkLine(lN)
+	for cn := startChunk; cn >= 0; cn-- {
+		n, err := m.BackSearch(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+		sn = ChunkSize - 1
+	}
+	return 0, ErrNotFound
 }
 
 // cancelWait waits for key to cancel.
@@ -445,4 +583,37 @@ func (root *Root) BackSearch(str string) {
 	ev.str = str
 	ev.SetEventNow()
 	root.postEvent(ev)
+}
+
+// searchChunk searches in a Chunk without loading it into memory.
+func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return 0, err
+	}
+	reader := bufio.NewReader(m.file)
+	var line bytes.Buffer
+	var isPrefix bool
+	i := 0
+	for i < ChunkSize {
+		buf, err := reader.ReadSlice('\n')
+		if err == bufio.ErrBufferFull {
+			isPrefix = true
+			err = nil
+		}
+		line.Write(buf)
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+		if searcher.Match(line.Bytes()) {
+			return i, nil
+		}
+		i++
+		line.Reset()
+		if err != nil {
+			break
+		}
+	}
+	return 0, ErrNotFound
 }

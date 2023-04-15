@@ -95,7 +95,7 @@ func (cmd *Command) Reload() *bufio.Reader {
 
 	sc := controlSpecifier{
 		control: reloadControl,
-		done:    make(chan struct{}),
+		done:    make(chan bool),
 	}
 	log.Println("stderr reload send")
 	cmd.docerr.ctlCh <- sc

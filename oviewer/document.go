@@ -126,7 +126,7 @@ type LineC struct {
 type chunk struct {
 	// lines stores the contents of the file in slices of strings.
 	// lines,endNum and eof is updated by reader goroutine.
-	lines []string
+	lines [][]byte
 	// start is the first position of the number of bytes read.
 	start int64
 }
@@ -156,7 +156,7 @@ func NewDocument() (*Document, error) {
 
 func NewChunk(start int64) *chunk {
 	return &chunk{
-		lines: make([]string, 0, ChunkSize),
+		lines: make([][]byte, 0, ChunkSize),
 		start: start,
 	}
 }
@@ -221,15 +221,15 @@ func STDINDocument() (*Document, error) {
 	return m, nil
 }
 
-// GetLine returns one line from buffer.
-func (m *Document) GetLine(n int) string {
+// Line returns one line from buffer.
+func (m *Document) Line(n int) []byte {
 	if n < m.startNum || n >= m.endNum {
-		return ""
+		return nil
 	}
 	chunkNum := n / ChunkSize
 	if len(m.chunks)-1 < chunkNum {
 		log.Println("over chunk size: ", chunkNum)
-		return ""
+		return nil
 	}
 	chunk := m.chunks[chunkNum]
 
@@ -245,7 +245,17 @@ func (m *Document) GetLine(n int) string {
 		return chunk.lines[cn]
 	}
 	log.Println("not load", n, m.endNum)
-	return ""
+	return nil
+}
+
+// Deprecated: GetLine returns one line from buffer.
+func (m *Document) GetLine(n int) string {
+	return string(m.Line(n))
+}
+
+// LineString returns one line from buffer.
+func (m *Document) LineString(n int) string {
+	return string(m.Line(n))
 }
 
 // loadControl sends instructions to load chunks into memory.
@@ -253,17 +263,29 @@ func (m *Document) loadControl(chunkNum int) {
 	sc := controlSpecifier{
 		control:  loadControl,
 		chunkNum: chunkNum,
-		done:     make(chan struct{}),
+		done:     make(chan bool),
 	}
 	m.ctlCh <- sc
 	<-sc.done
+}
+
+// searchControl sends instructions to load chunks into memory.
+func (m *Document) searchControl(chunkNum int, searcher Searcher) bool {
+	sc := controlSpecifier{
+		control:  searchControl,
+		searcher: searcher,
+		chunkNum: chunkNum,
+		done:     make(chan bool),
+	}
+	m.ctlCh <- sc
+	return <-sc.done
 }
 
 func (m *Document) closeControl() {
 	atomic.StoreInt32(&m.readCancel, 1)
 	sc := controlSpecifier{
 		control: closeControl,
-		done:    make(chan struct{}),
+		done:    make(chan bool),
 	}
 
 	log.Println("close send")
@@ -284,7 +306,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.GetLine(n))
+		fmt.Fprint(w, m.LineString(n))
 	}
 }
 
@@ -311,9 +333,8 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	str := m.GetLine(lN)
-	lc := parseString(str, tabWidth)
-	return lc, nil
+	str := m.LineString(lN)
+	return parseString(str, tabWidth), nil
 }
 
 // getLineC returns contents from line number and tabwidth.
@@ -359,39 +380,27 @@ func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
-// SearchLine searches the document and returns the matching line number.
-func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = max(lN, 0)
-	end := m.BufEndNum()
-	for n := lN; n < end; n++ {
-		if searcher.Match(m.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
+// GetChunkLine returns one line from buffer.
+func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
+	if len(m.chunks) <= chunkNum {
+		return nil, fmt.Errorf("over chunk size: %d", chunkNum)
 	}
+	chunk := m.chunks[chunkNum]
 
-	return 0, ErrNotFound
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if cn >= len(chunk.lines) {
+		return nil, fmt.Errorf("not load %d:%d", chunkNum, cn)
+	}
+	return chunk.lines[cn], nil
 }
 
-// BackSearchLine does a backward search on the document and returns a matching line number.
-func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = min(lN, m.BufEndNum()-1)
-
-	for n := lN; n >= 0; n-- {
-		if searcher.Match(m.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
-	}
-	return 0, ErrNotFound
+// chunkLine returns chunkNum and chunk line number from line number.
+func chunkLine(n int) (int, int) {
+	chunkNum := n / ChunkSize
+	cn := n % ChunkSize
+	return chunkNum, cn
 }
 
 // watchMode sets the document to watch mode.
@@ -447,5 +456,9 @@ func (m *Document) setColumnWidths() {
 	header = max(header, 0)
 	tl := min(1000, len(m.chunks[0].lines))
 	lines := m.chunks[0].lines[m.SkipLines:tl]
-	m.columnWidths = guesswidth.Positions(lines, header, 2)
+	buf := make([]string, len(lines))
+	for n, line := range lines {
+		buf[n] = string(line)
+	}
+	m.columnWidths = guesswidth.Positions(buf, header, 2)
 }
