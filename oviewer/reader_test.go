@@ -19,7 +19,7 @@ func TestDocument_ReadFile(t *testing.T) {
 		{
 			name: "testNoFile",
 			args: args{
-				"nofile",
+				"noFile",
 			},
 			wantErr: true,
 		},

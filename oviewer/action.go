@@ -63,7 +63,7 @@ func (root *Root) toggleLineNumMode() {
 // togglePlain toggles plain mode.
 func (root *Root) togglePlain() {
 	root.Doc.PlainMode = !root.Doc.PlainMode
-	root.setMessagef("Set PrainMode %t", root.Doc.PlainMode)
+	root.setMessagef("Set PlainMode %t", root.Doc.PlainMode)
 }
 
 // togglePlain toggles column rainbow mode.
@@ -103,7 +103,7 @@ func (root *Root) closeFile() {
 		return
 	}
 	if root.Doc.seekable {
-		root.setMessage("cannnot close")
+		root.setMessage("cannot close")
 		return
 	}
 	root.Doc.closeControl()

@@ -327,7 +327,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		line = string(chunk.lines[len(chunk.lines)-1])
 	}
 	m.mu.Unlock()
-	// Do not add if the previous is FormFeed(always add for formfeedtime).
+	// Do not add if the previous is FormFeed(always add for formfeedTime).
 	if line != FormFeed {
 		feed := FormFeed
 		if m.formfeedTime {
@@ -353,7 +353,7 @@ func (m *Document) lastChunk() *chunk {
 // The pipe will reset what it has read.
 func (m *Document) reload() error {
 	if m.FileName == "" && m.BufEOF() {
-		return fmt.Errorf("EOF reachede")
+		return fmt.Errorf("EOF reached")
 	}
 	if m.preventReload {
 		return fmt.Errorf("prevent reload")

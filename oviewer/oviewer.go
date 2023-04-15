@@ -190,7 +190,7 @@ type Config struct {
 	StyleHeader OVStyle
 	// StyleHeader is the style that applies to the header.
 	StyleBody OVStyle
-	// StyleOverStrike is a style that applies to overstrikes.
+	// StyleOverStrike is a style that applies to overstrike.
 	StyleOverStrike OVStyle
 	// OverLineS is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
@@ -255,7 +255,7 @@ type OVStyle struct {
 	Reverse bool
 	// If true, add underline.
 	Underline bool
-	// If true, add strikethrough.
+	// If true, add strike through.
 	StrikeThrough bool
 	// If true, add overline (not yet supported).
 	OverLine bool
@@ -271,7 +271,7 @@ type OVStyle struct {
 	UnReverse bool
 	// If true, sub underline.
 	UnUnderline bool
-	// If true, sub strikethrough.
+	// If true, sub strike through.
 	UnStrikeThrough bool
 	// if true, sub underline (not yet supported).
 	UnOverLine bool
@@ -335,7 +335,7 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
-	// ErrNoColumn indicates that cusror specified a nonexistent column.
+	// ErrNoColumn indicates that cursor specified a nonexistent column.
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")

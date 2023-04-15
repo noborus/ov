@@ -56,7 +56,7 @@ var EOFContent = content{
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
 
-// csicache caches escape sequences.
+// csiCache caches escape sequences.
 var csiCache sync.Map
 
 // parseState represents the affected state after parsing.
@@ -185,7 +185,7 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			es.style = tcell.StyleDefault
 			es.state = ansiText
 			return true
-		case ']': // Operting System Command Sequence.
+		case ']': // Operating System Command Sequence.
 			es.state = systemSequence
 			return true
 		case 'P', 'X', '^', '_': // Substrings and commands.
@@ -249,9 +249,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			es.parameter.WriteRune(mainc)
 			return true
 		}
-		urlid := es.parameter.String()
-		if urlid != "" {
-			es.style = es.style.UrlId(urlid)
+		urlID := es.parameter.String()
+		if urlID != "" {
+			es.style = es.style.UrlId(urlID)
 		}
 		es.parameter.Reset()
 		es.state = oscURL
