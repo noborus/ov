@@ -1,10 +1,12 @@
 package oviewer
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"regexp"
 	"strconv"
@@ -581,4 +583,37 @@ func (root *Root) BackSearch(str string) {
 	ev.str = str
 	ev.SetEventNow()
 	root.postEvent(ev)
+}
+
+// searchChunk searches in a Chunk without loading it into memory.
+func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return 0, err
+	}
+	reader := bufio.NewReader(m.file)
+	var line bytes.Buffer
+	var isPrefix bool
+	i := 0
+	for i < ChunkSize {
+		buf, err := reader.ReadSlice('\n')
+		if err == bufio.ErrBufferFull {
+			isPrefix = true
+			err = nil
+		}
+		line.Write(buf)
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+		if searcher.Match(line.Bytes()) {
+			return i, nil
+		}
+		i++
+		line.Reset()
+		if err != nil {
+			break
+		}
+	}
+	return 0, ErrNotFound
 }
