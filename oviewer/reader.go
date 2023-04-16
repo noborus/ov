@@ -164,7 +164,10 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	cFormat, r := uncompressedReader(m.file, m.seekable)
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
-			f.Seek(0, io.SeekStart)
+			_, err := f.Seek(0, io.SeekStart)
+			if err != nil {
+				return nil, err
+			}
 			r = f
 		}
 	} else {

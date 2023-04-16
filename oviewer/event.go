@@ -147,7 +147,7 @@ type eventAppSuspend struct {
 	tcell.EventTime
 }
 
-// Suspend fires the eventAppsuspend event.
+// Suspend fires the eventAppSuspend event.
 func (root *Root) Suspend() {
 	if !root.checkScreen() {
 		return
