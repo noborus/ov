@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -36,8 +35,6 @@ type Document struct {
 
 	// Specifies the chunk to read. -1 reads the new last line.
 	ctlCh chan controlSpecifier
-
-	cancel context.CancelFunc
 
 	cache *lru.Cache
 
@@ -94,8 +91,6 @@ type Document struct {
 
 	// 1 if EOF is reached.
 	eof int32
-	// openFollow represents the open followMode file.
-	openFollow int32
 	// 1 if there is a changed.
 	changed int32
 	// 1 if there is a closed.
@@ -110,7 +105,7 @@ type Document struct {
 	preventReload bool
 	// Is it possible to seek.
 	seekable bool
-	// formfeedtime adds time on formfeed.
+	// formfeedTime adds time on formfeed.
 	formfeedTime bool
 }
 

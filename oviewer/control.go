@@ -32,7 +32,7 @@ const (
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	go func() error {
+	go func() {
 		atomic.StoreInt32(&m.closed, 0)
 		r, err := m.fileReader(file)
 		if err != nil {
@@ -56,7 +56,6 @@ func (m *Document) ControlFile(file *os.File) error {
 			}
 		}
 		log.Println("close m.ctlCh")
-		return nil
 	}()
 
 	m.startControl()
@@ -75,15 +74,17 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		if !m.BufEOF() {
 			m.continueControl()
 		}
+		return reader, err
 	case continueControl:
 		reader, err = m.continueRead(reader)
 		if !m.BufEOF() {
 			m.continueControl()
 		}
+		return reader, err
 	case followControl:
-		reader, err = m.followRead(reader)
+		return m.followRead(reader)
 	case loadControl:
-		reader, err = m.readChunk(reader, sc.chunkNum)
+		return m.readChunk(reader, sc.chunkNum)
 	case searchControl:
 		_, err = m.searchChunk(sc.chunkNum, sc.searcher)
 		if err != nil {
@@ -96,20 +97,20 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case reloadControl:
 		reader, err = m.reloadRead(reader)
 		m.startControl()
+		return reader, err
 	case closeControl:
 		err = m.close()
 		log.Println(err)
-		err = nil
+		return reader, err
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.control))
 	}
-	return reader, nil
 }
 
 // ControlLog controls log.
 // ControlLog is only supported reload.
 func (m *Document) ControlLog() error {
-	go func() error {
+	go func() {
 		for sc := range m.ctlCh {
 			switch sc.control {
 			case reloadControl:
@@ -122,7 +123,6 @@ func (m *Document) ControlLog() error {
 			}
 		}
 		log.Println("close m.ctlCh")
-		return nil
 	}()
 	return nil
 }
@@ -131,7 +131,7 @@ func (m *Document) ControlLog() error {
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
 	reader := bufio.NewReader(r)
-	go func() error {
+	go func() {
 		var err error
 		for sc := range m.ctlCh {
 			switch sc.control {
@@ -160,7 +160,6 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 			}
 		}
 		log.Println("close ctlCh")
-		return nil
 	}()
 
 	m.startControl()

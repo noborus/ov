@@ -68,7 +68,7 @@ func (root *Root) nextDoc() {
 	root.debugMessage("next document")
 }
 
-// previouseDoc displays the previous document.
+// previousDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.Event = normal()
