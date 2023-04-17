@@ -28,7 +28,7 @@ type eventWatchInterval struct {
 	value string
 }
 
-// newWatchIntervalInputt returns watchIntervalEvent.
+// newWatchIntervalInput returns watchIntervalEvent.
 func newWatchIntervalEvent(clist *candidate) *eventWatchInterval {
 	return &eventWatchInterval{clist: clist}
 }

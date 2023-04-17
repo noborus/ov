@@ -146,9 +146,11 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 					m.continueControl()
 				}
 			case reloadControl:
-				log.Println("reset")
-				reader = reload()
-				m.startControl()
+				if reload != nil {
+					log.Println("reset")
+					reader = reload()
+					m.startControl()
+				}
 			default:
 				panic(fmt.Sprintf("unexpected %s", sc.control))
 			}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/noborus/ov/oviewer"
 )
@@ -11,8 +12,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fileName := "/var/log/syslog"
+	f, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	doc.FileName = fileName
 	// Use ReadFile to pass the file name to work in follow mode.
-	if err := doc.ReadFile("/var/log/syslog"); err != nil {
+	if err := doc.ControlFile(f); err != nil {
 		log.Fatal(err)
 	}
 
