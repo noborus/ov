@@ -277,7 +277,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	for n := line; n < ChunkSize; n++ {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
-			return n, err
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
 		}
 		if searcher.Match(buf) {
 			return n, nil
@@ -290,6 +290,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	}
 	return 0, ErrNotFound
 }
+
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	chunk := m.chunks[chunkNum]
 	if len(chunk.lines) == 0 {
@@ -300,7 +301,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 	for n := line; n >= 0; n-- {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
-			return n, err
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
 		}
 		if searcher.Match(buf) {
 			return n, nil
@@ -597,7 +598,7 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	i := 0
 	for i < ChunkSize {
 		buf, err := reader.ReadSlice('\n')
-		if err == bufio.ErrBufferFull {
+		if errors.Is(err, bufio.ErrBufferFull) {
 			isPrefix = true
 			err = nil
 		}

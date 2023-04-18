@@ -64,7 +64,7 @@ func (m *Document) ControlFile(file *os.File) error {
 
 func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
 	if atomic.LoadInt32(&m.closed) == 1 && sc.control != reloadControl {
-		return nil, fmt.Errorf("closed %s", sc.control)
+		return nil, fmt.Errorf("%w %s", ErrAlreadyClose, sc.control)
 	}
 
 	var err error

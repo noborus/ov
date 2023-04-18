@@ -339,6 +339,14 @@ var (
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrOutOfChunk indicates that the specified Chunk is out of range.
+	ErrOutOfChunk = errors.New("out of chunk")
+	// ErrNotLoaded indicates that it cannot be loaded.
+	ErrNotLoaded = errors.New("not loaded")
+	// ErrEOFreached indicates that EOF has been reached.
+	ErrEOFreached = errors.New("EOF reached")
+	// ErrPreventReload indicates that reload is prevented.
+	ErrPreventReload = errors.New("prevent reload")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
@@ -386,7 +394,7 @@ func NewRoot(r io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := m.ReadReader(r); err != nil {
+	if err := m.ControlReader(r, nil); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)

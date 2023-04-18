@@ -77,6 +77,7 @@ func (root *Root) wheelRight() {
 		root.moveRightN(4)
 	}
 }
+
 func (root *Root) wheelLeft() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {

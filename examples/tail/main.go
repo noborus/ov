@@ -18,7 +18,7 @@ func main() {
 		log.Fatal(err)
 	}
 	doc.FileName = fileName
-	// Use ReadFile to pass the file name to work in follow mode.
+	// Use ControlFile to pass the file name to work in follow mode.
 	if err := doc.ControlFile(f); err != nil {
 		log.Fatal(err)
 	}

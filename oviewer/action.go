@@ -111,7 +111,7 @@ func (root *Root) closeFile() {
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
-// reload reload a current document.
+// reload performs a reload of the current document.
 func (root *Root) reload(m *Document) {
 	if err := m.reload(); err != nil {
 		root.setMessagef("cannot reload: %s", err)
