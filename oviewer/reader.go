@@ -82,7 +82,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	// non-seekable files are all in memory, so loadControl should not be called.
 	if !m.seekable {
-		return nil, fmt.Errorf("cannot be loaded")
+		return nil, ErrNotLoaded
 	}
 
 	chunk := m.chunks[chunkNum]
@@ -100,7 +100,7 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 	return reader, nil
 }
 
-// reloadRead performs reload processing
+// reloadRead performs reload processing.
 func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.WatchMode {
 		m.reset()
@@ -121,7 +121,7 @@ func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error
 	if !m.seekable {
 		return m.fillChunk(chunk, reader, start, true)
 	}
-	return m.reserveChunk(chunk, reader, start)
+	return m.reserveChunk(reader, start)
 }
 
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
@@ -236,7 +236,7 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 			break
 		}
 		buf, err := reader.ReadSlice('\n')
-		if err == bufio.ErrBufferFull {
+		if errors.Is(err, bufio.ErrBufferFull) {
 			isPrefix = true
 			err = nil
 		}
@@ -271,12 +271,13 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 }
 
 // reserveChunk reserves ChunkSize lines.
-func (m *Document) reserveChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+// read and update size only.
+func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 	var isPrefix bool
 	i := start
 	for i < ChunkSize {
 		buf, err := reader.ReadSlice('\n')
-		if err == bufio.ErrBufferFull {
+		if errors.Is(err, bufio.ErrBufferFull) {
 			isPrefix = true
 			err = nil
 		}
@@ -355,11 +356,13 @@ func (m *Document) lastChunk() *chunk {
 // Regular files are reopened and reread increase.
 // The pipe will reset what it has read.
 func (m *Document) reload() error {
-	if m.FileName == "" && m.BufEOF() {
-		return fmt.Errorf("EOF reached")
-	}
 	if m.preventReload {
-		return fmt.Errorf("prevent reload")
+		return ErrPreventReload
+	}
+	// Prevent reload if stdin reaches EOF.
+	// Because no more content will be added.
+	if m.FileName == "" && m.BufEOF() {
+		return ErrEOFreached
 	}
 
 	atomic.StoreInt32(&m.readCancel, 1)
@@ -414,7 +417,7 @@ func (m *Document) close() error {
 // ReadFile reads file.
 // If the file name is empty, read from standard input.
 //
-// Deprecated:
+// Deprecated: Use ControlFile instead.
 func (m *Document) ReadFile(fileName string) error {
 	r, err := m.openFileReader(fileName)
 	if err != nil {
@@ -425,7 +428,7 @@ func (m *Document) ReadFile(fileName string) error {
 
 // ContinueReadAll continues to read even if it reaches EOF.
 //
-// Deprecated:
+// Deprecated: Use ControlFile instead.
 func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 	return m.ReadAll(r)
 }
@@ -433,7 +436,7 @@ func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
 // ReadReader reads reader.
 // A wrapper for ReadAll.
 //
-// Deprecated:
+// Deprecated: Use ControlReader instead.
 func (m *Document) ReadReader(r io.Reader) error {
 	return m.ReadAll(r)
 }
@@ -442,7 +445,7 @@ func (m *Document) ReadReader(r io.Reader) error {
 // And store it in the lines of the Document.
 // ReadAll needs to be notified on eofCh.
 //
-// Deprecated:
+// Deprecated: Use ControlReader instead.
 func (m *Document) ReadAll(r io.Reader) error {
 	reader := bufio.NewReader(r)
 	go func() {

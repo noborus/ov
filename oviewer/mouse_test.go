@@ -10,6 +10,7 @@ func normalDocument() *Document {
 	}
 	return m
 }
+
 func TestSCR_lineRangeToString(t *testing.T) {
 	type fields struct {
 		numbers []LineNumber

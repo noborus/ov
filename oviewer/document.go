@@ -322,7 +322,7 @@ func (m *Document) ClearCache() {
 	m.cache.Purge()
 }
 
-// contents returns contents from line number and tabwidth.
+// contents returns contents from line number and tabWidth.
 func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
@@ -332,7 +332,7 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 	return parseString(str, tabWidth), nil
 }
 
-// getLineC returns contents from line number and tabwidth.
+// getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 	if v, ok := m.cache.Get(lN); ok {
@@ -378,7 +378,7 @@ func (m *Document) firstLine() int {
 // GetChunkLine returns one line from buffer.
 func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	if len(m.chunks) <= chunkNum {
-		return nil, fmt.Errorf("over chunk size: %d", chunkNum)
+		return nil, ErrOutOfChunk
 	}
 	chunk := m.chunks[chunkNum]
 
@@ -386,7 +386,7 @@ func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	defer m.mu.Unlock()
 
 	if cn >= len(chunk.lines) {
-		return nil, fmt.Errorf("not load %d:%d", chunkNum, cn)
+		return nil, ErrOutOfRange
 	}
 	return chunk.lines[cn], nil
 }
