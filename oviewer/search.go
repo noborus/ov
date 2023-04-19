@@ -239,10 +239,9 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	root.cancelFunc = cancel
 
 	eg.Go(func() error {
-		return root.cancelWait()
+		return root.cancelWait(cancel)
 	})
 
 	eg.Go(func() error {
@@ -369,13 +368,10 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int
 }
 
 // cancelWait waits for key to cancel.
-func (root *Root) cancelWait() error {
+func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
-		if root.cancelFunc != nil {
-			root.cancelFunc()
-			root.setMessage("cancel")
-			root.cancelFunc = nil
-		}
+		cancel()
+		root.setMessage("cancel")
 		return nil
 	}
 
@@ -465,10 +461,9 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 		} else {
 			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
 		}
-		root.searchQuit()
 		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Printf("incSearch %s", err)
+			if !errors.Is(err, ErrCancel) {
+				log.Printf("incSearch: %s", err)
 			}
 			return
 		}
