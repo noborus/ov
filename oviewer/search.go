@@ -462,9 +462,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
 		}
 		if err != nil {
-			if !errors.Is(err, ErrCancel) {
-				log.Printf("incSearch: %s", err)
-			}
+			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
 		root.searchGo(lN)
