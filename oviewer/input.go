@@ -83,6 +83,11 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 		return
 	}
 
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+		root.cancelFunc = nil
+	}
+
 	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
