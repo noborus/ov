@@ -268,7 +268,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	chunk := m.chunks[chunkNum]
-	if len(chunk.lines) == 0 {
+	if m.seekable && len(chunk.lines) == 0 {
 		if !m.storageSearch(ctx, searcher, chunkNum, line) {
 			return 0, ErrNotFound
 		}
