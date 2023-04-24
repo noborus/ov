@@ -166,7 +166,7 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	// STDOUT
 	outReader, err := command.StdoutPipe()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("stdout pipe error: %w", err)
 	}
 	var so io.Reader = outReader
 	if STDOUTPIPE != nil {
@@ -176,7 +176,7 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	// STDERR
 	errReader, err := command.StderrPipe()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
 	}
 	var se io.Reader = errReader
 	if STDERRPIPE != nil {
@@ -184,7 +184,7 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	}
 
 	if err := command.Start(); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("command start error: %w", err)
 	}
 	return so, se, nil
 }

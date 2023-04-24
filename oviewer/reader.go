@@ -87,7 +87,7 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("seek:%w", err)
 	}
 	reader.Reset(m.file)
 	start := 0
@@ -164,9 +164,8 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	cFormat, r := uncompressedReader(m.file, m.seekable)
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
-			_, err := f.Seek(0, io.SeekStart)
-			if err != nil {
-				return nil, err
+			if _, err := f.Seek(0, io.SeekStart); err != nil {
+				return nil, fmt.Errorf("seek:%w", err)
 			}
 			r = f
 		}
@@ -204,7 +203,7 @@ func open(fileName string) (*os.File, error) {
 
 	f, err := os.Open(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", fileName, err)
 	}
 	return f, nil
 }

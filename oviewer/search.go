@@ -49,7 +49,7 @@ func (substr searchWord) Match(s []byte) bool {
 	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
 }
 
-// searchWord Match is a case-insensitive search.
+// searchWord MatchString is a case-insensitive search.
 func (substr searchWord) MatchString(s string) bool {
 	s = stripEscapeSequenceString(s)
 	return strings.Contains(strings.ToLower(s), substr.word)
@@ -583,7 +583,7 @@ func (root *Root) BackSearch(str string) {
 func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("seek:%w", err)
 	}
 	reader := bufio.NewReader(m.file)
 	var line bytes.Buffer

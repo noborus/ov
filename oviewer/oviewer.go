@@ -557,7 +557,7 @@ func (root *Root) Run() error {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
