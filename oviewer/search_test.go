@@ -608,3 +608,76 @@ func Test_condRegexpCompile(t *testing.T) {
 		})
 	}
 }
+
+func TestDocument_searchChunk(t *testing.T) {
+	type args struct {
+		chunkNum int
+		searcher Searcher
+	}
+	tests := []struct {
+		name     string
+		fileName string
+		args     args
+		want     int
+		wantErr  bool
+	}{
+		{
+			name:     "testNotFound",
+			fileName: "../testdata/ct.log",
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:     "testFound",
+			fileName: "../testdata/ct.log",
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("error", regexpCompile("error", false), true, false),
+			},
+			want:    3,
+			wantErr: false,
+		},
+		{
+			name:     "testCaseSensitive",
+			fileName: "../testdata/ct.log",
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("EXCEPTION", regexpCompile("EXCEPTION", false), true, false),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:     "testRegexp",
+			fileName: "../testdata/ct.log",
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("error", regexpCompile("error", true), true, true),
+			},
+			want:    3,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for !m.BufEOF() {
+			}
+			got, err := m.searchChunk(tt.args.chunkNum, tt.args.searcher)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.searchChunk() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.searchChunk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

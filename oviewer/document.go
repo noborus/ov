@@ -160,7 +160,7 @@ func NewChunk(start int64) *chunk {
 func (m *Document) NewCache() error {
 	cache, err := lru.New(1024)
 	if err != nil {
-		return err
+		return fmt.Errorf("new cache %w", err)
 	}
 	m.cache = cache
 	return nil
@@ -170,7 +170,7 @@ func (m *Document) NewCache() error {
 func OpenDocument(fileName string) (*Document, error) {
 	fi, err := os.Stat(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", fileName, err)
 	}
 	if fi.IsDir() {
 		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)

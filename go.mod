@@ -9,7 +9,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.16.4
+	github.com/klauspost/compress v1.16.5
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/noborus/guesswidth v0.3.2
 	github.com/pierrec/lz4 v2.6.1+incompatible
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
 	golang.org/x/sync v0.1.0
 	golang.org/x/term v0.7.0
 )
