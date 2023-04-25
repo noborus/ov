@@ -46,6 +46,7 @@ func compressType(header []byte) Compressed {
 	return UNCOMPRESSED
 }
 
+// String returns the string representation of the compressed format.
 func (c Compressed) String() string {
 	switch c {
 	case GZIP:
@@ -62,6 +63,7 @@ func (c Compressed) String() string {
 	return "UNCOMPRESSED"
 }
 
+// uncompressedReader returns a reader for the uncompressed format.
 func uncompressedReader(reader io.Reader, seekable bool) (Compressed, io.Reader) {
 	buf := [7]byte{}
 	n, err := io.ReadAtLeast(reader, buf[:], len(buf))
@@ -82,6 +84,7 @@ func uncompressedReader(reader io.Reader, seekable bool) (Compressed, io.Reader)
 	return cFormat, r
 }
 
+// compressedFormatReader returns a reader for the compressed format.
 func compressedFormatReader(cFormat Compressed, reader io.Reader) io.Reader {
 	var r io.Reader
 	var err error

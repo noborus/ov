@@ -2,19 +2,20 @@ package oviewer
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func BenchmarkParseString_Normal(b *testing.B) {
-	Parse_Helper(b, "../testdata/normal.txt")
+	Parse_Helper(b, filepath.Join(testdata, "normal.txt"))
 }
 
 func BenchmarkParseString_AnsiEscape(b *testing.B) {
-	Parse_Helper(b, "../testdata/ansiescape.txt")
+	Parse_Helper(b, filepath.Join(testdata, "ansiescape.txt"))
 }
 
 func BenchmarkParseString_ChromaTerm(b *testing.B) {
-	Parse_Helper(b, "../testdata/ct.log")
+	Parse_Helper(b, filepath.Join(testdata, "ct.log"))
 }
 
 func Parse_Helper(b *testing.B, fileName string) {
@@ -29,15 +30,15 @@ func Parse_Helper(b *testing.B, fileName string) {
 }
 
 func BenchmarkDraw_Normal(b *testing.B) {
-	Draw_Helper(b, "../testdata/normal.txt")
+	Draw_Helper(b, filepath.Join(testdata, "normal.txt"))
 }
 
 func BenchmarkDraw_AnsiEscape(b *testing.B) {
-	Draw_Helper(b, "../testdata/ansiescape.txt")
+	Draw_Helper(b, filepath.Join(testdata, "ansiescape.txt"))
 }
 
 func BenchmarkDraw_ChromaTerm(b *testing.B) {
-	Draw_Helper(b, "../testdata/ct.log")
+	Draw_Helper(b, filepath.Join(testdata, "ct.log"))
 }
 
 func Draw_Helper(b *testing.B, fileName string) {

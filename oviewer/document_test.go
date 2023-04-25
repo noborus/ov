@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -19,12 +20,12 @@ func TestOpenDocument(t *testing.T) {
 	}{
 		{
 			name:    "no file",
-			args:    args{fileName: "../testdata/nofile"},
+			args:    args{fileName: filepath.Join(testdata, "nofile")},
 			wantErr: true,
 		},
 		{
 			name:    "normal.txt",
-			args:    args{fileName: "../testdata/normal.txt"},
+			args:    args{fileName: filepath.Join(testdata, "normal.txt")},
 			wantErr: false,
 		},
 	}
@@ -167,7 +168,7 @@ func TestDocument_searchLine(t *testing.T) {
 		{
 			name: "test forward search",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -180,7 +181,7 @@ func TestDocument_searchLine(t *testing.T) {
 		{
 			name: "test forward search not found",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -232,7 +233,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		{
 			name: "test backword search",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -245,7 +246,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		{
 			name: "test backword search not found",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
