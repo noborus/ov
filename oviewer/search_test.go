@@ -623,7 +623,7 @@ func TestDocument_searchChunk(t *testing.T) {
 	}{
 		{
 			name:     "testNotFound",
-			fileName: "../testdata/ct.log",
+			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
 				chunkNum: 0,
 				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
@@ -633,7 +633,7 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 		{
 			name:     "testFound",
-			fileName: "../testdata/ct.log",
+			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
 				chunkNum: 0,
 				searcher: NewSearcher("error", regexpCompile("error", false), true, false),
@@ -643,7 +643,7 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 		{
 			name:     "testCaseSensitive",
-			fileName: "../testdata/ct.log",
+			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
 				chunkNum: 0,
 				searcher: NewSearcher("EXCEPTION", regexpCompile("EXCEPTION", false), true, false),
@@ -653,7 +653,7 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 		{
 			name:     "testRegexp",
-			fileName: "../testdata/ct.log",
+			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
 				chunkNum: 0,
 				searcher: NewSearcher("error", regexpCompile("error", true), true, true),

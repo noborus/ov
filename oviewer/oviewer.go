@@ -10,6 +10,8 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -70,6 +72,7 @@ type Root struct {
 	// Original position at the start of search.
 	OriginPos int
 
+	// CurrentDoc is the index of the current document.
 	CurrentDoc int
 
 	scr SCR
@@ -98,6 +101,7 @@ type Root struct {
 	mouseRectangle bool
 }
 
+// SCR contains the screen information.
 type SCR struct {
 	// numbers is the line information of the currently displayed screen.
 	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
@@ -310,6 +314,8 @@ const (
 // Does not track mouse movements except when dragging.
 const MouseFlags = tcell.MouseDragEvents
 
+// MaxWriteLog is the maximum number of lines to output to the log
+// when the debug flag is enabled.
 const MaxWriteLog int = 10
 
 var (
@@ -531,6 +537,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}
 }
 
+// setKeyConfig sets key bindings.
 func (root *Root) setKeyConfig() (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config)
 	if err := root.setHandlers(keyBind); err != nil {
@@ -636,6 +643,7 @@ func (root *Root) Run() error {
 	}
 }
 
+// optimizedMan optimizes execution with the Man command.
 func (root *Root) optimizedMan() {
 	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
@@ -646,6 +654,7 @@ func (root *Root) optimizedMan() {
 	root.Doc.Caption = manPN
 }
 
+// setModeConfig sets mode config.
 func (root *Root) setModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
@@ -660,6 +669,7 @@ func (root *Root) Close() {
 	root.Screen.Fini()
 }
 
+// setMessage displays a message in status.
 func (root *Root) setMessage(msg string) {
 	if root.message == msg {
 		return
@@ -892,4 +902,21 @@ func (scr SCR) lineNumber(y int) LineNumber {
 		return scr.numbers[y]
 	}
 	return scr.numbers[0]
+}
+
+func (root *Root) debugNumOfChunk() {
+	if !root.Debug {
+		return
+	}
+	for _, doc := range root.DocList {
+		var loaded []string
+		for n, chunk := range doc.chunks {
+			if len(chunk.lines) != 0 {
+				loaded = append(loaded, strconv.Itoa(n))
+			}
+		}
+		root.debugMessage(fmt.Sprintf("%s: number of chunks %d", doc.FileName, len(doc.chunks)))
+		root.debugMessage(fmt.Sprintf("chunks loaded are %s %s", doc.FileName, strings.Join(loaded, ",")))
+	}
+
 }

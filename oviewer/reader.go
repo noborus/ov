@@ -16,14 +16,15 @@ import (
 	"golang.org/x/term"
 )
 
+// FormFeed is the delimiter that separates the sections.
+// The default delimiter that separates single output from watch.
 const FormFeed = "\f"
 
 // firstRead first reads the file.
-// Packs the contents of the read file into the first chunk.
+// Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	chunk := m.chunks[0]
-	err := m.fillChunk(chunk, reader, 0, true)
-	if err != nil {
+	if err := m.fillChunk(chunk, reader, 0, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
@@ -124,11 +125,13 @@ func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error
 	return m.reserveChunk(reader, start)
 }
 
+// reloadFile reloads a file.
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.seekable {
 		m.ClearCache()
 		return reader, nil
 	}
+
 	atomic.StoreInt32(&m.closed, 1)
 	if err := m.file.Close(); err != nil {
 		log.Printf("reload: %s", err)
@@ -148,6 +151,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	return reader, nil
 }
 
+// afterEOF does processing after reaching EOF.
 func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	m.offset = m.size
 	atomic.StoreInt32(&m.eof, 1)
@@ -157,6 +161,21 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	return reader
 }
 
+// openFileReader opens a file,
+// selects a reader according to compression type and returns io.Reader.
+func (m *Document) openFileReader(fileName string) (io.Reader, error) {
+	f, err := open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	r, err := m.fileReader(f)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+// fileReader returns a io.Reader.
 func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.mu.Lock()
 	m.file = f
@@ -181,18 +200,7 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	return r, nil
 }
 
-func (m *Document) openFileReader(fileName string) (io.Reader, error) {
-	f, err := open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	r, err := m.fileReader(f)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
+// open opens a file.
 func open(fileName string) (*os.File, error) {
 	if fileName == "" {
 		if term.IsTerminal(0) {

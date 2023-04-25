@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bytes"
 	"io"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -100,7 +101,7 @@ func TestDocument_reset(t *testing.T) {
 		{
 			name: "testReset",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			wantNum: 0,
 		},
@@ -135,7 +136,7 @@ func TestDocument_reload(t *testing.T) {
 		{
 			name: "testReload",
 			fields: fields{
-				FileName:  "../testdata/normal.txt",
+				FileName:  filepath.Join(testdata, "normal.txt"),
 				WatchMode: false,
 				seekable:  true,
 			},
@@ -144,7 +145,7 @@ func TestDocument_reload(t *testing.T) {
 		{
 			name: "testWatchReload",
 			fields: fields{
-				FileName:  "../testdata/normal.txt",
+				FileName:  filepath.Join(testdata, "normal.txt"),
 				WatchMode: true,
 				seekable:  true,
 			},
