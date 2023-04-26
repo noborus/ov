@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/noborus/guesswidth"
 )
 
@@ -36,7 +36,7 @@ type Document struct {
 	// Specifies the chunk to read. -1 reads the new last line.
 	ctlCh chan controlSpecifier
 
-	cache *lru.Cache
+	cache *lru.Cache[int, LineC]
 
 	ticker     *time.Ticker
 	tickerDone chan struct{}
@@ -158,7 +158,7 @@ func NewChunk(start int64) *chunk {
 
 // NewCache creates a new cache.
 func (m *Document) NewCache() error {
-	cache, err := lru.New(1024)
+	cache, err := lru.New[int, LineC](1024)
 	if err != nil {
 		return fmt.Errorf("new cache %w", err)
 	}
@@ -335,8 +335,7 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 // getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
-	if v, ok := m.cache.Get(lN); ok {
-		line := v.(LineC)
+	if line, ok := m.cache.Get(lN); ok {
 		lc := make(contents, len(line.lc))
 		copy(lc, line.lc)
 		line.lc = lc
