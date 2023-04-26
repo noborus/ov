@@ -912,7 +912,7 @@ func (root *Root) debugNumOfChunk() {
 		var loaded []string
 		for n, chunk := range doc.chunks {
 			if len(chunk.lines) != 0 {
-				loaded = append(loaded, strconv.Itoa(n))
+				loaded = append(loaded, strconv.Itoa(n)+":"+strconv.Itoa(len(chunk.lines)))
 			}
 		}
 		root.debugMessage(fmt.Sprintf("%s: number of chunks %d", doc.FileName, len(doc.chunks)))
