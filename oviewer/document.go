@@ -33,6 +33,10 @@ type Document struct {
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 
+	loadedChunks *lru.Cache[int, bool]
+	// currentChunk represents the current chunk number.
+	currentChunk int
+
 	// Specifies the chunk to read. -1 reads the new last line.
 	ctlCh chan controlSpecifier
 
@@ -163,6 +167,11 @@ func (m *Document) NewCache() error {
 		return fmt.Errorf("new cache %w", err)
 	}
 	m.cache = cache
+	loadedChunks, err := lru.New[int, bool](1000000)
+	if err != nil {
+		return fmt.Errorf("new loadedChunks %w", err)
+	}
+	m.loadedChunks = loadedChunks
 	return nil
 }
 
@@ -227,11 +236,9 @@ func (m *Document) Line(n int) []byte {
 		return nil
 	}
 	chunk := m.chunks[chunkNum]
-
-	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+	if m.currentChunk != chunkNum {
 		m.loadControl(chunkNum)
 	}
-
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

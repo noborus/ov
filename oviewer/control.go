@@ -66,7 +66,6 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	if atomic.LoadInt32(&m.closed) == 1 && sc.control != reloadControl {
 		return nil, fmt.Errorf("%w %s", ErrAlreadyClose, sc.control)
 	}
-
 	var err error
 	switch sc.control {
 	case firstControl:
@@ -76,6 +75,15 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		}
 		return reader, err
 	case continueControl:
+		if !m.seekable {
+			chunkNum := len(m.chunks) - 1
+			if chunkNum != 0 {
+				m.loadedChunks.Add(chunkNum, true)
+			}
+			if m.loadedChunks.Len() > FileLoadChunkLimit {
+				return reader, nil
+			}
+		}
 		reader, err = m.continueRead(reader)
 		if !m.BufEOF() {
 			m.continueControl()
@@ -84,7 +92,30 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case followControl:
 		return m.followRead(reader)
 	case loadControl:
-		return m.readChunk(reader, sc.chunkNum)
+		if m.seekable {
+			chunk := m.chunks[sc.chunkNum]
+			if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+				return m.readChunk(reader, sc.chunkNum)
+			}
+			return reader, nil
+		}
+
+		m.currentChunk = sc.chunkNum
+		maxChunk := len(m.chunks)
+		log.Println("remove ?", m.currentChunk, maxChunk)
+		if m.currentChunk >= maxChunk-1 {
+			if m.loadedChunks.Len() >= FileLoadChunkLimit {
+				k, _, _ := m.loadedChunks.GetOldest()
+				log.Println("remove chunk", k)
+				m.loadedChunks.Remove(k)
+				m.chunks[k].lines = nil
+			}
+			if !m.BufEOF() {
+				log.Println("continue chunk", maxChunk-m.currentChunk)
+				m.continueControl()
+			}
+		}
+		return reader, nil
 	case searchControl:
 		_, err = m.searchChunk(sc.chunkNum, sc.searcher)
 		if err != nil {
@@ -113,6 +144,7 @@ func (m *Document) ControlLog() error {
 	go func() {
 		for sc := range m.ctlCh {
 			switch sc.control {
+			case loadControl:
 			case reloadControl:
 				m.reset()
 			default:
@@ -141,9 +173,18 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 					m.continueControl()
 				}
 			case continueControl:
+				log.Println("reader loaded chunk", m.loadedChunks.Len())
+
 				reader, err = m.continueRead(reader)
 				if !m.BufEOF() {
 					m.continueControl()
+				}
+
+			case loadControl:
+				m.currentChunk = sc.chunkNum
+				log.Println("reader change current chunk", m.currentChunk)
+				if sc.chunkNum != 0 {
+					m.loadedChunks.Add(sc.chunkNum, true)
 				}
 			case reloadControl:
 				if reload != nil {

@@ -81,11 +81,6 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 
 // readChunk loads the read contents into chunks.
 func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
-	// non-seekable files are all in memory, so loadControl should not be called.
-	if !m.seekable {
-		return nil, ErrNotLoaded
-	}
-
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
 		return nil, fmt.Errorf("seek:%w", err)

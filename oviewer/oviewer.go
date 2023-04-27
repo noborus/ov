@@ -237,6 +237,8 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
+	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunkLimit int
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -282,6 +284,8 @@ type OVStyle struct {
 }
 
 var (
+	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunkLimit int
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
@@ -561,6 +565,11 @@ func (root *Root) SetKeyHandler(name string, keys []string, handler func()) erro
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Close()
+
+	if root.Config.FileLoadChunkLimit > 0 && root.Config.FileLoadChunkLimit < 2 {
+		root.Config.FileLoadChunkLimit = 2
+	}
+	FileLoadChunkLimit = root.Config.FileLoadChunkLimit
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -917,6 +926,7 @@ func (root *Root) debugNumOfChunk() {
 		}
 		root.debugMessage(fmt.Sprintf("%s: number of chunks %d", doc.FileName, len(doc.chunks)))
 		root.debugMessage(fmt.Sprintf("chunks loaded are %s %s", doc.FileName, strings.Join(loaded, ",")))
+		root.debugMessage(fmt.Sprintf("chunks loaded are %v", doc.loadedChunks.Keys()))
 	}
 
 }

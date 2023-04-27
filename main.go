@@ -308,6 +308,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
+	rootCmd.PersistentFlags().IntP("file-load-limit", "", 0, "Limit chunks loading files into memory")
+	_ = viper.BindPFlag("FileLoadChunkLimit", rootCmd.PersistentFlags().Lookup("file-load-limit"))
+
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
