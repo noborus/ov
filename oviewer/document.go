@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
+	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
 )
 
@@ -33,11 +33,12 @@ type Document struct {
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 
-	loadedChunks *lru.Cache[int, bool]
+	// loadedChunks manages chunks loaded into memory.
+	loadedChunks *lru.Cache[int, struct{}]
 	// currentChunk represents the current chunk number.
 	currentChunk int
 
-	// Specifies the chunk to read. -1 reads the new last line.
+	// ctlCh is the channel for controlling the reader goroutine.
 	ctlCh chan controlSpecifier
 
 	cache *lru.Cache[int, LineC]
@@ -60,10 +61,12 @@ type Document struct {
 	// offset
 	offset int64
 
+	// startNum is the number of the first line that can be moved.
 	startNum int
 	// endNum is the number of the last line read.
 	endNum int
 
+	// markedPoint is the position of the marked line.
 	markedPoint int
 
 	// Last moved Section position.
@@ -167,7 +170,7 @@ func (m *Document) NewCache() error {
 		return fmt.Errorf("new cache %w", err)
 	}
 	m.cache = cache
-	loadedChunks, err := lru.New[int, bool](1000000)
+	loadedChunks, err := lru.New[int, struct{}](10000000)
 	if err != nil {
 		return fmt.Errorf("new loadedChunks %w", err)
 	}
@@ -200,6 +203,7 @@ func OpenDocument(fileName string) (*Document, error) {
 		return nil, err
 	}
 	m.FileName = fileName
+
 	if err := m.ControlFile(f); err != nil {
 		return nil, err
 	}
@@ -226,75 +230,44 @@ func STDINDocument() (*Document, error) {
 }
 
 // Line returns one line from buffer.
-func (m *Document) Line(n int) []byte {
+func (m *Document) Line(n int) ([]byte, error) {
 	if n < m.startNum || n >= m.endNum {
-		return nil
+		return nil, fmt.Errorf("out of range: %d", n)
 	}
 	chunkNum := n / ChunkSize
 	if len(m.chunks)-1 < chunkNum {
-		log.Println("over chunk size: ", chunkNum)
-		return nil
+		return nil, fmt.Errorf("over chunk size: %d", chunkNum)
 	}
 	chunk := m.chunks[chunkNum]
 	if m.currentChunk != chunkNum {
-		m.loadControl(chunkNum)
+		m.requestLoad(chunkNum)
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	cn := n % ChunkSize
 	if cn < len(chunk.lines) {
-		return chunk.lines[cn]
+		return chunk.lines[cn], nil
 	}
-	log.Println("not load", n, m.endNum)
-	return nil
+	return nil, fmt.Errorf("evicted from memory")
 }
 
 // Deprecated: GetLine returns one line from buffer.
 func (m *Document) GetLine(n int) string {
-	return string(m.Line(n))
+	s, err := m.Line(n)
+	if err != nil {
+		return ""
+	}
+	return string(s)
 }
 
 // LineString returns one line from buffer.
 func (m *Document) LineString(n int) string {
-	return string(m.Line(n))
-}
-
-// loadControl sends instructions to load chunks into memory.
-func (m *Document) loadControl(chunkNum int) {
-	sc := controlSpecifier{
-		control:  loadControl,
-		chunkNum: chunkNum,
-		done:     make(chan bool),
+	s, err := m.Line(n)
+	if err != nil {
+		return gchalk.Red(err.Error())
 	}
-	m.ctlCh <- sc
-	<-sc.done
-}
-
-// searchControl sends instructions to load chunks into memory.
-func (m *Document) searchControl(chunkNum int, searcher Searcher) bool {
-	sc := controlSpecifier{
-		control:  searchControl,
-		searcher: searcher,
-		chunkNum: chunkNum,
-		done:     make(chan bool),
-	}
-	m.ctlCh <- sc
-	return <-sc.done
-}
-
-func (m *Document) closeControl() {
-	atomic.StoreInt32(&m.readCancel, 1)
-	sc := controlSpecifier{
-		control: closeControl,
-		done:    make(chan bool),
-	}
-
-	log.Println("close send")
-	m.ctlCh <- sc
-	<-sc.done
-	log.Println("receive done")
-	atomic.StoreInt32(&m.readCancel, 0)
+	return string(s)
 }
 
 // CurrentLN returns the currently displayed line number.

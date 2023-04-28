@@ -317,7 +317,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
 	chunk := m.chunks[chunkNum]
 	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
-		if m.searchControl(chunkNum, searcher) {
+		if m.requestSearch(chunkNum, searcher) {
 			return true
 		}
 	}
@@ -352,7 +352,8 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
 	startChunk, sn := chunkLine(lN)
-	for cn := startChunk; cn >= 0; cn-- {
+	minChunk, _ := chunkLine(m.startNum)
+	for cn := startChunk; cn >= minChunk; cn-- {
 		n, err := m.BackSearch(ctx, searcher, cn, sn)
 		if err == nil {
 			return cn*ChunkSize + n, nil

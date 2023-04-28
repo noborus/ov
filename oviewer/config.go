@@ -3,6 +3,8 @@ package oviewer
 // NewConfig return the structure of Config with default values.
 func NewConfig() Config {
 	return Config{
+		LoadChunkLimit:     -1,
+		FileLoadChunkLimit: 100,
 		StyleHeader: OVStyle{
 			Bold: true,
 		},

@@ -237,6 +237,8 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
+	// LoadChunkLimit is a number that limits chunk loading.
+	LoadChunkLimit int
 	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
 	FileLoadChunkLimit int
 	// Debug represents whether to enable the debug output.
@@ -284,8 +286,12 @@ type OVStyle struct {
 }
 
 var (
+	// LoadChunkLimit is a number that limits the chunks to load into memory.
+	LoadChunkLimit int
+
 	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
 	FileLoadChunkLimit int
+
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
@@ -357,6 +363,8 @@ var (
 	ErrEOFreached = errors.New("EOF reached")
 	// ErrPreventReload indicates that reload is prevented.
 	ErrPreventReload = errors.New("prevent reload")
+	// ErrOverChunkLimit indicates that the chunk limit has been exceeded.
+	ErrOverChunkLimit = errors.New("over chunk limit")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
@@ -497,7 +505,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 						switch event.Op {
 						case fsnotify.Write:
 							select {
-							case doc.ctlCh <- controlSpecifier{control: followControl}:
+							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
 								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
@@ -507,7 +515,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 								continue
 							}
 							select {
-							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
+							case doc.ctlCh <- controlSpecifier{request: requestReload}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
 								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
@@ -565,12 +573,6 @@ func (root *Root) SetKeyHandler(name string, keys []string, handler func()) erro
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Close()
-
-	if root.Config.FileLoadChunkLimit > 0 && root.Config.FileLoadChunkLimit < 2 {
-		root.Config.FileLoadChunkLimit = 2
-	}
-	FileLoadChunkLimit = root.Config.FileLoadChunkLimit
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
@@ -927,6 +929,6 @@ func (root *Root) debugNumOfChunk() {
 		root.debugMessage(fmt.Sprintf("%s: number of chunks %d", doc.FileName, len(doc.chunks)))
 		root.debugMessage(fmt.Sprintf("chunks loaded are %s %s", doc.FileName, strings.Join(loaded, ",")))
 		root.debugMessage(fmt.Sprintf("chunks loaded are %v", doc.loadedChunks.Keys()))
+		root.debugMessage(fmt.Sprintf("size are %v", doc.size))
 	}
-
 }

@@ -43,8 +43,12 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 			return nil, err
 		}
 		reader.Reset(m.file)
+	} else {
+		chunkNum := len(m.chunks) - 1
+		if chunkNum != 0 {
+			m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+		}
 	}
-
 	chunk := m.lastChunk()
 	start := len(chunk.lines)
 	if err := m.addChunk(chunk, reader, start); err != nil {
@@ -369,7 +373,7 @@ func (m *Document) reload() error {
 
 	atomic.StoreInt32(&m.readCancel, 1)
 	sc := controlSpecifier{
-		control: reloadControl,
+		request: requestReload,
 		done:    make(chan bool),
 	}
 	m.ctlCh <- sc

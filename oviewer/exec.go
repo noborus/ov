@@ -94,7 +94,7 @@ func (cmd *Command) Reload() *bufio.Reader {
 	cmd.stderr = se
 
 	sc := controlSpecifier{
-		control: reloadControl,
+		request: requestReload,
 		done:    make(chan bool),
 	}
 	log.Println("stderr reload send")

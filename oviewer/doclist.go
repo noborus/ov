@@ -50,7 +50,7 @@ func (root *Root) closeDocument() {
 	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	log.Printf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
-	root.DocList[root.CurrentDoc].closeControl()
+	root.DocList[root.CurrentDoc].requestClose()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
