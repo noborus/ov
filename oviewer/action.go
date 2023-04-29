@@ -106,7 +106,7 @@ func (root *Root) closeFile() {
 		root.setMessage("cannot close")
 		return
 	}
-	root.Doc.closeControl()
+	root.Doc.requestClose()
 	root.setMessagef("close file %s", root.Doc.FileName)
 	log.Printf("close file %s", root.Doc.FileName)
 }
