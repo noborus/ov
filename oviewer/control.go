@@ -33,9 +33,9 @@ const (
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
 	if m.seekable {
-		m.loadedChunks.Resize(FileLoadChunkLimit + 1)
+		m.loadedChunks.Resize(FileLoadChunksLimit + 1)
 	} else {
-		m.loadedChunks.Resize(LoadChunkLimit + 1)
+		m.loadedChunks.Resize(LoadChunksLimit + 1)
 	}
 
 	go func() {
@@ -69,7 +69,7 @@ func (m *Document) ControlFile(file *os.File) error {
 }
 
 func (m *Document) mangesChunksFile(chunkNum int) error {
-	for m.loadedChunks.Len() > FileLoadChunkLimit {
+	for m.loadedChunks.Len() > FileLoadChunksLimit {
 		k, _, _ := m.loadedChunks.RemoveOldest()
 		if chunkNum != k {
 			log.Println("remove chunk", k)
@@ -93,11 +93,11 @@ func (m *Document) mangesChunksMem(chunkNum int) error {
 	if m.currentChunk < maxChunk-1 {
 		return fmt.Errorf("no need to add chunk %d", chunkNum)
 	}
-	if (LoadChunkLimit < 0) || (m.loadedChunks.Len() < LoadChunkLimit) {
+	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
 		return nil
 	}
 	k, _, _ := m.loadedChunks.GetOldest()
-	log.Println("remove chunk", k, m.loadedChunks.Len(), LoadChunkLimit)
+	log.Printf("Limit(%d) < Loaded(%d) remove chunk %d", LoadChunksLimit, m.loadedChunks.Len(), k)
 	m.loadedChunks.Remove(k)
 	m.chunks[k].lines = nil
 	m.mu.Lock()
@@ -107,7 +107,7 @@ func (m *Document) mangesChunksMem(chunkNum int) error {
 }
 
 func (m *Document) canRead() bool {
-	if LoadChunkLimit > 0 && m.loadedChunks.Len() >= LoadChunkLimit {
+	if LoadChunksLimit > 0 && m.loadedChunks.Len() >= LoadChunksLimit {
 		return false
 	}
 	return true
@@ -128,7 +128,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case requestContinue:
 		if !m.seekable {
 			if !m.canRead() {
-				log.Println("stop read", m.loadedChunks.Len(), FileLoadChunkLimit)
+				log.Println("stop read", m.loadedChunks.Len(), FileLoadChunksLimit)
 				return reader, nil
 			}
 		}

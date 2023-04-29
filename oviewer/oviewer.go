@@ -10,8 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 
@@ -237,10 +235,10 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
-	// LoadChunkLimit is a number that limits chunk loading.
-	LoadChunkLimit int
-	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunkLimit int
+	// LoadChunksLimit is a number that limits chunk loading.
+	LoadChunksLimit int
+	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunksLimit int
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -286,11 +284,10 @@ type OVStyle struct {
 }
 
 var (
-	// LoadChunkLimit is a number that limits the chunks to load into memory.
-	LoadChunkLimit int
-
-	// FileLoadChunkLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunkLimit int
+	// LoadChunksLimit is a number that limits the chunks to load into memory.
+	LoadChunksLimit int
+	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunksLimit int
 
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
@@ -920,15 +917,19 @@ func (root *Root) debugNumOfChunk() {
 		return
 	}
 	for _, doc := range root.DocList {
-		var loaded []string
+		if !doc.seekable {
+			if LoadChunksLimit > 0 {
+				root.debugMessage(fmt.Sprintf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys()))
+			}
+			continue
+		}
 		for n, chunk := range doc.chunks {
-			if len(chunk.lines) != 0 {
-				loaded = append(loaded, strconv.Itoa(n)+":"+strconv.Itoa(len(chunk.lines)))
+			if n != 0 && len(chunk.lines) != 0 {
+				if !doc.loadedChunks.Contains(n) {
+					log.Printf("chunk %d is not under control", n)
+				}
 			}
 		}
-		root.debugMessage(fmt.Sprintf("%s: number of chunks %d", doc.FileName, len(doc.chunks)))
-		root.debugMessage(fmt.Sprintf("chunks loaded are %s %s", doc.FileName, strings.Join(loaded, ",")))
-		root.debugMessage(fmt.Sprintf("chunks loaded are %v", doc.loadedChunks.Keys()))
-		root.debugMessage(fmt.Sprintf("size are %v", doc.size))
+		root.debugMessage(fmt.Sprintf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys()))
 	}
 }
