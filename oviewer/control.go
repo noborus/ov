@@ -79,7 +79,7 @@ func (m *Document) mangesChunksFile(chunkNum int) error {
 
 	chunk := m.chunks[chunkNum]
 	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
-		return fmt.Errorf("no need to add chunk %d", chunkNum)
+		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 	}
 	if chunkNum != 0 {
 		m.loadedChunks.Add(chunkNum, struct{}{})
@@ -91,7 +91,7 @@ func (m *Document) mangesChunksMem(chunkNum int) error {
 	m.currentChunk = chunkNum
 	maxChunk := len(m.chunks)
 	if m.currentChunk < maxChunk-1 {
-		return fmt.Errorf("no need to add chunk %d", chunkNum)
+		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 	}
 	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
 		return nil
@@ -209,10 +209,8 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 		for sc := range m.ctlCh {
 			switch sc.request {
 			case requestStart:
-				reader, err = m.firstRead(reader)
-				if !m.BufEOF() {
-					m.requestContinue()
-				}
+				// controlReader is the same for first and continue.
+				fallthrough
 			case requestContinue:
 				reader, err = m.continueRead(reader)
 				if !m.BufEOF() {
