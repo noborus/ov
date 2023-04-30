@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 )
 
+// controlSpecifier represents a control request.
 type controlSpecifier struct {
 	searcher Searcher
 	request  request
@@ -152,6 +153,9 @@ func (m *Document) unloadChunk(chunkNum int) {
 // managesChunksFile manages Chunks of regular files.
 // manage chunk eviction.
 func (m *Document) managesChunksFile(chunkNum int) error {
+	if chunkNum == 0 {
+		return nil
+	}
 	for m.loadedChunks.Len() > FileLoadChunksLimit {
 		k, _, _ := m.loadedChunks.GetOldest()
 		if chunkNum != k {
@@ -170,6 +174,9 @@ func (m *Document) managesChunksFile(chunkNum int) error {
 // The specified chunk is already in memory, so only the first chunk is unloaded.
 // Change the start position after unloading.
 func (m *Document) managesChunksMem(chunkNum int) {
+	if chunkNum == 0 {
+		return
+	}
 	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
 		return
 	}
