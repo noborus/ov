@@ -634,7 +634,6 @@ func (root *Root) Run() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
 	go func() {
 		// Undo screen when goroutine panic.
 		defer func() {
@@ -923,7 +922,7 @@ func (root *Root) debugNumOfChunk() {
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if LoadChunksLimit > 0 {
-				root.debugMessage(fmt.Sprintf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys()))
+				log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
 			}
 			continue
 		}
@@ -934,6 +933,6 @@ func (root *Root) debugNumOfChunk() {
 				}
 			}
 		}
-		root.debugMessage(fmt.Sprintf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys()))
+		log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
 	}
 }
