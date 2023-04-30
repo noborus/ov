@@ -68,51 +68,6 @@ func (m *Document) ControlFile(file *os.File) error {
 	return nil
 }
 
-func (m *Document) mangesChunksFile(chunkNum int) error {
-	for m.loadedChunks.Len() > FileLoadChunksLimit {
-		k, _, _ := m.loadedChunks.RemoveOldest()
-		if chunkNum != k {
-			log.Println("remove chunk", k)
-			m.chunks[k].lines = nil
-		}
-	}
-
-	chunk := m.chunks[chunkNum]
-	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
-		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
-	}
-	if chunkNum != 0 {
-		m.loadedChunks.Add(chunkNum, struct{}{})
-	}
-	return nil
-}
-
-func (m *Document) mangesChunksMem(chunkNum int) error {
-	m.currentChunk = chunkNum
-	maxChunk := len(m.chunks)
-	if m.currentChunk < maxChunk-1 {
-		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
-	}
-	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
-		return nil
-	}
-	k, _, _ := m.loadedChunks.GetOldest()
-	log.Printf("Limit(%d) < Loaded(%d) remove chunk %d", LoadChunksLimit, m.loadedChunks.Len(), k)
-	m.loadedChunks.Remove(k)
-	m.chunks[k].lines = nil
-	m.mu.Lock()
-	m.startNum = (k + 1) * ChunkSize
-	m.mu.Unlock()
-	return nil
-}
-
-func (m *Document) canRead() bool {
-	if LoadChunksLimit > 0 && m.loadedChunks.Len() >= LoadChunksLimit {
-		return false
-	}
-	return true
-}
-
 func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
 	if atomic.LoadInt32(&m.closed) == 1 && sc.request != requestReload {
 		return nil, fmt.Errorf("%w %s", ErrAlreadyClose, sc.request)
@@ -127,9 +82,13 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		return reader, err
 	case requestContinue:
 		if !m.seekable {
-			if !m.canRead() {
-				log.Println("stop read", m.loadedChunks.Len(), FileLoadChunksLimit)
+			if LoadChunksLimit > 0 && m.loadedChunks.Len() >= LoadChunksLimit {
+				log.Println("stop read", m.loadedChunks.Len(), LoadChunksLimit)
 				return reader, nil
+			}
+			chunkNum := len(m.chunks) - 1
+			if chunkNum != 0 {
+				m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
 			}
 		}
 		reader, err = m.continueRead(reader)
@@ -140,17 +99,21 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	case requestFollow:
 		return m.followRead(reader)
 	case requestLoad:
+		m.currentChunk = sc.chunkNum
 		if m.seekable {
-			if err := m.mangesChunksFile(sc.chunkNum); err != nil {
+			if err := m.managesChunksFile(sc.chunkNum); err != nil {
 				return reader, nil
+			}
+			if sc.chunkNum != 0 {
+				m.loadedChunks.Add(sc.chunkNum, struct{}{})
 			}
 			return m.readChunk(reader, sc.chunkNum)
 		}
-
 		if !m.BufEOF() {
-			if err := m.mangesChunksMem(sc.chunkNum); err != nil {
-				return reader, nil
+			if sc.chunkNum < len(m.chunks)-1 {
+				return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, sc.chunkNum)
 			}
+			m.managesChunksMem(sc.chunkNum)
 			m.requestContinue()
 		}
 		return reader, nil
@@ -162,11 +125,12 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 			}
 			return reader, err
 		}
-		if err := m.mangesChunksFile(sc.chunkNum); err != nil {
+		if err := m.managesChunksFile(sc.chunkNum); err != nil {
 			return reader, nil
 		}
 		return m.readChunk(reader, sc.chunkNum)
 	case requestReload:
+		m.loadedChunks.Purge()
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
 		return reader, err
@@ -177,6 +141,43 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
 	}
+}
+
+// unloadChunk unloads the chunk from memory.
+func (m *Document) unloadChunk(chunkNum int) {
+	m.loadedChunks.Remove(chunkNum)
+	m.chunks[chunkNum].lines = nil
+}
+
+// managesChunksFile manages Chunks of regular files.
+// manage chunk eviction.
+func (m *Document) managesChunksFile(chunkNum int) error {
+	for m.loadedChunks.Len() > FileLoadChunksLimit {
+		k, _, _ := m.loadedChunks.GetOldest()
+		if chunkNum != k {
+			m.unloadChunk(k)
+		}
+	}
+
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
+		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
+	}
+	return nil
+}
+
+// managesChunksMem manages Chunks other than regular files.
+// The specified chunk is already in memory, so only the first chunk is unloaded.
+// Change the start position after unloading.
+func (m *Document) managesChunksMem(chunkNum int) {
+	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
+		return
+	}
+	k, _, _ := m.loadedChunks.GetOldest()
+	m.unloadChunk(k)
+	m.mu.Lock()
+	m.startNum = (k + 1) * ChunkSize
+	m.mu.Unlock()
 }
 
 // ControlLog controls log.
@@ -212,15 +213,17 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 				// controlReader is the same for first and continue.
 				fallthrough
 			case requestContinue:
+				chunkNum := len(m.chunks) - 1
+				if chunkNum != 0 {
+					m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+				}
 				reader, err = m.continueRead(reader)
 				if !m.BufEOF() {
 					m.requestContinue()
 				}
 			case requestLoad:
 				m.currentChunk = sc.chunkNum
-				if sc.chunkNum != 0 {
-					m.loadedChunks.Add(sc.chunkNum, struct{}{})
-				}
+				m.managesChunksMem(sc.chunkNum)
 			case requestReload:
 				if reload != nil {
 					log.Println("reset")
