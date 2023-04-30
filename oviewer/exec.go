@@ -47,6 +47,8 @@ func (cmd *Command) Exec() (*Root, error) {
 	cmd.docout.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docout.FileName
 	atomic.StoreInt32(&cmd.docout.closed, 0)
 	atomic.StoreInt32(&cmd.docerr.closed, 0)
+	cmd.docout.seekable = false
+	cmd.docerr.seekable = false
 	cmd.docout.formfeedTime = true
 	cmd.docerr.formfeedTime = true
 	err = cmd.docout.ControlReader(so, cmd.Reload)

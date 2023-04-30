@@ -362,6 +362,10 @@ var (
 	ErrPreventReload = errors.New("prevent reload")
 	// ErrOverChunkLimit indicates that the chunk limit has been exceeded.
 	ErrOverChunkLimit = errors.New("over chunk limit")
+	// ErrAlreadyLoaded indicates that the chunk already loaded.
+	ErrAlreadyLoaded = errors.New("chunk already loaded")
+	// ErrEvictedMemory indicates that it has been evicted from memory.
+	ErrEvictedMemory = errors.New("evicted memory")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.

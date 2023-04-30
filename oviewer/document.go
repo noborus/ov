@@ -232,11 +232,11 @@ func STDINDocument() (*Document, error) {
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
 	if n < m.startNum || n >= m.endNum {
-		return nil, fmt.Errorf("out of range: %d", n)
+		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
 	chunkNum := n / ChunkSize
 	if len(m.chunks)-1 < chunkNum {
-		return nil, fmt.Errorf("over chunk size: %d", chunkNum)
+		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
 	chunk := m.chunks[chunkNum]
 	if m.currentChunk != chunkNum {
@@ -245,11 +245,10 @@ func (m *Document) Line(n int) ([]byte, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	cn := n % ChunkSize
-	if cn < len(chunk.lines) {
+	if cn := n % ChunkSize; cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
 	}
-	return nil, fmt.Errorf("evicted from memory")
+	return nil, ErrEvictedMemory
 }
 
 // Deprecated: GetLine returns one line from buffer.
