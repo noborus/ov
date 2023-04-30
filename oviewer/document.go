@@ -231,7 +231,7 @@ func STDINDocument() (*Document, error) {
 
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
-	if n < m.startNum || n >= m.endNum {
+	if n >= m.endNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
 	chunkNum := n / ChunkSize
