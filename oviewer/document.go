@@ -194,7 +194,7 @@ func OpenDocument(fileName string) (*Document, error) {
 	}
 
 	// named pipe.
-	if fi.Mode()&fs.ModeNamedPipe != 0 {
+	if fi.Mode()&fs.ModeNamedPipe != 0 || fi.Mode()&fs.ModeDevice != 0 {
 		m.seekable = false
 	}
 
