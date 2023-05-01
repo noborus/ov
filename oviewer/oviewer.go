@@ -933,6 +933,6 @@ func (root *Root) debugNumOfChunk() {
 				}
 			}
 		}
-		log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
 	}
 }
