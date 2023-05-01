@@ -98,7 +98,11 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		}
 		return reader, err
 	case requestFollow:
-		return m.followRead(reader)
+		reader, err = m.followRead(reader)
+		if !m.BufEOF() {
+			m.requestContinue()
+		}
+		return reader, err
 	case requestLoad:
 		m.currentChunk = sc.chunkNum
 		if m.seekable {

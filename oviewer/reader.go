@@ -69,7 +69,10 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 		reader = bufio.NewReader(m.file)
 	}
-	if err := m.readAll(reader); err != nil {
+
+	chunk := m.lastChunk()
+	start := len(chunk.lines)
+	if err := m.fillChunk(chunk, reader, start, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
