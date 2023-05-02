@@ -112,6 +112,8 @@ type Document struct {
 	preventReload bool
 	// Is it possible to seek.
 	seekable bool
+	// Is it possible to reopen.
+	reopenable bool
 	// formfeedTime adds time on formfeed.
 	formfeedTime bool
 }
@@ -145,6 +147,7 @@ func NewDocument() (*Document, error) {
 		},
 		ctlCh:         make(chan controlSpecifier),
 		seekable:      true,
+		reopenable:    true,
 		preventReload: false,
 		chunks: []*chunk{
 			NewChunk(0),
@@ -194,14 +197,19 @@ func OpenDocument(fileName string) (*Document, error) {
 	}
 
 	// named pipe.
-	if fi.Mode()&fs.ModeNamedPipe != 0 || fi.Mode()&fs.ModeDevice != 0 {
-		m.seekable = false
+	if fi.Mode()&fs.ModeNamedPipe != 0 {
+		m.reopenable = false
 	}
 
 	f, err := open(fileName)
 	if err != nil {
 		return nil, err
 	}
+	if n, err := f.Seek(1, io.SeekStart); n != 1 || err != nil {
+		m.seekable = false
+	}
+	f.Seek(0, io.SeekStart)
+
 	m.FileName = fileName
 
 	if err := m.ControlFile(f); err != nil {
@@ -218,6 +226,7 @@ func STDINDocument() (*Document, error) {
 	}
 
 	m.seekable = false
+	m.reopenable = false
 	m.Caption = "(STDIN)"
 	f, err := open("")
 	if err != nil {

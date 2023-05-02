@@ -135,7 +135,9 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		}
 		return m.readChunk(reader, sc.chunkNum)
 	case requestReload:
-		m.loadedChunks.Purge()
+		if !m.WatchMode {
+			m.loadedChunks.Purge()
+		}
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
 		return reader, err
@@ -311,4 +313,14 @@ func (m *Document) requestClose() {
 	m.ctlCh <- sc
 	<-sc.done
 	atomic.StoreInt32(&m.readCancel, 0)
+}
+
+// requestReload sends instructions to reload the file.
+func (m *Document) requestReload() {
+	sc := controlSpecifier{
+		request: requestReload,
+		done:    make(chan bool),
+	}
+	m.ctlCh <- sc
+	<-sc.done
 }

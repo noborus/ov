@@ -103,6 +103,7 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.WatchMode {
 		m.reset()
 	} else {
+		m.seekable = false
 		chunk := m.lastChunk()
 		m.appendFormFeed(chunk)
 	}
@@ -124,7 +125,7 @@ func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error
 
 // reloadFile reloads a file.
 func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
-	if !m.seekable {
+	if !m.reopenable {
 		m.ClearCache()
 		return reader, nil
 	}
@@ -137,7 +138,6 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 
 	atomic.StoreInt32(&m.closed, 0)
 	atomic.StoreInt32(&m.eof, 0)
-	log.Println("reload", m.FileName)
 	r, err := m.openFileReader(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)
@@ -370,12 +370,7 @@ func (m *Document) reload() error {
 	}
 
 	atomic.StoreInt32(&m.readCancel, 1)
-	sc := controlSpecifier{
-		request: requestReload,
-		done:    make(chan bool),
-	}
-	m.ctlCh <- sc
-	<-sc.done
+	m.requestReload()
 	atomic.StoreInt32(&m.readCancel, 0)
 	if !m.WatchMode {
 		m.topLN = 0
