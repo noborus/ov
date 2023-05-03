@@ -13,6 +13,7 @@ import (
 	"golang.org/x/term"
 )
 
+// Command is the structure of the command.
 type Command struct {
 	args    []string
 	command *exec.Cmd
@@ -22,61 +23,69 @@ type Command struct {
 	docerr  *Document
 }
 
+// NewCommand return the structure of Command.
 func NewCommand(args ...string) *Command {
 	return &Command{
 		args: args,
 	}
 }
 
+// Exec return the structure of oviewer.
 func (cmd *Command) Exec() (*Root, error) {
-	cmd.command = exec.Command(cmd.args[0], cmd.args[1:]...)
-	var err error
-	cmd.docout, cmd.docerr, err = newOutErrDocument()
+	docout, docerr, err := newOutErrDocument()
 	if err != nil {
 		return nil, err
 	}
+	cmd.docout = docout
+	cmd.docerr = docerr
 
+	cmd.command = exec.Command(cmd.args[0], cmd.args[1:]...)
 	so, se, err := commandStart(cmd.command)
 	if err != nil {
 		return nil, err
 	}
-
 	cmd.stdout = so
 	cmd.stderr = se
 
 	cmd.docout.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docout.FileName
+	cmd.docerr.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docerr.FileName
 	atomic.StoreInt32(&cmd.docout.closed, 0)
 	atomic.StoreInt32(&cmd.docerr.closed, 0)
 	cmd.docout.seekable = false
 	cmd.docerr.seekable = false
 	cmd.docout.formfeedTime = true
 	cmd.docerr.formfeedTime = true
-	err = cmd.docout.ControlReader(so, cmd.Reload)
-	if err != nil {
+
+	if err = cmd.docout.ControlReader(so, cmd.Reload); err != nil {
 		log.Printf("%s", err)
 	}
-	cmd.docerr.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docerr.FileName
-	err = cmd.docerr.ControlReader(se, cmd.stderrReload)
-	if err != nil {
+	if err = cmd.docerr.ControlReader(se, cmd.stderrReload); err != nil {
 		log.Printf("%s", err)
 	}
 	return NewOviewer(cmd.docout, cmd.docerr)
 }
 
+// Wait waits for the command to exit.
 func (cmd *Command) Wait() {
 	if cmd.command == nil || cmd.command.Process == nil {
 		return
 	}
+
 	atomic.StoreInt32(&cmd.docout.closed, 1)
 	atomic.StoreInt32(&cmd.docerr.closed, 1)
+
+	// Kill the command if it hasn't exited yet.
 	if err := cmd.command.Process.Kill(); err != nil {
 		log.Println(err)
 	}
+
+	// Wait for the command to exit.
 	if err := cmd.command.Wait(); err != nil {
 		log.Println(err)
 	}
 }
 
+// Reload restarts the command.
 func (cmd *Command) Reload() *bufio.Reader {
 	cmd.Wait()
 	if cmd.docout.WatchMode {
@@ -95,19 +104,14 @@ func (cmd *Command) Reload() *bufio.Reader {
 	cmd.stdout = so
 	cmd.stderr = se
 
-	sc := controlSpecifier{
-		request: requestReload,
-		done:    make(chan bool),
-	}
-	log.Println("stderr reload send")
-	cmd.docerr.ctlCh <- sc
-	<-sc.done
+	cmd.docerr.requestReload()
 	atomic.StoreInt32(&cmd.docerr.readCancel, 0)
 	log.Println("stderr receive done")
 
 	return bufio.NewReader(so)
 }
 
+// stderrReload is called when the command is restarted.
 func (cmd *Command) stderrReload() *bufio.Reader {
 	if !cmd.docout.WatchMode {
 		cmd.docerr.reset()
@@ -144,6 +148,7 @@ func ExecCommand(command *exec.Cmd) (*Root, error) {
 	return NewOviewer(docout, docerr)
 }
 
+// newOutErrDocument returns the structure of Document.
 func newOutErrDocument() (*Document, *Document, error) {
 	docout, err := NewDocument()
 	if err != nil {
@@ -160,6 +165,7 @@ func newOutErrDocument() (*Document, *Document, error) {
 	return docout, docerr, nil
 }
 
+// commandStart starts the command.
 func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
 		command.Stdin = os.Stdin
