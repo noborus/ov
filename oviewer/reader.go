@@ -117,10 +117,10 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 
 // addChunk fills or reserves a chunk.
 func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error {
-	if !m.seekable {
-		return m.fillChunk(chunk, reader, start, true)
+	if m.seekable {
+		return m.reserveChunk(reader, start)
 	}
-	return m.reserveChunk(reader, start)
+	return m.fillChunk(chunk, reader, start, true)
 }
 
 // reloadFile reloads a file.
@@ -234,8 +234,8 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
 	var line bytes.Buffer
 	var isPrefix bool
-	i := start
-	for i < ChunkSize {
+	num := start
+	for num < ChunkSize {
 		if atomic.LoadInt32(&m.readCancel) == 1 {
 			break
 		}
@@ -250,7 +250,7 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 			continue
 		}
 
-		i++
+		num++
 		atomic.StoreInt32(&m.changed, 1)
 		if err != nil {
 			if line.Len() != 0 {
@@ -274,33 +274,44 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 	return nil
 }
 
+const bufSize = 4096
+
 // reserveChunk reserves ChunkSize lines.
 // read and update size only.
 func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
-	var isPrefix bool
-	i := start
-	for i < ChunkSize {
-		buf, err := reader.ReadSlice('\n')
-		if errors.Is(err, bufio.ErrBufferFull) {
-			isPrefix = true
-			err = nil
-		}
-		m.size += int64(len(buf))
-		if isPrefix {
-			isPrefix = false
-			continue
-		}
-
-		i++
-		if len(buf) != 0 {
-			m.endNum++
-		}
-		m.offset = m.size
-		atomic.StoreInt32(&m.changed, 1)
+	num := start
+	for {
+		buf := make([]byte, bufSize)
+		size, err := reader.Read(buf)
 		if err != nil {
 			return err
 		}
+		if size == 0 {
+			return io.EOF
+		}
+
+		count := bytes.Count(buf, []byte("\n"))
+		// If it exceeds ChunkSize, Re-aggregate size and count.
+		if num+count > ChunkSize {
+			start := 0
+			left := ChunkSize - num
+			for i := 0; i < left; i++ {
+				p := bytes.IndexByte(buf[start:], '\n')
+				start += p + 1
+			}
+			size = start
+			count = left
+		}
+
+		num += count
+		m.endNum += count
+		m.size += int64(size)
+		m.offset = m.size
+		if num >= ChunkSize {
+			break
+		}
 	}
+	atomic.StoreInt32(&m.changed, 1)
 	return nil
 }
 
