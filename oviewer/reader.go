@@ -44,7 +44,7 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 		reader.Reset(m.file)
 	}
-	chunk := m.lastChunk()
+	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
 	if err := m.addChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -70,7 +70,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		reader = bufio.NewReader(m.file)
 	}
 
-	chunk := m.lastChunk()
+	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
 	if err := m.fillChunk(chunk, reader, start, true); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -104,7 +104,7 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		m.reset()
 	} else {
 		m.seekable = false
-		chunk := m.lastChunk()
+		chunk := m.chunkForAdd()
 		m.appendFormFeed(chunk)
 	}
 	var err error
@@ -216,7 +216,7 @@ func open(fileName string) (*os.File, error) {
 // readAll reads to the end.
 // The read lines are stored in the lines of the Document.
 func (m *Document) readAll(reader *bufio.Reader) error {
-	chunk := m.lastChunk()
+	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
 	for {
 		if err := m.fillChunk(chunk, reader, start, true); err != nil {
@@ -304,9 +304,11 @@ func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 		}
 
 		num += count
+		m.mu.Lock()
 		m.endNum += count
 		m.size += int64(size)
 		m.offset = m.size
+		m.mu.Unlock()
 		if num >= ChunkSize {
 			break
 		}
@@ -356,7 +358,8 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 	}
 }
 
-func (m *Document) lastChunk() *chunk {
+// chunkForAdd is a helper function to get the chunk to add.
+func (m *Document) chunkForAdd() *chunk {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.endNum < len(m.chunks)*ChunkSize {
@@ -365,6 +368,13 @@ func (m *Document) lastChunk() *chunk {
 	chunk := NewChunk(m.size)
 	m.chunks = append(m.chunks, chunk)
 	return chunk
+}
+
+// lastChunkNum returns the last chunk number.
+func (m *Document) lastChunkNum() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.chunks) - 1
 }
 
 // reload will read again.

@@ -267,7 +267,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 }
 
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if len(m.chunks)-1 < chunkNum {
+	if m.lastChunkNum() < chunkNum {
 		return 0, ErrOutOfChunk
 	}
 	chunk := m.chunks[chunkNum]
@@ -583,30 +583,36 @@ func (root *Root) BackSearch(str string) {
 
 // searchChunk searches in a Chunk without loading it into memory.
 func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
+	// Seek to the start of the chunk.
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("seek:%w", err)
 	}
+
+	// Read the chunk line by line.
 	reader := bufio.NewReader(m.file)
 	var line bytes.Buffer
 	var isPrefix bool
-	i := 0
-	for i < ChunkSize {
+	num := 0
+	for num < ChunkSize {
+		// Read a line.
 		buf, err := reader.ReadSlice('\n')
 		if errors.Is(err, bufio.ErrBufferFull) {
 			isPrefix = true
 			err = nil
 		}
 		line.Write(buf)
-		if isPrefix {
-			isPrefix = false
-			continue
+
+		// If the line is complete, check if it matches.
+		if !isPrefix {
+			if searcher.Match(line.Bytes()) {
+				return num, nil
+			}
+			num++
+			line.Reset()
 		}
-		if searcher.Match(line.Bytes()) {
-			return i, nil
-		}
-		i++
-		line.Reset()
+
+		// If we hit the end of the file, stop.
 		if err != nil {
 			break
 		}
