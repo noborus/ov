@@ -240,20 +240,21 @@ func STDINDocument() (*Document, error) {
 
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
-	if n >= m.endNum {
+	if n >= m.BufEndNum() {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
+
 	chunkNum := n / ChunkSize
-	if len(m.chunks)-1 < chunkNum {
+	if m.lastChunkNum() < chunkNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
-	chunk := m.chunks[chunkNum]
 	if m.currentChunk != chunkNum {
 		m.requestLoad(chunkNum)
 	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
+	chunk := m.chunks[chunkNum]
 	if cn := n % ChunkSize; cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
 	}
@@ -364,13 +365,12 @@ func (m *Document) firstLine() int {
 
 // GetChunkLine returns one line from buffer.
 func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if len(m.chunks) <= chunkNum {
 		return nil, ErrOutOfChunk
 	}
 	chunk := m.chunks[chunkNum]
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
 
 	if cn >= len(chunk.lines) {
 		return nil, ErrOutOfRange

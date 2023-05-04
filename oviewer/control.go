@@ -87,7 +87,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 				log.Println("stop read", m.loadedChunks.Len(), LoadChunksLimit)
 				return reader, nil
 			}
-			chunkNum := len(m.chunks) - 1
+			chunkNum := m.lastChunkNum()
 			if chunkNum != 0 {
 				m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
 			}
@@ -115,7 +115,7 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 			return m.readChunk(reader, sc.chunkNum)
 		}
 		if !m.BufEOF() {
-			if sc.chunkNum < len(m.chunks)-1 {
+			if sc.chunkNum < m.lastChunkNum() {
 				return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, sc.chunkNum)
 			}
 			m.managesChunksMem(sc.chunkNum)
@@ -226,7 +226,7 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 				// controlReader is the same for first and continue.
 				fallthrough
 			case requestContinue:
-				chunkNum := len(m.chunks) - 1
+				chunkNum := m.lastChunkNum()
 				if chunkNum != 0 {
 					m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
 				}
