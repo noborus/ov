@@ -279,42 +279,52 @@ const bufSize = 4096
 // reserveChunk reserves ChunkSize lines.
 // read and update size only.
 func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
+	count, size, err := m.countLines(reader, start)
+	m.mu.Lock()
+	m.endNum += count
+	m.size += int64(size)
+	m.offset = m.size
+	m.mu.Unlock()
+	atomic.StoreInt32(&m.changed, 1)
+	return err
+
+}
+
+// countLines counts the number of lines and the size of the buffer.
+func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error) {
 	num := start
+	count := 0
+	size := 0
+	buf := make([]byte, bufSize)
 	for {
-		buf := make([]byte, bufSize)
-		size, err := reader.Read(buf)
+		bufLen, err := reader.Read(buf)
 		if err != nil {
-			return err
+			return count, size, err
 		}
-		if size == 0 {
-			return io.EOF
+		if bufLen == 0 {
+			return count, size, io.EOF
 		}
 
-		count := bytes.Count(buf, []byte("\n"))
+		lSize := bufLen
+		lCount := bytes.Count(buf[:bufLen], []byte("\n"))
 		// If it exceeds ChunkSize, Re-aggregate size and count.
-		if num+count > ChunkSize {
-			start := 0
-			left := ChunkSize - num
-			for i := 0; i < left; i++ {
-				p := bytes.IndexByte(buf[start:], '\n')
-				start += p + 1
+		if num+lCount > ChunkSize {
+			lSize = 0
+			lCount = ChunkSize - num
+			for i := 0; i < lCount; i++ {
+				p := bytes.IndexByte(buf[lSize:bufLen], '\n')
+				lSize += p + 1
 			}
-			size = start
-			count = left
 		}
 
-		num += count
-		m.mu.Lock()
-		m.endNum += count
-		m.size += int64(size)
-		m.offset = m.size
-		m.mu.Unlock()
+		num += lCount
+		count += lCount
+		size += lSize
 		if num >= ChunkSize {
 			break
 		}
 	}
-	atomic.StoreInt32(&m.changed, 1)
-	return nil
+	return count, size, nil
 }
 
 // appendOnly appends to the line of the chunk.
