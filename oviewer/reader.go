@@ -40,15 +40,17 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
 			atomic.StoreInt32(&m.eof, 1)
-			return nil, err
+			log.Printf("seek: %s", err)
+			m.seekable = false
+		} else {
+			reader.Reset(m.file)
 		}
-		reader.Reset(m.file)
 	}
 	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
 	if err := m.addChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
-			return nil, err
+			return nil, fmt.Errorf("addChunk: %w", err)
 		}
 		reader = m.afterEOF(reader)
 	}
@@ -287,7 +289,6 @@ func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 	m.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 	return err
-
 }
 
 // countLines counts the number of lines and the size of the buffer.
