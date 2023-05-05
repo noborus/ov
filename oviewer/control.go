@@ -217,6 +217,7 @@ func (m *Document) ControlLog() error {
 // ControlReader is the controller for io.Reader.
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
+	m.seekable = false
 	reader := bufio.NewReader(r)
 	go func() {
 		var err error
@@ -247,7 +248,7 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 				panic(fmt.Sprintf("unexpected %s", sc.request))
 			}
 			if err != nil {
-				log.Println(err)
+				log.Printf("%v %s", sc.request, err)
 			}
 			if sc.done != nil {
 				close(sc.done)

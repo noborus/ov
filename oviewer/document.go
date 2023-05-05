@@ -159,6 +159,7 @@ func NewDocument() (*Document, error) {
 	return m, nil
 }
 
+// NewChunk returns chunk.
 func NewChunk(start int64) *chunk {
 	return &chunk{
 		lines: make([][]byte, 0, ChunkSize),
@@ -195,8 +196,7 @@ func OpenDocument(fileName string) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// named pipe.
+	// Check if the file is a named pipe.
 	if fi.Mode()&fs.ModeNamedPipe != 0 {
 		m.reopenable = false
 	}
@@ -205,13 +205,15 @@ func OpenDocument(fileName string) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Check if the file is seekable.
 	if n, err := f.Seek(1, io.SeekStart); n != 1 || err != nil {
 		m.seekable = false
+	} else {
+		f.Seek(0, io.SeekStart)
 	}
-	f.Seek(0, io.SeekStart)
 
 	m.FileName = fileName
-
+	// Read the control file.
 	if err := m.ControlFile(f); err != nil {
 		return nil, err
 	}
