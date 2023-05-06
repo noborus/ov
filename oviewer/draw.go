@@ -507,21 +507,25 @@ func (root *Root) inputLeftStatus() (contents, int) {
 	return leftContents, len(p) + input.cursorX
 }
 
+// inputOpts returns a string describing the current search mode.
 func (root *Root) inputOpts() string {
-	opt := ""
-	switch root.input.Event.Mode() {
-	case Search, Backsearch:
+	var opts string
+
+	// The current search mode.
+	mode := root.input.Event.Mode()
+	if mode == Search || mode == Backsearch {
 		if root.Config.RegexpSearch {
-			opt += "(R)"
+			opts += "(R)"
 		}
 		if root.Config.Incsearch {
-			opt += "(I)"
+			opts += "(I)"
 		}
 		if root.Config.CaseSensitive {
-			opt += "(Aa)"
+			opts += "(Aa)"
 		}
 	}
-	return opt
+
+	return opts
 }
 
 func (root *Root) rightStatus() contents {

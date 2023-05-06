@@ -174,11 +174,7 @@ func (m *Document) NewCache() error {
 		return fmt.Errorf("new cache %w", err)
 	}
 	m.cache = cache
-	loadedChunks, err := lru.New[int, struct{}](10000000)
-	if err != nil {
-		return fmt.Errorf("new loadedChunks %w", err)
-	}
-	m.loadedChunks = loadedChunks
+
 	return nil
 }
 
