@@ -14,7 +14,7 @@ ov is a terminal pager.
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
   * 1.1. [Not supported](#not-supported)
-  * 1.2. [TODO](#todo)
+  * 1.2. [TODO(Implemented in v0.20.0)](#todo(implemented-in-v0.20.0))
 * 2. [Install](#install)
   * 2.1. [deb package](#deb-package)
   * 2.2. [rpm package](#rpm-package)
@@ -49,11 +49,14 @@ ov is a terminal pager.
   * 3.19. [Jump target](#jump-target)
   * 3.20. [View mode](#view-mode)
   * 3.21. [Output on exit](#output-on-exit)
-* 4. [Command option](#command-option)
-* 5. [Key bindings](#key-bindings)
-* 6. [Customize](#customize)
-  * 6.1. [Style customization](#style-customization)
-  * 6.2. [Key binding customization](#key-binding-customization)
+* 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
+  * 4.1. [Regular file (seekable)](#regular-file-(seekable))
+  * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
+* 5. [Command option](#command-option)
+* 6. [Key bindings](#key-bindings)
+* 7. [Customize](#customize)
+  * 7.1. [Style customization](#style-customization)
+  * 7.2. [Key binding customization](#key-binding-customization)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -87,7 +90,7 @@ ov is a terminal pager.
 * Does not support syntax highlighting for file types (source code, markdown, etc.)
 * Does not support Filter function (`&pattern` equivalent of `less`)
 
-###  1.2. <a name='todo'></a>TODO
+###  1.2. <a name='todo(implemented-in-v0.20.0)'></a>TODO(Implemented in v0.20.0)
 
 * Allow opening files larger than memory
 * Enable follow by file name (equivalent to `tail -F`)
@@ -528,7 +531,52 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-##  4. <a name='command-option'></a>Command option
+##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
+
+Since **v0.20.0** it no longer loads everything into memory.
+The first chunk from the beginning to the 10,000th line is loaded into memory 
+and never freed.
+Therefore, files with less than 10,000 lines do not change behavior.
+
+###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
+
+Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
+The default limit for loading chunks is 100. To change this,
+use the `--file-load-limit` option or specify `FileLoadChunkLimit` in config. The minimum you can specify is 2.
+
+```console
+ov --file-load-limit 3 /var/log/syslog
+```
+
+```yaml
+FileLoadChunkLimit: 3
+```
+
+Also, go may use a lot of memory until the memory is freed by GC.
+Also consider setting the environment variable `GOMEMLIMIT`.
+
+```console
+export GOMEMLIMIT=100MiB
+```
+
+###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
+
+Non-seekable files and pipes cannot be read again, so they must exist in memory.
+
+If you specify the upper limit of chunks with `--load-limit` or `LoadChunkLimit`,
+it will read up to the upper limit first, but after that,
+when the displayed position advances, the old chunks will be released.
+The load-limit defaults to `-1`, which is unlimited. Minimum is `2`.
+
+```console
+cat /var/log/syslog | ov --load-limit 3
+```
+
+```yaml
+LoadChunkLimit: 3
+```
+
+##  5. <a name='command-option'></a>Command option
 
 ```console
 $ ov --help
@@ -544,6 +592,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --column-rainbow             column rainbow
+      --column-width               column width mode                                           v0.20.0
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
@@ -552,8 +601,10 @@ Flags:
   -X, --exit-write                 output the current screen when exiting
   -a, --exit-write-after int       NUM after the current lines when exiting
   -b, --exit-write-before int      NUM before the current lines when exiting
+      --file-load-limit int        Limit chunks loading files into memory (default 100)        v0.20.0
   -A, --follow-all                 follow all
   -f, --follow-mode                follow mode
+      --follow-name                follow name mode
       --follow-section             follow section
   -H, --header int                 number of header rows to fix
   -h, --help                       help for ov
@@ -561,6 +612,7 @@ Flags:
       --incsearch                  incremental search (default true)
   -j, --jump-target string         jump-target
   -n, --line-number                line number mode
+      --load-limit int             Limit loading chunks (default -1)                           v0.20.0
   -M, --multi-color strings        multi-color
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
@@ -577,7 +629,7 @@ Flags:
 
 It can also be changed after startup.
 
-##  5. <a name='key-bindings'></a>Key bindings
+##  6. <a name='key-bindings'></a>Key bindings
 
 ```console
  [Escape], [q]                * quit
@@ -635,6 +687,7 @@ It can also be changed after startup.
 
  [w], [W]                     * wrap/nowrap toggle
  [c]                          * column mode toggle
+ [alt+o]                      * column width toggle                               v0.20.0
  [ctrl+r]                     * column rainbow toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
@@ -677,9 +730,9 @@ It can also be changed after startup.
  [ctrl+v]                     * paste from clipboard
 ```
 
-##  6. <a name='customize'></a>Customize
+##  7. <a name='customize'></a>Customize
 
-###  6.1. <a name='style-customization'></a>Style customization
+###  7.1. <a name='style-customization'></a>Style customization
 
 You can customize the following items.
 
@@ -719,7 +772,7 @@ StyleAlternate:
 | Italic | true/false | false |
 | Underline | true/false | false |
 
-###  6.2. <a name='key-binding-customization'></a>Key binding customization
+###  7.2. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
 
