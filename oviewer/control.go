@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"sync/atomic"
+
+	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 // controlSpecifier represents a control request.
@@ -18,27 +20,28 @@ type controlSpecifier struct {
 	done     chan bool
 }
 
+// request represents a control request.
 type request string
 
+// control requests.
 const (
-	requestStart    = "start"
-	requestContinue = "read"
-	requestFollow   = "follow"
-	requestClose    = "close"
-	requestReload   = "reload"
-	requestLoad     = "load"
-	requestSearch   = "search"
+	requestStart    request = "start"
+	requestContinue request = "continue"
+	requestFollow   request = "follow"
+	requestClose    request = "close"
+	requestReload   request = "reload"
+	requestLoad     request = "load"
+	requestSearch   request = "search"
 )
 
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	if m.seekable {
-		m.loadedChunks.Resize(FileLoadChunksLimit + 1)
-	} else {
-		m.loadedChunks.Resize(LoadChunksLimit + 1)
+	cap, err := m.newLoadChunks()
+	if err != nil {
+		return err
 	}
-
+	m.loadedChunks = cap
 	go func() {
 		atomic.StoreInt32(&m.closed, 0)
 		r, err := m.fileReader(file)
@@ -218,6 +221,11 @@ func (m *Document) ControlLog() error {
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
 	m.seekable = false
+	cap, err := m.newLoadChunks()
+	if err != nil {
+		return err
+	}
+	m.loadedChunks = cap
 	reader := bufio.NewReader(r)
 	go func() {
 		var err error
@@ -259,6 +267,18 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 
 	m.requestStart()
 	return nil
+}
+
+// newLoadChunks creates a new LRU cache.
+// Manage chunks loaded in LRU cache.
+func (m *Document) newLoadChunks() (*lru.Cache[int, struct{}], error) {
+	capacity := FileLoadChunksLimit + 1
+	if !m.seekable {
+		if LoadChunksLimit > 0 {
+			capacity = LoadChunksLimit + 1
+		}
+	}
+	return lru.New[int, struct{}](capacity)
 }
 
 // requestStart send instructions to start reading.
