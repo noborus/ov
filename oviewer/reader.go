@@ -31,6 +31,10 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 		reader = m.afterEOF(reader)
 	}
+
+	if !m.BufEOF() {
+		m.requestContinue()
+	}
 	return reader, nil
 }
 
@@ -45,6 +49,10 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		} else {
 			reader.Reset(m.file)
 		}
+	} else {
+		if chunkNum := m.lastChunkNum(); chunkNum != 0 {
+			m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+		}
 	}
 	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
@@ -53,6 +61,10 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 			return nil, fmt.Errorf("addChunk: %w", err)
 		}
 		reader = m.afterEOF(reader)
+	}
+
+	if !m.BufEOF() {
+		m.requestContinue()
 	}
 	return reader, nil
 }
@@ -67,7 +79,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
-			return nil, fmt.Errorf("seek:%w", err)
+			return nil, fmt.Errorf("seek: %w", err)
 		}
 		reader = bufio.NewReader(m.file)
 	}
@@ -80,6 +92,47 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 		reader = m.afterEOF(reader)
 	}
+
+	if !m.BufEOF() {
+		m.requestContinue()
+	}
+	return reader, nil
+}
+
+// searchRead searches chunks and loads chunks if found.
+func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searcher) (*bufio.Reader, error) {
+	if _, err := m.searchChunk(chunkNum, searcher); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return reader, nil
+		}
+		return reader, err
+	}
+	if err := m.managesChunksFile(chunkNum); err != nil {
+		return reader, nil
+	}
+	return m.readChunk(reader, chunkNum)
+}
+
+// loadRead loads the read contents into chunks.
+func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+	m.currentChunk = chunkNum
+	if m.seekable {
+		if err := m.managesChunksFile(chunkNum); err != nil {
+			return reader, nil
+		}
+		if chunkNum != 0 {
+			m.loadedChunks.Add(chunkNum, struct{}{})
+		}
+		return m.readChunk(reader, chunkNum)
+	}
+
+	if !m.BufEOF() {
+		if chunkNum < m.lastChunkNum() {
+			return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
+		}
+		m.managesChunksMem(chunkNum)
+		m.requestContinue()
+	}
 	return reader, nil
 }
 
@@ -87,7 +140,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	chunk := m.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return nil, fmt.Errorf("seek:%w", err)
+		return nil, fmt.Errorf("seek: %w", err)
 	}
 	reader.Reset(m.file)
 	start := 0
@@ -183,7 +236,7 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
 			if _, err := f.Seek(0, io.SeekStart); err != nil {
-				return nil, fmt.Errorf("seek:%w", err)
+				return nil, fmt.Errorf("seek: %w", err)
 			}
 			r = f
 		}
