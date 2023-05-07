@@ -266,6 +266,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	root.setMessagef("search:%v", root.searchWord)
 }
 
+// Search searches for the search term and moves to the nearest matching line.
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	if m.lastChunkNum() < chunkNum {
 		return 0, ErrOutOfChunk
@@ -293,6 +294,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	return 0, ErrNotFound
 }
 
+// BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	chunk := m.chunks[chunkNum]
 	if len(chunk.lines) == 0 {
@@ -317,6 +319,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 	return 0, ErrNotFound
 }
 
+// storageSearch searches for line not in memory(storage).
 func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
 	chunk := m.chunks[chunkNum]
 	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {

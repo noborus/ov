@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -37,11 +36,8 @@ const (
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	cap, err := m.newLoadChunks()
-	if err != nil {
-		return err
-	}
-	m.loadedChunks = cap
+	m.setNewLoadChunks()
+
 	go func() {
 		atomic.StoreInt32(&m.closed, 0)
 		r, err := m.fileReader(file)
@@ -52,7 +48,7 @@ func (m *Document) ControlFile(file *os.File) error {
 		atomic.StoreInt32(&m.eof, 0)
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
-			reader, err = m.control(sc, reader)
+			reader, err = m.controlFile(sc, reader)
 			if err != nil {
 				log.Println(sc.request, err)
 			}
@@ -72,71 +68,75 @@ func (m *Document) ControlFile(file *os.File) error {
 	return nil
 }
 
-func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
+// ControlReader is the controller for io.Reader.
+// Assuming call from Exec. reload executes the argument function.
+func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
+	m.setNewLoadChunks()
+	m.seekable = false
+	reader := bufio.NewReader(r)
+
+	go func() {
+		var err error
+		for sc := range m.ctlCh {
+			reader, err = m.controlReader(sc, reader, reload)
+			if err != nil {
+				log.Println(sc.request, err)
+			}
+			if sc.done != nil {
+				if err != nil {
+					sc.done <- false
+				} else {
+					sc.done <- true
+				}
+				close(sc.done)
+			}
+		}
+		log.Println("close ctlCh")
+	}()
+
+	m.requestStart()
+	return nil
+}
+
+// ControlLog controls log.
+// ControlLog is only supported reload.
+func (m *Document) ControlLog() error {
+	go func() {
+		for sc := range m.ctlCh {
+			m.controlLog(sc)
+			if sc.done != nil {
+				sc.done <- true
+				close(sc.done)
+			}
+		}
+		log.Println("close m.ctlCh")
+	}()
+	return nil
+}
+
+// controlFile controls file read and loads in chunks.
+// controlFile receives and executes request.
+func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
 	if atomic.LoadInt32(&m.closed) == 1 && sc.request != requestReload {
 		return nil, fmt.Errorf("%w %s", ErrAlreadyClose, sc.request)
 	}
 	var err error
 	switch sc.request {
 	case requestStart:
-		reader, err = m.firstRead(reader)
-		if !m.BufEOF() {
-			m.requestContinue()
-		}
-		return reader, err
+		return m.firstRead(reader)
 	case requestContinue:
-		if !m.seekable {
-			if LoadChunksLimit > 0 && m.loadedChunks.Len() >= LoadChunksLimit {
-				log.Println("stop read", m.loadedChunks.Len(), LoadChunksLimit)
-				return reader, nil
-			}
-			chunkNum := m.lastChunkNum()
-			if chunkNum != 0 {
-				m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+		if !m.seekable && LoadChunksLimit > 0 {
+			if m.loadedChunks.Len() >= LoadChunksLimit {
+				return reader, ErrOverChunkLimit
 			}
 		}
-		reader, err = m.continueRead(reader)
-		if !m.BufEOF() {
-			m.requestContinue()
-		}
-		return reader, err
+		return m.continueRead(reader)
 	case requestFollow:
-		reader, err = m.followRead(reader)
-		if !m.BufEOF() {
-			m.requestContinue()
-		}
-		return reader, err
+		return m.followRead(reader)
 	case requestLoad:
-		m.currentChunk = sc.chunkNum
-		if m.seekable {
-			if err := m.managesChunksFile(sc.chunkNum); err != nil {
-				return reader, nil
-			}
-			if sc.chunkNum != 0 {
-				m.loadedChunks.Add(sc.chunkNum, struct{}{})
-			}
-			return m.readChunk(reader, sc.chunkNum)
-		}
-		if !m.BufEOF() {
-			if sc.chunkNum < m.lastChunkNum() {
-				return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, sc.chunkNum)
-			}
-			m.managesChunksMem(sc.chunkNum)
-			m.requestContinue()
-		}
-		return reader, nil
+		return m.loadRead(reader, sc.chunkNum)
 	case requestSearch:
-		_, err = m.searchChunk(sc.chunkNum, sc.searcher)
-		if err != nil {
-			if errors.Is(err, ErrNotFound) {
-				return reader, nil
-			}
-			return reader, err
-		}
-		if err := m.managesChunksFile(sc.chunkNum); err != nil {
-			return reader, nil
-		}
-		return m.readChunk(reader, sc.chunkNum)
+		return m.searchRead(reader, sc.chunkNum, sc.searcher)
 	case requestReload:
 		if !m.WatchMode {
 			m.loadedChunks.Purge()
@@ -148,6 +148,42 @@ func (m *Document) control(sc controlSpecifier, reader *bufio.Reader) (*bufio.Re
 		err = m.close()
 		log.Println(err)
 		return reader, err
+	default:
+		panic(fmt.Sprintf("unexpected %s", sc.request))
+	}
+}
+
+// controlReader controls io.Reader.
+// controlReader receives and executes request.
+func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, reload func() *bufio.Reader) (*bufio.Reader, error) {
+	switch sc.request {
+	case requestStart:
+		// controlReader is the same for first and continue.
+		return m.continueRead(reader)
+	case requestContinue:
+		return m.continueRead(reader)
+	case requestLoad:
+		m.currentChunk = sc.chunkNum
+		m.managesChunksMem(sc.chunkNum)
+	case requestReload:
+		if reload != nil {
+			log.Println("reload")
+			reader = reload()
+			m.requestStart()
+		}
+	default:
+		panic(fmt.Sprintf("unexpected %s", sc.request))
+	}
+	return reader, nil
+}
+
+// controlLog controls log.
+// controlLog receives and executes request.
+func (m *Document) controlLog(sc controlSpecifier) {
+	switch sc.request {
+	case requestLoad:
+	case requestReload:
+		m.reset()
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
 	}
@@ -196,89 +232,20 @@ func (m *Document) managesChunksMem(chunkNum int) {
 	m.mu.Unlock()
 }
 
-// ControlLog controls log.
-// ControlLog is only supported reload.
-func (m *Document) ControlLog() error {
-	go func() {
-		for sc := range m.ctlCh {
-			switch sc.request {
-			case requestLoad:
-			case requestReload:
-				m.reset()
-			default:
-				panic(fmt.Sprintf("unexpected %s", sc.request))
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close m.ctlCh")
-	}()
-	return nil
-}
-
-// ControlReader is the controller for io.Reader.
-// Assuming call from Exec. reload executes the argument function.
-func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
-	m.seekable = false
-	cap, err := m.newLoadChunks()
-	if err != nil {
-		return err
-	}
-	m.loadedChunks = cap
-	reader := bufio.NewReader(r)
-	go func() {
-		var err error
-		for sc := range m.ctlCh {
-			switch sc.request {
-			case requestStart:
-				// controlReader is the same for first and continue.
-				fallthrough
-			case requestContinue:
-				chunkNum := m.lastChunkNum()
-				if chunkNum != 0 {
-					m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
-				}
-				reader, err = m.continueRead(reader)
-				if !m.BufEOF() {
-					m.requestContinue()
-				}
-			case requestLoad:
-				m.currentChunk = sc.chunkNum
-				m.managesChunksMem(sc.chunkNum)
-			case requestReload:
-				if reload != nil {
-					log.Println("reset")
-					reader = reload()
-					m.requestStart()
-				}
-			default:
-				panic(fmt.Sprintf("unexpected %s", sc.request))
-			}
-			if err != nil {
-				log.Printf("%v %s", sc.request, err)
-			}
-			if sc.done != nil {
-				close(sc.done)
-			}
-		}
-		log.Println("close ctlCh")
-	}()
-
-	m.requestStart()
-	return nil
-}
-
-// newLoadChunks creates a new LRU cache.
+// setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
-func (m *Document) newLoadChunks() (*lru.Cache[int, struct{}], error) {
+func (m *Document) setNewLoadChunks() {
 	capacity := FileLoadChunksLimit + 1
 	if !m.seekable {
 		if LoadChunksLimit > 0 {
 			capacity = LoadChunksLimit + 1
 		}
 	}
-	return lru.New[int, struct{}](capacity)
+	chunks, err := lru.New[int, struct{}](capacity)
+	if err != nil {
+		log.Printf("lru new %s", err)
+	}
+	m.loadedChunks = chunks
 }
 
 // requestStart send instructions to start reading.
