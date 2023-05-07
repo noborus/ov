@@ -21,7 +21,7 @@ const (
 	Header                     // Header is the number of headers input mode.
 	Delimiter                  // Delimiter is a delimiter input mode.
 	TabWidth                   // TabWidth is the tab number input mode.
-	Watch                      // WatchInterval is the watch interval input mode.
+	Watch                      // Watch is the watch interval input mode.
 	SkipLines                  // SkipLines is the number of lines to skip.
 	WriteBA                    // WriteBA is the number of ranges to write at quit.
 	SectionDelimiter           // SectionDelimiter is a section delimiter input mode.

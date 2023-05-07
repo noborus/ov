@@ -112,7 +112,7 @@ type SCR struct {
 	startX int
 }
 
-// Line is Number of logical lines and number of wrapping lines on the screen.
+// LineNumber is Number of logical lines and number of wrapping lines on the screen.
 type LineNumber struct {
 	number int
 	wrap   int
@@ -317,6 +317,7 @@ const (
 	LogDoc
 )
 
+// MouseFlags represents which events of the mouse should be captured.
 // Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
 // Does not track mouse movements except when dragging.
 const MouseFlags = tcell.MouseDragEvents
