@@ -202,7 +202,8 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 // open opens a file.
 func open(fileName string) (*os.File, error) {
 	if fileName == "" {
-		if term.IsTerminal(0) {
+		fd := os.Stdin.Fd()
+		if term.IsTerminal(int(fd)) {
 			return nil, ErrMissingFile
 		}
 		return os.Stdin, nil
