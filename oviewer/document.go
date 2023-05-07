@@ -205,7 +205,7 @@ func OpenDocument(fileName string) (*Document, error) {
 	if n, err := f.Seek(1, io.SeekStart); n != 1 || err != nil {
 		m.seekable = false
 	} else {
-		f.Seek(0, io.SeekStart)
+		_, _ = f.Seek(0, io.SeekStart)
 	}
 
 	m.FileName = fileName
@@ -259,7 +259,8 @@ func (m *Document) Line(n int) ([]byte, error) {
 	return nil, ErrEvictedMemory
 }
 
-// Deprecated: GetLine returns one line from buffer.
+// GetLine returns one line from buffer.
+// Deprecated: Use LineString instead.
 func (m *Document) GetLine(n int) string {
 	s, err := m.Line(n)
 	if err != nil {
