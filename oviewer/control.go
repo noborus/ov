@@ -7,8 +7,6 @@ import (
 	"log"
 	"os"
 	"sync/atomic"
-
-	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 // controlSpecifier represents a control request.
@@ -50,7 +48,7 @@ func (m *Document) ControlFile(file *os.File) error {
 		for sc := range m.ctlCh {
 			reader, err = m.controlFile(sc, reader)
 			if err != nil {
-				log.Println(sc.request, err)
+				log.Printf("ControlFile %s: %s", sc.request, err)
 			}
 			if sc.done != nil {
 				if err != nil {
@@ -164,7 +162,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 		return m.continueRead(reader)
 	case requestLoad:
 		m.currentChunk = sc.chunkNum
-		m.managesChunksMem(sc.chunkNum)
+		m.evictChunksMem(sc.chunkNum)
 	case requestReload:
 		if reload != nil {
 			log.Println("reload")
@@ -187,65 +185,6 @@ func (m *Document) controlLog(sc controlSpecifier) {
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
 	}
-}
-
-// unloadChunk unloads the chunk from memory.
-func (m *Document) unloadChunk(chunkNum int) {
-	m.loadedChunks.Remove(chunkNum)
-	m.chunks[chunkNum].lines = nil
-}
-
-// managesChunksFile manages Chunks of regular files.
-// manage chunk eviction.
-func (m *Document) managesChunksFile(chunkNum int) error {
-	if chunkNum == 0 {
-		return nil
-	}
-	for m.loadedChunks.Len() > FileLoadChunksLimit {
-		k, _, _ := m.loadedChunks.GetOldest()
-		if chunkNum != k {
-			m.unloadChunk(k)
-		}
-	}
-
-	chunk := m.chunks[chunkNum]
-	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
-		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
-	}
-	return nil
-}
-
-// managesChunksMem manages Chunks other than regular files.
-// The specified chunk is already in memory, so only the first chunk is unloaded.
-// Change the start position after unloading.
-func (m *Document) managesChunksMem(chunkNum int) {
-	if chunkNum == 0 {
-		return
-	}
-	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
-		return
-	}
-	k, _, _ := m.loadedChunks.GetOldest()
-	m.unloadChunk(k)
-	m.mu.Lock()
-	m.startNum = (k + 1) * ChunkSize
-	m.mu.Unlock()
-}
-
-// setNewLoadChunks creates a new LRU cache.
-// Manage chunks loaded in LRU cache.
-func (m *Document) setNewLoadChunks() {
-	capacity := FileLoadChunksLimit + 1
-	if !m.seekable {
-		if LoadChunksLimit > 0 {
-			capacity = LoadChunksLimit + 1
-		}
-	}
-	chunks, err := lru.New[int, struct{}](capacity)
-	if err != nil {
-		log.Printf("lru new %s", err)
-	}
-	m.loadedChunks = chunks
 }
 
 // requestStart send instructions to start reading.

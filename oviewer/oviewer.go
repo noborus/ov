@@ -510,7 +510,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+								root.debugMessage(fmt.Sprintf("notify send fail %s", requestFollow))
 							}
 						case fsnotify.Remove, fsnotify.Create:
 							if !doc.FollowName {
@@ -520,7 +520,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 							case doc.ctlCh <- controlSpecifier{request: requestReload}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+								root.debugMessage(fmt.Sprintf("notify send fail %s", requestReload))
 							}
 
 						}
@@ -923,17 +923,17 @@ func (root *Root) debugNumOfChunk() {
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if LoadChunksLimit > 0 {
-				log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
 			}
 			continue
 		}
 		for n, chunk := range doc.chunks {
 			if n != 0 && len(chunk.lines) != 0 {
 				if !doc.loadedChunks.Contains(n) {
-					log.Printf("chunk %d is not under control", n)
+					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
 				}
 			}
 		}
-		log.Printf("%s(seekable): The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
 	}
 }
