@@ -49,10 +49,6 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		} else {
 			reader.Reset(m.file)
 		}
-	} else {
-		if chunkNum := m.lastChunkNum(); chunkNum != 0 {
-			m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
-		}
 	}
 	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
@@ -107,7 +103,7 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 		}
 		return reader, err
 	}
-	if err := m.managesChunksFile(chunkNum); err != nil {
+	if err := m.evictChunksFile(chunkNum); err != nil {
 		return reader, nil
 	}
 	return m.readChunk(reader, chunkNum)
@@ -117,22 +113,27 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	m.currentChunk = chunkNum
 	if m.seekable {
-		if err := m.managesChunksFile(chunkNum); err != nil {
-			return reader, nil
-		}
-		if chunkNum != 0 {
-			m.loadedChunks.Add(chunkNum, struct{}{})
-		}
-		return m.readChunk(reader, chunkNum)
+		return m.loadReadFile(reader, chunkNum)
+	}
+	return m.loadReadMem(reader, chunkNum)
+}
+
+func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+	_ = m.evictChunksFile(chunkNum)
+	m.addChunksFile(chunkNum)
+	return m.readChunk(reader, chunkNum)
+}
+
+func (m *Document) loadReadMem(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+	if m.BufEOF() {
+		return reader, nil
 	}
 
-	if !m.BufEOF() {
-		if chunkNum < m.lastChunkNum() {
-			return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
-		}
-		m.managesChunksMem(chunkNum)
-		m.requestContinue()
+	if chunkNum < m.lastChunkNum() {
+		return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 	}
+	m.evictChunksMem(chunkNum)
+	m.requestContinue()
 	return reader, nil
 }
 
@@ -421,25 +422,6 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		}
 		m.append(chunk, []byte(feed))
 	}
-}
-
-// chunkForAdd is a helper function to get the chunk to add.
-func (m *Document) chunkForAdd() *chunk {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.endNum < len(m.chunks)*ChunkSize {
-		return m.chunks[len(m.chunks)-1]
-	}
-	chunk := NewChunk(m.size)
-	m.chunks = append(m.chunks, chunk)
-	return chunk
-}
-
-// lastChunkNum returns the last chunk number.
-func (m *Document) lastChunkNum() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return len(m.chunks) - 1
 }
 
 // reload will read again.
