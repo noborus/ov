@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -374,7 +375,7 @@ func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	if cn >= len(chunk.lines) {
 		return nil, ErrOutOfRange
 	}
-	return chunk.lines[cn], nil
+	return bytes.TrimSuffix(chunk.lines[cn], []byte("\n")), nil
 }
 
 // chunkLine returns chunkNum and chunk line number from line number.

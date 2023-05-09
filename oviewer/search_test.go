@@ -661,6 +661,16 @@ func TestDocument_searchChunk(t *testing.T) {
 			want:    3,
 			wantErr: false,
 		},
+		{
+			name:     "testEnd",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("\\.$", regexpCompile("\\.$", true), true, true),
+			},
+			want:    0,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
