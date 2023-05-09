@@ -135,10 +135,11 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 
 // regexpCompile is regexp.Compile the search string.
 func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
+	opt := "(?m)"
 	if !caseSensitive {
-		r = "(?i)" + r
+		opt = "(?mi)"
 	}
-	re, err := regexp.Compile(r)
+	re, err := regexp.Compile(opt + r)
 	if err == nil {
 		return re
 	}

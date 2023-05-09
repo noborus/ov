@@ -304,7 +304,7 @@ func Test_regexpCompile(t *testing.T) {
 				r:             "t.",
 				caseSensitive: true,
 			},
-			want: regexp.MustCompile("t."),
+			want: regexp.MustCompile("(?m)t."),
 		},
 	}
 	for _, tt := range tests {
@@ -527,8 +527,18 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{".", "["},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("."),
+				regexp.MustCompile("(?m)."),
 				regexp.MustCompile(`\[`),
+			},
+		},
+		{
+			name: "test2",
+			args: args{
+				[]string{"a", "b"},
+			},
+			want: []*regexp.Regexp{
+				regexp.MustCompile("(?m)a"),
+				regexp.MustCompile("(?m)b"),
 			},
 		},
 	}
@@ -659,6 +669,16 @@ func TestDocument_searchChunk(t *testing.T) {
 				searcher: NewSearcher("error", regexpCompile("error", true), true, true),
 			},
 			want:    3,
+			wantErr: false,
+		},
+		{
+			name:     "testEnd",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("\\.$", regexpCompile("\\.$", true), true, true),
+			},
+			want:    0,
 			wantErr: false,
 		},
 	}
