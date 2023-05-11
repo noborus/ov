@@ -178,7 +178,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := position(root.Doc.BufEndNum(), input)
+	num := docPosition(root.Doc.BufEndNum(), input)
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
@@ -501,18 +501,17 @@ func (root *Root) resize() {
 
 // jumpPosition determines the position of the jump.
 func jumpPosition(height int, str string) int {
-	num := int(math.Round(position(height, str)))
+	num := int(math.Round(docPosition(height, str)))
 	if num < 0 {
 		return (height - 1) + num
 	}
 	return num
 }
 
-// position returns
-// the number of lines from the top for positive numbers (1),
-// dot.number for percentages (.5) = 50%,
-// and % after the number for percentages (50%).
-func position(height int, str string) float64 {
+// docPosition returns the number of lines from the top for positive
+// numbers (1), dot.number for percentages (.5) = 50%, and % after
+// the number for percentages (50%).
+func docPosition(height int, str string) float64 {
 	str = strings.TrimSpace(str)
 	if len(str) == 0 {
 		return 0

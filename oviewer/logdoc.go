@@ -15,11 +15,11 @@ func NewLogDoc() (*Document, error) {
 	m.FollowMode = true
 	m.Caption = "Log"
 	m.seekable = false
-	log.SetOutput(m)
 	atomic.StoreInt32(&m.closed, 1)
 	if err := m.ControlLog(); err != nil {
 		return nil, err
 	}
+	log.SetOutput(m)
 	return m, nil
 }
 

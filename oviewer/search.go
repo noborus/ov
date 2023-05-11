@@ -195,15 +195,17 @@ func (root *Root) searchPosition(lN int, str string) [][]int {
 	return indexes
 }
 
-// searchPositionReg returns an array of the beginning and end of the search string.
+// searchPositionReg returns an array of the beginning and end of the string
+// that matched the regular expression search.
 func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	if re == nil || re.String() == "" {
 		return nil
 	}
-	return re.FindAllIndex([]byte(s), -1)
+	return re.FindAllStringIndex(s, -1)
 }
 
-// searchPosition returns an array of the beginning and end of the search string.
+// searchPositionStr returns an array of the beginning and end of the string
+// that matched the string search.
 func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 	if substr == "" {
 		return nil
@@ -254,7 +256,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		}
 		root.searchQuit()
 		if err != nil {
-			return err
+			return fmt.Errorf("search:%w:%v", err, root.searchWord)
 		}
 		root.searchGo(lN)
 		return nil

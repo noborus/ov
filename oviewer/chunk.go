@@ -20,7 +20,7 @@ func (m *Document) setNewLoadChunks() {
 
 	chunks, err := lru.New[int, struct{}](capacity)
 	if err != nil {
-		log.Printf("lru new %s", err)
+		log.Panicf("lru new %s", err)
 	}
 	m.loadedChunks = chunks
 }
@@ -88,6 +88,7 @@ func (m *Document) unloadChunk(chunkNum int) {
 func (m *Document) lastChunkNum() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	return len(m.chunks) - 1
 }
 
@@ -95,6 +96,7 @@ func (m *Document) lastChunkNum() int {
 func (m *Document) chunkForAdd() *chunk {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	if m.endNum < len(m.chunks)*ChunkSize {
 		return m.chunks[len(m.chunks)-1]
 	}
