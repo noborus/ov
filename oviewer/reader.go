@@ -16,6 +16,10 @@ import (
 	"golang.org/x/term"
 )
 
+// bufSize is the size of the buffer used when reading the file.
+// This bufSize is used when only counting.
+const bufSize = 4096
+
 // FormFeed is the delimiter that separates the sections.
 // The default delimiter that separates single output from watch.
 const FormFeed = "\f"
@@ -73,15 +77,14 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.FollowMode && !m.FollowAll {
 		return reader, nil
 	}
+	chunk := m.chunkForAdd()
+	start := len(chunk.lines)
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
 			return nil, fmt.Errorf("seek: %w", err)
 		}
 		reader = bufio.NewReader(m.file)
 	}
-
-	chunk := m.chunkForAdd()
-	start := len(chunk.lines)
 	if err := m.fillChunk(chunk, reader, start, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
@@ -104,6 +107,7 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 		return reader, err
 	}
 	if err := m.evictChunksFile(chunkNum); err != nil {
+		log.Println(err)
 		return reader, nil
 	}
 	return m.readChunk(reader, chunkNum)
@@ -311,27 +315,18 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 		atomic.StoreInt32(&m.changed, 1)
 		if err != nil {
 			if line.Len() != 0 {
-				if isCount {
-					m.append(chunk, line.Bytes())
-					m.offset = m.size
-				} else {
-					m.appendOnly(chunk, line.Bytes())
-				}
+				m.append(chunk, isCount, line.Bytes())
+				m.offset = m.size
+				atomic.StoreInt32(&m.noNewlineEOF, 1)
 			}
 			return err
 		}
-		if isCount {
-			m.append(chunk, line.Bytes())
-			m.offset = m.size
-		} else {
-			m.appendOnly(chunk, line.Bytes())
-		}
+		m.append(chunk, isCount, line.Bytes())
+		m.offset = m.size
 		line.Reset()
 	}
 	return nil
 }
-
-const bufSize = 4096
 
 // reserveChunk reserves ChunkSize lines.
 // read and update size only.
@@ -355,7 +350,7 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 	for {
 		bufLen, err := reader.Read(buf)
 		if err != nil {
-			return count, size, err
+			return count, size, fmt.Errorf("read: %w", err)
 		}
 		if bufLen == 0 {
 			return count, size, io.EOF
@@ -379,6 +374,14 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 		if num >= ChunkSize {
 			break
 		}
+		// no newline at the end of the file.
+		if bufLen < bufSize {
+			p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
+			if p+1 < bufLen {
+				count++
+				atomic.StoreInt32(&m.noNewlineEOF, 1)
+			}
+		}
 	}
 	return count, size, nil
 }
@@ -394,9 +397,39 @@ func (m *Document) appendOnly(chunk *chunk, line []byte) {
 	m.mu.Unlock()
 }
 
-// append appends to the line of the chunk.
-// append updates the number of lines and size.
-func (m *Document) append(chunk *chunk, line []byte) {
+func (m *Document) joinLast(chunk *chunk, line []byte) {
+	m.mu.Lock()
+	size := len(line)
+	buf := chunk.lines[len(chunk.lines)-1]
+	dst := make([]byte, 0, len(buf)+size)
+	dst = append(dst, buf...)
+	dst = append(dst, line...)
+	log.Println(string(dst), string(buf), string(line))
+	m.size += int64(size)
+	m.cache.Remove(len(chunk.lines) - 1)
+	chunk.lines[len(chunk.lines)-1] = dst
+	m.mu.Unlock()
+	m.cache.Remove(m.endNum)
+}
+
+// append appends a line to the chunk.
+func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
+	if atomic.SwapInt32(&m.noNewlineEOF, 0) == 1 {
+		m.joinLast(chunk, line)
+		return
+	}
+
+	if isCount {
+		m.appendLine(chunk, line)
+		return
+	}
+
+	m.appendOnly(chunk, line)
+}
+
+// appendLine appends to the line of the chunk.
+// appendLine updates the number of lines and size.
+func (m *Document) appendLine(chunk *chunk, line []byte) {
 	m.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
@@ -420,7 +453,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		if m.formfeedTime {
 			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
 		}
-		m.append(chunk, []byte(feed))
+		m.appendLine(chunk, []byte(feed))
 	}
 }
 

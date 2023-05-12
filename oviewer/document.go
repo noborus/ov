@@ -53,6 +53,7 @@ type Document struct {
 	marked []int
 	// columnWidths is a slice of column widths.
 	columnWidths []int
+
 	// status is the display status of the document.
 	general
 
@@ -102,6 +103,8 @@ type Document struct {
 	changed int32
 	// 1 if there is a closed.
 	closed int32
+	// 1 if newline at end of file.
+	noNewlineEOF int32
 
 	// 1 if there is a read cancel.
 	readCancel int32
