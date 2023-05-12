@@ -117,6 +117,10 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 // loadRead loads the read contents into chunks.
 func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	m.currentChunk = chunkNum
+	if len(m.chunks[chunkNum].lines) != 0 {
+		// already loaded.
+		return reader, nil
+	}
 	if m.seekable {
 		return m.loadReadFile(reader, chunkNum)
 	}
@@ -407,17 +411,16 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	size := len(line)
 
 	m.mu.Lock()
-	buf := chunk.lines[len(chunk.lines)-1]
+	num := len(chunk.lines) - 1
+	buf := chunk.lines[num]
 	dst := make([]byte, 0, len(buf)+size)
 	dst = append(dst, buf...)
 	dst = append(dst, line...)
-
 	m.size += int64(size)
-	m.cache.Remove(len(chunk.lines) - 1)
-	chunk.lines[len(chunk.lines)-1] = dst
+	chunk.lines[num] = dst
 	m.mu.Unlock()
 
-	m.cache.Remove(m.endNum)
+	m.cache.Remove(m.endNum - 1)
 	return true
 }
 
