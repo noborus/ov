@@ -27,6 +27,7 @@ const FormFeed = "\f"
 // firstRead first reads the file.
 // Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
+	atomic.StoreInt32(&m.noNewlineEOF, 0)
 	chunk := m.chunks[0]
 	if err := m.fillChunk(chunk, reader, 0, true); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -397,26 +398,35 @@ func (m *Document) appendOnly(chunk *chunk, line []byte) {
 	m.mu.Unlock()
 }
 
-func (m *Document) joinLast(chunk *chunk, line []byte) {
-	m.mu.Lock()
+// joinLast joins the new content to the last line.
+// This is used when the last line is added without a newline and EOF.
+func (m *Document) joinLast(chunk *chunk, line []byte) bool {
+	if len(chunk.lines) == 0 {
+		return false
+	}
 	size := len(line)
+
+	m.mu.Lock()
 	buf := chunk.lines[len(chunk.lines)-1]
 	dst := make([]byte, 0, len(buf)+size)
 	dst = append(dst, buf...)
 	dst = append(dst, line...)
-	log.Println(string(dst), string(buf), string(line))
+
 	m.size += int64(size)
 	m.cache.Remove(len(chunk.lines) - 1)
 	chunk.lines[len(chunk.lines)-1] = dst
 	m.mu.Unlock()
+
 	m.cache.Remove(m.endNum)
+	return true
 }
 
 // append appends a line to the chunk.
 func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
 	if atomic.SwapInt32(&m.noNewlineEOF, 0) == 1 {
-		m.joinLast(chunk, line)
-		return
+		if m.joinLast(chunk, line) {
+			return
+		}
 	}
 
 	if isCount {
