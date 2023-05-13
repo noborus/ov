@@ -123,12 +123,12 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 
 // loadRead loads the read contents into chunks.
 func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
-	m.currentChunk = chunkNum
-	if len(m.chunks[chunkNum].lines) != 0 {
-		// already loaded.
-		return reader, nil
-	}
 	if m.seekable {
+		m.currentChunk = chunkNum
+		if len(m.chunks[chunkNum].lines) != 0 {
+			// already loaded.
+			return reader, nil
+		}
 		return m.loadReadFile(reader, chunkNum)
 	}
 	return m.loadReadMem(reader, chunkNum)
