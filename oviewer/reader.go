@@ -78,8 +78,15 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.FollowMode && !m.FollowAll {
 		return reader, nil
 	}
-	chunk := m.chunkForAdd()
-	start := len(chunk.lines)
+
+	atomic.StoreInt32(&m.eof, 0)
+	chunk := m.chunks[m.lastChunkNum()]
+	start := len(chunk.lines) - 1
+	if atomic.LoadInt32(&m.noNewlineEOF) == 0 {
+		chunk := m.chunkForAdd()
+		start = len(chunk.lines)
+	}
+
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
 			return nil, fmt.Errorf("seek: %w", err)
