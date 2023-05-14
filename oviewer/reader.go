@@ -134,19 +134,25 @@ func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, 
 	return m.loadReadMem(reader, chunkNum)
 }
 
+// loadReadFile loads the read contents into chunks.
+// loadReadFile frees old chunks and loads new chunks.
 func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	_ = m.evictChunksFile(chunkNum)
 	m.addChunksFile(chunkNum)
 	return m.readChunk(reader, chunkNum)
 }
 
+// loadReadMem loads the read contents into chunks.
+// loadReadMem frees the memory behind and reads forward.
 func (m *Document) loadReadMem(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	if m.BufEOF() {
 		return reader, nil
 	}
 
 	if chunkNum < m.lastChunkNum() {
-		return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
+		// already loaded.
+		// return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
+		return reader, nil
 	}
 	m.evictChunksMem(chunkNum)
 	m.requestContinue()

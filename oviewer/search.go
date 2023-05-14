@@ -256,6 +256,12 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		}
 		root.searchQuit()
 		if err != nil {
+			if lN < root.Doc.startNum {
+				// If lN is before startNum, move to startNum.
+				root.searchGo(root.Doc.startNum)
+				log.Printf("Moved to %d because %d is out of range.", root.Doc.startNum, lN)
+				return fmt.Errorf("search moved to %d:%w:%v", root.Doc.startNum, err, root.searchWord)
+			}
 			return fmt.Errorf("search:%w:%v", err, root.searchWord)
 		}
 		root.searchGo(lN)
@@ -271,14 +277,17 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 
 // Search searches for the search term and moves to the nearest matching line.
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if m.lastChunkNum() < chunkNum {
-		return 0, ErrOutOfChunk
-	}
-	if !m.isLoadedChunk(chunkNum) {
-		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+	if !m.seekable {
+		m.requestLoad(chunkNum)
+	} else {
+		if m.lastChunkNum() < chunkNum {
+			return 0, ErrOutOfChunk
+		}
+		if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
 			return 0, ErrNotFound
 		}
 	}
+
 	for n := line; n < ChunkSize; n++ {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
@@ -298,11 +307,10 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 
 // BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if !m.isLoadedChunk(chunkNum) {
-		if !m.storageSearch(ctx, searcher, chunkNum, line) {
-			return 0, ErrNotFound
-		}
+	if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+		return 0, ErrNotFound
 	}
+
 	for n := line; n >= 0; n-- {
 		buf, err := m.GetChunkLine(chunkNum, n)
 		if err != nil {
@@ -334,9 +342,8 @@ func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNu
 func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = max(lN, m.startNum)
 	startChunk, sn := chunkLine(lN)
-	endChunk, _ := chunkLine(m.BufEndNum() - 1)
 
-	for cn := startChunk; cn <= endChunk; cn++ {
+	for cn := startChunk; ; cn++ {
 		n, err := m.Search(ctx, searcher, cn, sn)
 		if err == nil {
 			return cn*ChunkSize + n, nil
@@ -345,6 +352,12 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 		case <-ctx.Done():
 			return 0, ErrCancel
 		default:
+		}
+
+		// endChunk may be updated by Search.
+		endChunk := (m.BufEndNum() - 1) / ChunkSize
+		if cn >= endChunk {
+			break
 		}
 		sn = 0
 	}
