@@ -123,8 +123,8 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestStart:
 		return m.firstRead(reader)
 	case requestContinue:
-		if !m.seekable && LoadChunksLimit > 0 {
-			if m.loadedChunks.Len() >= LoadChunksLimit {
+		if !m.seekable {
+			if MemoryLimit > 0 && m.loadedChunks.Len() >= MemoryLimit {
 				// Stopped loading due to load chunks limit.
 				// return reader, ErrOverChunkLimit
 				return reader, nil

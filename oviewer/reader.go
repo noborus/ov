@@ -125,10 +125,6 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	if m.seekable {
 		m.currentChunk = chunkNum
-		if len(m.chunks[chunkNum].lines) != 0 {
-			// already loaded.
-			return reader, nil
-		}
 		return m.loadReadFile(reader, chunkNum)
 	}
 	return m.loadReadMem(reader, chunkNum)
@@ -139,6 +135,10 @@ func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, 
 func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	_ = m.evictChunksFile(chunkNum)
 	m.addChunksFile(chunkNum)
+	if len(m.chunks[chunkNum].lines) != 0 {
+		// already loaded.
+		return reader, nil
+	}
 	return m.readChunk(reader, chunkNum)
 }
 

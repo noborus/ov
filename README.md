@@ -533,24 +533,13 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 ##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
 
-Since **v0.20.0** it no longer loads everything into memory.
-The first chunk from the beginning to the 10,000th line is loaded into memory 
+Since **v0.22.0** it no longer loads everything into memory.
+The first chunk from the beginning to the 10,000th line is loaded into memory
 and never freed.
 Therefore, files with less than 10,000 lines do not change behavior.
 
-###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
-
-Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
-The default limit for loading chunks is 100. To change this,
-use the `--file-load-limit` option or specify `FileLoadChunkLimit` in config. The minimum you can specify is 2.
-
-```console
-ov --file-load-limit 3 /var/log/syslog
-```
-
-```yaml
-FileLoadChunkLimit: 3
-```
+The `--memory-limit` option can be used to limit the chunks loaded into memory.
+Memory limits vary by file type.
 
 Also, go may use a lot of memory until the memory is freed by GC.
 Also consider setting the environment variable `GOMEMLIMIT`.
@@ -559,22 +548,41 @@ Also consider setting the environment variable `GOMEMLIMIT`.
 export GOMEMLIMIT=100MiB
 ```
 
+###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
+
+Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
+If `--memory-limit` is not specified, it will be limited to 100.
+
+```console
+ov --memory-limit-file 3 /var/log/syslog
+```
+
+Specify `MemoryLimit` in the configuration file.
+
+```yaml
+MemoryLimitFile: 3
+```
+
 ###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
 
 Non-seekable files and pipes cannot be read again, so they must exist in memory.
 
-If you specify the upper limit of chunks with `--load-limit` or `LoadChunkLimit`,
+If you specify the upper limit of chunks with `--memory-limit` or `MemoryLimit`,
 it will read up to the upper limit first, but after that,
 when the displayed position advances, the old chunks will be released.
-The load-limit defaults to `-1`, which is unlimited. Minimum is `2`.
+Unlimited if `--memory-limit` is not specified.
 
 ```console
-cat /var/log/syslog | ov --load-limit 3
+cat /var/log/syslog | ov --memory-limit 10
 ```
 
+It is recommended to put a limit in the config file as you may receive output larger than memory.
+
 ```yaml
-LoadChunkLimit: 3
+MemoryLimit: 1000
 ```
+
+You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
 
 ##  5. <a name='command-option'></a>Command option
 

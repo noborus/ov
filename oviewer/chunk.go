@@ -11,10 +11,26 @@ import (
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
 func (m *Document) setNewLoadChunks() {
-	capacity := FileLoadChunksLimit + 1
+	mlFile := MemoryLimitFile
+	if MemoryLimit >= 0 {
+		if MemoryLimit < 2 {
+			MemoryLimit = 2
+		}
+		mlFile = MemoryLimit
+		MemoryLimitFile = MemoryLimit
+	}
+
+	if MemoryLimitFile > mlFile {
+		MemoryLimitFile = mlFile
+	}
+	if MemoryLimitFile < 2 {
+		MemoryLimitFile = 2
+	}
+
+	capacity := MemoryLimitFile + 1
 	if !m.seekable {
-		if LoadChunksLimit > 0 {
-			capacity = LoadChunksLimit + 1
+		if MemoryLimit > 0 {
+			capacity = MemoryLimit + 1
 		}
 	}
 
@@ -48,7 +64,7 @@ func (m *Document) evictChunksFile(chunkNum int) error {
 	if chunkNum == 0 {
 		return nil
 	}
-	for m.loadedChunks.Len() > FileLoadChunksLimit {
+	if m.loadedChunks.Len() >= MemoryLimitFile {
 		k, _, _ := m.loadedChunks.GetOldest()
 		if chunkNum != k {
 			m.unloadChunk(k)
@@ -68,7 +84,7 @@ func (m *Document) evictChunksMem(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	if (LoadChunksLimit < 0) || (m.loadedChunks.Len() < LoadChunksLimit) {
+	if (MemoryLimit < 0) || (m.loadedChunks.Len() < MemoryLimit) {
 		return
 	}
 	k, _, _ := m.loadedChunks.GetOldest()

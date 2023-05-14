@@ -208,10 +208,10 @@ type Config struct {
 	// General represents the general behavior.
 	General general
 
-	// LoadChunksLimit is a number that limits chunk loading.
-	LoadChunksLimit int
-	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunksLimit int
+	// MemoryLimit is a number that limits chunk loading.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
@@ -284,10 +284,10 @@ type OVStyle struct {
 }
 
 var (
-	// LoadChunksLimit is a number that limits the chunks to load into memory.
-	LoadChunksLimit int
-	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunksLimit int
+	// MemoryLimit is a number that limits the chunks to load into memory.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
 
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
@@ -920,9 +920,11 @@ func (root *Root) debugNumOfChunk() {
 	if !root.Debug {
 		return
 	}
+	log.Println("MemoryLimit:", root.MemoryLimit)
+	log.Println("MemoryLimitFile:", root.MemoryLimitFile)
 	for _, doc := range root.DocList {
 		if !doc.seekable {
-			if LoadChunksLimit > 0 {
+			if MemoryLimit > 0 {
 				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
 			}
 			continue
