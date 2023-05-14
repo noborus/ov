@@ -600,7 +600,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --column-rainbow             column rainbow
-      --column-width               column width mode                                           v0.20.0
+      --column-width               column width mode
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
@@ -609,7 +609,6 @@ Flags:
   -X, --exit-write                 output the current screen when exiting
   -a, --exit-write-after int       NUM after the current lines when exiting
   -b, --exit-write-before int      NUM before the current lines when exiting
-      --file-load-limit int        Limit chunks loading files into memory (default 100)        v0.20.0
   -A, --follow-all                 follow all
   -f, --follow-mode                follow mode
       --follow-name                follow name mode
@@ -620,7 +619,8 @@ Flags:
       --incsearch                  incremental search (default true)
   -j, --jump-target string         jump-target
   -n, --line-number                line number mode
-      --load-limit int             Limit loading chunks (default -1)                           v0.20.0
+      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.22.0
+      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.22.0
   -M, --multi-color strings        multi-color
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
