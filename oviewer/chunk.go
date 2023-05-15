@@ -16,7 +16,6 @@ func (m *Document) setNewLoadChunks() {
 		if MemoryLimit < 2 {
 			MemoryLimit = 2
 		}
-		mlFile = MemoryLimit
 		MemoryLimitFile = MemoryLimit
 	}
 
@@ -133,4 +132,11 @@ func (m *Document) isLoadedChunk(chunkNum int) bool {
 		return true
 	}
 	return m.loadedChunks.Contains(chunkNum)
+}
+
+// chunkLine returns chunkNum and chunk line number from line number.
+func chunkLine(n int) (int, int) {
+	chunkNum := n / ChunkSize
+	cn := n % ChunkSize
+	return chunkNum, cn
 }
