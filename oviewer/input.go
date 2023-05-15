@@ -177,18 +177,22 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	return false
 }
 
+// inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
 }
 
+// inputIncSearch toggles incremental search.
 func (root *Root) inputIncSearch() {
 	root.Config.Incsearch = !root.Config.Incsearch
 }
 
+// inputRegexpSearch toggles regexp search.
 func (root *Root) inputRegexpSearch() {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
 
+// inputPrevious searches the previous history.
 func (root *Root) inputPrevious() {
 	input := root.input
 	input.value = input.Event.Up(input.value)
@@ -196,6 +200,7 @@ func (root *Root) inputPrevious() {
 	input.cursorX = runeWidth(string(runes))
 }
 
+// inputNext searches the next history.
 func (root *Root) inputNext() {
 	input := root.input
 	input.value = input.Event.Down(input.value)
@@ -252,6 +257,7 @@ type candidate struct {
 	p    int
 }
 
+// up returns the previous candidate.
 func (c *candidate) up() string {
 	if len(c.list) == 0 {
 		return ""
@@ -266,6 +272,7 @@ func (c *candidate) up() string {
 	return c.list[c.p]
 }
 
+// down returns the next candidate.
 func (c *candidate) down() string {
 	if len(c.list) == 0 {
 		return ""

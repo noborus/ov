@@ -380,13 +380,6 @@ func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	return chunk.lines[cn], nil
 }
 
-// chunkLine returns chunkNum and chunk line number from line number.
-func chunkLine(n int) (int, int) {
-	chunkNum := n / ChunkSize
-	cn := n % ChunkSize
-	return chunkNum, cn
-}
-
 // watchMode sets the document to watch mode.
 func (m *Document) watchMode() {
 	m.WatchMode = true
