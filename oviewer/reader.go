@@ -83,7 +83,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	chunk := m.chunks[m.lastChunkNum()]
 	start := len(chunk.lines) - 1
 	if atomic.LoadInt32(&m.noNewlineEOF) == 0 {
-		chunk := m.chunkForAdd()
+		chunk = m.chunkForAdd()
 		start = len(chunk.lines)
 	}
 
