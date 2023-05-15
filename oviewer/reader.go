@@ -390,6 +390,11 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 		count += lCount
 		size += lSize
 		if num >= ChunkSize {
+			// no newline at the end of the file.
+			if bufLen < bufSize {
+				p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
+				size -= bufLen - p - 1
+			}
 			break
 		}
 		// no newline at the end of the file.
