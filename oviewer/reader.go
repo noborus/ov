@@ -29,7 +29,7 @@ const FormFeed = "\f"
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.noNewlineEOF, 0)
 	chunk := m.chunks[0]
-	if err := m.fillChunk(chunk, reader, 0, true); err != nil {
+	if err := m.addLines(chunk, reader, 0); err != nil {
 		if !errors.Is(err, io.EOF) {
 			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
@@ -79,6 +79,11 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, nil
 	}
 
+	reader, err := m.loadRead(reader, m.lastChunkNum())
+	if err != nil {
+		return reader, err
+	}
+
 	atomic.StoreInt32(&m.eof, 0)
 	chunk := m.chunks[m.lastChunkNum()]
 	start := len(chunk.lines) - 1
@@ -86,14 +91,14 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		chunk = m.chunkForAdd()
 		start = len(chunk.lines)
 	}
-
 	if m.seekable {
 		if _, err := m.file.Seek(m.offset, io.SeekStart); err != nil {
 			return nil, fmt.Errorf("seek: %w", err)
 		}
 		reader = bufio.NewReader(m.file)
 	}
-	if err := m.fillChunk(chunk, reader, start, true); err != nil {
+
+	if err := m.addLines(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
@@ -167,7 +172,12 @@ func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 	}
 	reader.Reset(m.file)
 	start := 0
-	if err := m.fillChunk(chunk, reader, start, false); err != nil {
+	lastChunk, end := chunkLine(m.endNum)
+	if chunkNum != lastChunk {
+		end = ChunkSize
+	}
+	// log.Println("fillChunk", chunkNum, start, end)
+	if err := m.fillChunk(chunk, reader, start, end); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
@@ -198,7 +208,7 @@ func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error
 	if m.seekable {
 		return m.reserveChunk(reader, start)
 	}
-	return m.fillChunk(chunk, reader, start, true)
+	return m.addLines(chunk, reader, start)
 }
 
 // reloadFile reloads a file.
@@ -298,7 +308,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
 	for {
-		if err := m.fillChunk(chunk, reader, start, true); err != nil {
+		if err := m.addLines(chunk, reader, start); err != nil {
 			return err
 		}
 		chunk = NewChunk(m.size)
@@ -309,12 +319,23 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 	}
 }
 
-// fillChunk append lines read from reader into chunks.
-func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCount bool) error {
+// fillChunk fills the chunk with lines read from reader.
+func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, end int) error {
+	return m.readLines(chunk, reader, start, end, false)
+}
+
+// addLines appends lines read from reader into chunks.
+func (m *Document) addLines(chunk *chunk, reader *bufio.Reader, start int) error {
+	return m.readLines(chunk, reader, start, ChunkSize, true)
+}
+
+// readLines append lines read from reader into chunks.
+// Read and fill the number of lines from start to end in chunk.
+// If isCount is true, increment the number of lines read (update endNum).
+func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, addLines bool) error {
 	var line bytes.Buffer
 	var isPrefix bool
-	num := start
-	for num < ChunkSize {
+	for num := start; num < end; {
 		if atomic.LoadInt32(&m.readCancel) == 1 {
 			break
 		}
@@ -333,13 +354,13 @@ func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, isCo
 		atomic.StoreInt32(&m.changed, 1)
 		if err != nil {
 			if line.Len() != 0 {
-				m.append(chunk, isCount, line.Bytes())
+				m.append(chunk, addLines, line.Bytes())
 				m.offset = m.size
 				atomic.StoreInt32(&m.noNewlineEOF, 1)
 			}
 			return err
 		}
-		m.append(chunk, isCount, line.Bytes())
+		m.append(chunk, addLines, line.Bytes())
 		m.offset = m.size
 		line.Reset()
 	}
@@ -438,18 +459,15 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	chunk.lines[num] = dst
 	m.mu.Unlock()
 
+	if line[len(line)-1] == '\n' {
+		atomic.StoreInt32(&m.noNewlineEOF, 0)
+	}
 	m.cache.Remove(m.endNum - 1)
 	return true
 }
 
 // append appends a line to the chunk.
 func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
-	if atomic.SwapInt32(&m.noNewlineEOF, 0) == 1 {
-		if m.joinLast(chunk, line) {
-			return
-		}
-	}
-
 	if isCount {
 		m.appendLine(chunk, line)
 		return
@@ -461,6 +479,10 @@ func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
 // appendLine appends to the line of the chunk.
 // appendLine updates the number of lines and size.
 func (m *Document) appendLine(chunk *chunk, line []byte) {
+	if atomic.SwapInt32(&m.noNewlineEOF, 0) == 1 {
+		m.joinLast(chunk, line)
+		return
+	}
 	m.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
