@@ -53,6 +53,7 @@ type Document struct {
 	marked []int
 	// columnWidths is a slice of column widths.
 	columnWidths []int
+
 	// status is the display status of the document.
 	general
 
@@ -102,6 +103,8 @@ type Document struct {
 	changed int32
 	// 1 if there is a closed.
 	closed int32
+	// 1 if newline at end of file.
+	noNewlineEOF int32
 
 	// 1 if there is a read cancel.
 	readCancel int32
@@ -375,13 +378,6 @@ func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 		return nil, ErrOutOfRange
 	}
 	return chunk.lines[cn], nil
-}
-
-// chunkLine returns chunkNum and chunk line number from line number.
-func chunkLine(n int) (int, int) {
-	chunkNum := n / ChunkSize
-	cn := n % ChunkSize
-	return chunkNum, cn
 }
 
 // watchMode sets the document to watch mode.
