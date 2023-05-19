@@ -600,7 +600,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --column-rainbow             column rainbow
-      --column-width               column width mode
+      --column-width               column width mode                                                      v0.20.0
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
