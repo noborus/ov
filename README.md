@@ -77,7 +77,7 @@ ov is a terminal pager.
 * Supports [follow-mode](#follow-mode) (like tail -f).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
-* Supports the [execution](#exec-mode) of commands that toggle both stdout and stder for display.
+* Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
 * Supports [watch](#watch) mode, which reads files on a regular basis.
 * Supports incremental [search](#search) and regular expression search.
 * Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
@@ -563,6 +563,8 @@ Specify `MemoryLimit` in the configuration file.
 MemoryLimitFile: 3
 ```
 
+You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
+
 ###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
 
 Non-seekable files and pipes cannot be read again, so they must exist in memory.
@@ -581,8 +583,6 @@ It is recommended to put a limit in the config file as you may receive output la
 ```yaml
 MemoryLimit: 1000
 ```
-
-You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
 
 ##  5. <a name='command-option'></a>Command option
 
