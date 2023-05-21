@@ -29,7 +29,7 @@ const FormFeed = "\f"
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.noNewlineEOF, 0)
 	chunk := m.chunks[0]
-	if err := m.addLines(chunk, reader, 0); err != nil {
+	if err := m.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			atomic.StoreInt32(&m.eof, 1)
 			return nil, err
@@ -57,7 +57,7 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 	chunk := m.chunkForAdd()
 	start := len(chunk.lines)
-	if err := m.addChunk(chunk, reader, start); err != nil {
+	if err := m.addOrReserveChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, fmt.Errorf("addChunk: %w", err)
 		}
@@ -98,7 +98,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		reader = bufio.NewReader(m.file)
 	}
 
-	if err := m.addLines(chunk, reader, start); err != nil {
+	if err := m.readLines(chunk, reader, start, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
@@ -109,6 +109,62 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		m.requestContinue()
 	}
 	return reader, nil
+}
+
+// addOrReserveChunk reads a file to add or reserve a Chunk.
+// If it's a seekable file, it just reserves it for later reading.
+func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+	if m.seekable {
+		return m.reserveChunk(reader, start)
+	}
+	return m.readLines(chunk, reader, start, ChunkSize, true)
+}
+
+// reserveChunk reserves ChunkSize lines.
+// read and update size only.
+func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
+	count, size, err := m.countLines(reader, start)
+	m.mu.Lock()
+	m.endNum += count
+	m.size += int64(size)
+	m.offset = m.size
+	m.mu.Unlock()
+	atomic.StoreInt32(&m.changed, 1)
+	return err
+}
+
+// loadChunk actually loads the reserved Chunk.
+func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
+	chunk, err := m.seekChunk(reader, chunkNum)
+	if err != nil {
+		return nil, err
+	}
+
+	start := 0
+	end := ChunkSize
+	lastChunk, endNum := chunkLine(m.endNum)
+	if chunkNum == lastChunk {
+		end = endNum
+	}
+	// log.Println("fillChunk", chunkNum, start, end)
+
+	if err := m.readLines(chunk, reader, start, end, false); err != nil {
+		if !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		reader = m.afterEOF(reader)
+	}
+	return reader, nil
+}
+
+// seekChunk seeks to the start of the chunk.
+func (m *Document) seekChunk(reader *bufio.Reader, chunkNum int) (*chunk, error) {
+	chunk := m.chunks[chunkNum]
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return chunk, fmt.Errorf("seek: %w", err)
+	}
+	reader.Reset(m.file)
+	return chunk, nil
 }
 
 // searchRead searches chunks and loads chunks if found.
@@ -123,7 +179,7 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 		log.Println(err)
 		return reader, nil
 	}
-	return m.readChunk(reader, chunkNum)
+	return m.loadChunk(reader, chunkNum)
 }
 
 // loadRead loads the read contents into chunks.
@@ -144,7 +200,7 @@ func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Read
 		// already loaded.
 		return reader, nil
 	}
-	return m.readChunk(reader, chunkNum)
+	return m.loadChunk(reader, chunkNum)
 }
 
 // loadReadMem loads the read contents into chunks.
@@ -164,28 +220,6 @@ func (m *Document) loadReadMem(reader *bufio.Reader, chunkNum int) (*bufio.Reade
 	return reader, nil
 }
 
-// readChunk loads the read contents into chunks.
-func (m *Document) readChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
-	chunk := m.chunks[chunkNum]
-	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return nil, fmt.Errorf("seek: %w", err)
-	}
-	reader.Reset(m.file)
-	start := 0
-	lastChunk, end := chunkLine(m.endNum)
-	if chunkNum != lastChunk {
-		end = ChunkSize
-	}
-	// log.Println("fillChunk", chunkNum, start, end)
-	if err := m.fillChunk(chunk, reader, start, end); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return nil, err
-		}
-		reader = m.afterEOF(reader)
-	}
-	return reader, nil
-}
-
 // reloadRead performs reload processing.
 func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if !m.WatchMode {
@@ -201,14 +235,6 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		return nil, err
 	}
 	return reader, nil
-}
-
-// addChunk fills or reserves a chunk.
-func (m *Document) addChunk(chunk *chunk, reader *bufio.Reader, start int) error {
-	if m.seekable {
-		return m.reserveChunk(reader, start)
-	}
-	return m.addLines(chunk, reader, start)
 }
 
 // reloadFile reloads a file.
@@ -302,36 +328,9 @@ func open(fileName string) (*os.File, error) {
 	return f, nil
 }
 
-// readAll reads to the end.
-// The read lines are stored in the lines of the Document.
-func (m *Document) readAll(reader *bufio.Reader) error {
-	chunk := m.chunkForAdd()
-	start := len(chunk.lines)
-	for {
-		if err := m.addLines(chunk, reader, start); err != nil {
-			return err
-		}
-		chunk = NewChunk(m.size)
-		m.mu.Lock()
-		m.chunks = append(m.chunks, chunk)
-		m.mu.Unlock()
-		start = 0
-	}
-}
-
-// fillChunk fills the chunk with lines read from reader.
-func (m *Document) fillChunk(chunk *chunk, reader *bufio.Reader, start int, end int) error {
-	return m.readLines(chunk, reader, start, end, false)
-}
-
-// addLines appends lines read from reader into chunks.
-func (m *Document) addLines(chunk *chunk, reader *bufio.Reader, start int) error {
-	return m.readLines(chunk, reader, start, ChunkSize, true)
-}
-
 // readLines append lines read from reader into chunks.
 // Read and fill the number of lines from start to end in chunk.
-// If isCount is true, increment the number of lines read (update endNum).
+// If addLines is true, increment the number of lines read (update endNum).
 func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, addLines bool) error {
 	var line bytes.Buffer
 	var isPrefix bool
@@ -365,19 +364,6 @@ func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end 
 		line.Reset()
 	}
 	return nil
-}
-
-// reserveChunk reserves ChunkSize lines.
-// read and update size only.
-func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
-	count, size, err := m.countLines(reader, start)
-	m.mu.Lock()
-	m.endNum += count
-	m.size += int64(size)
-	m.offset = m.size
-	m.mu.Unlock()
-	atomic.StoreInt32(&m.changed, 1)
-	return err
 }
 
 // countLines counts the number of lines and the size of the buffer.
@@ -617,4 +603,21 @@ func (m *Document) ReadAll(r io.Reader) error {
 		}
 	}()
 	return nil
+}
+
+// readAll reads to the end.
+// The read lines are stored in the lines of the Document.
+func (m *Document) readAll(reader *bufio.Reader) error {
+	chunk := m.chunkForAdd()
+	start := len(chunk.lines)
+	for {
+		if err := m.readLines(chunk, reader, start, ChunkSize, true); err != nil {
+			return err
+		}
+		chunk = NewChunk(m.size)
+		m.mu.Lock()
+		m.chunks = append(m.chunks, chunk)
+		m.mu.Unlock()
+		start = 0
+	}
 }
