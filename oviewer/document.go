@@ -30,11 +30,7 @@ type Document struct {
 	// File is the os.File.
 	file *os.File
 
-	// chunks is the content of the file to be stored in chunks.
-	chunks []*chunk
-
-	// loadedChunks manages chunks loaded into memory.
-	loadedChunks *lru.Cache[int, struct{}]
+	store *store
 	// currentChunk represents the current chunk number.
 	currentChunk int
 
@@ -62,11 +58,6 @@ type Document struct {
 	// offset
 	offset int64
 
-	// startNum is the number of the first line that can be moved.
-	startNum int
-	// endNum is the number of the last line read.
-	endNum int
-
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
@@ -90,9 +81,6 @@ type Document struct {
 
 	// CFormat is a compressed format.
 	CFormat Compressed
-
-	// mu controls the mutex.
-	mu sync.Mutex
 
 	watchRestart int32
 	tickerState  int32
@@ -129,6 +117,22 @@ type LineC struct {
 	pos widthPos
 }
 
+type store struct {
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
+
+	// loadedChunks manages chunks loaded into memory.
+	loadedChunks *lru.Cache[int, struct{}]
+
+	// mu controls the mutex.
+	mu sync.Mutex
+
+	// startNum is the number of the first line that can be moved.
+	startNum int
+	// endNum is the number of the last line read.
+	endNum int
+}
+
 // chunk stores the contents of the split file as slices of strings.
 type chunk struct {
 	// lines stores the contents of the file in slices of strings.
@@ -152,8 +156,10 @@ func NewDocument() (*Document, error) {
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
-		chunks: []*chunk{
-			NewChunk(0),
+		store: &store{
+			chunks: []*chunk{
+				NewChunk(0),
+			},
 		},
 	}
 	if err := m.NewCache(); err != nil {
@@ -246,16 +252,16 @@ func (m *Document) Line(n int) ([]byte, error) {
 	}
 
 	chunkNum := n / ChunkSize
-	if m.lastChunkNum() < chunkNum {
+	if m.store.lastChunkNum() < chunkNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
 	if m.currentChunk != chunkNum {
 		m.requestLoad(chunkNum)
 	}
 
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	chunk := m.chunks[chunkNum]
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
+	chunk := m.store.chunks[chunkNum]
 	if cn := n % ChunkSize; cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
 	}
@@ -298,9 +304,9 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.endNum
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
+	return m.store.endNum
 }
 
 // BufEOF return true if EOF is reached.
@@ -367,12 +373,12 @@ func (m *Document) firstLine() int {
 
 // GetChunkLine returns one line from buffer.
 func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if len(m.chunks) <= chunkNum {
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
+	if len(m.store.chunks) <= chunkNum {
 		return nil, ErrOutOfChunk
 	}
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 
 	if cn >= len(chunk.lines) {
 		return nil, ErrOutOfRange
@@ -431,8 +437,8 @@ func (m *Document) setColumnWidths() {
 
 	header := m.Header - 1
 	header = max(header, 0)
-	tl := min(1000, len(m.chunks[0].lines))
-	lines := m.chunks[0].lines[m.SkipLines:tl]
+	tl := min(1000, len(m.store.chunks[0].lines))
+	lines := m.store.chunks[0].lines[m.SkipLines:tl]
 	buf := make([]string, len(lines))
 	for n, line := range lines {
 		buf[n] = string(line)

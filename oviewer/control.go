@@ -34,7 +34,7 @@ const (
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	m.setNewLoadChunks()
+	m.store.setNewLoadChunks(m.seekable)
 
 	go func() {
 		atomic.StoreInt32(&m.closed, 0)
@@ -69,7 +69,7 @@ func (m *Document) ControlFile(file *os.File) error {
 // ControlReader is the controller for io.Reader.
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
-	m.setNewLoadChunks()
+	m.store.setNewLoadChunks(false)
 	m.seekable = false
 	reader := bufio.NewReader(r)
 
@@ -124,7 +124,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return m.firstRead(reader)
 	case requestContinue:
 		if !m.seekable {
-			if MemoryLimit > 0 && m.loadedChunks.Len() >= MemoryLimit {
+			if MemoryLimit > 0 && m.store.loadedChunks.Len() >= MemoryLimit {
 				// Stopped loading due to load chunks limit.
 				// return reader, ErrOverChunkLimit
 				return reader, nil
@@ -139,7 +139,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return m.searchRead(reader, sc.chunkNum, sc.searcher)
 	case requestReload:
 		if !m.WatchMode {
-			m.loadedChunks.Purge()
+			m.store.loadedChunks.Purge()
 		}
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
@@ -164,7 +164,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 		return m.continueRead(reader)
 	case requestLoad:
 		m.currentChunk = sc.chunkNum
-		m.evictChunksMem(sc.chunkNum)
+		m.store.evictChunksMem(sc.chunkNum)
 	case requestReload:
 		if reload != nil {
 			log.Println("reload")

@@ -256,11 +256,11 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		}
 		root.searchQuit()
 		if err != nil {
-			if lN < root.Doc.startNum {
+			if lN < root.Doc.store.startNum {
 				// If lN is before startNum, move to startNum.
-				root.searchGo(root.Doc.startNum)
-				log.Printf("Moved to %d because %d is out of range.", root.Doc.startNum, lN)
-				return fmt.Errorf("search moved to %d:%w:%v", root.Doc.startNum, err, root.searchWord)
+				root.searchGo(root.Doc.store.startNum)
+				log.Printf("Moved to %d because %d is out of range.", root.Doc.store.startNum, lN)
+				return fmt.Errorf("search moved to %d:%w:%v", root.Doc.store.startNum, err, root.searchWord)
 			}
 			return fmt.Errorf("search:%w:%v", err, root.searchWord)
 		}
@@ -280,10 +280,10 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	if !m.seekable {
 		m.requestLoad(chunkNum)
 	} else {
-		if m.lastChunkNum() < chunkNum {
+		if m.store.lastChunkNum() < chunkNum {
 			return 0, ErrOutOfChunk
 		}
-		if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+		if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
 			return 0, ErrNotFound
 		}
 	}
@@ -307,7 +307,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 
 // BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
 		return 0, ErrNotFound
 	}
 
@@ -330,7 +330,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 
 // storageSearch searches for line not in memory(storage).
 func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
-	if !m.isLoadedChunk(chunkNum) && atomic.LoadInt32(&m.closed) == 0 {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && atomic.LoadInt32(&m.closed) == 0 {
 		if m.requestSearch(chunkNum, searcher) {
 			return true
 		}
@@ -340,7 +340,7 @@ func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNu
 
 // SearchLine searches the document and returns the matching line number.
 func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = max(lN, m.startNum)
+	lN = max(lN, m.store.startNum)
 	startChunk, sn := chunkLine(lN)
 
 	for cn := startChunk; ; cn++ {
@@ -369,7 +369,7 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
 	startChunk, sn := chunkLine(lN)
-	minChunk, _ := chunkLine(m.startNum)
+	minChunk, _ := chunkLine(m.store.startNum)
 	for cn := startChunk; cn >= minChunk; cn-- {
 		n, err := m.BackSearch(ctx, searcher, cn, sn)
 		if err == nil {
@@ -600,7 +600,7 @@ func (root *Root) BackSearch(str string) {
 // searchChunk searches in a Chunk without loading it into memory.
 func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	// Seek to the start of the chunk.
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("seek:%w", err)
 	}
