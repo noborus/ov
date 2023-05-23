@@ -175,7 +175,7 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 		}
 		return reader, err
 	}
-	if err := m.evictChunksFile(chunkNum); err != nil {
+	if err := m.store.evictChunksFile(chunkNum); err != nil {
 		log.Println(err)
 		return reader, nil
 	}
@@ -194,8 +194,8 @@ func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, 
 // loadReadFile loads the read contents into chunks.
 // loadReadFile frees old chunks and loads new chunks.
 func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
-	_ = m.evictChunksFile(chunkNum)
-	m.addChunksFile(chunkNum)
+	_ = m.store.evictChunksFile(chunkNum)
+	m.store.addChunksFile(chunkNum)
 	if len(m.store.chunks[chunkNum].lines) != 0 {
 		// already loaded.
 		return reader, nil

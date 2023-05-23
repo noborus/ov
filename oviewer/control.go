@@ -34,7 +34,7 @@ const (
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	m.setNewLoadChunks()
+	m.store.setNewLoadChunks(m.seekable)
 
 	go func() {
 		atomic.StoreInt32(&m.closed, 0)
@@ -69,7 +69,7 @@ func (m *Document) ControlFile(file *os.File) error {
 // ControlReader is the controller for io.Reader.
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
-	m.setNewLoadChunks()
+	m.store.setNewLoadChunks(false)
 	m.seekable = false
 	reader := bufio.NewReader(r)
 

@@ -3,14 +3,13 @@ package oviewer
 import (
 	"fmt"
 	"log"
-	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
-func (m *Document) setNewLoadChunks() {
+func (s *store) setNewLoadChunks(isFile bool) {
 	mlFile := MemoryLimitFile
 	if MemoryLimit >= 0 {
 		if MemoryLimit < 2 {
@@ -27,7 +26,7 @@ func (m *Document) setNewLoadChunks() {
 	}
 
 	capacity := MemoryLimitFile + 1
-	if !m.seekable {
+	if !isFile {
 		if MemoryLimit > 0 {
 			capacity = MemoryLimit + 1
 		}
@@ -37,41 +36,41 @@ func (m *Document) setNewLoadChunks() {
 	if err != nil {
 		log.Panicf("lru new %s", err)
 	}
-	m.store.loadedChunks = chunks
+	s.loadedChunks = chunks
 }
 
 // addChunksFile adds chunks of a regular file to memory.
-func (m *Document) addChunksFile(chunkNum int) {
+func (s *store) addChunksFile(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	if m.store.loadedChunks.Add(chunkNum, struct{}{}) {
+	if s.loadedChunks.Add(chunkNum, struct{}{}) {
 		log.Println("AddChunksFile evicted!")
 	}
 }
 
 // addChunksMem adds non-regular file chunks to memory.
-func (m *Document) addChunksMem(chunkNum int) {
+func (s *store) addChunksMem(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	m.store.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+	s.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
 }
 
 // evictChunksFile evicts chunks of a regular file from memory.
-func (m *Document) evictChunksFile(chunkNum int) error {
+func (s *store) evictChunksFile(chunkNum int) error {
 	if chunkNum == 0 {
 		return nil
 	}
-	if m.store.loadedChunks.Len() >= MemoryLimitFile {
-		k, _, _ := m.store.loadedChunks.GetOldest()
+	if s.loadedChunks.Len() >= MemoryLimitFile {
+		k, _, _ := s.loadedChunks.GetOldest()
 		if chunkNum != k {
-			m.unloadChunk(k)
+			s.unloadChunk(k)
 		}
 	}
 
-	chunk := m.store.chunks[chunkNum]
-	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
+	chunk := s.chunks[chunkNum]
+	if len(chunk.lines) != 0 {
 		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 	}
 	return nil
@@ -87,16 +86,16 @@ func (m *Document) evictChunksMem(chunkNum int) {
 		return
 	}
 	k, _, _ := m.store.loadedChunks.GetOldest()
-	m.unloadChunk(k)
+	m.store.unloadChunk(k)
 	m.mu.Lock()
 	m.startNum = (k + 1) * ChunkSize
 	m.mu.Unlock()
 }
 
 // unloadChunk unloads the chunk from memory.
-func (m *Document) unloadChunk(chunkNum int) {
-	m.store.loadedChunks.Remove(chunkNum)
-	m.store.chunks[chunkNum].lines = nil
+func (s *store) unloadChunk(chunkNum int) {
+	s.loadedChunks.Remove(chunkNum)
+	s.chunks[chunkNum].lines = nil
 }
 
 // lastChunkNum returns the last chunk number.
@@ -118,7 +117,7 @@ func (m *Document) chunkForAdd() *chunk {
 	chunk := NewChunk(m.size)
 	m.store.chunks = append(m.store.chunks, chunk)
 	if !m.seekable {
-		m.addChunksMem(len(m.store.chunks) - 1)
+		m.store.addChunksMem(len(m.store.chunks) - 1)
 	}
 	return chunk
 }
