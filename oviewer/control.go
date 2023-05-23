@@ -124,7 +124,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return m.firstRead(reader)
 	case requestContinue:
 		if !m.seekable {
-			if MemoryLimit > 0 && m.loadedChunks.Len() >= MemoryLimit {
+			if MemoryLimit > 0 && m.store.loadedChunks.Len() >= MemoryLimit {
 				// Stopped loading due to load chunks limit.
 				// return reader, ErrOverChunkLimit
 				return reader, nil
@@ -139,7 +139,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return m.searchRead(reader, sc.chunkNum, sc.searcher)
 	case requestReload:
 		if !m.WatchMode {
-			m.loadedChunks.Purge()
+			m.store.loadedChunks.Purge()
 		}
 		reader, err = m.reloadRead(reader)
 		m.requestStart()

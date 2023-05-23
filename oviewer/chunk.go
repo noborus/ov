@@ -37,7 +37,7 @@ func (m *Document) setNewLoadChunks() {
 	if err != nil {
 		log.Panicf("lru new %s", err)
 	}
-	m.loadedChunks = chunks
+	m.store.loadedChunks = chunks
 }
 
 // addChunksFile adds chunks of a regular file to memory.
@@ -45,7 +45,7 @@ func (m *Document) addChunksFile(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	if m.loadedChunks.Add(chunkNum, struct{}{}) {
+	if m.store.loadedChunks.Add(chunkNum, struct{}{}) {
 		log.Println("AddChunksFile evicted!")
 	}
 }
@@ -55,7 +55,7 @@ func (m *Document) addChunksMem(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	m.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
+	m.store.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
 }
 
 // evictChunksFile evicts chunks of a regular file from memory.
@@ -63,8 +63,8 @@ func (m *Document) evictChunksFile(chunkNum int) error {
 	if chunkNum == 0 {
 		return nil
 	}
-	if m.loadedChunks.Len() >= MemoryLimitFile {
-		k, _, _ := m.loadedChunks.GetOldest()
+	if m.store.loadedChunks.Len() >= MemoryLimitFile {
+		k, _, _ := m.store.loadedChunks.GetOldest()
 		if chunkNum != k {
 			m.unloadChunk(k)
 		}
@@ -83,10 +83,10 @@ func (m *Document) evictChunksMem(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	if (MemoryLimit < 0) || (m.loadedChunks.Len() < MemoryLimit) {
+	if (MemoryLimit < 0) || (m.store.loadedChunks.Len() < MemoryLimit) {
 		return
 	}
-	k, _, _ := m.loadedChunks.GetOldest()
+	k, _, _ := m.store.loadedChunks.GetOldest()
 	m.unloadChunk(k)
 	m.mu.Lock()
 	m.startNum = (k + 1) * ChunkSize
@@ -95,7 +95,7 @@ func (m *Document) evictChunksMem(chunkNum int) {
 
 // unloadChunk unloads the chunk from memory.
 func (m *Document) unloadChunk(chunkNum int) {
-	m.loadedChunks.Remove(chunkNum)
+	m.store.loadedChunks.Remove(chunkNum)
 	m.store.chunks[chunkNum].lines = nil
 }
 
@@ -131,7 +131,7 @@ func (m *Document) isLoadedChunk(chunkNum int) bool {
 	if !m.seekable {
 		return true
 	}
-	return m.loadedChunks.Contains(chunkNum)
+	return m.store.loadedChunks.Contains(chunkNum)
 }
 
 // chunkLine returns chunkNum and chunk line number from line number.

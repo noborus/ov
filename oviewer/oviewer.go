@@ -925,17 +925,17 @@ func (root *Root) debugNumOfChunk() {
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if MemoryLimit > 0 {
-				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 			}
 			continue
 		}
 		for n, chunk := range doc.store.chunks {
 			if n != 0 && len(chunk.lines) != 0 {
-				if !doc.loadedChunks.Contains(n) {
+				if !doc.store.loadedChunks.Contains(n) {
 					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
 				}
 			}
 		}
-		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 	}
 }

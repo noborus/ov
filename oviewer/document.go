@@ -31,9 +31,6 @@ type Document struct {
 	file *os.File
 
 	store *store
-
-	// loadedChunks manages chunks loaded into memory.
-	loadedChunks *lru.Cache[int, struct{}]
 	// currentChunk represents the current chunk number.
 	currentChunk int
 
@@ -131,6 +128,9 @@ type LineC struct {
 type store struct {
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
+
+	// loadedChunks manages chunks loaded into memory.
+	loadedChunks *lru.Cache[int, struct{}]
 }
 
 // chunk stores the contents of the split file as slices of strings.
