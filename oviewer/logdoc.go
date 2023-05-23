@@ -31,11 +31,11 @@ func (m *Document) Write(p []byte) (int, error) {
 	if len(chunk.lines) >= ChunkSize {
 		chunk = NewChunk(m.size)
 		m.mu.Lock()
-		if len(m.chunks) > 2 {
-			m.chunks[len(m.chunks)-2].lines = nil
-			m.startNum = ChunkSize * (len(m.chunks) - 1)
+		if len(m.store.chunks) > 2 {
+			m.store.chunks[len(m.store.chunks)-2].lines = nil
+			m.startNum = ChunkSize * (len(m.store.chunks) - 1)
 		}
-		m.chunks = append(m.chunks, chunk)
+		m.store.chunks = append(m.store.chunks, chunk)
 		m.mu.Unlock()
 	}
 	return len(p), nil

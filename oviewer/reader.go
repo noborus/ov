@@ -28,7 +28,7 @@ const FormFeed = "\f"
 // Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.noNewlineEOF, 0)
-	chunk := m.chunks[0]
+	chunk := m.store.chunks[0]
 	if err := m.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
 			atomic.StoreInt32(&m.eof, 1)
@@ -85,7 +85,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 
 	atomic.StoreInt32(&m.eof, 0)
-	chunk := m.chunks[m.lastChunkNum()]
+	chunk := m.store.chunks[m.lastChunkNum()]
 	start := len(chunk.lines) - 1
 	if atomic.LoadInt32(&m.noNewlineEOF) == 0 {
 		chunk = m.chunkForAdd()
@@ -159,7 +159,7 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 // seekChunk seeks to the start of the chunk.
 func (m *Document) seekChunk(reader *bufio.Reader, chunkNum int) (*chunk, error) {
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
 		return chunk, fmt.Errorf("seek: %w", err)
 	}
@@ -196,7 +196,7 @@ func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, 
 func (m *Document) loadReadFile(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	_ = m.evictChunksFile(chunkNum)
 	m.addChunksFile(chunkNum)
-	if len(m.chunks[chunkNum].lines) != 0 {
+	if len(m.store.chunks[chunkNum].lines) != 0 {
 		// already loaded.
 		return reader, nil
 	}
@@ -524,7 +524,7 @@ func (m *Document) reset() {
 	m.mu.Lock()
 	m.size = 0
 	m.endNum = 0
-	m.chunks = []*chunk{
+	m.store.chunks = []*chunk{
 		NewChunk(0),
 	}
 	m.mu.Unlock()
@@ -616,7 +616,7 @@ func (m *Document) readAll(reader *bufio.Reader) error {
 		}
 		chunk = NewChunk(m.size)
 		m.mu.Lock()
-		m.chunks = append(m.chunks, chunk)
+		m.store.chunks = append(m.store.chunks, chunk)
 		m.mu.Unlock()
 		start = 0
 	}

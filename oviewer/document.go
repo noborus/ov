@@ -30,8 +30,7 @@ type Document struct {
 	// File is the os.File.
 	file *os.File
 
-	// chunks is the content of the file to be stored in chunks.
-	chunks []*chunk
+	store *store
 
 	// loadedChunks manages chunks loaded into memory.
 	loadedChunks *lru.Cache[int, struct{}]
@@ -129,6 +128,11 @@ type LineC struct {
 	pos widthPos
 }
 
+type store struct {
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
+}
+
 // chunk stores the contents of the split file as slices of strings.
 type chunk struct {
 	// lines stores the contents of the file in slices of strings.
@@ -152,8 +156,10 @@ func NewDocument() (*Document, error) {
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
-		chunks: []*chunk{
-			NewChunk(0),
+		store: &store{
+			chunks: []*chunk{
+				NewChunk(0),
+			},
 		},
 	}
 	if err := m.NewCache(); err != nil {
@@ -255,7 +261,7 @@ func (m *Document) Line(n int) ([]byte, error) {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 	if cn := n % ChunkSize; cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
 	}
@@ -369,10 +375,10 @@ func (m *Document) firstLine() int {
 func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if len(m.chunks) <= chunkNum {
+	if len(m.store.chunks) <= chunkNum {
 		return nil, ErrOutOfChunk
 	}
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 
 	if cn >= len(chunk.lines) {
 		return nil, ErrOutOfRange
@@ -431,8 +437,8 @@ func (m *Document) setColumnWidths() {
 
 	header := m.Header - 1
 	header = max(header, 0)
-	tl := min(1000, len(m.chunks[0].lines))
-	lines := m.chunks[0].lines[m.SkipLines:tl]
+	tl := min(1000, len(m.store.chunks[0].lines))
+	lines := m.store.chunks[0].lines[m.SkipLines:tl]
 	buf := make([]string, len(lines))
 	for n, line := range lines {
 		buf[n] = string(line)

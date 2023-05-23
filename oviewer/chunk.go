@@ -70,7 +70,7 @@ func (m *Document) evictChunksFile(chunkNum int) error {
 		}
 	}
 
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 	if len(chunk.lines) != 0 || atomic.LoadInt32(&m.closed) != 0 {
 		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 	}
@@ -96,7 +96,7 @@ func (m *Document) evictChunksMem(chunkNum int) {
 // unloadChunk unloads the chunk from memory.
 func (m *Document) unloadChunk(chunkNum int) {
 	m.loadedChunks.Remove(chunkNum)
-	m.chunks[chunkNum].lines = nil
+	m.store.chunks[chunkNum].lines = nil
 }
 
 // lastChunkNum returns the last chunk number.
@@ -104,7 +104,7 @@ func (m *Document) lastChunkNum() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	return len(m.chunks) - 1
+	return len(m.store.chunks) - 1
 }
 
 // chunkForAdd is a helper function to get the chunk to add.
@@ -112,13 +112,13 @@ func (m *Document) chunkForAdd() *chunk {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.endNum < len(m.chunks)*ChunkSize {
-		return m.chunks[len(m.chunks)-1]
+	if m.endNum < len(m.store.chunks)*ChunkSize {
+		return m.store.chunks[len(m.store.chunks)-1]
 	}
 	chunk := NewChunk(m.size)
-	m.chunks = append(m.chunks, chunk)
+	m.store.chunks = append(m.store.chunks, chunk)
 	if !m.seekable {
-		m.addChunksMem(len(m.chunks) - 1)
+		m.addChunksMem(len(m.store.chunks) - 1)
 	}
 	return chunk
 }

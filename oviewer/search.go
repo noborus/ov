@@ -600,7 +600,7 @@ func (root *Root) BackSearch(str string) {
 // searchChunk searches in a Chunk without loading it into memory.
 func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	// Seek to the start of the chunk.
-	chunk := m.chunks[chunkNum]
+	chunk := m.store.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
 		return 0, fmt.Errorf("seek:%w", err)
 	}
