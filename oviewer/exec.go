@@ -89,7 +89,7 @@ func (cmd *Command) Wait() {
 func (cmd *Command) Reload() *bufio.Reader {
 	cmd.Wait()
 	if cmd.docout.WatchMode {
-		cmd.docout.appendFormFeed(cmd.docout.chunkForAdd(false))
+		cmd.docout.appendFormFeed(cmd.docout.store.chunkForAdd(false, cmd.docout.size))
 	} else {
 		cmd.docout.reset()
 	}
@@ -116,7 +116,7 @@ func (cmd *Command) stderrReload() *bufio.Reader {
 	if !cmd.docout.WatchMode {
 		cmd.docerr.reset()
 	} else {
-		cmd.docerr.appendFormFeed(cmd.docerr.chunkForAdd(false))
+		cmd.docerr.appendFormFeed(cmd.docerr.store.chunkForAdd(false, cmd.docerr.size))
 	}
 
 	return bufio.NewReader(cmd.stderr)

@@ -78,18 +78,18 @@ func (s *store) evictChunksFile(chunkNum int) error {
 
 // evictChunksMem evicts non-regular file chunks from memory.
 // Change the start position after unloading.
-func (m *Document) evictChunksMem(chunkNum int) {
+func (s *store) evictChunksMem(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
-	if (MemoryLimit < 0) || (m.store.loadedChunks.Len() < MemoryLimit) {
+	if (MemoryLimit < 0) || (s.loadedChunks.Len() < MemoryLimit) {
 		return
 	}
-	k, _, _ := m.store.loadedChunks.GetOldest()
-	m.store.unloadChunk(k)
-	m.store.mu.Lock()
-	m.store.startNum = (k + 1) * ChunkSize
-	m.store.mu.Unlock()
+	k, _, _ := s.loadedChunks.GetOldest()
+	s.unloadChunk(k)
+	s.mu.Lock()
+	s.startNum = (k + 1) * ChunkSize
+	s.mu.Unlock()
 }
 
 // unloadChunk unloads the chunk from memory.
@@ -106,17 +106,17 @@ func (s *store) lastChunkNum() int {
 }
 
 // chunkForAdd is a helper function to get the chunk to add.
-func (m *Document) chunkForAdd(isFile bool) *chunk {
-	m.store.mu.Lock()
-	defer m.store.mu.Unlock()
+func (s *store) chunkForAdd(isFile bool, start int64) *chunk {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if m.store.endNum < len(m.store.chunks)*ChunkSize {
-		return m.store.chunks[len(m.store.chunks)-1]
+	if s.endNum < len(s.chunks)*ChunkSize {
+		return s.chunks[len(s.chunks)-1]
 	}
-	chunk := NewChunk(m.size)
-	m.store.chunks = append(m.store.chunks, chunk)
+	chunk := NewChunk(start)
+	s.chunks = append(s.chunks, chunk)
 	if !isFile {
-		m.store.addChunksMem(len(m.store.chunks) - 1)
+		s.addChunksMem(len(s.chunks) - 1)
 	}
 	return chunk
 }

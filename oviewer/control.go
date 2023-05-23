@@ -164,7 +164,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 		return m.continueRead(reader)
 	case requestLoad:
 		m.currentChunk = sc.chunkNum
-		m.evictChunksMem(sc.chunkNum)
+		m.store.evictChunksMem(sc.chunkNum)
 	case requestReload:
 		if reload != nil {
 			log.Println("reload")
