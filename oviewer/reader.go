@@ -55,7 +55,7 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 			reader.Reset(m.file)
 		}
 	}
-	chunk := m.chunkForAdd()
+	chunk := m.chunkForAdd(m.seekable)
 	start := len(chunk.lines)
 	if err := m.addOrReserveChunk(chunk, reader, start); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -79,16 +79,16 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, nil
 	}
 
-	reader, err := m.loadRead(reader, m.lastChunkNum())
+	reader, err := m.loadRead(reader, m.store.lastChunkNum())
 	if err != nil {
 		return reader, err
 	}
 
 	atomic.StoreInt32(&m.eof, 0)
-	chunk := m.store.chunks[m.lastChunkNum()]
+	chunk := m.store.chunks[m.store.lastChunkNum()]
 	start := len(chunk.lines) - 1
 	if atomic.LoadInt32(&m.noNewlineEOF) == 0 {
-		chunk = m.chunkForAdd()
+		chunk = m.chunkForAdd(m.seekable)
 		start = len(chunk.lines)
 	}
 	if m.seekable {
@@ -124,11 +124,11 @@ func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start i
 // read and update size only.
 func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 	count, size, err := m.countLines(reader, start)
-	m.mu.Lock()
+	m.store.mu.Lock()
 	m.endNum += count
 	m.size += int64(size)
 	m.offset = m.size
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 	return err
 }
@@ -210,7 +210,7 @@ func (m *Document) loadReadMem(reader *bufio.Reader, chunkNum int) (*bufio.Reade
 		return reader, nil
 	}
 
-	if chunkNum < m.lastChunkNum() {
+	if chunkNum < m.store.lastChunkNum() {
 		// already loaded.
 		// return reader, fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
 		return reader, nil
@@ -226,7 +226,7 @@ func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		m.reset()
 	} else {
 		m.seekable = false
-		chunk := m.chunkForAdd()
+		chunk := m.chunkForAdd(m.seekable)
 		m.appendFormFeed(chunk)
 	}
 	var err error
@@ -288,7 +288,7 @@ func (m *Document) openFileReader(fileName string) (io.Reader, error) {
 
 // fileReader returns a io.Reader.
 func (m *Document) fileReader(f *os.File) (io.Reader, error) {
-	m.mu.Lock()
+	m.store.mu.Lock()
 	m.file = f
 
 	cFormat, r := uncompressedReader(m.file, m.seekable)
@@ -306,7 +306,7 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	if STDOUTPIPE != nil {
 		r = io.TeeReader(r, STDOUTPIPE)
 	}
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 
 	return r, nil
 }
@@ -419,12 +419,12 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 // appendOnly appends to the line of the chunk.
 // appendOnly does not updates the number of lines and size.
 func (m *Document) appendOnly(chunk *chunk, line []byte) {
-	m.mu.Lock()
+	m.store.mu.Lock()
 	size := len(line)
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 }
 
 // joinLast joins the new content to the last line.
@@ -435,7 +435,7 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	}
 	size := len(line)
 
-	m.mu.Lock()
+	m.store.mu.Lock()
 	num := len(chunk.lines) - 1
 	buf := chunk.lines[num]
 	dst := make([]byte, 0, len(buf)+size)
@@ -443,7 +443,7 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	dst = append(dst, line...)
 	m.size += int64(size)
 	chunk.lines[num] = dst
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 
 	if line[len(line)-1] == '\n' {
 		atomic.StoreInt32(&m.noNewlineEOF, 0)
@@ -469,23 +469,23 @@ func (m *Document) appendLine(chunk *chunk, line []byte) {
 		m.joinLast(chunk, line)
 		return
 	}
-	m.mu.Lock()
+	m.store.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
 	m.endNum++
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 }
 
 func (m *Document) appendFormFeed(chunk *chunk) {
 	line := ""
-	m.mu.Lock()
+	m.store.mu.Lock()
 	if len(chunk.lines) > 0 {
 		line = string(chunk.lines[len(chunk.lines)-1])
 	}
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 	// Do not add if the previous is FormFeed(always add for formfeedTime).
 	if line != FormFeed {
 		feed := FormFeed
@@ -521,13 +521,13 @@ func (m *Document) reload() error {
 
 // reset clears all lines.
 func (m *Document) reset() {
-	m.mu.Lock()
+	m.store.mu.Lock()
 	m.size = 0
 	m.endNum = 0
 	m.store.chunks = []*chunk{
 		NewChunk(0),
 	}
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 	atomic.StoreInt32(&m.changed, 1)
 	m.ClearCache()
 }
@@ -608,16 +608,16 @@ func (m *Document) ReadAll(r io.Reader) error {
 // readAll reads to the end.
 // The read lines are stored in the lines of the Document.
 func (m *Document) readAll(reader *bufio.Reader) error {
-	chunk := m.chunkForAdd()
+	chunk := m.chunkForAdd(m.seekable)
 	start := len(chunk.lines)
 	for {
 		if err := m.readLines(chunk, reader, start, ChunkSize, true); err != nil {
 			return err
 		}
 		chunk = NewChunk(m.size)
-		m.mu.Lock()
+		m.store.mu.Lock()
 		m.store.chunks = append(m.store.chunks, chunk)
-		m.mu.Unlock()
+		m.store.mu.Unlock()
 		start = 0
 	}
 }

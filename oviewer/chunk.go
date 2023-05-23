@@ -87,9 +87,9 @@ func (m *Document) evictChunksMem(chunkNum int) {
 	}
 	k, _, _ := m.store.loadedChunks.GetOldest()
 	m.store.unloadChunk(k)
-	m.mu.Lock()
+	m.store.mu.Lock()
 	m.startNum = (k + 1) * ChunkSize
-	m.mu.Unlock()
+	m.store.mu.Unlock()
 }
 
 // unloadChunk unloads the chunk from memory.
@@ -99,38 +99,37 @@ func (s *store) unloadChunk(chunkNum int) {
 }
 
 // lastChunkNum returns the last chunk number.
-func (m *Document) lastChunkNum() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	return len(m.store.chunks) - 1
+func (s *store) lastChunkNum() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.chunks) - 1
 }
 
 // chunkForAdd is a helper function to get the chunk to add.
-func (m *Document) chunkForAdd() *chunk {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (m *Document) chunkForAdd(isFile bool) *chunk {
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
 
 	if m.endNum < len(m.store.chunks)*ChunkSize {
 		return m.store.chunks[len(m.store.chunks)-1]
 	}
 	chunk := NewChunk(m.size)
 	m.store.chunks = append(m.store.chunks, chunk)
-	if !m.seekable {
+	if !isFile {
 		m.store.addChunksMem(len(m.store.chunks) - 1)
 	}
 	return chunk
 }
 
 // isLoadedChunk returns true if the chunk is loaded in memory.
-func (m *Document) isLoadedChunk(chunkNum int) bool {
+func (s *store) isLoadedChunk(chunkNum int, isFile bool) bool {
 	if chunkNum == 0 {
 		return true
 	}
-	if !m.seekable {
+	if !isFile {
 		return true
 	}
-	return m.store.loadedChunks.Contains(chunkNum)
+	return s.loadedChunks.Contains(chunkNum)
 }
 
 // chunkLine returns chunkNum and chunk line number from line number.

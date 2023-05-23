@@ -87,9 +87,6 @@ type Document struct {
 	// CFormat is a compressed format.
 	CFormat Compressed
 
-	// mu controls the mutex.
-	mu sync.Mutex
-
 	watchRestart int32
 	tickerState  int32
 
@@ -131,6 +128,9 @@ type store struct {
 
 	// loadedChunks manages chunks loaded into memory.
 	loadedChunks *lru.Cache[int, struct{}]
+
+	// mu controls the mutex.
+	mu sync.Mutex
 }
 
 // chunk stores the contents of the split file as slices of strings.
@@ -252,15 +252,15 @@ func (m *Document) Line(n int) ([]byte, error) {
 	}
 
 	chunkNum := n / ChunkSize
-	if m.lastChunkNum() < chunkNum {
+	if m.store.lastChunkNum() < chunkNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
 	if m.currentChunk != chunkNum {
 		m.requestLoad(chunkNum)
 	}
 
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
 	chunk := m.store.chunks[chunkNum]
 	if cn := n % ChunkSize; cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
@@ -304,8 +304,8 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
 	return m.endNum
 }
 
@@ -373,8 +373,8 @@ func (m *Document) firstLine() int {
 
 // GetChunkLine returns one line from buffer.
 func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.store.mu.Lock()
+	defer m.store.mu.Unlock()
 	if len(m.store.chunks) <= chunkNum {
 		return nil, ErrOutOfChunk
 	}

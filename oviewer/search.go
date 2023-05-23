@@ -280,10 +280,10 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	if !m.seekable {
 		m.requestLoad(chunkNum)
 	} else {
-		if m.lastChunkNum() < chunkNum {
+		if m.store.lastChunkNum() < chunkNum {
 			return 0, ErrOutOfChunk
 		}
-		if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+		if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
 			return 0, ErrNotFound
 		}
 	}
@@ -307,7 +307,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 
 // BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if !m.isLoadedChunk(chunkNum) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
 		return 0, ErrNotFound
 	}
 
@@ -330,7 +330,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 
 // storageSearch searches for line not in memory(storage).
 func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
-	if !m.isLoadedChunk(chunkNum) && atomic.LoadInt32(&m.closed) == 0 {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && atomic.LoadInt32(&m.closed) == 0 {
 		if m.requestSearch(chunkNum, searcher) {
 			return true
 		}
