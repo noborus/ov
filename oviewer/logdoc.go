@@ -33,7 +33,7 @@ func (m *Document) Write(p []byte) (int, error) {
 		m.store.mu.Lock()
 		if len(m.store.chunks) > 2 {
 			m.store.chunks[len(m.store.chunks)-2].lines = nil
-			m.startNum = ChunkSize * (len(m.store.chunks) - 1)
+			m.store.startNum = ChunkSize * (len(m.store.chunks) - 1)
 		}
 		m.store.chunks = append(m.store.chunks, chunk)
 		m.store.mu.Unlock()

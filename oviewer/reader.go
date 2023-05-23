@@ -125,7 +125,7 @@ func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start i
 func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 	count, size, err := m.countLines(reader, start)
 	m.store.mu.Lock()
-	m.endNum += count
+	m.store.endNum += count
 	m.size += int64(size)
 	m.offset = m.size
 	m.store.mu.Unlock()
@@ -142,7 +142,7 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 	start := 0
 	end := ChunkSize
-	lastChunk, endNum := chunkLine(m.endNum)
+	lastChunk, endNum := chunkLine(m.store.endNum)
 	if chunkNum == lastChunk {
 		end = endNum
 	}
@@ -448,7 +448,7 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	if line[len(line)-1] == '\n' {
 		atomic.StoreInt32(&m.noNewlineEOF, 0)
 	}
-	m.cache.Remove(m.endNum - 1)
+	m.cache.Remove(m.store.endNum - 1)
 	return true
 }
 
@@ -472,7 +472,7 @@ func (m *Document) appendLine(chunk *chunk, line []byte) {
 	m.store.mu.Lock()
 	size := len(line)
 	m.size += int64(size)
-	m.endNum++
+	m.store.endNum++
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
@@ -523,7 +523,7 @@ func (m *Document) reload() error {
 func (m *Document) reset() {
 	m.store.mu.Lock()
 	m.size = 0
-	m.endNum = 0
+	m.store.endNum = 0
 	m.store.chunks = []*chunk{
 		NewChunk(0),
 	}

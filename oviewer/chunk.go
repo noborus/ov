@@ -88,7 +88,7 @@ func (m *Document) evictChunksMem(chunkNum int) {
 	k, _, _ := m.store.loadedChunks.GetOldest()
 	m.store.unloadChunk(k)
 	m.store.mu.Lock()
-	m.startNum = (k + 1) * ChunkSize
+	m.store.startNum = (k + 1) * ChunkSize
 	m.store.mu.Unlock()
 }
 
@@ -110,7 +110,7 @@ func (m *Document) chunkForAdd(isFile bool) *chunk {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
 
-	if m.endNum < len(m.store.chunks)*ChunkSize {
+	if m.store.endNum < len(m.store.chunks)*ChunkSize {
 		return m.store.chunks[len(m.store.chunks)-1]
 	}
 	chunk := NewChunk(m.size)

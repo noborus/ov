@@ -58,11 +58,6 @@ type Document struct {
 	// offset
 	offset int64
 
-	// startNum is the number of the first line that can be moved.
-	startNum int
-	// endNum is the number of the last line read.
-	endNum int
-
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
@@ -131,6 +126,11 @@ type store struct {
 
 	// mu controls the mutex.
 	mu sync.Mutex
+
+	// startNum is the number of the first line that can be moved.
+	startNum int
+	// endNum is the number of the last line read.
+	endNum int
 }
 
 // chunk stores the contents of the split file as slices of strings.
@@ -306,7 +306,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 func (m *Document) BufEndNum() int {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
-	return m.endNum
+	return m.store.endNum
 }
 
 // BufEOF return true if EOF is reached.
