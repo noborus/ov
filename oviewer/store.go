@@ -3,9 +3,30 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 )
+
+// ChunkSize is the unit of number of lines to split the file.
+var ChunkSize = 10000
+
+// NewStore returns store.
+func NewStore() *store {
+	return &store{
+		chunks: []*chunk{
+			NewChunk(0),
+		},
+	}
+}
+
+// NewChunk returns chunk.
+func NewChunk(start int64) *chunk {
+	return &chunk{
+		lines: make([][]byte, 0, ChunkSize),
+		start: start,
+	}
+}
 
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
@@ -49,14 +70,6 @@ func (s *store) addChunksFile(chunkNum int) {
 	}
 }
 
-// addChunksMem adds non-regular file chunks to memory.
-func (s *store) addChunksMem(chunkNum int) {
-	if chunkNum == 0 {
-		return
-	}
-	s.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
-}
-
 // evictChunksFile evicts chunks of a regular file from memory.
 func (s *store) evictChunksFile(chunkNum int) error {
 	if chunkNum == 0 {
@@ -76,13 +89,29 @@ func (s *store) evictChunksFile(chunkNum int) error {
 	return nil
 }
 
-// evictChunksMem evicts non-regular file chunks from memory.
-// Change the start position after unloading.
-func (s *store) evictChunksMem(chunkNum int) {
+// addChunksMem adds non-regular file chunks to memory.
+func (s *store) addChunksMem(chunkNum int) {
+	if MemoryLimit < 0 {
+		return
+	}
 	if chunkNum == 0 {
 		return
 	}
-	if (MemoryLimit < 0) || (s.loadedChunks.Len() < MemoryLimit) {
+	if _, _, evicted := s.loadedChunks.PeekOrAdd(chunkNum, struct{}{}); evicted {
+		log.Println("AddChunksMem evicted!")
+	}
+}
+
+// evictChunksMem evicts non-regular file chunks from memory.
+// Change the start position after unloading.
+func (s *store) evictChunksMem(chunkNum int) {
+	if MemoryLimit < 0 {
+		return
+	}
+	if chunkNum == 0 {
+		return
+	}
+	if s.loadedChunks.Len() < MemoryLimit {
 		return
 	}
 	k, _, _ := s.loadedChunks.GetOldest()
@@ -137,4 +166,60 @@ func chunkLine(n int) (int, int) {
 	chunkNum := n / ChunkSize
 	cn := n % ChunkSize
 	return chunkNum, cn
+}
+
+// appendOnly appends to the line of the chunk.
+// appendOnly does not updates the number of lines and size.
+func (s *store) appendOnly(chunk *chunk, line []byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	size := len(line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
+}
+
+// appendLine appends to the line of the chunk.
+// appendLine updates the number of lines and size.
+func (s *store) appendLine(chunk *chunk, line []byte) {
+	if atomic.SwapInt32(&s.noNewlineEOF, 0) == 1 {
+		s.joinLast(chunk, line)
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	size := len(line)
+	s.size += int64(size)
+	s.endNum++
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
+}
+
+// joinLast joins the new content to the last line.
+// This is used when the last line is added without a newline and EOF.
+func (s *store) joinLast(chunk *chunk, line []byte) bool {
+	size := len(line)
+	if size == 0 {
+		return false
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	num := len(chunk.lines) - 1
+	buf := chunk.lines[num]
+	dst := make([]byte, 0, len(buf)+size)
+	dst = append(dst, buf...)
+	dst = append(dst, line...)
+	s.size += int64(size)
+	chunk.lines[num] = dst
+
+	if line[len(line)-1] == '\n' {
+		atomic.StoreInt32(&s.noNewlineEOF, 0)
+	}
+	return true
 }

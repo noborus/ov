@@ -20,82 +20,36 @@ import (
 
 // Root structure contains information about the drawing.
 type Root struct {
-	// tcell.Screen is the root screen.
 	tcell.Screen
-
-	// Doc contains the model of ov
-	Doc *Document
-	// help
-	helpDoc *Document
-	// log
-	logDoc *Document
-
-	// input contains the input mode.
-	input *Input
-
-	// cancelFunc saves the cancel function, which is a time-consuming process.
-	cancelFunc context.CancelFunc
-
-	// searchReg for on-screen highlighting.
-	searchReg *regexp.Regexp
-
-	// keyConfig contains the binding settings for the key.
-	keyConfig *cbind.Configuration
-	// inputKeyConfig contains the binding settings for the key.
+	Doc            *Document
+	helpDoc        *Document
+	logDoc         *Document
+	input          *Input
+	cancelFunc     context.CancelFunc
+	searchReg      *regexp.Regexp
+	keyConfig      *cbind.Configuration
 	inputKeyConfig *cbind.Configuration
-
-	// searchWord for on-screen highlighting.
-	searchWord string
-	// Original string.
-	OriginStr string
-
-	// message is the message to display.
-	message string
-
-	// DocList
-	DocList []*Document
-
-	// cancelKeys represents the cancellation key string.
-	cancelKeys []string
-
-	// Config contains settings that determine the behavior of ov.
+	searchWord     string
+	OriginStr      string
+	message        string
+	cancelKeys     []string
+	DocList        []*Document
+	scr            SCR
 	Config
-
-	// screenMode represents the mode of screen.
-	screenMode ScreenMode
-
-	// mu controls the RWMutex.
-	mu sync.RWMutex
-
-	// Original position at the start of search.
-	OriginPos int
-
-	// CurrentDoc is the index of the current document.
-	CurrentDoc int
-
-	scr SCR
-	// x1, y1, x2, y2 are the coordinates selected by the mouse.
-	x1 int
-	y1 int
-	x2 int
-	y2 int
-
-	// headerLen is the actual header length when wrapped.
-	headerLen int
-
-	// statusPos is the position of the status line.
-	statusPos int
-	// minStartX is the minimum start position of x.
-	minStartX int
-
-	// skipDraw skips draw once when true.
-	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
-	skipDraw bool
-	// mousePressed is a flag when the mouse selection button is pressed.
-	mousePressed bool
-	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
-	// mouseRectangle is a flag for rectangle selection.
+	screenMode     ScreenMode
+	OriginPos      int
+	CurrentDoc     int
+	minStartX      int
+	x1             int
+	y1             int
+	x2             int
+	y2             int
+	headerLen      int
+	statusPos      int
+	mu             sync.RWMutex
+	skipDraw       bool
+	mousePressed   bool
+	mouseSelect    bool
 	mouseRectangle bool
 }
 
@@ -174,73 +128,35 @@ type general struct {
 
 // Config represents the settings of ov.
 type Config struct {
-	// KeyBinding
-	Keybind map[string][]string
-	// Mode represents the operation of the customized mode.
-	Mode map[string]general
-	// StyleAlternate is a style that applies line by line.
-	StyleAlternate OVStyle
-	// StyleHeader is the style that applies to the header.
-	StyleHeader OVStyle
-	// StyleBody is the style that applies to the body.
-	StyleBody OVStyle
-	// StyleOverStrike is a style that applies to overstrike.
-	StyleOverStrike OVStyle
-	// StyleOverLine is a style that applies to overstrike underlines.
-	StyleOverLine OVStyle
-	// StyleLineNumber is a style that applies line number.
-	StyleLineNumber OVStyle
-	// StyleSearchHighlight is the style that applies to the search highlight.
-	StyleSearchHighlight OVStyle
-	// StyleColumnHighlight is the style that applies to the column highlight.
-	StyleColumnHighlight OVStyle
-	// StyleMarkLine is a style that marked line.
-	StyleMarkLine OVStyle
-	// StyleSectionLine is a style that section delimiter line.
-	StyleSectionLine OVStyle
-	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
+	Keybind                  map[string][]string
+	Mode                     map[string]general
+	ViewMode                 string
+	DefaultKeyBind           string
+	StyleColumnRainbow       []OVStyle
 	StyleMultiColorHighlight []OVStyle
-	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
-	StyleColumnRainbow []OVStyle
-	// StyleJumpTargetLine is the line that displays the search results.
-	StyleJumpTargetLine OVStyle
-
-	// General represents the general behavior.
-	General general
-
-	// MemoryLimit is a number that limits chunk loading.
-	MemoryLimit int
-	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
-	MemoryLimitFile int
-	// BeforeWriteOriginal specifies the number of lines before the current position.
-	// 0 is the top of the current screen
-	BeforeWriteOriginal int
-	// AfterWriteOriginal specifies the number of lines after the current position.
-	// 0 specifies the bottom of the screen.
-	AfterWriteOriginal int
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
-	// Mouse support disable.
-	DisableMouse bool
-	// IsWriteOriginal is true, write the current screen on quit.
-	IsWriteOriginal bool
-	// QuitSmall Quit if the output fits on one screen.
-	QuitSmall bool
-	// CaseSensitive is case-sensitive if true.
-	CaseSensitive bool
-	// RegexpSearch is Regular expression search if true.
-	RegexpSearch bool
-	// Incsearch is incremental search if true.
-	Incsearch bool
-
-	// Debug represents whether to enable the debug output.
-	Debug bool
+	StyleLineNumber          OVStyle
+	StyleHeader              OVStyle
+	StyleSearchHighlight     OVStyle
+	StyleColumnHighlight     OVStyle
+	StyleMarkLine            OVStyle
+	StyleSectionLine         OVStyle
+	StyleOverStrike          OVStyle
+	StyleBody                OVStyle
+	StyleJumpTargetLine      OVStyle
+	StyleAlternate           OVStyle
+	StyleOverLine            OVStyle
+	General                  general
+	MemoryLimitFile          int
+	AfterWriteOriginal       int
+	BeforeWriteOriginal      int
+	MemoryLimit              int
+	DisableMouse             bool
+	IsWriteOriginal          bool
+	QuitSmall                bool
+	CaseSensitive            bool
+	RegexpSearch             bool
+	Incsearch                bool
+	Debug                    bool
 }
 
 // OVStyle represents a style in addition to the original style.

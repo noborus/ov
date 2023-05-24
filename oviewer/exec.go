@@ -15,12 +15,12 @@ import (
 
 // Command is the structure of the command.
 type Command struct {
-	args    []string
-	command *exec.Cmd
 	stdout  io.Reader
 	stderr  io.Reader
+	command *exec.Cmd
 	docout  *Document
 	docerr  *Document
+	args    []string
 }
 
 // NewCommand return the structure of Command.
@@ -89,7 +89,7 @@ func (cmd *Command) Wait() {
 func (cmd *Command) Reload() *bufio.Reader {
 	cmd.Wait()
 	if cmd.docout.WatchMode {
-		cmd.docout.appendFormFeed(cmd.docout.store.chunkForAdd(false, cmd.docout.size))
+		cmd.docout.appendFormFeed(cmd.docout.store.chunkForAdd(false, cmd.docout.store.size))
 	} else {
 		cmd.docout.reset()
 	}
@@ -116,7 +116,7 @@ func (cmd *Command) stderrReload() *bufio.Reader {
 	if !cmd.docout.WatchMode {
 		cmd.docerr.reset()
 	} else {
-		cmd.docerr.appendFormFeed(cmd.docerr.store.chunkForAdd(false, cmd.docerr.size))
+		cmd.docerr.appendFormFeed(cmd.docerr.store.chunkForAdd(false, cmd.docerr.store.size))
 	}
 
 	return bufio.NewReader(cmd.stderr)

@@ -12,9 +12,9 @@ import (
 // controlSpecifier represents a control request.
 type controlSpecifier struct {
 	searcher Searcher
+	done     chan bool
 	request  request
 	chunkNum int
-	done     chan bool
 }
 
 // request represents a control request.
@@ -43,7 +43,7 @@ func (m *Document) ControlFile(file *os.File) error {
 			atomic.StoreInt32(&m.closed, 1)
 			log.Println(err)
 		}
-		atomic.StoreInt32(&m.eof, 0)
+		atomic.StoreInt32(&m.store.eof, 0)
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
 			reader, err = m.controlFile(sc, reader)
@@ -132,6 +132,8 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		}
 		return m.continueRead(reader)
 	case requestFollow:
+		// Remove the last line from the cache as it may be appended.
+		m.cache.Remove(m.store.endNum - 1)
 		return m.followRead(reader)
 	case requestLoad:
 		return m.loadRead(reader, sc.chunkNum)
