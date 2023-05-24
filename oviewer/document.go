@@ -83,8 +83,6 @@ type Document struct {
 	changed int32
 	// 1 if there is a closed.
 	closed int32
-	// 1 if newline at end of file.
-	noNewlineEOF int32
 
 	// 1 if there is a read cancel.
 	readCancel int32
@@ -123,6 +121,10 @@ type store struct {
 	startNum int
 	// endNum is the number of the last line read.
 	endNum int
+
+	// 1 if newline at end of file.
+	noNewlineEOF int32
+
 	// size is the number of bytes read.
 	size int64
 	// offset

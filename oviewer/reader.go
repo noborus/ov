@@ -27,7 +27,7 @@ const FormFeed = "\f"
 // firstRead first reads the file.
 // Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
-	atomic.StoreInt32(&m.noNewlineEOF, 0)
+	atomic.StoreInt32(&m.store.noNewlineEOF, 0)
 	chunk := m.store.chunks[0]
 	if err := m.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
@@ -87,7 +87,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.eof, 0)
 	chunk := m.store.chunks[m.store.lastChunkNum()]
 	start := len(chunk.lines) - 1
-	if atomic.LoadInt32(&m.noNewlineEOF) == 0 {
+	if atomic.LoadInt32(&m.store.noNewlineEOF) == 0 {
 		chunk = m.store.chunkForAdd(m.seekable, m.store.size)
 		start = len(chunk.lines)
 	}
@@ -354,7 +354,7 @@ func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end 
 			if line.Len() != 0 {
 				m.append(chunk, addLines, line.Bytes())
 				m.store.offset = m.store.size
-				atomic.StoreInt32(&m.noNewlineEOF, 1)
+				atomic.StoreInt32(&m.store.noNewlineEOF, 1)
 			}
 			return err
 		}
@@ -408,7 +408,7 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 			p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
 			if p+1 < bufLen {
 				count++
-				atomic.StoreInt32(&m.noNewlineEOF, 1)
+				atomic.StoreInt32(&m.store.noNewlineEOF, 1)
 			}
 		}
 	}
@@ -434,7 +434,7 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	m.store.mu.Unlock()
 
 	if line[len(line)-1] == '\n' {
-		atomic.StoreInt32(&m.noNewlineEOF, 0)
+		atomic.StoreInt32(&m.store.noNewlineEOF, 0)
 	}
 	return true
 }
@@ -452,7 +452,7 @@ func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
 // appendLine appends to the line of the chunk.
 // appendLine updates the number of lines and size.
 func (m *Document) appendLine(chunk *chunk, line []byte) {
-	if atomic.SwapInt32(&m.noNewlineEOF, 0) == 1 {
+	if atomic.SwapInt32(&m.store.noNewlineEOF, 0) == 1 {
 		m.joinLast(chunk, line)
 		return
 	}
