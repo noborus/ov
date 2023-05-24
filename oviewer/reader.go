@@ -436,7 +436,6 @@ func (m *Document) joinLast(chunk *chunk, line []byte) bool {
 	if line[len(line)-1] == '\n' {
 		atomic.StoreInt32(&m.noNewlineEOF, 0)
 	}
-	m.cache.Remove(m.store.endNum - 1)
 	return true
 }
 

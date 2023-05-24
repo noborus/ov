@@ -132,6 +132,8 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		}
 		return m.continueRead(reader)
 	case requestFollow:
+		// Remove the last line from the cache as it may be appended.
+		m.cache.Remove(m.store.endNum - 1)
 		return m.followRead(reader)
 	case requestLoad:
 		return m.loadRead(reader, sc.chunkNum)
