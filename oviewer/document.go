@@ -15,9 +15,6 @@ import (
 	"github.com/noborus/guesswidth"
 )
 
-// ChunkSize is the unit of number of lines to split the file.
-var ChunkSize = 10000
-
 // The Document structure contains the values
 // for the logical screen.
 type Document struct {
@@ -52,11 +49,6 @@ type Document struct {
 
 	// status is the display status of the document.
 	general
-
-	// size is the number of bytes read.
-	size int64
-	// offset
-	offset int64
 
 	// markedPoint is the position of the marked line.
 	markedPoint int
@@ -131,6 +123,10 @@ type store struct {
 	startNum int
 	// endNum is the number of the last line read.
 	endNum int
+	// size is the number of bytes read.
+	size int64
+	// offset
+	offset int64
 }
 
 // chunk stores the contents of the split file as slices of strings.
@@ -166,14 +162,6 @@ func NewDocument() (*Document, error) {
 		return nil, err
 	}
 	return m, nil
-}
-
-// NewChunk returns chunk.
-func NewChunk(start int64) *chunk {
-	return &chunk{
-		lines: make([][]byte, 0, ChunkSize),
-		start: start,
-	}
 }
 
 // NewCache creates a new cache.
@@ -251,7 +239,8 @@ func (m *Document) Line(n int) ([]byte, error) {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
 
-	chunkNum := n / ChunkSize
+	chunkNum, cn := chunkLine(n)
+
 	if m.store.lastChunkNum() < chunkNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
@@ -262,7 +251,7 @@ func (m *Document) Line(n int) ([]byte, error) {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
 	chunk := m.store.chunks[chunkNum]
-	if cn := n % ChunkSize; cn < len(chunk.lines) {
+	if cn < len(chunk.lines) {
 		return chunk.lines[cn], nil
 	}
 	return nil, ErrEvictedMemory

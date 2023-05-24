@@ -7,6 +7,17 @@ import (
 	lru "github.com/hashicorp/golang-lru/v2"
 )
 
+// ChunkSize is the unit of number of lines to split the file.
+var ChunkSize = 10000
+
+// NewChunk returns chunk.
+func NewChunk(start int64) *chunk {
+	return &chunk{
+		lines: make([][]byte, 0, ChunkSize),
+		start: start,
+	}
+}
+
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
 func (s *store) setNewLoadChunks(isFile bool) {
@@ -49,14 +60,6 @@ func (s *store) addChunksFile(chunkNum int) {
 	}
 }
 
-// addChunksMem adds non-regular file chunks to memory.
-func (s *store) addChunksMem(chunkNum int) {
-	if chunkNum == 0 {
-		return
-	}
-	s.loadedChunks.PeekOrAdd(chunkNum, struct{}{})
-}
-
 // evictChunksFile evicts chunks of a regular file from memory.
 func (s *store) evictChunksFile(chunkNum int) error {
 	if chunkNum == 0 {
@@ -76,13 +79,29 @@ func (s *store) evictChunksFile(chunkNum int) error {
 	return nil
 }
 
-// evictChunksMem evicts non-regular file chunks from memory.
-// Change the start position after unloading.
-func (s *store) evictChunksMem(chunkNum int) {
+// addChunksMem adds non-regular file chunks to memory.
+func (s *store) addChunksMem(chunkNum int) {
+	if MemoryLimit < 0 {
+		return
+	}
 	if chunkNum == 0 {
 		return
 	}
-	if (MemoryLimit < 0) || (s.loadedChunks.Len() < MemoryLimit) {
+	if _, _, evicted := s.loadedChunks.PeekOrAdd(chunkNum, struct{}{}); evicted {
+		log.Println("AddChunksMem evicted!")
+	}
+}
+
+// evictChunksMem evicts non-regular file chunks from memory.
+// Change the start position after unloading.
+func (s *store) evictChunksMem(chunkNum int) {
+	if MemoryLimit < 0 {
+		return
+	}
+	if chunkNum == 0 {
+		return
+	}
+	if s.loadedChunks.Len() < MemoryLimit {
 		return
 	}
 	k, _, _ := s.loadedChunks.GetOldest()
@@ -137,4 +156,15 @@ func chunkLine(n int) (int, int) {
 	chunkNum := n / ChunkSize
 	cn := n % ChunkSize
 	return chunkNum, cn
+}
+
+// appendOnly appends to the line of the chunk.
+// appendOnly does not updates the number of lines and size.
+func (s *store) appendOnly(chunk *chunk, line []byte) {
+	s.mu.Lock()
+	size := len(line)
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
+	s.mu.Unlock()
 }
