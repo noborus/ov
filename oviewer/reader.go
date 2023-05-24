@@ -330,7 +330,7 @@ func open(fileName string) (*os.File, error) {
 // readLines append lines read from reader into chunks.
 // Read and fill the number of lines from start to end in chunk.
 // If addLines is true, increment the number of lines read (update endNum).
-func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, addLines bool) error {
+func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, updateNum bool) error {
 	var line bytes.Buffer
 	var isPrefix bool
 	for num := start; num < end; {
@@ -352,14 +352,12 @@ func (m *Document) readLines(chunk *chunk, reader *bufio.Reader, start int, end 
 		atomic.StoreInt32(&m.changed, 1)
 		if err != nil {
 			if line.Len() != 0 {
-				m.append(chunk, addLines, line.Bytes())
-				m.store.offset = m.store.size
+				m.append(chunk, updateNum, line.Bytes())
 				atomic.StoreInt32(&m.store.noNewlineEOF, 1)
 			}
 			return err
 		}
-		m.append(chunk, addLines, line.Bytes())
-		m.store.offset = m.store.size
+		m.append(chunk, updateNum, line.Bytes())
 		line.Reset()
 	}
 	return nil
@@ -415,55 +413,14 @@ func (m *Document) countLines(reader *bufio.Reader, start int) (int, int, error)
 	return count, size, nil
 }
 
-// joinLast joins the new content to the last line.
-// This is used when the last line is added without a newline and EOF.
-func (m *Document) joinLast(chunk *chunk, line []byte) bool {
-	if len(chunk.lines) == 0 {
-		return false
-	}
-	size := len(line)
-
-	m.store.mu.Lock()
-	num := len(chunk.lines) - 1
-	buf := chunk.lines[num]
-	dst := make([]byte, 0, len(buf)+size)
-	dst = append(dst, buf...)
-	dst = append(dst, line...)
-	m.store.size += int64(size)
-	chunk.lines[num] = dst
-	m.store.mu.Unlock()
-
-	if line[len(line)-1] == '\n' {
-		atomic.StoreInt32(&m.store.noNewlineEOF, 0)
-	}
-	return true
-}
-
 // append appends a line to the chunk.
-func (m *Document) append(chunk *chunk, isCount bool, line []byte) {
-	if isCount {
-		m.appendLine(chunk, line)
-		return
+func (m *Document) append(chunk *chunk, updateNum bool, line []byte) {
+	if updateNum {
+		m.store.appendLine(chunk, line)
+	} else {
+		m.store.appendOnly(chunk, line)
 	}
-
-	m.store.appendOnly(chunk, line)
-}
-
-// appendLine appends to the line of the chunk.
-// appendLine updates the number of lines and size.
-func (m *Document) appendLine(chunk *chunk, line []byte) {
-	if atomic.SwapInt32(&m.store.noNewlineEOF, 0) == 1 {
-		m.joinLast(chunk, line)
-		return
-	}
-	m.store.mu.Lock()
-	size := len(line)
-	m.store.size += int64(size)
-	m.store.endNum++
-	dst := make([]byte, size)
-	copy(dst, line)
-	chunk.lines = append(chunk.lines, dst)
-	m.store.mu.Unlock()
+	m.store.offset = m.store.size
 }
 
 func (m *Document) appendFormFeed(chunk *chunk) {
@@ -479,7 +436,7 @@ func (m *Document) appendFormFeed(chunk *chunk) {
 		if m.formfeedTime {
 			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
 		}
-		m.appendLine(chunk, []byte(feed))
+		m.store.appendLine(chunk, []byte(feed))
 	}
 }
 

@@ -3,6 +3,7 @@ package oviewer
 import (
 	"fmt"
 	"log"
+	"sync/atomic"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 )
@@ -162,9 +163,54 @@ func chunkLine(n int) (int, int) {
 // appendOnly does not updates the number of lines and size.
 func (s *store) appendOnly(chunk *chunk, line []byte) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	size := len(line)
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
-	s.mu.Unlock()
+
+}
+
+// appendLine appends to the line of the chunk.
+// appendLine updates the number of lines and size.
+func (s *store) appendLine(chunk *chunk, line []byte) {
+	if atomic.SwapInt32(&s.noNewlineEOF, 0) == 1 {
+		s.joinLast(chunk, line)
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	size := len(line)
+	s.size += int64(size)
+	s.endNum++
+	dst := make([]byte, size)
+	copy(dst, line)
+	chunk.lines = append(chunk.lines, dst)
+
+}
+
+// joinLast joins the new content to the last line.
+// This is used when the last line is added without a newline and EOF.
+func (s *store) joinLast(chunk *chunk, line []byte) bool {
+	size := len(line)
+	if size == 0 {
+		return false
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	num := len(chunk.lines) - 1
+	buf := chunk.lines[num]
+	dst := make([]byte, 0, len(buf)+size)
+	dst = append(dst, buf...)
+	dst = append(dst, line...)
+	s.size += int64(size)
+	chunk.lines[num] = dst
+
+	if line[len(line)-1] == '\n' {
+		atomic.StoreInt32(&s.noNewlineEOF, 0)
+	}
+	return true
 }

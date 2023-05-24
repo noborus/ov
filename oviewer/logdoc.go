@@ -27,7 +27,7 @@ func NewLogDoc() (*Document, error) {
 // Therefore, the log.Print output is displayed by logDoc.
 func (m *Document) Write(p []byte) (int, error) {
 	chunk := m.store.chunkForAdd(false, m.store.size)
-	m.appendLine(chunk, p)
+	m.append(chunk, true, p)
 	if len(chunk.lines) >= ChunkSize {
 		chunk = NewChunk(m.store.size)
 		m.store.mu.Lock()
