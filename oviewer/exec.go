@@ -15,12 +15,12 @@ import (
 
 // Command is the structure of the command.
 type Command struct {
-	args    []string
-	command *exec.Cmd
 	stdout  io.Reader
 	stderr  io.Reader
+	command *exec.Cmd
 	docout  *Document
 	docerr  *Document
+	args    []string
 }
 
 // NewCommand return the structure of Command.

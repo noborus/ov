@@ -18,29 +18,27 @@ import (
 // The Document structure contains the values
 // for the logical screen.
 type Document struct {
+	// File is the os.File.
+	file *os.File
+
+	cache *lru.Cache[int, LineC]
+
+	ticker     *time.Ticker
+	tickerDone chan struct{}
+	// ctlCh is the channel for controlling the reader goroutine.
+	ctlCh chan controlSpecifier
+
+	// multiColorRegexps holds multicolor regular expressions in slices.
+	multiColorRegexps []*regexp.Regexp
+	// store represents store management.
+	store *store
+
 	// fileName is the file name to display.
 	FileName string
 	// Caption is an additional caption to display after the file name.
 	Caption string
 	// filepath stores the absolute pathname for file watching.
 	filepath string
-	// File is the os.File.
-	file *os.File
-
-	store *store
-	// currentChunk represents the current chunk number.
-	currentChunk int
-
-	// ctlCh is the channel for controlling the reader goroutine.
-	ctlCh chan controlSpecifier
-
-	cache *lru.Cache[int, LineC]
-
-	ticker     *time.Ticker
-	tickerDone chan struct{}
-
-	// multiColorRegexps holds multicolor regular expressions in slices.
-	multiColorRegexps []*regexp.Regexp
 
 	// marked is a list of marked line numbers.
 	marked []int
@@ -50,6 +48,8 @@ type Document struct {
 	// status is the display status of the document.
 	general
 
+	// currentChunk represents the current chunk number.
+	currentChunk int
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
@@ -77,8 +77,6 @@ type Document struct {
 	watchRestart int32
 	tickerState  int32
 
-	// 1 if EOF is reached.
-	eof int32
 	// 1 if there is a changed.
 	changed int32
 	// 1 if there is a closed.
@@ -99,32 +97,22 @@ type Document struct {
 	formfeedTime bool
 }
 
-// LineC is one line of information.
-// Contains content, string, location information.
-type LineC struct {
-	lc  contents
-	str string
-	pos widthPos
-}
-
+// store represents store management.
 type store struct {
-	// chunks is the content of the file to be stored in chunks.
-	chunks []*chunk
-
 	// loadedChunks manages chunks loaded into memory.
 	loadedChunks *lru.Cache[int, struct{}]
-
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
 	// mu controls the mutex.
 	mu sync.Mutex
-
 	// startNum is the number of the first line that can be moved.
 	startNum int
 	// endNum is the number of the last line read.
 	endNum int
-
 	// 1 if newline at end of file.
 	noNewlineEOF int32
-
+	// 1 if EOF is reached.
+	eof int32
 	// size is the number of bytes read.
 	size int64
 	// offset
@@ -138,6 +126,14 @@ type chunk struct {
 	lines [][]byte
 	// start is the first position of the number of bytes read.
 	start int64
+}
+
+// LineC is one line of information.
+// Contains content, string, location information.
+type LineC struct {
+	lc  contents
+	str string
+	pos widthPos
 }
 
 // NewDocument returns Document.
@@ -154,11 +150,7 @@ func NewDocument() (*Document, error) {
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
-		store: &store{
-			chunks: []*chunk{
-				NewChunk(0),
-			},
-		},
+		store:         NewStore(),
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
@@ -302,7 +294,7 @@ func (m *Document) BufEndNum() int {
 
 // BufEOF return true if EOF is reached.
 func (m *Document) BufEOF() bool {
-	return atomic.LoadInt32(&m.eof) == 1
+	return atomic.LoadInt32(&m.store.eof) == 1
 }
 
 // ClearCache clears the cache.

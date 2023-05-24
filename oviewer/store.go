@@ -11,6 +11,15 @@ import (
 // ChunkSize is the unit of number of lines to split the file.
 var ChunkSize = 10000
 
+// NewStore returns store.
+func NewStore() *store {
+	return &store{
+		chunks: []*chunk{
+			NewChunk(0),
+		},
+	}
+}
+
 // NewChunk returns chunk.
 func NewChunk(start int64) *chunk {
 	return &chunk{
@@ -164,11 +173,11 @@ func chunkLine(n int) (int, int) {
 func (s *store) appendOnly(chunk *chunk, line []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	size := len(line)
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
-
 }
 
 // appendLine appends to the line of the chunk.
@@ -188,7 +197,6 @@ func (s *store) appendLine(chunk *chunk, line []byte) {
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
-
 }
 
 // joinLast joins the new content to the last line.
@@ -201,6 +209,7 @@ func (s *store) joinLast(chunk *chunk, line []byte) bool {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	num := len(chunk.lines) - 1
 	buf := chunk.lines[num]
 	dst := make([]byte, 0, len(buf)+size)

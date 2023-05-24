@@ -31,7 +31,7 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	chunk := m.store.chunks[0]
 	if err := m.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
-			atomic.StoreInt32(&m.eof, 1)
+			atomic.StoreInt32(&m.store.eof, 1)
 			return nil, err
 		}
 		reader = m.afterEOF(reader)
@@ -48,7 +48,7 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if _, err := m.file.Seek(m.store.offset, io.SeekStart); err != nil {
-			atomic.StoreInt32(&m.eof, 1)
+			atomic.StoreInt32(&m.store.eof, 1)
 			log.Printf("seek: %s", err)
 			m.seekable = false
 		} else {
@@ -84,7 +84,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, err
 	}
 
-	atomic.StoreInt32(&m.eof, 0)
+	atomic.StoreInt32(&m.store.eof, 0)
 	chunk := m.store.chunks[m.store.lastChunkNum()]
 	start := len(chunk.lines) - 1
 	if atomic.LoadInt32(&m.store.noNewlineEOF) == 0 {
@@ -250,7 +250,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	m.ClearCache()
 
 	atomic.StoreInt32(&m.closed, 0)
-	atomic.StoreInt32(&m.eof, 0)
+	atomic.StoreInt32(&m.store.eof, 0)
 	r, err := m.openFileReader(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %s", err)
@@ -264,7 +264,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 // afterEOF does processing after reaching EOF.
 func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	m.store.offset = m.store.size
-	atomic.StoreInt32(&m.eof, 1)
+	atomic.StoreInt32(&m.store.eof, 1)
 	if !m.seekable { // for NamedPipe.
 		return bufio.NewReader(m.file)
 	}
@@ -288,8 +288,9 @@ func (m *Document) openFileReader(fileName string) (io.Reader, error) {
 // fileReader returns a io.Reader.
 func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.store.mu.Lock()
-	m.file = f
+	defer m.store.mu.Unlock()
 
+	m.file = f
 	cFormat, r := uncompressedReader(m.file, m.seekable)
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
@@ -305,7 +306,6 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	if STDOUTPIPE != nil {
 		r = io.TeeReader(r, STDOUTPIPE)
 	}
-	m.store.mu.Unlock()
 
 	return r, nil
 }
@@ -465,13 +465,8 @@ func (m *Document) reload() error {
 
 // reset clears all lines.
 func (m *Document) reset() {
-	m.store.mu.Lock()
-	m.store.size = 0
-	m.store.endNum = 0
-	m.store.chunks = []*chunk{
-		NewChunk(0),
-	}
-	m.store.mu.Unlock()
+	m.store = NewStore()
+	m.store.setNewLoadChunks(m.seekable)
 	atomic.StoreInt32(&m.changed, 1)
 	m.ClearCache()
 }
@@ -491,7 +486,7 @@ func (m *Document) close() error {
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
-	atomic.StoreInt32(&m.eof, 1)
+	atomic.StoreInt32(&m.store.eof, 1)
 	atomic.StoreInt32(&m.closed, 1)
 	atomic.StoreInt32(&m.changed, 1)
 	return nil
@@ -539,7 +534,7 @@ func (m *Document) ReadAll(r io.Reader) error {
 		if err := m.readAll(reader); err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
 				m.store.offset = m.store.size
-				atomic.StoreInt32(&m.eof, 1)
+				atomic.StoreInt32(&m.store.eof, 1)
 				return
 			}
 			log.Printf("error: %v\n", err)
