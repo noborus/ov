@@ -60,8 +60,8 @@ func (s *store) setNewLoadChunks(isFile bool) {
 	s.loadedChunks = chunks
 }
 
-// addChunksFile adds chunks of a regular file to memory.
-func (s *store) addChunksFile(chunkNum int) {
+// loadChunksFile adds chunks of a regular file to memory.
+func (s *store) loadChunksFile(chunkNum int) {
 	if chunkNum == 0 {
 		return
 	}
@@ -89,8 +89,8 @@ func (s *store) evictChunksFile(chunkNum int) error {
 	return nil
 }
 
-// addChunksMem adds non-regular file chunks to memory.
-func (s *store) addChunksMem(chunkNum int) {
+// loadChunksMem adds non-regular file chunks to memory.
+func (s *store) loadChunksMem(chunkNum int) {
 	if MemoryLimit < 0 {
 		return
 	}
@@ -131,6 +131,7 @@ func (s *store) unloadChunk(chunkNum int) {
 func (s *store) lastChunkNum() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	return len(s.chunks) - 1
 }
 
@@ -142,10 +143,11 @@ func (s *store) chunkForAdd(isFile bool, start int64) *chunk {
 	if s.endNum < len(s.chunks)*ChunkSize {
 		return s.chunks[len(s.chunks)-1]
 	}
+
 	chunk := NewChunk(start)
 	s.chunks = append(s.chunks, chunk)
 	if !isFile {
-		s.addChunksMem(len(s.chunks) - 1)
+		s.loadChunksMem(len(s.chunks) - 1)
 	}
 	return chunk
 }
@@ -159,6 +161,17 @@ func (s *store) isLoadedChunk(chunkNum int, isFile bool) bool {
 		return true
 	}
 	return s.loadedChunks.Contains(chunkNum)
+}
+
+// chunkRange returns the start and end line numbers of the chunk.
+func (s *store) chunkRange(chunkNum int) (int, int) {
+	start := 0
+	end := ChunkSize
+	lastChunk, endNum := chunkLine(s.endNum)
+	if chunkNum == lastChunk {
+		end = endNum
+	}
+	return start, end
 }
 
 // chunkLine returns chunkNum and chunk line number from line number.
