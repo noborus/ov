@@ -1,10 +1,7 @@
 package oviewer
 
 import (
-	"sync"
 	"testing"
-
-	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 func Test_newLoadChunks(t *testing.T) {
@@ -144,42 +141,107 @@ func Test_store_chunkRange(t *testing.T) {
 	}
 }
 
+func testNewStoreFile(t *testing.T, chunkNum int) *store {
+	t.Helper()
+	s := NewStore()
+	s.chunks = make([]*chunk, chunkNum)
+	s.setNewLoadChunks(true)
+	for i := 0; i < chunkNum; i++ {
+		chunk := NewChunk(0)
+		chunk.lines = make([][]byte, ChunkSize)
+		for j := 0; j < ChunkSize; j++ {
+			chunk.lines[j] = []byte("a")
+		}
+		s.chunks[i] = chunk
+	}
+	return s
+}
+
 func Test_store_swapChunksFile(t *testing.T) {
+	type global struct {
+		MemoryLimit     int
+		MemoryLimitFile int
+	}
 	type fields struct {
-		loadedChunks *lru.Cache[int, struct{}]
-		chunks       []*chunk
-		mu           sync.Mutex
-		startNum     int
-		endNum       int
-		noNewlineEOF int32
-		eof          int32
-		size         int64
-		offset       int64
+		maxChunks int
 	}
 	type args struct {
-		chunkNum int
+		chunkNums []int
+		contains  int
 	}
 	tests := []struct {
 		name   string
+		global global
 		fields fields
 		args   args
+		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "test0",
+			fields: fields{maxChunks: 100},
+			global: global{
+				MemoryLimit:     3,
+				MemoryLimitFile: 100,
+			},
+			args: args{
+				chunkNums: []int{0},
+				contains:  0,
+			},
+			want: false,
+		},
+		{
+			name:   "test1",
+			fields: fields{maxChunks: 100},
+			global: global{
+				MemoryLimit:     3,
+				MemoryLimitFile: 100,
+			},
+			args: args{
+				chunkNums: []int{1},
+				contains:  1,
+			},
+			want: true,
+		},
+		{
+			name:   "testFalse",
+			fields: fields{maxChunks: 100},
+			global: global{
+				MemoryLimit:     3,
+				MemoryLimitFile: 100,
+			},
+			args: args{
+				chunkNums: []int{99},
+				contains:  1,
+			},
+			want: false,
+		},
+		{
+			name:   "testEvict",
+			fields: fields{maxChunks: 100},
+			global: global{
+				MemoryLimit:     3,
+				MemoryLimitFile: 3,
+			},
+			args: args{
+				chunkNums: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				contains:  2,
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &store{
-				loadedChunks: tt.fields.loadedChunks,
-				chunks:       tt.fields.chunks,
-				mu:           tt.fields.mu,
-				startNum:     tt.fields.startNum,
-				endNum:       tt.fields.endNum,
-				noNewlineEOF: tt.fields.noNewlineEOF,
-				eof:          tt.fields.eof,
-				size:         tt.fields.size,
-				offset:       tt.fields.offset,
+			MemoryLimit = tt.global.MemoryLimit
+			MemoryLimitFile = tt.global.MemoryLimitFile
+			s := testNewStoreFile(t, tt.fields.maxChunks)
+			for _, num := range tt.args.chunkNums {
+				s.swapLoadedFile(num)
 			}
-			s.swapLoadedFile(tt.args.chunkNum)
+
+			if got := s.loadedChunks.Contains(tt.args.contains); got != tt.want {
+				t.Logf("loadedChunks: %v", s.loadedChunks.Len())
+				t.Errorf("store.swapChunksFile() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

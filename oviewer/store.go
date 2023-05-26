@@ -157,19 +157,33 @@ func (s *store) isLoadedChunk(chunkNum int, isFile bool) bool {
 	return s.loadedChunks.Contains(chunkNum)
 }
 
+// isContinueRead returns whether to continue reading.
+func (s *store) isContinueRead(isFile bool) bool {
+	if isFile {
+		return true
+	}
+	if MemoryLimit < 0 {
+		return true
+	}
+	if s.loadedChunks.Len() < MemoryLimit {
+		return true
+	}
+	return false
+}
+
 // chunkRange returns the start and end line numbers of the chunk.
 func (s *store) chunkRange(chunkNum int) (int, int) {
 	start := 0
 	end := ChunkSize
-	lastChunk, endNum := chunkLine(s.endNum)
+	lastChunk, endNum := chunkLineNum(s.endNum)
 	if chunkNum == lastChunk {
 		end = endNum
 	}
 	return start, end
 }
 
-// chunkLine returns chunkNum and chunk line number from line number.
-func chunkLine(n int) (int, int) {
+// chunkLineNum returns chunkNum and chunk line number from line number.
+func chunkLineNum(n int) (int, int) {
 	chunkNum := n / ChunkSize
 	cn := n % ChunkSize
 	return chunkNum, cn
