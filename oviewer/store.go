@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"fmt"
 	"log"
 	"sync/atomic"
 
@@ -31,6 +30,16 @@ func NewChunk(start int64) *chunk {
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
 func (s *store) setNewLoadChunks(isFile bool) {
+	capacity := newLoadChunks(isFile)
+	loaded, err := lru.New[int, struct{}](capacity)
+	if err != nil {
+		log.Panicf("lru new %s", err)
+	}
+	s.loadedChunks = loaded
+}
+
+// newLoadChunks creates a new LRU cache.
+func newLoadChunks(isFile bool) int {
 	mlFile := MemoryLimitFile
 	if MemoryLimit >= 0 {
 		if MemoryLimit < 2 {
@@ -52,28 +61,15 @@ func (s *store) setNewLoadChunks(isFile bool) {
 			capacity = MemoryLimit + 1
 		}
 	}
-
-	chunks, err := lru.New[int, struct{}](capacity)
-	if err != nil {
-		log.Panicf("lru new %s", err)
-	}
-	s.loadedChunks = chunks
+	return capacity
 }
 
-// loadChunksFile adds chunks of a regular file to memory.
-func (s *store) loadChunksFile(chunkNum int) {
+// swapLoadedFile swaps loaded chunks.
+// Unload unnecessary Chunks and load new Chunks.
+// Already loaded Chunk tells new.
+func (s *store) swapLoadedFile(chunkNum int) {
 	if chunkNum == 0 {
 		return
-	}
-	if s.loadedChunks.Add(chunkNum, struct{}{}) {
-		log.Println("AddChunksFile evicted!")
-	}
-}
-
-// evictChunksFile evicts chunks of a regular file from memory.
-func (s *store) evictChunksFile(chunkNum int) error {
-	if chunkNum == 0 {
-		return nil
 	}
 	if s.loadedChunks.Len() >= MemoryLimitFile {
 		k, _, _ := s.loadedChunks.GetOldest()
@@ -81,12 +77,9 @@ func (s *store) evictChunksFile(chunkNum int) error {
 			s.unloadChunk(k)
 		}
 	}
-
-	chunk := s.chunks[chunkNum]
-	if len(chunk.lines) != 0 {
-		return fmt.Errorf("%w %d", ErrAlreadyLoaded, chunkNum)
+	if s.loadedChunks.Add(chunkNum, struct{}{}) {
+		log.Println("loadChunksFile evicted!")
 	}
-	return nil
 }
 
 // loadChunksMem adds non-regular file chunks to memory.
@@ -98,7 +91,7 @@ func (s *store) loadChunksMem(chunkNum int) {
 		return
 	}
 	if _, _, evicted := s.loadedChunks.PeekOrAdd(chunkNum, struct{}{}); evicted {
-		log.Println("AddChunksMem evicted!")
+		log.Println("loadChunksMem evicted!")
 	}
 }
 
@@ -135,7 +128,8 @@ func (s *store) lastChunkNum() int {
 	return len(s.chunks) - 1
 }
 
-// chunkForAdd is a helper function to get the chunk to add.
+// chunkForAdd returns a Chunk for appending lines.
+// Returns a new Chunk if the Chunk is full.
 func (s *store) chunkForAdd(isFile bool, start int64) *chunk {
 	s.mu.Lock()
 	defer s.mu.Unlock()
