@@ -47,9 +47,6 @@ func (m *Document) ControlFile(file *os.File) error {
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
 			reader, err = m.controlFile(sc, reader)
-			if err != nil {
-				log.Printf("ControlFile %s: %s", sc.request, err)
-			}
 			if sc.done != nil {
 				if err != nil {
 					sc.done <- false
@@ -123,12 +120,8 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestStart:
 		return m.firstRead(reader)
 	case requestContinue:
-		if !m.seekable {
-			if MemoryLimit > 0 && m.store.loadedChunks.Len() >= MemoryLimit {
-				// Stopped loading due to load chunks limit.
-				// return reader, ErrOverChunkLimit
-				return reader, nil
-			}
+		if !m.store.isContinueRead(m.seekable) {
+			return reader, nil
 		}
 		return m.continueRead(reader)
 	case requestFollow:
@@ -166,6 +159,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 		return m.continueRead(reader)
 	case requestLoad:
 		m.currentChunk = sc.chunkNum
+		// Since controlReader is loaded outside, it only evicts.
 		m.store.evictChunksMem(sc.chunkNum)
 	case requestReload:
 		if reload != nil {

@@ -341,7 +341,7 @@ func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNu
 // SearchLine searches the document and returns the matching line number.
 func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = max(lN, m.store.startNum)
-	startChunk, sn := chunkLine(lN)
+	startChunk, sn := chunkLineNum(lN)
 
 	for cn := startChunk; ; cn++ {
 		n, err := m.Search(ctx, searcher, cn, sn)
@@ -368,8 +368,8 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 // BackSearchLine does a backward search on the document and returns a matching line number.
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
-	startChunk, sn := chunkLine(lN)
-	minChunk, _ := chunkLine(m.store.startNum)
+	startChunk, sn := chunkLineNum(lN)
+	minChunk, _ := chunkLineNum(m.store.startNum)
 	for cn := startChunk; cn >= minChunk; cn-- {
 		n, err := m.BackSearch(ctx, searcher, cn, sn)
 		if err == nil {

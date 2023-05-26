@@ -233,7 +233,7 @@ func (m *Document) Line(n int) ([]byte, error) {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
 
-	chunkNum, cn := chunkLine(n)
+	chunkNum, cn := chunkLineNum(n)
 
 	if m.store.lastChunkNum() < chunkNum {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
@@ -242,13 +242,22 @@ func (m *Document) Line(n int) ([]byte, error) {
 		m.requestLoad(chunkNum)
 	}
 
+	return m.GetChunkLine(chunkNum, cn)
+}
+
+// GetChunkLine returns one line from buffer.
+func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
-	chunk := m.store.chunks[chunkNum]
-	if cn < len(chunk.lines) {
-		return chunk.lines[cn], nil
+	if len(m.store.chunks) <= chunkNum {
+		return nil, ErrOutOfChunk
 	}
-	return nil, ErrEvictedMemory
+	chunk := m.store.chunks[chunkNum]
+
+	if cn >= len(chunk.lines) {
+		return nil, ErrOutOfRange
+	}
+	return chunk.lines[cn], nil
 }
 
 // GetLine returns one line from buffer.
@@ -352,21 +361,6 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 // firstLine is the first line that excludes the SkipLines and Header.
 func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
-}
-
-// GetChunkLine returns one line from buffer.
-func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	m.store.mu.Lock()
-	defer m.store.mu.Unlock()
-	if len(m.store.chunks) <= chunkNum {
-		return nil, ErrOutOfChunk
-	}
-	chunk := m.store.chunks[chunkNum]
-
-	if cn >= len(chunk.lines) {
-		return nil, ErrOutOfRange
-	}
-	return chunk.lines[cn], nil
 }
 
 // watchMode sets the document to watch mode.
