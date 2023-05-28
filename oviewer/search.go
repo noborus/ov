@@ -256,11 +256,12 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		}
 		root.searchQuit()
 		if err != nil {
-			if lN < root.Doc.store.startNum {
+			startNum := root.Doc.BufStartNum()
+			if lN < startNum {
 				// If lN is before startNum, move to startNum.
-				root.searchGo(root.Doc.store.startNum)
-				log.Printf("Moved to %d because %d is out of range.", root.Doc.store.startNum, lN)
-				return fmt.Errorf("search moved to %d:%w:%v", root.Doc.store.startNum, err, root.searchWord)
+				root.searchGo(startNum)
+				log.Printf("Moved to %d because %d is out of range.", startNum, lN)
+				return fmt.Errorf("search moved to %d:%w:%v", startNum, err, root.searchWord)
 			}
 			return fmt.Errorf("search:%w:%v", err, root.searchWord)
 		}
@@ -340,7 +341,7 @@ func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNu
 
 // SearchLine searches the document and returns the matching line number.
 func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = max(lN, m.store.startNum)
+	lN = max(lN, m.BufStartNum())
 	startChunk, sn := chunkLineNum(lN)
 
 	for cn := startChunk; ; cn++ {
@@ -369,7 +370,7 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
 	lN = min(lN, m.BufEndNum()-1)
 	startChunk, sn := chunkLineNum(lN)
-	minChunk, _ := chunkLineNum(m.store.startNum)
+	minChunk, _ := chunkLineNum(m.BufStartNum())
 	for cn := startChunk; cn >= minChunk; cn-- {
 		n, err := m.BackSearch(ctx, searcher, cn, sn)
 		if err == nil {

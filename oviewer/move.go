@@ -15,7 +15,7 @@ func (m *Document) moveLine(lN int) int {
 
 // moveTop moves to the top.
 func (m *Document) moveTop() {
-	m.moveLine(m.store.startNum)
+	m.moveLine(m.BufStartNum())
 }
 
 // Go to the top line.
@@ -58,7 +58,7 @@ func (root *Root) movePgUp() {
 	defer root.releaseEventBuffer()
 
 	root.moveNumUp(root.statusPos - root.headerLen)
-	if root.Doc.topLN < root.Doc.store.startNum {
+	if root.Doc.topLN < root.Doc.BufStartNum() {
 		root.Doc.moveTop()
 	}
 }
@@ -98,7 +98,7 @@ func (root *Root) moveHfUp() {
 	defer root.releaseEventBuffer()
 
 	root.moveNumUp((root.statusPos - root.headerLen) / 2)
-	if root.Doc.topLN < root.Doc.store.startNum {
+	if root.Doc.topLN < root.Doc.BufStartNum() {
 		root.Doc.moveTop()
 	}
 }
@@ -200,7 +200,7 @@ func (root *Root) moveUpN(n int) {
 	defer root.releaseEventBuffer()
 
 	m := root.Doc
-	if m.topLN <= m.store.startNum && m.topLX == 0 {
+	if m.topLN <= m.BufStartNum() && m.topLX == 0 {
 		return
 	}
 
@@ -224,8 +224,9 @@ func (root *Root) moveUpN(n int) {
 
 	// Previous line.
 	m.topLN -= n
-	if m.topLN < m.store.startNum {
-		m.topLN = m.store.startNum
+	start := m.BufStartNum()
+	if m.topLN < start {
+		m.topLN = start
 		m.topLX = 0
 		return
 	}
@@ -321,7 +322,7 @@ func (root *Root) prevSection() {
 		return
 	}
 	n = (n - m.firstLine()) + m.SectionStartPosition
-	n = max(n, m.store.startNum)
+	n = max(n, m.BufStartNum())
 	m.moveLine(n)
 }
 

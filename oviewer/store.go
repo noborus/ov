@@ -109,9 +109,7 @@ func (s *store) evictChunksMem(chunkNum int) {
 	}
 	k, _, _ := s.loadedChunks.GetOldest()
 	s.unloadChunk(k)
-	s.mu.Lock()
-	s.startNum = (k + 1) * ChunkSize
-	s.mu.Unlock()
+	atomic.StoreInt32(&s.startNum, int32((k+1)*ChunkSize))
 }
 
 // unloadChunk unloads the chunk from memory.
@@ -133,8 +131,8 @@ func (s *store) lastChunkNum() int {
 func (s *store) chunkForAdd(isFile bool, start int64) *chunk {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	if s.endNum < len(s.chunks)*ChunkSize {
+	endNum := int(atomic.LoadInt32(&s.endNum))
+	if endNum < len(s.chunks)*ChunkSize {
 		return s.chunks[len(s.chunks)-1]
 	}
 
@@ -175,9 +173,10 @@ func (s *store) isContinueRead(isFile bool) bool {
 func (s *store) chunkRange(chunkNum int) (int, int) {
 	start := 0
 	end := ChunkSize
-	lastChunk, endNum := chunkLineNum(s.endNum)
+	endNum := int(atomic.LoadInt32(&s.endNum))
+	lastChunk, chunkEndNum := chunkLineNum(endNum)
 	if chunkNum == lastChunk {
-		end = endNum
+		end = chunkEndNum
 	}
 	return start, end
 }
@@ -214,7 +213,7 @@ func (s *store) appendLine(chunk *chunk, line []byte) {
 
 	size := len(line)
 	s.size += int64(size)
-	s.endNum++
+	atomic.AddInt32(&s.endNum, 1)
 	dst := make([]byte, size)
 	copy(dst, line)
 	chunk.lines = append(chunk.lines, dst)
