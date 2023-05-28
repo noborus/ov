@@ -126,7 +126,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return m.continueRead(reader)
 	case requestFollow:
 		// Remove the last line from the cache as it may be appended.
-		m.cache.Remove(m.store.endNum - 1)
+		m.cache.Remove(m.BufEndNum() - 1)
 		return m.followRead(reader)
 	case requestLoad:
 		return m.loadRead(reader, sc.chunkNum)
@@ -141,7 +141,6 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		return reader, err
 	case requestClose:
 		err = m.close()
-		log.Println(err)
 		return reader, err
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
@@ -158,7 +157,6 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 	case requestContinue:
 		return m.continueRead(reader)
 	case requestLoad:
-		m.currentChunk = sc.chunkNum
 		// Since controlReader is loaded outside, it only evicts.
 		m.store.evictChunksMem(sc.chunkNum)
 	case requestReload:
@@ -227,17 +225,16 @@ func (m *Document) requestSearch(chunkNum int, searcher Searcher) bool {
 }
 
 // requestClose sends instructions to close the file.
-func (m *Document) requestClose() {
+func (m *Document) requestClose() bool {
 	atomic.StoreInt32(&m.readCancel, 1)
+	defer atomic.StoreInt32(&m.readCancel, 0)
 	sc := controlSpecifier{
 		request: requestClose,
 		done:    make(chan bool),
 	}
 
-	log.Println("close send")
 	m.ctlCh <- sc
-	<-sc.done
-	atomic.StoreInt32(&m.readCancel, 0)
+	return <-sc.done
 }
 
 // requestReload sends instructions to reload the file.

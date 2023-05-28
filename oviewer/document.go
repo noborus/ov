@@ -106,9 +106,9 @@ type store struct {
 	// mu controls the mutex.
 	mu sync.Mutex
 	// startNum is the number of the first line that can be moved.
-	startNum int
+	startNum int32
 	// endNum is the number of the last line read.
-	endNum int
+	endNum int32
 	// 1 if newline at end of file.
 	noNewlineEOF int32
 	// 1 if EOF is reached.
@@ -239,6 +239,7 @@ func (m *Document) Line(n int) ([]byte, error) {
 		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
 	}
 	if m.currentChunk != chunkNum {
+		m.currentChunk = chunkNum
 		m.requestLoad(chunkNum)
 	}
 
@@ -294,11 +295,14 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 	}
 }
 
+// BufStartNum return start line number.
+func (m *Document) BufStartNum() int {
+	return int(atomic.LoadInt32(&m.store.startNum))
+}
+
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
-	m.store.mu.Lock()
-	defer m.store.mu.Unlock()
-	return m.store.endNum
+	return int(atomic.LoadInt32(&m.store.endNum))
 }
 
 // BufEOF return true if EOF is reached.

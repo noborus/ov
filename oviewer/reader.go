@@ -125,10 +125,10 @@ func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start i
 func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
 	count, size, err := m.countLines(reader, start)
 	m.store.mu.Lock()
-	m.store.endNum += count
 	m.store.size += int64(size)
 	m.store.offset = m.store.size
 	m.store.mu.Unlock()
+	atomic.AddInt32(&m.store.endNum, int32(count))
 	atomic.StoreInt32(&m.changed, 1)
 	return err
 }
@@ -170,7 +170,6 @@ func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searc
 // loadRead loads the read contents into chunks.
 func (m *Document) loadRead(reader *bufio.Reader, chunkNum int) (*bufio.Reader, error) {
 	if m.seekable {
-		m.currentChunk = chunkNum
 		return m.loadReadFile(reader, chunkNum)
 	}
 	return m.loadReadMem(reader, chunkNum)
@@ -267,11 +266,13 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
 
+	atomic.StoreInt32(&m.closed, 0)
 	m.file = f
 	cFormat, r := uncompressedReader(m.file, m.seekable)
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
 			if _, err := f.Seek(0, io.SeekStart); err != nil {
+				atomic.StoreInt32(&m.closed, 1)
 				return nil, fmt.Errorf("seek: %w", err)
 			}
 			r = f
@@ -459,7 +460,7 @@ func (m *Document) close() error {
 	if m.checkClose() {
 		return nil
 	}
-	log.Println("close")
+
 	if err := m.file.Close(); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
