@@ -35,15 +35,15 @@ const (
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
 	m.store.setNewLoadChunks(m.seekable)
+	atomic.StoreInt32(&m.closed, 0)
+	r, err := m.fileReader(file)
+	if err != nil {
+		atomic.StoreInt32(&m.closed, 1)
+		log.Println(err)
+	}
+	atomic.StoreInt32(&m.store.eof, 0)
 
 	go func() {
-		atomic.StoreInt32(&m.closed, 0)
-		r, err := m.fileReader(file)
-		if err != nil {
-			atomic.StoreInt32(&m.closed, 1)
-			log.Println(err)
-		}
-		atomic.StoreInt32(&m.store.eof, 0)
 		reader := bufio.NewReader(r)
 		for sc := range m.ctlCh {
 			reader, err = m.controlFile(sc, reader)
