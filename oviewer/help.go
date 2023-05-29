@@ -17,11 +17,11 @@ func NewHelp(k KeyBind) (*Document, error) {
 		return nil, err
 	}
 
-	m.append(m.store.chunks[m.store.lastChunkNum()], true, []byte("\t\t\t"+gchalk.WithUnderline().Bold("ov help")))
+	m.store.append(m.store.chunks[m.store.lastChunkNum()], true, []byte("\t\t\t"+gchalk.WithUnderline().Bold("ov help")))
 
 	str := strings.Split(KeyBindString(k), "\n")
 	for _, s := range str {
-		m.append(m.store.chunks[m.store.lastChunkNum()], true, []byte(s))
+		m.store.append(m.store.chunks[m.store.lastChunkNum()], true, []byte(s))
 	}
 
 	m.FileName = "Help"

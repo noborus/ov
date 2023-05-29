@@ -26,17 +26,18 @@ func NewLogDoc() (*Document, error) {
 // Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
 func (m *Document) Write(p []byte) (int, error) {
-	chunk := m.store.chunkForAdd(false, m.store.size)
-	m.append(chunk, true, p)
+	s := m.store
+	chunk := s.chunkForAdd(false, s.size)
+	s.append(chunk, true, p)
 	if len(chunk.lines) >= ChunkSize {
-		chunk = NewChunk(m.store.size)
-		m.store.mu.Lock()
-		if len(m.store.chunks) > 2 {
-			m.store.chunks[len(m.store.chunks)-2].lines = nil
-			atomic.StoreInt32(&m.store.startNum, int32(ChunkSize*(len(m.store.chunks)-1)))
+		chunk = NewChunk(s.size)
+		s.mu.Lock()
+		if len(s.chunks) > 2 {
+			s.chunks[len(s.chunks)-2].lines = nil
+			atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
 		}
-		m.store.chunks = append(m.store.chunks, chunk)
-		m.store.mu.Unlock()
+		s.chunks = append(s.chunks, chunk)
+		s.mu.Unlock()
 	}
 	return len(p), nil
 }

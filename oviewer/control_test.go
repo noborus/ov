@@ -125,7 +125,7 @@ func TestDocument_requestLoad(t *testing.T) {
 			m.requestLoad(tt.fields.chunkNum)
 
 			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
-			got, err := m.GetChunkLine(chunkNum, cn)
+			got, err := m.store.GetChunkLine(chunkNum, cn)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}

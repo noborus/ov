@@ -31,7 +31,8 @@ type Document struct {
 	// multiColorRegexps holds multicolor regular expressions in slices.
 	multiColorRegexps []*regexp.Regexp
 	// store represents store management.
-	store *store
+	store       *store
+	followStore *store
 
 	// fileName is the file name to display.
 	FileName string
@@ -76,14 +77,11 @@ type Document struct {
 
 	watchRestart int32
 	tickerState  int32
-
-	// 1 if there is a changed.
-	changed int32
 	// 1 if there is a closed.
 	closed int32
 
-	// 1 if there is a read cancel.
-	readCancel int32
+	// 1 if there is a tmpFollow mode.
+	tmpFollow int32
 
 	// WatchMode is watch mode.
 	WatchMode bool
@@ -93,8 +91,6 @@ type Document struct {
 	seekable bool
 	// Is it possible to reopen.
 	reopenable bool
-	// formfeedTime adds time on formfeed.
-	formfeedTime bool
 }
 
 // store represents store management.
@@ -109,6 +105,11 @@ type store struct {
 	startNum int32
 	// endNum is the number of the last line read.
 	endNum int32
+
+	// 1 if there is a changed.
+	changed int32
+	// 1 if there is a read cancel.
+	readCancel int32
 	// 1 if newline at end of file.
 	noNewlineEOF int32
 	// 1 if EOF is reached.
@@ -117,6 +118,8 @@ type store struct {
 	size int64
 	// offset
 	offset int64
+	// formfeedTime adds time on formfeed.
+	formfeedTime bool
 }
 
 // chunk stores the contents of the split file as slices of strings.
@@ -229,31 +232,36 @@ func STDINDocument() (*Document, error) {
 
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
+	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+		return m.followStore.GetChunkLine(0, n)
+	}
+
+	s := m.store
 	if n >= m.BufEndNum() {
-		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
+		return nil, fmt.Errorf("%w %d>%d", ErrOutOfRange, n, m.BufEndNum())
 	}
 
 	chunkNum, cn := chunkLineNum(n)
 
-	if m.store.lastChunkNum() < chunkNum {
-		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
+	if s.lastChunkNum() < chunkNum {
+		return nil, fmt.Errorf("%w %d<%d", ErrOutOfRange, s.lastChunkNum(), chunkNum)
 	}
 	if m.currentChunk != chunkNum {
 		m.currentChunk = chunkNum
 		m.requestLoad(chunkNum)
 	}
 
-	return m.GetChunkLine(chunkNum, cn)
+	return s.GetChunkLine(chunkNum, cn)
 }
 
 // GetChunkLine returns one line from buffer.
-func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	m.store.mu.Lock()
-	defer m.store.mu.Unlock()
-	if len(m.store.chunks) <= chunkNum {
+func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.chunks) <= chunkNum {
 		return nil, ErrOutOfChunk
 	}
-	chunk := m.store.chunks[chunkNum]
+	chunk := s.chunks[chunkNum]
 
 	if cn >= len(chunk.lines) {
 		return nil, ErrOutOfRange
@@ -302,6 +310,14 @@ func (m *Document) BufStartNum() int {
 
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
+	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+		return int(atomic.LoadInt32(&m.followStore.endNum))
+	}
+	return int(atomic.LoadInt32(&m.store.endNum))
+}
+
+// BufEndNum return last line number.
+func (m *Document) storeEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
 }
 

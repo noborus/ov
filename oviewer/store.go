@@ -1,8 +1,14 @@
 package oviewer
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
 	"log"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 )
@@ -188,6 +194,102 @@ func chunkLineNum(n int) (int, int) {
 	return chunkNum, cn
 }
 
+// readLines append lines read from reader into chunks.
+// Read and fill the number of lines from start to end in chunk.
+// If addLines is true, increment the number of lines read (update endNum).
+func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, updateNum bool) error {
+	var line bytes.Buffer
+	var isPrefix bool
+	for num := start; num < end; {
+		if atomic.LoadInt32(&s.readCancel) == 1 {
+			break
+		}
+		buf, err := reader.ReadSlice('\n')
+		if errors.Is(err, bufio.ErrBufferFull) {
+			isPrefix = true
+			err = nil
+		}
+		line.Write(buf)
+		if isPrefix {
+			isPrefix = false
+			continue
+		}
+
+		num++
+		atomic.StoreInt32(&s.changed, 1)
+		if err != nil {
+			if line.Len() != 0 {
+				s.append(chunk, updateNum, line.Bytes())
+				atomic.StoreInt32(&s.noNewlineEOF, 1)
+			}
+			return err
+		}
+		s.append(chunk, updateNum, line.Bytes())
+		line.Reset()
+	}
+	return nil
+}
+
+// countLines counts the number of lines and the size of the buffer.
+func (s *store) countLines(reader *bufio.Reader, start int) (int, int, error) {
+	num := start
+	count := 0
+	size := 0
+	buf := make([]byte, bufSize)
+	for {
+		bufLen, err := reader.Read(buf)
+		if err != nil {
+			return count, size, fmt.Errorf("read: %w", err)
+		}
+		if bufLen == 0 {
+			return count, size, io.EOF
+		}
+
+		lSize := bufLen
+		lCount := bytes.Count(buf[:bufLen], []byte("\n"))
+		// If it exceeds ChunkSize, Re-aggregate size and count.
+		if num+lCount > ChunkSize {
+			lSize = 0
+			lCount = ChunkSize - num
+			for i := 0; i < lCount; i++ {
+				p := bytes.IndexByte(buf[lSize:bufLen], '\n')
+				lSize += p + 1
+			}
+		}
+
+		num += lCount
+		count += lCount
+		size += lSize
+		if num >= ChunkSize {
+			// no newline at the end of the file.
+			if bufLen < bufSize {
+				p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
+				size -= bufLen - p - 1
+			}
+			break
+		}
+		// no newline at the end of the file.
+		if bufLen < bufSize {
+			p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
+			if p+1 < bufLen {
+				count++
+				atomic.StoreInt32(&s.noNewlineEOF, 1)
+			}
+		}
+	}
+	return count, size, nil
+}
+
+// append appends a line to the chunk.
+func (s *store) append(chunk *chunk, updateNum bool, line []byte) {
+	if updateNum {
+		s.appendLine(chunk, line)
+	} else {
+		s.appendOnly(chunk, line)
+	}
+	s.offset = s.size
+}
+
 // appendOnly appends to the line of the chunk.
 // appendOnly does not updates the number of lines and size.
 func (s *store) appendOnly(chunk *chunk, line []byte) {
@@ -242,4 +344,22 @@ func (s *store) joinLast(chunk *chunk, line []byte) bool {
 		atomic.StoreInt32(&s.noNewlineEOF, 0)
 	}
 	return true
+}
+
+// appendFormFeed appends a formfeed to the chunk.
+func (s *store) appendFormFeed(chunk *chunk) {
+	line := ""
+	s.mu.Lock()
+	if len(chunk.lines) > 0 {
+		line = string(chunk.lines[len(chunk.lines)-1])
+	}
+	s.mu.Unlock()
+	// Do not add if the previous is FormFeed(always add for formfeedTime).
+	if line != FormFeed {
+		feed := FormFeed
+		if s.formfeedTime {
+			feed = fmt.Sprintf("%sTime: %s", FormFeed, time.Now().Format(time.RFC3339))
+		}
+		s.appendLine(chunk, []byte(feed))
+	}
 }

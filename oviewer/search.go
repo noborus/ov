@@ -290,7 +290,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	}
 
 	for n := line; n < ChunkSize; n++ {
-		buf, err := m.GetChunkLine(chunkNum, n)
+		buf, err := m.store.GetChunkLine(chunkNum, n)
 		if err != nil {
 			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
 		}
@@ -313,7 +313,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 	}
 
 	for n := line; n >= 0; n-- {
-		buf, err := m.GetChunkLine(chunkNum, n)
+		buf, err := m.store.GetChunkLine(chunkNum, n)
 		if err != nil {
 			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
 		}
