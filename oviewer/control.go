@@ -123,6 +123,11 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		if !m.store.isContinueRead(m.seekable) {
 			return reader, nil
 		}
+		if m.seekable && (m.FollowMode || m.FollowAll) {
+			if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
+				return m.tmpFollowRead(reader)
+			}
+		}
 		return m.continueRead(reader)
 	case requestFollow:
 		// Remove the last line from the cache as it may be appended.
@@ -226,8 +231,8 @@ func (m *Document) requestSearch(chunkNum int, searcher Searcher) bool {
 
 // requestClose sends instructions to close the file.
 func (m *Document) requestClose() bool {
-	atomic.StoreInt32(&m.readCancel, 1)
-	defer atomic.StoreInt32(&m.readCancel, 0)
+	atomic.StoreInt32(&m.store.readCancel, 1)
+	defer atomic.StoreInt32(&m.store.readCancel, 0)
 	sc := controlSpecifier{
 		request: requestClose,
 		done:    make(chan bool),

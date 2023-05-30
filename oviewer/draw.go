@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync/atomic"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -534,6 +535,9 @@ func (root *Root) rightStatus() contents {
 		next = "..."
 	}
 	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
+	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
+		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
+	}
 	return StrToContents(str, -1)
 }
 

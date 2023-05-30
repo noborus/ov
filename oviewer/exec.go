@@ -53,8 +53,8 @@ func (cmd *Command) Exec() (*Root, error) {
 	atomic.StoreInt32(&cmd.docerr.closed, 0)
 	cmd.docout.seekable = false
 	cmd.docerr.seekable = false
-	cmd.docout.formfeedTime = true
-	cmd.docerr.formfeedTime = true
+	cmd.docout.store.formfeedTime = true
+	cmd.docerr.store.formfeedTime = true
 
 	if err = cmd.docout.ControlReader(so, cmd.Reload); err != nil {
 		log.Printf("%s", err)
@@ -89,7 +89,8 @@ func (cmd *Command) Wait() {
 func (cmd *Command) Reload() *bufio.Reader {
 	cmd.Wait()
 	if cmd.docout.WatchMode {
-		cmd.docout.appendFormFeed(cmd.docout.store.chunkForAdd(false, cmd.docout.store.size))
+		s := cmd.docout.store
+		s.appendFormFeed(s.chunkForAdd(false, s.size))
 	} else {
 		cmd.docout.reset()
 	}
@@ -105,7 +106,7 @@ func (cmd *Command) Reload() *bufio.Reader {
 	cmd.stderr = se
 
 	cmd.docerr.requestReload()
-	atomic.StoreInt32(&cmd.docerr.readCancel, 0)
+	atomic.StoreInt32(&cmd.docerr.store.readCancel, 0)
 	log.Println("stderr receive done")
 
 	return bufio.NewReader(so)
@@ -116,7 +117,8 @@ func (cmd *Command) stderrReload() *bufio.Reader {
 	if !cmd.docout.WatchMode {
 		cmd.docerr.reset()
 	} else {
-		cmd.docerr.appendFormFeed(cmd.docerr.store.chunkForAdd(false, cmd.docerr.store.size))
+		s := cmd.docerr.store
+		s.appendFormFeed(s.chunkForAdd(false, s.size))
 	}
 
 	return bufio.NewReader(cmd.stderr)
