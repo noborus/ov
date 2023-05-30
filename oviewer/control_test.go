@@ -274,7 +274,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}
-
+			defer af.Close()
 			af.Write(tt.fields.appendBytes)
 
 			done := make(chan bool)
