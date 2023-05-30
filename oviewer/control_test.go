@@ -262,6 +262,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}
+			defer f.Close()
 			m.FollowMode = true
 			if err := m.ControlFile(f); err != nil {
 				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
