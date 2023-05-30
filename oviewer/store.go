@@ -231,12 +231,11 @@ func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int
 }
 
 // countLines counts the number of lines and the size of the buffer.
-func (s *store) countLines(reader *bufio.Reader, start int) (int, int, error) {
-	num := start
+func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, error) {
 	count := 0
 	size := 0
 	buf := make([]byte, bufSize)
-	for {
+	for num := start; num < end; {
 		bufLen, err := reader.Read(buf)
 		if err != nil {
 			return count, size, fmt.Errorf("read: %w", err)

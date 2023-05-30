@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -8,7 +10,8 @@ import (
 
 func TestDocument_ControlFile(t *testing.T) {
 	type fields struct {
-		FileName string
+		FileName   string
+		FollowMode bool
 	}
 	tests := []struct {
 		name    string
@@ -16,21 +19,34 @@ func TestDocument_ControlFile(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "testNoFile",
-			fields:  fields{FileName: "noFile"},
+			name: "testNoFile",
+			fields: fields{
+				FileName:   "noFile",
+				FollowMode: false,
+			},
 			wantErr: false,
 		},
 		{
 			name: "testTestFile",
 			fields: fields{
-				FileName: filepath.Join(testdata, "test.txt"),
+				FileName:   filepath.Join(testdata, "test.txt"),
+				FollowMode: false,
 			},
 			wantErr: false,
 		},
 		{
 			name: "testLargeFile",
 			fields: fields{
-				FileName: filepath.Join(testdata, "large.txt"),
+				FileName:   filepath.Join(testdata, "large.txt"),
+				FollowMode: false,
+			},
+			wantErr: false,
+		},
+		{
+			name: "testLargeFileFollow",
+			fields: fields{
+				FileName:   filepath.Join(testdata, "large.txt"),
+				FollowMode: true,
 			},
 			wantErr: false,
 		},
@@ -41,6 +57,7 @@ func TestDocument_ControlFile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			m.FollowMode = tt.fields.FollowMode
 			f, err := open(tt.fields.FileName)
 			if err != nil {
 				// Ignore open errors and test *os.file for invalid values.
@@ -187,6 +204,94 @@ func TestDocument_requestSearch(t *testing.T) {
 			}
 			if got := m.requestSearch(tt.fields.chunkNum, searcher); got != tt.want {
 				t.Errorf("Document.requestSearch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func CopyToTempFile(t *testing.T, fileName string) string {
+	t.Helper()
+	tmpdir := t.TempDir()
+	fname := filepath.Join(tmpdir, filepath.Base(fileName))
+	orig, err := os.Open(fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer orig.Close()
+
+	dst, err := os.Create(fname)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, orig); err != nil {
+		t.Fatal(err)
+	}
+	return fname
+}
+
+func TestDocument_requestFollow(t *testing.T) {
+	type fields struct {
+		FileName    string
+		appendBytes []byte
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "testLargeFile1",
+			fields: fields{
+				FileName:    filepath.Join(testdata, "large.txt"),
+				appendBytes: []byte("a\n"),
+			},
+			want:    []byte("a\n"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fname := CopyToTempFile(t, tt.fields.FileName)
+			m, err := NewDocument()
+			if err != nil {
+				t.Fatal(err)
+			}
+			f, err := open(fname)
+			if err != nil {
+				t.Fatal("open error", tt.fields.FileName)
+			}
+			m.FollowMode = true
+			if err := m.ControlFile(f); err != nil {
+				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			for !m.BufEOF() {
+			}
+
+			af, err := os.OpenFile(fname, os.O_APPEND|os.O_RDWR, 0600)
+			if err != nil {
+				t.Fatal("open error", tt.fields.FileName)
+			}
+
+			af.Write(tt.fields.appendBytes)
+
+			done := make(chan bool)
+			m.ctlCh <- controlSpecifier{
+				request: requestFollow,
+				done:    done,
+			}
+			<-done
+
+			chunkNum, cn := chunkLineNum(m.BufEndNum() - 1)
+			got, err := m.store.GetChunkLine(chunkNum, cn)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Document.requestLoad() = %v, want %v", string(got), string(tt.want))
 			}
 		})
 	}

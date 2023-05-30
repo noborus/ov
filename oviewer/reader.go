@@ -18,8 +18,8 @@ import (
 // This bufSize is used when only counting.
 const bufSize = 4096
 
-// TailSize represents the position to start reading backwards from the end position.
-const TailSize = 10000
+// tailSize represents the position to start reading backwards from the end position.
+const tailSize = 10000
 
 // FormFeed is the delimiter that separates the sections.
 // The default delimiter that separates single output from watch.
@@ -31,38 +31,36 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.store.noNewlineEOF, 0)
 	chunk := m.store.chunks[0]
 	if err := m.store.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
-		if !errors.Is(err, io.EOF) {
-			atomic.StoreInt32(&m.store.eof, 1)
-			return nil, err
+		if errors.Is(err, io.EOF) {
+			return m.afterEOF(reader), nil
 		}
-		reader = m.afterEOF(reader)
+		atomic.StoreInt32(&m.store.eof, 1)
+		return nil, err
 	}
 
-	if !m.BufEOF() {
-		m.requestContinue()
-	}
+	m.requestContinue()
 	return reader, nil
 }
 
 // tmpFollowRead reads the file in follow-mode.
 // It is executed only once if EOF has not been reached after follow-mode is set.
 func (m *Document) tmpFollowRead(reader *bufio.Reader) (*bufio.Reader, error) {
+
 	m.followStore = NewStore()
 	atomic.StoreInt32(&m.tmpFollow, 1)
 
-	if ret, err := m.file.Seek(TailSize*-1, io.SeekEnd); err != nil {
-		log.Printf("tmpFollowRead: %d: %v", ret, err)
-		return reader, err
+	if _, err := m.file.Seek(tailSize*-1, io.SeekEnd); err != nil {
+		return reader, fmt.Errorf("tmpFollowRead seek: %w", err)
 	}
 	reader.Reset(m.file)
 	chunk := m.followStore.chunks[0]
 	if err := m.followStore.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if !errors.Is(err, io.EOF) {
-			atomic.StoreInt32(&m.followStore.eof, 1)
 			return nil, err
 		}
 	}
 
+	atomic.StoreInt32(&m.followStore.eof, 1)
 	m.requestContinue()
 	return reader, nil
 }
@@ -81,16 +79,14 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 	chunk := m.store.chunkForAdd(m.seekable, m.store.size)
 	start := len(chunk.lines)
-	if err := m.addOrReserveChunk(chunk, reader, start); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return nil, fmt.Errorf("addChunk: %w", err)
+	if err := m.addOrReserveChunk(chunk, reader, start, ChunkSize); err != nil {
+		if errors.Is(err, io.EOF) {
+			return m.afterEOF(reader), nil
 		}
-		reader = m.afterEOF(reader)
+		return nil, fmt.Errorf("addChunk: %w", err)
 	}
 
-	if !m.BufEOF() {
-		m.requestContinue()
-	}
+	m.requestContinue()
 	return reader, nil
 }
 
@@ -123,31 +119,29 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	}
 
 	if err := m.store.readLines(chunk, reader, start, ChunkSize, true); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return nil, err
+		if errors.Is(err, io.EOF) {
+			return m.afterEOF(reader), nil
 		}
-		reader = m.afterEOF(reader)
+		return nil, err
 	}
 
-	if !m.BufEOF() {
-		m.requestContinue()
-	}
+	m.requestContinue()
 	return reader, nil
 }
 
 // addOrReserveChunk reads a file to add or reserve a Chunk.
 // If it's a seekable file, it just reserves it for later reading.
-func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start int) error {
+func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start int, end int) error {
 	if m.seekable {
-		return m.reserveChunk(reader, start)
+		return m.reserveChunk(reader, start, ChunkSize)
 	}
 	return m.store.readLines(chunk, reader, start, ChunkSize, true)
 }
 
 // reserveChunk reserves ChunkSize lines.
 // read and update size only.
-func (m *Document) reserveChunk(reader *bufio.Reader, start int) error {
-	count, size, err := m.store.countLines(reader, start)
+func (m *Document) reserveChunk(reader *bufio.Reader, start int, end int) error {
+	count, size, err := m.store.countLines(reader, start, end)
 	m.store.mu.Lock()
 	m.store.size += int64(size)
 	m.store.offset = m.store.size
@@ -166,10 +160,10 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 	start, end := m.store.chunkRange(chunkNum)
 	if err := m.store.readLines(chunk, reader, start, end, false); err != nil {
-		if !errors.Is(err, io.EOF) {
-			return nil, err
+		if errors.Is(err, io.EOF) {
+			return m.afterEOF(reader), nil
 		}
-		reader = m.afterEOF(reader)
+		return nil, err
 	}
 	return reader, nil
 }

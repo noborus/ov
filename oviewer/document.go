@@ -259,12 +259,12 @@ func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(s.chunks) <= chunkNum {
-		return nil, ErrOutOfChunk
+		return nil, fmt.Errorf("over chunk(%d) %w", chunkNum, ErrOutOfRange)
 	}
 	chunk := s.chunks[chunkNum]
 
 	if cn >= len(chunk.lines) {
-		return nil, ErrOutOfRange
+		return nil, fmt.Errorf("over line (%d:%d) %w", chunkNum, cn, ErrOutOfRange)
 	}
 	return chunk.lines[cn], nil
 }
