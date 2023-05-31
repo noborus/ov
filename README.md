@@ -14,7 +14,6 @@ ov is a terminal pager.
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
   * 1.1. [Not supported](#not-supported)
-  * 1.2. [TODO(Implemented in v0.20.0)](#todo(implemented-in-v0.20.0))
 * 2. [Install](#install)
   * 2.1. [deb package](#deb-package)
   * 2.2. [rpm package](#rpm-package)
@@ -33,22 +32,24 @@ ov is a terminal pager.
     * 3.3.1. [Skip](#skip)
   * 3.4. [Column mode](#column-mode)
   * 3.5. [Column rainbow mode](#column-rainbow-mode)
-  * 3.6. [Wrap/NoWrap](#wrap/nowrap)
-  * 3.7. [Alternate-Rows](#alternate-rows)
-  * 3.8. [Section](#section)
-  * 3.9. [Follow mode](#follow-mode)
-  * 3.10. [Follow all mode](#follow-all-mode)
-  * 3.11. [Follow section mode](#follow-section-mode)
-  * 3.12. [Exec mode](#exec-mode)
-  * 3.13. [Search](#search)
-  * 3.14. [Mark](#mark)
-  * 3.15. [Watch](#watch)
-  * 3.16. [Mouse support](#mouse-support)
-  * 3.17. [Multi color highlight](#multi-color-highlight)
-  * 3.18. [Plain](#plain)
-  * 3.19. [Jump target](#jump-target)
-  * 3.20. [View mode](#view-mode)
-  * 3.21. [Output on exit](#output-on-exit)
+  * 3.6. [column-width](#column-width)
+  * 3.7. [Wrap/NoWrap](#wrap/nowrap)
+  * 3.8. [Alternate-Rows](#alternate-rows)
+  * 3.9. [Section](#section)
+  * 3.10. [Follow mode](#follow-mode)
+  * 3.11. [Follow name](#follow-name)
+  * 3.12. [Follow all mode](#follow-all-mode)
+  * 3.13. [Follow section mode](#follow-section-mode)
+  * 3.14. [Exec mode](#exec-mode)
+  * 3.15. [Search](#search)
+  * 3.16. [Mark](#mark)
+  * 3.17. [Watch](#watch)
+  * 3.18. [Mouse support](#mouse-support)
+  * 3.19. [Multi color highlight](#multi-color-highlight)
+  * 3.20. [Plain](#plain)
+  * 3.21. [Jump target](#jump-target)
+  * 3.22. [View mode](#view-mode)
+  * 3.23. [Output on exit](#output-on-exit)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -66,36 +67,34 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
+* Supports files larger than memory (**v0.30.0 or later**).
+* Regular files can be opened quickly even if they are large (**v0.30.0 or later**).
 * Supports fixed [header](#header) line display (both wrap/nowrap).
 * Supports [column mode](#column-mode), which recognizes columns by delimiter.
 * Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
+* Support columns with fixed widths instead of delimiters (**v0.30.0 or later**).
 * Supports section-by-section movement, splitting [sections](#section) by delimiter.
 * Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
 * Supports alternating row styling.
 * Shortcut keys are [customizable](#key-binding-customization).
 * The style of the effect is [customizable](#style-customization).
 * Supports [follow-mode](#follow-mode) (like tail -f).
+* Support follow mode by file name (equivalent to `tail -F`) (**v0.30.0 or later**).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
 * Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
 * Supports [watch](#watch) mode, which reads files on a regular basis.
+* Support watch in exec mode (equivalent to `watch` command) (**v0.30.0 or later**).
 * Supports incremental [search](#search) and regular expression search.
 * Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
 * Better support for Unicode and East Asian Width.
 * Supports compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
-  
+
 ###  1.1. <a name='not-supported'></a>Not supported
 
 * Does not support syntax highlighting for file types (source code, markdown, etc.)
 * Does not support Filter function (`&pattern` equivalent of `less`)
-
-###  1.2. <a name='todo(implemented-in-v0.20.0)'></a>TODO(Implemented in v0.20.0)
-
-* Allow opening files larger than memory
-* Enable follow by file name (equivalent to `tail -F`)
-* Support columns with fixed widths instead of delimiters
-* Support watch in exec mode (equivalent to `watch` command)
 
 ##  2. <a name='install'></a>Install
 
@@ -295,13 +294,26 @@ StyleColumnRainbow:
   - Foreground: "red"
 ```
 
-###  3.6. <a name='wrap/nowrap'></a>Wrap/NoWrap
+###  3.6. <a name='column-width'></a>column-width
+
+For output like `ps`, using `--column-width` is a better way to separate columns than using spaces as delimiters.
+
+You can specify the column width with `--column-width` (default key `alt+o`).
+
+
+```console
+ps aux|ov -H1 --column-width --column-rainbow
+```
+
+![ps-ov.png](docs/ps-ov.png)
+
+###  3.7. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
 
 The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
 
-###  3.7. <a name='alternate-rows'></a>Alternate-Rows
+###  3.8. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) (default key `C`) option
 The style can be set with [Style customization](#style-customization).
@@ -310,7 +322,7 @@ The style can be set with [Style customization](#style-customization).
 ov --alternate-rows test.csv
 ```
 
-###  3.8. <a name='section'></a>Section
+###  3.9. <a name='section'></a>Section
 
 You specify `--section-delimiter`(default key `alt+d`), you can move up and down in section units.
 The start of the section can be adjusted with `--section-start`(default key `ctrl+F3`, `alt+s`).
@@ -323,7 +335,7 @@ The section-delimiter is written in a regular expression (for example: "^#").
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-###  3.9. <a name='follow-mode'></a>Follow mode
+###  3.10. <a name='follow-mode'></a>Follow mode
 
 `--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
@@ -335,7 +347,16 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.10. <a name='follow-all-mode'></a>Follow all mode
+###  3.11. <a name='follow-name'></a>Follow name
+
+You can specify the file name to follow with `--follow-name`(like `tail -F`).
+Monitor file names instead of file descriptors.
+
+```console
+ov --follow-name /var/log/nginx/access.log
+```
+
+###  3.12. <a name='follow-all-mode'></a>Follow all mode
 
 `--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
@@ -343,7 +364,7 @@ ov --follow-mode /var/log/syslog
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.11. <a name='follow-section-mode'></a>Follow section mode
+###  3.13. <a name='follow-section-mode'></a>Follow section mode
 
 Use the `--follow-section`(default key `F2`) option to follow by section.
 Follow mode is line-by-line, while follow section mode is section-by-section.
@@ -358,7 +379,7 @@ ov --section-delimiter "^#" --follow-section README.md
 >
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
-###  3.12. <a name='exec-mode'></a>Exec mode
+###  3.14. <a name='exec-mode'></a>Exec mode
 
 Use the `--exec` (`-e`) option to run the command and display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -369,7 +390,7 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
-###  3.13. <a name='search'></a>Search
+###  3.15. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(defualt).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -381,7 +402,7 @@ Displayed when the following are enabled in the search input prompt:
 | Regular expression search | (R) | alt+r | --regexp-search  |
 | Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
 
-###  3.14. <a name='mark'></a>Mark
+###  3.16. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -391,7 +412,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.15. <a name='watch'></a>Watch
+###  3.17. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -405,7 +426,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.16. <a name='mouse-support'></a>Mouse support
+###  3.18. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `contrl+alt+r`).
@@ -422,7 +443,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
 
-###  3.17. <a name='multi-color-highlight'></a>Multi color highlight
+###  3.19. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(defualt) enters multi-word input mode.
@@ -455,12 +476,12 @@ StyleMultiColorHighlight:
   - Foreground: "grey"
 ```
 
-###  3.18. <a name='plain'></a>Plain
+###  3.20. <a name='plain'></a>Plain
 
 Supports undecorating ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  3.19. <a name='jump-target'></a>Jump target
+###  3.21. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -471,7 +492,7 @@ You can also specify a percentage, such as (50%).
 
 This option can be specified with `--jump-target`(or `-j`) (default key `j`).
 
-###  3.20. <a name='view-mode'></a>View mode
+###  3.22. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -510,7 +531,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-###  3.21. <a name='output-on-exit'></a>Output on exit
+###  3.23. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -533,7 +554,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 ##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
 
-Since **v0.22.0** it no longer loads everything into memory.
+Since **v0.30.0** it no longer loads everything into memory.
 The first chunk from the beginning to the 10,000th line is loaded into memory
 and never freed.
 Therefore, files with less than 10,000 lines do not change behavior.
@@ -549,6 +570,8 @@ export GOMEMLIMIT=100MiB
 ```
 
 ###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
+
+![regular file memory](docs/ov-file-mem.png)
 
 Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
 If `--memory-limit` is not specified, it will be limited to 100.
@@ -566,6 +589,8 @@ MemoryLimitFile: 3
 You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
 
 ###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
+
+![non-regular file memory](docs/ov-mem-mem.png)
 
 Non-seekable files and pipes cannot be read again, so they must exist in memory.
 
@@ -600,7 +625,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --column-rainbow             column rainbow
-      --column-width               column width mode                                                      v0.20.0
+      --column-width               column width mode                                                      v0.30.0
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
@@ -619,8 +644,8 @@ Flags:
       --incsearch                  incremental search (default true)
   -j, --jump-target string         jump-target
   -n, --line-number                line number mode
-      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.22.0
-      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.22.0
+      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.30.0
+      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.30.0
   -M, --multi-color strings        multi-color
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen
@@ -695,7 +720,7 @@ It can also be changed after startup.
 
  [w], [W]                     * wrap/nowrap toggle
  [c]                          * column mode toggle
- [alt+o]                      * column width toggle                               v0.20.0
+ [alt+o]                      * column width toggle                               v0.30.0
  [ctrl+r]                     * column rainbow toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle

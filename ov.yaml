@@ -3,9 +3,10 @@
 #
 # CaseSensitive: false
 # RegexpSearch: false
-# Incsearch: ftrue
+# Incsearch: true
 # BeforeWriteOriginal: 1000
 # AfterWriteOriginal: 0
+# MemoryLimit: 10000
 
 General:
   TabWidth: 8
