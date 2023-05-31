@@ -42,10 +42,9 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	return reader, nil
 }
 
-// tmpFollowRead reads the file in follow-mode.
+// tmpRead read tail to temporary store.
 // It is executed only once if EOF has not been reached after follow-mode is set.
-func (m *Document) tmpFollowRead(reader *bufio.Reader) (*bufio.Reader, error) {
-
+func (m *Document) tmpRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	m.followStore = NewStore()
 	atomic.StoreInt32(&m.tmpFollow, 1)
 
@@ -160,6 +159,7 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 	start, end := m.store.chunkRange(chunkNum)
 	if err := m.store.readLines(chunk, reader, start, end, false); err != nil {
+		log.Printf("Failed to read the expected number of lines(%d:%d): %s", start, end, err)
 		if errors.Is(err, io.EOF) {
 			return m.afterEOF(reader), nil
 		}
