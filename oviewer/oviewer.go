@@ -20,36 +20,71 @@ import (
 
 // Root structure contains information about the drawing.
 type Root struct {
+	// tcell.Screen is the root screen.
 	tcell.Screen
-	Doc            *Document
-	helpDoc        *Document
-	logDoc         *Document
-	input          *Input
-	cancelFunc     context.CancelFunc
-	searchReg      *regexp.Regexp
-	keyConfig      *cbind.Configuration
+	// Doc contains the model of ov
+	Doc *Document
+	// help
+	helpDoc *Document
+	// log
+	logDoc *Document
+
+	// input contains the input mode.
+	input *Input
+	// cancelFunc saves the cancel function, which is a time-consuming process.
+	cancelFunc context.CancelFunc
+
+	// searchReg for on-screen highlighting.
+	searchReg *regexp.Regexp
+	// keyConfig contains the binding settings for the key.
+	keyConfig *cbind.Configuration
+	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
-	searchWord     string
-	OriginStr      string
-	message        string
-	cancelKeys     []string
-	DocList        []*Document
-	scr            SCR
+
+	// searchWord for on-screen highlighting.
+	searchWord string
+	// Original string.
+	OriginStr string
+
+	// message is the message to display.
+	message string
+	// cancelKeys represents the cancellation key string.
+	cancelKeys []string
+
+	// DocList is the list of documents.
+	DocList []*Document
+	scr     SCR
 	Config
-	screenMode     ScreenMode
-	OriginPos      int
-	CurrentDoc     int
-	minStartX      int
-	x1             int
-	y1             int
-	x2             int
-	y2             int
-	headerLen      int
-	statusPos      int
-	mu             sync.RWMutex
-	skipDraw       bool
-	mousePressed   bool
-	mouseSelect    bool
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
+	// Original position at the start of search.
+	OriginPos int
+
+	// CurrentDoc is the index of the current document.
+	CurrentDoc int
+	// minStartX is the minimum start position of x.
+	minStartX int
+	// x1, y1, x2, y2 are the coordinates selected by the mouse.
+	x1 int
+	y1 int
+	x2 int
+	y2 int
+
+	// headerLen is the actual header length when wrapped.
+	headerLen int
+	// statusPos is the position of the status line.
+	statusPos int
+
+	// mu controls the RWMutex.
+	mu sync.RWMutex
+
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
+	skipDraw bool
+	// mousePressed is a flag when the mouse selection button is pressed.
+	mousePressed bool
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
 }
 

@@ -125,7 +125,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		}
 		if m.seekable && (m.FollowMode || m.FollowAll) {
 			if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
-				return m.tmpFollowRead(reader)
+				return m.tmpRead(reader)
 			}
 		}
 		return m.continueRead(reader)
