@@ -59,5 +59,6 @@ func NewConfig() Config {
 			SectionStartPosition: 0,
 			JumpTarget:           0,
 		},
+		InvertPromptColor: true,
 	}
 }

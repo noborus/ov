@@ -483,20 +483,27 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	} else if root.Doc.FollowSection {
 		modeStatus = "(Follow Section)"
 	}
-	caption := root.Doc.FileName
+
+	caption := ""
 	if root.Doc.Caption != "" {
 		caption = root.Doc.Caption
+	} else if !root.Config.HidePromptFilename {
+		caption = root.Doc.FileName
 	}
 
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, caption, root.message)
 	leftContents := StrToContents(leftStatus, -1)
-	color := tcell.ColorWhite
-	if root.CurrentDoc != 0 {
-		color = tcell.Color((root.CurrentDoc + 8) % 16)
+
+	if root.Config.InvertPromptColor {
+		color := tcell.ColorWhite
+		if root.CurrentDoc != 0 {
+			color = tcell.Color((root.CurrentDoc + 8) % 16)
+		}
+		for i := 0; i < len(leftContents); i++ {
+			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
+		}
 	}
-	for i := 0; i < len(leftContents); i++ {
-		leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
-	}
+
 	return leftContents, len(leftContents)
 }
 

@@ -192,6 +192,8 @@ type Config struct {
 	RegexpSearch             bool
 	Incsearch                bool
 	Debug                    bool
+	HidePromptFilename       bool
+	InvertPromptColor        bool
 }
 
 // OVStyle represents a style in addition to the original style.

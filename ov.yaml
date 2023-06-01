@@ -7,6 +7,8 @@
 # BeforeWriteOriginal: 1000
 # AfterWriteOriginal: 0
 # MemoryLimit: 10000
+# HidePromptFilename: false
+# InvertPromptColor: true
 
 General:
   TabWidth: 8
