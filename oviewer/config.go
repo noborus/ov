@@ -59,6 +59,11 @@ func NewConfig() Config {
 			SectionStartPosition: 0,
 			JumpTarget:           0,
 		},
-		InvertPromptColor: true,
+		Prompt: OVPromptConfig{
+			Normal: OVPromptConfigNormal{
+				ShowFilename: true,
+				InvertColor: true,
+			},
+		},
 	}
 }

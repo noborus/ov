@@ -487,14 +487,14 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	caption := ""
 	if root.Doc.Caption != "" {
 		caption = root.Doc.Caption
-	} else if !root.Config.HidePromptFilename {
+	} else if root.Config.Prompt.Normal.ShowFilename {
 		caption = root.Doc.FileName
 	}
 
 	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, caption, root.message)
 	leftContents := StrToContents(leftStatus, -1)
 
-	if root.Config.InvertPromptColor {
+	if root.Config.Prompt.Normal.InvertColor {
 		color := tcell.ColorWhite
 		if root.CurrentDoc != 0 {
 			color = tcell.Color((root.CurrentDoc + 8) % 16)

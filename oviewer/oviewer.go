@@ -161,6 +161,15 @@ type general struct {
 	PlainMode bool
 }
 
+type OVPromptConfigNormal struct {
+	ShowFilename bool
+	InvertColor  bool
+}
+
+type OVPromptConfig struct {
+	Normal OVPromptConfigNormal
+}
+
 // Config represents the settings of ov.
 type Config struct {
 	Keybind                  map[string][]string
@@ -192,8 +201,7 @@ type Config struct {
 	RegexpSearch             bool
 	Incsearch                bool
 	Debug                    bool
-	HidePromptFilename       bool
-	InvertPromptColor        bool
+	Prompt                   OVPromptConfig
 }
 
 // OVStyle represents a style in addition to the original style.
