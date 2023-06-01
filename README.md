@@ -300,12 +300,13 @@ For output like `ps`, using `--column-width` is a better way to separate columns
 
 You can specify the column width with `--column-width` (default key `alt+o`).
 
-
 ```console
 ps aux|ov -H1 --column-width --column-rainbow
 ```
 
 ![ps-ov.png](docs/ps-ov.png)
+
+This column-width feature is implemented using [guesswidth](https://github.com/noborus/guesswidth).
 
 ###  3.7. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
