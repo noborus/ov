@@ -192,6 +192,7 @@ type Config struct {
 	RegexpSearch             bool
 	Incsearch                bool
 	Debug                    bool
+	SmartCase                bool
 }
 
 // OVStyle represents a style in addition to the original style.

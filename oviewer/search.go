@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"unicode"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
@@ -228,9 +229,20 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	}
 	root.input.value = word
 	root.searchWord = word
-	root.searchReg = regexpCompile(root.searchWord, caseSensitive)
 
-	return NewSearcher(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
+	smartCaseSensitive := caseSensitive
+	if root.Config.SmartCase {
+		smartCaseSensitive = false
+		for _, ch := range word {
+			if unicode.IsUpper(ch) {
+				smartCaseSensitive = true
+				break
+			}
+		}
+	}
+	root.searchReg = regexpCompile(root.searchWord, smartCaseSensitive)
+
+	return NewSearcher(root.searchWord, root.searchReg, smartCaseSensitive, root.Config.RegexpSearch)
 }
 
 // searchMove searches forward/backward and moves to the nearest matching line.
