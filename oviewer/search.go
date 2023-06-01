@@ -231,7 +231,7 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	root.searchWord = word
 
 	smartCaseSensitive := caseSensitive
-	if root.Config.SmartCase {
+	if root.Config.SmartCaseSensitive {
 		smartCaseSensitive = false
 		for _, ch := range word {
 			if unicode.IsUpper(ch) {

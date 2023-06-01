@@ -2,7 +2,7 @@
 # Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
 #
 # CaseSensitive: false
-# SmartCase: false
+# SmartCaseSensitive: false
 # RegexpSearch: false
 # Incsearch: true
 # BeforeWriteOriginal: 1000

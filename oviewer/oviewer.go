@@ -189,10 +189,10 @@ type Config struct {
 	IsWriteOriginal          bool
 	QuitSmall                bool
 	CaseSensitive            bool
+	SmartCaseSensitive       bool
 	RegexpSearch             bool
 	Incsearch                bool
 	Debug                    bool
-	SmartCase                bool
 }
 
 // OVStyle represents a style in addition to the original style.

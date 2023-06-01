@@ -501,9 +501,9 @@ func TestRoot_setSearch(t *testing.T) {
 			},
 		},
 		{
-			name: "testSmartCaseTrue",
+			name: "testSmartCaseSensitiveTrue",
 			config: Config{
-				SmartCase: true,
+				SmartCaseSensitive: true,
 			},
 			fields: fields{
 				input: &Input{},
