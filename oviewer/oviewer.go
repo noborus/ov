@@ -34,15 +34,14 @@ type Root struct {
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchReg for on-screen highlighting.
-	searchReg *regexp.Regexp
+	// searcher is the searcher.
+	searcher Searcher
+
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
-	// searchWord for on-screen highlighting.
-	searchWord string
 	// Original string.
 	OriginStr string
 
