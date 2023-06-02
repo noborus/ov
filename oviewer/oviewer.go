@@ -189,6 +189,7 @@ type Config struct {
 	IsWriteOriginal          bool
 	QuitSmall                bool
 	CaseSensitive            bool
+	SmartCaseSensitive       bool
 	RegexpSearch             bool
 	Incsearch                bool
 	Debug                    bool

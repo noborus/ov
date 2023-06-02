@@ -474,6 +474,7 @@ func TestRoot_setSearch(t *testing.T) {
 		fields fields
 		args   args
 		want   Searcher
+		config Config
 	}{
 		{
 			name: "testNil",
@@ -499,11 +500,28 @@ func TestRoot_setSearch(t *testing.T) {
 				word: strings.ToLower("test"),
 			},
 		},
+		{
+			name: "testSmartCaseSensitiveTrue",
+			config: Config{
+				SmartCaseSensitive: true,
+			},
+			fields: fields{
+				input: &Input{},
+			},
+			args: args{
+				word:          "Test",
+				caseSensitive: false,
+			},
+			want: sensitiveWord{
+				word: "Test",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := &Root{
 				input: tt.fields.input,
+				Config: tt.config,
 			}
 			if got := root.setSearcher(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Root.setSearch() = %v, want %v", got, tt.want)
