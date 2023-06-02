@@ -209,7 +209,6 @@ func TestDocument_requestLoadMem(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = 2
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -229,7 +228,6 @@ func TestDocument_requestLoadMem(t *testing.T) {
 			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
 			got, err := m.store.GetChunkLine(chunkNum, cn)
 			if (err != nil) != tt.wantErr {
-				t.Log(MemoryLimit)
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !reflect.DeepEqual(got, tt.want) {
