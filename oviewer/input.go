@@ -180,6 +180,17 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 // inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
+	if root.Config.CaseSensitive {
+		root.Config.SmartCaseSensitive = false
+	}
+}
+
+// inputSmartCaseSensitive toggles case sensitivity.
+func (root *Root) inputSmartCaseSensitive() {
+	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
+	if root.Config.SmartCaseSensitive {
+		root.Config.CaseSensitive = false
+	}
 }
 
 // inputIncSearch toggles incremental search.

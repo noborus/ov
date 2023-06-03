@@ -35,8 +35,14 @@ import (
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
 type Searcher interface {
+	// Match searches for bytes.
 	Match([]byte) bool
+	// MatchString searches for strings.
 	MatchString(string) bool
+	// FindAll searches for strings and returns the index of the match.
+	FindAll(string) [][]int
+	// String returns the search word.
+	String() string
 }
 
 // searchWord is a case-insensitive search.
@@ -44,16 +50,27 @@ type searchWord struct {
 	word string
 }
 
-// searchWord Match is a case-insensitive search.
+// searchWord Match is a case-insensitive search for bytes.
 func (substr searchWord) Match(s []byte) bool {
 	s = stripEscapeSequenceBytes(s)
 	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
 }
 
-// searchWord MatchString is a case-insensitive search.
+// searchWord MatchString is a case-insensitive search for string.
 func (substr searchWord) MatchString(s string) bool {
 	s = stripEscapeSequenceString(s)
 	return strings.Contains(strings.ToLower(s), substr.word)
+}
+
+// searchWord FindAll searches for strings and returns the index of the match.
+func (substr searchWord) FindAll(s string) [][]int {
+	s = strings.ToLower(s)
+	return allStringIndex(s, substr.word)
+}
+
+// searchWord String returns the search word.
+func (substr searchWord) String() string {
+	return substr.word
 }
 
 // sensitiveWord is a case-sensitive search.
@@ -61,16 +78,26 @@ type sensitiveWord struct {
 	word string
 }
 
-// sensitiveWord Match is a case-sensitive search.
+// sensitiveWord Match is a case-sensitive search for bytes.
 func (substr sensitiveWord) Match(s []byte) bool {
 	s = stripEscapeSequenceBytes(s)
 	return bytes.Contains(s, []byte(substr.word))
 }
 
-// sensitiveWord Match is a case-sensitive search.
+// sensitiveWord MatchString is a case-sensitive search for string.
 func (substr sensitiveWord) MatchString(s string) bool {
 	s = stripEscapeSequenceString(s)
 	return strings.Contains(s, substr.word)
+}
+
+// sensitiveWord FindAll searches for strings and returns the index of the match.
+func (substr sensitiveWord) FindAll(s string) [][]int {
+	return allStringIndex(s, substr.word)
+}
+
+// String returns the search word.
+func (substr sensitiveWord) String() string {
+	return substr.word
 }
 
 // regexpWord is a regular expression search.
@@ -78,16 +105,26 @@ type regexpWord struct {
 	word *regexp.Regexp
 }
 
-// regexpWord Match is a regular expression search.
+// regexpWord Match is a regular expression search for bytes.
 func (substr regexpWord) Match(s []byte) bool {
 	s = stripEscapeSequenceBytes(s)
 	return substr.word.Match(s)
 }
 
-// regexpWord Match is a regular expression search.
+// regexpWord MatchString is a regular expression search for string.
 func (substr regexpWord) MatchString(s string) bool {
 	s = stripEscapeSequenceString(s)
 	return substr.word.MatchString(s)
+}
+
+// regexpWord FindAll searches for strings and returns the index of the match.
+func (substr regexpWord) FindAll(s string) [][]int {
+	return substr.word.FindAllStringIndex(s, -1)
+}
+
+// regexpWord String returns the search word.
+func (substr regexpWord) String() string {
+	return substr.word.String()
 }
 
 // stripRegexpES is a regular expression that excludes escape sequences.
@@ -187,13 +224,7 @@ func condRegexpCompile(in string) *regexp.Regexp {
 // searchPosition returns the position where the search in the argument line matched.
 // searchPosition uses cache.
 func (root *Root) searchPosition(lN int, str string) [][]int {
-	var indexes [][]int
-	if root.Config.RegexpSearch {
-		indexes = searchPositionReg(str, root.searchReg)
-	} else {
-		indexes = searchPositionStr(root.Config.CaseSensitive, str, root.searchWord)
-	}
-	return indexes
+	return root.searcher.FindAll(str)
 }
 
 // searchPositionReg returns an array of the beginning and end of the string
@@ -223,26 +254,22 @@ func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 // Returns nil if there is no search term.
 func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	if word == "" {
-		root.searchWord = ""
-		root.searchReg = nil
 		return nil
 	}
 	root.input.value = word
-	root.searchWord = word
 
-	smartCaseSensitive := caseSensitive
 	if root.Config.SmartCaseSensitive {
-		smartCaseSensitive = false
 		for _, ch := range word {
 			if unicode.IsUpper(ch) {
-				smartCaseSensitive = true
+				caseSensitive = true
 				break
 			}
 		}
 	}
-	root.searchReg = regexpCompile(root.searchWord, smartCaseSensitive)
-
-	return NewSearcher(root.searchWord, root.searchReg, smartCaseSensitive, root.Config.RegexpSearch)
+	reg := regexpCompile(word, caseSensitive)
+	searcher := NewSearcher(word, reg, caseSensitive, root.Config.RegexpSearch)
+	root.searcher = searcher
+	return searcher
 }
 
 // searchMove searches forward/backward and moves to the nearest matching line.
@@ -250,7 +277,8 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	if searcher == nil {
 		return
 	}
-	root.setMessagef("search:%v (%v)Cancel", root.searchWord, strings.Join(root.cancelKeys, ","))
+	word := root.searcher.String()
+	root.setMessagef("search:%v (%v)Cancel", word, strings.Join(root.cancelKeys, ","))
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -273,9 +301,9 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 				// If lN is before startNum, move to startNum.
 				root.searchGo(startNum)
 				log.Printf("Moved to %d because %d is out of range.", startNum, lN)
-				return fmt.Errorf("search moved to %d:%w:%v", startNum, err, root.searchWord)
+				return fmt.Errorf("search moved to %d:%w:%v", startNum, err, word)
 			}
-			return fmt.Errorf("search:%w:%v", err, root.searchWord)
+			return fmt.Errorf("search:%w:%v", err, word)
 		}
 		root.searchGo(lN)
 		return nil
@@ -285,7 +313,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		root.setMessage(err.Error())
 		return
 	}
-	root.setMessagef("search:%v", root.searchWord)
+	root.setMessagef("search:%v", word)
 }
 
 // Search searches for the search term and moves to the nearest matching line.
@@ -512,11 +540,15 @@ func (root *Root) cancelRestart(ctx context.Context) context.Context {
 
 // returnStartPosition checks the input value and returns the start position.
 func (root *Root) returnStartPosition() int {
+	word := ""
+	if root.searcher != nil {
+		word = root.searcher.String()
+	}
 	start := root.Doc.topLN
-	if !strings.Contains(root.searchWord, root.OriginStr) {
+	if !strings.Contains(word, root.OriginStr) {
 		start = root.OriginPos
 	}
-	root.OriginStr = root.searchWord
+	root.OriginStr = word
 	return start
 }
 
@@ -564,8 +596,12 @@ type eventNextSearch struct {
 
 // setNextSearch fires the eventNextSearch event.
 func (root *Root) setNextSearch() {
+	if root.searcher == nil {
+		return
+	}
+
 	ev := &eventNextSearch{}
-	ev.str = root.searchWord
+	ev.str = root.searcher.String()
 	ev.SetEventNow()
 	root.postEvent(ev)
 }
@@ -578,8 +614,12 @@ type eventNextBackSearch struct {
 
 // setNextBackSearch fires the eventNextBackSearch event.
 func (root *Root) setNextBackSearch() {
+	if root.searcher == nil {
+		return
+	}
+
 	ev := &eventNextBackSearch{}
-	ev.str = root.searchWord
+	ev.str = root.searcher.String()
 	ev.SetEventNow()
 	root.postEvent(ev)
 }

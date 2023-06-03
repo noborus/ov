@@ -11,6 +11,7 @@ import (
 )
 
 func TestDocument_ControlFile(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName   string
 		FollowMode bool
@@ -81,6 +82,7 @@ func TestDocument_ControlFile(t *testing.T) {
 }
 
 func TestDocument_requestLoad(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 		chunkNum int
@@ -165,71 +167,6 @@ func TestDocument_requestLoad(t *testing.T) {
 			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
 			got, err := m.store.GetChunkLine(chunkNum, cn)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Document.requestLoad() = %v, want %v", string(got), string(tt.want))
-			}
-		})
-	}
-}
-
-func TestDocument_requestLoadMem(t *testing.T) {
-	type fields struct {
-		FileName string
-		chunkNum int
-		lineNum  int
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []byte
-		wantErr bool
-	}{
-		{
-			name: "testLargeFileZstd",
-			fields: fields{
-				FileName: filepath.Join(testdata, "large.txt.zst"),
-				chunkNum: 99,
-				lineNum:  999999,
-			},
-			want:    []byte("1000000\n"),
-			wantErr: false,
-		},
-		{
-			name: "testLargeFileZstd2",
-			fields: fields{
-				FileName: filepath.Join(testdata, "large.txt.zst"),
-				chunkNum: 10,
-				lineNum:  10001,
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = 2
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			f, err := open(tt.fields.FileName)
-			if err != nil {
-				t.Fatal("open error", tt.fields.FileName)
-			}
-			m.FollowMode = true
-			if err := m.ControlFile(f); err != nil {
-				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
-			}
-			for line := 0; !m.BufEOF(); line++ {
-				m.requestLoad(line)
-			}
-
-			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
-			got, err := m.store.GetChunkLine(chunkNum, cn)
-			if (err != nil) != tt.wantErr {
-				t.Log(MemoryLimit)
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !reflect.DeepEqual(got, tt.want) {

@@ -401,7 +401,8 @@ Displayed when the following are enabled in the search input prompt:
 |:---------|:--------|:----|:--------------|
 | Incremental search | (I) | alt+i | --incremental |
 | Regular expression search | (R) | alt+r | --regexp-search  |
-| Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
+| Case-sensitive | (Aa) | alt+c | -i, --case-sensitive |
+| Smart case-sensitive | (S) | alt+s | --smart-case-sensitive |
 
 ###  3.16. <a name='mark'></a>Mark
 
@@ -654,6 +655,7 @@ Flags:
       --section-delimiter string   section delimiter
       --section-start int          section start position
       --skip-lines int             skip the number of lines
+      --smart-case-sensitive       smart case-sensitive in search                                         v0.31.0
   -x, --tab-width int              tab stop width (default 8)
   -v, --version                    display version information
       --view-mode string           view mode
@@ -756,6 +758,7 @@ It can also be changed after startup.
 	Key binding when typing
 
  [alt+c]                      * case-sensitive toggle
+ [alt+s]                      * smart case-sensitive toggle                         v0.31.0
  [alt+r]                      * regular expression search toggle
  [alt+i]                      * incremental search toggle
  [Up]                         * previous candidate

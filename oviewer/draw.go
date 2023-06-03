@@ -241,7 +241,7 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
 func (root *Root) searchHighlight(lN int, line LineC) {
-	if root.searchWord == "" {
+	if root.searcher == nil || root.searcher.String() == "" {
 		return
 	}
 
@@ -521,7 +521,9 @@ func (root *Root) inputOpts() string {
 		if root.Config.Incsearch {
 			opts += "(I)"
 		}
-		if root.Config.CaseSensitive {
+		if root.Config.SmartCaseSensitive {
+			opts += "(S)"
+		} else if root.Config.CaseSensitive {
 			opts += "(Aa)"
 		}
 	}

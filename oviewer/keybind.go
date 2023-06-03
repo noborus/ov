@@ -75,13 +75,14 @@ const (
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
 
-	inputCaseSensitive = "input_casesensitive"
-	inputIncSearch     = "input_incsearch"
-	inputRegexpSearch  = "input_regexp_search"
-	inputPrevious      = "input_previous"
-	inputNext          = "input_next"
-	inputCopy          = "input_copy"
-	inputPaste         = "input_paste"
+	inputCaseSensitive      = "input_casesensitive"
+	inputSmartCaseSensitive = "input_smart_casesensitive"
+	inputIncSearch          = "input_incsearch"
+	inputRegexpSearch       = "input_regexp_search"
+	inputPrevious           = "input_previous"
+	inputNext               = "input_next"
+	inputCopy               = "input_copy"
+	inputPaste              = "input_paste"
 )
 
 // handlers returns a map of the action's handlers.
@@ -150,13 +151,14 @@ func (root *Root) handlers() map[string]func() {
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
 
-		inputCaseSensitive: root.inputCaseSensitive,
-		inputIncSearch:     root.inputIncSearch,
-		inputRegexpSearch:  root.inputRegexpSearch,
-		inputPrevious:      root.inputPrevious,
-		inputNext:          root.inputNext,
-		inputCopy:          root.CopySelect,
-		inputPaste:         root.Paste,
+		inputCaseSensitive:      root.inputCaseSensitive,
+		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
+		inputIncSearch:          root.inputIncSearch,
+		inputRegexpSearch:       root.inputRegexpSearch,
+		inputPrevious:           root.inputPrevious,
+		inputNext:               root.inputNext,
+		inputCopy:               root.CopySelect,
+		inputPaste:              root.Paste,
 	}
 }
 
@@ -229,13 +231,14 @@ func defaultKeyBinds() KeyBind {
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
 
-		inputCaseSensitive: {"alt+c"},
-		inputIncSearch:     {"alt+i"},
-		inputRegexpSearch:  {"alt+r"},
-		inputPrevious:      {"Up"},
-		inputNext:          {"Down"},
-		inputCopy:          {"ctrl+c"},
-		inputPaste:         {"ctrl+v"},
+		inputCaseSensitive:      {"alt+c"},
+		inputSmartCaseSensitive: {"alt+s"},
+		inputIncSearch:          {"alt+i"},
+		inputRegexpSearch:       {"alt+r"},
+		inputPrevious:           {"Up"},
+		inputNext:               {"Down"},
+		inputCopy:               {"ctrl+c"},
+		inputPaste:              {"ctrl+v"},
 	}
 }
 
@@ -334,6 +337,7 @@ func (k KeyBind) String() string {
 	fmt.Fprint(&b, "\n\tKey binding when typing\n")
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
+	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")

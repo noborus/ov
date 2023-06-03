@@ -352,7 +352,7 @@ func (m *Document) reload() error {
 // reset clears all lines.
 func (m *Document) reset() {
 	m.store = NewStore()
-	m.store.setNewLoadChunks(m.seekable)
+	m.store.setNewLoadChunks(m.memoryLimit)
 	atomic.StoreInt32(&m.store.changed, 1)
 	m.ClearCache()
 }

@@ -49,6 +49,9 @@ type Document struct {
 	// status is the display status of the document.
 	general
 
+	// memoryLimit is the maximum chunk size.
+	memoryLimit int
+
 	// currentChunk represents the current chunk number.
 	currentChunk int
 	// markedPoint is the position of the marked line.
@@ -101,6 +104,7 @@ type store struct {
 	chunks []*chunk
 	// mu controls the mutex.
 	mu sync.Mutex
+
 	// startNum is the number of the first line that can be moved.
 	startNum int32
 	// endNum is the number of the last line read.
@@ -150,6 +154,7 @@ func NewDocument() (*Document, error) {
 			PlainMode:       false,
 		},
 		ctlCh:         make(chan controlSpecifier),
+		memoryLimit:   100,
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
