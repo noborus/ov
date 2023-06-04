@@ -243,7 +243,9 @@ func init() {
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
 	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
-	_ = viper.BindPFlag("general.WrapMode", rootCmd.PersistentFlags().Lookup("wrap"))
+	wrapFlag := rootCmd.PersistentFlags().Lookup("wrap")
+	_ = viper.BindPFlag("general.WrapMode", wrapFlag)
+	wrapFlag.NoOptDefVal = "true|=false"
 
 	rootCmd.PersistentFlags().BoolP("plain", "p", false, "disable original decoration")
 	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))
@@ -307,7 +309,9 @@ func init() {
 	_ = viper.BindPFlag("RegexpSearch", rootCmd.PersistentFlags().Lookup("regexp-search"))
 
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
-	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
+	incsearchFlag := rootCmd.PersistentFlags().Lookup("incsearch")
+	_ = viper.BindPFlag("Incsearch", incsearchFlag)
+	incsearchFlag.NoOptDefVal = "true|=false"
 
 	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
