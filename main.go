@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/noborus/ov/oviewer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 )
@@ -191,17 +194,102 @@ func SetRedirect() {
 	}
 }
 
+func flagUsage(f *pflag.FlagSet) string {
+	buf := new(bytes.Buffer)
+
+	lines := make([]string, 0)
+
+	maxlen := 0
+	f.VisitAll(func(flag *pflag.Flag) {
+		if flag.Hidden {
+			return
+		}
+
+		line := ""
+		if flag.Shorthand != "" && flag.ShorthandDeprecated == "" {
+			line = fmt.Sprintf("  -%s, --%s", flag.Shorthand, flag.Name)
+		} else {
+			line = fmt.Sprintf("      --%s", flag.Name)
+		}
+
+		varname, usage := pflag.UnquoteUsage(flag)
+		if varname != "" {
+			line += " " + varname
+		}
+
+		switch flag.Value.Type() {
+		case "string":
+		case "bool":
+			if flag.DefValue == "true" {
+				line += "[=true|false]"
+			}
+		case "count":
+		default:
+		}
+
+		// This special character will be replaced with spacing once the
+		// correct alignment is calculated
+		line += "\x00"
+		if len(line) > maxlen {
+			maxlen = len(line)
+		}
+
+		line += usage
+
+		switch flag.Value.Type() {
+		case "int", "int8", "int16", "int32", "int64":
+			if flag.DefValue != "0" {
+				line += fmt.Sprintf(" (default %s)", flag.DefValue)
+			}
+		case "string":
+			if flag.DefValue != "" {
+				line += fmt.Sprintf(" (default %q)", flag.DefValue)
+			}
+		case "bool":
+			if flag.DefValue == "true" {
+				line += " (default true)"
+			}
+		case "count":
+		default:
+		}
+		if len(flag.Deprecated) != 0 {
+			line += fmt.Sprintf(" (DEPRECATED: %s)", flag.Deprecated)
+		}
+
+		lines = append(lines, line)
+	})
+
+	for _, line := range lines {
+		sidx := strings.Index(line, "\x00")
+		spacing := strings.Repeat(" ", maxlen-sidx)
+		fmt.Fprintln(buf, line[:sidx], spacing, line[sidx+1:])
+	}
+
+	return buf.String()
+}
+
+func UsageFunc() (cmd func(*cobra.Command) error) {
+	return func(c *cobra.Command) error {
+		fmt.Fprintf(os.Stdout, "Usage:\n")
+		fmt.Fprintf(os.Stdout, "  %s [flags] [FILE]...\n", c.CommandPath())
+		fmt.Fprintf(os.Stdout, "\n")
+		fmt.Fprintf(os.Stdout, "Flags:\n")
+		fmt.Print(flagUsage(c.Flags()))
+		return nil
+	}
+}
+
 func init() {
 	config = oviewer.NewConfig()
 	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/ov/config.yaml)")
+	rootCmd.SetUsageFunc(UsageFunc())
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config `file` (default is $XDG_CONFIG_HOME/ov/config.yaml)")
 	_ = rootCmd.RegisterFlagCompletionFunc("config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"yaml"}, cobra.ShellCompDirectiveFilterFileExt
 	})
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
-	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "exec command")
+	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "command execution result instead of file")
 
 	rootCmd.PersistentFlags().StringVarP(&completion, "completion", "", "", "generate completion script [bash|zsh|fish|powershell]")
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
@@ -248,13 +336,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("plain", "p", false, "disable original decoration")
 	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))
 
-	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter")
+	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter `character`")
 	_ = viper.BindPFlag("general.ColumnDelimiter", rootCmd.PersistentFlags().Lookup("column-delimiter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("column-delimiter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{",\tcomma", "|\tvertical line", "\\\\t\ttab", "│\tbox"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().StringP("section-delimiter", "", "", "section delimiter")
+	rootCmd.PersistentFlags().StringP("section-delimiter", "", "", "`regexp` for section delimiter .e.g. \"^#\"")
 	_ = viper.BindPFlag("general.SectionDelimiter", rootCmd.PersistentFlags().Lookup("section-delimiter"))
 
 	rootCmd.PersistentFlags().IntP("section-start", "", 0, "section start position")
@@ -272,13 +360,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow name mode")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
-	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval")
+	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))
 
-	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "multi-color")
+	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "comma separated words(regexp) to color .e.g. \"ERROR,WARNING\"")
 	_ = viper.BindPFlag("general.MultiColorWords", rootCmd.PersistentFlags().Lookup("multi-color"))
 
-	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump-target")
+	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int]`")
 	_ = viper.BindPFlag("general.JumpTargetString", rootCmd.PersistentFlags().Lookup("jump-target"))
 
 	// Config
@@ -288,10 +376,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
 	_ = viper.BindPFlag("IsWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write"))
 
-	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "NUM before the current lines when exiting")
+	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "number before the current lines when exiting")
 	_ = viper.BindPFlag("BeforeWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-before"))
 
-	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "NUM after the current lines when exiting")
+	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "number after the current lines when exiting")
 	_ = viper.BindPFlag("AfterWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-after"))
 
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
@@ -312,10 +400,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
-	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "Number of chunks to limit in memory")
+	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "number of chunks to limit in memory")
 	_ = viper.BindPFlag("MemoryLimit", rootCmd.PersistentFlags().Lookup("memory-limit"))
 
-	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "The number of chunks to limit in memory for the file")
+	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "number of chunks to limit in memory for the file")
 	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
