@@ -6,7 +6,7 @@
 
 ov is a terminal pager.
 
-* `ov` can be used instead of `less` or `more` or `tail -f`.
+* `ov` can be used instead of `less`, `more`, `tail -f/-F` and `watch`.
 * `ov` also has an effective function for tabular text.
 
 ![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
@@ -67,19 +67,19 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
-* Supports files larger than memory (**v0.30.0 or later**).
+* Supports files larger than [memory](#how-to-reduce-memory-usage) (**v0.30.0 or later**).
 * Regular files can be opened quickly even if they are large (**v0.30.0 or later**).
 * Supports fixed [header](#header) line display (both wrap/nowrap).
 * Supports [column mode](#column-mode), which recognizes columns by delimiter.
 * Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
-* Support columns with fixed widths instead of delimiters (**v0.30.0 or later**).
+* Support [columns with fixed widths](#column-width) instead of delimiters (**v0.30.0 or later**).
 * Supports section-by-section movement, splitting [sections](#section) by delimiter.
 * Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
-* Supports alternating row styling.
+* Supports [alternating row](#alternate-rows) styling.
 * Shortcut keys are [customizable](#key-binding-customization).
 * The style of the effect is [customizable](#style-customization).
-* Supports [follow-mode](#follow-mode) (like tail -f).
-* Support follow mode by file name (equivalent to `tail -F`) (**v0.30.0 or later**).
+* Supports [follow-mode](#follow-mode) (like `tail -f`).
+* Support follow mode by file [name](#follow-name) (like `tail -F`) (**v0.30.0 or later**).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
 * Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
@@ -393,7 +393,7 @@ ov --follow-all --exec -- make
 
 ###  3.15. <a name='search'></a>Search
 
-Search by forward search `/` key(default) or the backward search `?` key(defualt).
+Search by forward search `/` key(default) or the backward search `?` key(default).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
 Displayed when the following are enabled in the search input prompt:
 
@@ -431,7 +431,7 @@ ov --watch 1 /proc/meminfo
 ###  3.18. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
-This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `contrl+alt+r`).
+This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -448,7 +448,7 @@ Also, if mouse support is enabled, horizontal scrolling is possible with `shift+
 ###  3.19. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
-`.`key(defualt) enters multi-word input mode.
+`.`key(default) enters multi-word input mode.
 Enter multiple words (regular expressions) separated by spaces.
 
 For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
@@ -480,7 +480,7 @@ StyleMultiColorHighlight:
 
 ###  3.20. <a name='plain'></a>Plain
 
-Supports undecorating ANSI escape sequences.
+Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
 ###  3.21. <a name='jump-target'></a>Jump target
