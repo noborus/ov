@@ -9,6 +9,7 @@ import (
 )
 
 func TestDocument_ReadFile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		args string
 	}
@@ -33,7 +34,9 @@ func TestDocument_ReadFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -46,6 +49,7 @@ func TestDocument_ReadFile(t *testing.T) {
 }
 
 func TestDocument_ReadAll(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r io.Reader
 	}
@@ -77,7 +81,9 @@ func TestDocument_ReadAll(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -90,6 +96,7 @@ func TestDocument_ReadAll(t *testing.T) {
 }
 
 func TestDocument_reset(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -107,7 +114,9 @@ func TestDocument_reset(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fields.FileName)
 			if err != nil {
 				t.Fatalf("OpenDocument %s", err)
@@ -123,6 +132,7 @@ func TestDocument_reset(t *testing.T) {
 }
 
 func TestDocument_reload(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName  string
 		WatchMode bool
@@ -153,7 +163,9 @@ func TestDocument_reload(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal("NewDocument error")

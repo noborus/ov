@@ -7,6 +7,7 @@ import (
 )
 
 func Test_store_chunkRange(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		chunks   []*chunk
 		startNum int32
@@ -67,7 +68,9 @@ func Test_store_chunkRange(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := &store{
 				chunks:   tt.fields.chunks,
 				startNum: tt.fields.startNum,
@@ -103,6 +106,7 @@ func testNewStore(t *testing.T, chunkNum int, capacity int) *store {
 }
 
 func Test_store_swapChunksFile(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -159,7 +163,9 @@ func Test_store_swapChunksFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.capacity)
 			for _, num := range tt.args.chunkNums {
 				s.swapLoadedFile(num)
@@ -173,6 +179,7 @@ func Test_store_swapChunksFile(t *testing.T) {
 }
 
 func Test_store_isContinueRead(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		limit int
 	}
@@ -204,7 +211,9 @@ func Test_store_isContinueRead(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := testNewStore(t, 10, tt.args.limit)
 			if got := s.isContinueRead(tt.args.limit); got != tt.want {
 				t.Logf("loadedChunks: %v", s.loadedChunks.Len())
@@ -215,6 +224,7 @@ func Test_store_isContinueRead(t *testing.T) {
 }
 
 func Test_store_loadChunksMem(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -271,7 +281,9 @@ func Test_store_loadChunksMem(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
 			for _, chunkNum := range tt.args.chunkNums {
 				s.loadChunksMem(chunkNum)
@@ -285,6 +297,7 @@ func Test_store_loadChunksMem(t *testing.T) {
 }
 
 func Test_store_evictChunksMem(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -353,7 +366,9 @@ func Test_store_evictChunksMem(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
 			for _, chunkNum := range tt.args.chunkNums {
 				s.loadChunksMem(chunkNum)
@@ -379,6 +394,7 @@ func testChunkStore(t *testing.T) (*store, *chunk) {
 }
 
 func Test_store_appendLine(t *testing.T) {
+	t.Parallel()
 	type appendArgs struct {
 		noNewlineEOF int32
 		line         []byte
@@ -446,7 +462,9 @@ func Test_store_appendLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s, chunk := testChunkStore(t)
 
 			for _, app := range tt.args {
@@ -461,6 +479,7 @@ func Test_store_appendLine(t *testing.T) {
 }
 
 func Test_store_chunkForAdd(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		chunks   []*chunk
 		startNum int
@@ -508,7 +527,9 @@ func Test_store_chunkForAdd(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := NewStore()
 			s.chunks = tt.fields.chunks
 			if got := s.chunkForAdd(tt.args.isFile, tt.args.start); !reflect.DeepEqual(got, tt.want) {
@@ -519,6 +540,7 @@ func Test_store_chunkForAdd(t *testing.T) {
 }
 
 func Test_store_isLoadedChunk(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		chunks int
 	}
@@ -583,7 +605,9 @@ func Test_store_isLoadedChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := testNewStore(t, tt.fields.chunks, tt.limit)
 			if got := s.isLoadedChunk(tt.args.chunkNum, tt.args.isFile); got != tt.want {
 				t.Logf("isLoadedChunk %v", s.loadedChunks.Keys())

@@ -63,7 +63,9 @@ func TestDocument_ControlFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -146,7 +148,9 @@ func TestDocument_requestLoad(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -210,7 +214,9 @@ func TestDocument_requestSearch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -275,7 +281,9 @@ func TestDocument_requestFollow(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			fname := CopyToTempFile(t, tt.fields.FileName)
 			m, err := NewDocument()
 			if err != nil {
@@ -343,7 +351,9 @@ func TestDocument_requestClose(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -392,7 +402,9 @@ func TestDocument_ControlReader(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -460,7 +472,9 @@ func TestDocument_ControlReaderCtl(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -495,7 +509,9 @@ func TestDocument_ControlLog(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
