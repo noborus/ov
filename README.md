@@ -619,48 +619,48 @@ ov is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 Usage:
-  ov [flags]
+  ov [flags] [FILE]...
 
 Flags:
-  -C, --alternate-rows             alternately change the line color
-  -i, --case-sensitive             case-sensitive in search
-  -d, --column-delimiter string    column delimiter (default ",")
-  -c, --column-mode                column mode
-      --column-rainbow             column rainbow
-      --column-width               column width mode                                                      v0.30.0
-      --completion string          generate completion script [bash|zsh|fish|powershell]
-      --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
-      --debug                      debug mode
-      --disable-mouse              disable mouse support
-  -e, --exec                       exec command
-  -X, --exit-write                 output the current screen when exiting
-  -a, --exit-write-after int       NUM after the current lines when exiting
-  -b, --exit-write-before int      NUM before the current lines when exiting
-  -A, --follow-all                 follow all
-  -f, --follow-mode                follow mode
-      --follow-name                follow name mode
-      --follow-section             follow section
-  -H, --header int                 number of header rows to fix
-  -h, --help                       help for ov
-      --help-key                   display key bind information
-      --incsearch                  incremental search (default true)
-  -j, --jump-target string         jump-target
-  -n, --line-number                line number mode
-      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.30.0
-      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.30.0
-  -M, --multi-color strings        multi-color
-  -p, --plain                      disable original decoration
-  -F, --quit-if-one-screen         quit if the output fits on one screen
-      --regexp-search              regular expression search
-      --section-delimiter string   section delimiter
-      --section-start int          section start position
-      --skip-lines int             skip the number of lines
-      --smart-case-sensitive       smart case-sensitive in search                                         v0.31.0
-  -x, --tab-width int              tab stop width (default 8)
-  -v, --version                    display version information
-      --view-mode string           view mode
-  -T, --watch int                  watch mode interval
-  -w, --wrap                       wrap mode (default true)
+  -C, --alternate-rows                alternately change the line color
+  -i, --case-sensitive                case-sensitive in search
+  -d, --column-delimiter character    column delimiter character (default ",")
+  -c, --column-mode                   column mode
+      --column-rainbow                column rainbow
+      --column-width                  column width mode                                                      v0.30.0
+      --completion string             generate completion script [bash|zsh|fish|powershell]
+      --config file                   config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
+      --debug                         debug mode
+      --disable-mouse                 disable mouse support
+  -e, --exec                          command execution result instead of file
+  -X, --exit-write                    output the current screen when exiting
+  -a, --exit-write-after int          number after the current lines when exiting
+  -b, --exit-write-before int         number before the current lines when exiting
+  -A, --follow-all                    follow all
+  -f, --follow-mode                   follow mode
+      --follow-name                   follow name mode
+      --follow-section                follow section
+  -H, --header int                    number of header rows to fix
+  -h, --help                          help for ov
+      --help-key                      display key bind information
+      --incsearch[=true|false]        incremental search (default true)
+  -j, --jump-target [int|int%|.int]   jump target [int|int%|.int]
+  -n, --line-number                   line number mode
+      --memory-limit int              number of chunks to limit in memory (default -1)                       v0.30.0
+      --memory-limit-file int         number of chunks to limit in memory for the file (default 100)         v0.30.0
+  -M, --multi-color strings           comma separated words(regexp) to color .e.g. "ERROR,WARNING"
+  -p, --plain                         disable original decoration
+  -F, --quit-if-one-screen            quit if the output fits on one screen
+      --regexp-search                 regular expression search
+      --section-delimiter regexp      regexp for section delimiter .e.g. "^#"
+      --section-start int             section start position
+      --skip-lines int                skip the number of lines
+      --smart-case-sensitive          smart case-sensitive in search                                         v0.31.0
+  -x, --tab-width int                 tab stop width (default 8)
+  -v, --version                       display version information
+      --view-mode string              view mode
+  -T, --watch seconds                 watch mode interval(seconds)
+  -w, --wrap[=true|false]             wrap mode (default true)
 ```
 
 It can also be changed after startup.
