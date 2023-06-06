@@ -41,6 +41,7 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 }
 
 func Test_position(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		height int
 		str    string
@@ -84,7 +85,9 @@ func Test_position(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := docPosition(tt.args.height, tt.args.str); got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
 			}
@@ -93,6 +96,7 @@ func Test_position(t *testing.T) {
 }
 
 func Test_jumpPosition(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		height int
 		str    string
@@ -120,7 +124,9 @@ func Test_jumpPosition(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := jumpPosition(tt.args.height, tt.args.str); got != tt.want {
 				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
 			}

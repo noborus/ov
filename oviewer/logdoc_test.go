@@ -5,6 +5,7 @@ import (
 )
 
 func TestDocument_Write(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		log []byte
 	}
@@ -35,7 +36,9 @@ func TestDocument_Write(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)

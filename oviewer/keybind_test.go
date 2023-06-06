@@ -37,6 +37,7 @@ func Test_defaultKeyBinds(t *testing.T) {
 }
 
 func TestKeyBind_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		k    KeyBind
@@ -46,7 +47,9 @@ func TestKeyBind_String(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			kb := defaultKeyBinds()
 			kbStr := kb.String()
 			count := 0

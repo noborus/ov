@@ -129,6 +129,7 @@ func Test_searchWord_Match(t *testing.T) {
 }
 
 func Test_sensitiveWord_Match(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		word string
 	}
@@ -163,7 +164,9 @@ func Test_sensitiveWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			substr := sensitiveWord{
 				word: tt.fields.word,
 			}
@@ -175,6 +178,7 @@ func Test_sensitiveWord_Match(t *testing.T) {
 }
 
 func Test_regexpWord_Match(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		word *regexp.Regexp
 	}
@@ -209,7 +213,9 @@ func Test_regexpWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			substr := regexpWord{
 				word: tt.fields.word,
 			}
@@ -221,6 +227,7 @@ func Test_regexpWord_Match(t *testing.T) {
 }
 
 func Test_getSearchMatch(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		searchWord    string
 		searchReg     *regexp.Regexp
@@ -279,7 +286,9 @@ func Test_getSearchMatch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
 			if got := searcher.MatchString(tt.word); got != tt.want {
 				t.Errorf("getSearchMatch() = %v, want %v", got, tt.want)
@@ -289,6 +298,7 @@ func Test_getSearchMatch(t *testing.T) {
 }
 
 func Test_regexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r             string
 		caseSensitive bool
@@ -308,7 +318,9 @@ func Test_regexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := regexpCompile(tt.args.r, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("regexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -317,6 +329,7 @@ func Test_regexpCompile(t *testing.T) {
 }
 
 func Test_searchPositionReg(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s  string
 		re *regexp.Regexp
@@ -402,7 +415,9 @@ func Test_searchPositionReg(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := searchPositionReg(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
@@ -411,6 +426,7 @@ func Test_searchPositionReg(t *testing.T) {
 }
 
 func Test_searchPosition(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		caseSensitive bool
 		s             string
@@ -453,7 +469,9 @@ func Test_searchPosition(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := searchPositionStr(tt.args.caseSensitive, tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
@@ -462,6 +480,7 @@ func Test_searchPosition(t *testing.T) {
 }
 
 func TestRoot_setSearch(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		input *Input
 	}
@@ -518,9 +537,11 @@ func TestRoot_setSearch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			root := &Root{
-				input: tt.fields.input,
+				input:  tt.fields.input,
 				Config: tt.config,
 			}
 			if got := root.setSearcher(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
@@ -531,6 +552,7 @@ func TestRoot_setSearch(t *testing.T) {
 }
 
 func Test_multiRegexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		words []string
 	}
@@ -561,7 +583,9 @@ func Test_multiRegexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := multiRegexpCompile(tt.args.words); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("multiRegexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -570,6 +594,7 @@ func Test_multiRegexpCompile(t *testing.T) {
 }
 
 func Test_condRegexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		in string
 	}
@@ -629,7 +654,9 @@ func Test_condRegexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := condRegexpCompile(tt.args.in); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("condRegexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -638,6 +665,7 @@ func Test_condRegexpCompile(t *testing.T) {
 }
 
 func TestDocument_searchChunk(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		chunkNum int
 		searcher Searcher
@@ -701,7 +729,9 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fileName)
 			if err != nil {
 				t.Fatal(err)
