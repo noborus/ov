@@ -22,7 +22,7 @@ func (root *Root) draw() {
 		return
 	}
 
-	if m.ColumnWidth && m.columnWidths == nil {
+	if m.ColumnWidth && len(m.columnWidths) == 0 {
 		m.setColumnWidths()
 	}
 

@@ -554,7 +554,7 @@ func (root *Root) endRight() int {
 		if err != nil {
 			continue
 		}
-		x = max(x, len(lc))
+		x = max(x, len(lc)-1)
 	}
 	return x - ((root.scr.vWidth - root.scr.startX) - 1)
 }

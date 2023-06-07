@@ -826,7 +826,7 @@ func mergeGeneral(src general, dst general) general {
 	if dst.JumpTarget != 0 {
 		src.JumpTarget = dst.JumpTarget
 	}
-	if dst.MultiColorWords != nil {
+	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
 	}
 	return src
