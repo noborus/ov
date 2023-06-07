@@ -104,6 +104,7 @@ func TestDocument_lineToContents(t *testing.T) {
 }
 
 func TestDocument_Export(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		start int
 		end   int
@@ -157,6 +158,7 @@ func TestDocument_Export(t *testing.T) {
 }
 
 func TestDocument_searchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -224,6 +226,7 @@ func TestDocument_searchLine(t *testing.T) {
 }
 
 func TestDocument_backSearchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}

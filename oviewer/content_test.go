@@ -253,7 +253,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1B[38;5;31mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -262,7 +262,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -271,7 +271,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1b[38;5;1;48;5;2mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)).Background(tcell.Color(tcell.ColorValid + 2)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1).Background(tcell.ColorValid + 2), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -763,6 +763,7 @@ func Test_contentsToStr(t *testing.T) {
 }
 
 func Test_widthPos_x(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		x int
 	}
@@ -797,6 +798,7 @@ func Test_widthPos_x(t *testing.T) {
 }
 
 func Test_widthPos_n(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		w int
 	}

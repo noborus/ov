@@ -140,9 +140,6 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestSearch:
 		return m.searchRead(reader, sc.chunkNum, sc.searcher)
 	case requestReload:
-		if !m.WatchMode {
-			m.store.loadedChunks.Purge()
-		}
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
 		return reader, err

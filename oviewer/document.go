@@ -408,7 +408,7 @@ func (m *Document) unWatchMode() {
 func (m *Document) regexpCompile() {
 	m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 	m.setSectionDelimiter(m.SectionDelimiter)
-	if m.MultiColorWords != nil {
+	if len(m.MultiColorWords) > 0 {
 		m.setMultiColorWords(m.MultiColorWords)
 	}
 }
