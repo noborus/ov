@@ -181,6 +181,7 @@ func TestDocument_requestLoad(t *testing.T) {
 }
 
 func TestDocument_requestSearch(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName   string
 		searchWord string
@@ -260,6 +261,7 @@ func CopyToTempFile(t *testing.T, fileName string) string {
 }
 
 func TestDocument_requestFollow(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName    string
 		appendBytes []byte
@@ -332,6 +334,7 @@ func TestDocument_requestFollow(t *testing.T) {
 }
 
 func TestDocument_requestClose(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -375,6 +378,7 @@ func TestDocument_requestClose(t *testing.T) {
 }
 
 func TestDocument_ControlReader(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r      io.Reader
 		reload func() *bufio.Reader
@@ -417,6 +421,7 @@ func TestDocument_ControlReader(t *testing.T) {
 }
 
 func TestDocument_ControlReaderCtl(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r      io.Reader
 		reload func() *bufio.Reader
@@ -492,6 +497,7 @@ func TestDocument_ControlReaderCtl(t *testing.T) {
 }
 
 func TestDocument_ControlLog(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		sc      controlSpecifier
