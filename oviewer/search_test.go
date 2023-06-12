@@ -202,6 +202,16 @@ func Test_regexpWord_Match(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "testBlankLine",
+			fields: fields{
+				word: regexpCompile("^$", false),
+			},
+			args: args{
+				"",
+			},
+			want: true,
+		},
+		{
 			name: "testFalse",
 			fields: fields{
 				word: regexpCompile("t", true),
@@ -745,6 +755,125 @@ func TestDocument_searchChunk(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("Document.searchChunk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_sensitive_FindAll(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   [][]int
+	}{
+		{
+			name: "testFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testCSFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testRegexpFound",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 3}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.FindAll(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sensitiveWord.FindAll() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_search_String(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testString",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			want: "error",
+		},
+		{
+			name: "testCaseSensitive",
+			fields: fields{
+				searchWord:    "ERROR",
+				searchReg:     regexpCompile("ERROR", true),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			want: "ERROR",
+		},
+		{
+			name: "testRegexp",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			want: "err*",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.String(); got != tt.want {
+				t.Errorf("searchWord.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
