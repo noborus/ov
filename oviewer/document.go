@@ -305,7 +305,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.LineString(n))
+		fmt.Fprintln(w, m.LineString(n))
 	}
 }
 

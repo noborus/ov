@@ -676,7 +676,7 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 
 		// If the line is complete, check if it matches.
 		if !isPrefix {
-			if searcher.Match(line.Bytes()) {
+			if searcher.Match(bytes.TrimSuffix(line.Bytes(), []byte("\n"))) {
 				return num, nil
 			}
 			num++
