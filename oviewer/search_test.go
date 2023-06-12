@@ -314,7 +314,7 @@ func Test_regexpCompile(t *testing.T) {
 				r:             "t.",
 				caseSensitive: true,
 			},
-			want: regexp.MustCompile("(?m)t."),
+			want: regexp.MustCompile("t."),
 		},
 	}
 	for _, tt := range tests {
@@ -567,7 +567,7 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{".", "["},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)."),
+				regexp.MustCompile("."),
 				regexp.MustCompile(`\[`),
 			},
 		},
@@ -577,8 +577,8 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{"a", "b"},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)a"),
-				regexp.MustCompile("(?m)b"),
+				regexp.MustCompile("a"),
+				regexp.MustCompile("b"),
 			},
 		},
 	}

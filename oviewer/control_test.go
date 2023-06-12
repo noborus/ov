@@ -103,7 +103,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 1,
 				lineNum:  10001,
 			},
-			want:    []byte("10002\n"),
+			want:    []byte("10002"),
 			wantErr: false,
 		},
 		{
@@ -113,7 +113,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 99,
 				lineNum:  999999,
 			},
-			want:    []byte("1000000\n"),
+			want:    []byte("1000000"),
 			wantErr: false,
 		},
 		{
@@ -123,7 +123,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 1,
 				lineNum:  12344,
 			},
-			want:    []byte("12345\n"),
+			want:    []byte("12345"),
 			wantErr: false,
 		},
 		{
@@ -278,7 +278,7 @@ func TestDocument_requestFollow(t *testing.T) {
 				FileName:    filepath.Join(testdata, "large.txt"),
 				appendBytes: []byte("a\n"),
 			},
-			want:    []byte("a\n"),
+			want:    []byte("a"),
 			wantErr: false,
 		},
 	}
