@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -271,7 +272,7 @@ func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	if cn >= len(chunk.lines) {
 		return nil, fmt.Errorf("over line (%d:%d) %w", chunkNum, cn, ErrOutOfRange)
 	}
-	return chunk.lines[cn], nil
+	return bytes.TrimSuffix(chunk.lines[cn], []byte("\n")), nil
 }
 
 // GetLine returns one line from buffer.
@@ -304,7 +305,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.LineString(n))
+		fmt.Fprintln(w, m.LineString(n))
 	}
 }
 

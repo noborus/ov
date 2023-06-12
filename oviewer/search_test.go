@@ -202,6 +202,16 @@ func Test_regexpWord_Match(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "testBlankLine",
+			fields: fields{
+				word: regexpCompile("^$", false),
+			},
+			args: args{
+				"",
+			},
+			want: true,
+		},
+		{
 			name: "testFalse",
 			fields: fields{
 				word: regexpCompile("t", true),
@@ -217,7 +227,7 @@ func Test_regexpWord_Match(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			substr := regexpWord{
-				word: tt.fields.word,
+				regexp: tt.fields.word,
 			}
 			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
@@ -314,7 +324,7 @@ func Test_regexpCompile(t *testing.T) {
 				r:             "t.",
 				caseSensitive: true,
 			},
-			want: regexp.MustCompile("(?m)t."),
+			want: regexp.MustCompile("t."),
 		},
 	}
 	for _, tt := range tests {
@@ -567,7 +577,7 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{".", "["},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)."),
+				regexp.MustCompile("."),
 				regexp.MustCompile(`\[`),
 			},
 		},
@@ -577,8 +587,8 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{"a", "b"},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)a"),
-				regexp.MustCompile("(?m)b"),
+				regexp.MustCompile("a"),
+				regexp.MustCompile("b"),
 			},
 		},
 	}
@@ -745,6 +755,125 @@ func TestDocument_searchChunk(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("Document.searchChunk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_sensitive_FindAll(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   [][]int
+	}{
+		{
+			name: "testFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testCSFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testRegexpFound",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 3}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.FindAll(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sensitiveWord.FindAll() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_search_String(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testString",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			want: "error",
+		},
+		{
+			name: "testCaseSensitive",
+			fields: fields{
+				searchWord:    "ERROR",
+				searchReg:     regexpCompile("ERROR", true),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			want: "ERROR",
+		},
+		{
+			name: "testRegexp",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			want: "err*",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.String(); got != tt.want {
+				t.Errorf("searchWord.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

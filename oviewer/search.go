@@ -102,29 +102,30 @@ func (substr sensitiveWord) String() string {
 
 // regexpWord is a regular expression search.
 type regexpWord struct {
-	word *regexp.Regexp
+	word   string
+	regexp *regexp.Regexp
 }
 
 // regexpWord Match is a regular expression search for bytes.
 func (substr regexpWord) Match(s []byte) bool {
 	s = stripEscapeSequenceBytes(s)
-	return substr.word.Match(s)
+	return substr.regexp.Match(s)
 }
 
 // regexpWord MatchString is a regular expression search for string.
 func (substr regexpWord) MatchString(s string) bool {
 	s = stripEscapeSequenceString(s)
-	return substr.word.MatchString(s)
+	return substr.regexp.MatchString(s)
 }
 
 // regexpWord FindAll searches for strings and returns the index of the match.
 func (substr regexpWord) FindAll(s string) [][]int {
-	return substr.word.FindAllStringIndex(s, -1)
+	return substr.regexp.FindAllStringIndex(s, -1)
 }
 
 // regexpWord String returns the search word.
 func (substr regexpWord) String() string {
-	return substr.word.String()
+	return substr.word
 }
 
 // stripRegexpES is a regular expression that excludes escape sequences.
@@ -152,7 +153,8 @@ func stripEscapeSequenceBytes(s []byte) []byte {
 func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) Searcher {
 	if regexpSearch && word != regexp.QuoteMeta(word) {
 		return regexpWord{
-			word: searchReg,
+			word:   word,
+			regexp: searchReg,
 		}
 	}
 	if caseSensitive {
@@ -173,9 +175,9 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 
 // regexpCompile is regexp.Compile the search string.
 func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
-	opt := "(?m)"
+	opt := ""
 	if !caseSensitive {
-		opt = "(?mi)"
+		opt = "(?i)"
 	}
 	re, err := regexp.Compile(opt + r)
 	if err == nil {
@@ -674,7 +676,7 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 
 		// If the line is complete, check if it matches.
 		if !isPrefix {
-			if searcher.Match(line.Bytes()) {
+			if searcher.Match(bytes.TrimSuffix(line.Bytes(), []byte("\n"))) {
 				return num, nil
 			}
 			num++
