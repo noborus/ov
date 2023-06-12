@@ -217,7 +217,7 @@ func Test_regexpWord_Match(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			substr := regexpWord{
-				word: tt.fields.word,
+				regexp: tt.fields.word,
 			}
 			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
