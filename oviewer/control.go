@@ -180,6 +180,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 func (m *Document) controlLog(sc controlSpecifier) {
 	switch sc.request {
 	case requestLoad:
+	case requestFollow:
 	case requestReload:
 		m.reset()
 	default:
