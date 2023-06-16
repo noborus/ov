@@ -826,3 +826,31 @@ You can customize key bindings.
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
+
+## VS
+
+The following software can be used instead. If you are not satisfied with `ov`, you should try it.
+
+* [less](https://github.com/gwsw/less)
+  * `less` is versatile, feature-rich, and the de facto standard for pagers.
+* [most](https://www.jedsoft.org/most/)
+  * `most` is a general-purpose pager with split-window capabilities.
+* [pspg](https://github.com/okbob/pspg)
+  * `pspg` is a pager suitable for output of psql etc.
+* [moar](https://github.com/walles/moar)
+  * `moar` is a pager with code highlighting.
+* [slit](https://github.com/tigrawap/slit)
+  * `slit` is a pager suitable for viewing logs.
+* [lnav](https://lnav.org/)
+  * `lnav` analyzes logs and can be used as a viewer.
+* [peep](https://github.com/ryochack/peep)
+  * `peep` is a pager that can work in a small pane.
+
+## Work together
+
+The following are not actually pagers and do not conflict. can work together.
+
+* [bat](https://github.com/sharkdp/bat)
+  * `bat` is an alternative to cat. It supports a lot of highlighting and automatically calls the pager.
+* [delta](https://github.com/dandavison/delta)
+  * `delta` processes the diff for easy viewing and displays it. Call the pager automatically.
