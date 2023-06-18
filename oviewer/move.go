@@ -382,6 +382,7 @@ func (root *Root) moveLeftN(n int) {
 	x, err := root.columnX(cursor)
 	if err != nil {
 		root.debugMessage(err.Error())
+		m.x = x
 		return
 	}
 	m.x = x
@@ -424,10 +425,16 @@ func (root *Root) cursorCorrection(cursor int) int {
 		return cursor
 	}
 
+	width := root.scr.vWidth - root.scr.startX
 	if m.ColumnWidth {
-		return cursorFromPosition(m.columnWidths, cursor, m.x, m.x+root.scr.vWidth)
+		line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
+		if !valid {
+			return cursor
+		}
+		return cursorFromPosition(line, m.columnWidths, cursor, m.x, m.x+width)
 	}
 
+	// delimiter
 	for i := 0; i < m.firstLine()+10; i++ {
 		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
 		if !valid {
@@ -438,26 +445,36 @@ func (root *Root) cursorCorrection(cursor int) int {
 		if len(widths) <= cursor {
 			continue
 		}
-		return cursorFromPosition(widths, cursor, m.x, m.x+root.scr.vWidth)
+		return cursorFromPosition(line, widths, cursor, m.x, m.x+width)
 	}
 	return cursor
 }
 
-func cursorFromPosition(widths []int, cursor int, start int, end int) int {
-	if len(widths) > cursor+1 && widths[cursor] < start && widths[cursor+1] < end {
-		for n, wx := range widths {
-			if wx >= start {
+func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int) int {
+	if len(widths)-1 < cursor {
+		return len(widths) - 1
+	}
+
+	curPos := line.pos.x(widths[cursor])
+	if curPos > start && curPos < end {
+		return cursor
+	}
+
+	if curPos < start {
+		for n := 0; n < len(widths); n++ {
+			if widths[n] > start {
 				return n
 			}
 		}
 		return len(widths) - 1
 	}
-	if cursor > 1 && widths[cursor] > end && widths[cursor-1] > start {
+	if curPos > end {
 		for n := len(widths) - 1; n >= 0; n-- {
 			if widths[n] < end {
 				return n
 			}
 		}
+		return 0
 	}
 	return cursor
 }
@@ -472,6 +489,11 @@ func widthsDelimiter(str string, delimiter string, delimiterReg *regexp.Regexp) 
 	widths[0] = 0
 	for i := 0; i < len(indexes); i++ {
 		widths[i+1] = indexes[i][1] + 1
+
+	}
+	// rightmost fence is not a delimiter.
+	if len(str) == indexes[len(indexes)-1][1] {
+		return widths[:len(widths)-1]
 	}
 	return widths
 }
@@ -500,6 +522,7 @@ func (root *Root) columnWidthX(cursor int) (int, error) {
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
 func (root *Root) columnDelimiterX(cursor int) (int, error) {
 	const columnEdge = 2
+	width := root.scr.vWidth - root.scr.startX
 	m := root.Doc
 	if cursor <= 0 {
 		return 0, nil
@@ -512,50 +535,50 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		if !valid {
 			continue
 		}
-		indexes := widthsDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-		maxCursor = max(maxCursor, len(indexes))
-		if len(indexes) < cursor {
+		widths := widthsDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		maxCursor = max(maxCursor, len(widths)-1)
+		if len(widths) < cursor {
 			continue
 		}
 
-		if len(indexes) == cursor {
+		if len(widths) == cursor {
 			// right over column.
 			end := line.pos.x(len(line.str))
-			if end-m.x < root.scr.vWidth { // don't scroll.
-				return m.x, nil
+			if end-m.x < width { // don't scroll.
+				return m.x, ErrNoColumn
 			}
-			if m.x+root.scr.vWidth < end-root.scr.vWidth {
-				return m.x + root.scr.vWidth, ErrNoColumn
+			if m.x+width < end-width {
+				return m.x + width, ErrNoColumn
 			}
-			return end - root.scr.vWidth + columnEdge, ErrNoColumn
+			return end - width + columnEdge, ErrNoColumn
 		}
 
 		start, end := 0, 0
-		if cursor+1 > len(indexes)-1 {
+		if cursor+1 > len(widths)-1 {
 			// right edge.
-			start = line.pos.x(indexes[len(indexes)-1])
+			start = line.pos.x(widths[len(widths)-1])
 			end = line.pos.x(len(line.str))
 		} else {
-			start = line.pos.x(indexes[cursor])
-			end = line.pos.x(indexes[cursor+1])
+			start = line.pos.x(widths[cursor])
+			end = line.pos.x(widths[cursor+1])
 		}
 
 		if start < m.x {
 			return start - columnEdge, nil
 		}
 		if end > m.x {
-			if end-m.x < root.scr.vWidth { // don't scroll.
+			if end-m.x < width { // don't scroll.
 				return m.x, nil
 			}
-			if end-start < root.scr.vWidth {
-				if (end-root.scr.vWidth)-m.x > root.scr.vWidth {
-					return m.x + root.scr.vWidth, ErrOverScreen
+			if end-start < width {
+				if (end-width)-m.x > width {
+					return m.x + width, ErrOverScreen
 				}
 
-				if (cursor == len(indexes)-1) && (end == start) {
-					return end - root.scr.vWidth, nil
+				if (cursor == len(widths)-1) && (end == start) {
+					return end - width, nil
 				}
-				return end - root.scr.vWidth, nil
+				return end - width, nil
 			}
 			if end == start {
 				return m.x, ErrNoColumn
