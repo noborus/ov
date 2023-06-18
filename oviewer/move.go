@@ -37,6 +37,7 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 	if !root.Doc.WrapMode {
 		return lN, 0
 	}
+
 	listX := root.leftMostX(lN + root.Doc.firstLine())
 	if len(listX) == 0 {
 		return lN, 0
@@ -363,18 +364,15 @@ func (root *Root) moveLeftN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	if !m.ColumnMode {
-		if m.WrapMode {
-			return
-		}
-		m.x -= n
-		if m.x < root.minStartX {
-			m.x = root.minStartX
-		}
+	if root.Doc.ColumnMode {
+		root.moveColumnLeft(n)
 		return
 	}
+	root.moveNormalLeft(n)
+}
 
+func (root *Root) moveColumnLeft(n int) {
+	m := root.Doc
 	if m.columnCursor <= 0 {
 		return
 	}
@@ -389,25 +387,32 @@ func (root *Root) moveLeftN(n int) {
 	m.columnCursor = cursor
 }
 
+func (root *Root) moveNormalLeft(n int) {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	m.x -= n
+	if m.x < root.minStartX {
+		m.x = root.minStartX
+	}
+}
+
 // Move right by n amount.
 func (root *Root) moveRightN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	if !m.ColumnMode {
-		if m.WrapMode {
-			return
-		}
-		end := root.endRight()
-		if end < m.x+n {
-			m.x = end
-		} else {
-			m.x += n
-		}
+	if root.Doc.ColumnMode {
+		root.moveColumnRight(n)
 		return
 	}
 
+	root.moveNormalRight(n)
+}
+
+func (root *Root) moveColumnRight(n int) {
+	m := root.Doc
 	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
@@ -419,7 +424,21 @@ func (root *Root) moveRightN(n int) {
 	m.columnCursor = cursor
 }
 
-func (root *Root) cursorCorrection(cursor int) int {
+func (root *Root) moveNormalRight(n int) {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	end := root.endRight()
+	if end < m.x+n {
+		m.x = end
+	} else {
+		m.x += n
+	}
+}
+
+// correctCursor returns the best cursor position from the current x position.
+func (root *Root) correctCursor(cursor int) int {
 	m := root.Doc
 	if m.WrapMode {
 		return cursor
@@ -440,7 +459,7 @@ func (root *Root) cursorCorrection(cursor int) int {
 		if !valid {
 			continue
 		}
-		widths := widthsDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 
 		if len(widths) <= cursor {
 			continue
@@ -450,6 +469,11 @@ func (root *Root) cursorCorrection(cursor int) int {
 	return cursor
 }
 
+// cursorFromPosition returns the cursor position.
+// Returns the current cursor position
+// if the cursor position is contained within the currently displayed screen.
+// Returns the cursor position moved into the screen
+// if the cursor position is not contained within the currently displayed screen.
 func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int) int {
 	if len(widths)-1 < cursor {
 		return len(widths) - 1
@@ -468,6 +492,7 @@ func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int
 		}
 		return len(widths) - 1
 	}
+
 	if curPos > end {
 		for n := len(widths) - 1; n >= 0; n-- {
 			if widths[n] < end {
@@ -477,25 +502,6 @@ func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int
 		return 0
 	}
 	return cursor
-}
-
-func widthsDelimiter(str string, delimiter string, delimiterReg *regexp.Regexp) []int {
-	indexes := allIndex(str, delimiter, delimiterReg)
-	if len(indexes) == 0 {
-		return nil
-	}
-
-	widths := make([]int, len(indexes)+1)
-	widths[0] = 0
-	for i := 0; i < len(indexes); i++ {
-		widths[i+1] = indexes[i][1] + 1
-
-	}
-	// rightmost fence is not a delimiter.
-	if len(str) == indexes[len(indexes)-1][1] {
-		return widths[:len(widths)-1]
-	}
-	return widths
 }
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
@@ -535,7 +541,7 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		if !valid {
 			continue
 		}
-		widths := widthsDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		maxCursor = max(maxCursor, len(widths)-1)
 		if len(widths) < cursor {
 			continue
@@ -591,6 +597,32 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		return m.x, ErrNoColumn
 	}
 	return 0, ErrNoDelimiter
+}
+
+// splitPosition returns a slice of positions in a delimited string.
+func splitPosition(str string, delimiter string, delimiterReg *regexp.Regexp) []int {
+	indexes := allIndex(str, delimiter, delimiterReg)
+	if len(indexes) == 0 {
+		return nil
+	}
+
+	widths := make([]int, len(indexes)+1)
+
+	is := 0
+	// The leftmost fence is not a delimiter.
+	// If there is no fence on the left edge, the value starts from 0.
+	if indexes[0][0] != 0 {
+		widths[0] = 0
+		is = 1
+	}
+	for i := 0; i < len(indexes); i++ {
+		widths[i+is] = indexes[i][1] + 1
+	}
+	// rightmost fence is not a delimiter.
+	if len(str) == indexes[len(indexes)-1][1] {
+		return widths[:len(widths)-1]
+	}
+	return widths
 }
 
 // Move to the left by half a screen.
