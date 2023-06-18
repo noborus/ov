@@ -19,6 +19,7 @@ func (root *Root) toggleWrapMode() {
 	m.WrapMode = !m.WrapMode
 	m.x = 0
 	if m.ColumnMode {
+		m.columnCursor = root.cursorCorrection(m.columnCursor)
 		x, err := root.columnX(m.columnCursor)
 		if err != nil {
 			x = 0
@@ -31,6 +32,9 @@ func (root *Root) toggleWrapMode() {
 // toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
+	if root.Doc.ColumnMode {
+		root.Doc.columnCursor = root.cursorCorrection(root.Doc.columnCursor)
+	}
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }
 
