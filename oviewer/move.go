@@ -606,17 +606,15 @@ func splitPosition(str string, delimiter string, delimiterReg *regexp.Regexp) []
 		return nil
 	}
 
-	widths := make([]int, len(indexes)+1)
+	widths := make([]int, 0, len(indexes)+1)
 
-	is := 0
 	// The leftmost fence is not a delimiter.
 	// If there is no fence on the left edge, the value starts from 0.
 	if indexes[0][0] != 0 {
-		widths[0] = 0
-		is = 1
+		widths = append(widths, 0)
 	}
 	for i := 0; i < len(indexes); i++ {
-		widths[i+is] = indexes[i][1] + 1
+		widths = append(widths, indexes[i][1]+1)
 	}
 	// rightmost fence is not a delimiter.
 	if len(str) == indexes[len(indexes)-1][1] {
