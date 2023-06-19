@@ -435,6 +435,7 @@ func (root *Root) moveColumnRight(n int) {
 			return
 		}
 	}
+
 	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
@@ -540,11 +541,21 @@ func (root *Root) columnWidthX(cursor int) (int, error) {
 	if cursor <= 0 {
 		return 0, nil
 	}
-	if len(m.columnWidths) >= cursor {
-		x := m.columnWidths[cursor-1]
-		return x, nil
+	if len(m.columnWidths) < cursor {
+		return 0, ErrNoDelimiter
 	}
-	return 0, ErrNoDelimiter
+	width := root.scr.vWidth - root.scr.startX
+	x := m.columnWidths[cursor-1]
+	if m.x < x {
+		if x-m.x > width {
+			return x, nil
+		}
+	} else {
+		if x-m.x < 0 {
+			return x, nil
+		}
+	}
+	return m.x, nil
 }
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
@@ -781,6 +792,17 @@ func (root *Root) leftMostX(lN int) []int {
 
 func (root *Root) rightmostColumn() (int, int) {
 	m := root.Doc
+	width := root.scr.vWidth - root.scr.startX
+
+	if m.ColumnWidth {
+		line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
+		if !valid {
+			return 0, 0
+		}
+		maxWidth := line.pos.x(len(line.str))
+		maxWidth = max(0, maxWidth-width)
+		return maxWidth, len(m.columnWidths)
+	}
 	maxWidth := 0
 	maxColumn := 0
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
@@ -792,7 +814,6 @@ func (root *Root) rightmostColumn() (int, int) {
 		maxWidth = max(maxWidth, line.pos.x(len(line.str)))
 		maxColumn = max(maxColumn, len(widths)-1)
 	}
-	width := root.scr.vWidth - root.scr.startX
 	maxWidth = max(0, maxWidth-width)
 	return maxWidth, maxColumn
 }
