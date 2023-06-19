@@ -6,6 +6,10 @@ import (
 	"regexp"
 )
 
+// TargetLineDelimiter covers from line 1 to this line,
+// because there are headers and separators.
+const TargetLineDelimiter = 10
+
 // moveLine moves to the specified line.
 func (m *Document) moveLine(lN int) int {
 	lN = min(lN, m.BufEndNum())
@@ -349,18 +353,18 @@ func (root *Root) lastSection() {
 
 // Move to the left.
 // Called from a EventKey.
-func (root *Root) moveLeft() {
-	root.moveLeftN(1)
+func (root *Root) moveLeftOne() {
+	root.moveLeft(1)
 }
 
 // Move to the right.
 // Called from a EventKey.
-func (root *Root) moveRight() {
-	root.moveRightN(1)
+func (root *Root) moveRightOne() {
+	root.moveRight(1)
 }
 
 // Move left by n amount.
-func (root *Root) moveLeftN(n int) {
+func (root *Root) moveLeft(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -373,9 +377,17 @@ func (root *Root) moveLeftN(n int) {
 
 func (root *Root) moveColumnLeft(n int) {
 	m := root.Doc
+	// left edge
 	if m.columnCursor <= 0 {
-		return
+		if root.Config.DisableColumnCycle {
+			m.x, m.columnCursor = 0, 0
+			return
+		} else {
+			m.x, m.columnCursor = root.rightmostColumn()
+			return
+		}
 	}
+
 	cursor := m.columnCursor - n
 	x, err := root.columnX(cursor)
 	if err != nil {
@@ -399,7 +411,7 @@ func (root *Root) moveNormalLeft(n int) {
 }
 
 // Move right by n amount.
-func (root *Root) moveRightN(n int) {
+func (root *Root) moveRight(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -413,6 +425,16 @@ func (root *Root) moveRightN(n int) {
 
 func (root *Root) moveColumnRight(n int) {
 	m := root.Doc
+
+	// right edge
+	if !root.Config.DisableColumnCycle {
+		rx, rCursor := root.rightmostColumn()
+		if m.columnCursor >= rCursor && m.x >= rx {
+			m.x = 0
+			m.columnCursor = 0
+			return
+		}
+	}
 	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
@@ -454,7 +476,7 @@ func (root *Root) correctCursor(cursor int) int {
 	}
 
 	// delimiter
-	for i := 0; i < m.firstLine()+10; i++ {
+	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
 		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
 		if !valid {
 			continue
@@ -534,15 +556,15 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		return 0, nil
 	}
 
-	maxCursor := 0
-	// m.firstLine()+10 = Maximum columnMode target.
-	for i := 0; i < m.firstLine()+10; i++ {
+	maxColumn := 0
+	// m.firstLine()+TargetLineDelimiter = Maximum columnMode target.
+	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
 		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
 		if !valid {
 			continue
 		}
 		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-		maxCursor = max(maxCursor, len(widths)-1)
+		maxColumn = max(maxColumn, len(widths)-1)
 		if len(widths) < cursor {
 			continue
 		}
@@ -593,7 +615,7 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		return start - columnEdge, nil
 	}
 
-	if maxCursor > 0 {
+	if maxColumn > 0 {
 		return m.x, ErrNoColumn
 	}
 	return 0, ErrNoDelimiter
@@ -745,7 +767,7 @@ func (root *Root) leftMostX(lN int) []int {
 	}
 
 	listX := make([]int, 0, (len(lc)/root.scr.vWidth)+1)
-	width := (root.scr.vWidth - root.scr.startX)
+	width := root.scr.vWidth - root.scr.startX
 
 	listX = append(listX, 0)
 	for n := width; n < len(lc); n += width {
@@ -755,4 +777,22 @@ func (root *Root) leftMostX(lN int) []int {
 		listX = append(listX, n)
 	}
 	return listX
+}
+
+func (root *Root) rightmostColumn() (int, int) {
+	m := root.Doc
+	maxWidth := 0
+	maxColumn := 0
+	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
+		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !valid {
+			continue
+		}
+		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		maxWidth = max(maxWidth, line.pos.x(len(line.str)))
+		maxColumn = max(maxColumn, len(widths)-1)
+	}
+	width := root.scr.vWidth - root.scr.startX
+	maxWidth = max(0, maxWidth-width)
+	return maxWidth, maxColumn
 }

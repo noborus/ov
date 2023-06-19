@@ -72,18 +72,18 @@ func (root *Root) wheelDown() {
 func (root *Root) wheelRight() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveRight()
+		root.moveRightOne()
 	} else {
-		root.moveRightN(4)
+		root.moveRight(4)
 	}
 }
 
 func (root *Root) wheelLeft() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveLeft()
+		root.moveLeftOne()
 	} else {
-		root.moveLeftN(4)
+		root.moveLeft(4)
 	}
 }
 

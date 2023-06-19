@@ -224,6 +224,8 @@ type Config struct {
 	// Incsearch is incremental search if true.
 	Incsearch bool
 
+	// DisableColumnCycle is disable column cycle.
+	DisableColumnCycle bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }

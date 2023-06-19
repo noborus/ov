@@ -19,12 +19,13 @@ func (root *Root) toggleWrapMode() {
 	m.WrapMode = !m.WrapMode
 	m.x = 0
 	if m.ColumnMode {
-		m.columnCursor = root.correctCursor(m.columnCursor)
-		x, err := root.columnX(m.columnCursor)
+		cursor := root.correctCursor(m.columnCursor)
+		x, err := root.columnX(cursor)
 		if err != nil {
 			x = 0
 		}
 		m.x = x
+		m.columnCursor = cursor
 	}
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
 }
