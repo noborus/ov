@@ -3,6 +3,7 @@ package oviewer
 import (
 	"context"
 	"log"
+	"regexp"
 )
 
 // moveLine moves to the specified line.
@@ -36,6 +37,7 @@ func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
 	if !root.Doc.WrapMode {
 		return lN, 0
 	}
+
 	listX := root.leftMostX(lN + root.Doc.firstLine())
 	if len(listX) == 0 {
 		return lN, 0
@@ -351,23 +353,26 @@ func (root *Root) moveLeft() {
 	root.moveLeftN(1)
 }
 
+// Move to the right.
+// Called from a EventKey.
+func (root *Root) moveRight() {
+	root.moveRightN(1)
+}
+
 // Move left by n amount.
 func (root *Root) moveLeftN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	if !m.ColumnMode {
-		if m.WrapMode {
-			return
-		}
-		m.x -= n
-		if m.x < root.minStartX {
-			m.x = root.minStartX
-		}
+	if root.Doc.ColumnMode {
+		root.moveColumnLeft(n)
 		return
 	}
+	root.moveNormalLeft(n)
+}
 
+func (root *Root) moveColumnLeft(n int) {
+	m := root.Doc
 	if m.columnCursor <= 0 {
 		return
 	}
@@ -375,16 +380,22 @@ func (root *Root) moveLeftN(n int) {
 	x, err := root.columnX(cursor)
 	if err != nil {
 		root.debugMessage(err.Error())
+		m.x = x
 		return
 	}
 	m.x = x
 	m.columnCursor = cursor
 }
 
-// Move to the right.
-// Called from a EventKey.
-func (root *Root) moveRight() {
-	root.moveRightN(1)
+func (root *Root) moveNormalLeft(n int) {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	m.x -= n
+	if m.x < root.minStartX {
+		m.x = root.minStartX
+	}
 }
 
 // Move right by n amount.
@@ -392,28 +403,105 @@ func (root *Root) moveRightN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	if !m.ColumnMode {
-		if m.WrapMode {
-			return
-		}
-		end := root.endRight()
-		if end < m.x+n {
-			m.x = end
-		} else {
-			m.x += n
-		}
+	if root.Doc.ColumnMode {
+		root.moveColumnRight(n)
 		return
 	}
 
+	root.moveNormalRight(n)
+}
+
+func (root *Root) moveColumnRight(n int) {
+	m := root.Doc
 	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
 		root.debugMessage(err.Error())
+		m.x = x
 		return
 	}
 	m.x = x
 	m.columnCursor = cursor
+}
+
+func (root *Root) moveNormalRight(n int) {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	end := root.endRight()
+	if end < m.x+n {
+		m.x = end
+	} else {
+		m.x += n
+	}
+}
+
+// correctCursor returns the best cursor position from the current x position.
+func (root *Root) correctCursor(cursor int) int {
+	m := root.Doc
+	if m.WrapMode {
+		return cursor
+	}
+
+	width := root.scr.vWidth - root.scr.startX
+	if m.ColumnWidth {
+		line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
+		if !valid {
+			return cursor
+		}
+		return cursorFromPosition(line, m.columnWidths, cursor, m.x, m.x+width)
+	}
+
+	// delimiter
+	for i := 0; i < m.firstLine()+10; i++ {
+		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !valid {
+			continue
+		}
+		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+
+		if len(widths) <= cursor {
+			continue
+		}
+		return cursorFromPosition(line, widths, cursor, m.x, m.x+width)
+	}
+	return cursor
+}
+
+// cursorFromPosition returns the cursor position.
+// Returns the current cursor position
+// if the cursor position is contained within the currently displayed screen.
+// Returns the cursor position moved into the screen
+// if the cursor position is not contained within the currently displayed screen.
+func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int) int {
+	if len(widths)-1 < cursor {
+		return len(widths) - 1
+	}
+
+	curPos := line.pos.x(widths[cursor])
+	if curPos > start && curPos < end {
+		return cursor
+	}
+
+	if curPos < start {
+		for n := 0; n < len(widths); n++ {
+			if widths[n] > start {
+				return n
+			}
+		}
+		return len(widths) - 1
+	}
+
+	if curPos > end {
+		for n := len(widths) - 1; n >= 0; n-- {
+			if widths[n] < end {
+				return n
+			}
+		}
+		return 0
+	}
+	return cursor
 }
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
@@ -439,6 +527,8 @@ func (root *Root) columnWidthX(cursor int) (int, error) {
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
 func (root *Root) columnDelimiterX(cursor int) (int, error) {
+	const columnEdge = 2
+	width := root.scr.vWidth - root.scr.startX
 	m := root.Doc
 	if cursor <= 0 {
 		return 0, nil
@@ -451,36 +541,86 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		if !valid {
 			continue
 		}
-		indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-		maxCursor = max(maxCursor, len(indexes))
-		if len(indexes) < cursor {
+		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		maxCursor = max(maxCursor, len(widths)-1)
+		if len(widths) < cursor {
 			continue
 		}
 
+		if len(widths) == cursor {
+			// right over column.
+			end := line.pos.x(len(line.str))
+			if end-m.x < width { // don't scroll.
+				return m.x, ErrNoColumn
+			}
+			if m.x+width < end-width {
+				return m.x + width, ErrNoColumn
+			}
+			return end - width + columnEdge, ErrNoColumn
+		}
+
 		start, end := 0, 0
-		if len(indexes) == cursor {
+		if cursor+1 > len(widths)-1 {
 			// right edge.
-			idx := indexes[cursor-1]
-			start = line.pos.x(idx[1] + len(m.ColumnDelimiter))
+			start = line.pos.x(widths[len(widths)-1])
 			end = line.pos.x(len(line.str))
 		} else {
-			idx := indexes[cursor]
-			start = line.pos.x(idx[0])
-			end = line.pos.x(idx[1])
+			start = line.pos.x(widths[cursor])
+			end = line.pos.x(widths[cursor+1])
 		}
-		if root.scr.vWidth > end { // don't scroll.
-			return 0, nil
+
+		if start < m.x {
+			return start - columnEdge, nil
 		}
-		if end-root.scr.vWidth > 0 {
-			return end - root.scr.vWidth, nil
+		if end > m.x {
+			if end-m.x < width { // don't scroll.
+				return m.x, nil
+			}
+			if end-start < width {
+				if (end-width)-m.x > width {
+					return m.x + width, ErrOverScreen
+				}
+
+				if (cursor == len(widths)-1) && (end == start) {
+					return end - width, nil
+				}
+				return end - width, nil
+			}
+			if end == start {
+				return m.x, ErrNoColumn
+			}
 		}
-		return start, nil
+		return start - columnEdge, nil
 	}
 
 	if maxCursor > 0 {
 		return m.x, ErrNoColumn
 	}
 	return 0, ErrNoDelimiter
+}
+
+// splitPosition returns a slice of positions in a delimited string.
+func splitPosition(str string, delimiter string, delimiterReg *regexp.Regexp) []int {
+	indexes := allIndex(str, delimiter, delimiterReg)
+	if len(indexes) == 0 {
+		return nil
+	}
+
+	widths := make([]int, 0, len(indexes)+1)
+
+	// The leftmost fence is not a delimiter.
+	// If there is no fence on the left edge, the value starts from 0.
+	if indexes[0][0] != 0 {
+		widths = append(widths, 0)
+	}
+	for i := 0; i < len(indexes); i++ {
+		widths = append(widths, indexes[i][1]+1)
+	}
+	// rightmost fence is not a delimiter.
+	if len(str) == indexes[len(indexes)-1][1] {
+		return widths[:len(widths)-1]
+	}
+	return widths
 }
 
 // Move to the left by half a screen.

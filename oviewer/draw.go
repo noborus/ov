@@ -304,13 +304,20 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 	if len(indexes) == 0 {
 		return
 	}
+
+	lStart := 0
+	if indexes[0][0] == 0 {
+		lStart = indexes[0][1]
+		indexes = indexes[1:]
+	}
+
 	numC := len(root.StyleColumnRainbow)
 
 	var iStart, iEnd int
 	for c := 0; c < len(indexes)+1; c++ {
 		switch {
 		case c == 0:
-			iStart = 0
+			iStart = lStart
 			iEnd = indexes[0][1] - 1
 			if iEnd < 0 {
 				iEnd = 0

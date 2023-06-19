@@ -290,24 +290,12 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	})
 
 	eg.Go(func() error {
-		var err error
-		if forward {
-			lN, err = root.Doc.SearchLine(ctx, searcher, lN)
-		} else {
-			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
-		}
+		n, err := root.Doc.searchLine(ctx, searcher, forward, lN)
 		root.searchQuit()
 		if err != nil {
-			startNum := root.Doc.BufStartNum()
-			if lN < startNum {
-				// If lN is before startNum, move to startNum.
-				root.searchGo(startNum)
-				log.Printf("Moved to %d because %d is out of range.", startNum, lN)
-				return fmt.Errorf("search moved to %d:%w:%v", startNum, err, word)
-			}
 			return fmt.Errorf("search:%w:%v", err, word)
 		}
-		root.searchGo(lN)
+		root.searchGo(n)
 		return nil
 	})
 
@@ -316,6 +304,14 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		return
 	}
 	root.setMessagef("search:%v", word)
+}
+
+// searchLine is a forward/backward search wrap function
+func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bool, lN int) (int, error) {
+	if forward {
+		return m.SearchLine(ctx, searcher, lN)
+	}
+	return m.BackSearchLine(ctx, searcher, lN)
 }
 
 // Search searches for the search term and moves to the nearest matching line.
@@ -516,17 +512,12 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 
 	ctx = root.cancelRestart(ctx)
 	go func() {
-		var err error
-		if forward {
-			lN, err = root.Doc.SearchLine(ctx, searcher, lN)
-		} else {
-			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
-		}
+		n, err := root.Doc.searchLine(ctx, searcher, forward, lN)
 		if err != nil {
 			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
-		root.searchGo(lN)
+		root.searchGo(n)
 	}()
 }
 
