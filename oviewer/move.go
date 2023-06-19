@@ -380,10 +380,13 @@ func (root *Root) moveColumnLeft(n int) {
 	// left edge
 	if m.columnCursor <= 0 {
 		if root.Config.DisableColumnCycle {
-			m.x, m.columnCursor = 0, 0
+			m.x = 0
+			m.columnCursor = 0
 			return
 		} else {
-			m.x, m.columnCursor = root.rightmostColumn()
+			x, cursor := root.rightmostColumn()
+			m.x = x - ((root.scr.vWidth / 2) - root.scr.startX)
+			m.columnCursor = cursor
 			return
 		}
 	}
@@ -429,7 +432,8 @@ func (root *Root) moveColumnRight(n int) {
 	// right edge
 	if !root.Config.DisableColumnCycle {
 		rx, rCursor := root.rightmostColumn()
-		if m.columnCursor >= rCursor && m.x >= rx {
+		width := root.scr.vWidth - root.scr.startX
+		if m.columnCursor >= rCursor && m.x+width >= rx {
 			m.x = 0
 			m.columnCursor = 0
 			return
@@ -541,10 +545,10 @@ func (root *Root) columnWidthX(cursor int) (int, error) {
 	if cursor <= 0 {
 		return 0, nil
 	}
-	if len(m.columnWidths) < cursor {
-		return 0, ErrNoDelimiter
-	}
 	width := root.scr.vWidth - root.scr.startX
+	if cursor > len(m.columnWidths) {
+		return m.x + width, ErrNoDelimiter
+	}
 	x := m.columnWidths[cursor-1]
 	if m.x < x {
 		if x-m.x > width {
@@ -589,7 +593,7 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 			if m.x+width < end-width {
 				return m.x + width, ErrNoColumn
 			}
-			return end - width + columnEdge, ErrNoColumn
+			return end - (width / 2) + columnEdge, ErrNoColumn
 		}
 
 		start, end := 0, 0
@@ -792,7 +796,6 @@ func (root *Root) leftMostX(lN int) []int {
 
 func (root *Root) rightmostColumn() (int, int) {
 	m := root.Doc
-	width := root.scr.vWidth - root.scr.startX
 
 	if m.ColumnWidth {
 		line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
@@ -800,9 +803,10 @@ func (root *Root) rightmostColumn() (int, int) {
 			return 0, 0
 		}
 		maxWidth := line.pos.x(len(line.str))
-		maxWidth = max(0, maxWidth-width)
+		maxWidth = max(0, maxWidth)
 		return maxWidth, len(m.columnWidths)
 	}
+
 	maxWidth := 0
 	maxColumn := 0
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
@@ -814,6 +818,6 @@ func (root *Root) rightmostColumn() (int, int) {
 		maxWidth = max(maxWidth, line.pos.x(len(line.str)))
 		maxColumn = max(maxColumn, len(widths)-1)
 	}
-	maxWidth = max(0, maxWidth-width)
+	maxWidth = max(0, maxWidth)
 	return maxWidth, maxColumn
 }
