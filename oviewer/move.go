@@ -638,16 +638,13 @@ func screenAdjustX(widths []int, cursor int, l int, r int, x1 int, x2 int) (int,
 	}
 
 	// right scroll
-	if x2 > r {
-		move := (x1 - l)
-		log.Println("right scroll", l, x1, move)
-		if move > r-l {
-			return l + (r - l), cursor - 1, nil
-		}
-		return x1 - columnEdge, cursor, nil
+	// x2 >= r
+	move := (x1 - l)
+	log.Println("right scroll", l, x1, move)
+	if move > r-l {
+		return l + (r - l), cursor - 1, nil
 	}
-	log.Println("??? No column")
-	return l, cursor, ErrNoColumn
+	return x1 - columnEdge, cursor, nil
 }
 
 // splitPosition returns a slice of positions in a delimited string.
