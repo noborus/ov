@@ -588,7 +588,6 @@ func (root *Root) columnDelimiterX(moveTo int) (int, int, error) {
 			continue
 		}
 		cursor := m.columnCursor + moveTo
-		log.Println(cursor, len(widths))
 		if cursor >= 0 && cursor < len(widths) {
 			x1 := line.pos.x(widths[cursor])
 			x2 := line.pos.x(len(line.str))
@@ -597,7 +596,9 @@ func (root *Root) columnDelimiterX(moveTo int) (int, int, error) {
 			}
 			return screenAdjustX(widths, cursor, m.x, m.x+width, x1, x2)
 		} else {
-			return 0, 0, ErrOverScreen
+			x1 := line.pos.x(widths[len(widths)-1])
+			x2 := line.pos.x(len(line.str))
+			return screenAdjustX(widths, cursor, m.x, m.x+width, x1, x2)
 		}
 	}
 
@@ -612,7 +613,11 @@ const columnEdge = 2
 func screenAdjustX(widths []int, cursor int, l int, r int, x1 int, x2 int) (int, int, error) {
 	// right edge + 1
 	if cursor > len(widths)-1 {
-		return x1, cursor, ErrOverScreen
+		log.Println("right edg +1")
+		if x2 > r {
+			return l + (r - l), cursor - 1, nil
+		}
+		return x1, cursor - 1, ErrOverScreen
 	}
 	// right edge
 	if cursor == len(widths)-1 {
@@ -634,10 +639,14 @@ func screenAdjustX(widths []int, cursor int, l int, r int, x1 int, x2 int) (int,
 
 	// right scroll
 	if x2 > r {
-		log.Println("right scroll")
+		move := (x1 - l)
+		log.Println("right scroll", l, x1, move)
+		if move > r-l {
+			return l + (r - l), cursor - 1, nil
+		}
 		return x1 - columnEdge, cursor, nil
 	}
-	log.Println("???")
+	log.Println("??? No column")
 	return l, cursor, ErrNoColumn
 }
 
