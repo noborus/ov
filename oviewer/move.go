@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"errors"
 	"log"
 	"regexp"
 )
@@ -385,14 +386,13 @@ func (root *Root) moveColumnLeft(n int) {
 			return
 		} else {
 			x, cursor := root.rightmostColumn()
-			m.x = x - ((root.scr.vWidth / 2) - root.scr.startX)
+			m.x = max(0, x-((root.scr.vWidth/2)-root.scr.startX))
 			m.columnCursor = cursor
 			return
 		}
 	}
 
-	cursor := m.columnCursor - n
-	x, err := root.columnX(cursor)
+	x, cursor, err := root.columnX(-1)
 	if err != nil {
 		root.debugMessage(err.Error())
 		m.x = x
@@ -430,19 +430,27 @@ func (root *Root) moveColumnRight(n int) {
 	m := root.Doc
 
 	// right edge
-	if !root.Config.DisableColumnCycle {
-		rx, rCursor := root.rightmostColumn()
-		width := root.scr.vWidth - root.scr.startX
-		if m.columnCursor >= rCursor && m.x+width >= rx {
-			m.x = 0
-			m.columnCursor = 0
-			return
+	/*
+		if !root.Config.DisableColumnCycle {
+			rx, rCursor := root.rightmostColumn()
+			width := root.scr.vWidth - root.scr.startX
+			if m.columnCursor >= rCursor && m.x+width >= rx {
+				m.x = 0
+				m.columnCursor = 0
+				return
+			}
 		}
-	}
-
-	cursor := m.columnCursor + n
-	x, err := root.columnX(cursor)
+	*/
+	x, cursor, err := root.columnX(1)
 	if err != nil {
+		if errors.Is(err, ErrOverScreen) {
+			if !root.Config.DisableColumnCycle {
+				log.Println("over")
+				m.x = 0
+				m.columnCursor = 0
+				return
+			}
+		}
 		root.debugMessage(err.Error())
 		m.x = x
 		return
@@ -532,44 +540,40 @@ func cursorFromPosition(line LineC, widths []int, cursor int, start int, end int
 }
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
-func (root *Root) columnX(cursor int) (int, error) {
+func (root *Root) columnX(moveTo int) (int, int, error) {
 	if root.Doc.ColumnWidth {
-		return root.columnWidthX(cursor)
+		return root.columnWidthX(moveTo)
 	}
-	return root.columnDelimiterX(cursor)
+	return root.columnDelimiterX(moveTo)
 }
 
 // columnWidthX returns the columnCursor and actual x from columnCursor.
-func (root *Root) columnWidthX(cursor int) (int, error) {
+func (root *Root) columnWidthX(moveTo int) (int, int, error) {
 	m := root.Doc
-	if cursor <= 0 {
-		return 0, nil
-	}
+
 	width := root.scr.vWidth - root.scr.startX
-	if cursor > len(m.columnWidths) {
-		return m.x + width, ErrNoDelimiter
+
+	cursor := m.columnCursor + moveTo
+	if cursor < 0 {
+		return m.x, m.columnCursor, ErrNoColumn
 	}
-	x := m.columnWidths[cursor-1]
-	if m.x < x {
-		if x-m.x > width {
-			return x, nil
-		}
-	} else {
-		if x-m.x < 0 {
-			return x, nil
-		}
+
+	var widths = make([]int, 0, len(m.columnWidths)+2)
+	widths = append(widths, 0)
+	widths = append(widths, m.columnWidths...)
+	x1 := widths[cursor]
+	x2 := widths[len(widths)-1] + 1
+	if cursor < len(widths)-1 {
+		x2 = widths[cursor+1] - 1
 	}
-	return m.x, nil
+
+	return screenAdjustX(widths, cursor, m.x, m.x+width, x1, x2)
 }
 
 // columnDelimiterX returns the columnCursor and actual x from columnCursor.
-func (root *Root) columnDelimiterX(cursor int) (int, error) {
-	const columnEdge = 2
+func (root *Root) columnDelimiterX(moveTo int) (int, int, error) {
 	width := root.scr.vWidth - root.scr.startX
 	m := root.Doc
-	if cursor <= 0 {
-		return 0, nil
-	}
 
 	maxColumn := 0
 	// m.firstLine()+TargetLineDelimiter = Maximum columnMode target.
@@ -580,60 +584,61 @@ func (root *Root) columnDelimiterX(cursor int) (int, error) {
 		}
 		widths := splitPosition(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		maxColumn = max(maxColumn, len(widths)-1)
-		if len(widths) < cursor {
+		if len(widths) <= 0 {
 			continue
 		}
-
-		if len(widths) == cursor {
-			// right over column.
-			end := line.pos.x(len(line.str))
-			if end-m.x < width { // don't scroll.
-				return m.x, ErrNoColumn
+		cursor := m.columnCursor + moveTo
+		log.Println(cursor, len(widths))
+		if cursor >= 0 && cursor < len(widths) {
+			x1 := line.pos.x(widths[cursor])
+			x2 := line.pos.x(len(line.str))
+			if cursor < len(widths)-1 {
+				x2 = line.pos.x(widths[cursor+1])
 			}
-			if m.x+width < end-width {
-				return m.x + width, ErrNoColumn
-			}
-			return end - (width / 2) + columnEdge, ErrNoColumn
-		}
-
-		start, end := 0, 0
-		if cursor+1 > len(widths)-1 {
-			// right edge.
-			start = line.pos.x(widths[len(widths)-1])
-			end = line.pos.x(len(line.str))
+			return screenAdjustX(widths, cursor, m.x, m.x+width, x1, x2)
 		} else {
-			start = line.pos.x(widths[cursor])
-			end = line.pos.x(widths[cursor+1])
+			return 0, 0, ErrOverScreen
 		}
-
-		if start < m.x {
-			return start - columnEdge, nil
-		}
-		if end > m.x {
-			if end-m.x < width { // don't scroll.
-				return m.x, nil
-			}
-			if end-start < width {
-				if (end-width)-m.x > width {
-					return m.x + width, ErrOverScreen
-				}
-
-				if (cursor == len(widths)-1) && (end == start) {
-					return end - width, nil
-				}
-				return end - width, nil
-			}
-			if end == start {
-				return m.x, ErrNoColumn
-			}
-		}
-		return start - columnEdge, nil
 	}
 
 	if maxColumn > 0 {
-		return m.x, ErrNoColumn
+		return m.x, m.columnCursor, ErrNoColumn
 	}
-	return 0, ErrNoDelimiter
+	return 0, m.columnCursor, ErrNoDelimiter
+}
+
+const columnEdge = 2
+
+func screenAdjustX(widths []int, cursor int, l int, r int, x1 int, x2 int) (int, int, error) {
+	// right edge + 1
+	if cursor > len(widths)-1 {
+		return x1, cursor, ErrOverScreen
+	}
+	// right edge
+	if cursor == len(widths)-1 {
+		log.Println("right edg")
+		return x1 - columnEdge, cursor, nil
+	}
+
+	// 0 ~ right edge - 1
+	// don't scroll
+	if l <= x1 && x2 < r {
+		return l, cursor, nil
+	}
+
+	// lef scroll
+	if x1 < l {
+		log.Println("left scroll")
+		return x1 - columnEdge, cursor, nil
+	}
+
+	// right scroll
+	if x2 > r {
+		log.Println("right scroll")
+		return x1 - columnEdge, cursor, nil
+	}
+	log.Println("???")
+	return l, cursor, ErrNoColumn
 }
 
 // splitPosition returns a slice of positions in a delimited string.
