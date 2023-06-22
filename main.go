@@ -406,6 +406,9 @@ func init() {
 	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "number of chunks to limit in memory for the file")
 	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
+	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "Disable column cycling")
+	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
+
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 }

@@ -17,13 +17,12 @@ import (
 func (root *Root) toggleWrapMode() {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
-	m.x = 0
-	if m.ColumnMode {
-		m.columnCursor = root.correctCursor(m.columnCursor)
-		x, err := root.columnX(m.columnCursor)
-		if err != nil {
-			x = 0
-		}
+	x, err := root.correctX(m.columnCursor)
+	if err != nil {
+		log.Println(err)
+	}
+	// Move if off screen
+	if x < m.x || x > m.x+(root.scr.vWidth-root.scr.startX) {
 		m.x = x
 	}
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
