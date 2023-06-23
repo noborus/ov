@@ -176,10 +176,35 @@ func (root *Root) watchControl() {
 	}()
 }
 
+// searchGoLine moves to the specified line after searching.
+// Go to the specified line +root.Doc.JumpTarget Go to.
 func (root *Root) searchGoLine(lN int) {
-	root.Doc.topLN = lN - root.Doc.firstLine()
+	if !root.Doc.JumpTargetSection {
+		root.Doc.topLN = lN - root.Doc.firstLine()
+		root.Doc.topLX = 0
+		root.moveNumUp(root.Doc.JumpTarget)
+		return
+	}
+
+	pN, err := root.Doc.prevSection(lN)
+	if err != nil {
+		pN = 0
+	}
+	root.Doc.topLN = pN
 	root.Doc.topLX = 0
-	root.moveNumUp(root.Doc.JumpTarget)
+	y := 0
+
+	for n := pN; n < lN; n++ {
+		listX := root.leftMostX(n)
+		y += len(listX)
+	}
+
+	if root.statusPos > y {
+		root.Doc.JumpTarget = y
+		return
+	}
+	root.Doc.JumpTarget = root.statusPos - 1
+	root.moveNumDown(y - root.Doc.JumpTarget + 1)
 }
 
 // goLine will move to the specified line.
@@ -490,7 +515,12 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := jumpPosition(root.scr.vHeight, input)
+	num, section := jumpPosition(root.scr.vHeight, input)
+	root.Doc.JumpTargetSection = section
+	if root.Doc.JumpTargetSection {
+		root.setMessagef("Set JumpTarget section start")
+		return
+	}
 	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
@@ -509,12 +539,16 @@ func (root *Root) resize() {
 }
 
 // jumpPosition determines the position of the jump.
-func jumpPosition(height int, str string) int {
+func jumpPosition(height int, str string) (int, bool) {
+	s := strings.Trim(str, " ")
+	if len(s) > 0 && s[0] == 's' {
+		return 0, true
+	}
 	num := int(math.Round(docPosition(height, str)))
 	if num < 0 {
-		return (height - 1) + num
+		return (height - 1) + num, false
 	}
-	return num
+	return num, false
 }
 
 // docPosition returns the number of lines from the top for positive
@@ -563,7 +597,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
+	root.Doc.JumpTarget, root.Doc.JumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.

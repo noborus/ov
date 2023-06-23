@@ -102,9 +102,10 @@ func Test_jumpPosition(t *testing.T) {
 		str    string
 	}
 	tests := []struct {
-		name string
-		args args
-		want int
+		name  string
+		args  args
+		want  int
+		want1 bool
 	}{
 		{
 			name: "test1",
@@ -112,7 +113,8 @@ func Test_jumpPosition(t *testing.T) {
 				height: 30,
 				str:    "1",
 			},
-			want: 1,
+			want:  1,
+			want1: false,
 		},
 		{
 			name: "test.3",
@@ -120,14 +122,28 @@ func Test_jumpPosition(t *testing.T) {
 				height: 10,
 				str:    ".3",
 			},
-			want: 3,
+			want:  3,
+			want1: false,
+		},
+		{
+			name: "testSection",
+			args: args{
+				height: 30,
+				str:    "s",
+			},
+			want:  0,
+			want1: true,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := jumpPosition(tt.args.height, tt.args.str); got != tt.want {
+			got, got1 := jumpPosition(tt.args.height, tt.args.str)
+			if got != tt.want {
+				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
 				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
 			}
 		})
