@@ -40,6 +40,89 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 	}
 }
 
+func Test_rangeBA(t *testing.T) {
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		want1   int
+		wantErr bool
+	}{
+		{
+			name: "testInvalid",
+			args: args{
+				str: "invalid",
+			},
+			want:    0,
+			want1:   0,
+			wantErr: true,
+		},
+		{
+			name: "testInvalid2",
+			args: args{
+				str: "1:invalid",
+			},
+			want:    1,
+			want1:   0,
+			wantErr: true,
+		},
+		{
+			name: "testBefore",
+			args: args{
+				str: "1",
+			},
+			want:    1,
+			want1:   0,
+			wantErr: false,
+		},
+		{
+			name: "testBA",
+			args: args{
+				str: "1:1",
+			},
+			want:    1,
+			want1:   1,
+			wantErr: false,
+		},
+		{
+			name: "testOnlyAfter",
+			args: args{
+				str: ":1",
+			},
+			want:    0,
+			want1:   1,
+			wantErr: false,
+		},
+		{
+			name: "testOnlyBefore",
+			args: args{
+				str: "1:",
+			},
+			want:    1,
+			want1:   0,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1, err := rangeBA(tt.args.str)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("rangeBA() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("rangeBA() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("rangeBA() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
 func Test_position(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -123,6 +206,42 @@ func Test_jumpPosition(t *testing.T) {
 				str:    ".3",
 			},
 			want:  3,
+			want1: false,
+		},
+		{
+			name: "testMinus",
+			args: args{
+				height: 30,
+				str:    "-10",
+			},
+			want:  19,
+			want1: false,
+		},
+		{
+			name: "testInvalid",
+			args: args{
+				height: 30,
+				str:    "invalid",
+			},
+			want:  0,
+			want1: false,
+		},
+		{
+			name: "testInvalid2",
+			args: args{
+				height: 30,
+				str:    ".i",
+			},
+			want:  0,
+			want1: false,
+		},
+		{
+			name: "testInvalid3",
+			args: args{
+				height: 30,
+				str:    "p%",
+			},
+			want:  0,
 			want1: false,
 		},
 		{

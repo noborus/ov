@@ -17,6 +17,7 @@ import (
 func (root *Root) toggleWrapMode() {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
+	// Move cursor to correct position
 	x, err := root.correctX(m.columnCursor)
 	if err != nil {
 		log.Println(err)
@@ -31,6 +32,7 @@ func (root *Root) toggleWrapMode() {
 // toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
+
 	if root.Doc.ColumnMode {
 		root.Doc.columnCursor = root.correctCursor(root.Doc.columnCursor)
 	}
@@ -176,16 +178,19 @@ func (root *Root) watchControl() {
 	}()
 }
 
-// searchGoLine moves to the specified line after searching.
-// Go to the specified line +root.Doc.JumpTarget Go to.
-func (root *Root) searchGoLine(lN int) {
-	if !root.Doc.JumpTargetSection {
-		root.Doc.topLN = lN - root.Doc.firstLine()
-		root.Doc.topLX = 0
-		root.moveNumUp(root.Doc.JumpTarget)
+// searchGoto will go to the line with the matching term after searching.
+// Jump by section if JumpTargetSection is true.
+func (root *Root) searchGoto(lN int) {
+	if root.Doc.JumpTargetSection {
+		root.searchGoSection(lN)
 		return
 	}
+	root.searchGoLine(lN)
+}
 
+// searchGoSection will go to the section with the matching term after searching.
+// Move the JumpTarget so that it can be seen from the beginning of the section.
+func (root *Root) searchGoSection(lN int) {
 	pN, err := root.Doc.prevSection(lN)
 	if err != nil {
 		pN = 0
@@ -205,6 +210,14 @@ func (root *Root) searchGoLine(lN int) {
 	}
 	root.Doc.JumpTarget = root.statusPos - 1
 	root.moveNumDown(y - root.Doc.JumpTarget + 1)
+}
+
+// searchGoLine moves to the specified line after searching.
+// Go to the specified line +root.Doc.JumpTarget Go to.
+func (root *Root) searchGoLine(lN int) {
+	root.Doc.topLN = lN - root.Doc.firstLine()
+	root.Doc.topLX = 0
+	root.moveNumUp(root.Doc.JumpTarget)
 }
 
 // goLine will move to the specified line.
@@ -452,33 +465,43 @@ func (root *Root) setWatchInterval(input string) {
 // setWriteBA sets the number before and after the line
 // to be written at the end.
 func (root *Root) setWriteBA(input string) {
-	ba := strings.Split(input, ":")
+	before, after, err := rangeBA(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	root.BeforeWriteOriginal = before
+	root.AfterWriteOriginal = after
+	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
+	root.IsWriteOriginal = true
+	root.Quit()
+}
+
+// rangeBA returns the before after number from a string.
+func rangeBA(str string) (int, int, error) {
+	ba := strings.Split(str, ":")
 	bstr := ba[0]
 	if bstr == "" {
 		bstr = "0"
 	}
 	before, err := strconv.Atoi(bstr)
 	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
+		return 0, 0, err
 	}
-	root.BeforeWriteOriginal = before
 
-	if len(ba) > 1 {
-		astr := ba[1]
-		if astr == "" {
-			astr = "0"
-		}
-		after, err := strconv.Atoi(astr)
-		if err != nil {
-			root.setMessage(ErrInvalidNumber.Error())
-			return
-		}
-		root.AfterWriteOriginal = after
+	if len(ba) == 1 {
+		return before, 0, nil
 	}
-	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
-	root.IsWriteOriginal = true
-	root.Quit()
+
+	astr := ba[1]
+	if astr == "" {
+		astr = "0"
+	}
+	after, err := strconv.Atoi(astr)
+	if err != nil {
+		return before, 0, err
+	}
+	return before, after, nil
 }
 
 // setSectionDelimiter sets the delimiter string.
@@ -540,11 +563,14 @@ func (root *Root) resize() {
 
 // jumpPosition determines the position of the jump.
 func jumpPosition(height int, str string) (int, bool) {
-	s := strings.Trim(str, " ")
+	if len(str) == 0 {
+		return 0, false
+	}
+	s := strings.ToLower(strings.Trim(str, " "))
 	if len(s) > 0 && s[0] == 's' {
 		return 0, true
 	}
-	num := int(math.Round(docPosition(height, str)))
+	num := int(math.Round(docPosition(height, s)))
 	if num < 0 {
 		return (height - 1) + num, false
 	}
@@ -555,11 +581,6 @@ func jumpPosition(height int, str string) (int, bool) {
 // numbers (1), dot.number for percentages (.5) = 50%, and % after
 // the number for percentages (50%).
 func docPosition(height int, str string) float64 {
-	str = strings.TrimSpace(str)
-	if len(str) == 0 {
-		return 0
-	}
-
 	var p float64 = 0
 	if strings.HasPrefix(str, ".") {
 		str = strings.TrimLeft(str, ".")
