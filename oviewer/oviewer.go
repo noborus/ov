@@ -136,6 +136,8 @@ type general struct {
 	SectionStartPosition int
 	// JumpTarget is the display position of search results.
 	JumpTarget int
+	// JumpTargetSection is the display position of search results.
+	JumpTargetSection bool
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.

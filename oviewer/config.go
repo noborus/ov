@@ -54,10 +54,8 @@ func NewConfig() Config {
 			Underline: true,
 		},
 		General: general{
-			TabWidth:             8,
-			MarkStyleWidth:       1,
-			SectionStartPosition: 0,
-			JumpTarget:           0,
+			TabWidth:       8,
+			MarkStyleWidth: 1,
 		},
 	}
 }
