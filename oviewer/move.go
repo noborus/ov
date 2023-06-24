@@ -3,11 +3,37 @@ package oviewer
 import (
 	"context"
 	"log"
+	"strconv"
 )
 
 // TargetLineDelimiter covers from line 1 to this line,
 // because there are headers and separators.
 const TargetLineDelimiter = 10
+
+// MoveLine fires an eventGoto event that moves to the specified line.
+func (root *Root) MoveLine(num int) {
+	if !root.checkScreen() {
+		return
+	}
+	root.sendGoto(num)
+}
+
+func (root *Root) sendGoto(num int) {
+	ev := &eventGoto{}
+	ev.value = strconv.Itoa(num)
+	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// MoveTop fires the event of moving to top.
+func (root *Root) MoveTop() {
+	root.MoveLine(0)
+}
+
+// MoveBottom fires the event of moving to bottom.
+func (root *Root) MoveBottom() {
+	root.MoveLine(root.Doc.BufEndNum())
+}
 
 // moveLine moves to the specified line.
 func (m *Document) moveLine(lN int) int {

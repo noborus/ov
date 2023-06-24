@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -91,10 +90,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
-	if err := root.Screen.PostEvent(nev); err != nil {
-		log.Println(err)
-	}
-
+	root.postEvent(nev)
 	input.Event = normal()
 }
 

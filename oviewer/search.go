@@ -291,11 +291,11 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 
 	eg.Go(func() error {
 		n, err := root.Doc.searchLine(ctx, searcher, forward, lN)
-		root.searchQuit()
+		root.sendSearchQuit()
 		if err != nil {
 			return fmt.Errorf("search:%w:%v", err, word)
 		}
-		root.searchGo(n)
+		root.sendSearchMove(n)
 		return nil
 	})
 
@@ -467,8 +467,8 @@ type eventSearchQuit struct {
 	tcell.EventTime
 }
 
-// searchQuit fires the eventSearchQuit event.
-func (root *Root) searchQuit() {
+// sendSearchQuit fires the eventSearchQuit event.
+func (root *Root) sendSearchQuit() {
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -480,7 +480,7 @@ type eventSearchMove struct {
 	value int
 }
 
-func (root *Root) searchGo(lN int) {
+func (root *Root) sendSearchMove(lN int) {
 	ev := &eventSearchMove{}
 	ev.SetEventNow()
 	ev.value = lN
@@ -517,7 +517,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
-		root.searchGo(n)
+		root.sendSearchMove(n)
 	}()
 }
 
@@ -587,8 +587,8 @@ type eventNextSearch struct {
 	str string
 }
 
-// setNextSearch fires the eventNextSearch event.
-func (root *Root) setNextSearch() {
+// sendNextSearch fires the eventNextSearch event.
+func (root *Root) sendNextSearch() {
 	if root.searcher == nil {
 		return
 	}
@@ -605,8 +605,8 @@ type eventNextBackSearch struct {
 	str string
 }
 
-// setNextBackSearch fires the eventNextBackSearch event.
-func (root *Root) setNextBackSearch() {
+// sendNextBackSearch fires the eventNextBackSearch event.
+func (root *Root) sendNextBackSearch() {
 	if root.searcher == nil {
 		return
 	}
@@ -621,6 +621,10 @@ func (root *Root) setNextBackSearch() {
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
 func (root *Root) Search(str string) {
+	root.sendForwardSearch(str)
+}
+
+func (root *Root) sendForwardSearch(str string) {
 	if !root.checkScreen() {
 		return
 	}
@@ -634,6 +638,10 @@ func (root *Root) Search(str string) {
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
 func (root *Root) BackSearch(str string) {
+	root.sendBackSearch(str)
+}
+
+func (root *Root) sendBackSearch(str string) {
 	if !root.checkScreen() {
 		return
 	}

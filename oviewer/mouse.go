@@ -137,6 +137,10 @@ type eventCopySelect struct {
 
 // CopySelect fires the eventCopySelect event.
 func (root *Root) CopySelect() {
+	root.sendCopySelect()
+}
+
+func (root *Root) sendCopySelect() {
 	if !root.checkScreen() {
 		return
 	}
@@ -182,6 +186,10 @@ type eventPaste struct {
 
 // Paste fires the eventPaste event.
 func (root *Root) Paste() {
+	root.sendPaste()
+}
+
+func (root *Root) sendPaste() {
 	if !root.checkScreen() {
 		return
 	}
