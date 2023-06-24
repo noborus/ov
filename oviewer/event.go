@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"log"
-	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -134,6 +133,10 @@ type eventAppQuit struct {
 
 // Quit fires the eventAppQuit event.
 func (root *Root) Quit() {
+	root.sendQuit()
+}
+
+func (root *Root) sendQuit() {
 	if !root.checkScreen() {
 		return
 	}
@@ -149,15 +152,16 @@ type eventAppSuspend struct {
 
 // Suspend fires the eventAppSuspend event.
 func (root *Root) Suspend() {
+	root.sendSuspend()
+}
+
+func (root *Root) sendSuspend() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventAppSuspend{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
+	root.postEvent(ev)
 }
 
 // Cancel follow mode and follow all mode.
@@ -232,38 +236,19 @@ type eventUpdateEndNum struct {
 
 // regularUpdate fires an eventUpdateEndNum event when an update is required.
 func (root *Root) regularUpdate() {
+	root.sendUpdateEndNum()
+}
+
+func (root *Root) sendUpdateEndNum() {
 	if !root.checkScreen() {
 		return
 	}
-
 	if !root.hasDocChanged() {
 		return
 	}
-
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
 	root.postEvent(ev)
-}
-
-// MoveLine fires an eventGoto event that moves to the specified line.
-func (root *Root) MoveLine(num int) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventGoto{}
-	ev.value = strconv.Itoa(num)
-	ev.SetEventNow()
-	root.postEvent(ev)
-}
-
-// MoveTop fires the event of moving to top.
-func (root *Root) MoveTop() {
-	root.MoveLine(0)
-}
-
-// MoveBottom fires the event of moving to bottom.
-func (root *Root) MoveBottom() {
-	root.MoveLine(root.Doc.BufEndNum())
 }
 
 // eventDocument represents a set document event.
@@ -277,10 +262,16 @@ func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &eventDocument{}
-	if docNum >= 0 && docNum < root.DocumentLen() {
-		ev.docNum = docNum
+
+	if docNum < 0 || docNum < root.DocumentLen() {
+		return
 	}
+	root.sendDocument(docNum)
+}
+
+func (root *Root) sendDocument(docNum int) {
+	ev := &eventDocument{}
+	ev.docNum = docNum
 	ev.SetEventNow()
 	root.postEvent(ev)
 }
@@ -293,6 +284,10 @@ type eventAddDocument struct {
 
 // AddDocument fires the eventAddDocument event.
 func (root *Root) AddDocument(m *Document) {
+	root.sendAddDocument(m)
+}
+
+func (root *Root) sendAddDocument(m *Document) {
 	if !root.checkScreen() {
 		return
 	}
@@ -309,6 +304,10 @@ type eventCloseDocument struct {
 
 // CloseDocument fires the eventCloseDocument event.
 func (root *Root) CloseDocument(m *Document) {
+	root.sendCloseDocument()
+}
+
+func (root *Root) sendCloseDocument() {
 	if !root.checkScreen() {
 		return
 	}
@@ -325,13 +324,14 @@ type eventReload struct {
 
 // Reload fires the eventReload event.
 func (root *Root) Reload() {
+	root.sendReload()
+}
+
+func (root *Root) sendReload() {
 	if !root.checkScreen() {
 		return
 	}
-	root.setMessagef("reload %s", root.Doc.FileName)
-	log.Printf("reload %s", root.Doc.FileName)
 	ev := &eventReload{}
-	ev.SetEventNow()
 	ev.m = root.Doc
 	ev.SetEventNow()
 	root.postEvent(ev)

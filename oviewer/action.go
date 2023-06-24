@@ -170,9 +170,7 @@ func (root *Root) watchControl() {
 				ev := &eventReload{}
 				ev.SetEventNow()
 				ev.m = m
-				if err := root.Screen.PostEvent(ev); err != nil {
-					log.Println(err)
-				}
+				root.postEvent(ev)
 			}
 		}
 	}()
