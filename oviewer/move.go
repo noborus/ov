@@ -112,14 +112,19 @@ func (root *Root) limitMoveDown(x int, y int) {
 	if y+root.scr.vHeight < m.BufEndNum()-m.SkipLines {
 		m.topLN = y
 		m.topLX = x
+		return
 	}
 
 	tx, tn := root.bottomLineNum(m.BufEndNum())
-	if y > tn || (y == tn && x > tx) {
-		if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
-			m.topLN = tn
-			m.topLX = tx
-		}
+	if y < tn || (y == tn && x < tx) {
+		m.topLN = y
+		m.topLX = x
+		return
+	}
+
+	if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
+		m.topLN = tn
+		m.topLX = tx
 	}
 }
 
