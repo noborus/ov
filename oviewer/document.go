@@ -86,6 +86,8 @@ type Document struct {
 
 	// 1 if there is a tmpFollow mode.
 	tmpFollow int32
+	// tmpLN is a temporary line number when the number of lines is undetermined.
+	tmpLN int32
 
 	// WatchMode is watch mode.
 	WatchMode bool

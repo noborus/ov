@@ -19,18 +19,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	}
 	go root.updateInterval(ctx)
 	defer root.debugNumOfChunk()
-	for {
-		if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
-			root.follow()
-		}
 
-		if !root.skipDraw {
-			root.draw()
-		}
-		root.skipDraw = false
-		if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
-			root.watchControl()
-		}
+	for {
+		root.everyUpdate()
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -102,6 +93,29 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			close(quitChan)
 			return
 		}
+	}
+}
+
+// everyUpdate is called every time before running the event.
+func (root *Root) everyUpdate() {
+	// If tmpLN is set, set top position to position from bottom.
+	// This process is executed when temporary read is switched to normal read.
+	if n := atomic.SwapInt32(&root.Doc.tmpLN, 0); n > 0 {
+		tmpN := int(n) - root.Doc.topLN
+		root.Doc.topLN = root.Doc.BufEndNum() - tmpN
+	}
+
+	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
+		root.follow()
+	}
+
+	if !root.skipDraw {
+		root.draw()
+	}
+	root.skipDraw = false
+
+	if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
+		root.watchControl()
 	}
 }
 
