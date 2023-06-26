@@ -220,7 +220,7 @@ func (root *Root) moveHfRight() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveHfLeft()
+	root.Doc.moveHfRight()
 }
 
 // moveBeginLeft moves to the beginning of the line.
