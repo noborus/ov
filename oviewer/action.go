@@ -197,8 +197,9 @@ func (root *Root) searchGoSection(lN int) {
 	root.Doc.topLX = 0
 	y := 0
 
+	width := root.scr.vWidth - root.scr.startX
 	for n := pN; n < lN; n++ {
-		listX := root.leftMostX(n)
+		listX := root.Doc.leftMostX(width, n)
 		y += len(listX)
 	}
 
