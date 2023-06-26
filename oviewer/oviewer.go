@@ -69,11 +69,6 @@ type Root struct {
 	x2 int
 	y2 int
 
-	// headerLen is the actual header length when wrapped.
-	headerLen int
-	// statusPos is the position of the status line.
-	statusPos int
-
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
@@ -847,7 +842,7 @@ func (root *Root) prepareView() {
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
 	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
-	root.statusPos = root.scr.vHeight - statusLine
+	root.Doc.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.

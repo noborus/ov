@@ -1,15 +1,8 @@
 package oviewer
 
 import (
-	"context"
-	"log"
 	"strconv"
-	"sync/atomic"
 )
-
-// TargetLineDelimiter covers from line 1 to this line,
-// because there are headers and separators.
-const TargetLineDelimiter = 10
 
 // MoveLine fires an eventGoto event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
@@ -19,6 +12,7 @@ func (root *Root) MoveLine(num int) {
 	root.sendGoto(num)
 }
 
+// sendGoto fires an eventGoto event that moves to the specified line.
 func (root *Root) sendGoto(num int) {
 	ev := &eventGoto{}
 	ev.value = strconv.Itoa(num)
@@ -36,54 +30,22 @@ func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
 }
 
-// moveLine moves to the specified line.
-func (m *Document) moveLine(lN int) int {
-	lN = min(lN, m.BufEndNum())
-	m.topLN = lN
-	m.topLX = 0
-	return lN
-}
-
 // Go to the top line.
 // Called from a EventKey.
 func (root *Root) moveTop() {
-	root.Doc.moveTop()
-}
+	root.resetSelect()
+	defer root.releaseEventBuffer()
 
-// moveTop moves to the top.
-func (m *Document) moveTop() {
-	m.moveLine(m.BufStartNum())
+	root.Doc.moveTop()
 }
 
 // Go to the bottom line.
 // Called from a EventKey.
 func (root *Root) moveBottom() {
-	if root.Doc.seekable && atomic.LoadInt32(&root.Doc.store.eof) == 0 && atomic.LoadInt32(&root.Doc.tmpFollow) == 0 {
-		root.Doc.requestEnd()
-	}
-	root.Doc.topLX, root.Doc.topLN = root.bottomLineNum(root.Doc.BufEndNum())
-}
+	root.resetSelect()
+	defer root.releaseEventBuffer()
 
-// Move to the nth wrapping line of the specified line.
-func (root *Root) moveLineNth(lN int, nTh int) (int, int) {
-	lN = root.Doc.moveLine(lN)
-	if !root.Doc.WrapMode {
-		return lN, 0
-	}
-
-	listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, lN+root.Doc.firstLine())
-	if len(listX) == 0 {
-		return lN, 0
-	}
-
-	if nTh >= len(listX) {
-		nTh = len(listX) - 1
-	}
-
-	root.Doc.topLN = lN
-	root.Doc.topLX = listX[nTh]
-
-	return lN, nTh
+	root.Doc.moveBottom()
 }
 
 // Move up one screen.
@@ -92,10 +54,7 @@ func (root *Root) movePgUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.moveNumUp(root.statusPos - root.headerLen)
-	if root.Doc.topLN < root.Doc.BufStartNum() {
-		root.Doc.moveTop()
-	}
+	root.Doc.movePgUp()
 }
 
 // Moves down one screen.
@@ -104,32 +63,7 @@ func (root *Root) movePgDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	y := m.bottomLN - m.firstLine()
-	x := m.bottomLX
-	root.limitMoveDown(x, y)
-}
-
-// limitMoveDown limits the movement of the cursor when moving down.
-func (root *Root) limitMoveDown(x int, y int) {
-	m := root.Doc
-	if y+root.scr.vHeight < m.BufEndNum()-m.SkipLines {
-		m.topLN = y
-		m.topLX = x
-		return
-	}
-
-	tx, tn := root.bottomLineNum(m.BufEndNum())
-	if y < tn || (y == tn && x < tx) {
-		m.topLN = y
-		m.topLX = x
-		return
-	}
-
-	if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
-		m.topLN = tn
-		m.topLX = tx
-	}
+	root.Doc.movePgDn()
 }
 
 // Moves up half a screen.
@@ -138,10 +72,7 @@ func (root *Root) moveHfUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.moveNumUp((root.statusPos - root.headerLen) / 2)
-	if root.Doc.topLN < root.Doc.BufStartNum() {
-		root.Doc.moveTop()
-	}
+	root.Doc.moveHfUp()
 }
 
 // Moves down half a screen.
@@ -150,255 +81,71 @@ func (root *Root) moveHfDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.moveNumDown((root.statusPos - root.headerLen) / 2)
-}
-
-// numOfWrap returns the number of wrap from lX and lY.
-func (root *Root) numOfWrap(lX int, lY int) int {
-	listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, lY)
-	if len(listX) == 0 {
-		return 0
-	}
-	return numOfSlice(listX, lX)
-}
-
-// numOfSlice returns what number x is in slice.
-func numOfSlice(listX []int, x int) int {
-	for n, v := range listX {
-		if v >= x {
-			return n
-		}
-	}
-	return len(listX) - 1
-}
-
-// numOfReverseSlice returns what number x is from the back of slice.
-func numOfReverseSlice(listX []int, x int) int {
-	for n := len(listX) - 1; n >= 0; n-- {
-		if listX[n] <= x {
-			return n
-		}
-	}
-	return 0
-}
-
-// Moves up by the specified number of y.
-func (root *Root) moveNumUp(moveY int) {
-	m := root.Doc
-	if !m.WrapMode {
-		m.topLN -= moveY
-		return
-	}
-
-	// WrapMode
-	num := m.topLN + m.firstLine()
-	m.topLX, num = root.findNumUp(m.topLX, num, moveY)
-	m.topLN = num - m.firstLine()
-}
-
-// bottomLineNum returns the display start line
-// when the last line number as an argument.
-func (root *Root) bottomLineNum(lN int) (int, int) {
-	if lN < root.headerLen {
-		return 0, 0
-	}
-
-	height := (root.scr.vHeight - root.headerLen) - 2
-	if !root.Doc.WrapMode {
-		return 0, lN - (height + root.Doc.firstLine())
-	}
-	// WrapMode
-	lX, lN := root.findNumUp(0, lN, height)
-	return lX, lN - root.Doc.firstLine()
-}
-
-// findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
-func (root *Root) findNumUp(lX int, lN int, upY int) (int, int) {
-	listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, lN)
-	n := numOfSlice(listX, lX)
-
-	for y := upY; y > 0; y-- {
-		if n <= 0 {
-			lN--
-			listX = root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, lN)
-			n = len(listX)
-		}
-		if n > 0 {
-			lX = listX[n-1]
-		} else {
-			lX = 0
-		}
-		n--
-	}
-	return lX, lN
-}
-
-// Moves down by the specified number of y.
-func (root *Root) moveNumDown(moveY int) {
-	m := root.Doc
-	num := m.topLN + m.firstLine()
-	if !m.WrapMode {
-		root.limitMoveDown(0, num+moveY)
-		return
-	}
-
-	// WrapMode
-	width := root.scr.vWidth - root.scr.startX
-	x := m.topLX
-	listX := root.Doc.leftMostX(width, num)
-	n := numOfReverseSlice(listX, x)
-
-	for y := 0; y < moveY; y++ {
-		if n >= len(listX) {
-			num++
-			if num > m.BufEndNum() {
-				break
-			}
-			listX = root.Doc.leftMostX(width, num)
-			n = 0
-		}
-		x = 0
-		if len(listX) > 0 && n < len(listX) {
-			x = listX[n]
-		}
-		n++
-	}
-
-	root.limitMoveDown(x, num-m.Header)
+	root.Doc.moveHfDn()
 }
 
 // Move up one line.
 // Called from a EventKey.
-func (root *Root) moveUp() {
-	root.moveUpN(1)
-}
-
-// Move up by n amount.
-func (root *Root) moveUpN(n int) {
-	root.resetSelect()
-	defer root.releaseEventBuffer()
-
-	m := root.Doc
-	if m.topLN <= m.BufStartNum() && m.topLX == 0 {
-		return
-	}
-
-	if !m.WrapMode {
-		m.topLN -= n
-		m.topLX = 0
-		return
-	}
-
-	// WrapMode.
-	// Same line.
-	if m.topLX > 0 {
-		listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, m.topLN+m.firstLine())
-		for n, x := range listX {
-			if x >= m.topLX {
-				m.topLX = listX[n-1]
-				return
-			}
-		}
-	}
-
-	// Previous line.
-	m.topLN -= n
-	start := m.BufStartNum()
-	if m.topLN < start {
-		m.topLN = start
-		m.topLX = 0
-		return
-	}
-	listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, m.topLN+m.firstLine())
-	if len(listX) > 0 {
-		m.topLX = listX[len(listX)-1]
-		return
-	}
-	m.topLX = 0
+func (root *Root) moveUpOne() {
+	root.moveUp(1)
 }
 
 // Move down one line.
 // Called from a EventKey.
-func (root *Root) moveDown() {
-	root.moveDownN(1)
+func (root *Root) moveDownOne() {
+	root.moveDown(1)
 }
 
-// Move down by n amount.
-func (root *Root) moveDownN(n int) {
+// Move up by n amount.
+func (root *Root) moveUp(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	num := m.topLN
+	root.Doc.moveUp(n)
+}
 
-	if !m.WrapMode {
-		num += n
-		root.limitMoveDown(0, num)
-		return
-	}
+// Move down by n amount.
+func (root *Root) moveDown(n int) {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
 
-	// WrapMode
-	listX := root.Doc.leftMostX(root.scr.vWidth-root.scr.startX, m.topLN+m.firstLine())
-	for _, x := range listX {
-		if x > m.topLX {
-			root.limitMoveDown(x, num)
-			return
-		}
-	}
-
-	// Next line.
-	num += n
-	m.topLX = 0
-	root.limitMoveDown(m.topLX, num)
+	root.Doc.moveDown(n)
 }
 
 // nextSection moves down to the next section's delimiter.
 func (root *Root) nextSection() {
-	// Move by page, if there is no section delimiter.
-	if root.Doc.SectionDelimiter == "" {
-		root.movePgDn()
-		return
-	}
-
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
 	m := root.Doc
+	// Move by page, if there is no section delimiter.
+	if m.SectionDelimiter == "" {
+		m.movePgDn()
+		return
+	}
+
 	num, err := m.nextSection(m.topLN + m.firstLine())
 	if err != nil {
 		// Last section or no section.
 		root.setMessage("no next section")
-		root.movePgDn()
+		m.movePgDn()
 		return
 	}
-	root.Doc.moveLine((num - m.firstLine()) + m.SectionStartPosition)
-}
-
-// nextSection returns the line number of the previous section.
-func (m *Document) nextSection(n int) (int, error) {
-	num := n + (1 - m.SectionStartPosition)
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	ctx := context.Background()
-	defer ctx.Done()
-	n, err := m.SearchLine(ctx, searcher, num)
-	if err != nil {
-		return n, err
-	}
-	return n, nil
+	m.moveLine((num - m.firstLine()) + m.SectionStartPosition)
 }
 
 // prevSection moves up to the delimiter of the previous section.
 func (root *Root) prevSection() {
-	// Move by page, if there is no section delimiter.
-	if root.Doc.SectionDelimiter == "" {
-		root.movePgUp()
-		return
-	}
-
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
 	m := root.Doc
+	// Move by page, if there is no section delimiter.
+	if m.SectionDelimiter == "" {
+		m.movePgUp()
+		return
+	}
+
 	num, err := m.prevSection(m.topLN + m.firstLine())
 	if err != nil {
 		m.moveTop()
@@ -407,58 +154,107 @@ func (root *Root) prevSection() {
 	m.moveLine(num)
 }
 
-// prevSection returns the line number of the previous section.
-func (m *Document) prevSection(n int) (int, error) {
-	num := n - (1 + m.SectionStartPosition)
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	ctx := context.Background()
-	defer ctx.Done()
-	n, err := m.BackSearchLine(ctx, searcher, num)
-	if err != nil {
-		return 0, err
-	}
-	n = (n - m.firstLine()) + m.SectionStartPosition
-	n = max(n, m.BufStartNum())
-	return n, nil
-}
-
 // lastSection moves to the last section.
 func (root *Root) lastSection() {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	// +1 to avoid if the bottom line is a session delimiter.
-	num := m.BufEndNum() - 2
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	ctx := context.Background()
-	defer ctx.Done()
-	n, err := m.BackSearchLine(ctx, searcher, num)
-	if err != nil {
-		log.Printf("last section:%v", err)
+	root.Doc.lastSection()
+}
+
+// Move to the left.
+// Called from a EventKey.
+func (root *Root) moveLeftOne() {
+	root.moveLeft(1)
+}
+
+// Move to the right.
+// Called from a EventKey.
+func (root *Root) moveRightOne() {
+	root.moveRight(1)
+}
+
+// Move left by n amount.
+func (root *Root) moveLeft(n int) {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
+	if root.Doc.ColumnMode {
+		root.moveColumnLeft(n)
 		return
 	}
-	n = (n - m.firstLine()) + m.SectionStartPosition
-	m.moveLine(n)
+	root.moveNormalLeft(n)
 }
 
-// leftMostX returns a list of left - most x positions when wrapping.
-// Returns nil if there is no line number.
-func (m *Document) leftMostX(width int, lN int) []int {
-	lc, err := m.contents(lN, m.TabWidth)
-	if err != nil {
-		return nil
+// Move right by n amount.
+func (root *Root) moveRight(n int) {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
+	if root.Doc.ColumnMode {
+		root.moveColumnRight(n)
+		return
 	}
-	return leftMostX(width, lc)
+	root.moveNormalRight(n)
 }
 
-func leftMostX(width int, lc contents) []int {
-	listX := make([]int, 0, (len(lc)/width)+1)
-	listX = append(listX, 0)
-	for n := width; n < len(lc); n += width {
-		if lc[n-1].width == 2 {
-			n--
-		}
-		listX = append(listX, n)
+// Move to the left by half a screen.
+// Called from a EventKey.
+func (root *Root) moveHfLeft() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
+	root.Doc.moveHfLeft()
+	root.minX()
+}
+
+func (root *Root) minX() {
+	if root.Doc.x < root.minStartX {
+		root.Doc.x = root.minStartX
 	}
-	return listX
+}
+
+// Move to the right by half a screen.
+// Called from a EventKey.
+func (root *Root) moveHfRight() {
+	root.resetSelect()
+	defer root.releaseEventBuffer()
+
+	root.Doc.moveHfLeft()
+}
+
+// moveBeginLeft moves to the beginning of the line.
+func (root *Root) moveBeginLeft() {
+	root.Doc.moveBeginLeft()
+}
+
+// moveEndRight moves to the end of the line.
+// Move so that the end of the currently displayed line is visible.
+func (root *Root) moveEndRight() {
+	root.Doc.moveEndRight(root.scr)
+}
+
+// moveNormalLeft moves the screen left.
+func (root *Root) moveNormalLeft(n int) {
+	root.Doc.moveNormalLeft(n)
+	root.minX()
+}
+
+// moveNormalRight moves the screen right.
+func (root *Root) moveNormalRight(n int) {
+	root.Doc.moveNormalRight(n, root.scr)
+}
+
+// moveColumnLeft moves the cursor to the left by n amount.
+func (root *Root) moveColumnLeft(n int) {
+	if err := root.Doc.moveColumnLeft(n, root.scr, root.Config.DisableColumnCycle); err != nil {
+		root.debugMessage(err.Error())
+	}
+}
+
+// moveColumnRight moves the cursor to the right by n amount.
+func (root *Root) moveColumnRight(n int) {
+	if err := root.Doc.moveColumnRight(n, root.scr, root.Config.DisableColumnCycle); err != nil {
+		root.debugMessage(err.Error())
+	}
 }

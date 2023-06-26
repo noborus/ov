@@ -6,6 +6,30 @@ import (
 	"testing"
 )
 
+func TestDocument_moveBeginLeft(t *testing.T) {
+	tests := []struct {
+		name  string
+		wantX int
+	}{
+		{
+			name:  "test1",
+			wantX: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := NewDocument()
+			if err != nil {
+				t.Fatal(err)
+			}
+			m.moveBeginLeft()
+			if m.x != tt.wantX {
+				t.Errorf("screenAdjustX() gotX = %v, wantX %v", m.x, tt.wantX)
+			}
+		})
+	}
+}
+
 func Test_screenAdjustX(t *testing.T) {
 	type args struct {
 		left   int

@@ -18,7 +18,7 @@ func (root *Root) toggleWrapMode() {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
 	// Move cursor to correct position
-	x, err := root.correctX(m.columnCursor)
+	x, err := root.Doc.correctX(m.columnCursor)
 	if err != nil {
 		log.Println(err)
 	}
@@ -34,7 +34,7 @@ func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
 
 	if root.Doc.ColumnMode {
-		root.Doc.columnCursor = root.correctCursor(root.Doc.columnCursor)
+		root.Doc.columnCursor = root.Doc.correctCursor(root.Doc.columnCursor)
 	}
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }
@@ -189,26 +189,26 @@ func (root *Root) searchGoto(lN int) {
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
 func (root *Root) searchGoSection(lN int) {
-	pN, err := root.Doc.prevSection(lN)
+	m := root.Doc
+	pN, err := m.prevSection(lN)
 	if err != nil {
 		pN = 0
 	}
-	root.Doc.topLN = pN
-	root.Doc.topLX = 0
+	m.topLN = pN
+	m.topLX = 0
 	y := 0
 
-	width := root.scr.vWidth - root.scr.startX
 	for n := pN; n < lN; n++ {
-		listX := root.Doc.leftMostX(width, n)
+		listX := m.leftMostX(n)
 		y += len(listX)
 	}
 
-	if root.statusPos > y {
-		root.Doc.JumpTarget = y
+	if m.statusPos > y {
+		m.JumpTarget = y
 		return
 	}
-	root.Doc.JumpTarget = root.statusPos - 1
-	root.moveNumDown(y - root.Doc.JumpTarget + 1)
+	m.JumpTarget = m.statusPos - 1
+	m.moveNumDown(y - m.JumpTarget + 1)
 }
 
 // searchGoLine moves to the specified line after searching.
@@ -216,7 +216,7 @@ func (root *Root) searchGoSection(lN int) {
 func (root *Root) searchGoLine(lN int) {
 	root.Doc.topLN = lN - root.Doc.firstLine()
 	root.Doc.topLX = 0
-	root.moveNumUp(root.Doc.JumpTarget)
+	root.Doc.moveNumUp(root.Doc.JumpTarget)
 }
 
 // goLine will move to the specified line.
@@ -250,7 +250,7 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	lN, nTh = root.moveLineNth(lN-1, nTh)
+	lN, nTh = root.Doc.moveLineNth(lN-1, nTh)
 	root.setMessagef("Moved to line %d.%d", lN+1, nTh)
 }
 

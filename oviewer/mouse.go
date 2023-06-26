@@ -60,13 +60,13 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 // wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp() {
 	root.setMessage("")
-	root.moveUpN(2)
+	root.moveUp(2)
 }
 
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown() {
 	root.setMessage("")
-	root.moveDownN(2)
+	root.moveDown(2)
 }
 
 func (root *Root) wheelRight() {

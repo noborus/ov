@@ -34,6 +34,9 @@ func (root *Root) draw() {
 		lX = m.topLX
 	}
 
+	m.width = root.scr.vWidth - root.scr.startX
+	m.height = root.scr.vHeight - m.headerLen
+
 	lN = m.topLN + lN
 	// Body
 	lX, lN = root.drawBody(lX, lN)
@@ -98,7 +101,7 @@ func (root *Root) drawHeader() int {
 			wrapNum = 0
 		}
 	}
-	root.headerLen = y
+	m.headerLen = y
 	return lN
 }
 
@@ -106,13 +109,13 @@ func (root *Root) drawHeader() int {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	wrapNum := root.numOfWrap(lX, lN)
+	wrapNum := m.numOfWrap(lX, lN)
 	line, valid := m.getLineC(lN, m.TabWidth)
 	root.bodyStyle(line.lc, root.StyleBody)
 	if valid {
 		root.styleContent(lN, line)
 	}
-	for y := root.headerLen; y < root.scr.vHeight-statusLine; y++ {
+	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
 		root.scr.numbers[y] = LineNumber{
 			number: lN,
 			wrap:   wrapNum,
@@ -167,7 +170,7 @@ func (root *Root) coordinatesStyle(lN int, y int, str string) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 	root.markStyle(lN, y, markStyleWidth)
 	root.sectionLineHighlight(y, str)
-	if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
+	if root.Doc.JumpTarget != 0 && root.Doc.headerLen+root.Doc.JumpTarget == y {
 		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }
@@ -450,14 +453,14 @@ func (root *Root) markStyle(lN int, y int, width int) {
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
-	root.clearY(root.statusPos)
+	root.clearY(root.Doc.statusPos)
 	leftContents, cursorPos := root.leftStatus()
-	root.setContentString(0, root.statusPos, leftContents)
+	root.setContentString(0, root.Doc.statusPos, leftContents)
 
 	rightContents := root.rightStatus()
-	root.setContentString(root.scr.vWidth-len(rightContents), root.statusPos, rightContents)
+	root.setContentString(root.scr.vWidth-len(rightContents), root.Doc.statusPos, rightContents)
 
-	root.Screen.ShowCursor(cursorPos, root.statusPos)
+	root.Screen.ShowCursor(cursorPos, root.Doc.statusPos)
 }
 
 func (root *Root) leftStatus() (contents, int) {
