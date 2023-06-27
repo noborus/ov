@@ -57,5 +57,11 @@ func NewConfig() Config {
 			TabWidth:       8,
 			MarkStyleWidth: 1,
 		},
+		Prompt: OVPromptConfig{
+			Normal: OVPromptConfigNormal{
+				ShowFilename: true,
+				InvertColor: true,
+			},
+		},
 	}
 }

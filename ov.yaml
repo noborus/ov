@@ -8,6 +8,10 @@
 # BeforeWriteOriginal: 1000
 # AfterWriteOriginal: 0
 # MemoryLimit: 10000
+# Prompt:
+#   Normal:
+#     ShowFilename: true
+#     InvertColor: true
 
 General:
   TabWidth: 8

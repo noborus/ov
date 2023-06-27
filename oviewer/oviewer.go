@@ -157,6 +157,15 @@ type general struct {
 	PlainMode bool
 }
 
+type OVPromptConfigNormal struct {
+	ShowFilename bool
+	InvertColor  bool
+}
+
+type OVPromptConfig struct {
+	Normal OVPromptConfigNormal
+}
+
 // Config represents the settings of ov.
 type Config struct {
 	// KeyBinding
@@ -172,7 +181,10 @@ type Config struct {
 	StyleColumnRainbow []OVStyle
 	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
 	StyleMultiColorHighlight []OVStyle
-	// StyleHeader is the style that applies to the header.
+
+	Prompt                   OVPromptConfig
+
+  // StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
 	// StyleBody is the style that applies to the body.
 	StyleBody OVStyle
