@@ -55,6 +55,16 @@ type Document struct {
 
 	// currentChunk represents the current chunk number.
 	currentChunk int
+
+	// headerLen is the actual header length when wrapped.
+	headerLen int
+	// statusPos is the position of the status line.
+	statusPos int
+
+	// width is the width of the screen.
+	width int
+	// height is the height of the screen.
+	height int
 	// markedPoint is the position of the marked line.
 	markedPoint int
 

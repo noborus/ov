@@ -105,8 +105,8 @@ func (root *Root) handlers() map[string]func() {
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
-		actionMoveDown:       root.moveDown,
-		actionMoveUp:         root.moveUp,
+		actionMoveDown:       root.moveDownOne,
+		actionMoveUp:         root.moveUpOne,
 		actionMoveTop:        root.moveTop,
 		actionMoveBottom:     root.moveBottom,
 		actionMovePgUp:       root.movePgUp,
@@ -275,7 +275,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
 	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
 	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
-	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")
 	fmt.Fprint(&b, "\n")
@@ -316,7 +316,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
-	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 
 	fmt.Fprint(&b, "\n\tSection\n")
 	fmt.Fprint(&b, "\n")

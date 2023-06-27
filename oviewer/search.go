@@ -547,7 +547,7 @@ func (root *Root) returnStartPosition() int {
 
 // startSearchLN returns the start position of the search.
 func (root *Root) startSearchLN() int {
-	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.JumpTarget)
 	if l.number-root.Doc.topLN > root.Doc.topLN {
 		return 0
 	}
@@ -563,21 +563,21 @@ func (root *Root) firstSearch(ctx context.Context) {
 // nextSearch performs the next search.
 func (root *Root) nextSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, true, l.number+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
 func (root *Root) firstBackSearch(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.headerLen)
+	l := root.scr.lineNumber(root.Doc.headerLen)
 	root.searchMove(ctx, false, l.number, searcher)
 }
 
 // nextBackSearch performs the next back search.
 func (root *Root) nextBackSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, false, l.number-1, searcher)
 }
 
