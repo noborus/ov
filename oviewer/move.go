@@ -216,7 +216,7 @@ func (root *Root) moveNormalLeft(n int) {
 
 // moveNormalRight moves the screen right.
 func (root *Root) moveNormalRight(n int) {
-	root.Doc.moveNormalRight(n, root.scr)
+	root.Doc.moveNormalRight(n)
 }
 
 // moveColumnLeft moves the cursor to the left by n amount.
