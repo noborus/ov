@@ -622,7 +622,7 @@ func (root *Root) ViewSync() {
 
 // TailSync move to tail and sync.
 func (root *Root) TailSync() {
-	root.moveBottom()
+	root.Doc.moveBottom()
 	root.ViewSync()
 }
 

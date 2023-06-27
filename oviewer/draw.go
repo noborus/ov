@@ -34,9 +34,6 @@ func (root *Root) draw() {
 		lX = m.topLX
 	}
 
-	m.width = root.scr.vWidth - root.scr.startX
-	m.height = root.scr.vHeight - m.headerLen
-
 	lN = m.topLN + lN
 	// Body
 	lX, lN = root.drawBody(lX, lN)
