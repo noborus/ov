@@ -129,6 +129,7 @@ func Test_searchWord_Match(t *testing.T) {
 }
 
 func Test_sensitiveWord_Match(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		word string
 	}
@@ -163,7 +164,9 @@ func Test_sensitiveWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			substr := sensitiveWord{
 				word: tt.fields.word,
 			}
@@ -175,6 +178,7 @@ func Test_sensitiveWord_Match(t *testing.T) {
 }
 
 func Test_regexpWord_Match(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		word *regexp.Regexp
 	}
@@ -198,6 +202,16 @@ func Test_regexpWord_Match(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "testBlankLine",
+			fields: fields{
+				word: regexpCompile("^$", false),
+			},
+			args: args{
+				"",
+			},
+			want: true,
+		},
+		{
 			name: "testFalse",
 			fields: fields{
 				word: regexpCompile("t", true),
@@ -209,9 +223,11 @@ func Test_regexpWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			substr := regexpWord{
-				word: tt.fields.word,
+				regexp: tt.fields.word,
 			}
 			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
@@ -221,6 +237,7 @@ func Test_regexpWord_Match(t *testing.T) {
 }
 
 func Test_getSearchMatch(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		searchWord    string
 		searchReg     *regexp.Regexp
@@ -279,7 +296,9 @@ func Test_getSearchMatch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
 			if got := searcher.MatchString(tt.word); got != tt.want {
 				t.Errorf("getSearchMatch() = %v, want %v", got, tt.want)
@@ -289,6 +308,7 @@ func Test_getSearchMatch(t *testing.T) {
 }
 
 func Test_regexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r             string
 		caseSensitive bool
@@ -304,11 +324,13 @@ func Test_regexpCompile(t *testing.T) {
 				r:             "t.",
 				caseSensitive: true,
 			},
-			want: regexp.MustCompile("(?m)t."),
+			want: regexp.MustCompile("t."),
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := regexpCompile(tt.args.r, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("regexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -317,6 +339,7 @@ func Test_regexpCompile(t *testing.T) {
 }
 
 func Test_searchPositionReg(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s  string
 		re *regexp.Regexp
@@ -402,7 +425,9 @@ func Test_searchPositionReg(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := searchPositionReg(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
@@ -411,6 +436,7 @@ func Test_searchPositionReg(t *testing.T) {
 }
 
 func Test_searchPosition(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		caseSensitive bool
 		s             string
@@ -453,7 +479,9 @@ func Test_searchPosition(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := searchPositionStr(tt.args.caseSensitive, tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
 			}
@@ -462,6 +490,7 @@ func Test_searchPosition(t *testing.T) {
 }
 
 func TestRoot_setSearch(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		input *Input
 	}
@@ -474,6 +503,7 @@ func TestRoot_setSearch(t *testing.T) {
 		fields fields
 		args   args
 		want   Searcher
+		config Config
 	}{
 		{
 			name: "testNil",
@@ -499,11 +529,30 @@ func TestRoot_setSearch(t *testing.T) {
 				word: strings.ToLower("test"),
 			},
 		},
+		{
+			name: "testSmartCaseSensitiveTrue",
+			config: Config{
+				SmartCaseSensitive: true,
+			},
+			fields: fields{
+				input: &Input{},
+			},
+			args: args{
+				word:          "Test",
+				caseSensitive: false,
+			},
+			want: sensitiveWord{
+				word: "Test",
+			},
+		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			root := &Root{
-				input: tt.fields.input,
+				input:  tt.fields.input,
+				Config: tt.config,
 			}
 			if got := root.setSearcher(tt.args.word, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Root.setSearch() = %v, want %v", got, tt.want)
@@ -513,6 +562,7 @@ func TestRoot_setSearch(t *testing.T) {
 }
 
 func Test_multiRegexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		words []string
 	}
@@ -527,7 +577,7 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{".", "["},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)."),
+				regexp.MustCompile("."),
 				regexp.MustCompile(`\[`),
 			},
 		},
@@ -537,13 +587,15 @@ func Test_multiRegexpCompile(t *testing.T) {
 				[]string{"a", "b"},
 			},
 			want: []*regexp.Regexp{
-				regexp.MustCompile("(?m)a"),
-				regexp.MustCompile("(?m)b"),
+				regexp.MustCompile("a"),
+				regexp.MustCompile("b"),
 			},
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := multiRegexpCompile(tt.args.words); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("multiRegexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -552,6 +604,7 @@ func Test_multiRegexpCompile(t *testing.T) {
 }
 
 func Test_condRegexpCompile(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		in string
 	}
@@ -611,7 +664,9 @@ func Test_condRegexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := condRegexpCompile(tt.args.in); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("condRegexpCompile() = %v, want %v", got, tt.want)
 			}
@@ -620,6 +675,7 @@ func Test_condRegexpCompile(t *testing.T) {
 }
 
 func TestDocument_searchChunk(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		chunkNum int
 		searcher Searcher
@@ -683,7 +739,9 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fileName)
 			if err != nil {
 				t.Fatal(err)
@@ -697,6 +755,125 @@ func TestDocument_searchChunk(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("Document.searchChunk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_sensitive_FindAll(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   [][]int
+	}{
+		{
+			name: "testFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testCSFound",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 5}},
+		},
+		{
+			name: "testRegexpFound",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			args: args{
+				s: "error",
+			},
+			want: [][]int{{0, 3}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.FindAll(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sensitiveWord.FindAll() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_search_String(t *testing.T) {
+	type fields struct {
+		searchWord    string
+		searchReg     *regexp.Regexp
+		caseSensitive bool
+		regexpSearch  bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testString",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			want: "error",
+		},
+		{
+			name: "testCaseSensitive",
+			fields: fields{
+				searchWord:    "ERROR",
+				searchReg:     regexpCompile("ERROR", true),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			want: "ERROR",
+		},
+		{
+			name: "testRegexp",
+			fields: fields{
+				searchWord:    "err*",
+				searchReg:     regexpCompile("err*", false),
+				caseSensitive: false,
+				regexpSearch:  true,
+			},
+			want: "err*",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
+			if got := substr.String(); got != tt.want {
+				t.Errorf("searchWord.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

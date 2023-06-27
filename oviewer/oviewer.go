@@ -34,15 +34,14 @@ type Root struct {
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchReg for on-screen highlighting.
-	searchReg *regexp.Regexp
+	// searcher is the searcher.
+	searcher Searcher
+
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
-	// searchWord for on-screen highlighting.
-	searchWord string
 	// Original string.
 	OriginStr string
 
@@ -69,11 +68,6 @@ type Root struct {
 	y1 int
 	x2 int
 	y2 int
-
-	// headerLen is the actual header length when wrapped.
-	headerLen int
-	// statusPos is the position of the status line.
-	statusPos int
 
 	// mu controls the RWMutex.
 	mu sync.RWMutex
@@ -137,6 +131,8 @@ type general struct {
 	SectionStartPosition int
 	// JumpTarget is the display position of search results.
 	JumpTarget int
+	// JumpTargetSection is the display position of search results.
+	JumpTargetSection bool
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -172,36 +168,75 @@ type OVPromptConfig struct {
 
 // Config represents the settings of ov.
 type Config struct {
-	Keybind                  map[string][]string
-	Mode                     map[string]general
-	ViewMode                 string
-	DefaultKeyBind           string
-	StyleColumnRainbow       []OVStyle
+	// KeyBinding
+	Keybind map[string][]string
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
+	StyleColumnRainbow []OVStyle
+	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
 	StyleMultiColorHighlight []OVStyle
-	StyleLineNumber          OVStyle
-	StyleHeader              OVStyle
-	StyleSearchHighlight     OVStyle
-	StyleColumnHighlight     OVStyle
-	StyleMarkLine            OVStyle
-	StyleSectionLine         OVStyle
-	StyleOverStrike          OVStyle
-	StyleBody                OVStyle
-	StyleJumpTargetLine      OVStyle
-	StyleAlternate           OVStyle
-	StyleOverLine            OVStyle
-	General                  general
-	MemoryLimitFile          int
-	AfterWriteOriginal       int
-	BeforeWriteOriginal      int
-	MemoryLimit              int
-	DisableMouse             bool
-	IsWriteOriginal          bool
-	QuitSmall                bool
-	CaseSensitive            bool
-	RegexpSearch             bool
-	Incsearch                bool
-	Debug                    bool
+
 	Prompt                   OVPromptConfig
+
+  // StyleHeader is the style that applies to the header.
+	StyleHeader OVStyle
+	// StyleBody is the style that applies to the body.
+	StyleBody OVStyle
+	// StyleLineNumber is a style that applies line number.
+	StyleLineNumber OVStyle
+	// StyleSearchHighlight is the style that applies to the search highlight.
+	StyleSearchHighlight OVStyle
+	// StyleColumnHighlight is the style that applies to the column highlight.
+	StyleColumnHighlight OVStyle
+	// StyleMarkLine is a style that marked line.
+	StyleMarkLine OVStyle
+	// StyleSectionLine is a style that section delimiter line.
+	StyleSectionLine OVStyle
+	// StyleJumpTargetLine is the line that displays the search results.
+	StyleJumpTargetLine OVStyle
+	// StyleAlternate is a style that applies line by line.
+	StyleAlternate OVStyle
+	// StyleOverStrike is a style that applies to overstrike.
+	StyleOverStrike OVStyle
+	// StyleOverLine is a style that applies to overstrike underlines.
+	StyleOverLine OVStyle
+	// General represents the general behavior.
+	General general
+	// BeforeWriteOriginal specifies the number of lines before the current position.
+	// 0 is the top of the current screen
+	BeforeWriteOriginal int
+	// AfterWriteOriginal specifies the number of lines after the current position.
+	// 0 specifies the bottom of the screen.
+	AfterWriteOriginal int
+	// MemoryLimit is a number that limits chunk loading.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
+	// Mouse support disable.
+	DisableMouse bool
+	// IsWriteOriginal is true, write the current screen on quit.
+	IsWriteOriginal bool
+	// QuitSmall Quit if the output fits on one screen.
+	QuitSmall bool
+	// CaseSensitive is case-sensitive if true.
+	CaseSensitive bool
+	// SmartCaseSensitive is lowercase search ignores case, if true.
+	SmartCaseSensitive bool
+	// RegexpSearch is Regular expression search if true.
+	RegexpSearch bool
+	// Incsearch is incremental search if true.
+	Incsearch bool
+
+	// DisableColumnCycle is disable column cycle.
+	DisableColumnCycle bool
+	// Debug represents whether to enable the debug output.
+	Debug bool
 }
 
 // OVStyle represents a style in addition to the original style.
@@ -314,6 +349,8 @@ var (
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrOverScreen indicates that the specified screen is out of range.
+	ErrOverScreen = errors.New("over screen")
 	// ErrOutOfChunk indicates that the specified Chunk is out of range.
 	ErrOutOfChunk = errors.New("out of chunk")
 	// ErrNotLoaded indicates that it cannot be loaded.
@@ -802,7 +839,7 @@ func mergeGeneral(src general, dst general) general {
 	if dst.JumpTarget != 0 {
 		src.JumpTarget = dst.JumpTarget
 	}
-	if dst.MultiColorWords != nil {
+	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
 	}
 	return src
@@ -817,7 +854,7 @@ func (root *Root) prepareView() {
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
 	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
-	root.statusPos = root.scr.vHeight - statusLine
+	root.Doc.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.

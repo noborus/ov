@@ -223,12 +223,14 @@ func (m *Document) loadReadMem(reader *bufio.Reader, chunkNum int) (*bufio.Reade
 
 // reloadRead performs reload processing.
 func (m *Document) reloadRead(reader *bufio.Reader) (*bufio.Reader, error) {
-	if !m.WatchMode {
-		m.reset()
-	} else {
+	// Add to store in WatchMode, otherwise reset
+	if m.WatchMode {
 		m.seekable = false
 		chunk := m.store.chunkForAdd(m.seekable, m.store.size)
 		m.store.appendFormFeed(chunk)
+	} else {
+		m.store.loadedChunks.Purge()
+		m.reset()
 	}
 
 	return m.reloadFile(reader)
@@ -264,6 +266,7 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	m.store.offset = m.store.size
 	atomic.StoreInt32(&m.store.eof, 1)
 	if atomic.SwapInt32(&m.tmpFollow, 0) == 1 {
+		atomic.StoreInt32(&m.tmpLN, atomic.LoadInt32(&m.followStore.endNum))
 		m.cache.Purge()
 	}
 	if !m.seekable { // for NamedPipe.
@@ -351,8 +354,11 @@ func (m *Document) reload() error {
 
 // reset clears all lines.
 func (m *Document) reset() {
+	if !m.BufEOF() {
+		return
+	}
 	m.store = NewStore()
-	m.store.setNewLoadChunks(m.seekable)
+	m.store.setNewLoadChunks(m.memoryLimit)
 	atomic.StoreInt32(&m.store.changed, 1)
 	m.ClearCache()
 }

@@ -23,6 +23,7 @@ type request string
 // control requests.
 const (
 	requestStart    request = "start"
+	requestEnd      request = "end"
 	requestContinue request = "continue"
 	requestFollow   request = "follow"
 	requestClose    request = "close"
@@ -34,7 +35,8 @@ const (
 // ControlFile controls file read and loads in chunks.
 // ControlFile can be reloaded by file name.
 func (m *Document) ControlFile(file *os.File) error {
-	m.store.setNewLoadChunks(m.seekable)
+	m.memoryLimit = loadChunksCapacity(m.seekable)
+	m.store.setNewLoadChunks(m.memoryLimit)
 	atomic.StoreInt32(&m.closed, 0)
 	r, err := m.fileReader(file)
 	if err != nil {
@@ -66,7 +68,8 @@ func (m *Document) ControlFile(file *os.File) error {
 // ControlReader is the controller for io.Reader.
 // Assuming call from Exec. reload executes the argument function.
 func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error {
-	m.store.setNewLoadChunks(false)
+	m.memoryLimit = loadChunksCapacity(false)
+	m.store.setNewLoadChunks(m.memoryLimit)
 	m.seekable = false
 	reader := bufio.NewReader(r)
 
@@ -119,14 +122,20 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	switch sc.request {
 	case requestStart:
 		return m.firstRead(reader)
+	case requestEnd:
+		if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
+			return m.tmpRead(reader)
+		}
+		return m.continueRead(reader)
 	case requestContinue:
-		if !m.store.isContinueRead(m.seekable) {
+		if !m.store.isContinueRead(m.memoryLimit) {
 			return reader, nil
 		}
 		if m.seekable && (m.FollowMode || m.FollowAll) {
-			if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
-				return m.tmpRead(reader)
-			}
+			go func() {
+				m.requestEnd()
+			}()
+			return reader, nil
 		}
 		return m.continueRead(reader)
 	case requestFollow:
@@ -138,9 +147,6 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestSearch:
 		return m.searchRead(reader, sc.chunkNum, sc.searcher)
 	case requestReload:
-		if !m.WatchMode {
-			m.store.loadedChunks.Purge()
-		}
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
 		return reader, err
@@ -181,6 +187,7 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 func (m *Document) controlLog(sc controlSpecifier) {
 	switch sc.request {
 	case requestLoad:
+	case requestFollow:
 	case requestReload:
 		m.reset()
 	default:
@@ -195,6 +202,16 @@ func (m *Document) requestStart() {
 			request: requestStart,
 		}
 	}()
+}
+
+// requestStart send instructions to end reading.
+func (m *Document) requestEnd() {
+	sc := controlSpecifier{
+		request: requestEnd,
+		done:    make(chan bool),
+	}
+	m.ctlCh <- sc
+	<-sc.done
 }
 
 // requestContinue sends instructions to continue reading.

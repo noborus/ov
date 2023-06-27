@@ -9,6 +9,7 @@ import (
 )
 
 func TestOpenDocument(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		fileName string
 	}
@@ -30,7 +31,9 @@ func TestOpenDocument(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			_, err := OpenDocument(tt.args.fileName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OpenDocument() error = %v, wantErr %v", err, tt.wantErr)
@@ -75,7 +78,9 @@ func TestDocument_lineToContents(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -99,6 +104,7 @@ func TestDocument_lineToContents(t *testing.T) {
 }
 
 func TestDocument_Export(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		start int
 		end   int
@@ -129,7 +135,9 @@ func TestDocument_Export(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -150,6 +158,7 @@ func TestDocument_Export(t *testing.T) {
 }
 
 func TestDocument_searchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -193,7 +202,9 @@ func TestDocument_searchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fields.FileName)
 			if err != nil {
 				t.Fatalf("OpenDocument %s", err)
@@ -215,6 +226,7 @@ func TestDocument_searchLine(t *testing.T) {
 }
 
 func TestDocument_backSearchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -258,7 +270,9 @@ func TestDocument_backSearchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fields.FileName)
 			if err != nil {
 				t.Fatalf("OpenDocument %s", err)

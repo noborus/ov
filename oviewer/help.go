@@ -17,12 +17,9 @@ func NewHelp(k KeyBind) (*Document, error) {
 		return nil, err
 	}
 
-	m.store.append(m.store.chunks[m.store.lastChunkNum()], true, []byte("\t\t\t"+gchalk.WithUnderline().Bold("ov help")))
-
-	str := strings.Split(KeyBindString(k), "\n")
-	for _, s := range str {
-		m.store.append(m.store.chunks[m.store.lastChunkNum()], true, []byte(s))
-	}
+	helpStr := bytes.NewBufferString("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
+	helpStr.WriteString("\n")
+	helpStr.WriteString(KeyBindString(k))
 
 	m.FileName = "Help"
 	m.store.eof = 1
@@ -30,7 +27,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.seekable = false
 	m.setSectionDelimiter("\t")
 	atomic.StoreInt32(&m.closed, 1)
-	if err := m.ControlReader(strings.NewReader(m.FileName), nil); err != nil {
+	if err := m.ControlReader(helpStr, nil); err != nil {
 		return nil, err
 	}
 	return m, err

@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -91,10 +90,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
-	if err := root.Screen.PostEvent(nev); err != nil {
-		log.Println(err)
-	}
-
+	root.postEvent(nev)
 	input.Event = normal()
 }
 
@@ -180,6 +176,17 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 // inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
+	if root.Config.CaseSensitive {
+		root.Config.SmartCaseSensitive = false
+	}
+}
+
+// inputSmartCaseSensitive toggles case sensitivity.
+func (root *Root) inputSmartCaseSensitive() {
+	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
+	if root.Config.SmartCaseSensitive {
+		root.Config.CaseSensitive = false
+	}
 }
 
 // inputIncSearch toggles incremental search.

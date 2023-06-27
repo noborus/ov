@@ -22,7 +22,7 @@ func (root *Root) draw() {
 		return
 	}
 
-	if m.ColumnWidth && m.columnWidths == nil {
+	if m.ColumnWidth && len(m.columnWidths) == 0 {
 		m.setColumnWidths()
 	}
 
@@ -98,7 +98,7 @@ func (root *Root) drawHeader() int {
 			wrapNum = 0
 		}
 	}
-	root.headerLen = y
+	m.headerLen = y
 	return lN
 }
 
@@ -106,13 +106,13 @@ func (root *Root) drawHeader() int {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	wrapNum := root.numOfWrap(lX, lN)
+	wrapNum := m.numOfWrap(lX, lN)
 	line, valid := m.getLineC(lN, m.TabWidth)
 	root.bodyStyle(line.lc, root.StyleBody)
 	if valid {
 		root.styleContent(lN, line)
 	}
-	for y := root.headerLen; y < root.scr.vHeight-statusLine; y++ {
+	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
 		root.scr.numbers[y] = LineNumber{
 			number: lN,
 			wrap:   wrapNum,
@@ -167,7 +167,7 @@ func (root *Root) coordinatesStyle(lN int, y int, str string) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 	root.markStyle(lN, y, markStyleWidth)
 	root.sectionLineHighlight(y, str)
-	if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
+	if root.Doc.JumpTarget != 0 && root.Doc.headerLen+root.Doc.JumpTarget == y {
 		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }
@@ -210,26 +210,23 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lN int, lc contents) (int, int) {
-	if lX < root.minStartX {
-		lX = root.minStartX
-	}
-
+func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, int) {
+	startX = max(startX, root.minStartX)
 	for x := 0; root.scr.startX+x < root.scr.vWidth; x++ {
-		if lX+x >= len(lc) {
+		if startX+x >= len(lc) {
 			// EOL
 			root.clearEOL(root.scr.startX+x, y)
 			break
 		}
 		content := DefaultContent
-		if lX+x >= 0 {
-			content = lc[lX+x]
+		if startX+x >= 0 {
+			content = lc[startX+x]
 		}
 		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	lN++
 
-	return lX, lN
+	return startX, lN
 }
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.
@@ -241,7 +238,7 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
 func (root *Root) searchHighlight(lN int, line LineC) {
-	if root.searchWord == "" {
+	if root.searcher == nil || root.searcher.String() == "" {
 		return
 	}
 
@@ -304,13 +301,20 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 	if len(indexes) == 0 {
 		return
 	}
+
+	lStart := 0
+	if indexes[0][0] == 0 {
+		lStart = indexes[0][1]
+		indexes = indexes[1:]
+	}
+
 	numC := len(root.StyleColumnRainbow)
 
 	var iStart, iEnd int
 	for c := 0; c < len(indexes)+1; c++ {
 		switch {
 		case c == 0:
-			iStart = 0
+			iStart = lStart
 			iEnd = indexes[0][1] - 1
 			if iEnd < 0 {
 				iEnd = 0
@@ -443,14 +447,14 @@ func (root *Root) markStyle(lN int, y int, width int) {
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
-	root.clearY(root.statusPos)
+	root.clearY(root.Doc.statusPos)
 	leftContents, cursorPos := root.leftStatus()
-	root.setContentString(0, root.statusPos, leftContents)
+	root.setContentString(0, root.Doc.statusPos, leftContents)
 
 	rightContents := root.rightStatus()
-	root.setContentString(root.scr.vWidth-len(rightContents), root.statusPos, rightContents)
+	root.setContentString(root.scr.vWidth-len(rightContents), root.Doc.statusPos, rightContents)
 
-	root.Screen.ShowCursor(cursorPos, root.statusPos)
+	root.Screen.ShowCursor(cursorPos, root.Doc.statusPos)
 }
 
 func (root *Root) leftStatus() (contents, int) {
@@ -528,7 +532,9 @@ func (root *Root) inputOpts() string {
 		if root.Config.Incsearch {
 			opts += "(I)"
 		}
-		if root.Config.CaseSensitive {
+		if root.Config.SmartCaseSensitive {
+			opts += "(S)"
+		} else if root.Config.CaseSensitive {
 			opts += "(Aa)"
 		}
 	}

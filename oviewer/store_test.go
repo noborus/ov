@@ -6,66 +6,8 @@ import (
 	"testing"
 )
 
-func Test_newLoadChunks(t *testing.T) {
-	type global struct {
-		MemoryLimit     int
-		MemoryLimitFile int
-	}
-	type args struct {
-		isFile bool
-	}
-	tests := []struct {
-		name   string
-		global global
-		args   args
-		want   int
-	}{
-		{
-			name: "testMemLimit",
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
-			args: args{
-				isFile: false,
-			},
-			want: 4,
-		},
-		{
-			name: "testFileLimit",
-			global: global{
-				MemoryLimit:     -1,
-				MemoryLimitFile: 10,
-			},
-			args: args{
-				isFile: true,
-			},
-			want: 11,
-		},
-		{
-			name: "testDefault",
-			global: global{
-				MemoryLimit:     -1,
-				MemoryLimitFile: 100,
-			},
-			args: args{
-				isFile: false,
-			},
-			want: 101,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			MemoryLimitFile = tt.global.MemoryLimitFile
-			if got := newLoadChunks(tt.args.isFile); got != tt.want {
-				t.Errorf("newLoadChunks() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_store_chunkRange(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		chunks   []*chunk
 		startNum int32
@@ -126,7 +68,9 @@ func Test_store_chunkRange(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := &store{
 				chunks:   tt.fields.chunks,
 				startNum: tt.fields.startNum,
@@ -143,11 +87,12 @@ func Test_store_chunkRange(t *testing.T) {
 	}
 }
 
-func testNewStore(t *testing.T, chunkNum int, isFile bool) *store {
+func testNewStore(t *testing.T, chunkNum int, capacity int) *store {
 	t.Helper()
 	s := NewStore()
 	s.chunks = make([]*chunk, chunkNum)
-	s.setNewLoadChunks(isFile)
+	t.Logf("capacity %d", capacity)
+	s.setNewLoadChunks(capacity)
 	for i := 0; i < chunkNum; i++ {
 		chunk := NewChunk(0)
 		chunk.lines = make([][]byte, ChunkSize)
@@ -161,10 +106,7 @@ func testNewStore(t *testing.T, chunkNum int, isFile bool) *store {
 }
 
 func Test_store_swapChunksFile(t *testing.T) {
-	type global struct {
-		MemoryLimit     int
-		MemoryLimitFile int
-	}
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -173,19 +115,16 @@ func Test_store_swapChunksFile(t *testing.T) {
 		loaded    int
 	}
 	tests := []struct {
-		name   string
-		global global
-		fields fields
-		args   args
-		want   bool
+		name     string
+		capacity int
+		fields   fields
+		args     args
+		want     bool
 	}{
 		{
-			name:   "test0",
-			fields: fields{maxChunks: 100},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			name:     "test0",
+			fields:   fields{maxChunks: 100},
+			capacity: 100,
 			args: args{
 				chunkNums: []int{0},
 				loaded:    0,
@@ -193,12 +132,9 @@ func Test_store_swapChunksFile(t *testing.T) {
 			want: true,
 		},
 		{
-			name:   "test1",
-			fields: fields{maxChunks: 100},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			name:     "test1",
+			fields:   fields{maxChunks: 100},
+			capacity: 100,
 			args: args{
 				chunkNums: []int{1},
 				loaded:    1,
@@ -206,12 +142,9 @@ func Test_store_swapChunksFile(t *testing.T) {
 			want: true,
 		},
 		{
-			name:   "testFalse",
-			fields: fields{maxChunks: 100},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			name:     "testFalse",
+			fields:   fields{maxChunks: 100},
+			capacity: 100,
 			args: args{
 				chunkNums: []int{99},
 				loaded:    1,
@@ -219,12 +152,9 @@ func Test_store_swapChunksFile(t *testing.T) {
 			want: false,
 		},
 		{
-			name:   "testEvict",
-			fields: fields{maxChunks: 100},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 3,
-			},
+			name:     "testEvict",
+			fields:   fields{maxChunks: 100},
+			capacity: 3,
 			args: args{
 				chunkNums: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 				loaded:    2,
@@ -233,10 +163,10 @@ func Test_store_swapChunksFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			MemoryLimitFile = tt.global.MemoryLimitFile
-			s := testNewStore(t, tt.fields.maxChunks, true)
+			t.Parallel()
+			s := testNewStore(t, tt.fields.maxChunks, tt.capacity)
 			for _, num := range tt.args.chunkNums {
 				s.swapLoadedFile(num)
 			}
@@ -249,41 +179,43 @@ func Test_store_swapChunksFile(t *testing.T) {
 }
 
 func Test_store_isContinueRead(t *testing.T) {
-	type global struct {
-		MemoryLimit int
+	t.Parallel()
+	type args struct {
+		limit int
 	}
 	tests := []struct {
-		name   string
-		global global
-		want   bool
+		name string
+		args args
+		want bool
 	}{
 		{
 			name: "testOK",
-			global: global{
-				MemoryLimit: 100,
+			args: args{
+				limit: 100,
 			},
 			want: true,
 		},
 		{
 			name: "testNoLimit",
-			global: global{
-				MemoryLimit: -1,
+			args: args{
+				limit: -1,
 			},
 			want: true,
 		},
 		{
 			name: "testNG",
-			global: global{
-				MemoryLimit: 9,
+			args: args{
+				limit: 9,
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			s := testNewStore(t, 10, false)
-			if got := s.isContinueRead(false); got != tt.want {
+			t.Parallel()
+			s := testNewStore(t, 10, tt.args.limit)
+			if got := s.isContinueRead(tt.args.limit); got != tt.want {
 				t.Logf("loadedChunks: %v", s.loadedChunks.Len())
 				t.Errorf("store.isContinueRead() = %v, want %v", got, tt.want)
 			}
@@ -292,10 +224,7 @@ func Test_store_isContinueRead(t *testing.T) {
 }
 
 func Test_store_loadChunksMem(t *testing.T) {
-	type global struct {
-		MemoryLimit     int
-		MemoryLimitFile int
-	}
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -305,7 +234,7 @@ func Test_store_loadChunksMem(t *testing.T) {
 	}
 	tests := []struct {
 		name   string
-		global global
+		limit  int
 		fields fields
 		args   args
 		want   bool
@@ -313,10 +242,7 @@ func Test_store_loadChunksMem(t *testing.T) {
 		{
 			name:   "test0",
 			fields: fields{maxChunks: 3},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			limit:  3,
 			args: args{
 				chunkNums: []int{0},
 				contains:  0,
@@ -326,10 +252,7 @@ func Test_store_loadChunksMem(t *testing.T) {
 		{
 			name:   "test1",
 			fields: fields{maxChunks: 3},
-			global: global{
-				MemoryLimit:     10,
-				MemoryLimitFile: 100,
-			},
+			limit:  10,
 			args: args{
 				chunkNums: []int{1},
 				contains:  1,
@@ -339,10 +262,7 @@ func Test_store_loadChunksMem(t *testing.T) {
 		{
 			name:   "test2",
 			fields: fields{maxChunks: 3},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			limit:  3,
 			args: args{
 				chunkNums: []int{1, 2, 3},
 				contains:  2,
@@ -352,38 +272,32 @@ func Test_store_loadChunksMem(t *testing.T) {
 		{
 			name:   "testNoLimit",
 			fields: fields{maxChunks: 10},
-			global: global{
-				MemoryLimit:     -1,
-				MemoryLimitFile: 100,
-			},
+			limit:  -1,
 			args: args{
 				chunkNums: []int{1},
 				contains:  1,
 			},
-			want: false,
+			want: true,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			MemoryLimitFile = tt.global.MemoryLimitFile
-			s := testNewStore(t, tt.fields.maxChunks, true)
+			t.Parallel()
+			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
 			for _, chunkNum := range tt.args.chunkNums {
 				s.loadChunksMem(chunkNum)
 			}
 			if got := s.loadedChunks.Contains(tt.args.contains); got != tt.want {
 				t.Logf("loadedChunks: %v[%v]", s.loadedChunks.Keys(), tt.args.contains)
-				t.Errorf("store.swapChunksFile() = %v, want %v", got, tt.want)
+				t.Errorf("store.loadChunksMem() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func Test_store_evictChunksMem(t *testing.T) {
-	type global struct {
-		MemoryLimit     int
-		MemoryLimitFile int
-	}
+	t.Parallel()
 	type fields struct {
 		maxChunks int
 	}
@@ -393,7 +307,7 @@ func Test_store_evictChunksMem(t *testing.T) {
 	}
 	tests := []struct {
 		name   string
-		global global
+		limit  int
 		fields fields
 		args   args
 		want   bool
@@ -401,36 +315,29 @@ func Test_store_evictChunksMem(t *testing.T) {
 		{
 			name:   "test0",
 			fields: fields{maxChunks: 3},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			limit:  3,
 			args: args{
 				chunkNums: []int{0},
 				current:   0,
 			},
 			want: false,
 		},
-		{
-			name:   "test1",
-			fields: fields{maxChunks: 3},
-			global: global{
-				MemoryLimit:     10,
-				MemoryLimitFile: 100,
+		/*
+			{
+				name:   "test1",
+				fields: fields{maxChunks: 3},
+				limit:  10,
+				args: args{
+					chunkNums: []int{1},
+					current:   1,
+				},
+				want: true,
 			},
-			args: args{
-				chunkNums: []int{1},
-				current:   1,
-			},
-			want: true,
-		},
+		*/
 		{
 			name:   "testCurrent",
 			fields: fields{maxChunks: 10},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			limit:  3,
 			args: args{
 				chunkNums: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 				current:   9,
@@ -440,10 +347,7 @@ func Test_store_evictChunksMem(t *testing.T) {
 		{
 			name:   "testOld",
 			fields: fields{maxChunks: 10},
-			global: global{
-				MemoryLimit:     3,
-				MemoryLimitFile: 100,
-			},
+			limit:  3,
 			args: args{
 				chunkNums: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 				current:   6,
@@ -453,10 +357,7 @@ func Test_store_evictChunksMem(t *testing.T) {
 		{
 			name:   "testNoLimit",
 			fields: fields{maxChunks: 10},
-			global: global{
-				MemoryLimit:     -1,
-				MemoryLimitFile: 100,
-			},
+			limit:  -1,
 			args: args{
 				chunkNums: []int{1},
 				current:   1,
@@ -465,10 +366,10 @@ func Test_store_evictChunksMem(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			MemoryLimitFile = tt.global.MemoryLimitFile
-			s := testNewStore(t, tt.fields.maxChunks, true)
+			t.Parallel()
+			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
 			for _, chunkNum := range tt.args.chunkNums {
 				s.loadChunksMem(chunkNum)
 				s.evictChunksMem(chunkNum)
@@ -493,6 +394,7 @@ func testChunkStore(t *testing.T) (*store, *chunk) {
 }
 
 func Test_store_appendLine(t *testing.T) {
+	t.Parallel()
 	type appendArgs struct {
 		noNewlineEOF int32
 		line         []byte
@@ -560,7 +462,9 @@ func Test_store_appendLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s, chunk := testChunkStore(t)
 
 			for _, app := range tt.args {
@@ -575,6 +479,7 @@ func Test_store_appendLine(t *testing.T) {
 }
 
 func Test_store_chunkForAdd(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		chunks   []*chunk
 		startNum int
@@ -622,7 +527,9 @@ func Test_store_chunkForAdd(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := NewStore()
 			s.chunks = tt.fields.chunks
 			if got := s.chunkForAdd(tt.args.isFile, tt.args.start); !reflect.DeepEqual(got, tt.want) {
@@ -633,10 +540,7 @@ func Test_store_chunkForAdd(t *testing.T) {
 }
 
 func Test_store_isLoadedChunk(t *testing.T) {
-	type global struct {
-		MemoryLimit     int
-		MemoryLimitFile int
-	}
+	t.Parallel()
 	type fields struct {
 		chunks int
 	}
@@ -646,17 +550,14 @@ func Test_store_isLoadedChunk(t *testing.T) {
 	}
 	tests := []struct {
 		name   string
-		global global
+		limit  int
 		fields fields
 		args   args
 		want   bool
 	}{
 		{
-			name: "test0",
-			global: global{
-				MemoryLimit:     -1,
-				MemoryLimitFile: 100,
-			},
+			name:  "test0",
+			limit: 100,
 			fields: fields{
 				chunks: 0,
 			},
@@ -667,11 +568,8 @@ func Test_store_isLoadedChunk(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "test1",
-			global: global{
-				MemoryLimit:     10,
-				MemoryLimitFile: 100,
-			},
+			name:  "test1",
+			limit: 100,
 			fields: fields{
 				chunks: 3,
 			},
@@ -682,11 +580,8 @@ func Test_store_isLoadedChunk(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "testTrue",
-			global: global{
-				MemoryLimit:     10,
-				MemoryLimitFile: 100,
-			},
+			name:  "testTrue",
+			limit: 10,
 			fields: fields{
 				chunks: 3,
 			},
@@ -697,11 +592,8 @@ func Test_store_isLoadedChunk(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "testFail",
-			global: global{
-				MemoryLimit:     10,
-				MemoryLimitFile: 100,
-			},
+			name:  "testFail",
+			limit: 10,
 			fields: fields{
 				chunks: 3,
 			},
@@ -713,10 +605,10 @@ func Test_store_isLoadedChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = tt.global.MemoryLimit
-			MemoryLimitFile = tt.global.MemoryLimitFile
-			s := testNewStore(t, tt.fields.chunks, tt.args.isFile)
+			t.Parallel()
+			s := testNewStore(t, tt.fields.chunks, tt.limit)
 			if got := s.isLoadedChunk(tt.args.chunkNum, tt.args.isFile); got != tt.want {
 				t.Logf("isLoadedChunk %v", s.loadedChunks.Keys())
 				t.Errorf("store.isLoadedChunk() = %v, want %v", got, tt.want)

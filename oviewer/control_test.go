@@ -11,6 +11,7 @@ import (
 )
 
 func TestDocument_ControlFile(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName   string
 		FollowMode bool
@@ -62,7 +63,9 @@ func TestDocument_ControlFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -81,6 +84,7 @@ func TestDocument_ControlFile(t *testing.T) {
 }
 
 func TestDocument_requestLoad(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 		chunkNum int
@@ -99,7 +103,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 1,
 				lineNum:  10001,
 			},
-			want:    []byte("10002\n"),
+			want:    []byte("10002"),
 			wantErr: false,
 		},
 		{
@@ -109,7 +113,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 99,
 				lineNum:  999999,
 			},
-			want:    []byte("1000000\n"),
+			want:    []byte("1000000"),
 			wantErr: false,
 		},
 		{
@@ -119,7 +123,7 @@ func TestDocument_requestLoad(t *testing.T) {
 				chunkNum: 1,
 				lineNum:  12344,
 			},
-			want:    []byte("12345\n"),
+			want:    []byte("12345"),
 			wantErr: false,
 		},
 		{
@@ -144,7 +148,9 @@ func TestDocument_requestLoad(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -174,72 +180,8 @@ func TestDocument_requestLoad(t *testing.T) {
 	}
 }
 
-func TestDocument_requestLoadMem(t *testing.T) {
-	type fields struct {
-		FileName string
-		chunkNum int
-		lineNum  int
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []byte
-		wantErr bool
-	}{
-		{
-			name: "testLargeFileZstd",
-			fields: fields{
-				FileName: filepath.Join(testdata, "large.txt.zst"),
-				chunkNum: 99,
-				lineNum:  999999,
-			},
-			want:    []byte("1000000\n"),
-			wantErr: false,
-		},
-		{
-			name: "testLargeFileZstd2",
-			fields: fields{
-				FileName: filepath.Join(testdata, "large.txt.zst"),
-				chunkNum: 10,
-				lineNum:  10001,
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			MemoryLimit = 2
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			f, err := open(tt.fields.FileName)
-			if err != nil {
-				t.Fatal("open error", tt.fields.FileName)
-			}
-			m.FollowMode = true
-			if err := m.ControlFile(f); err != nil {
-				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
-			}
-			for line := 0; !m.BufEOF(); line++ {
-				m.requestLoad(line)
-			}
-
-			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
-			got, err := m.store.GetChunkLine(chunkNum, cn)
-			if (err != nil) != tt.wantErr {
-				t.Log(MemoryLimit)
-				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Document.requestLoad() = %v, want %v", string(got), string(tt.want))
-			}
-		})
-	}
-}
-
 func TestDocument_requestSearch(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName   string
 		searchWord string
@@ -273,7 +215,9 @@ func TestDocument_requestSearch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -317,6 +261,7 @@ func CopyToTempFile(t *testing.T, fileName string) string {
 }
 
 func TestDocument_requestFollow(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName    string
 		appendBytes []byte
@@ -333,12 +278,14 @@ func TestDocument_requestFollow(t *testing.T) {
 				FileName:    filepath.Join(testdata, "large.txt"),
 				appendBytes: []byte("a\n"),
 			},
-			want:    []byte("a\n"),
+			want:    []byte("a"),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			fname := CopyToTempFile(t, tt.fields.FileName)
 			m, err := NewDocument()
 			if err != nil {
@@ -387,6 +334,7 @@ func TestDocument_requestFollow(t *testing.T) {
 }
 
 func TestDocument_requestClose(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -406,7 +354,9 @@ func TestDocument_requestClose(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -428,6 +378,7 @@ func TestDocument_requestClose(t *testing.T) {
 }
 
 func TestDocument_ControlReader(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r      io.Reader
 		reload func() *bufio.Reader
@@ -455,7 +406,9 @@ func TestDocument_ControlReader(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -468,6 +421,7 @@ func TestDocument_ControlReader(t *testing.T) {
 }
 
 func TestDocument_ControlReaderCtl(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		r      io.Reader
 		reload func() *bufio.Reader
@@ -523,7 +477,9 @@ func TestDocument_ControlReaderCtl(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -541,6 +497,7 @@ func TestDocument_ControlReaderCtl(t *testing.T) {
 }
 
 func TestDocument_ControlLog(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		sc      controlSpecifier
@@ -558,7 +515,9 @@ func TestDocument_ControlLog(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)

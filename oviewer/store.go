@@ -35,8 +35,10 @@ func NewChunk(start int64) *chunk {
 
 // setNewLoadChunks creates a new LRU cache.
 // Manage chunks loaded in LRU cache.
-func (s *store) setNewLoadChunks(isFile bool) {
-	capacity := newLoadChunks(isFile)
+func (s *store) setNewLoadChunks(capacity int) {
+	if capacity <= 0 {
+		capacity = 1
+	}
 	loaded, err := lru.New[int, struct{}](capacity)
 	if err != nil {
 		log.Panicf("lru new %s", err)
@@ -44,27 +46,25 @@ func (s *store) setNewLoadChunks(isFile bool) {
 	s.loadedChunks = loaded
 }
 
-// newLoadChunks creates a new LRU cache.
-func newLoadChunks(isFile bool) int {
+// loadChunksCapacity creates a new LRU cache.
+func loadChunksCapacity(isFile bool) int {
+	mlMem := MemoryLimit
 	mlFile := MemoryLimitFile
-	if MemoryLimit >= 0 {
-		if MemoryLimit < 2 {
-			MemoryLimit = 2
+	if mlMem >= 0 {
+		if mlMem < 2 {
+			mlMem = 2
 		}
-		MemoryLimitFile = MemoryLimit
+		mlFile = mlMem
 	}
 
-	if MemoryLimitFile > mlFile {
-		MemoryLimitFile = mlFile
-	}
-	if MemoryLimitFile < 2 {
-		MemoryLimitFile = 2
+	if mlFile < 2 {
+		mlFile = 2
 	}
 
-	capacity := MemoryLimitFile + 1
+	capacity := mlFile + 1
 	if !isFile {
-		if MemoryLimit > 0 {
-			capacity = MemoryLimit + 1
+		if mlMem > 0 {
+			capacity = mlMem + 1
 		}
 	}
 	return capacity
@@ -162,14 +162,11 @@ func (s *store) isLoadedChunk(chunkNum int, isFile bool) bool {
 }
 
 // isContinueRead returns whether to continue reading.
-func (s *store) isContinueRead(isFile bool) bool {
-	if isFile {
+func (s *store) isContinueRead(limit int) bool {
+	if limit < 0 {
 		return true
 	}
-	if MemoryLimit < 0 {
-		return true
-	}
-	if s.loadedChunks.Len() < MemoryLimit {
+	if s.loadedChunks.Len() < limit {
 		return true
 	}
 	return false

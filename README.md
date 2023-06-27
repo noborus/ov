@@ -6,7 +6,7 @@
 
 ov is a terminal pager.
 
-* `ov` can be used instead of `less` or `more` or `tail -f`.
+* `ov` can be used instead of `less`, `more`, `tail -f/-F` and `watch`.
 * `ov` also has an effective function for tabular text.
 
 ![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
@@ -67,19 +67,19 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
-* Supports files larger than memory (**v0.30.0 or later**).
+* Supports files larger than [memory](#how-to-reduce-memory-usage) (**v0.30.0 or later**).
 * Regular files can be opened quickly even if they are large (**v0.30.0 or later**).
 * Supports fixed [header](#header) line display (both wrap/nowrap).
 * Supports [column mode](#column-mode), which recognizes columns by delimiter.
 * Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
-* Support columns with fixed widths instead of delimiters (**v0.30.0 or later**).
+* Support [columns with fixed widths](#column-width) instead of delimiters (**v0.30.0 or later**).
 * Supports section-by-section movement, splitting [sections](#section) by delimiter.
 * Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
-* Supports alternating row styling.
+* Supports [alternating row](#alternate-rows) styling.
 * Shortcut keys are [customizable](#key-binding-customization).
 * The style of the effect is [customizable](#style-customization).
-* Supports [follow-mode](#follow-mode) (like tail -f).
-* Support follow mode by file name (equivalent to `tail -F`) (**v0.30.0 or later**).
+* Supports [follow-mode](#follow-mode) (like `tail -f`).
+* Support follow mode by file [name](#follow-name) (like `tail -F`) (**v0.30.0 or later**).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
 * Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
@@ -300,12 +300,13 @@ For output like `ps`, using `--column-width` is a better way to separate columns
 
 You can specify the column width with `--column-width` (default key `alt+o`).
 
-
 ```console
 ps aux|ov -H1 --column-width --column-rainbow
 ```
 
 ![ps-ov.png](docs/ps-ov.png)
+
+This column-width feature is implemented using [guesswidth](https://github.com/noborus/guesswidth).
 
 ###  3.7. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
@@ -392,7 +393,7 @@ ov --follow-all --exec -- make
 
 ###  3.15. <a name='search'></a>Search
 
-Search by forward search `/` key(default) or the backward search `?` key(defualt).
+Search by forward search `/` key(default) or the backward search `?` key(default).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
 Displayed when the following are enabled in the search input prompt:
 
@@ -400,7 +401,8 @@ Displayed when the following are enabled in the search input prompt:
 |:---------|:--------|:----|:--------------|
 | Incremental search | (I) | alt+i | --incremental |
 | Regular expression search | (R) | alt+r | --regexp-search  |
-| Case sensitive | (Aa) | alt+c |  -i, --case-sensitive |
+| Case-sensitive | (Aa) | alt+c | -i, --case-sensitive |
+| Smart case-sensitive | (S) | alt+s | --smart-case-sensitive |
 
 ###  3.16. <a name='mark'></a>Mark
 
@@ -429,7 +431,7 @@ ov --watch 1 /proc/meminfo
 ###  3.18. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
-This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `contrl+alt+r`).
+This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -446,7 +448,7 @@ Also, if mouse support is enabled, horizontal scrolling is possible with `shift+
 ###  3.19. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
-`.`key(defualt) enters multi-word input mode.
+`.`key(default) enters multi-word input mode.
 Enter multiple words (regular expressions) separated by spaces.
 
 For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
@@ -478,7 +480,7 @@ StyleMultiColorHighlight:
 
 ###  3.20. <a name='plain'></a>Plain
 
-Supports undecorating ANSI escape sequences.
+Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
 ###  3.21. <a name='jump-target'></a>Jump target
@@ -617,47 +619,48 @@ ov is a feature rich pager(such as more/less).
 It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 Usage:
-  ov [flags]
+  ov [flags] [FILE]...
 
 Flags:
-  -C, --alternate-rows             alternately change the line color
-  -i, --case-sensitive             case-sensitive in search
-  -d, --column-delimiter string    column delimiter (default ",")
-  -c, --column-mode                column mode
-      --column-rainbow             column rainbow
-      --column-width               column width mode                                                      v0.30.0
-      --completion string          generate completion script [bash|zsh|fish|powershell]
-      --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
-      --debug                      debug mode
-      --disable-mouse              disable mouse support
-  -e, --exec                       exec command
-  -X, --exit-write                 output the current screen when exiting
-  -a, --exit-write-after int       NUM after the current lines when exiting
-  -b, --exit-write-before int      NUM before the current lines when exiting
-  -A, --follow-all                 follow all
-  -f, --follow-mode                follow mode
-      --follow-name                follow name mode
-      --follow-section             follow section
-  -H, --header int                 number of header rows to fix
-  -h, --help                       help for ov
-      --help-key                   display key bind information
-      --incsearch                  incremental search (default true)
-  -j, --jump-target string         jump-target
-  -n, --line-number                line number mode
-      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.30.0
-      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.30.0
-  -M, --multi-color strings        multi-color
-  -p, --plain                      disable original decoration
-  -F, --quit-if-one-screen         quit if the output fits on one screen
-      --regexp-search              regular expression search
-      --section-delimiter string   section delimiter
-      --section-start int          section start position
-      --skip-lines int             skip the number of lines
-  -x, --tab-width int              tab stop width (default 8)
-  -v, --version                    display version information
-      --view-mode string           view mode
-  -T, --watch int                  watch mode interval
-  -w, --wrap                       wrap mode (default true)
+  -C, --alternate-rows                alternately change the line color
+  -i, --case-sensitive                case-sensitive in search
+  -d, --column-delimiter character    column delimiter character (default ",")
+  -c, --column-mode                   column mode
+      --column-rainbow                column rainbow
+      --column-width                  column width mode                                                      v0.30.0
+      --completion string             generate completion script [bash|zsh|fish|powershell]
+      --config file                   config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
+      --debug                         debug mode
+      --disable-mouse                 disable mouse support
+  -e, --exec                          command execution result instead of file
+  -X, --exit-write                    output the current screen when exiting
+  -a, --exit-write-after int          number after the current lines when exiting
+  -b, --exit-write-before int         number before the current lines when exiting
+  -A, --follow-all                    follow all
+  -f, --follow-mode                   follow mode
+      --follow-name                   follow name mode
+      --follow-section                follow section
+  -H, --header int                    number of header rows to fix
+  -h, --help                          help for ov
+      --help-key                      display key bind information
+      --incsearch[=true|false]        incremental search (default true)
+  -j, --jump-target [int|int%|.int]   jump target [int|int%|.int]
+  -n, --line-number                   line number mode
+      --memory-limit int              number of chunks to limit in memory (default -1)                       v0.30.0
+      --memory-limit-file int         number of chunks to limit in memory for the file (default 100)         v0.30.0
+  -M, --multi-color strings           comma separated words(regexp) to color .e.g. "ERROR,WARNING"
+  -p, --plain                         disable original decoration
+  -F, --quit-if-one-screen            quit if the output fits on one screen
+      --regexp-search                 regular expression search
+      --section-delimiter regexp      regexp for section delimiter .e.g. "^#"
+      --section-start int             section start position
+      --skip-lines int                skip the number of lines
+      --smart-case-sensitive          smart case-sensitive in search                                         v0.31.0
+  -x, --tab-width int                 tab stop width (default 8)
+  -v, --version                       display version information
+      --view-mode string              view mode
+  -T, --watch seconds                 watch mode interval(seconds)
+  -w, --wrap[=true|false]             wrap mode (default true)
 ```
 
 It can also be changed after startup.
@@ -755,6 +758,7 @@ It can also be changed after startup.
 	Key binding when typing
 
  [alt+c]                      * case-sensitive toggle
+ [alt+s]                      * smart case-sensitive toggle                         v0.31.0
  [alt+r]                      * regular expression search toggle
  [alt+i]                      * incremental search toggle
  [Up]                         * previous candidate
@@ -822,3 +826,31 @@ You can customize key bindings.
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
+
+## VS
+
+The following software can be used instead. If you are not satisfied with `ov`, you should try it.
+
+* [less](https://github.com/gwsw/less)
+  * `less` is versatile, feature-rich, and the de facto standard for pagers.
+* [most](https://www.jedsoft.org/most/)
+  * `most` is a general-purpose pager with split-window capabilities.
+* [pspg](https://github.com/okbob/pspg)
+  * `pspg` is a pager suitable for output of psql etc.
+* [moar](https://github.com/walles/moar)
+  * `moar` is a pager with code highlighting.
+* [slit](https://github.com/tigrawap/slit)
+  * `slit` is a pager suitable for viewing logs.
+* [lnav](https://lnav.org/)
+  * `lnav` analyzes logs and can be used as a viewer.
+* [peep](https://github.com/ryochack/peep)
+  * `peep` is a pager that can work in a small pane.
+
+## Work together
+
+The following are not actually pagers and do not conflict. can work together.
+
+* [bat](https://github.com/sharkdp/bat)
+  * `bat` is an alternative to cat. It supports a lot of highlighting and automatically calls the pager.
+* [delta](https://github.com/dandavison/delta)
+  * `delta` processes the diff for easy viewing and displays it. Call the pager automatically.

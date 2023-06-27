@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -49,8 +50,21 @@ type Document struct {
 	// status is the display status of the document.
 	general
 
+	// memoryLimit is the maximum chunk size.
+	memoryLimit int
+
 	// currentChunk represents the current chunk number.
 	currentChunk int
+
+	// headerLen is the actual header length when wrapped.
+	headerLen int
+	// statusPos is the position of the status line.
+	statusPos int
+
+	// width is the width of the screen.
+	width int
+	// height is the height of the screen.
+	height int
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
@@ -82,6 +96,8 @@ type Document struct {
 
 	// 1 if there is a tmpFollow mode.
 	tmpFollow int32
+	// tmpLN is a temporary line number when the number of lines is undetermined.
+	tmpLN int32
 
 	// WatchMode is watch mode.
 	WatchMode bool
@@ -101,6 +117,7 @@ type store struct {
 	chunks []*chunk
 	// mu controls the mutex.
 	mu sync.Mutex
+
 	// startNum is the number of the first line that can be moved.
 	startNum int32
 	// endNum is the number of the last line read.
@@ -150,6 +167,7 @@ func NewDocument() (*Document, error) {
 			PlainMode:       false,
 		},
 		ctlCh:         make(chan controlSpecifier),
+		memoryLimit:   100,
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
@@ -266,7 +284,7 @@ func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	if cn >= len(chunk.lines) {
 		return nil, fmt.Errorf("over line (%d:%d) %w", chunkNum, cn, ErrOutOfRange)
 	}
-	return chunk.lines[cn], nil
+	return bytes.TrimSuffix(chunk.lines[cn], []byte("\n")), nil
 }
 
 // GetLine returns one line from buffer.
@@ -299,7 +317,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.LineString(n))
+		fmt.Fprintln(w, m.LineString(n))
 	}
 }
 
@@ -403,7 +421,7 @@ func (m *Document) unWatchMode() {
 func (m *Document) regexpCompile() {
 	m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 	m.setSectionDelimiter(m.SectionDelimiter)
-	if m.MultiColorWords != nil {
+	if len(m.MultiColorWords) > 0 {
 		m.setMultiColorWords(m.MultiColorWords)
 	}
 }
