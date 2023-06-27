@@ -22,7 +22,7 @@ func (root *Root) sendGoto(num int) {
 
 // MoveTop fires the event of moving to top.
 func (root *Root) MoveTop() {
-	root.MoveLine(0)
+	root.MoveLine(root.Doc.BufStartNum())
 }
 
 // MoveBottom fires the event of moving to bottom.
@@ -117,21 +117,10 @@ func (root *Root) nextSection() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	// Move by page, if there is no section delimiter.
-	if m.SectionDelimiter == "" {
-		m.movePgDn()
-		return
-	}
-
-	num, err := m.nextSection(m.topLN + m.firstLine())
-	if err != nil {
+	if err := root.Doc.moveNextSection(); err != nil {
 		// Last section or no section.
-		root.setMessage("no next section")
-		m.movePgDn()
-		return
+		root.setMessage("No more next sections")
 	}
-	m.moveLine((num - m.firstLine()) + m.SectionStartPosition)
 }
 
 // prevSection moves up to the delimiter of the previous section.
@@ -139,19 +128,10 @@ func (root *Root) prevSection() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	m := root.Doc
-	// Move by page, if there is no section delimiter.
-	if m.SectionDelimiter == "" {
-		m.movePgUp()
+	if err := root.Doc.movePrevSection(); err != nil {
+		root.setMessage("No more previous sections")
 		return
 	}
-
-	num, err := m.prevSection(m.topLN + m.firstLine())
-	if err != nil {
-		m.moveTop()
-		return
-	}
-	m.moveLine(num)
 }
 
 // lastSection moves to the last section.
@@ -159,7 +139,7 @@ func (root *Root) lastSection() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.lastSection()
+	root.Doc.moveLastSection()
 }
 
 // Move to the left.
@@ -205,13 +185,7 @@ func (root *Root) moveHfLeft() {
 	defer root.releaseEventBuffer()
 
 	root.Doc.moveHfLeft()
-	root.minX()
-}
-
-func (root *Root) minX() {
-	if root.Doc.x < root.minStartX {
-		root.Doc.x = root.minStartX
-	}
+	root.Doc.x = max(root.Doc.x, root.minStartX)
 }
 
 // Move to the right by half a screen.
@@ -237,7 +211,7 @@ func (root *Root) moveEndRight() {
 // moveNormalLeft moves the screen left.
 func (root *Root) moveNormalLeft(n int) {
 	root.Doc.moveNormalLeft(n)
-	root.minX()
+	root.Doc.x = max(root.Doc.x, root.minStartX)
 }
 
 // moveNormalRight moves the screen right.

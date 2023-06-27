@@ -13,10 +13,12 @@ const columnMargin = 2
 // because there are headers and separators.
 const TargetLineDelimiter = 10
 
+// moveBeginLeft moves to the beginning of the screen.
 func (m *Document) moveBeginLeft() {
 	m.x = 0
 }
 
+// moveEndRight moves to the end of the screen.
 func (m *Document) moveEndRight(scr SCR) {
 	m.x = m.endRight(scr)
 }
@@ -267,6 +269,7 @@ func splitByDelimiter(str string, delimiter string, delimiterReg *regexp.Regexp)
 	return widths
 }
 
+// moveHfLeft moves to the left half screen.
 func (m *Document) moveHfLeft() {
 	moveSize := (m.width / 2)
 	if m.x > 0 && (m.x-moveSize) < 0 {
@@ -276,6 +279,7 @@ func (m *Document) moveHfLeft() {
 	m.x -= moveSize
 }
 
+// moveHfRight moves to the right half screen.
 func (m *Document) moveHfRight() {
 	if m.x < 0 {
 		m.x = 0
@@ -284,10 +288,22 @@ func (m *Document) moveHfRight() {
 	m.x += (m.width / 2)
 }
 
+// moveNormalLeft moves to the left.
 func (m *Document) moveNormalLeft(n int) {
 	m.x -= n
 }
 
+// moveNormalRight moves to the right.
+func (m *Document) moveNormalRight(n int, scr SCR) {
+	end := m.endRight(scr)
+	if end < m.x+n {
+		m.x = end
+		return
+	}
+	m.x += n
+}
+
+// moveColumnLeft moves to the left column.
 func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	if m.columnCursor <= 0 && m.x <= 2 {
 		if !cycle {
@@ -308,6 +324,7 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	return nil
 }
 
+// moveColumnRight moves to the right column.
 func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	x, cursor, err := m.columnX(scr, 1)
 	if err != nil {
@@ -324,14 +341,6 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	m.x = x
 	m.columnCursor = cursor
 	return nil
-}
-
-func (m *Document) moveNormalRight(n int, scr SCR) {
-	end := m.endRight(scr)
-	if end < m.x+n {
-		m.x = end
-	}
-	m.x += n
 }
 
 // endRight returns x when the content displayed on the current screen is right edge.

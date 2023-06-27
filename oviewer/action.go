@@ -208,7 +208,7 @@ func (root *Root) searchGoSection(lN int) {
 		return
 	}
 	m.JumpTarget = m.statusPos - 1
-	m.moveNumDown(y - m.JumpTarget + 1)
+	m.moveYDown(y - m.JumpTarget + 1)
 }
 
 // searchGoLine moves to the specified line after searching.
@@ -216,7 +216,7 @@ func (root *Root) searchGoSection(lN int) {
 func (root *Root) searchGoLine(lN int) {
 	root.Doc.topLN = lN - root.Doc.firstLine()
 	root.Doc.topLX = 0
-	root.Doc.moveNumUp(root.Doc.JumpTarget)
+	root.Doc.moveYUp(root.Doc.JumpTarget)
 }
 
 // goLine will move to the specified line.

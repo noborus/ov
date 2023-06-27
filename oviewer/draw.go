@@ -213,26 +213,23 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lN int, lc contents) (int, int) {
-	if lX < root.minStartX {
-		lX = root.minStartX
-	}
-
+func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, int) {
+	startX = max(startX, root.minStartX)
 	for x := 0; root.scr.startX+x < root.scr.vWidth; x++ {
-		if lX+x >= len(lc) {
+		if startX+x >= len(lc) {
 			// EOL
 			root.clearEOL(root.scr.startX+x, y)
 			break
 		}
 		content := DefaultContent
-		if lX+x >= 0 {
-			content = lc[lX+x]
+		if startX+x >= 0 {
+			content = lc[startX+x]
 		}
 		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
 	}
 	lN++
 
-	return lX, lN
+	return startX, lN
 }
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.

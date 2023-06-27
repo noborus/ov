@@ -19,11 +19,13 @@ func (m *Document) moveTop() {
 	m.moveLine(m.BufStartNum())
 }
 
+// moveBottom moves to the bottom.
 func (m *Document) moveBottom() {
+	// If the file is seekable, move to the end of the file.
 	if m.seekable && atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
-		// If the file is seekable, move to the end of the file.
 		m.requestEnd()
 	}
+
 	m.topLX, m.topLN = m.bottomLineNum(m.height-2, m.BufEndNum())
 }
 
@@ -49,28 +51,32 @@ func (m *Document) moveLineNth(lN int, nTh int) (int, int) {
 	return lN, nTh
 }
 
+// movePgUp moves up one screen.
 func (m *Document) movePgUp() {
-	m.moveNumUp(m.height)
+	m.moveYUp(m.height)
 	if m.topLN < m.BufStartNum() {
 		m.moveTop()
 	}
 }
 
+// movePgDn moves down one screen.
 func (m *Document) movePgDn() {
 	y := m.bottomLN - m.firstLine()
 	x := m.bottomLX
 	m.limitMoveDown(x, y)
 }
 
+// moveHfUp moves up half a screen.
 func (m *Document) moveHfUp() {
-	m.moveNumUp(m.height / 2)
+	m.moveYUp(m.height / 2)
 	if m.topLN < m.BufStartNum() {
 		m.moveTop()
 	}
 }
 
+// moveHfDn moves down half a screen.
 func (m *Document) moveHfDn() {
-	m.moveNumDown(m.height / 2)
+	m.moveYDown(m.height / 2)
 }
 
 // limitMoveDown limits the movement of the cursor when moving down.
@@ -123,17 +129,17 @@ func numOfReverseSlice(listX []int, x int) int {
 	return 0
 }
 
-// Moves up by the specified number of y.
-func (m *Document) moveNumUp(moveY int) {
+// MoveYUp moves up by the specified number of y.
+func (m *Document) moveYUp(moveY int) {
 	if !m.WrapMode {
 		m.topLN -= moveY
 		return
 	}
 
 	// WrapMode
-	num := m.topLN + m.firstLine()
-	m.topLX, num = m.findNumUp(m.topLX, num, moveY)
-	m.topLN = num - m.firstLine()
+	LX, lN := m.numUp(m.topLX, m.topLN+m.firstLine(), moveY)
+	m.topLX = LX
+	m.topLN = lN - m.firstLine()
 }
 
 // bottomLineNum returns the display start line
@@ -146,12 +152,12 @@ func (m *Document) bottomLineNum(height int, lN int) (int, int) {
 		return 0, lN - (height + m.firstLine())
 	}
 	// WrapMode
-	lX, lN := m.findNumUp(height, 0, lN)
+	lX, lN := m.numUp(0, lN, height)
 	return lX, lN - m.firstLine()
 }
 
-// findNumUp finds lX, lN when the number of lines is moved up from lX, lN.
-func (m *Document) findNumUp(upY int, lX int, lN int) (int, int) {
+// numUp finds lX, lN when the number of lines is moved up from lX, lN.
+func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 	listX := m.leftMostX(lN)
 	n := numOfSlice(listX, lX)
 
@@ -171,26 +177,26 @@ func (m *Document) findNumUp(upY int, lX int, lN int) (int, int) {
 	return lX, lN
 }
 
-// Moves down by the specified number of y.
-func (m *Document) moveNumDown(moveY int) {
-	num := m.topLN + m.firstLine()
+// MoveYDown moves down by the specified number of y.
+func (m *Document) moveYDown(moveY int) {
+	lN := m.topLN + m.firstLine()
 	if !m.WrapMode {
-		m.limitMoveDown(0, num+moveY)
+		m.limitMoveDown(0, lN+moveY)
 		return
 	}
 
 	// WrapMode
 	x := m.topLX
-	listX := m.leftMostX(num)
+	listX := m.leftMostX(lN)
 	n := numOfReverseSlice(listX, x)
 
 	for y := 0; y < moveY; y++ {
 		if n >= len(listX) {
-			num++
-			if num > m.BufEndNum() {
+			lN++
+			if lN > m.BufEndNum() {
 				break
 			}
-			listX = m.leftMostX(num)
+			listX = m.leftMostX(lN)
 			n = 0
 		}
 		x = 0
@@ -200,11 +206,12 @@ func (m *Document) moveNumDown(moveY int) {
 		n++
 	}
 
-	m.limitMoveDown(x, num-m.Header)
+	m.limitMoveDown(x, lN-m.Header)
 }
 
+// moveUp moves up by the specified number of lines.
 func (m *Document) moveUp(n int) {
-	if m.topLN <= m.BufStartNum() && m.topLX == 0 {
+	if (m.topLN < m.BufStartNum()) || ((m.topLN == m.BufStartNum()) && (m.topLX == 0)) {
 		return
 	}
 
@@ -242,12 +249,12 @@ func (m *Document) moveUp(n int) {
 	m.topLX = 0
 }
 
+// moveDown	moves down by the specified number of lines.
 func (m *Document) moveDown(n int) {
-	num := m.topLN
-
+	lN := m.topLN
 	if !m.WrapMode {
-		num += n
-		m.limitMoveDown(0, num)
+		lN += n
+		m.limitMoveDown(0, lN)
 		return
 	}
 
@@ -255,37 +262,71 @@ func (m *Document) moveDown(n int) {
 	listX := m.leftMostX(m.topLN + m.firstLine())
 	for _, x := range listX {
 		if x > m.topLX {
-			m.limitMoveDown(x, num)
+			m.limitMoveDown(x, lN)
 			return
 		}
 	}
 
 	// Next line.
-	num += n
+	lN += n
 	m.topLX = 0
-	m.limitMoveDown(m.topLX, num)
+	m.limitMoveDown(m.topLX, lN)
+}
+
+// moveNextSection moves to the next section.
+func (m *Document) moveNextSection() error {
+	// Move by page, if there is no section delimiter.
+	if m.SectionDelimiter == "" {
+		m.movePgDn()
+		return nil
+	}
+
+	lN, err := m.nextSection(m.topLN + m.firstLine())
+	if err != nil {
+		m.movePgDn()
+		return ErrNoDelimiter
+	}
+	m.moveLine((lN - m.firstLine()) + m.SectionStartPosition)
+	return nil
 }
 
 // nextSection returns the line number of the previous section.
 func (m *Document) nextSection(n int) (int, error) {
-	num := n + (1 - m.SectionStartPosition)
+	lN := n + (1 - m.SectionStartPosition)
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
-	n, err := m.SearchLine(ctx, searcher, num)
+	n, err := m.SearchLine(ctx, searcher, lN)
 	if err != nil {
 		return n, err
 	}
 	return n, nil
 }
 
+// movePrevSection moves to the previous section.
+func (m *Document) movePrevSection() error {
+	// Move by page, if there is no section delimiter.
+	if m.SectionDelimiter == "" {
+		m.movePgUp()
+		return nil
+	}
+
+	lN, err := m.prevSection(m.topLN + m.firstLine())
+	if err != nil {
+		m.moveTop()
+		return err
+	}
+	m.moveLine(lN)
+	return nil
+}
+
 // prevSection returns the line number of the previous section.
 func (m *Document) prevSection(n int) (int, error) {
-	num := n - (1 + m.SectionStartPosition)
+	lN := n - (1 + m.SectionStartPosition)
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
-	n, err := m.BackSearchLine(ctx, searcher, num)
+	n, err := m.BackSearchLine(ctx, searcher, lN)
 	if err != nil {
 		return 0, err
 	}
@@ -294,13 +335,14 @@ func (m *Document) prevSection(n int) (int, error) {
 	return n, nil
 }
 
-func (m *Document) lastSection() {
+// moveLastSection moves to the last section.
+func (m *Document) moveLastSection() {
 	// +1 to avoid if the bottom line is a session delimiter.
-	num := m.BufEndNum() - 2
+	lN := m.BufEndNum() - 2
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
-	n, err := m.BackSearchLine(ctx, searcher, num)
+	n, err := m.BackSearchLine(ctx, searcher, lN)
 	if err != nil {
 		log.Printf("last section:%v", err)
 		return
