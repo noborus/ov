@@ -6,6 +6,9 @@ import (
 	"sync/atomic"
 )
 
+// lastLineMargin is the margin of the last line
+const lastLineMargin = 1
+
 // moveLine moves to the specified line.
 func (m *Document) moveLine(lN int) int {
 	lN = min(lN, m.BufEndNum())
@@ -26,7 +29,7 @@ func (m *Document) moveBottom() {
 		m.requestEnd()
 	}
 
-	m.topLX, m.topLN = m.bottomLineNum(m.height-2, m.BufEndNum())
+	m.topLX, m.topLN = m.bottomLineNum(m.height-lastLineMargin, m.BufEndNum())
 }
 
 // Move to the nth wrapping line of the specified line.
@@ -87,7 +90,7 @@ func (m *Document) limitMoveDown(x int, y int) {
 		return
 	}
 
-	tx, tn := m.bottomLineNum(m.height-2, m.BufEndNum())
+	tx, tn := m.bottomLineNum(m.height-lastLineMargin, m.BufEndNum())
 	if y < tn || (y == tn && x < tx) {
 		m.topLN = y
 		m.topLX = x
