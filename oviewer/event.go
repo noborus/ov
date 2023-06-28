@@ -106,7 +106,7 @@ func (root *Root) everyUpdate() {
 	}
 
 	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.scr.vHeight - root.Doc.headerLen
+	root.Doc.height = root.Doc.statusPos - root.Doc.headerLen
 
 	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 		root.follow()
