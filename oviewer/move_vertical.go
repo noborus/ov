@@ -361,6 +361,7 @@ func (m *Document) leftMostX(lN int) []int {
 	return leftMostX(m.width, lc)
 }
 
+// leftMostX returns a list of left - most x positions when wrapping.
 func leftMostX(width int, lc contents) []int {
 	listX := make([]int, 0, (len(lc)/width)+1)
 	listX = append(listX, 0)
