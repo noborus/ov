@@ -192,18 +192,37 @@ func TestDocument_moveLineNth(t *testing.T) {
 func TestDocument_moveBottomFile(t *testing.T) {
 	type fields struct {
 		fileName string
+		width    int
+		height   int
+		wrap     bool
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		want   int
+		want1  int
 	}{
 		{
-			name: "moveBottom",
+			name: "moveBottomNoWrap",
 			fields: fields{
 				fileName: filepath.Join(testdata, "move.txt"),
+				width:    10,
+				height:   10,
+				wrap:     false,
 			},
-			want: 44,
+			want:  0,
+			want1: 33,
+		},
+		{
+			name: "moveBottomWrap",
+			fields: fields{
+				fileName: filepath.Join(testdata, "move.txt"),
+				width:    10,
+				height:   10,
+				wrap:     true,
+			},
+			want:  70,
+			want1: 40,
 		},
 	}
 	for _, tt := range tests {
@@ -212,11 +231,17 @@ func TestDocument_moveBottomFile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			m.width = tt.fields.width
+			m.height = tt.fields.height
+			m.WrapMode = tt.fields.wrap
 			for !m.BufEOF() {
 			}
 			m.moveBottom()
-			if got := m.topLN; got != tt.want {
-				t.Errorf("Document.moveLine() = %v, want %v", got, tt.want)
+			if got := m.topLX; got != tt.want {
+				t.Errorf("Document.moveLine() LX = %v, want %v", got, tt.want)
+			}
+			if got := m.topLN; got != tt.want1 {
+				t.Errorf("Document.moveLine() LN = %v, want %v", got, tt.want1)
 			}
 		})
 	}
