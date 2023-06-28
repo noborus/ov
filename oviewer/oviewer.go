@@ -157,12 +157,17 @@ type general struct {
 	PlainMode bool
 }
 
+// OVPromptConfigNormal is the normal prompt setting.
 type OVPromptConfigNormal struct {
+	// ShowFilename controls whether to display filename.
 	ShowFilename bool
-	InvertColor  bool
+	// InvertColor controls whether the text is colored and inverted.
+	InvertColor bool
 }
 
+// OVPromptConfig is the prompt setting.
 type OVPromptConfig struct {
+	// Normal is the normal prompt setting.
 	Normal OVPromptConfigNormal
 }
 
@@ -182,9 +187,10 @@ type Config struct {
 	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
 	StyleMultiColorHighlight []OVStyle
 
-	Prompt                   OVPromptConfig
+	// Prompt is the prompt setting.
+	Prompt OVPromptConfig
 
-  // StyleHeader is the style that applies to the header.
+	// StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
 	// StyleBody is the style that applies to the body.
 	StyleBody OVStyle

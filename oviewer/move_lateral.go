@@ -35,6 +35,8 @@ func (m *Document) correctCursor(cursor int) int {
 	return m.correctCursorDelimiter(cursor)
 }
 
+// correctCursorWidth returns the cursor adjusted for the width of the line
+// and the position of the screen.
 func (m *Document) correctCursorWidth(cursor int) int {
 	line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
 	if !valid {
@@ -43,8 +45,8 @@ func (m *Document) correctCursorWidth(cursor int) int {
 	return cursorFromPosition(line, m.columnWidths, cursor, m.x, m.x+m.width)
 }
 
+// correctCursorDelimiter corrects the cursor position when the column delimiter.
 func (m *Document) correctCursorDelimiter(cursor int) int {
-	// delimiter
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
 		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
 		if !valid {
@@ -106,6 +108,7 @@ func (m *Document) correctX(cursor int) (int, error) {
 	return m.correctXDelimiter(cursor)
 }
 
+// correctXWidth returns the best x position of the column at the specified cursor position.
 func (m *Document) correctXWidth(cursor int) (int, error) {
 	if cursor < len(m.columnWidths) {
 		return m.columnWidths[cursor-1], nil
@@ -113,6 +116,7 @@ func (m *Document) correctXWidth(cursor int) (int, error) {
 	return m.columnWidths[len(m.columnWidths)-1], nil
 }
 
+// correctXDelimiter returns the best x position of the column at the specified cursor position.
 func (m *Document) correctXDelimiter(cursor int) (int, error) {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
 		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
