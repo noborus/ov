@@ -137,6 +137,9 @@ func parseString(str string, tabWidth int) contents {
 				}
 				continue
 			case mainc < 0x20: // control character
+				if mainc == '\r' { // CR
+					continue
+				}
 				c.mainc = mainc
 				c.width = 0
 				lc = append(lc, c)

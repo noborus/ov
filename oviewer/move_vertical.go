@@ -11,7 +11,12 @@ const lastLineMargin = 1
 
 // moveLine moves to the specified line.
 func (m *Document) moveLine(lN int) int {
-	lN = min(lN, m.BufEndNum())
+	if m.BufEndNum() == 0 {
+		return 0
+	}
+	if lN > m.BufEndNum() {
+		return m.BufEndNum() - 1
+	}
 	m.topLN = lN
 	m.topLX = 0
 	return lN
@@ -29,7 +34,7 @@ func (m *Document) moveBottom() {
 		m.requestEnd()
 	}
 
-	m.topLX, m.topLN = m.bottomLineNum(m.height-lastLineMargin, m.BufEndNum())
+	m.topLX, m.topLN = m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
 }
 
 // Move to the nth wrapping line of the specified line.
@@ -90,7 +95,7 @@ func (m *Document) limitMoveDown(x int, y int) {
 		return
 	}
 
-	tx, tn := m.bottomLineNum(m.height-lastLineMargin, m.BufEndNum())
+	tx, tn := m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
 	if y < tn || (y == tn && x < tx) {
 		m.topLN = y
 		m.topLX = x
@@ -147,23 +152,23 @@ func (m *Document) moveYUp(moveY int) {
 
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
-func (m *Document) bottomLineNum(height int, lN int) (int, int) {
+func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 	if lN < m.headerLen {
 		return 0, 0
 	}
 	if !m.WrapMode {
-		return 0, lN - (height + m.firstLine())
+		return 0, (lN + 1) - (height + m.firstLine())
 	}
 	// WrapMode
-	lX, lN := m.numUp(0, lN, height)
-	return lX, lN - m.firstLine()
+	listX := m.leftMostX(lN)
+	topLX, topLN := m.numUp(listX[len(listX)-1], lN, height)
+	return topLX, topLN - m.firstLine()
 }
 
 // numUp finds lX, lN when the number of lines is moved up from lX, lN.
 func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 	listX := m.leftMostX(lN)
-	n := numOfSlice(listX, lX)
-
+	n := len(listX)
 	for y := upY; y > 0; y-- {
 		if n <= 0 {
 			lN--
@@ -361,11 +366,11 @@ func (m *Document) leftMostX(lN int) []int {
 	if err != nil {
 		return nil
 	}
-	return leftMostX(m.width, lc)
+	return leftX(m.width, lc)
 }
 
-// leftMostX returns a list of left - most x positions when wrapping.
-func leftMostX(width int, lc contents) []int {
+// leftX returns a list of left - most x positions when wrapping.
+func leftX(width int, lc contents) []int {
 	listX := make([]int, 0, (len(lc)/width)+1)
 	listX = append(listX, 0)
 	for n := width; n < len(lc); n += width {
