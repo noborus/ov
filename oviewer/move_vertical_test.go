@@ -287,7 +287,7 @@ func Test_leftMostX(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := leftMostX(tt.args.width, tt.args.lc); !reflect.DeepEqual(got, tt.want) {
+			if got := leftX(tt.args.width, tt.args.lc); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("leftMostX() = %v, want %v", got, tt.want)
 			}
 		})
@@ -342,7 +342,7 @@ func TestDocument_moveYUp(t *testing.T) {
 			args: args{
 				moveY: 1,
 			},
-			want:  30,
+			want:  140,
 			want1: 1,
 		},
 	}
@@ -365,6 +365,43 @@ func TestDocument_moveYUp(t *testing.T) {
 			}
 			if m.topLN != tt.want1 {
 				t.Errorf("Document.moveYUp() LN = %v, want %v", m.topLN, tt.want1)
+			}
+		})
+	}
+}
+
+func Test_leftX(t *testing.T) {
+	type args struct {
+		width int
+		lc    contents
+	}
+	tests := []struct {
+		name string
+		args args
+		want []int
+	}{
+		{
+			name: "oneLine",
+			args: args{
+				width: 10,
+				lc:    parseString("0123456789", 8),
+			},
+			want: []int{0},
+		},
+		{
+			name: "MixedWidth",
+			args: args{
+				width: 80,
+				lc: parseString(`47382,"90718","9071800","オキナワケン","ヤエヤマグンヨナグニチョウ","イカニケイサイガナイバアイ","沖縄県","八重山郡与那国町","以下に掲載がない場合",0,0,0,0,0,0
+`, 8),
+			},
+			want: []int{0, 79},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := leftX(tt.args.width, tt.args.lc); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("leftX() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"testing"
@@ -323,6 +324,74 @@ func Test_splitDelimiter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := splitByDelimiter(tt.args.str, tt.args.delimiter, tt.args.delimiterReg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("splitDelimiter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDocument_correctCursor(t *testing.T) {
+	type fields struct {
+		fileName        string
+		wrap            bool
+		columnDelimiter string
+		x               int
+		width           int
+	}
+	type args struct {
+		cursor int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "noDelimiter",
+			fields: fields{
+				fileName: filepath.Join(testdata, "normal.txt"),
+				wrap:     true,
+			},
+			args: args{cursor: 10},
+			want: 10,
+		},
+		{
+			name: "CSVRight",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnDelimiter: ",",
+				x:               10,
+				width:           10,
+			},
+			args: args{cursor: 4},
+			want: 2,
+		},
+		{
+			name: "CSVLeft",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnDelimiter: ",",
+				x:               30,
+				width:           10,
+			},
+			args: args{cursor: 0},
+			want: 4,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			m.WrapMode = tt.fields.wrap
+			m.ColumnDelimiter = tt.fields.columnDelimiter
+			m.x = tt.fields.x
+			m.width = tt.fields.width
+			for !m.BufEOF() {
+			}
+			if got := m.correctCursor(tt.args.cursor); got != tt.want {
+				t.Errorf("Document.correctCursor() = %v, want %v", got, tt.want)
 			}
 		})
 	}
