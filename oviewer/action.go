@@ -220,6 +220,14 @@ func (root *Root) searchGoLine(lN int) {
 }
 
 // goLine will move to the specified line.
+// decimal number > line number
+// 10 -> line 10
+// decimal number + "." + decimal number > line number + number of wrapping lines
+// 10.5 -> line 10 + 5 wrapping lines
+// "." + decimal is a percentage position
+// .5 -> 50% of the way down the file
+// decimal + "%" is a percentage position
+// 50% -> 50% of the way down the file
 func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return

@@ -101,7 +101,7 @@ func (root *Root) moveUp(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveUp(n)
+	root.Doc.moveYUp(n)
 }
 
 // Move down by n amount.
@@ -109,7 +109,7 @@ func (root *Root) moveDown(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveDown(n)
+	root.Doc.moveYDown(n)
 }
 
 // nextSection moves down to the next section's delimiter.
