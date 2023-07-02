@@ -6,6 +6,19 @@ import (
 	"testing"
 )
 
+func moveText(t *testing.T) *Document {
+	t.Helper()
+	m, err := OpenDocument(filepath.Join(testdata, "MOCK_DATA.csv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !m.BufEOF() {
+	}
+	m.width = 80
+	m.height = 23
+	return m
+}
+
 func TestDocument_moveLine(t *testing.T) {
 	type args struct {
 		lN int
@@ -342,7 +355,7 @@ func TestDocument_moveYUp(t *testing.T) {
 			args: args{
 				moveY: 1,
 			},
-			want:  140,
+			want:  30,
 			want1: 1,
 		},
 	}
@@ -402,6 +415,233 @@ func Test_leftX(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := leftX(tt.args.width, tt.args.lc); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("leftX() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDocument_movePgUpDown(t *testing.T) {
+	type fields struct {
+		down int
+		up   int
+		wrap bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		wantLX int
+		wantLN int
+	}{
+		{
+			name: "movePgUp",
+			fields: fields{
+				down: 2,
+				up:   1,
+				wrap: false,
+			},
+			wantLX: 0,
+			wantLN: 23,
+		},
+		{
+			name: "moveWrapPgUpDown",
+			fields: fields{
+				down: 2,
+				up:   1,
+				wrap: true,
+			},
+			wantLX: 0,
+			wantLN: 13,
+		},
+		{
+			name: "moveWrapPgUpDown2",
+			fields: fields{
+				down: 2,
+				up:   3,
+				wrap: true,
+			},
+			wantLX: 0,
+			wantLN: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveText(t)
+			m.WrapMode = tt.fields.wrap
+			for i := 0; i < tt.fields.down; i++ {
+				m.movePgDn()
+			}
+			for i := 0; i < tt.fields.up; i++ {
+				m.movePgUp()
+			}
+			if m.topLX != tt.wantLX {
+				t.Errorf("Document.movePgUpDown() LX = %v, wantLX %v", m.topLX, tt.wantLX)
+			}
+			if m.topLN != tt.wantLN {
+				t.Errorf("Document.movePgUpDown() LN = %v, wantLN %v", m.topLN, tt.wantLN)
+			}
+		})
+	}
+}
+
+func TestDocument_moveHfUpDown(t *testing.T) {
+	type fields struct {
+		down int
+		up   int
+		wrap bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		wantLX int
+		wantLN int
+	}{
+		{
+			name: "moveHfUpDown",
+			fields: fields{
+				down: 2,
+				up:   1,
+				wrap: false,
+			},
+			wantLX: 0,
+			wantLN: 11,
+		},
+		{
+			name: "moveWrapHfUpDown",
+			fields: fields{
+				down: 2,
+				up:   1,
+				wrap: true,
+			},
+			wantLX: 0,
+			wantLN: 6,
+		},
+		{
+			name: "moveHfUpDown2",
+			fields: fields{
+				down: 1,
+				up:   3,
+				wrap: false,
+			},
+			wantLX: 0,
+			wantLN: 0,
+		},
+		{
+			name: "moveWrapHfUpDown2",
+			fields: fields{
+				down: 2,
+				up:   3,
+				wrap: true,
+			},
+			wantLX: 0,
+			wantLN: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveText(t)
+			m.WrapMode = tt.fields.wrap
+			for i := 0; i < tt.fields.down; i++ {
+				m.moveHfDn()
+			}
+			for i := 0; i < tt.fields.up; i++ {
+				m.moveHfUp()
+			}
+			if m.topLX != tt.wantLX {
+				t.Errorf("Document.moveHfUpDown() LX = %v, wantLX %v", m.topLX, tt.wantLX)
+			}
+			if m.topLN != tt.wantLN {
+				t.Errorf("Document.moveHfUpDown() LN = %v, wantLN %v", m.topLN, tt.wantLN)
+			}
+		})
+	}
+}
+
+func TestDocument_limitMoveDown(t *testing.T) {
+	type fields struct {
+		wrap bool
+	}
+	type args struct {
+		lX int
+		lN int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		wantLX int
+		wantLN int
+	}{
+		{
+			name: "NormalNoWrap",
+			fields: fields{
+				wrap: false,
+			},
+			args: args{
+				lX: 0,
+				lN: 10,
+			},
+			wantLX: 0,
+			wantLN: 10,
+		},
+		{
+			name: "NormalWrap",
+			fields: fields{
+				wrap: true,
+			},
+			args: args{
+				lX: 0,
+				lN: 10,
+			},
+			wantLX: 0,
+			wantLN: 10,
+		},
+		{
+			name: "overNoWrap",
+			fields: fields{
+				wrap: false,
+			},
+			args: args{
+				lX: 0,
+				lN: 2000,
+			},
+			wantLX: 0,
+			wantLN: 979,
+		},
+		{
+			name: "boundary",
+			fields: fields{
+				wrap: true,
+			},
+			args: args{
+				lX: 0,
+				lN: 988,
+			},
+			wantLX: 0,
+			wantLN: 988,
+		},
+		{
+			name: "overWrap",
+			fields: fields{
+				wrap: true,
+			},
+			args: args{
+				lX: 0,
+				lN: 2000,
+			},
+			wantLX: 80,
+			wantLN: 988,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveText(t)
+			m.WrapMode = tt.fields.wrap
+			m.limitMoveDown(tt.args.lX, tt.args.lN)
+			if m.topLX != tt.wantLX {
+				t.Errorf("Document.limitMoveDown() LX = %v, wantLX %v", m.topLX, tt.wantLX)
+			}
+			if m.topLN != tt.wantLN {
+				t.Errorf("Document.limitMoveDown() LN = %v, wantLN %v", m.topLN, tt.wantLN)
 			}
 		})
 	}

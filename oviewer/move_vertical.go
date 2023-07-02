@@ -14,8 +14,9 @@ func (m *Document) moveLine(lN int) int {
 	if m.BufEndNum() == 0 {
 		return 0
 	}
-	if lN > m.BufEndNum() {
-		return m.BufEndNum() - 1
+
+	if endLN := m.BufEndNum() - 1; lN > endLN {
+		lN = endLN
 	}
 	m.topLN = lN
 	m.topLX = 0
@@ -62,24 +63,16 @@ func (m *Document) moveLineNth(lN int, nTh int) (int, int) {
 // movePgUp moves up one screen.
 func (m *Document) movePgUp() {
 	m.moveYUp(m.height)
-	if m.topLN < m.BufStartNum() {
-		m.moveTop()
-	}
 }
 
 // movePgDn moves down one screen.
 func (m *Document) movePgDn() {
-	y := m.bottomLN - m.firstLine()
-	x := m.bottomLX
-	m.limitMoveDown(x, y)
+	m.moveYDown(m.height)
 }
 
 // moveHfUp moves up half a screen.
 func (m *Document) moveHfUp() {
 	m.moveYUp(m.height / 2)
-	if m.topLN < m.BufStartNum() {
-		m.moveTop()
-	}
 }
 
 // moveHfDn moves down half a screen.
@@ -88,23 +81,23 @@ func (m *Document) moveHfDn() {
 }
 
 // limitMoveDown limits the movement of the cursor when moving down.
-func (m *Document) limitMoveDown(x int, y int) {
-	if y+m.height < m.BufEndNum()-m.SkipLines {
-		m.topLN = y
-		m.topLX = x
+func (m *Document) limitMoveDown(lX int, lN int) {
+	if lN+m.height < m.BufEndNum()-m.SkipLines {
+		m.topLX = lX
+		m.topLN = lN
 		return
 	}
 
-	tx, tn := m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
-	if y < tn || (y == tn && x < tx) {
-		m.topLN = y
-		m.topLX = x
+	tX, tN := m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
+	if lN < tN || (lN == tN && lX < tX) {
+		m.topLX = lX
+		m.topLN = lN
 		return
 	}
-
-	if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
-		m.topLN = tn
-		m.topLX = tx
+	// move to bottom
+	if m.topLN < tN || (m.topLN == tN && m.topLX < tX) {
+		m.topLX = tX
+		m.topLN = tN
 	}
 }
 
@@ -114,13 +107,8 @@ func (m *Document) numOfWrap(lX int, lY int) int {
 	if len(listX) == 0 {
 		return 0
 	}
-	return numOfSlice(listX, lX)
-}
-
-// numOfSlice returns what number x is in slice.
-func numOfSlice(listX []int, x int) int {
 	for n, v := range listX {
-		if v >= x {
+		if v >= lX {
 			return n
 		}
 	}
@@ -137,19 +125,6 @@ func numOfReverseSlice(listX []int, x int) int {
 	return 0
 }
 
-// MoveYUp moves up by the specified number of y.
-func (m *Document) moveYUp(moveY int) {
-	if !m.WrapMode {
-		m.topLN -= moveY
-		return
-	}
-
-	// WrapMode
-	LX, lN := m.numUp(m.topLX, m.topLN+m.firstLine(), moveY)
-	m.topLX = LX
-	m.topLN = lN - m.firstLine()
-}
-
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (m *Document) bottomLineNum(lN int, height int) (int, int) {
@@ -159,16 +134,17 @@ func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 	if !m.WrapMode {
 		return 0, (lN + 1) - (height + m.firstLine())
 	}
+
 	// WrapMode
 	listX := m.leftMostX(lN)
-	topLX, topLN := m.numUp(listX[len(listX)-1], lN, height)
+	topLX, topLN := m.numUp(listX[len(listX)-1], lN, height-1)
 	return topLX, topLN - m.firstLine()
 }
 
 // numUp finds lX, lN when the number of lines is moved up from lX, lN.
 func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 	listX := m.leftMostX(lN)
-	n := len(listX)
+	n := numOfReverseSlice(listX, lX)
 	for y := upY; y > 0; y-- {
 		if n <= 0 {
 			lN--
@@ -185,7 +161,7 @@ func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 	return lX, lN
 }
 
-// MoveYDown moves down by the specified number of y.
+// moveYDown moves down by the specified number of y.
 func (m *Document) moveYDown(moveY int) {
 	lN := m.topLN + m.firstLine()
 	if !m.WrapMode {
@@ -194,11 +170,10 @@ func (m *Document) moveYDown(moveY int) {
 	}
 
 	// WrapMode
-	x := m.topLX
+	lX := m.topLX
 	listX := m.leftMostX(lN)
-	n := numOfReverseSlice(listX, x)
-
-	for y := 0; y < moveY; y++ {
+	n := numOfReverseSlice(listX, lX)
+	for y := 0; y <= moveY; y++ {
 		if n >= len(listX) {
 			lN++
 			if lN > m.BufEndNum() {
@@ -207,78 +182,55 @@ func (m *Document) moveYDown(moveY int) {
 			listX = m.leftMostX(lN)
 			n = 0
 		}
-		x = 0
+		lX = 0
 		if len(listX) > 0 && n < len(listX) {
-			x = listX[n]
+			lX = listX[n]
 		}
 		n++
 	}
-
-	m.limitMoveDown(x, lN-m.Header)
+	m.limitMoveDown(lX, lN-m.firstLine())
 }
 
-// moveUp moves up by the specified number of lines.
-func (m *Document) moveUp(n int) {
-	if (m.topLN < m.BufStartNum()) || ((m.topLN == m.BufStartNum()) && (m.topLX == 0)) {
-		return
-	}
-
+// moveYUp moves up by the specified number of y.
+func (m *Document) moveYUp(moveY int) {
 	if !m.WrapMode {
-		m.topLN -= n
-		m.topLX = 0
-		return
-	}
-
-	// WrapMode.
-	// Same line.
-	if m.topLX > 0 {
-		listX := m.leftMostX(m.topLN + m.firstLine())
-		for n, x := range listX {
-			if x >= m.topLX {
-				m.topLX = listX[n-1]
-				return
-			}
+		m.topLN -= moveY
+		if m.topLN < m.BufStartNum() {
+			m.moveTop()
 		}
-	}
-
-	// Previous line.
-	m.topLN -= n
-	start := m.BufStartNum()
-	if m.topLN < start {
-		m.topLN = start
-		m.topLX = 0
-		return
-	}
-	listX := m.leftMostX(m.topLN + m.firstLine())
-	if len(listX) > 0 {
-		m.topLX = listX[len(listX)-1]
-		return
-	}
-	m.topLX = 0
-}
-
-// moveDown	moves down by the specified number of lines.
-func (m *Document) moveDown(n int) {
-	lN := m.topLN
-	if !m.WrapMode {
-		lN += n
-		m.limitMoveDown(0, lN)
 		return
 	}
 
 	// WrapMode
-	listX := m.leftMostX(m.topLN + m.firstLine())
-	for _, x := range listX {
-		if x > m.topLX {
-			m.limitMoveDown(x, lN)
-			return
-		}
+	lX, lN := m.numUp(m.topLX, m.topLN+m.firstLine(), moveY)
+	m.topLX = lX
+	m.topLN = lN - m.firstLine()
+	if m.topLN < m.BufStartNum() {
+		m.moveTop()
 	}
+}
 
-	// Next line.
-	lN += n
-	m.topLX = 0
-	m.limitMoveDown(m.topLX, lN)
+// leftMostX returns a list of left - most x positions when wrapping.
+// Returns nil if there is no line number.
+func (m *Document) leftMostX(lN int) []int {
+	lc, err := m.contents(lN, m.TabWidth)
+	if err != nil {
+		return nil
+	}
+	return leftX(m.width, lc)
+}
+
+// leftX returns a list of left - most x positions when wrapping.
+func leftX(width int, lc contents) []int {
+	listX := make([]int, 0, (len(lc)/width)+1)
+	listX = append(listX, 0)
+	for n := width; n < len(lc); n += width {
+		if lc[n-1].width == 2 {
+			n--
+		}
+		listX = append(listX, n)
+	}
+	return listX
 }
 
 // moveNextSection moves to the next section.
@@ -357,27 +309,4 @@ func (m *Document) moveLastSection() {
 	}
 	n = (n - m.firstLine()) + m.SectionStartPosition
 	m.moveLine(n)
-}
-
-// leftMostX returns a list of left - most x positions when wrapping.
-// Returns nil if there is no line number.
-func (m *Document) leftMostX(lN int) []int {
-	lc, err := m.contents(lN, m.TabWidth)
-	if err != nil {
-		return nil
-	}
-	return leftX(m.width, lc)
-}
-
-// leftX returns a list of left - most x positions when wrapping.
-func leftX(width int, lc contents) []int {
-	listX := make([]int, 0, (len(lc)/width)+1)
-	listX = append(listX, 0)
-	for n := width; n < len(lc); n += width {
-		if lc[n-1].width == 2 {
-			n--
-		}
-		listX = append(listX, n)
-	}
-	return listX
 }
