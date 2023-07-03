@@ -131,7 +131,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		if !m.store.isContinueRead(m.memoryLimit) {
 			return reader, nil
 		}
-		if m.seekable && (m.FollowMode || m.FollowAll) {
+		if m.seekable && atomic.LoadInt32(&m.tmpFollow) == 0 && (m.FollowMode || m.FollowAll) {
 			go func() {
 				m.requestEnd()
 			}()
