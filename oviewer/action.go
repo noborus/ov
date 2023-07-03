@@ -188,7 +188,7 @@ func (root *Root) searchGoSection(lN int) {
 	if err != nil {
 		pN = 0
 	}
-	m.topLN = pN
+	m.topLN = pN - root.Doc.firstLine()
 	m.topLX = 0
 	y := 0
 
