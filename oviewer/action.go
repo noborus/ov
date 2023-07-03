@@ -80,9 +80,6 @@ func (root *Root) toggleRainbow() {
 // toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode() {
 	root.Doc.FollowMode = !root.Doc.FollowMode
-	if root.Doc.FollowMode {
-		root.Doc.ctlCh <- controlSpecifier{request: requestFollow}
-	}
 }
 
 // toggleFollowAll toggles follow all mode.
@@ -93,9 +90,6 @@ func (root *Root) toggleFollowAll() {
 		doc.latestNum = doc.BufEndNum()
 	}
 	root.mu.Unlock()
-	if root.Doc.FollowAll {
-		root.Doc.ctlCh <- controlSpecifier{request: requestFollow}
-	}
 }
 
 // toggleFollowSection toggles follow section mode.
