@@ -201,8 +201,9 @@ func (root *Root) searchGoSection(lN int) {
 		m.JumpTarget = y
 		return
 	}
+
 	m.JumpTarget = m.statusPos - 1
-	m.moveYDown(y - m.JumpTarget + 1)
+	m.moveYDown(y - m.JumpTarget)
 }
 
 // searchGoLine moves to the specified line after searching.
