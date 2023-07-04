@@ -170,48 +170,15 @@ func (root *Root) watchControl() {
 	}()
 }
 
-// searchGoto will go to the line with the matching term after searching.
+// searchGo will go to the line with the matching term after searching.
 // Jump by section if JumpTargetSection is true.
-func (root *Root) searchGoto(lN int) {
+func (root *Root) searchGo(lN int) {
 	if root.Doc.JumpTargetSection {
-		root.searchGoSection(lN)
+		root.Doc.searchGoSection(lN)
 		return
 	}
-	root.searchGoLine(lN)
-}
-
-// searchGoSection will go to the section with the matching term after searching.
-// Move the JumpTarget so that it can be seen from the beginning of the section.
-func (root *Root) searchGoSection(lN int) {
-	m := root.Doc
-	pN, err := m.prevSection(lN)
-	if err != nil {
-		pN = 0
-	}
-	m.topLN = pN - root.Doc.firstLine()
-	m.topLX = 0
-	y := 0
-
-	for n := pN; n < lN; n++ {
-		listX := m.leftMostX(n)
-		y += len(listX)
-	}
-
-	if m.statusPos > y {
-		m.JumpTarget = y
-		return
-	}
-
-	m.JumpTarget = m.statusPos - 1
-	m.moveYDown(y - m.JumpTarget)
-}
-
-// searchGoLine moves to the specified line after searching.
-// Go to the specified line +root.Doc.JumpTarget Go to.
-func (root *Root) searchGoLine(lN int) {
-	root.Doc.topLN = lN - root.Doc.firstLine()
-	root.Doc.topLX = 0
-	root.Doc.moveYUp(root.Doc.JumpTarget)
+	x := root.searchXPos(lN)
+	root.Doc.searchGoTo(lN, x)
 }
 
 // goLine will move to the specified line.

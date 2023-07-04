@@ -229,6 +229,16 @@ func (root *Root) searchPosition(lN int, str string) [][]int {
 	return root.searcher.FindAll(str)
 }
 
+// searchXPos returns the x position of the first match.
+func (root *Root) searchXPos(lN int) int {
+	line, _ := root.Doc.getLineC(lN, root.Doc.TabWidth)
+	indexes := root.searchPosition(lN, line.str)
+	if len(indexes) == 0 {
+		return 0
+	}
+	return line.pos.x(indexes[0][0])
+}
+
 // searchPositionReg returns an array of the beginning and end of the string
 // that matched the regular expression search.
 func searchPositionReg(s string, re *regexp.Regexp) [][]int {

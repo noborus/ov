@@ -232,3 +232,43 @@ func (root *Root) moveColumnRight(n int) {
 		root.debugMessage(err.Error())
 	}
 }
+
+// searchGoTo moves to the specified line and position after searching.
+// Go to the specified line +root.Doc.JumpTarget Go to.
+// If the search term is off screen, move until the search term is visible.
+func (m *Document) searchGoTo(lN int, x int) {
+	if x < m.x || x > m.x+m.width-1 {
+		m.x = x
+	}
+	if nTh := x / m.width; nTh > m.height {
+		m.topLX = nTh * m.width
+	}
+
+	m.topLN = lN - m.firstLine()
+	m.moveYUp(m.JumpTarget)
+}
+
+// searchGoSection will go to the section with the matching term after searching.
+// Move the JumpTarget so that it can be seen from the beginning of the section.
+func (m *Document) searchGoSection(lN int) {
+	pN, err := m.prevSection(lN)
+	if err != nil {
+		pN = 0
+	}
+	m.topLN = pN - m.firstLine()
+	m.topLX = 0
+	y := 0
+
+	for n := pN; n < lN; n++ {
+		listX := m.leftMostX(n)
+		y += len(listX)
+	}
+
+	if m.statusPos > y {
+		m.JumpTarget = y
+		return
+	}
+
+	m.JumpTarget = m.statusPos - 1
+	m.moveYDown(y - m.JumpTarget)
+}
