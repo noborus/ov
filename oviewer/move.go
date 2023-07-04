@@ -101,7 +101,7 @@ func (root *Root) moveUp(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveYUp(n)
+	root.Doc.moveLimitYUp(n)
 }
 
 // Move down by n amount.

@@ -372,7 +372,7 @@ func TestDocument_moveYUp(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.topLN = tt.fields.lN
 			m.topLX = tt.fields.lX
-			m.moveYUp(tt.args.moveY)
+			m.moveLimitYUp(tt.args.moveY)
 			if m.topLX != tt.want {
 				t.Errorf("Document.moveYUp() LX = %v, want %v", m.topLX, tt.want)
 			}
