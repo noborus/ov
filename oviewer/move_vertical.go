@@ -163,13 +163,13 @@ func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 
 // moveYDown moves down by the specified number of y.
 func (m *Document) moveYDown(moveY int) {
-	lN := m.topLN + m.firstLine()
 	if !m.WrapMode {
-		m.limitMoveDown(0, lN+moveY)
+		m.limitMoveDown(0, m.topLN+moveY)
 		return
 	}
 
 	// WrapMode
+	lN := m.topLN + m.firstLine()
 	lX := m.topLX
 	listX := m.leftMostX(lN)
 	n := numOfReverseSlice(listX, lX)

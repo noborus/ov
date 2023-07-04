@@ -251,17 +251,27 @@ func (m *Document) searchGoTo(lN int, x int) {
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
 func (m *Document) searchGoSection(lN int) {
-	pN, err := m.prevSection(lN)
+	sN, err := m.prevSection(lN)
 	if err != nil {
-		pN = 0
+		sN = 0
 	}
-	m.topLN = pN - m.firstLine()
-	m.topLX = 0
 	y := 0
+	m.topLX = 0
+	if sN < m.firstLine() {
+		// topLN is negative if the section is less than header + skip.
+		m.topLN = sN - m.firstLine()
+	} else {
+		m.topLN = sN
+		sN += m.firstLine()
+	}
 
-	for n := pN; n < lN; n++ {
-		listX := m.leftMostX(n)
-		y += len(listX)
+	if !m.WrapMode {
+		y = lN - sN
+	} else {
+		for n := sN; n < lN; n++ {
+			listX := m.leftMostX(n)
+			y += len(listX)
+		}
 	}
 
 	if m.statusPos > y+m.headerLen {
@@ -270,5 +280,5 @@ func (m *Document) searchGoSection(lN int) {
 	}
 
 	m.JumpTarget = m.statusPos - (m.headerLen + 1)
-	m.moveYDown(y + m.headerLen - m.JumpTarget)
+	m.moveYDown(y - m.JumpTarget)
 }
