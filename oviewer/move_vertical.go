@@ -62,7 +62,7 @@ func (m *Document) moveLineNth(lN int, nTh int) (int, int) {
 
 // movePgUp moves up one screen.
 func (m *Document) movePgUp() {
-	m.moveYUp(m.height)
+	m.moveLimitYUp(m.height)
 }
 
 // movePgDn moves down one screen.
@@ -72,7 +72,7 @@ func (m *Document) movePgDn() {
 
 // moveHfUp moves up half a screen.
 func (m *Document) moveHfUp() {
-	m.moveYUp(m.height / 2)
+	m.moveLimitYUp(m.height / 2)
 }
 
 // moveHfDn moves down half a screen.
@@ -191,13 +191,19 @@ func (m *Document) moveYDown(moveY int) {
 	m.limitMoveDown(lX, lN-m.firstLine())
 }
 
+// moveLimitYUp moves up by the specified number of y.
+// The movement is limited to the top of the document.
+func (m *Document) moveLimitYUp(moveY int) {
+	m.moveYUp(moveY)
+	if m.topLN < m.BufStartNum() {
+		m.moveTop()
+	}
+}
+
 // moveYUp moves up by the specified number of y.
 func (m *Document) moveYUp(moveY int) {
 	if !m.WrapMode {
 		m.topLN -= moveY
-		if m.topLN < m.BufStartNum() {
-			m.moveTop()
-		}
 		return
 	}
 
@@ -205,9 +211,6 @@ func (m *Document) moveYUp(moveY int) {
 	lX, lN := m.numUp(m.topLX, m.topLN+m.firstLine(), moveY)
 	m.topLX = lX
 	m.topLN = lN - m.firstLine()
-	if m.topLN < m.BufStartNum() {
-		m.moveTop()
-	}
 }
 
 // leftMostX returns a list of left - most x positions when wrapping.
