@@ -264,11 +264,11 @@ func (m *Document) searchGoSection(lN int) {
 		y += len(listX)
 	}
 
-	if m.statusPos > y {
+	if m.statusPos > y+m.headerLen {
 		m.JumpTarget = y
 		return
 	}
 
-	m.JumpTarget = m.statusPos - 1
-	m.moveYDown(y - m.JumpTarget)
+	m.JumpTarget = m.statusPos - (m.headerLen + 1)
+	m.moveYDown(y + m.headerLen - m.JumpTarget)
 }
