@@ -1,0 +1,16 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0 168720 13788 ?        Ss   Mar11   0:50 /sbin/init splash
+root           2  0.0  0.0      0     0 ?        S    Mar11   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        I<   Mar11   0:00 [rcu_gp]
+root           4  0.0  0.0      0     0 ?        I<   Mar11   0:00 [rcu_par_gp]
+root           5  0.0  0.0      0     0 ?        I<   Mar11   0:00 [slub_flushwq]
+root           6  0.0  0.0      0     0 ?        I<   Mar11   0:00 [netns]
+root           8  0.0  0.0      0     0 ?        I<   Mar11   0:00 [kworker/0:0H-events_highpri]
+root          10  0.0  0.0      0     0 ?        I<   Mar11   0:00 [mm_percpu_wq]
+root          11  0.0  0.0      0     0 ?        I    Mar11   0:00 [rcu_tasks_kthread]
+noborus     3416  8.3  1.5 6081012 499072 ?      Ssl  Mar11 490:50 /usr/bin/gnome-shell
+noborus     3476  0.0  0.0 582688 17388 ?        Sl   Mar11   0:00 /usr/libexec/gnome-shell-calendar-server
+noborus     3533  0.0  0.0 2875268 28260 ?       Sl   Mar11   0:00 /usr/bin/gjs /usr/share/gnome-shell/org.gnome.Shell.Notifications
+noborus     3816  0.0  0.0 2932604 28164 ?       Sl   Mar11   0:00 /usr/bin/gjs /usr/share/gnome-shell/org.gnome.ScreenSaver
+noborus   660384  0.0  0.3 3505316 115544 ?      Sl   07:43   0:09 gjs /usr/share/gnome-shell/extensions/ding@rastersoft.com/ding.js -E -P /usr/share/gnome-shell/extensions/ding@rastersoft.com -M 1 -D 1920:0:1920:1080:1:0:0:0:0:0 -D 0:0:1920:1200:2:27:0:0:0:1
+noborus   735125  0.0  0.0  10268  2420 pts/3    S+   11:24   0:00 grep --color gnome-shell
