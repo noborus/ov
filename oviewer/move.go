@@ -221,14 +221,14 @@ func (root *Root) moveNormalRight(n int) {
 
 // moveColumnLeft moves the cursor to the left by n amount.
 func (root *Root) moveColumnLeft(n int) {
-	if err := root.Doc.moveColumnLeft(n, root.scr, root.Config.DisableColumnCycle); err != nil {
+	if err := root.Doc.moveColumnLeft(n, root.scr, !root.Config.DisableColumnCycle); err != nil {
 		root.debugMessage(err.Error())
 	}
 }
 
 // moveColumnRight moves the cursor to the right by n amount.
 func (root *Root) moveColumnRight(n int) {
-	if err := root.Doc.moveColumnRight(n, root.scr, root.Config.DisableColumnCycle); err != nil {
+	if err := root.Doc.moveColumnRight(n, root.scr, !root.Config.DisableColumnCycle); err != nil {
 		root.debugMessage(err.Error())
 	}
 }
@@ -237,12 +237,7 @@ func (root *Root) moveColumnRight(n int) {
 // Go to the specified line +root.Doc.JumpTarget Go to.
 // If the search term is off screen, move until the search term is visible.
 func (m *Document) searchGoTo(lN int, x int) {
-	if x < m.x || x > m.x+m.width-1 {
-		m.x = x
-	}
-	if nTh := x / m.width; nTh > m.height {
-		m.topLX = nTh * m.width
-	}
+	m.searchGoX(x)
 
 	m.topLN = lN - m.firstLine()
 	m.moveYUp(m.JumpTarget)
@@ -250,13 +245,14 @@ func (m *Document) searchGoTo(lN int, x int) {
 
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
-func (m *Document) searchGoSection(lN int) {
+func (m *Document) searchGoSection(lN int, x int) {
+	m.searchGoX(x)
+
 	sN, err := m.prevSection(lN)
 	if err != nil {
 		sN = 0
 	}
 	y := 0
-	m.topLX = 0
 	if sN < m.firstLine() {
 		// topLN is negative if the section is less than header + skip.
 		m.topLN = sN - m.firstLine()
@@ -281,4 +277,18 @@ func (m *Document) searchGoSection(lN int) {
 
 	m.JumpTarget = m.statusPos - (m.headerLen + 1)
 	m.moveYDown(y - m.JumpTarget)
+}
+
+// searchGoX moves to the specified x position.
+func (m *Document) searchGoX(x int) {
+	m.topLX = 0
+	// If the search term is outside the height of the screen when in WrapMode.
+	if nTh := x / m.width; nTh > m.height {
+		m.topLX = nTh * m.width
+	}
+
+	// If the search term is outside the width of the screen when in NoWrapMode.
+	if x < m.x || x > m.x+m.width-1 {
+		m.x = x
+	}
 }

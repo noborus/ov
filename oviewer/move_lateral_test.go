@@ -396,3 +396,301 @@ func TestDocument_correctCursor(t *testing.T) {
 		})
 	}
 }
+
+func moveColumnWidth(t *testing.T) *Document {
+	t.Helper()
+	m, err := OpenDocument(filepath.Join(testdata, "ps.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !m.BufEOF() {
+	}
+	m.ColumnWidth = true
+	m.width = 80
+	m.height = 23
+	return m
+}
+
+func TestDocument_moveColumnWithLeft(t *testing.T) {
+	type fields struct {
+		cursor int
+	}
+	type args struct {
+		n     int
+		cycle bool
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantCursor int
+	}{
+		{
+			name: "ps1",
+			fields: fields{
+				cursor: 1,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 0,
+		},
+		{
+			name: "ps2",
+			fields: fields{
+				cursor: 4,
+			},
+			args: args{
+				n:     2,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 2,
+		},
+		{
+			name: "psCycle",
+			fields: fields{
+				cursor: 0,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 10,
+		},
+		{
+			name: "psNoCycle",
+			fields: fields{
+				cursor: 0,
+			},
+			args: args{
+				n:     1,
+				cycle: false,
+			},
+			wantErr:    true,
+			wantCursor: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveColumnWidth(t)
+			m.columnCursor = tt.fields.cursor
+			numbers := make([]LineNumber, m.height)
+			for i := 0; i < m.height; i++ {
+				numbers[i] = LineNumber{
+					number: i,
+					wrap:   1,
+				}
+			}
+			scr := SCR{
+				numbers: numbers,
+			}
+			m.setColumnWidths()
+			if err := m.moveColumnLeft(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
+				t.Errorf("Document.moveColumnWidthLeft() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got := m.columnCursor; got != tt.wantCursor {
+				t.Errorf("Document.moveColumnWidthLeft() = %v, want %v", got, tt.wantCursor)
+			}
+		})
+	}
+}
+
+func TestDocument_moveColumnWidthRight(t *testing.T) {
+	type fields struct {
+		cursor int
+		x      int
+	}
+	type args struct {
+		n     int
+		cycle bool
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantCursor int
+	}{
+		{
+			name: "ps1",
+			fields: fields{
+				cursor: 1,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 2,
+		},
+		{
+			name: "ps2",
+			fields: fields{
+				cursor: 4,
+			},
+			args: args{
+				n:     2,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 6,
+		},
+		{
+			name: "psCycle",
+			fields: fields{
+				cursor: 10,
+				x:      180,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 0,
+		},
+		{
+			name: "psNoCycle",
+			fields: fields{
+				cursor: 10,
+				x:      180,
+			},
+			args: args{
+				n:     1,
+				cycle: false,
+			},
+			wantErr:    false,
+			wantCursor: 10,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveColumnWidth(t)
+			m.columnCursor = tt.fields.cursor
+			numbers := make([]LineNumber, m.height)
+			for i := 0; i < m.height; i++ {
+				numbers[i] = LineNumber{
+					number: i,
+					wrap:   1,
+				}
+			}
+			scr := SCR{
+				numbers: numbers,
+			}
+			m.setColumnWidths()
+			m.x = tt.fields.x
+			if err := m.moveColumnRight(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
+				t.Errorf("Document.moveColumnWidthRight() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got := m.columnCursor; got != tt.wantCursor {
+				t.Errorf("Document.moveColumnWidthRight() = %v, want %v", got, tt.wantCursor)
+			}
+		})
+	}
+}
+
+func moveColumnDelimiter(t *testing.T) *Document {
+	t.Helper()
+	m, err := OpenDocument(filepath.Join(testdata, "MOCK_DATA.csv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !m.BufEOF() {
+	}
+	m.width = 80
+	m.height = 23
+	m.setDelimiter(",")
+	return m
+}
+
+func TestDocument_moveColumnDelimiterLeft(t *testing.T) {
+	type fields struct {
+		cursor int
+	}
+	type args struct {
+		n     int
+		cycle bool
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantCursor int
+	}{
+		{
+			name: "csv1",
+			fields: fields{
+				cursor: 1,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 0,
+		},
+		{
+			name: "csv2",
+			fields: fields{
+				cursor: 4,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 3,
+		},
+		{
+			name: "csvCycle",
+			fields: fields{
+				cursor: 0,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr:    false,
+			wantCursor: 7,
+		},
+		{
+			name: "csvNoCycle",
+			fields: fields{
+				cursor: 0,
+			},
+			args: args{
+				n:     1,
+				cycle: false,
+			},
+			wantErr:    false,
+			wantCursor: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := moveColumnDelimiter(t)
+			m.columnCursor = tt.fields.cursor
+			numbers := make([]LineNumber, m.height)
+			for i := 0; i < m.height; i++ {
+				numbers[i] = LineNumber{
+					number: i,
+					wrap:   1,
+				}
+			}
+			scr := SCR{
+				numbers: numbers,
+			}
+			if err := m.moveColumnLeft(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
+				t.Errorf("Document.moveColumnDelimiterLeft() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got := m.columnCursor; got != tt.wantCursor {
+				t.Errorf("Document.moveColumnDelimiterLeft() = %v, want %v", got, tt.wantCursor)
+			}
+		})
+	}
+}

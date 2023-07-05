@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"errors"
-	"log"
 	"regexp"
 )
 
@@ -245,7 +244,6 @@ func screenAdjustX(left int, right int, cl int, cr int, widths []int, cursor int
 			return left - width, cursor, nil
 		}
 
-		log.Println("????")
 		return left - width, cursor + 1, nil
 	}
 
@@ -289,12 +287,12 @@ func splitByDelimiter(str string, delimiter string, delimiterReg *regexp.Regexp)
 
 // moveHfLeft moves to the left half screen.
 func (m *Document) moveHfLeft() {
-	moveSize := (m.width / 2)
-	if m.x > 0 && (m.x-moveSize) < 0 {
+	hfSize := (m.width / 2)
+	if m.x > 0 && (m.x-hfSize) < 0 {
 		m.x = 0
 		return
 	}
-	m.x -= moveSize
+	m.x -= hfSize
 }
 
 // moveHfRight moves to the right half screen.
@@ -319,7 +317,7 @@ func (m *Document) moveNormalRight(n int) {
 // moveColumnLeft moves to the left column.
 func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	if m.columnCursor <= 0 && m.x <= 2 {
-		if !cycle {
+		if cycle {
 			cursor := m.rightEndColumn()
 			m.x = max(0, m.endRight(scr)+columnMargin)
 			m.columnCursor = cursor
@@ -327,29 +325,22 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 		}
 	}
 
-	x, cursor, err := m.columnX(scr, -1)
-	if err != nil {
-		m.x = x
-		return err
-	}
-	m.x = x
-	m.columnCursor = cursor
-	return nil
+	var err error
+	m.x, m.columnCursor, err = m.columnX(scr, -n)
+	return err
 }
 
 // moveColumnRight moves to the right column.
 func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
-	x, cursor, err := m.columnX(scr, 1)
+	x, cursor, err := m.columnX(scr, n)
 	if err != nil {
 		if errors.Is(err, ErrOverScreen) {
-			if !cycle {
+			if cycle {
 				m.x = 0
 				m.columnCursor = 0
 				return nil
 			}
 		}
-		m.x = x
-		return err
 	}
 	m.x = x
 	m.columnCursor = cursor

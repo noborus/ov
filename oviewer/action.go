@@ -173,11 +173,11 @@ func (root *Root) watchControl() {
 // searchGo will go to the line with the matching term after searching.
 // Jump by section if JumpTargetSection is true.
 func (root *Root) searchGo(lN int) {
+	x := root.searchXPos(lN)
 	if root.Doc.JumpTargetSection {
-		root.Doc.searchGoSection(lN)
+		root.Doc.searchGoSection(lN, x)
 		return
 	}
-	x := root.searchXPos(lN)
 	root.Doc.searchGoTo(lN, x)
 }
 
