@@ -329,7 +329,7 @@ func Test_splitDelimiter(t *testing.T) {
 	}
 }
 
-func TestDocument_correctCursor(t *testing.T) {
+func TestDocument_optimalCursor(t *testing.T) {
 	type fields struct {
 		fileName        string
 		wrap            bool
@@ -390,7 +390,7 @@ func TestDocument_correctCursor(t *testing.T) {
 			m.width = tt.fields.width
 			for !m.BufEOF() {
 			}
-			if got := m.correctCursor(tt.args.cursor); got != tt.want {
+			if got := m.optimalCursor(tt.args.cursor); got != tt.want {
 				t.Errorf("Document.correctCursor() = %v, want %v", got, tt.want)
 			}
 		})
