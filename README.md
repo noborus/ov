@@ -9,7 +9,7 @@ ov is a terminal pager.
 * `ov` can be used instead of `less`, `more`, `tail -f/-F` and `watch`.
 * `ov` also has an effective function for tabular text.
 
-![ov1.png](https://raw.githubusercontent.com/noborus/ov/master/docs/ov1.png)
+![ov-image.png](./docs/ov-image.png)
 
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
