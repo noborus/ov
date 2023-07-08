@@ -266,6 +266,7 @@ func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
 // Returns nil if there is no search term.
 func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	if word == "" {
+		root.searcher = nil
 		return nil
 	}
 	root.input.value = word
@@ -327,7 +328,9 @@ func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bo
 // Search searches for the search term and moves to the nearest matching line.
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	if !m.seekable {
-		m.requestLoad(chunkNum)
+		if chunkNum != 0 && m.store.lastChunkNum() <= chunkNum {
+			m.requestLoad(chunkNum)
+		}
 	} else {
 		if m.store.lastChunkNum() < chunkNum {
 			return 0, ErrOutOfChunk
