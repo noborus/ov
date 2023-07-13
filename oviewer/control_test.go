@@ -168,6 +168,14 @@ func TestDocument_requestLoad(t *testing.T) {
 
 			m.requestLoad(tt.fields.chunkNum)
 
+			sc := controlSpecifier{
+				request:  requestLoad,
+				chunkNum: tt.fields.chunkNum,
+				done:     make(chan bool),
+			}
+			m.ctlCh <- sc
+			<-sc.done
+
 			chunkNum, cn := chunkLineNum(tt.fields.lineNum)
 			got, err := m.store.GetChunkLine(chunkNum, cn)
 			if (err != nil) != tt.wantErr {

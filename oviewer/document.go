@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -299,11 +300,17 @@ func (m *Document) GetLine(n int) string {
 
 // LineString returns one line from buffer.
 func (m *Document) LineString(n int) string {
+	str, _ := m.LineStr(n)
+	return str
+}
+
+// LineStr returns one line from buffer.
+func (m *Document) LineStr(n int) (string, error) {
 	s, err := m.Line(n)
 	if err != nil {
-		return gchalk.Red(err.Error())
+		return gchalk.Red(err.Error()), err
 	}
-	return string(s)
+	return string(s), nil
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -355,8 +362,8 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	str := m.LineString(lN)
-	return parseString(str, tabWidth), nil
+	str, err := m.LineStr(lN)
+	return parseString(str, tabWidth), err
 }
 
 // getLineC returns contents from line number and tabWidth.
@@ -370,8 +377,7 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 	}
 
 	org, err := m.contents(lN, tabWidth)
-	if err != nil {
-		// EOF
+	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
 		return LineC{
@@ -386,7 +392,7 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 		str: str,
 		pos: pos,
 	}
-	if len(org) != 0 {
+	if err == nil {
 		m.cache.Add(lN, line)
 	}
 

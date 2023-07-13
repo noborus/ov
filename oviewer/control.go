@@ -225,13 +225,13 @@ func (m *Document) requestContinue() {
 
 // requestLoad sends instructions to load chunks into memory.
 func (m *Document) requestLoad(chunkNum int) {
-	sc := controlSpecifier{
-		request:  requestLoad,
-		chunkNum: chunkNum,
-		done:     make(chan bool),
-	}
-	m.ctlCh <- sc
-	<-sc.done
+	go func() {
+		sc := controlSpecifier{
+			request:  requestLoad,
+			chunkNum: chunkNum,
+		}
+		m.ctlCh <- sc
+	}()
 }
 
 // requestSearch sends instructions to load chunks into memory.
