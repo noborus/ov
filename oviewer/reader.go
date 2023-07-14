@@ -159,10 +159,10 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 
 	start, end := m.store.chunkRange(chunkNum)
 	if err := m.store.readLines(chunk, reader, start, end, false); err != nil {
-		log.Printf("Failed to read the expected number of lines(%d:%d): %s", start, end, err)
 		if errors.Is(err, io.EOF) {
 			return m.afterEOF(reader), nil
 		}
+		log.Printf("Failed to read the expected number of lines(%d:%d): %s", start, end, err)
 		return nil, err
 	}
 	return reader, nil
