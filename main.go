@@ -268,6 +268,8 @@ func flagUsage(f *pflag.FlagSet) string {
 	return buf.String()
 }
 
+// UsageFunc returns a function that returns the usage.
+// This is for overwriting cobra usage.
 func UsageFunc() (cmd func(*cobra.Command) error) {
 	return func(c *cobra.Command) error {
 		fmt.Fprintf(os.Stdout, "Usage:\n")
