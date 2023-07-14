@@ -623,3 +623,55 @@ func (root *Root) updateEndNum() {
 	root.drawStatus()
 	root.Screen.Sync()
 }
+
+// follow updates the document in follow mode.
+func (root *Root) follow() {
+	if root.General.FollowAll {
+		root.followAll()
+	}
+	num := root.Doc.BufEndNum()
+	if root.Doc.latestNum == num {
+		return
+	}
+
+	root.skipDraw = false
+	if root.Doc.FollowSection {
+		root.tailSection()
+	} else {
+		root.TailSync()
+	}
+	root.Doc.latestNum = num
+}
+
+// followAll monitors and switches all document updates
+// in follow all mode.
+func (root *Root) followAll() {
+	if root.screenMode != Docs {
+		return
+	}
+
+	current := root.CurrentDoc
+	root.mu.RLock()
+	for n, doc := range root.DocList {
+		if doc.latestNum != doc.BufEndNum() {
+			current = n
+		}
+	}
+	root.mu.RUnlock()
+
+	if root.CurrentDoc != current {
+		root.switchDocument(current)
+	}
+}
+
+// Cancel follow mode and follow all mode.
+func (root *Root) Cancel() {
+	root.General.FollowAll = false
+	root.Doc.FollowMode = false
+}
+
+// WriteQuit sets the write flag and executes a quit event.
+func (root *Root) WriteQuit() {
+	root.IsWriteOriginal = true
+	root.Quit()
+}

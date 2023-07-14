@@ -406,9 +406,8 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 		default:
 		}
 
-		// endChunk may be updated by Search.
-		endChunk := (m.BufEndNum() - 1) / ChunkSize
-		if cn >= endChunk {
+		// lastChunkNum may be updated by Search.
+		if cn >= m.store.lastChunkNum() {
 			break
 		}
 		sn = 0

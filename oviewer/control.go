@@ -74,8 +74,8 @@ func (m *Document) ControlReader(r io.Reader, reload func() *bufio.Reader) error
 	reader := bufio.NewReader(r)
 
 	go func() {
-		var err error
 		for sc := range m.ctlCh {
+			var err error
 			reader, err = m.controlReader(sc, reader, reload)
 			if err != nil {
 				log.Println(sc.request, err)
