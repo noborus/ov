@@ -117,7 +117,7 @@ type store struct {
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 	// mu controls the mutex.
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	// startNum is the number of the first line that can be moved.
 	startNum int32

@@ -126,8 +126,8 @@ func (s *store) unloadChunk(chunkNum int) {
 
 // lastChunkNum returns the last chunk number.
 func (s *store) lastChunkNum() int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	return len(s.chunks) - 1
 }
