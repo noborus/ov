@@ -4,6 +4,9 @@ import (
 	"strconv"
 )
 
+// bottomMargin is the margin of the bottom line when specifying section
+const bottomMargin = 2
+
 // MoveLine fires an eventGoto event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
 	if !root.checkScreen() {
@@ -243,6 +246,11 @@ func (m *Document) searchGoTo(lN int, x int) {
 	m.moveYUp(m.JumpTarget)
 }
 
+// Bottom line of jumpTarget when specifying a section
+func (m *Document) bottomJumpTarget() int {
+	return m.statusPos - bottomMargin
+}
+
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
 func (m *Document) searchGoSection(lN int, x int) {
@@ -270,12 +278,12 @@ func (m *Document) searchGoSection(lN int, x int) {
 		}
 	}
 
-	if m.statusPos > y+m.headerLen {
+	if m.bottomJumpTarget() > y+m.headerLen {
 		m.JumpTarget = y
 		return
 	}
 
-	m.JumpTarget = m.statusPos - (m.headerLen + 1)
+	m.JumpTarget = m.bottomJumpTarget() - (m.headerLen + 1)
 	m.moveYDown(y - m.JumpTarget)
 }
 
