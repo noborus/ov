@@ -57,7 +57,10 @@ ov is a terminal pager.
 * 6. [Key bindings](#key-bindings)
 * 7. [Customize](#customize)
   * 7.1. [Style customization](#style-customization)
-  * 7.2. [Key binding customization](#key-binding-customization)
+  * 7.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
+  * 7.3. [Key binding customization](#key-binding-customization)
+* 8. [VS](#vs)
+* 9. [Work together](#work-together)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -503,6 +506,13 @@ You can also specify a percentage, such as (50%).
 
 This option can be specified with `--jump-target`(or `-j`) (default key `j`).
 
+If `section` is specified as the `--jump-target`, the display will start from the beginning of the section as much as possible
+and the jump-target will be changed.
+
+```console
+ov --section-delimiter "^#" --jump-target section README.md
+```
+
 ###  3.22. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
@@ -793,7 +803,23 @@ StyleAlternate:
 | Italic | true/false | false |
 | Underline | true/false | false |
 
-###  7.2. <a name='key-binding-customization'></a>Key binding customization
+###  7.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
+
+You can customize the bottom status line.
+
+Whether to display file names.
+Whether to invert the color of the file name.
+
+[Example]
+
+```yaml
+Prompt
+  Normal:
+    ShowFilename: false
+    InvertColor: false
+```
+
+###  7.3. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
 
@@ -811,7 +837,7 @@ You can customize key bindings.
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
 
-## VS
+##  8. <a name='vs'></a>VS
 
 The following software can be used instead. If you are not satisfied with `ov`, you should try it.
 
@@ -830,7 +856,7 @@ The following software can be used instead. If you are not satisfied with `ov`, 
 * [peep](https://github.com/ryochack/peep)
   * `peep` is a pager that can work in a small pane.
 
-## Work together
+##  9. <a name='work-together'></a>Work together
 
 The following are not actually pagers and do not conflict. can work together.
 
