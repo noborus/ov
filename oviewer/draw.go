@@ -167,7 +167,7 @@ func (root *Root) coordinatesStyle(lN int, y int, str string) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 	root.markStyle(lN, y, markStyleWidth)
 	root.sectionLineHighlight(y, str)
-	if root.Doc.JumpTarget != 0 && root.Doc.headerLen+root.Doc.JumpTarget == y {
+	if root.Doc.jumpTargetNum != 0 && root.Doc.headerLen+root.Doc.jumpTargetNum == y {
 		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }

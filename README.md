@@ -397,12 +397,21 @@ Search by forward search `/` key(default) or the backward search `?` key(default
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
 Displayed when the following are enabled in the search input prompt:
 
-| Function | display | (Default)key |command option |
-|:---------|:--------|:----|:--------------|
-| Incremental search | (I) | alt+i | --incremental |
-| Regular expression search | (R) | alt+r | --regexp-search  |
-| Case-sensitive | (Aa) | alt+c | -i, --case-sensitive |
-| Smart case-sensitive | (S) | alt+s | --smart-case-sensitive |
+|         Function          | display | (Default)key |     command option     |    config file     |
+|---------------------------|---------|--------------|------------------------|--------------------|
+| Incremental search        | (I)     | alt+i        | --incremental          | Incsearch          |
+| Regular expression search | (R)     | alt+r        | --regexp-search        | RegexpSearch       |
+| Case-sensitive            | (Aa)    | alt+c        | -i, --case-sensitive   | CaseSensitive      |
+| Smart case-sensitive      | (S)     | alt+s        | --smart-case-sensitive | SmartCaseSensitive |
+
+Specify true/false in config file.
+
+```config.yaml
+CaseSensitive: false
+RegexpSearch: false
+Incsearch: true
+SmartCaseSensitive: true
+```
 
 ###  3.16. <a name='mark'></a>Mark
 
@@ -613,53 +622,53 @@ MemoryLimit: 1000
 
 ##  5. <a name='command-option'></a>Command option
 
-| short |             long              |                            purpose                             |
-|-------|-------------------------------|----------------------------------------------------------------|
-| -C,   | --alternate-rows              | alternately change the line color                              |
-| -i,   | --case-sensitive              | case-sensitive in search                                       |
-| -d,   | --column-delimiter character  | column delimiter character (default ",")                       |
-| -c,   | --column-mode                 | column mode                                                    |
-|       | --column-rainbow              | column rainbow                                                 |
-|       | --column-width                | column width mode                                              |
-|       | --completion string           | generate completion script [bash|zsh|fish|powershell]          |
-|       | --config file                 | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)       |
-|       | --debug                       | debug mode                                                     |
-|       | --disable-column-cycle        | Disable column cycling                                         |
-|       | --disable-mouse               | disable mouse support                                          |
-| -e,   | --exec                        | command execution result instead of file                       |
-| -X,   | --exit-write                  | output the current screen when exiting                         |
-| -a,   | --exit-write-after int        | number after the current lines when exiting                    |
-| -b,   | --exit-write-before int       | number before the current lines when exiting                   |
-| -A,   | --follow-all                  | follow all                                                     |
-| -f,   | --follow-mode                 | follow mode                                                    |
-|       | --follow-name                 | follow name mode                                               |
-|       | --follow-section              | follow section                                                 |
-| -H,   | --header int                  | number of header rows to fix                                   |
-| -h,   | --help                        | help for ov                                                    |
-|       | --help-key                    | display key bind information                                   |
-|       | --incsearch[=true|false]      | incremental search (default true)                              |
-| -j,   | --jump-target [int|int%|.int] | jump target [int|int%|.int]                                    |
-| -n,   | --line-number                 | line number mode                                               |
-|       | --memory-limit int            | number of chunks to limit in memory (default -1)               |
-|       | --memory-limit-file int       | number of chunks to limit in memory for the file (default 100) |
-| -M,   | --multi-color strings         | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
-| -p,   | --plain                       | disable original decoration                                    |
-| -F,   | --quit-if-one-screen          | quit if the output fits on one screen                          |
-|       | --regexp-search               | regular expression search                                      |
-|       | --section-delimiter regexp    | regexp for section delimiter .e.g. "^#"                        |
-|       | --section-start int           | section start position                                         |
-|       | --skip-lines int              | skip the number of lines                                       |
-|       | --smart-case-sensitive        | smart case-sensitive in search                                 |
-| -x,   | --tab-width int               | tab stop width (default 8)                                     |
-| -v,   | --version                     | display version information                                    |
-|       | --view-mode string            | view mode                                                      |
-| -T,   | --watch seconds               | watch mode interval(seconds)                                   |
-| -w,   | --wrap[=true|false]           | wrap mode (default true)                                       |
-
+| short |                  long                   |                             purpos                             |
+|-------|-----------------------------------------|----------------------------------------------------------------|
+| -C,   | --alternate-rows                        | alternately change the line color                              |
+| -i,   | --case-sensitive                        | case-sensitive in search                                       |
+| -d,   | --column-delimiter character            | column delimiter character (default ",")                       |
+| -c,   | --column-mode                           | column mode                                                    |
+|       | --column-rainbow                        | column mode to rainbow                                         |
+|       | --column-width                          | column mode for width                                          |
+|       | --completion string                     | generate completion script [bash|zsh|fish|powershell]          |
+|       | --config file                           | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)       |
+|       | --debug                                 | debug mode                                                     |
+|       | --disable-column-cycle                  | disable column cycling                                         |
+|       | --disable-mouse                         | disable mouse support                                          |
+| -e,   | --exec                                  | command execution result instead of file                       |
+| -X,   | --exit-write                            | output the current screen when exiting                         |
+| -a,   | --exit-write-after int                  | number after the current lines when exiting                    |
+| -b,   | --exit-write-before int                 | number before the current lines when exiting                   |
+| -A,   | --follow-all                            | follow all mode                                                |
+| -f,   | --follow-mode                           | follow mode                                                    |
+|       | --follow-name                           | file name follow mode                                          |
+|       | --follow-section                        | section-by-section follow mode                                 |
+| -H,   | --header int                            | number of header rows to fix                                   |
+| -h,   | --help                                  | help for ov                                                    |
+|       | --help-key                              | display key bind information                                   |
+|       | --incsearch[=true|false]                | incremental search (default true)                              |
+| -j,   | --jump-target [int|int%|.int|'section'] | jump target [int|int%|.int|'section']                          |
+| -n,   | --line-number                           | line number mode                                               |
+|       | --memory-limit int                      | number of chunks to limit in memory (default -1)               |
+|       | --memory-limit-file int                 | number of chunks to limit in memory for the file (default 100) |
+| -M,   | --multi-color strings                   | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
+| -p,   | --plain                                 | disable original decoration                                    |
+| -F,   | --quit-if-one-screen                    | quit if the output fits on one screen                          |
+|       | --regexp-search                         | regular expression search                                      |
+|       | --section-delimiter regexp              | regexp for section delimiter .e.g. "^#"                        |
+|       | --section-start int                     | section start position                                         |
+|       | --skip-lines int                        | skip the number of lines                                       |
+|       | --smart-case-sensitive                  | smart case-sensitive in search                                 |
+| -x,   | --tab-width int                         | tab stop width (default 8)                                     |
+| -v,   | --version                               | display version information                                    |
+|       | --view-mode string                      | view mode                                                      |
+| -T,   | --watch seconds                         | watch mode interval(seconds)                                   |
+| -w,   | --wrap[=true|false]                     | wrap mode (default true)                                       |
 
 It can also be changed after startup.
 
 ##  6. <a name='key-bindings'></a>Key bindings
+
 |              key              |                      action                      |
 |-------------------------------|--------------------------------------------------|
 | [Escape], [q]                 | quit                                             |

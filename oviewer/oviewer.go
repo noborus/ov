@@ -113,7 +113,7 @@ type general struct {
 	// SectionDelimiter is a section delimiter.
 	SectionDelimiter string
 	// Specified string for jumpTarget.
-	JumpTargetString string
+	JumpTarget string
 	// MultiColorWords specifies words to color separated by spaces.
 	MultiColorWords []string
 
@@ -129,10 +129,6 @@ type general struct {
 	MarkStyleWidth int
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
-	// JumpTarget is the display position of search results.
-	JumpTarget int
-	// JumpTargetSection is the display position of search results.
-	JumpTargetSection bool
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -839,10 +835,7 @@ func mergeGeneral(src general, dst general) general {
 	if dst.SectionStartPosition != 0 {
 		src.SectionStartPosition = dst.SectionStartPosition
 	}
-	if dst.JumpTargetString != "" {
-		src.JumpTargetString = dst.JumpTargetString
-	}
-	if dst.JumpTarget != 0 {
+	if dst.JumpTarget != "" {
 		src.JumpTarget = dst.JumpTarget
 	}
 	if len(dst.MultiColorWords) > 0 {
