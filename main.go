@@ -305,7 +305,7 @@ func init() {
 		return []string{"3\ttab width", "2\ttab width", "4\ttab width", "8\ttab width"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header rows to fix")
+	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header lines to be displayed constantly")
 	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
 	_ = rootCmd.RegisterFlagCompletionFunc("header", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
@@ -323,10 +323,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
 	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
-	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column width mode")
+	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column mode for width")
 	_ = viper.BindPFlag("general.ColumnWidth", rootCmd.PersistentFlags().Lookup("column-width"))
 
-	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "column rainbow")
+	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "column mode to rainbow")
 	_ = viper.BindPFlag("general.ColumnRainbow", rootCmd.PersistentFlags().Lookup("column-rainbow"))
 
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
@@ -353,13 +353,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
 
-	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow all")
+	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow mode to switch to updated files")
 	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
 
-	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "follow section")
+	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "section-by-section follow mode")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
-	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow name mode")
+	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "file name follow mode")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
@@ -368,8 +368,8 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "comma separated words(regexp) to color .e.g. \"ERROR,WARNING\"")
 	_ = viper.BindPFlag("general.MultiColorWords", rootCmd.PersistentFlags().Lookup("multi-color"))
 
-	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int]`")
-	_ = viper.BindPFlag("general.JumpTargetString", rootCmd.PersistentFlags().Lookup("jump-target"))
+	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int|'section']`")
+	_ = viper.BindPFlag("general.JumpTarget", rootCmd.PersistentFlags().Lookup("jump-target"))
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
@@ -408,7 +408,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "number of chunks to limit in memory for the file")
 	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
-	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "Disable column cycling")
+	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")

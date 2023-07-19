@@ -175,7 +175,7 @@ func (root *Root) watchControl() {
 func (root *Root) searchGo(lN int) {
 	root.resetSelect()
 	x := root.searchXPos(lN)
-	if root.Doc.JumpTargetSection {
+	if root.Doc.jumpTargetSection {
 		root.Doc.searchGoSection(lN, x)
 		return
 	}
@@ -509,8 +509,8 @@ func (root *Root) setMultiColor(input string) {
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
 	num, section := jumpPosition(root.scr.vHeight, input)
-	root.Doc.JumpTargetSection = section
-	if root.Doc.JumpTargetSection {
+	root.Doc.jumpTargetSection = section
+	if root.Doc.jumpTargetSection {
 		root.setMessagef("Set JumpTarget section start")
 		return
 	}
@@ -518,11 +518,11 @@ func (root *Root) setJumpTarget(input string) {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
-	if root.Doc.JumpTarget == num {
+	if root.Doc.jumpTargetNum == num {
 		return
 	}
-	root.Doc.JumpTargetString = input
-	root.Doc.JumpTarget = num
+	root.Doc.JumpTarget = input
+	root.Doc.jumpTargetNum = num
 	root.setMessagef("Set JumpTarget %d", num)
 }
 
@@ -588,7 +588,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget, root.Doc.JumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
+	root.Doc.jumpTargetNum, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
 }
 
 // TailSync move to tail and sync.

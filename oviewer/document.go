@@ -87,6 +87,11 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
+	// jumpTargetNum is the display position of search results.
+	jumpTargetNum int
+	// jumpTargetSection is the display position of search results.
+	jumpTargetSection bool
+
 	// CFormat is a compressed format.
 	CFormat Compressed
 
