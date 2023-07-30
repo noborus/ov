@@ -501,32 +501,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
-				root.mu.Lock()
-				for _, doc := range root.DocList {
-					if doc.filepath == event.Name {
-						switch event.Op {
-						case fsnotify.Write:
-							select {
-							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
-								root.debugMessage(fmt.Sprintf("notify send %v", event))
-							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %s", requestFollow))
-							}
-						case fsnotify.Remove, fsnotify.Create:
-							if !doc.FollowName {
-								continue
-							}
-							select {
-							case doc.ctlCh <- controlSpecifier{request: requestReload}:
-								root.debugMessage(fmt.Sprintf("notify send %v", event))
-							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %s", requestReload))
-							}
-
-						}
-					}
-				}
-				root.mu.Unlock()
+				root.watchEvent(event)
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -548,6 +523,34 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 		if err := watcher.Add(path); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
+	}
+}
+
+// watchEvent sends a notification to the document.
+func (root *Root) watchEvent(event fsnotify.Event) {
+	root.mu.Lock()
+	defer root.mu.Unlock()
+
+	for _, m := range root.DocList {
+		if m.filepath == event.Name {
+			switch event.Op {
+			case fsnotify.Write:
+				root.sendRequest(m, requestFollow)
+			case fsnotify.Remove, fsnotify.Create:
+				if m.FollowName {
+					root.sendRequest(m, requestReload)
+				}
+			}
+		}
+	}
+}
+
+func (root *Root) sendRequest(m *Document, request request) {
+	select {
+	case m.ctlCh <- controlSpecifier{request: request}:
+		root.debugMessage(fmt.Sprintf("notify send %v", request))
+	default:
+		root.debugMessage(fmt.Sprintf("notify send fail %s", request))
 	}
 }
 
