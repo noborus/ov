@@ -148,7 +148,7 @@ func (m *Document) moveToWidth(scr SCR, moveTo int) (int, int, error) {
 		return m.x, m.columnCursor, ErrNoColumn
 	}
 
-	var widths = make([]int, 0, len(m.columnWidths)+2)
+	widths := make([]int, 0, len(m.columnWidths)+2)
 	widths = append(widths, 0)
 	widths = append(widths, m.columnWidths...)
 	var cl, cr int
