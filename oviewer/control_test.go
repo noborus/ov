@@ -312,7 +312,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			for !m.BufEOF() {
 			}
 
-			af, err := os.OpenFile(fname, os.O_APPEND|os.O_RDWR, 0600)
+			af, err := os.OpenFile(fname, os.O_APPEND|os.O_RDWR, 0o600)
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}

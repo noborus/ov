@@ -60,7 +60,7 @@ func NewConfig() Config {
 		Prompt: OVPromptConfig{
 			Normal: OVPromptConfigNormal{
 				ShowFilename: true,
-				InvertColor: true,
+				InvertColor:  true,
 			},
 		},
 	}
