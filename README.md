@@ -297,6 +297,25 @@ StyleColumnRainbow:
   - Foreground: "red"
 ```
 
+Style specifications other than `Foreground` can also be specified.
+
+```yaml
+StyleColumnRainbow:
+    - Foreground: "white"
+      Background: "red"
+    - Foreground: "aqua"
+      Underline: true
+    - Foreground: "#ff7f00"
+      Background: "blue"
+      Bold: true
+    - Foreground: "lime"
+      Italic: true
+    - Foreground: "blue"
+      Dim: true
+    - Foreground: "yellowgreen"
+    - Foreground: "red"
+```
+
 ###  3.6. <a name='column-width'></a>column-width
 
 For output like `ps`, using `--column-width` is a better way to separate columns than using spaces as delimiters.
@@ -483,11 +502,13 @@ StyleMultiColorHighlight:
   - Foreground: "red"
     Reverse: true
   - Foreground: "aqua"
+    Underline: true
   - Foreground: "yellow"
+    Background: "blue"
   - Foreground: "fuchsia"
   - Foreground: "lime"
   - Foreground: "blue"
-  - Foreground: "grey"
+  - Foreground: "#c0c0c0"
 ```
 
 ###  3.20. <a name='plain'></a>Plain
@@ -802,6 +823,26 @@ StyleAlternate:
 | Dim | true/false | false |
 | Italic | true/false | false |
 | Underline | true/false | false |
+
+Specify `StyleMultiColorHighlight` and `StyleColumnRainbow` in an array.
+
+```yaml
+StyleMultiColorHighlight
+  - Foreground: "red"
+    Reverse: true
+  - Foreground: "aqua"
+    Underline: true
+```
+
+```yaml
+StyleColumnRainbow:
+  - Foreground: "white"
+    Background: "black"
+  - Foreground: "aqua"
+    Background: "black"
+    Underline: true
+  - Background: "lightsalmon"
+```
 
 ###  7.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
