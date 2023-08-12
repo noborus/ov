@@ -52,6 +52,48 @@ func TestRoot_Search(t *testing.T) {
 	}
 }
 
+func TestRoot_BackSearch(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames []string
+	}
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				fileNames: []string{
+					filepath.Join(testdata, "test.txt"),
+				},
+			},
+			args: args{
+				str: "test",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := openFiles(tt.fields.fileNames)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewOviewer() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			root.BackSearch(tt.args.str)
+		})
+	}
+}
+
 func Test_searchWord_Match(t *testing.T) {
 	type fields struct {
 		word string
