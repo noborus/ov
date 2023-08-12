@@ -32,7 +32,7 @@ func (m *Document) moveTop() {
 func (m *Document) moveBottom() {
 	// If the file is seekable, move to the end of the file.
 	if m.seekable && atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
-		m.requestEnd()
+		m.requestBottom()
 	}
 
 	m.topLX, m.topLN = m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)

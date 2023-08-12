@@ -23,7 +23,7 @@ type request string
 // control requests.
 const (
 	requestStart    request = "start"
-	requestEnd      request = "end"
+	requestBottom   request = "bottom"
 	requestContinue request = "continue"
 	requestFollow   request = "follow"
 	requestClose    request = "close"
@@ -122,7 +122,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	switch sc.request {
 	case requestStart:
 		return m.firstRead(reader)
-	case requestEnd:
+	case requestBottom:
 		if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
 			return m.tmpRead(reader)
 		}
@@ -133,7 +133,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		}
 		if m.seekable && atomic.LoadInt32(&m.tmpFollow) == 0 && (m.FollowMode || m.FollowAll) {
 			go func() {
-				m.requestEnd()
+				m.requestBottom()
 			}()
 			return reader, nil
 		}
@@ -204,10 +204,10 @@ func (m *Document) requestStart() {
 	}()
 }
 
-// requestStart send instructions to end reading.
-func (m *Document) requestEnd() {
+// requestBottom sends instructions to read the last part of the file.
+func (m *Document) requestBottom() {
 	sc := controlSpecifier{
-		request: requestEnd,
+		request: requestBottom,
 		done:    make(chan bool),
 	}
 	m.ctlCh <- sc
