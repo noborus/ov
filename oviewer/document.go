@@ -325,11 +325,9 @@ func (m *Document) CurrentLN() int {
 
 // Export exports the document in the specified range.
 func (m *Document) Export(w io.Writer, start int, end int) {
+	end = min(end, m.BufEndNum()-1)
 	for n := start; n <= end; n++ {
-		if n >= m.BufEndNum() {
-			break
-		}
-		fmt.Fprintln(w, m.LineString(n))
+		fmt.Fprintln(w, m.GetLine(n))
 	}
 }
 
