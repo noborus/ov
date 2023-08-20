@@ -359,3 +359,21 @@ func (s *store) appendFormFeed(chunk *chunk) {
 		s.appendLine(chunk, []byte(feed))
 	}
 }
+
+func (s *store) export(w io.Writer, chunk *chunk, start int, end int) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if start < 0 {
+		start = 0
+	}
+	if end > len(chunk.lines) {
+		end = len(chunk.lines)
+	}
+	for i := start; i < end; i++ {
+		if _, err := w.Write(chunk.lines[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
