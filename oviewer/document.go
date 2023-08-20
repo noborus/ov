@@ -326,8 +326,18 @@ func (m *Document) CurrentLN() int {
 // Export exports the document in the specified range.
 func (m *Document) Export(w io.Writer, start int, end int) {
 	end = min(end, m.BufEndNum()-1)
-	for n := start; n <= end; n++ {
-		fmt.Fprintln(w, m.GetLine(n))
+	startChunk, startCn := chunkLineNum(start)
+	endChunk, endCn := chunkLineNum(end)
+
+	scn := startCn
+	ecn := ChunkSize
+	for chunkNum := startChunk; chunkNum <= endChunk; chunkNum++ {
+		if chunkNum == endChunk {
+			ecn = endCn + 1
+		}
+		chunk := m.store.chunks[chunkNum]
+		m.store.export(w, chunk, scn, ecn)
+		scn = 0
 	}
 }
 
