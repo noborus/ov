@@ -28,6 +28,7 @@ var (
 	// config is the oviewer setting.
 	config oviewer.Config
 
+	// pattern is search pattern.
 	pattern string
 
 	// ver is version information.
@@ -304,6 +305,8 @@ func init() {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
+
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
@@ -376,8 +379,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int|'section']`")
 	_ = viper.BindPFlag("general.JumpTarget", rootCmd.PersistentFlags().Lookup("jump-target"))
-
-	rootCmd.PersistentFlags().StringVar(&pattern, "pattern", "", "search pattern")
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
