@@ -28,6 +28,8 @@ var (
 	// config is the oviewer setting.
 	config oviewer.Config
 
+	pattern string
+
 	// ver is version information.
 	ver bool
 	// helpKey is key bind information.
@@ -125,6 +127,10 @@ func RunOviewer(args []string) error {
 	}
 
 	ov.SetConfig(config)
+
+	if pattern != "" {
+		ov.Search(pattern)
+	}
 
 	if err := ov.Run(); err != nil {
 		return err
@@ -370,6 +376,8 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int|'section']`")
 	_ = viper.BindPFlag("general.JumpTarget", rootCmd.PersistentFlags().Lookup("jump-target"))
+
+	rootCmd.PersistentFlags().StringVar(&pattern, "pattern", "", "search pattern")
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
