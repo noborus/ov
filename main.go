@@ -28,6 +28,9 @@ var (
 	// config is the oviewer setting.
 	config oviewer.Config
 
+	// pattern is search pattern.
+	pattern string
+
 	// ver is version information.
 	ver bool
 	// helpKey is key bind information.
@@ -125,6 +128,10 @@ func RunOviewer(args []string) error {
 	}
 
 	ov.SetConfig(config)
+
+	if pattern != "" {
+		ov.Search(pattern)
+	}
 
 	if err := ov.Run(); err != nil {
 		return err
@@ -297,6 +304,8 @@ func init() {
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
+
+	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
