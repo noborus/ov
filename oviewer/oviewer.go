@@ -291,6 +291,8 @@ var (
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
 	OverLineStyle tcell.Style
+	// SkipExtract is a flag to skip extracting compressed files.
+	SkipExtract bool
 )
 
 // ov output destination.
