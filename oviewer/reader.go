@@ -276,7 +276,6 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 }
 
 // openFileReader opens a file,
-// selects a reader according to compression type and returns io.Reader.
 func (m *Document) openFileReader(fileName string) (io.Reader, error) {
 	f, err := open(fileName)
 	if err != nil {
@@ -286,13 +285,20 @@ func (m *Document) openFileReader(fileName string) (io.Reader, error) {
 }
 
 // fileReader returns a io.Reader.
+// selects a reader according to compression type and returns io.Reader.
 func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
 
 	atomic.StoreInt32(&m.closed, 0)
 	m.file = f
-	cFormat, r := uncompressedReader(m.file, m.seekable)
+
+	cFormat := UNCOMPRESSED
+	r := io.Reader(m.file)
+	if !SkipExtract {
+		cFormat, r = uncompressedReader(m.file, m.seekable)
+	}
+
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
 			if _, err := f.Seek(0, io.SeekStart); err != nil {

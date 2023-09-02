@@ -307,6 +307,8 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extract")
+
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
