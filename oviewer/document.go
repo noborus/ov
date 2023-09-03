@@ -324,7 +324,7 @@ func (m *Document) CurrentLN() int {
 }
 
 // Export exports the document in the specified range.
-func (m *Document) Export(w io.Writer, start int, end int) {
+func (m *Document) Export(w io.Writer, start int, end int) error {
 	end = min(end, m.BufEndNum()-1)
 	startChunk, startCn := chunkLineNum(start)
 	endChunk, endCn := chunkLineNum(end)
@@ -336,9 +336,12 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 			ecn = endCn + 1
 		}
 		chunk := m.store.chunks[chunkNum]
-		m.store.export(w, chunk, scn, ecn)
+		if err := m.store.export(w, chunk, scn, ecn); err != nil {
+			return err
+		}
 		scn = 0
 	}
+	return nil
 }
 
 // BufStartNum return start line number.

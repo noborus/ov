@@ -899,7 +899,9 @@ func (root *Root) WriteOriginal() {
 		end = m.topLN + root.AfterWriteOriginal - 1
 	}
 
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // WriteLog write to the log terminal.
@@ -907,7 +909,9 @@ func (root *Root) WriteLog() {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // lineNumber returns the line information from y on the screen.
