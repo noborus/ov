@@ -27,7 +27,7 @@ const (
 	SectionStart               // SectionStart is a section start position input mode.
 	MultiColor                 // MultiColor is multi-word coloring.
 	JumpTarget                 // JumpTarget is the position to display the search results.
-	SaveBuffer                 // SaveBuffer is the buffer number to save.
+	SaveBuffer                 // SaveBuffer is the save buffer.
 )
 
 // Input represents the status of various inputs.

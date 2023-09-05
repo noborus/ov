@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"log"
 	"os"
 	"strings"
 
@@ -23,18 +22,17 @@ func (root *Root) saveBuffer(input string) {
 
 	file, err := os.Create(fileName)
 	if err != nil {
-		root.setMessagef("cannot save: %s:%s", fileName, err)
+		root.setMessageLogf("cannot save: %s:%s", fileName, err)
 		return
 	}
 	defer file.Close()
 
 	if err := root.Doc.Export(file, root.Doc.BufStartNum(), root.Doc.BufEndNum()); err != nil {
-		root.setMessagef("cannot save: %s:%s", fileName, err)
+		root.setMessageLogf("cannot save: %s:%s", fileName, err)
 		return
 	}
 
-	log.Printf("saved %s", fileName)
-	root.setMessagef("saved %s", fileName)
+	root.setMessageLogf("saved %s", fileName)
 }
 
 // saveConfirm waits for the user to confirm the save.
