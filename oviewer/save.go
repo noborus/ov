@@ -7,20 +7,35 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+type saveSelection string
+
+const (
+	saveCancel    saveSelection = "cancel"
+	saveOverWrite saveSelection = "overwrite"
+	saveAppend    saveSelection = "append"
+)
+
 // saveBuffer saves the buffer to the specified file.
 func (root *Root) saveBuffer(input string) {
 	fileName := strings.TrimSpace(input)
 
+	perm := os.FileMode(0644)
+	flag := os.O_WRONLY | os.O_CREATE
 	_, err := os.Stat(fileName)
 	if err == nil {
-		root.setMessagef("overwrite? (O)overwrite (N)cancel:")
-		if !root.saveConfirm() {
-			root.setMessagef("save cancel")
+		root.setMessagef("overwrite? (O)overwrite, (A)Append, (N)cancel:")
+		switch root.saveConfirm() {
+		case saveOverWrite:
+			flag = os.O_WRONLY | os.O_TRUNC
+		case saveAppend:
+			flag |= os.O_APPEND
+		case saveCancel:
+			root.setMessage("save cancel")
 			return
 		}
 	}
 
-	file, err := os.Create(fileName)
+	file, err := os.OpenFile(fileName, flag, perm)
 	if err != nil {
 		root.setMessageLogf("cannot save: %s:%s", fileName, err)
 		return
@@ -36,7 +51,7 @@ func (root *Root) saveBuffer(input string) {
 }
 
 // saveConfirm waits for the user to confirm the save.
-func (root *Root) saveConfirm() bool {
+func (root *Root) saveConfirm() saveSelection {
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
@@ -44,12 +59,14 @@ func (root *Root) saveConfirm() bool {
 			if ev.Key() == tcell.KeyRune {
 				switch ev.Rune() {
 				case 'o', 'O':
-					return true
+					return saveOverWrite
+				case 'a', 'A':
+					return saveAppend
 				case 'n', 'N', 'q', 'Q':
-					return false
+					return saveCancel
 				}
 			} else if ev.Key() == tcell.KeyEscape {
-				return false
+				return saveCancel
 			}
 		}
 	}
