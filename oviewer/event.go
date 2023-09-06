@@ -81,6 +81,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.setMultiColor(ev.value)
 		case *eventJumpTarget:
 			root.setJumpTarget(ev.value)
+		case *eventSaveBuffer:
+			root.saveBuffer(ev.value)
 
 		// tcell events
 		case *tcell.EventResize:
