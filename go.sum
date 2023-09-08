@@ -161,8 +161,8 @@ github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZ
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
-github.com/noborus/cbind v0.1.5-0.20230908043842-600415b20353 h1:1PZNzq+zn/9V+Wxi7MX/gnX40nk3obFYaqNSkpve1EY=
-github.com/noborus/cbind v0.1.5-0.20230908043842-600415b20353/go.mod h1:LtfqJTzM7qhg88nAvNhx+VnTjZ0SXBJtxBObbfBWo/M=
+github.com/noborus/cbind v0.1.5-0.20230908160312-b8340899f8df h1:ApXuVlxkfqXlwJmgSCOza24txGyBXvXFs7bgVP+WdYA=
+github.com/noborus/cbind v0.1.5-0.20230908160312-b8340899f8df/go.mod h1:LtfqJTzM7qhg88nAvNhx+VnTjZ0SXBJtxBObbfBWo/M=
 github.com/noborus/guesswidth v0.3.4 h1:+iKmbm0iFTS3pksIOKQQvLVZVOKNZHavqJoFK2mPoTQ=
 github.com/noborus/guesswidth v0.3.4/go.mod h1:2F1sqiazKIwuSRjQTweQHPFJcjV5375jYUrTik9/V5k=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
