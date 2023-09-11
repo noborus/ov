@@ -159,6 +159,7 @@ func TestDocument_getContents(t *testing.T) {
 		fields fields
 		args   args
 		want   contents
+		want1  bool
 	}{
 		{
 			name: "test normal",
@@ -169,7 +170,8 @@ func TestDocument_getContents(t *testing.T) {
 				lN:       0,
 				tabWidth: 8,
 			},
-			want: parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
+			want:  parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
+			want1: true,
 		},
 	}
 	for _, tt := range tests {
@@ -181,11 +183,14 @@ func TestDocument_getContents(t *testing.T) {
 
 			for !m.BufEOF() {
 			}
-
-			if got := m.getContents(tt.args.lN, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
+			got, ok := m.getContents(tt.args.lN, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
 				g, _ := ContentsToStr(got)
 				w, _ := ContentsToStr(tt.want)
 				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
+			}
+			if ok != tt.want1 {
+				t.Errorf("Document.getContents() ok = %v, want %v", ok, tt.want1)
 			}
 		})
 	}

@@ -14,14 +14,37 @@ import (
 // mouseEvent handles mouse events.
 func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
+	mod := ev.Modifiers()
+
+	var horizontal bool
+	if mod&tcell.ModShift != 0 {
+		horizontal = true
+	}
 
 	if button&tcell.WheelUp != 0 {
+		if horizontal {
+			root.wheelLeft()
+			return
+		}
 		root.wheelUp()
 		return
 	}
 
 	if button&tcell.WheelDown != 0 {
+		if horizontal {
+			root.wheelRight()
+			return
+		}
 		root.wheelDown()
+		return
+	}
+
+	if button&tcell.WheelLeft != 0 {
+		root.wheelLeft()
+		return
+	}
+	if button&tcell.WheelRight != 0 {
+		root.wheelRight()
 		return
 	}
 
@@ -37,15 +60,30 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 // wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp() {
 	root.setMessage("")
-	root.moveUp()
-	root.moveUp()
+	root.moveUpN(2)
 }
 
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown() {
 	root.setMessage("")
-	root.moveDown()
-	root.moveDown()
+	root.moveDownN(2)
+}
+
+func (root *Root) wheelRight() {
+	root.setMessage("")
+	if root.Doc.ColumnMode {
+		root.moveRight()
+	} else {
+		root.moveRightN(4)
+	}
+}
+func (root *Root) wheelLeft() {
+	root.setMessage("")
+	if root.Doc.ColumnMode {
+		root.moveLeft()
+	} else {
+		root.moveLeftN(4)
+	}
 }
 
 // selectRange saves the position by selecting the range with the mouse.
@@ -144,11 +182,16 @@ func (root *Root) drawRectangle(x1, y1, x2, y2 int, sel bool) {
 
 // reverseLine reverses one line.
 func (root *Root) reverseLine(y int, start int, end int, sel bool) {
+	if start >= end {
+		return
+	}
 	for x := start; x < end; x++ {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		style = style.Reverse(sel)
 		root.Screen.SetContent(x, y, mainc, combc, style)
-		x += width - 1
+		if width == 2 {
+			x++
+		}
 	}
 }
 

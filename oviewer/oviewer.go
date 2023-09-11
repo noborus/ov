@@ -63,8 +63,8 @@ type Root struct {
 
 	// vWidth represents the screen width.
 	vWidth int
-	// vHight represents the screen height.
-	vHight int
+	// vHeight represents the screen height.
+	vHeight int
 
 	// startX is the start position of x.
 	startX int
@@ -253,6 +253,24 @@ type OVStyle struct {
 	Underline bool
 	// If true, add strikethrough.
 	StrikeThrough bool
+	// If true, add overline (not yet supported).
+	OverLine bool
+	// If true, sub blink.
+	UnBlink bool
+	// If true, sub bold.
+	UnBold bool
+	// If true, sub dim.
+	UnDim bool
+	// If true, sub italic.
+	UnItalic bool
+	// If true, sub reverse.
+	UnReverse bool
+	// If true, sub underline.
+	UnUnderline bool
+	// If true, sub strikethrough.
+	UnStrikeThrough bool
+	// if true, sub underline (not yet supported).
+	UnOverLine bool
 }
 
 var (
@@ -618,6 +636,9 @@ func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
 	}
+	if root.Doc == root.logDoc {
+		return
+	}
 	root.message = msg
 	if len(msg) == 0 {
 		return
@@ -649,25 +670,46 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Foreground(tcell.GetColor(s.Foreground))
 	}
 	if s.Blink {
-		style = style.Blink(s.Blink)
+		style = style.Blink(true)
 	}
 	if s.Bold {
-		style = style.Bold(s.Bold)
+		style = style.Bold(true)
 	}
 	if s.Dim {
-		style = style.Dim(s.Dim)
+		style = style.Dim(true)
 	}
 	if s.Italic {
-		style = style.Italic(s.Italic)
+		style = style.Italic(true)
 	}
 	if s.Reverse {
-		style = style.Reverse(s.Reverse)
+		style = style.Reverse(true)
 	}
 	if s.Underline {
-		style = style.Underline(s.Underline)
+		style = style.Underline(true)
 	}
 	if s.StrikeThrough {
-		style = style.StrikeThrough(s.StrikeThrough)
+		style = style.StrikeThrough(true)
+	}
+	if s.UnBlink {
+		style = style.Blink(false)
+	}
+	if s.UnBold {
+		style = style.Bold(false)
+	}
+	if s.UnDim {
+		style = style.Dim(false)
+	}
+	if s.UnItalic {
+		style = style.Italic(false)
+	}
+	if s.UnReverse {
+		style = style.Reverse(false)
+	}
+	if s.UnUnderline {
+		style = style.Underline(false)
+	}
+	if s.UnStrikeThrough {
+		style = style.StrikeThrough(false)
 	}
 	return style
 }
@@ -737,14 +779,14 @@ func mergeGeneral(src general, dst general) general {
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
-	root.vWidth, root.vHight = screen.Size()
+	root.vWidth, root.vHeight = screen.Size()
 
 	// Do not allow size 0.
 	root.vWidth = max(root.vWidth, 1)
-	root.vHight = max(root.vHight, 1)
+	root.vHeight = max(root.vHeight, 1)
 
-	root.lines = make([]line, root.vHight+1)
-	root.statusPos = root.vHight - statusLine
+	root.lines = make([]line, root.vHeight+1)
+	root.statusPos = root.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -757,15 +799,15 @@ func (root *Root) docSmall() bool {
 	if !m.BufEOF() {
 		return false
 	}
-	hight := 0
+	height := 0
 	for y := 0; y < m.BufEndNum(); y++ {
 		lc, err := m.contentsLN(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
-		hight += 1 + (len(lc) / root.vWidth)
-		if hight > root.vHight {
+		height += 1 + (len(lc) / root.vWidth)
+		if height > root.vHeight {
 			return false
 		}
 	}

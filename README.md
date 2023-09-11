@@ -29,6 +29,7 @@ ov is a terminal pager.
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
   * 3.3. [Header](#header)
+    * 3.3.1. [Skip](#skip)
   * 3.4. [Column mode](#column-mode)
   * 3.5. [Column rainbow mode](#column-rainbow-mode)
   * 3.6. [Wrap/NoWrap](#wrap/nowrap)
@@ -46,6 +47,7 @@ ov is a terminal pager.
   * 3.18. [Plain](#plain)
   * 3.19. [Jump target](#jump-target)
   * 3.20. [View mode](#view-mode)
+  * 3.21. [Output on exit](#output-on-exit)
 * 4. [Command option](#command-option)
 * 5. [Key bindings](#key-bindings)
 * 6. [Customize](#customize)
@@ -77,7 +79,7 @@ ov is a terminal pager.
 * Supports [multi-color](#multi-color-highlight) to color each after multiple.
 * Better support for Unicode and East Asian Width.
 * Supports compressed files (gzip, bzip2, zstd, lz4, xz).
-* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [etc...](https://noborus.github.io/ov/)
+* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
   
 ###  1.1. <a name='not-supported'></a>Not supported
 
@@ -186,6 +188,8 @@ sudo install ov /usr/local/bin
 
 ##  3. <a name='usage'></a>Usage
 
+(default key `key`) indicates the key that can be specified even after starting the same function as the command line option.
+
 ###  3.1. <a name='basic-usage'></a>Basic usage
 
 ov supports open file name or standard input.
@@ -229,17 +233,21 @@ Create a `config.yaml` file in one of the above directories. If the file is in t
 
 Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
 
-If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
+> **Note**
+>
+> If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
 ###  3.3. <a name='header'></a>Header
 
-The `--header` (`-H`) option fixedly displays the specified number of lines.
+The `--header` (`-H`) (default key `H`) option fixedly displays the specified number of lines.
 
 ```console
 ov --header 1 README.md
 ```
 
-When used with the `--skip-lines` option, it hides the number of lines specified by skip and then displays the header.
+####  3.3.1. <a name='skip'></a>Skip
+
+When used with the `--skip-lines` (default key `ctrl+s`) option, it hides the number of lines specified by skip and then displays the header.
 
 ```console
 ov --skip-lines 1 --header 1 README.md
@@ -247,32 +255,46 @@ ov --skip-lines 1 --header 1 README.md
 
 ###  3.4. <a name='column-mode'></a>Column mode
 
-Specify the delimiter with `--column-delimiter` and set it to `--column-mode` to highlight the column.
-
-After startup, switch the display in column mode (default key is `c`).
-You can also enter a column-delimiter after startup (default key is `d`).
+Specify the delimiter with `--column-delimiter`(default key is `d`) and set it to `--column-mode`(default key is `c`) to highlight the column.
 
 ```console
 ov --column-delimiter "," --column-mode test.csv
 ```
 
+Regular expressions can be used for the `--column-delimiter`.
+Enclose in '/' when using regular expressions.
+
+```console
+ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
+```
+
 ###  3.5. <a name='column-rainbow-mode'></a>Column rainbow mode
 
 You can also color each column individually in column mode.
-Specify `--column-rainbow` in addition to the `--column-mode` option.
+Specify `--column-rainbow`(default key is `ctrl+r`) in addition to the `--column-mode` option.
 
-After startup, switch the display with column rainbow (default key is `ctrl+r`).
+Color customization is possible. Please specify 7 or more colors in `config.yaml`.
+
+```yaml
+StyleColumnRainbow:
+  - Foreground: "white"
+  - Foreground: "aqua"
+  - Foreground: "lightsalmon"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "yellowgreen"
+  - Foreground: "red"
+```
 
 ###  3.6. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
 
-The option is `--wrap`, specify `--wrap=false` if you do not want to wrap.
-After startup, toggle display with wrap (default key `w`).
+The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
 
 ###  3.7. <a name='alternate-rows'></a>Alternate-Rows
 
-Alternate row styles with the `--alternate-rows`(`-C`) option
+Alternate row styles with the `--alternate-rows`(`-C`) (default key `C`) option
 The style can be set with [Style customization](#style-customization).
 
 ```console
@@ -281,8 +303,8 @@ ov --alternate-rows test.csv
 
 ###  3.8. <a name='section'></a>Section
 
-You specify `--section-delimiter`, you can move up and down in section units.
-The start of the section can be adjusted with `--section-start`.
+You specify `--section-delimiter`(default key `alt+d`), you can move up and down in section units.
+The start of the section can be adjusted with `--section-start`(default key `ctrl+F3`, `alt+s`).
 
 ![section.png](docs/section.png)
 
@@ -294,7 +316,7 @@ you can move the diff for each file.
 
 ###  3.9. <a name='follow-mode'></a>Follow mode
 
-Output appended data and move it to the bottom line (like `tail -f`).
+`--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
 ```console
 ov --follow-mode /var/log/syslog
@@ -306,7 +328,7 @@ ov --follow-mode /var/log/syslog
 
 ###  3.10. <a name='follow-all-mode'></a>Follow all mode
 
-Same as follow-mode, and switches to the last updated file when there are multiple files.
+`--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
 ```console
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
@@ -314,6 +336,7 @@ ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 
 ###  3.11. <a name='follow-section-mode'></a>Follow section mode
 
+Use the `--follow-section`(default key `F2`) option to follow by section.
 Follow mode is line-by-line, while follow section mode is section-by-section.
 Follow section mode displays the bottom section.
 The following example is displayed from the header (#) at the bottom.
@@ -322,12 +345,13 @@ The following example is displayed from the header (#) at the bottom.
 ov --section-delimiter "^#" --follow-section README.md
 ```
 
- [Watch](#watch) mode is a mode in which `--follow-section` and
- `--section-delimiter "^\f"` are automatically set.
+> **Note**
+>
+> [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
 ###  3.12. <a name='exec-mode'></a>Exec mode
 
-Execute the command to display stdout/stderr separately.
+Use the `--exec` (`-e`) option to run the command and display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
 
 Shows the stderr screen as soon as an error occurs, when used with `--follow-all`.
@@ -362,6 +386,7 @@ Use the `>`next and `<`previous (default) key to move to the marked position.
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
+Use the `--watch`(`-T`) option.
 Go further to the last section.
 The default is'section-delimiter', so the last loaded content is displayed.
 
@@ -374,7 +399,7 @@ ov --watch 1 /proc/meminfo
 ###  3.16. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
-This can be disabled with the option `--disable-mouse`.
+This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `contrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -386,6 +411,8 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in ov is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
+Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
+
 ###  3.17. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
@@ -394,7 +421,7 @@ Enter multiple words (regular expressions) separated by spaces.
 
 For example, `error info warn debug` will color errors red, info cyan, warn yellow, and debug magenta.
 
-It can also be specified with the command line option `--multi-color`(or `-M`).
+It can also be specified with the command line option `--multi-color`(`-M`)(default key `.`).
 For command line options, pass them separated by ,(comma).
 
 For example:
@@ -405,11 +432,24 @@ ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 
 ![multi-color.png](https://raw.githubusercontent.com/noborus/ov/master/docs/multi-color.png)
 
+Color customization is possible. Please specify 7 or more colors in config.yaml.
+
+```yaml
+StyleMultiColorHighlight:
+  - Foreground: "red"
+    Reverse: true
+  - Foreground: "aqua"
+  - Foreground: "yellow"
+  - Foreground: "fuchsia"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "grey"
+```
+
 ###  3.18. <a name='plain'></a>Plain
 
 Supports undecorating ANSI escape sequences.
-The option is `--plain` (or `-p`).
-After startup, toggle the original decoration (default key `ctrl+e`).
+The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
 ###  3.19. <a name='jump-target'></a>Jump target
 
@@ -420,12 +460,11 @@ Negative numbers are displayed up by the number of lines from the bottom(-1).
 . (dot) can be used to specify a percentage. .5 is the middle of the screen(.5).
 You can also specify a percentage, such as (50%).
 
-This option can be specified with `--jump-target`(or `-j`).
-It can be entered after startup (default key `j`).
+This option can be specified with `--jump-target`(or `-j`) (default key `j`).
 
 ###  3.20. <a name='view-mode'></a>View mode
 
-You may want to use some modes in combination.
+You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
 
 For example, if you write the following settings in ov.yaml,
@@ -434,8 +473,6 @@ For example, if you write the following settings in ov.yaml,
 ```console
 ov --view-mode csv test.csv
 ```
-
-After startup, you can enter view-mode with (default key `p`).
 
 ```ov.yaml
 Mode:
@@ -463,6 +500,27 @@ Mode:
     ColumnDelimiter: ","
     ColumnRainbow: true
 ```
+
+###  3.21. <a name='output-on-exit'></a>Output on exit
+
+`--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
+This looks like the display remains on the console after the ov is over.
+
+By default, it outputs the amount of the displayed screen and exits.
+
+```console
+ov -X README.md
+```
+
+You can change how much is written using `--exit-write-before` and `--exit-write-after`(default key `ctrl+q`).
+`--exit-write-before`
+
+`--exit-write-before` specifies the number of lines before the current position(top of screen).
+`--exit-write-before 3` will output from 3 lines before.
+
+`--exit-write-after` specifies the number of lines after the current position (top of screen).
+
+`--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
 ##  4. <a name='command-option'></a>Command option
 
@@ -542,7 +600,9 @@ It can also be changed after startup.
  [right]                      * scroll to right
  [ctrl+left]                  * scroll left half screen
  [ctrl+right]                 * scroll right half screen
- [g]                          * go to line(input number)
+ [shift+Home]                 * go to beginning of line
+ [shift+End]                  * go to end of line
+ [g]                          * go to line(input number and `.n` and `n%` allowed)
 
 	Move document
 
@@ -572,7 +632,7 @@ It can also be changed after startup.
  [ctrl+r]                     * column rainbow toggle
  [C]                          * alternate rows of style toggle
  [G]                          * line number toggle
- [ctrl+e]                     * original decoration toggle
+ [ctrl+e]                     * original decoration toggle(plain)
 
 	Change Display with Input
 
@@ -582,7 +642,7 @@ It can also be changed after startup.
  [ctrl+s]                     * number of skip lines
  [t]                          * TAB width
  [.]                          * multi color highlight
- [j]                          * jump target
+ [j]                          * jump target(`.n` and `n%` allowed)
 
 	Section
 
@@ -605,6 +665,10 @@ It can also be changed after startup.
  [alt+c]                      * case-sensitive toggle
  [alt+r]                      * regular expression search toggle
  [alt+i]                      * incremental search toggle
+ [Up]                         * previous candidate
+ [Down]                       * next candidate
+ [ctrl+c]                     * copy to clipboard.
+ [ctrl+v]                     * paste from clipboard
 ```
 
 ##  6. <a name='customize'></a>Customize
@@ -623,6 +687,7 @@ You can customize the following items.
 * StyleMarkLine
 * StyleSectionLine
 * StyleMultiColorHighlight
+* StyleColumnRainbow
 * StyleJumpTargetLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).

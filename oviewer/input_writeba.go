@@ -17,7 +17,7 @@ func baCandidate() *candidate {
 	}
 }
 
-// eventWriteBA represents the WatchInteval input mode.
+// eventWriteBA represents the writeBA input mode.
 type eventWriteBA struct {
 	tcell.EventTime
 	clist *candidate

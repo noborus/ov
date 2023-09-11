@@ -36,6 +36,8 @@ const (
 	actionMoveRight      = "right"
 	actionMoveHfLeft     = "half_left"
 	actionMoveHfRight    = "half_right"
+	actionMoveBeginLeft  = "begin_left"
+	actionMoveEndRight   = "end_right"
 	actionMoveBottom     = "bottom"
 	actionMovePgUp       = "page_up"
 	actionMovePgDn       = "page_down"
@@ -77,6 +79,8 @@ const (
 	inputRegexpSearch  = "input_regexp_search"
 	inputPrevious      = "input_previous"
 	inputNext          = "input_next"
+	inputCopy          = "input_copy"
+	inputPaste         = "input_paste"
 )
 
 // handlers returns a map of the action's handlers.
@@ -111,6 +115,8 @@ func (root *Root) handlers() map[string]func() {
 		actionMoveRight:      root.moveRight,
 		actionMoveHfLeft:     root.moveHfLeft,
 		actionMoveHfRight:    root.moveHfRight,
+		actionMoveBeginLeft:  root.moveBeginLeft,
+		actionMoveEndRight:   root.moveEndRight,
 		actionSection:        root.setSectionDelimiterMode,
 		actionSectionStart:   root.setSectionStartMode,
 		actionNextSection:    root.nextSection,
@@ -147,6 +153,8 @@ func (root *Root) handlers() map[string]func() {
 		inputRegexpSearch:  root.inputRegexpSearch,
 		inputPrevious:      root.inputPrevious,
 		inputNext:          root.inputNext,
+		inputCopy:          root.CopySelect,
+		inputPaste:         root.Paste,
 	}
 }
 
@@ -184,6 +192,8 @@ func defaultKeyBinds() KeyBind {
 		actionMoveRight:      {"right"},
 		actionMoveHfLeft:     {"ctrl+left"},
 		actionMoveHfRight:    {"ctrl+right"},
+		actionMoveBeginLeft:  {"shift+Home"},
+		actionMoveEndRight:   {"shift+End"},
 		actionSection:        {"alt+d"},
 		actionSectionStart:   {"ctrl+F3", "alt+s"},
 		actionNextSection:    {"space"},
@@ -221,6 +231,8 @@ func defaultKeyBinds() KeyBind {
 		inputRegexpSearch:  {"alt+r"},
 		inputPrevious:      {"Up"},
 		inputNext:          {"Down"},
+		inputCopy:          {"ctrl+c"},
+		inputPaste:         {"ctrl+v"},
 	}
 }
 
@@ -255,6 +267,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
+	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
+	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
 	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")
@@ -320,6 +334,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")
 	k.writeKeyBind(&b, inputNext, "next candidate")
+	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
+	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
 	return b.String()
 }
 

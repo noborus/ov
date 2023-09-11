@@ -77,7 +77,7 @@ func (root *Root) movePgDn() {
 
 func (root *Root) limitMoveDown(x int, y int) {
 	m := root.Doc
-	if y+root.vHight >= m.BufEndNum()-m.SkipLines {
+	if y+root.vHeight >= m.BufEndNum()-m.SkipLines {
 		tx, tn := root.bottomLineNum(m.BufEndNum())
 		if y > tn || (y == tn && x > tx) {
 			if m.topLN < tn || (m.topLN == tn && m.topLX < tx) {
@@ -192,6 +192,11 @@ func (root *Root) moveNumDown(moveY int) {
 // Move up one line.
 // Called from a EventKey.
 func (root *Root) moveUp() {
+	root.moveUpN(1)
+}
+
+// Move up by n amount.
+func (root *Root) moveUpN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -201,7 +206,7 @@ func (root *Root) moveUp() {
 	}
 
 	if !m.WrapMode {
-		m.topLN--
+		m.topLN -= n
 		m.topLX = 0
 		return
 	}
@@ -219,7 +224,7 @@ func (root *Root) moveUp() {
 	}
 
 	// Previous line.
-	m.topLN--
+	m.topLN -= n
 	if m.topLN < 0 {
 		m.topLN = 0
 		m.topLX = 0
@@ -236,6 +241,11 @@ func (root *Root) moveUp() {
 // Move down one line.
 // Called from a EventKey.
 func (root *Root) moveDown() {
+	root.moveDownN(1)
+}
+
+// Move down by n amount.
+func (root *Root) moveDownN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -243,7 +253,7 @@ func (root *Root) moveDown() {
 	num := m.topLN
 
 	if !m.WrapMode {
-		num++
+		num += n
 		root.limitMoveDown(0, num)
 		return
 	}
@@ -259,7 +269,7 @@ func (root *Root) moveDown() {
 	}
 
 	// Next line.
-	num++
+	num += n
 	m.topLX = 0
 	root.limitMoveDown(m.topLX, num)
 }
@@ -338,6 +348,11 @@ func (root *Root) lastSection() {
 // Move to the left.
 // Called from a EventKey.
 func (root *Root) moveLeft() {
+	root.moveLeftN(1)
+}
+
+// Move left by n amount.
+func (root *Root) moveLeftN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -346,28 +361,34 @@ func (root *Root) moveLeft() {
 		if m.WrapMode {
 			return
 		}
-		m.x--
+		m.x -= n
 		if m.x < root.minStartX {
 			m.x = root.minStartX
 		}
 		return
 	}
 
-	if m.columnCursor > 0 {
-		cursor := m.columnCursor - 1
-		x, err := root.columnX(cursor)
-		if err != nil {
-			root.debugMessage(err.Error())
-			return
-		}
-		m.x = x
-		m.columnCursor = cursor
+	if m.columnCursor <= 0 {
+		return
 	}
+	cursor := m.columnCursor - n
+	x, err := root.columnX(cursor)
+	if err != nil {
+		root.debugMessage(err.Error())
+		return
+	}
+	m.x = x
+	m.columnCursor = cursor
 }
 
 // Move to the right.
 // Called from a EventKey.
 func (root *Root) moveRight() {
+	root.moveRightN(1)
+}
+
+// Move right by n amount.
+func (root *Root) moveRightN(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -376,11 +397,16 @@ func (root *Root) moveRight() {
 		if m.WrapMode {
 			return
 		}
-		m.x++
+		end := root.endRight()
+		if end < m.x+n {
+			m.x = end
+		} else {
+			m.x += n
+		}
 		return
 	}
 
-	cursor := m.columnCursor + 1
+	cursor := m.columnCursor + n
 	x, err := root.columnX(cursor)
 	if err != nil {
 		root.debugMessage(err.Error())
@@ -404,31 +430,31 @@ func (root *Root) columnX(cursor int) (int, error) {
 		if err != nil {
 			continue
 		}
-		lineStr, posCV := ContentsToStr(lc)
-		idxs := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
-		maxCursor = max(maxCursor, len(idxs))
-		if len(idxs) < cursor {
+		lineStr, pos := ContentsToStr(lc)
+		indexes := allIndex(lineStr, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		maxCursor = max(maxCursor, len(indexes))
+		if len(indexes) < cursor {
 			continue
 		}
 
-		sx, ex := 0, 0
-		if len(idxs) == cursor {
+		start, end := 0, 0
+		if len(indexes) == cursor {
 			// right edge.
-			pos := idxs[cursor-1]
-			sx = posCV[pos[1]+len(m.ColumnDelimiter)]
-			ex = posCV[len(lineStr)]
+			idx := indexes[cursor-1]
+			start = pos.x(idx[1] + len(m.ColumnDelimiter))
+			end = pos.x(len(lineStr))
 		} else {
-			pos := idxs[cursor]
-			sx = posCV[pos[0]]
-			ex = posCV[pos[1]]
+			idx := indexes[cursor]
+			start = pos.x(idx[0])
+			end = pos.x(idx[1])
 		}
-		if root.vWidth > ex { // don't scroll.
+		if root.vWidth > end { // don't scroll.
 			return 0, nil
 		}
-		if ex-root.vWidth > 0 {
-			return ex - root.vWidth, nil
+		if end-root.vWidth > 0 {
+			return end - root.vWidth, nil
 		}
-		return sx, nil
+		return start, nil
 	}
 
 	if maxCursor > 0 {
@@ -479,6 +505,40 @@ func (root *Root) moveHfRight() {
 	m.x += (root.vWidth / 2)
 }
 
+// moveBeginLeft moves to the beginning of the line.
+func (root *Root) moveBeginLeft() {
+	m := root.Doc
+
+	if m.WrapMode {
+		return
+	}
+	m.x = 0
+}
+
+// moveEndRight moves to the end of the line.
+// Move so that the end of the currently displayed line is visible.
+func (root *Root) moveEndRight() {
+	m := root.Doc
+	if m.WrapMode {
+		return
+	}
+	m.x = root.endRight()
+}
+
+func (root *Root) endRight() int {
+	m := root.Doc
+	x := 0
+	for _, line := range root.lines {
+		lY := line.number
+		lc, err := m.contentsLN(lY, m.TabWidth)
+		if err != nil {
+			continue
+		}
+		x = max(x, len(lc))
+	}
+	return x - ((root.vWidth - root.startX) - 1)
+}
+
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (root *Root) bottomLineNum(lN int) (int, int) {
@@ -486,12 +546,12 @@ func (root *Root) bottomLineNum(lN int) (int, int) {
 		return 0, 0
 	}
 
-	hight := (root.vHight - root.headerLen) - 2
+	height := (root.vHeight - root.headerLen) - 2
 	if !root.Doc.WrapMode {
-		return 0, lN - (hight + root.Doc.firstLine())
+		return 0, lN - (height + root.Doc.firstLine())
 	}
 	// WrapMode
-	lX, lN := root.findNumUp(0, lN, hight)
+	lX, lN := root.findNumUp(0, lN, height)
 	return lX, lN - root.Doc.firstLine()
 }
 

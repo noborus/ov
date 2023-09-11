@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -13,6 +14,9 @@ import (
 
 	"github.com/dgraph-io/ristretto"
 )
+
+// ChunkSize is the unit of number of lines to split the file.
+var ChunkSize = 10000
 
 // The Document structure contains the values
 // for the logical screen.
@@ -34,9 +38,11 @@ type Document struct {
 	// Is it possible to seek.
 	seekable bool
 
-	// lines stores the contents of the file in slices of strings.
-	// lines,endNum and eof is updated by reader goroutine.
-	lines []string
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
+
+	// size is the number of bytes read.
+	size int64
 	// endNum is the number of the last line read.
 	endNum int
 
@@ -63,15 +69,17 @@ type Document struct {
 
 	lastContentsNum int
 	lastContentsStr string
-	lastContentsMap map[int]int
+	lastPos         widthPos
 
 	// status is the display status of the document.
 	general
 
 	// WatchMode is watch mode.
-	WatchMode bool
-	ticker    *time.Ticker
-
+	WatchMode    bool
+	ticker       *time.Ticker
+	tickerDone   chan struct{}
+	watchRestart atomic.Bool
+	tickerState  atomic.Bool
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
 	// topLN is the starting position of the current y.
@@ -101,13 +109,22 @@ type Document struct {
 	mu sync.Mutex
 }
 
+// chunk stores the contents of the split file as slices of strings.
+type chunk struct {
+	// lines stores the contents of the file in slices of strings.
+	// lines,endNum and eof is updated by reader goroutine.
+	lines []string
+	// start is the first position of the number of bytes read.
+	start int64
+}
+
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		lines:    make([]string, 0),
-		eofCh:    make(chan struct{}),
-		followCh: make(chan struct{}),
-		changCh:  make(chan struct{}),
+		eofCh:      make(chan struct{}),
+		followCh:   make(chan struct{}),
+		changCh:    make(chan struct{}),
+		tickerDone: make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,
@@ -117,12 +134,21 @@ func NewDocument() (*Document, error) {
 		lastContentsNum: -1,
 		seekable:        true,
 		preventReload:   false,
+		chunks: []*chunk{
+			NewChunk(0),
+		},
 	}
-
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
 	return m, nil
+}
+
+func NewChunk(start int64) *chunk {
+	return &chunk{
+		lines: make([]string, 0, ChunkSize),
+		start: start,
+	}
 }
 
 // OpenDocument opens a file and returns a Document.
@@ -174,7 +200,20 @@ func (m *Document) GetLine(n int) string {
 	if n < 0 || n >= m.endNum {
 		return ""
 	}
-	return m.lines[n]
+
+	chunkNum := n / ChunkSize
+	chunkLine := n % ChunkSize
+	if len(m.chunks)-1 < chunkNum {
+		log.Println("over chunk size: ", chunkNum)
+		return ""
+	}
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines)-1 < chunkLine {
+		log.Printf("over lines size: chunk[%d]:%d < %d", chunkNum, len(chunk.lines)-1, chunkLine)
+		return ""
+	}
+
+	return chunk.lines[chunkLine]
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -188,7 +227,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprintln(w, m.GetLine(n))
+		fmt.Fprint(w, m.GetLine(n))
 	}
 }
 
@@ -248,17 +287,17 @@ func (m *Document) contentsLN(lN int, tabWidth int) (contents, error) {
 
 // getContents returns contents from line number and tabwidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getContents(lN int, tabWidth int) contents {
+func (m *Document) getContents(lN int, tabWidth int) (contents, bool) {
 	org, err := m.contentsLN(lN, tabWidth)
 	if err != nil {
 		// EOF
 		lc := make(contents, 1)
 		lc[0] = EOFContent
-		return lc
+		return lc, false
 	}
 	lc := make(contents, len(org))
 	copy(lc, org)
-	return lc
+	return lc, true
 }
 
 // getContentsStr is returns a converted string
@@ -266,12 +305,12 @@ func (m *Document) getContents(lN int, tabWidth int) contents {
 // getContentsStr saves the last result
 // and reduces the number of executions of contentsToStr.
 // Because it takes time to analyze a line with a very long line.
-func (m *Document) getContentsStr(lN int, lc contents) (string, map[int]int) {
+func (m *Document) getContentsStr(lN int, lc contents) (string, widthPos) {
 	if m.lastContentsNum != lN {
-		m.lastContentsStr, m.lastContentsMap = ContentsToStr(lc)
+		m.lastContentsStr, m.lastPos = ContentsToStr(lc)
 		m.lastContentsNum = lN
 	}
-	return m.lastContentsStr, m.lastContentsMap
+	return m.lastContentsStr, m.lastPos
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.
