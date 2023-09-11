@@ -178,23 +178,15 @@ type Config struct {
 	Keybind map[string][]string
 	// Mode represents the operation of the customized mode.
 	Mode map[string]general
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
 	// StyleAlternate is a style that applies line by line.
 	StyleAlternate OVStyle
 	// StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
-	// StyleHeader is the style that applies to the header.
+	// StyleBody is the style that applies to the body.
 	StyleBody OVStyle
 	// StyleOverStrike is a style that applies to overstrike.
 	StyleOverStrike OVStyle
-	// OverLineS is a style that applies to overstrike underlines.
+	// StyleOverLine is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
 	// StyleLineNumber is a style that applies line number.
 	StyleLineNumber OVStyle
@@ -216,6 +208,10 @@ type Config struct {
 	// General represents the general behavior.
 	General general
 
+	// MemoryLimit is a number that limits chunk loading.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
@@ -223,22 +219,26 @@ type Config struct {
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
 
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+
 	// Mouse support disable.
 	DisableMouse bool
 	// IsWriteOriginal is true, write the current screen on quit.
 	IsWriteOriginal bool
-	// QuiteSmall Quit if the output fits on one screen.
+	// QuitSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
 	// RegexpSearch is Regular expression search if true.
 	RegexpSearch bool
-	// Incsearch is incremental server if true.
+	// Incsearch is incremental search if true.
 	Incsearch bool
-	// LoadChunksLimit is a number that limits chunk loading.
-	LoadChunksLimit int
-	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunksLimit int
+
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -284,10 +284,10 @@ type OVStyle struct {
 }
 
 var (
-	// LoadChunksLimit is a number that limits the chunks to load into memory.
-	LoadChunksLimit int
-	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
-	FileLoadChunksLimit int
+	// MemoryLimit is a number that limits the chunks to load into memory.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
 
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
@@ -510,7 +510,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+								root.debugMessage(fmt.Sprintf("notify send fail %s", requestFollow))
 							}
 						case fsnotify.Remove, fsnotify.Create:
 							if !doc.FollowName {
@@ -520,7 +520,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 							case doc.ctlCh <- controlSpecifier{request: requestReload}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
+								root.debugMessage(fmt.Sprintf("notify send fail %s", requestReload))
 							}
 
 						}
@@ -920,20 +920,22 @@ func (root *Root) debugNumOfChunk() {
 	if !root.Debug {
 		return
 	}
+	log.Println("MemoryLimit:", root.MemoryLimit)
+	log.Println("MemoryLimitFile:", root.MemoryLimitFile)
 	for _, doc := range root.DocList {
 		if !doc.seekable {
-			if LoadChunksLimit > 0 {
-				log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+			if MemoryLimit > 0 {
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
 			}
 			continue
 		}
 		for n, chunk := range doc.chunks {
 			if n != 0 && len(chunk.lines) != 0 {
 				if !doc.loadedChunks.Contains(n) {
-					log.Printf("chunk %d is not under control", n)
+					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
 				}
 			}
 		}
-		log.Printf("%s(seekable): The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
 	}
 }
