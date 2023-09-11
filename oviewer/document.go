@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,57 +17,55 @@ import (
 	"github.com/noborus/guesswidth"
 )
 
-// ChunkSize is the unit of number of lines to split the file.
-var ChunkSize = 10000
-
 // The Document structure contains the values
 // for the logical screen.
 type Document struct {
+	// File is the os.File.
+	file *os.File
+
+	cache *lru.Cache[int, LineC]
+
+	ticker     *time.Ticker
+	tickerDone chan struct{}
+	// ctlCh is the channel for controlling the reader goroutine.
+	ctlCh chan controlSpecifier
+
+	// multiColorRegexps holds multicolor regular expressions in slices.
+	multiColorRegexps []*regexp.Regexp
+	// store represents store management.
+	store       *store
+	followStore *store
+
 	// fileName is the file name to display.
 	FileName string
 	// Caption is an additional caption to display after the file name.
 	Caption string
 	// filepath stores the absolute pathname for file watching.
 	filepath string
-	// File is the os.File.
-	file *os.File
-
-	// chunks is the content of the file to be stored in chunks.
-	chunks []*chunk
-
-	// loadedChunks manages chunks loaded into memory.
-	loadedChunks *lru.Cache[int, struct{}]
-	// currentChunk represents the current chunk number.
-	currentChunk int
-
-	// ctlCh is the channel for controlling the reader goroutine.
-	ctlCh chan controlSpecifier
-
-	cache *lru.Cache[int, LineC]
-
-	ticker     *time.Ticker
-	tickerDone chan struct{}
-
-	// multiColorRegexps holds multicolor regular expressions in slices.
-	multiColorRegexps []*regexp.Regexp
 
 	// marked is a list of marked line numbers.
 	marked []int
 	// columnWidths is a slice of column widths.
 	columnWidths []int
+
 	// status is the display status of the document.
 	general
 
-	// size is the number of bytes read.
-	size int64
-	// offset
-	offset int64
+	// memoryLimit is the maximum chunk size.
+	memoryLimit int
 
-	// startNum is the number of the first line that can be moved.
-	startNum int
-	// endNum is the number of the last line read.
-	endNum int
+	// currentChunk represents the current chunk number.
+	currentChunk int
 
+	// headerLen is the actual header length when wrapped.
+	headerLen int
+	// statusPos is the position of the status line.
+	statusPos int
+
+	// width is the width of the screen.
+	width int
+	// height is the height of the screen.
+	height int
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
@@ -87,24 +87,23 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
+	// jumpTargetNum is the display position of search results.
+	jumpTargetNum int
+	// jumpTargetSection is the display position of search results.
+	jumpTargetSection bool
+
 	// CFormat is a compressed format.
 	CFormat Compressed
 
-	// mu controls the mutex.
-	mu sync.Mutex
-
 	watchRestart int32
 	tickerState  int32
-
-	// 1 if EOF is reached.
-	eof int32
-	// 1 if there is a changed.
-	changed int32
 	// 1 if there is a closed.
 	closed int32
 
-	// 1 if there is a read cancel.
-	readCancel int32
+	// 1 if there is a tmpFollow mode.
+	tmpFollow int32
+	// tmpLN is a temporary line number when the number of lines is undetermined.
+	tmpLN int32
 
 	// WatchMode is watch mode.
 	WatchMode bool
@@ -114,16 +113,36 @@ type Document struct {
 	seekable bool
 	// Is it possible to reopen.
 	reopenable bool
-	// formfeedTime adds time on formfeed.
-	formfeedTime bool
 }
 
-// LineC is one line of information.
-// Contains content, string, location information.
-type LineC struct {
-	lc  contents
-	str string
-	pos widthPos
+// store represents store management.
+type store struct {
+	// loadedChunks manages chunks loaded into memory.
+	loadedChunks *lru.Cache[int, struct{}]
+	// chunks is the content of the file to be stored in chunks.
+	chunks []*chunk
+	// mu controls the mutex.
+	mu sync.RWMutex
+
+	// startNum is the number of the first line that can be moved.
+	startNum int32
+	// endNum is the number of the last line read.
+	endNum int32
+
+	// 1 if there is a changed.
+	changed int32
+	// 1 if there is a read cancel.
+	readCancel int32
+	// 1 if newline at end of file.
+	noNewlineEOF int32
+	// 1 if EOF is reached.
+	eof int32
+	// size is the number of bytes read.
+	size int64
+	// offset
+	offset int64
+	// formfeedTime adds time on formfeed.
+	formfeedTime bool
 }
 
 // chunk stores the contents of the split file as slices of strings.
@@ -133,6 +152,14 @@ type chunk struct {
 	lines [][]byte
 	// start is the first position of the number of bytes read.
 	start int64
+}
+
+// LineC is one line of information.
+// Contains content, string, location information.
+type LineC struct {
+	lc  contents
+	str string
+	pos widthPos
 }
 
 // NewDocument returns Document.
@@ -146,25 +173,16 @@ func NewDocument() (*Document, error) {
 			PlainMode:       false,
 		},
 		ctlCh:         make(chan controlSpecifier),
+		memoryLimit:   100,
 		seekable:      true,
 		reopenable:    true,
 		preventReload: false,
-		chunks: []*chunk{
-			NewChunk(0),
-		},
+		store:         NewStore(),
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
 	return m, nil
-}
-
-// NewChunk returns chunk.
-func NewChunk(start int64) *chunk {
-	return &chunk{
-		lines: make([][]byte, 0, ChunkSize),
-		start: start,
-	}
 }
 
 // NewCache creates a new cache.
@@ -238,25 +256,41 @@ func STDINDocument() (*Document, error) {
 
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
-	if n >= m.BufEndNum() {
-		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
+	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+		return m.followStore.GetChunkLine(0, n)
 	}
 
-	chunkNum := n / ChunkSize
-	if m.lastChunkNum() < chunkNum {
-		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
+	s := m.store
+	if n >= m.BufEndNum() {
+		return nil, fmt.Errorf("%w %d>%d", ErrOutOfRange, n, m.BufEndNum())
+	}
+
+	chunkNum, cn := chunkLineNum(n)
+
+	if s.lastChunkNum() < chunkNum {
+		return nil, fmt.Errorf("%w %d<%d", ErrOutOfRange, s.lastChunkNum(), chunkNum)
 	}
 	if m.currentChunk != chunkNum {
+		m.currentChunk = chunkNum
 		m.requestLoad(chunkNum)
 	}
 
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	chunk := m.chunks[chunkNum]
-	if cn := n % ChunkSize; cn < len(chunk.lines) {
-		return chunk.lines[cn], nil
+	return s.GetChunkLine(chunkNum, cn)
+}
+
+// GetChunkLine returns one line from buffer.
+func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.chunks) <= chunkNum {
+		return nil, fmt.Errorf("over chunk(%d) %w", chunkNum, ErrOutOfRange)
 	}
-	return nil, ErrEvictedMemory
+	chunk := s.chunks[chunkNum]
+
+	if cn >= len(chunk.lines) {
+		return nil, fmt.Errorf("over line (%d:%d) %w", chunkNum, cn, ErrOutOfRange)
+	}
+	return bytes.TrimSuffix(chunk.lines[cn], []byte("\n")), nil
 }
 
 // GetLine returns one line from buffer.
@@ -271,11 +305,17 @@ func (m *Document) GetLine(n int) string {
 
 // LineString returns one line from buffer.
 func (m *Document) LineString(n int) string {
+	str, _ := m.LineStr(n)
+	return str
+}
+
+// LineStr returns one line from buffer.
+func (m *Document) LineStr(n int) (string, error) {
 	s, err := m.Line(n)
 	if err != nil {
-		return gchalk.Red(err.Error())
+		return gchalk.Red(err.Error()), err
 	}
-	return string(s)
+	return string(s), nil
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -284,25 +324,47 @@ func (m *Document) CurrentLN() int {
 }
 
 // Export exports the document in the specified range.
-func (m *Document) Export(w io.Writer, start int, end int) {
-	for n := start; n <= end; n++ {
-		if n >= m.BufEndNum() {
-			break
+func (m *Document) Export(w io.Writer, start int, end int) error {
+	end = min(end, m.BufEndNum()-1)
+	startChunk, startCn := chunkLineNum(start)
+	endChunk, endCn := chunkLineNum(end)
+
+	scn := startCn
+	ecn := ChunkSize
+	for chunkNum := startChunk; chunkNum <= endChunk; chunkNum++ {
+		if chunkNum == endChunk {
+			ecn = endCn + 1
 		}
-		fmt.Fprint(w, m.LineString(n))
+		chunk := m.store.chunks[chunkNum]
+		if err := m.store.export(w, chunk, scn, ecn); err != nil {
+			return err
+		}
+		scn = 0
 	}
+	return nil
+}
+
+// BufStartNum return start line number.
+func (m *Document) BufStartNum() int {
+	return int(atomic.LoadInt32(&m.store.startNum))
 }
 
 // BufEndNum return last line number.
 func (m *Document) BufEndNum() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.endNum
+	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+		return int(atomic.LoadInt32(&m.followStore.endNum))
+	}
+	return int(atomic.LoadInt32(&m.store.endNum))
+}
+
+// BufEndNum return last line number.
+func (m *Document) storeEndNum() int {
+	return int(atomic.LoadInt32(&m.store.endNum))
 }
 
 // BufEOF return true if EOF is reached.
 func (m *Document) BufEOF() bool {
-	return atomic.LoadInt32(&m.eof) == 1
+	return atomic.LoadInt32(&m.store.eof) == 1
 }
 
 // ClearCache clears the cache.
@@ -316,8 +378,8 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 		return nil, ErrOutOfRange
 	}
 
-	str := m.LineString(lN)
-	return parseString(str, tabWidth), nil
+	str, err := m.LineStr(lN)
+	return parseString(str, tabWidth), err
 }
 
 // getLineC returns contents from line number and tabWidth.
@@ -331,8 +393,7 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 	}
 
 	org, err := m.contents(lN, tabWidth)
-	if err != nil {
-		// EOF
+	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
 		return LineC{
@@ -347,7 +408,7 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 		str: str,
 		pos: pos,
 	}
-	if len(org) != 0 {
+	if err == nil {
 		m.cache.Add(lN, line)
 	}
 
@@ -360,28 +421,6 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 // firstLine is the first line that excludes the SkipLines and Header.
 func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
-}
-
-// GetChunkLine returns one line from buffer.
-func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if len(m.chunks) <= chunkNum {
-		return nil, ErrOutOfChunk
-	}
-	chunk := m.chunks[chunkNum]
-
-	if cn >= len(chunk.lines) {
-		return nil, ErrOutOfRange
-	}
-	return chunk.lines[cn], nil
-}
-
-// chunkLine returns chunkNum and chunk line number from line number.
-func chunkLine(n int) (int, int) {
-	chunkNum := n / ChunkSize
-	cn := n % ChunkSize
-	return chunkNum, cn
 }
 
 // watchMode sets the document to watch mode.
@@ -404,7 +443,7 @@ func (m *Document) unWatchMode() {
 func (m *Document) regexpCompile() {
 	m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 	m.setSectionDelimiter(m.SectionDelimiter)
-	if m.MultiColorWords != nil {
+	if len(m.MultiColorWords) > 0 {
 		m.setMultiColorWords(m.MultiColorWords)
 	}
 }
@@ -435,8 +474,8 @@ func (m *Document) setColumnWidths() {
 
 	header := m.Header - 1
 	header = max(header, 0)
-	tl := min(1000, len(m.chunks[0].lines))
-	lines := m.chunks[0].lines[m.SkipLines:tl]
+	tl := min(1000, len(m.store.chunks[0].lines))
+	lines := m.store.chunks[0].lines[m.SkipLines:tl]
 	buf := make([]string, len(lines))
 	for n, line := range lines {
 		buf[n] = string(line)

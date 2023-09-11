@@ -60,30 +60,30 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 // wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp() {
 	root.setMessage("")
-	root.moveUpN(2)
+	root.moveUp(2)
 }
 
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown() {
 	root.setMessage("")
-	root.moveDownN(2)
+	root.moveDown(2)
 }
 
 func (root *Root) wheelRight() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveRight()
+		root.moveRightOne()
 	} else {
-		root.moveRightN(4)
+		root.moveRight(4)
 	}
 }
 
 func (root *Root) wheelLeft() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveLeft()
+		root.moveLeftOne()
 	} else {
-		root.moveLeftN(4)
+		root.moveLeft(4)
 	}
 }
 
@@ -137,6 +137,10 @@ type eventCopySelect struct {
 
 // CopySelect fires the eventCopySelect event.
 func (root *Root) CopySelect() {
+	root.sendCopySelect()
+}
+
+func (root *Root) sendCopySelect() {
 	if !root.checkScreen() {
 		return
 	}
@@ -182,6 +186,10 @@ type eventPaste struct {
 
 // Paste fires the eventPaste event.
 func (root *Root) Paste() {
+	root.sendPaste()
+}
+
+func (root *Root) sendPaste() {
 	if !root.checkScreen() {
 		return
 	}
