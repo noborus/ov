@@ -74,6 +74,7 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
+	actionSaveBuffer     = "save_buffer"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -150,6 +151,7 @@ func (root *Root) handlers() map[string]func() {
 		actionToggleMouse:    root.toggleMouse,
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
+		actionSaveBuffer:     root.setSaveBuffer,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -230,6 +232,7 @@ func defaultKeyBinds() KeyBind {
 		actionSuspend:        {"ctrl+z"},
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
+		actionSaveBuffer:     {"S"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -258,6 +261,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
 	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
+	k.writeKeyBind(&b, actionSaveBuffer, "save buffer to file")
 
 	fmt.Fprint(&b, "\n\tMoving\n")
 	fmt.Fprint(&b, "\n")
