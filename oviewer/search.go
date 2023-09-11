@@ -311,7 +311,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	})
 
 	if err := eg.Wait(); err != nil {
-		root.setMessage(err.Error())
+		root.setMessageLog(err.Error())
 		return
 	}
 	root.setMessagef("search:%v", word)
@@ -468,7 +468,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		default:
-			log.Printf("unexpected event %#v", ev)
+			root.setMessageLogf("unexpected event %#v", ev)
 			return nil
 		}
 	}
@@ -668,7 +668,7 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	// Seek to the start of the chunk.
 	chunk := m.store.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
-		return 0, fmt.Errorf("seek:%w", err)
+		return 0, fmt.Errorf("seek: %w", err)
 	}
 
 	// Read the chunk line by line.

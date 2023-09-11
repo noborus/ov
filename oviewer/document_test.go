@@ -149,7 +149,9 @@ func TestDocument_Export(t *testing.T) {
 			for !m.BufEOF() {
 			}
 			m.bottomLN = m.BufEndNum()
-			m.Export(w, tt.args.start, tt.args.end)
+			if err := m.Export(w, tt.args.start, tt.args.end); err != nil {
+				t.Fatal(err)
+			}
 			if gotW := w.String(); gotW != tt.wantW {
 				t.Errorf("Document.Export() = %v, want %v", gotW, tt.wantW)
 			}

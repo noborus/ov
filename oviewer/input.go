@@ -27,6 +27,7 @@ const (
 	SectionStart               // SectionStart is a section start position input mode.
 	MultiColor                 // MultiColor is multi-word coloring.
 	JumpTarget                 // JumpTarget is the position to display the search results.
+	SaveBuffer                 // SaveBuffer is the save buffer.
 )
 
 // Input represents the status of various inputs.
@@ -47,6 +48,7 @@ type Input struct {
 	SectionStartCandidate *candidate
 	MultiColorCandidate   *candidate
 	JumpTargetCandidate   *candidate
+	SaveBufferCandidate   *candidate
 
 	value   string
 	cursorX int
@@ -67,6 +69,7 @@ func NewInput() *Input {
 	i.SectionStartCandidate = sectionStartCandidate()
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
+	i.SaveBufferCandidate = saveBufferCandidate()
 
 	i.Event = &eventNormal{}
 	return &i

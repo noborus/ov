@@ -20,7 +20,7 @@ func (root *Root) toggleWrapMode() {
 	// Move cursor to correct position
 	x, err := root.Doc.optimalX(m.columnCursor)
 	if err != nil {
-		log.Println(err)
+		root.setMessageLog(err.Error())
 	}
 	// Move if off screen
 	if x < m.x || x > m.x+(root.scr.vWidth-root.scr.startX) {
@@ -112,14 +112,13 @@ func (root *Root) closeFile() {
 		return
 	}
 	root.Doc.requestClose()
-	root.setMessagef("close file %s", root.Doc.FileName)
-	log.Printf("close file %s", root.Doc.FileName)
+	root.setMessageLogf("close file %s", root.Doc.FileName)
 }
 
 // reload performs a reload of the current document.
 func (root *Root) reload(m *Document) {
 	if err := m.reload(); err != nil {
-		root.setMessagef("cannot reload: %s", err)
+		root.setMessageLogf("cannot reload: %s", err)
 		return
 	}
 	root.releaseEventBuffer()
@@ -347,11 +346,11 @@ func (root *Root) suspend() {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		log.Println(err)
+		root.setMessageLog(err.Error())
 	}
 	fmt.Println("resume ov")
 	if err := root.Screen.Resume(); err != nil {
-		log.Println(err)
+		root.setMessageLog(err.Error())
 	}
 	log.Println("Resume")
 }
@@ -428,8 +427,7 @@ func (root *Root) setWatchInterval(input string) {
 		root.Doc.watchMode()
 	}
 	atomic.StoreInt32(&root.Doc.watchRestart, 1)
-	log.Printf("Set watch interval %d", interval)
-	root.setMessagef("Set watch interval %d", interval)
+	root.setMessageLogf("Set watch interval %d", interval)
 }
 
 // setWriteBA sets the number before and after the line

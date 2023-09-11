@@ -291,6 +291,8 @@ var (
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
 	OverLineStyle tcell.Style
+	// SkipExtract is a flag to skip extracting compressed files.
+	SkipExtract bool
 )
 
 // ov output destination.
@@ -684,6 +686,12 @@ func (root *Root) Close() {
 	root.Screen.Fini()
 }
 
+// setMessagef displays a formatted message in status.
+func (root *Root) setMessagef(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	root.setMessage(msg)
+}
+
 // setMessage displays a message in status.
 func (root *Root) setMessage(msg string) {
 	if root.message == msg {
@@ -695,11 +703,24 @@ func (root *Root) setMessage(msg string) {
 	root.Show()
 }
 
-func (root *Root) setMessagef(format string, a ...any) {
+// setMessageLogf displays a formatted message in the status and outputs it to the log.
+func (root *Root) setMessageLogf(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
-	root.setMessage(msg)
+	root.setMessageLog(msg)
 }
 
+// setMessageLog displays a message in the status and outputs it to the log.
+func (root *Root) setMessageLog(msg string) {
+	if root.message == msg {
+		return
+	}
+	root.message = msg
+	log.Print(msg)
+	root.drawStatus()
+	root.Show()
+}
+
+// debugMessage outputs a debug message.
 func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
@@ -707,7 +728,7 @@ func (root *Root) debugMessage(msg string) {
 	if root.Doc == root.logDoc {
 		return
 	}
-	root.message = msg
+
 	if len(msg) == 0 {
 		return
 	}
@@ -897,7 +918,9 @@ func (root *Root) WriteOriginal() {
 		end = m.topLN + root.AfterWriteOriginal - 1
 	}
 
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // WriteLog write to the log terminal.
@@ -905,7 +928,9 @@ func (root *Root) WriteLog() {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // lineNumber returns the line information from y on the screen.
@@ -916,6 +941,7 @@ func (scr SCR) lineNumber(y int) LineNumber {
 	return scr.numbers[0]
 }
 
+// debugNumOfChunk outputs the number of chunks.
 func (root *Root) debugNumOfChunk() {
 	if !root.Debug {
 		return
