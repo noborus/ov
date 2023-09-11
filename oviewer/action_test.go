@@ -42,8 +42,8 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 
 func Test_position(t *testing.T) {
 	type args struct {
-		hight int
-		str   string
+		height int
+		str    string
 	}
 	tests := []struct {
 		name string
@@ -53,39 +53,39 @@ func Test_position(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				hight: 30,
-				str:   "1",
+				height: 30,
+				str:    "1",
 			},
 			want: 1,
 		},
 		{
 			name: "test.5",
 			args: args{
-				hight: 30,
-				str:   ".5",
+				height: 30,
+				str:    ".5",
 			},
 			want: 15,
 		},
 		{
 			name: "test20%",
 			args: args{
-				hight: 30,
-				str:   "20%",
+				height: 30,
+				str:    "20%",
 			},
 			want: 6,
 		},
 		{
 			name: "test.3",
 			args: args{
-				hight: 45,
-				str:   "30%",
+				height: 45,
+				str:    "30%",
 			},
 			want: 13.5,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := position(tt.args.hight, tt.args.str); got != tt.want {
+			if got := position(tt.args.height, tt.args.str); got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
 			}
 		})
@@ -94,8 +94,8 @@ func Test_position(t *testing.T) {
 
 func Test_jumpPosition(t *testing.T) {
 	type args struct {
-		hight int
-		str   string
+		height int
+		str    string
 	}
 	tests := []struct {
 		name string
@@ -105,23 +105,23 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				hight: 30,
-				str:   "1",
+				height: 30,
+				str:    "1",
 			},
 			want: 1,
 		},
 		{
 			name: "test.3",
 			args: args{
-				hight: 10,
-				str:   ".3",
+				height: 10,
+				str:    ".3",
 			},
 			want: 3,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := jumpPosition(tt.args.hight, tt.args.str); got != tt.want {
+			if got := jumpPosition(tt.args.height, tt.args.str); got != tt.want {
 				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
 			}
 		})

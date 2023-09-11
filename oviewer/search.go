@@ -146,39 +146,14 @@ func condRegexpCompile(in string) *regexp.Regexp {
 
 // searchPosition returns the position where the search in the argument line matched.
 // searchPosition uses cache.
-func (root *Root) searchPosition(lN int, lineStr string) [][]int {
-	m := root.Doc
-	key := root.searchKey(lN)
-
-	if value, found := m.cache.Get(key); found {
-		poss, ok := value.([][]int)
-		if !ok {
-			return nil
-		}
-		return poss
-	}
-
-	var poss [][]int
+func (root *Root) searchPosition(lN int, str string) [][]int {
+	var indexes [][]int
 	if root.Config.RegexpSearch {
-		poss = searchPositionReg(lineStr, root.searchReg)
+		indexes = searchPositionReg(str, root.searchReg)
 	} else {
-		poss = searchPositionStr(root.Config.CaseSensitive, lineStr, root.searchWord)
+		indexes = searchPositionStr(root.Config.CaseSensitive, str, root.searchWord)
 	}
-
-	m.cache.Set(key, poss, 3)
-	return poss
-}
-
-// searcKey returns a search key for the cache.
-func (root *Root) searchKey(lN int) string {
-	s := "s"
-	if root.Config.RegexpSearch {
-		s += "r"
-	}
-	if root.Config.CaseSensitive {
-		s += "i"
-	}
-	return fmt.Sprintf("search:%d:%s:%s", lN, s, root.searchWord)
+	return indexes
 }
 
 // searchPositionReg returns an array of the beginning and end of the search string.
@@ -217,11 +192,6 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	return NewSearcher(root.searchWord, root.searchReg, caseSensitive, root.Config.RegexpSearch)
 }
 
-// eventSearchQuit represents a search quit event.
-type eventSearchQuit struct {
-	tcell.EventTime
-}
-
 // searchMove searches forward/backward and moves to the nearest matching line.
 func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
 	if searcher == nil {
@@ -248,9 +218,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 		if err != nil {
 			return err
 		}
-		root.Doc.topLN = lN - root.Doc.firstLine()
-		root.Doc.topLX = 0
-		root.moveNumUp(root.Doc.JumpTarget)
+		root.searchGo(lN)
 		return nil
 	})
 
@@ -285,25 +253,45 @@ func (root *Root) cancelWait() error {
 			c.SetKey(mod, key, cancelApp)
 		}
 	}
-
+	// Allow only some events while searching.
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
-		case *tcell.EventKey:
+		case *tcell.EventKey: // cancel key?
 			c.Capture(ev)
-		case *eventSearchQuit:
+		case *eventSearchQuit: // found
+			return nil
+		case *eventUpdateEndNum:
+			root.updateEndNum()
+		default:
+			log.Printf("unexpected event %#v", ev)
 			return nil
 		}
 	}
 }
 
+// eventSearchQuit represents a search quit event.
+type eventSearchQuit struct {
+	tcell.EventTime
+}
+
 // searchQuit fires the eventSearchQuit event.
 func (root *Root) searchQuit() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventSearchQuit{}
 	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// eventSearchMove represents the moveo input mode.
+type eventSearchMove struct {
+	tcell.EventTime
+	value int
+}
+
+func (root *Root) searchGo(lN int) {
+	ev := &eventSearchMove{}
+	ev.SetEventNow()
+	ev.value = lN
 	root.postEvent(ev)
 }
 
@@ -341,13 +329,11 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 		root.searchQuit()
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Println(err)
+				log.Printf("incSearch %s", err)
 			}
 			return
 		}
-		root.Doc.topLN = lN - root.Doc.firstLine()
-		root.Doc.topLX = 0
-		root.moveNumUp(root.Doc.JumpTarget)
+		root.searchGo(lN)
 	}()
 }
 
@@ -373,7 +359,7 @@ func (root *Root) returnStartPosition() int {
 
 // startSearchLN returns the start position of the search.
 func (root *Root) startSearchLN() int {
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
 	if l.number-root.Doc.topLN > root.Doc.topLN {
 		return 0
 	}
@@ -389,21 +375,21 @@ func (root *Root) firstSearch(ctx context.Context) {
 // nextSearch performs the next search.
 func (root *Root) nextSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, true, l.number+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
 func (root *Root) firstBackSearch(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	l := root.lineInfo(root.headerLen)
+	l := root.scr.lineNumber(root.headerLen)
 	root.searchMove(ctx, false, l.number, searcher)
 }
 
 // nextBackSearch performs the next back search.
 func (root *Root) nextBackSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.lineInfo(root.headerLen + root.Doc.JumpTarget)
+	l := root.scr.lineNumber(root.headerLen + root.Doc.JumpTarget)
 	root.searchMove(ctx, false, l.number-1, searcher)
 }
 

@@ -14,7 +14,7 @@ const statusLine = 1
 func (root *Root) draw() {
 	m := root.Doc
 
-	if root.vHight == 0 {
+	if root.scr.vHeight == 0 {
 		m.topLN = 0
 		root.drawStatus()
 		root.Show()
@@ -22,18 +22,18 @@ func (root *Root) draw() {
 	}
 
 	// Header
-	lY := root.drawHeader()
+	lN := root.drawHeader()
 
 	lX := 0
 	if m.WrapMode {
 		lX = m.topLX
 	}
 
-	lY = m.topLN + lY
+	lN = m.topLN + lN
 	// Body
-	lX, lY = root.drawBody(lX, lY)
+	lX, lN = root.drawBody(lX, lN)
 
-	m.bottomLN = max(lY, 0)
+	m.bottomLN = max(lN, 0)
 	m.bottomLX = lX
 
 	if root.mouseSelect {
@@ -48,34 +48,44 @@ func (root *Root) draw() {
 func (root *Root) drawHeader() int {
 	m := root.Doc
 
-	// lY is a logical line.
-	lY := m.SkipLines
-	// lX is the x position of Contents.
+	// lN is a logical line number.
+	lN := m.SkipLines
+	// lX is the logical x position of Contents.
 	lX := 0
 
 	// wrapNum is the number of wrapped lines.
 	wrapNum := 0
-	// hy is the drawing line.
-	hy := 0
-	for ; lY < m.firstLine(); hy++ {
-		if hy > root.vHight {
+	line, _ := m.getLineC(lN, m.TabWidth)
+	// y is the y-coordinate.
+	y := 0
+	for ; lN < m.firstLine(); y++ {
+		if y > root.scr.vHeight {
 			break
 		}
 
-		lc := m.getContents(lY, m.TabWidth)
-		lineStr, posCV := m.getContentsStr(lY, lc)
-		root.lines[hy] = line{
-			number: lY,
+		root.scr.numbers[y] = LineNumber{
+			number: lN,
 			wrap:   wrapNum,
 		}
 
-		root.columnHighlight(lc, lineStr, posCV)
-		root.blankLineNumber(hy)
+		if root.Doc.ColumnMode {
+			root.columnHighlight(line)
+		}
+		if root.Doc.LineNumMode {
+			root.blankLineNumber(y)
+		}
 
-		lX, lY = root.drawLine(hy, lX, lY, lc)
-
+		nextX, nextY := root.drawLine(y, lX, lN, line.lc)
 		// header style
-		root.lineStyle(hy, root.StyleHeader)
+		root.yStyle(y, root.StyleHeader)
+
+		lX = nextX
+		if nextY != lN {
+			lN = nextY
+			line, _ = m.getLineC(lN, m.TabWidth)
+			root.styleContent(lN, line)
+
+		}
 
 		if lX > 0 {
 			wrapNum++
@@ -83,53 +93,44 @@ func (root *Root) drawHeader() int {
 			wrapNum = 0
 		}
 	}
-	root.headerLen = hy
-	return lY
+	root.headerLen = y
+	return lN
 }
 
 // drawBody draws body.
-func (root *Root) drawBody(lX int, lY int) (int, int) {
+func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	wrapNum := root.numOfWrap(lX, lY)
-	markStyleWidth := min(root.vWidth, root.Doc.general.MarkStyleWidth)
-	root.Doc.lastContentsNum = -1
-
-	// lc, lineStr, byteMap store the previous value.
-	// Because it may be a continuation from the previous line in wrap mode.
-	lastLN := -1
-	var lc contents
-	var lineStr string
-	var posCV map[int]int
-	for y := root.headerLen; y < root.vHight-statusLine; y++ {
-		if lastLN != lY {
-			lc = m.getContents(lY, m.TabWidth)
-			lineStr, posCV = m.getContentsStr(lY, lc)
-			root.bodyStyle(lc, root.StyleBody)
-			lastLN = lY
-		}
-
-		root.lines[y] = line{
-			number: lY,
+	wrapNum := root.numOfWrap(lX, lN)
+	line, valid := m.getLineC(lN, m.TabWidth)
+	root.bodyStyle(line.lc, root.StyleBody)
+	root.styleContent(lN, line)
+	for y := root.headerLen; y < root.scr.vHeight-statusLine; y++ {
+		root.scr.numbers[y] = LineNumber{
+			number: lN,
 			wrap:   wrapNum,
 		}
 
-		if root.Doc.PlainMode {
-			root.plainStyle(lc)
+		if root.Doc.LineNumMode {
+			if valid {
+				root.drawLineNumber(lN, y)
+			} else {
+				root.blankLineNumber(y)
+			}
 		}
-		root.columnHighlight(lc, lineStr, posCV)
-		root.multiColorHighlight(lc, lineStr, posCV)
-		root.searchHighlight(lY, lc, lineStr, posCV)
-		root.drawLineNumber(lY, y)
 
-		currentY := lY
-		lX, lY = root.drawLine(y, lX, lY, lc)
+		nextX, nextY := root.drawLine(y, lX, lN, line.lc)
 
-		root.alternateRowsStyle(currentY, y)
-		root.markStyle(currentY, y, markStyleWidth)
-		root.sectionLineHighlight(y, lineStr)
-		if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
-			root.lineStyle(y, root.StyleJumpTargetLine)
+		if valid {
+			root.coordinatesStyle(lN, y, line.str)
+		}
+
+		lX = nextX
+		if nextY != lN {
+			lN = nextY
+			line, valid = m.getLineC(lN, m.TabWidth)
+			root.bodyStyle(line.lc, root.StyleBody)
+			root.styleContent(lN, line)
 		}
 
 		if lX > 0 {
@@ -138,68 +139,89 @@ func (root *Root) drawBody(lX int, lY int) (int, int) {
 			wrapNum = 0
 		}
 	}
+	return lX, lN
+}
 
-	return lX, lY
+func (root *Root) styleContent(lN int, line LineC) {
+	if root.Doc.PlainMode {
+		root.plainStyle(line.lc)
+	}
+	if root.Doc.ColumnMode {
+		root.columnHighlight(line)
+	}
+	root.multiColorHighlight(line)
+	root.searchHighlight(lN, line)
+}
+
+func (root *Root) coordinatesStyle(lN int, y int, str string) {
+	root.alternateRowsStyle(lN, y)
+	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
+	root.markStyle(lN, y, markStyleWidth)
+	root.sectionLineHighlight(y, str)
+	if root.Doc.JumpTarget != 0 && root.headerLen+root.Doc.JumpTarget == y {
+		root.yStyle(y, root.StyleJumpTargetLine)
+	}
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawLine(y int, lX int, lY int, lc contents) (int, int) {
+func (root *Root) drawLine(y int, lX int, lN int, lc contents) (int, int) {
 	if root.Doc.WrapMode {
-		return root.drawWrapLine(y, lX, lY, lc)
+		return root.drawWrapLine(y, lX, lN, lc)
 	}
 
-	return root.drawNoWrapLine(y, root.Doc.x, lY, lc)
+	return root.drawNoWrapLine(y, root.Doc.x, lN, lc)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawWrapLine(y int, lX int, lY int, lc contents) (int, int) {
+func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 	if lX < 0 {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
 	}
 
+	//log.Println("len", root.scr.vHeight*root.scr.vWidth, len(lc))
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
-			root.clearEOL(root.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y)
 			lX = 0
-			lY++
+			lN++
 			break
 		}
 		content := lc[lX+x]
-		if x+root.startX+content.width > root.vWidth {
+		if x+root.scr.startX+content.width > root.scr.vWidth {
 			// Right edge.
-			root.clearEOL(root.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y)
 			lX += x
 			break
 		}
-		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
 	}
 
-	return lX, lY
+	return lX, lN
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lY int, lc contents) (int, int) {
+func (root *Root) drawNoWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 	if lX < root.minStartX {
 		lX = root.minStartX
 	}
 
-	for x := 0; root.startX+x < root.vWidth; x++ {
+	for x := 0; root.scr.startX+x < root.scr.vWidth; x++ {
 		if lX+x >= len(lc) {
 			// EOL
-			root.clearEOL(root.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y)
 			break
 		}
 		content := DefaultContent
 		if lX+x >= 0 {
 			content = lc[lX+x]
 		}
-		root.Screen.SetContent(root.startX+x, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
 	}
-	lY++
+	lN++
 
-	return lX, lY
+	return lX, lN
 }
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.
@@ -210,14 +232,14 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lY int, lc contents, lineStr string, posCV map[int]int) {
+func (root *Root) searchHighlight(lN int, line LineC) {
 	if root.searchWord == "" {
 		return
 	}
 
-	poss := root.searchPosition(lY, lineStr)
-	for _, r := range poss {
-		RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleSearchHighlight)
+	indexes := root.searchPosition(lN, line.str)
+	for _, idx := range indexes {
+		RangeStyle(line.lc, line.pos.x(idx[0]), line.pos.x(idx[1]), root.StyleSearchHighlight)
 	}
 }
 
@@ -230,12 +252,12 @@ func (root *Root) plainStyle(lc contents) {
 
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
 // The style of the first specified word takes precedence.
-func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int) {
+func (root *Root) multiColorHighlight(line LineC) {
 	numC := len(root.StyleMultiColorHighlight)
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
-		poss := searchPositionReg(str, root.Doc.multiColorRegexps[i])
-		for _, r := range poss {
-			RangeStyle(lc, posCV[r[0]], posCV[r[1]], root.StyleMultiColorHighlight[i%numC])
+		indexes := searchPositionReg(line.str, root.Doc.multiColorRegexps[i])
+		for _, idx := range indexes {
+			RangeStyle(line.lc, line.pos.x(idx[0]), line.pos.x(idx[1]), root.StyleMultiColorHighlight[i%numC])
 		}
 	}
 }
@@ -243,22 +265,15 @@ func (root *Root) multiColorHighlight(lc contents, str string, posCV map[int]int
 // blankLineNumber should be blank for the line number.
 func (root *Root) blankLineNumber(y int) {
 	m := root.Doc
-	// line number mode
-	if !root.Doc.LineNumMode {
-		return
-	}
-	numC := StrToContents(strings.Repeat(" ", root.startX-1), m.TabWidth)
+	numC := StrToContents(strings.Repeat(" ", root.scr.startX-1), m.TabWidth)
 	root.setContentString(0, y, numC)
 }
 
 // drawLineNumber draws the line number.
-func (root *Root) drawLineNumber(lY int, y int) {
+func (root *Root) drawLineNumber(lN int, y int) {
 	m := root.Doc
-	if !m.LineNumMode {
-		return
-	}
 	// Line numbers start at 1 except for skip and header lines.
-	numC := StrToContents(fmt.Sprintf("%*d", root.startX-1, lY-m.firstLine()+1), m.TabWidth)
+	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, lN-m.firstLine()+1), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
 		numC[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 	}
@@ -266,34 +281,35 @@ func (root *Root) drawLineNumber(lY int, y int) {
 }
 
 // columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(lc contents, str string, posCV map[int]int) {
+func (root *Root) columnHighlight(line LineC) {
 	m := root.Doc
-	if !m.ColumnMode {
+
+	indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+	if len(indexes) == 0 {
 		return
 	}
-
 	numC := len(root.StyleColumnRainbow)
-	c := 0
-	start := 0
-	idxs := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-	for _, idx := range idxs {
+
+	var iStart, iEnd int
+	for c := 0; c < len(indexes)+1; c++ {
+		switch {
+		case c == 0:
+			iStart = 0
+			iEnd = indexes[0][1] - 1
+		case c < len(indexes):
+			iStart = iEnd + 1
+			iEnd = indexes[c][0]
+		case c == len(indexes):
+			iStart = iEnd + 1
+			iEnd = len(line.str)
+		}
+
+		start, end := line.pos.x(iStart), line.pos.x(iEnd)
 		if m.ColumnRainbow {
-			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnRainbow[c%numC])
+			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
-			RangeStyle(lc, posCV[start], posCV[idx[0]], root.StyleColumnHighlight)
-		}
-		start = idx[1]
-		if start != 1 {
-			c++
-		}
-	}
-	if start < len(str) {
-		if m.ColumnRainbow {
-			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnRainbow[c%numC])
-		}
-		if c == m.columnCursor && start != 0 {
-			RangeStyle(lc, posCV[start], posCV[len(str)], root.StyleColumnHighlight)
+			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 		}
 	}
 }
@@ -307,27 +323,27 @@ func RangeStyle(lc contents, start int, end int, s OVStyle) {
 }
 
 // alternateRowsStyle applies from beginning to end of line.
-func (root *Root) alternateRowsStyle(lY int, y int) {
+func (root *Root) alternateRowsStyle(lN int, y int) {
 	if root.Doc.AlternateRows {
-		if (lY)%2 == 1 {
-			root.lineStyle(y, root.StyleAlternate)
+		if (lN)%2 == 1 {
+			root.yStyle(y, root.StyleAlternate)
 		}
 	}
 }
 
-// lineStyle applies the style from the left edge to the right edge of the physical line.
+// yStyle applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
-func (root *Root) lineStyle(y int, s OVStyle) {
-	for x := 0; x < root.vWidth; x++ {
+func (root *Root) yStyle(y int, s OVStyle) {
+	for x := 0; x < root.scr.vWidth; x++ {
 		r, c, ts, _ := root.GetContent(x, y)
 		root.Screen.SetContent(x, y, r, c, applyStyle(ts, s))
 	}
 }
 
 // markStyle applies the style from the left edge to the specified width.
-func (root *Root) markStyle(lY int, y int, width int) {
+func (root *Root) markStyle(lN int, y int, width int) {
 	m := root.Doc
-	if contains(m.marked, lY) {
+	if contains(m.marked, lN) {
 		for x := 0; x < width; x++ {
 			r, c, style, _ := root.GetContent(x, y)
 			root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
@@ -337,12 +353,12 @@ func (root *Root) markStyle(lY int, y int, width int) {
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
-	root.clearLine(root.statusPos)
+	root.clearY(root.statusPos)
 	leftContents, cursorPos := root.leftStatus()
 	root.setContentString(0, root.statusPos, leftContents)
 
 	rightContents := root.rightStatus()
-	root.setContentString(root.vWidth-len(rightContents), root.statusPos, rightContents)
+	root.setContentString(root.scr.vWidth-len(rightContents), root.statusPos, rightContents)
 
 	root.Screen.ShowCursor(cursorPos, root.statusPos)
 }
@@ -435,13 +451,13 @@ func (root *Root) setContentString(vx int, vy int, lc contents) {
 
 // clearEOL clears from the specified position to the right end.
 func (root *Root) clearEOL(x int, y int) {
-	for ; x < root.vWidth; x++ {
+	for ; x < root.scr.vWidth; x++ {
 		root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault)
 	}
 }
 
-// clearLine clear the specified line.
-func (root *Root) clearLine(y int) {
+// clearY clear the specified line.
+func (root *Root) clearY(y int) {
 	root.clearEOL(0, y)
 }
 
@@ -457,6 +473,6 @@ func (root *Root) sectionLineHighlight(y int, str string) {
 	}
 
 	if root.Doc.SectionDelimiterReg.MatchString(str) {
-		root.lineStyle(y, root.StyleSectionLine)
+		root.yStyle(y, root.StyleSectionLine)
 	}
 }

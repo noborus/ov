@@ -21,8 +21,6 @@ import (
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
-	// Config contains settings that determine the behavior of ov.
-	Config
 
 	// Doc contains the model of ov
 	Doc *Document
@@ -31,25 +29,12 @@ type Root struct {
 	// log
 	logDoc *Document
 
-	// DocList
-	DocList    []*Document
-	CurrentDoc int
-	// mu controls the RWMutex.
-	mu sync.RWMutex
-
-	// screenMode represents the mode of screen.
-	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
-	// Original position at the start of search.
-	OriginPos int
-	// Original string.
-	OriginStr string
+
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchWord for on-screen highlighting.
-	searchWord string
 	// searchReg for on-screen highlighting.
 	searchReg *regexp.Regexp
 
@@ -58,37 +43,40 @@ type Root struct {
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
+	// searchWord for on-screen highlighting.
+	searchWord string
+	// Original string.
+	OriginStr string
+
 	// message is the message to display.
 	message string
 
-	// vWidth represents the screen width.
-	vWidth int
-	// vHight represents the screen height.
-	vHight int
+	// DocList
+	DocList []*Document
 
-	// startX is the start position of x.
-	startX int
+	// cancelKeys represents the cancellation key string.
+	cancelKeys []string
 
-	// lines is the line information of the currently displayed screen.
-	// lines (number of logical lines and number of wrapping lines) from y on the screen.
-	lines []line
+	// Config contains settings that determine the behavior of ov.
+	Config
 
-	// skipDraw skips draw once when true.
-	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
-	skipDraw bool
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
 
+	// mu controls the RWMutex.
+	mu sync.RWMutex
+
+	// Original position at the start of search.
+	OriginPos int
+
+	CurrentDoc int
+
+	scr SCR
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
 	x2 int
 	y2 int
-
-	// mousePressed is a flag when the mouse selection button is pressed.
-	mousePressed bool
-	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
-	// mouseRectangle is a flag for rectangle selection.
-	mouseRectangle bool
 
 	// headerLen is the actual header length when wrapped.
 	headerLen int
@@ -98,12 +86,31 @@ type Root struct {
 	// minStartX is the minimum start position of x.
 	minStartX int
 
-	// cancelKeys represents the cancellation key string.
-	cancelKeys []string
+	// skipDraw skips draw once when true.
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
+	skipDraw bool
+	// mousePressed is a flag when the mouse selection button is pressed.
+	mousePressed bool
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+	// mouseRectangle is a flag for rectangle selection.
+	mouseRectangle bool
+}
+
+type SCR struct {
+	// numbers is the line information of the currently displayed screen.
+	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
+	numbers []LineNumber
+	// vWidth represents the screen width.
+	vWidth int
+	// vHeight represents the screen height.
+	vHeight int
+	// startX is the start position of x.
+	startX int
 }
 
 // Line is Number of logical lines and number of wrapping lines on the screen.
-type line struct {
+type LineNumber struct {
 	number int
 	wrap   int
 }
@@ -111,12 +118,33 @@ type line struct {
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {
+	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
+	ColumnDelimiterReg *regexp.Regexp
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter string
+	// SectionDelimiterReg is a section delimiter.
+	SectionDelimiterReg *regexp.Regexp
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter string
+	// Specified string for jumpTarget.
+	JumpTargetString string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
+
 	// TabWidth is tab stop num.
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
 	// SkipLines is the rows to skip.
 	SkipLines int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition int
+	// JumpTarget is the display position of search results.
+	JumpTarget int
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -127,10 +155,6 @@ type general struct {
 	LineNumMode bool
 	// Wrap is Wrap mode.
 	WrapMode bool
-	// ColumnDelimiter is a column delimiter.
-	ColumnDelimiter string
-	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
-	ColumnDelimiterReg *regexp.Regexp
 	// FollowMode is the follow mode.
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.
@@ -139,26 +163,22 @@ type general struct {
 	FollowSection bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
-	// WatchInterval is the watch interval (seconds).
-	WatchInterval int
-	// MarkStyleWidth is width to apply the style of the marked line.
-	MarkStyleWidth int
-	// SectionDelimiter is a section delimiter.
-	SectionDelimiter string
-	// SectionDelimiterReg is a section delimiter.
-	SectionDelimiterReg *regexp.Regexp
-	// SectionStartPosition is a section start position.
-	SectionStartPosition int
-	// Specified string for jumpTarget.
-	JumpTargetString string
-	// JumpTarget is the display position of search results.
-	JumpTarget int
-	// MultiColorWords specifies words to color separated by spaces.
-	MultiColorWords []string
 }
 
 // Config represents the settings of ov.
 type Config struct {
+	// KeyBinding
+	Keybind map[string][]string
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
+
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+
 	// StyleAlternate is a style that applies line by line.
 	StyleAlternate OVStyle
 	// StyleHeader is the style that applies to the header.
@@ -188,13 +208,7 @@ type Config struct {
 
 	// General represents the general behavior.
 	General general
-	// Mode represents the operation of the customized mode.
-	Mode map[string]general
 
-	// Mouse support disable.
-	DisableMouse bool
-	// IsWriteOriginal is true, write the current screen on quit.
-	IsWriteOriginal bool
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
@@ -202,6 +216,10 @@ type Config struct {
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
 
+	// Mouse support disable.
+	DisableMouse bool
+	// IsWriteOriginal is true, write the current screen on quit.
+	IsWriteOriginal bool
 	// QuiteSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
@@ -212,25 +230,6 @@ type Config struct {
 	Incsearch bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-	// KeyBinding
-	Keybind map[string][]string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
-	// Old setting.
-	// Deprecated: Alternating background color.
-	ColorAlternate string
-	// Deprecated: Header color.
-	ColorHeader string
-	// Deprecated: OverStrike color.
-	ColorOverStrike string
-	// Deprecated: OverLine color.
-	ColorOverLine string
 }
 
 // OVStyle represents a style in addition to the original style.
@@ -253,6 +252,24 @@ type OVStyle struct {
 	Underline bool
 	// If true, add strikethrough.
 	StrikeThrough bool
+	// If true, add overline (not yet supported).
+	OverLine bool
+	// If true, sub blink.
+	UnBlink bool
+	// If true, sub bold.
+	UnBold bool
+	// If true, sub dim.
+	UnDim bool
+	// If true, sub italic.
+	UnItalic bool
+	// If true, sub reverse.
+	UnReverse bool
+	// If true, sub underline.
+	UnUnderline bool
+	// If true, sub strikethrough.
+	UnStrikeThrough bool
+	// if true, sub underline (not yet supported).
+	UnOverLine bool
 }
 
 var (
@@ -469,8 +486,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		err := watcher.Add(doc.FileName)
-		if err != nil {
+		if err := watcher.Add(doc.FileName); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
 	}
@@ -618,6 +634,9 @@ func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
 	}
+	if root.Doc == root.logDoc {
+		return
+	}
 	root.message = msg
 	if len(msg) == 0 {
 		return
@@ -649,25 +668,46 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Foreground(tcell.GetColor(s.Foreground))
 	}
 	if s.Blink {
-		style = style.Blink(s.Blink)
+		style = style.Blink(true)
 	}
 	if s.Bold {
-		style = style.Bold(s.Bold)
+		style = style.Bold(true)
 	}
 	if s.Dim {
-		style = style.Dim(s.Dim)
+		style = style.Dim(true)
 	}
 	if s.Italic {
-		style = style.Italic(s.Italic)
+		style = style.Italic(true)
 	}
 	if s.Reverse {
-		style = style.Reverse(s.Reverse)
+		style = style.Reverse(true)
 	}
 	if s.Underline {
-		style = style.Underline(s.Underline)
+		style = style.Underline(true)
 	}
 	if s.StrikeThrough {
-		style = style.StrikeThrough(s.StrikeThrough)
+		style = style.StrikeThrough(true)
+	}
+	if s.UnBlink {
+		style = style.Blink(false)
+	}
+	if s.UnBold {
+		style = style.Bold(false)
+	}
+	if s.UnDim {
+		style = style.Dim(false)
+	}
+	if s.UnItalic {
+		style = style.Italic(false)
+	}
+	if s.UnReverse {
+		style = style.Reverse(false)
+	}
+	if s.UnUnderline {
+		style = style.Underline(false)
+	}
+	if s.UnStrikeThrough {
+		style = style.StrikeThrough(false)
 	}
 	return style
 }
@@ -737,14 +777,13 @@ func mergeGeneral(src general, dst general) general {
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
-	root.vWidth, root.vHight = screen.Size()
+	root.scr.vWidth, root.scr.vHeight = screen.Size()
 
 	// Do not allow size 0.
-	root.vWidth = max(root.vWidth, 1)
-	root.vHight = max(root.vHight, 1)
-
-	root.lines = make([]line, root.vHight+1)
-	root.statusPos = root.vHight - statusLine
+	root.scr.vWidth = max(root.scr.vWidth, 1)
+	root.scr.vHeight = max(root.scr.vHeight, 1)
+	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
+	root.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -757,15 +796,15 @@ func (root *Root) docSmall() bool {
 	if !m.BufEOF() {
 		return false
 	}
-	hight := 0
+	height := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		lc, err := m.contentsLN(y, root.Doc.TabWidth)
+		lc, err := m.contents(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
-		hight += 1 + (len(lc) / root.vWidth)
-		if hight > root.vHight {
+		height += 1 + (len(lc) / root.scr.vWidth)
+		if height > root.scr.vHeight {
 			return false
 		}
 	}
@@ -796,10 +835,10 @@ func (root *Root) WriteLog() {
 	m.Export(os.Stdout, start, end)
 }
 
-// lineInfo returns the line information from y on the screen.
-func (root *Root) lineInfo(y int) line {
-	if y >= 0 && y <= len(root.lines) {
-		return root.lines[y]
+// lineNumber returns the line information from y on the screen.
+func (scr SCR) lineNumber(y int) LineNumber {
+	if y >= 0 && y <= len(scr.numbers) {
+		return scr.numbers[y]
 	}
-	return root.lines[0]
+	return scr.numbers[0]
 }

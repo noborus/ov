@@ -30,6 +30,11 @@ const (
 	ansiEscape
 	ansiSubstring
 	ansiControlSequence
+	otherSequence
+	systemSequence
+	oscHyperLink
+	oscParameter
+	oscURL
 )
 
 // DefaultContent is a blank Content.
@@ -40,9 +45,12 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
-// EOFContent is "~" only.
+// EOFC is the EOF character.
+const EOFC rune = '~'
+
+// EOFContent is EOFC only.
 var EOFContent = content{
-	mainc: '~',
+	mainc: EOFC,
 	combc: nil,
 	width: 1,
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
@@ -51,161 +59,242 @@ var EOFContent = content{
 // csicache caches escape sequences.
 var csiCache sync.Map
 
+// parseState represents the affected state after parsing.
+type parseState struct {
+	style     tcell.Style
+	parameter strings.Builder
+	url       strings.Builder
+	bsContent content
+	state     int
+	tabx      int
+	bsFlag    bool // backspace(^H) flag
+}
+
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.
+// If tabwidth is set to -1, \t is displayed instead of functioning as a tab.
 func parseString(str string, tabWidth int) contents {
 	lc := make(contents, 0, len(str))
-	state := ansiText
-	var csiParameter strings.Builder
-	style := tcell.StyleDefault
-	tabX := 0
-	b := 0
-	bsFlag := false // backspace(^H) flag
-	var bsContent content
+	state := &parseState{
+		state:     ansiText,
+		parameter: strings.Builder{},
+		url:       strings.Builder{},
+		style:     tcell.StyleDefault,
+		tabx:      0,
+		bsFlag:    false,
+		bsContent: DefaultContent,
+	}
 
 	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {
-		runes := gr.Runes()
-		runeValue := runes[0]
+		r := gr.Runes()
+		mainc := r[0]
+		combc := r[1:]
+
+		if state.parseEscapeSequence(mainc) {
+			continue
+		}
+
 		c := DefaultContent
-		switch state {
-		case ansiEscape:
-			switch runeValue {
-			case '[': // Control Sequence Introducer.
-				csiParameter.Reset()
-				state = ansiControlSequence
-				continue
-			case 'c': // Reset.
-				style = tcell.StyleDefault
-				state = ansiText
-				continue
-			case 'P', ']', 'X', '^', '_': // Substrings and commands.
-				state = ansiSubstring
-				continue
-			default: // Ignore.
-				state = ansiText
-			}
-		case ansiSubstring:
-			if runeValue == 0x1b {
-				state = ansiControlSequence
-			}
-			continue
-		case ansiControlSequence:
-			if runeValue == 'm' {
-				style = csToStyle(style, csiParameter.String())
-			} else if runeValue >= 'A' && runeValue <= 'T' {
-				// Ignore.
-			} else {
-				if runeValue >= 0x30 && runeValue <= 0x3f {
-					csiParameter.WriteRune(runeValue)
-					continue
-				}
-			}
-			state = ansiText
-			continue
-		}
-
-		switch runeValue {
-		case 0x1b:
-			state = ansiEscape
-			continue
-		case '\n':
-			continue
-		}
-
-		switch runewidth.RuneWidth(runeValue) {
+		switch runewidth.RuneWidth(mainc) {
 		case 0:
 			switch {
-			case runeValue == '\t': // TAB
+			case mainc == '\t': // TAB
 				switch {
 				case tabWidth > 0:
-					tabStop := tabWidth - (tabX % tabWidth)
+					tabStop := tabWidth - (state.tabx % tabWidth)
 					c.width = 1
-					c.style = style
+					c.style = state.style
 					c.mainc = rune('\t')
 					lc = append(lc, c)
-					tabX++
+					state.tabx++
 					c.mainc = 0
 					for i := 0; i < tabStop-1; i++ {
 						lc = append(lc, c)
-						tabX++
+						state.tabx++
 					}
 				case tabWidth < 0:
 					c.width = 1
-					c.style = style.Reverse(true)
+					c.style = state.style.Reverse(true)
 					c.mainc = rune('\\')
 					lc = append(lc, c)
 					c.mainc = rune('t')
 					lc = append(lc, c)
-					tabX += 2
+					state.tabx += 2
 				default:
 				}
 				continue
-			case runeValue == '\b': // BackSpace
+			case mainc == '\b': // BackSpace
 				if len(lc) == 0 {
 					continue
 				}
-				bsFlag = true
-				bsContent = lc.last()
-				b -= (1 + len(string(bsContent.mainc)))
-				if bsContent.width > 1 {
+				state.bsFlag = true
+				state.bsContent = lc.last()
+				if state.bsContent.width > 1 {
 					lc = lc[:len(lc)-2]
 				} else {
 					lc = lc[:len(lc)-1]
 				}
 				continue
-			case runeValue < 0x20: // control character
-				c.mainc = runeValue
+			case mainc < 0x20: // control character
+				c.mainc = mainc
 				c.width = 0
 				lc = append(lc, c)
 				continue
 			}
 			lastC := lc.last()
-			lastC.combc = append(lastC.combc, runeValue)
+			lastC.combc = append(lastC.combc, mainc)
 			n := len(lc) - lastC.width
 			if n >= 0 && len(lc) > n {
 				lc[n] = lastC
 			}
 		case 1:
-			c.mainc = runeValue
-			if len(runes) > 1 {
-				c.combc = runes[1:]
+			c.mainc = mainc
+			if len(combc) > 0 {
+				c.combc = combc
 			}
 			c.width = 1
-			c.style = style
-			if bsFlag {
-				c.style = overstrike(bsContent.mainc, runeValue, style)
-				bsFlag = false
-				bsContent = DefaultContent
-			}
+			c.style = state.overstrike(c, state.style)
 			lc = append(lc, c)
-			tabX++
+			state.tabx++
 		case 2:
-			c.mainc = runeValue
-			if len(runes) > 1 {
-				c.combc = runes[1:]
+			c.mainc = mainc
+			if len(combc) > 0 {
+				c.combc = combc
 			}
 			c.width = 2
-			c.style = style
-			if bsFlag {
-				c.style = overstrike(bsContent.mainc, runeValue, style)
-				bsFlag = false
-				bsContent = DefaultContent
-			}
+			c.style = state.overstrike(c, state.style)
 			lc = append(lc, c, DefaultContent)
-			tabX += 2
+			state.tabx += 2
 		}
 	}
 	return lc
 }
 
-// overstrike returns an overstrike tcell.Style.
-func overstrike(p, m rune, style tcell.Style) tcell.Style {
-	if p == m {
+// parseEscapeSequence parses an escape sequence and changes state.
+// Returns true if it is an escape sequence and a non-printing character.
+func (es *parseState) parseEscapeSequence(mainc rune) bool {
+	switch es.state {
+	case ansiEscape:
+		switch mainc {
+		case '[': // Control Sequence Introducer.
+			es.parameter.Reset()
+			es.state = ansiControlSequence
+			return true
+		case 'c': // Reset.
+			es.style = tcell.StyleDefault
+			es.state = ansiText
+			return true
+		case ']': // Operting System Command Sequence.
+			es.state = systemSequence
+			return true
+		case 'P', 'X', '^', '_': // Substrings and commands.
+			es.state = ansiSubstring
+			return true
+		case '(':
+			es.state = otherSequence
+			return true
+		default: // Ignore.
+			es.state = ansiText
+		}
+	case ansiSubstring:
+		if mainc == 0x1b {
+			es.state = ansiControlSequence
+		}
+		return true
+	case ansiControlSequence:
+		if mainc == 'm' {
+			es.style = csToStyle(es.style, es.parameter.String())
+		} else if mainc >= 'A' && mainc <= 'T' {
+			// Ignore.
+		} else {
+			if mainc >= 0x30 && mainc <= 0x3f {
+				es.parameter.WriteRune(mainc)
+				return true
+			}
+		}
+		es.state = ansiText
+		return true
+	case otherSequence:
+		es.state = ansiEscape
+		return true
+	case systemSequence:
+		switch mainc {
+		case '8':
+			es.state = oscHyperLink
+			return true
+		case '\\':
+			es.state = ansiText
+			return true
+		case 0x1b:
+			// unknown but for compatibility.
+			es.state = ansiControlSequence
+			return true
+		case 0x07:
+			es.state = ansiText
+			return true
+		}
+		log.Printf("invalid char %c", mainc)
+		return true
+	case oscHyperLink:
+		switch mainc {
+		case ';':
+			es.state = oscParameter
+			return true
+		}
+		es.state = ansiText
+		return false
+	case oscParameter:
+		if mainc != ';' {
+			es.parameter.WriteRune(mainc)
+			return true
+		}
+		urlid := es.parameter.String()
+		if urlid != "" {
+			es.style = es.style.UrlId(urlid)
+		}
+		es.parameter.Reset()
+		es.state = oscURL
+		return true
+	case oscURL:
+		switch mainc {
+		case 0x1b:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = systemSequence
+			return true
+		case 0x07:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = ansiText
+			return true
+		}
+		es.url.WriteRune(mainc)
+		return true
+	}
+	switch mainc {
+	case 0x1b:
+		es.state = ansiEscape
+		return true
+	case '\n':
+		return true
+	}
+	return false
+}
+
+// overstrike set style for overstrike.
+func (state *parseState) overstrike(m content, style tcell.Style) tcell.Style {
+	if !state.bsFlag {
+		return style
+	}
+
+	if state.bsContent.mainc == m.mainc {
 		style = OverStrikeStyle
-	} else if p == '_' {
+	} else if state.bsContent.mainc == '_' {
 		style = OverLineStyle
 	}
+	state.bsFlag = false
+	state.bsContent = DefaultContent
 	return style
 }
 
@@ -260,11 +349,23 @@ func parseCSI(params string) OVStyle {
 		case "7", "07":
 			s.Reverse = true
 		case "8", "08":
-			s.Reverse = true
+			// Invisible On (not implemented)
 		case "9", "09":
 			s.StrikeThrough = true
-		case "22", "24", "25", "27":
-			s = OVStyle{}
+		case "22":
+			s.UnBold = true
+		case "23":
+			s.UnItalic = true
+		case "24":
+			s.UnUnderline = true
+		case "25":
+			s.UnBlink = true
+		case "27":
+			s.UnReverse = true
+		case "28":
+			// Invisible Off (not implemented)
+		case "29":
+			s.UnStrikeThrough = true
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
 			s.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
@@ -275,6 +376,10 @@ func parseCSI(params string) OVStyle {
 			s.Background = colorName(int(tcell.Color(colorNumber - 40)))
 		case "49":
 			s.Background = "default"
+		case "53":
+			s.OverLine = true
+		case "55":
+			s.UnOverLine = true
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
 			s.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
@@ -371,18 +476,22 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
+type widthPos []int
+
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc contents) (string, map[int]int) {
+func ContentsToStr(lc contents) (string, widthPos) {
 	var buff strings.Builder
-	posCV := make(map[int]int)
+	pos := make(widthPos, 0, len(lc)*4)
 
-	bn := 0
+	i, bn := 0, 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		posCV[bn] = n
+		for ; i <= bn; i++ {
+			pos = append(pos, n)
+		}
 		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -397,6 +506,34 @@ func ContentsToStr(lc contents) (string, map[int]int) {
 		}
 	}
 	str := buff.String()
-	posCV[bn] = len(lc)
-	return str, posCV
+	for ; i <= bn; i++ {
+		pos = append(pos, len(lc))
+	}
+	return str, pos
+}
+
+// x returns the x position on the screen.
+func (pos widthPos) x(x int) int {
+	if x < len(pos) {
+		return pos[x]
+	}
+	return pos[len(pos)-1]
+}
+
+// n return string position from content.
+func (pos widthPos) n(w int) int {
+	var x int
+	for _, c := range pos {
+		if c >= w {
+			x = c
+			break
+		}
+	}
+	// It should return the last byte of a multibyte character.
+	for i := len(pos) - 1; i >= 0; i-- {
+		if pos[i] == x {
+			return i
+		}
+	}
+	return len(pos) - 1
 }

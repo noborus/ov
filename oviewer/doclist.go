@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"fmt"
 	"log"
 	"sync/atomic"
 )
@@ -69,7 +68,6 @@ func (root *Root) nextDoc() {
 	root.setDocumentNum(root.CurrentDoc + 1)
 	root.input.Event = normal()
 	root.debugMessage("next document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // previouseDoc displays the previous document.
@@ -77,14 +75,12 @@ func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.Event = normal()
 	root.debugMessage("previous document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // switchDocument displays the document of the specified docNum.
 func (root *Root) switchDocument(docNum int) {
 	root.setDocumentNum(docNum)
 	root.debugMessage("switch document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // setDocumentNum actually specifies docNum to display the document.
@@ -104,9 +100,6 @@ func (root *Root) setDocumentNum(docNum int) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
-	if m.WatchMode {
-		root.watchStart()
-	}
 	root.ViewSync()
 }
 

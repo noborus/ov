@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -15,7 +16,7 @@ var UpdateInterval = 50 * time.Millisecond
 // eventLoop is manages and executes events in the eventLoop routine.
 func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
-		root.watchStart()
+		atomic.StoreInt32(&root.Doc.watchRestart, 1)
 	}
 	go root.updateInterval(ctx)
 
@@ -28,7 +29,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.draw()
 		}
 		root.skipDraw = false
-
+		if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
+			root.watchControl()
+		}
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -64,6 +67,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.firstBackSearch(ctx)
 		case *eventNextBackSearch:
 			root.nextBackSearch(ctx, ev.str)
+		case *eventSearchMove:
+			root.searchGoLine(ev.value)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:
@@ -340,7 +345,7 @@ func (root *Root) Reload() {
 
 // releaseEventBuffer will release all event buffers.
 func (root *Root) releaseEventBuffer() {
-	for root.HasPendingEvent() {
+	for root.Screen.HasPendingEvent() {
 		_ = root.Screen.PollEvent()
 	}
 }
@@ -348,6 +353,7 @@ func (root *Root) releaseEventBuffer() {
 // postEvent is a wrapper for tcell.Event.
 func (root *Root) postEvent(ev tcell.Event) {
 	if err := root.Screen.PostEvent(ev); err != nil {
-		log.Println(err)
+		log.Printf("postEvent %s", err)
+		root.releaseEventBuffer()
 	}
 }

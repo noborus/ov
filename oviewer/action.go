@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -113,38 +114,48 @@ func (root *Root) toggleWatch() {
 	} else {
 		root.Doc.watchMode()
 	}
-	if root.Doc.WatchMode {
-		root.watchStart()
-	}
+	atomic.StoreInt32(&root.Doc.watchRestart, 1)
 }
 
-// watchStart starts watch mode.
-func (root *Root) watchStart() {
+// watchControl start/stop watch mode.
+func (root *Root) watchControl() {
 	m := root.Doc
 	m.WatchInterval = max(m.WatchInterval, 1)
-	if m.ticker != nil {
-		log.Println("watch stop")
-		m.ticker.Stop()
+	if atomic.LoadInt32(&m.tickerState) == 1 {
+		m.tickerDone <- struct{}{}
+		<-m.tickerDone
+	}
+	if !root.Doc.WatchMode {
+		return
 	}
 	log.Printf("watch start at interval %d", m.WatchInterval)
 	m.ticker = time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
+	atomic.StoreInt32(&m.tickerState, 1)
 	go func() {
 		for {
-			<-m.ticker.C
-			if m.WatchMode {
+			select {
+			case <-m.tickerDone:
+				log.Println("watch stop")
+				m.ticker.Stop()
+				atomic.StoreInt32(&m.tickerState, 0)
+				m.tickerDone <- struct{}{}
+				return
+			case <-m.ticker.C:
 				ev := &eventReload{}
 				ev.SetEventNow()
 				ev.m = m
 				if err := root.Screen.PostEvent(ev); err != nil {
 					log.Println(err)
 				}
-			} else {
-				log.Println("watch stop")
-				m.ticker.Stop()
-				return
 			}
 		}
 	}()
+}
+
+func (root *Root) searchGoLine(lN int) {
+	root.Doc.topLN = lN - root.Doc.firstLine()
+	root.Doc.topLX = 0
+	root.moveNumUp(root.Doc.JumpTarget)
 }
 
 // goLine will move to the specified line.
@@ -152,7 +163,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := position(root.Doc.endNum, input)
+	num := position(root.Doc.BufEndNum(), input)
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
@@ -250,7 +261,7 @@ func (root *Root) setHeader(input string) {
 		root.setMessagef("Set header: %s", ErrInvalidNumber.Error())
 		return
 	}
-	if num < 0 || num > root.vHight-1 {
+	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set header %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -379,12 +390,12 @@ func (root *Root) setWatchInterval(input string) {
 
 	root.Doc.WatchInterval = interval
 	if root.Doc.WatchInterval == 0 {
-		root.Doc.WatchMode = false
-		return
+		root.Doc.unWatchMode()
+	} else {
+		root.Doc.watchMode()
 	}
-
-	root.Doc.WatchMode = true
-	root.watchStart()
+	atomic.StoreInt32(&root.Doc.watchRestart, 1)
+	log.Printf("Set watch interval %d", interval)
 	root.setMessagef("Set watch interval %d", interval)
 }
 
@@ -454,8 +465,8 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := jumpPosition(root.vHight, input)
-	if num < 0 || num > root.vHight-1 {
+	num := jumpPosition(root.scr.vHeight, input)
+	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
@@ -473,10 +484,10 @@ func (root *Root) resize() {
 }
 
 // jumpPosition determines the position of the jump.
-func jumpPosition(hight int, str string) int {
-	num := int(math.Round(position(hight, str)))
+func jumpPosition(height int, str string) int {
+	num := int(math.Round(position(height, str)))
 	if num < 0 {
-		return (hight - 1) + num
+		return (height - 1) + num
 	}
 	return num
 }
@@ -485,7 +496,7 @@ func jumpPosition(hight int, str string) int {
 // the number of lines from the top for positive numbers (1),
 // dot.number for percentages (.5) = 50%,
 // and % after the number for percentages (50%).
-func position(hight int, str string) float64 {
+func position(height int, str string) float64 {
 	str = strings.TrimSpace(str)
 	if len(str) == 0 {
 		return 0
@@ -510,7 +521,7 @@ func position(hight int, str string) float64 {
 	}
 
 	if p != 0 {
-		return float64(hight) * p
+		return float64(height) * p
 	}
 
 	num, err := strconv.ParseFloat(str, 64)
@@ -528,7 +539,7 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget = jumpPosition(root.vHight, root.Doc.JumpTargetString)
+	root.Doc.JumpTarget = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
 }
 
 // TailSync move to tail and sync.
@@ -550,9 +561,9 @@ func (root *Root) tailSection() {
 
 // prepareStartX prepares startX.
 func (root *Root) prepareStartX() {
-	root.startX = 0
+	root.scr.startX = 0
 	if root.Doc.LineNumMode {
-		root.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
+		root.scr.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
 	}
 }
 

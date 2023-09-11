@@ -84,7 +84,7 @@ func TestDocument_lineToContents(t *testing.T) {
 			}
 			<-m.eofCh
 			t.Logf("num:%d", m.BufEndNum())
-			got, err := m.contentsLN(tt.args.lN, tt.args.tabWidth)
+			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.lineToContents() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -141,51 +141,6 @@ func TestDocument_Export(t *testing.T) {
 			m.Export(w, tt.args.start, tt.args.end)
 			if gotW := w.String(); gotW != tt.wantW {
 				t.Errorf("Document.Export() = %v, want %v", gotW, tt.wantW)
-			}
-		})
-	}
-}
-
-func TestDocument_getContents(t *testing.T) {
-	type fields struct {
-		FileName string
-	}
-	type args struct {
-		lN       int
-		tabWidth int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   contents
-	}{
-		{
-			name: "test normal",
-			fields: fields{
-				FileName: "../testdata/normal.txt",
-			},
-			args: args{
-				lN:       0,
-				tabWidth: 8,
-			},
-			want: parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-
-			for !m.BufEOF() {
-			}
-
-			if got := m.getContents(tt.args.lN, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
-				g, _ := ContentsToStr(got)
-				w, _ := ContentsToStr(tt.want)
-				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
 			}
 		})
 	}
