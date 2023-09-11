@@ -13,7 +13,9 @@ func (root *Root) setJumpTargetMode() {
 // jumpTargetCandidate returns the candidate to set to default.
 func jumpTargetCandidate() *candidate {
 	return &candidate{
-		list: []string{},
+		list: []string{
+			"section",
+		},
 	}
 }
 

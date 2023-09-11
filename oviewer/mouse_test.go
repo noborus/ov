@@ -12,6 +12,7 @@ func normalDocument() *Document {
 }
 
 func TestSCR_lineRangeToString(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		numbers []LineNumber
 		vWidth  int
@@ -70,7 +71,9 @@ func TestSCR_lineRangeToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scr := SCR{
 				numbers: tt.fields.numbers,
 				vWidth:  tt.fields.vWidth,
@@ -90,6 +93,7 @@ func TestSCR_lineRangeToString(t *testing.T) {
 }
 
 func TestSCR_rectangleToString(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		numbers []LineNumber
 		vWidth  int
@@ -148,7 +152,9 @@ func TestSCR_rectangleToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scr := SCR{
 				numbers: tt.fields.numbers,
 				vWidth:  tt.fields.vWidth,
@@ -176,6 +182,7 @@ func NewLineC(str string, tabWidth int) LineC {
 }
 
 func TestSCR_selectLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		startX int
 	}
@@ -244,7 +251,9 @@ func TestSCR_selectLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scr := SCR{
 				startX: tt.fields.startX,
 			}

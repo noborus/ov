@@ -1,12 +1,24 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"strings"
+
+	"github.com/gdamore/tcell/v2"
+)
+
+// searchCandidateListLen is the number of search candidates for multicolor.
+const searchCandidateListLen = 10
 
 // setMultiColorMode sets the inputMode to MultiColor.
 func (root *Root) setMultiColorMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	list := root.searchCandidates(searchCandidateListLen)
+	str := strings.Join(list, " ")
+	input.MultiColorCandidate.list = toLast(input.MultiColorCandidate.list, str)
+
 	input.Event = newMultiColorEvent(input.MultiColorCandidate)
 }
 
