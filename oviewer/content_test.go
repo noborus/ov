@@ -108,7 +108,9 @@ func Test_parseStringNormal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
@@ -184,7 +186,9 @@ func Test_parseStringOverlapping(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
@@ -249,7 +253,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1B[38;5;31mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -258,7 +262,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -267,7 +271,7 @@ func Test_parseStringStyle(t *testing.T) {
 				line: "\x1b[38;5;1;48;5;2mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.Color(tcell.ColorValid + 1)).Background(tcell.Color(tcell.ColorValid + 2)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1).Background(tcell.ColorValid + 2), mainc: 'c', combc: nil},
 			},
 		},
 		{
@@ -340,7 +344,9 @@ func Test_parseStringStyle(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
@@ -434,7 +440,9 @@ func Test_parseStringUnStyle(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
@@ -493,7 +501,9 @@ func Test_parseStringCombining(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = %v, want %v", got, tt.want)
@@ -545,7 +555,9 @@ func Test_parseStringHyperlink(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
@@ -599,7 +611,9 @@ func Test_lastContent(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := tt.args.lc.last(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("lastContent() = %v, want %v", got, tt.want)
 			}
@@ -644,7 +658,9 @@ func Test_csToStyle(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := csToStyle(tt.args.style, tt.args.csiParameter); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("csToStyle() = %v, want %v", got, tt.want)
 				gfg, gbg, gattr := got.Decompose()
@@ -675,7 +691,9 @@ func Test_strToContents(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := StrToContents(tt.args.line, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("strToContent() = \n%#v, want \n%#v", got, tt.want)
 			}
@@ -729,7 +747,9 @@ func Test_contentsToStr(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			lc := parseString(tt.str, 8)
 			got1, got2 := ContentsToStr(lc)
 			if got1 != tt.want1 {
@@ -737,6 +757,82 @@ func Test_contentsToStr(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got2, tt.want2) {
 				t.Errorf("contentsToStr() = %v, want %v", got2, tt.want2)
+			}
+		})
+	}
+}
+
+func Test_widthPos_x(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		x int
+	}
+	tests := []struct {
+		name string
+		pos  widthPos
+		args args
+		want int
+	}{
+		{
+			name: "\ttest",
+			pos:  widthPos{0, 1, 8, 9, 10, 11},
+			args: args{2},
+			want: 8,
+		},
+		{
+			name: "testあいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{12},
+			want: 8,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tt.pos.x(tt.args.x); got != tt.want {
+				t.Errorf("widthPos.x() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_widthPos_n(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		w int
+	}
+	tests := []struct {
+		name string
+		pos  widthPos
+		args args
+		want int
+	}{
+		{
+			name: "\ttest",
+			pos:  widthPos{0, 1, 8, 9, 10, 11},
+			args: args{8},
+			want: 2,
+		},
+		{
+			name: "testあいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{8},
+			want: 12,
+		},
+		{
+			name: "test2あいうえお",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{9},
+			want: 15,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tt.pos.n(tt.args.w); got != tt.want {
+				t.Errorf("widthPos.n() = %v, want %v", got, tt.want)
 			}
 		})
 	}

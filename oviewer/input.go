@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -21,13 +20,14 @@ const (
 	Header                     // Header is the number of headers input mode.
 	Delimiter                  // Delimiter is a delimiter input mode.
 	TabWidth                   // TabWidth is the tab number input mode.
-	Watch                      // WatchInterval is the watch interval input mode.
+	Watch                      // Watch is the watch interval input mode.
 	SkipLines                  // SkipLines is the number of lines to skip.
 	WriteBA                    // WriteBA is the number of ranges to write at quit.
 	SectionDelimiter           // SectionDelimiter is a section delimiter input mode.
 	SectionStart               // SectionStart is a section start position input mode.
 	MultiColor                 // MultiColor is multi-word coloring.
 	JumpTarget                 // JumpTarget is the position to display the search results.
+	SaveBuffer                 // SaveBuffer is the save buffer.
 )
 
 // Input represents the status of various inputs.
@@ -48,6 +48,7 @@ type Input struct {
 	SectionStartCandidate *candidate
 	MultiColorCandidate   *candidate
 	JumpTargetCandidate   *candidate
+	SaveBufferCandidate   *candidate
 
 	value   string
 	cursorX int
@@ -68,6 +69,7 @@ func NewInput() *Input {
 	i.SectionStartCandidate = sectionStartCandidate()
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
+	i.SaveBufferCandidate = saveBufferCandidate()
 
 	i.Event = &eventNormal{}
 	return &i
@@ -83,13 +85,15 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 		return
 	}
 
+	if root.cancelFunc != nil {
+		root.cancelFunc()
+		root.cancelFunc = nil
+	}
+
 	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
-	if err := root.Screen.PostEvent(nev); err != nil {
-		log.Println(err)
-	}
-
+	root.postEvent(nev)
 	input.Event = normal()
 }
 
@@ -172,18 +176,33 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	return false
 }
 
+// inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
+	if root.Config.CaseSensitive {
+		root.Config.SmartCaseSensitive = false
+	}
 }
 
+// inputSmartCaseSensitive toggles case sensitivity.
+func (root *Root) inputSmartCaseSensitive() {
+	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
+	if root.Config.SmartCaseSensitive {
+		root.Config.CaseSensitive = false
+	}
+}
+
+// inputIncSearch toggles incremental search.
 func (root *Root) inputIncSearch() {
 	root.Config.Incsearch = !root.Config.Incsearch
 }
 
+// inputRegexpSearch toggles regexp search.
 func (root *Root) inputRegexpSearch() {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
 
+// inputPrevious searches the previous history.
 func (root *Root) inputPrevious() {
 	input := root.input
 	input.value = input.Event.Up(input.value)
@@ -191,6 +210,7 @@ func (root *Root) inputPrevious() {
 	input.cursorX = runeWidth(string(runes))
 }
 
+// inputNext searches the next history.
 func (root *Root) inputNext() {
 	input := root.input
 	input.value = input.Event.Down(input.value)
@@ -247,6 +267,7 @@ type candidate struct {
 	p    int
 }
 
+// up returns the previous candidate.
 func (c *candidate) up() string {
 	if len(c.list) == 0 {
 		return ""
@@ -261,6 +282,7 @@ func (c *candidate) up() string {
 	return c.list[c.p]
 }
 
+// down returns the next candidate.
 func (c *candidate) down() string {
 	if len(c.list) == 0 {
 		return ""

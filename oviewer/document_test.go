@@ -3,11 +3,13 @@ package oviewer
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
 
 func TestOpenDocument(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		fileName string
 	}
@@ -19,17 +21,19 @@ func TestOpenDocument(t *testing.T) {
 	}{
 		{
 			name:    "no file",
-			args:    args{fileName: "../testdata/nofile"},
+			args:    args{fileName: filepath.Join(testdata, "nofile")},
 			wantErr: true,
 		},
 		{
 			name:    "normal.txt",
-			args:    args{fileName: "../testdata/normal.txt"},
+			args:    args{fileName: filepath.Join(testdata, "normal.txt")},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			_, err := OpenDocument(tt.args.fileName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OpenDocument() error = %v, wantErr %v", err, tt.wantErr)
@@ -74,7 +78,9 @@ func TestDocument_lineToContents(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -82,9 +88,10 @@ func TestDocument_lineToContents(t *testing.T) {
 			if err := m.ReadAll(bytes.NewBufferString(tt.str)); err != nil {
 				t.Fatal(err)
 			}
-			<-m.eofCh
+			for !m.BufEOF() {
+			}
 			t.Logf("num:%d", m.BufEndNum())
-			got, err := m.contentsLN(tt.args.lN, tt.args.tabWidth)
+			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.lineToContents() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -97,6 +104,7 @@ func TestDocument_lineToContents(t *testing.T) {
 }
 
 func TestDocument_Export(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		start int
 		end   int
@@ -127,7 +135,9 @@ func TestDocument_Export(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := NewDocument()
 			if err != nil {
 				t.Fatal(err)
@@ -136,9 +146,12 @@ func TestDocument_Export(t *testing.T) {
 				t.Fatal(err)
 			}
 			w := &bytes.Buffer{}
-			<-m.eofCh
+			for !m.BufEOF() {
+			}
 			m.bottomLN = m.BufEndNum()
-			m.Export(w, tt.args.start, tt.args.end)
+			if err := m.Export(w, tt.args.start, tt.args.end); err != nil {
+				t.Fatal(err)
+			}
 			if gotW := w.String(); gotW != tt.wantW {
 				t.Errorf("Document.Export() = %v, want %v", gotW, tt.wantW)
 			}
@@ -146,57 +159,8 @@ func TestDocument_Export(t *testing.T) {
 	}
 }
 
-func TestDocument_getContents(t *testing.T) {
-	type fields struct {
-		FileName string
-	}
-	type args struct {
-		lN       int
-		tabWidth int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   contents
-		want1  bool
-	}{
-		{
-			name: "test normal",
-			fields: fields{
-				FileName: "../testdata/normal.txt",
-			},
-			args: args{
-				lN:       0,
-				tabWidth: 8,
-			},
-			want:  parseString("khaki	mediumseagreen	steelblue	forestgreen	royalblue	mediumseagreen", 8),
-			want1: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-
-			for !m.BufEOF() {
-			}
-			got, ok := m.getContents(tt.args.lN, tt.args.tabWidth)
-			if !reflect.DeepEqual(got, tt.want) {
-				g, _ := ContentsToStr(got)
-				w, _ := ContentsToStr(tt.want)
-				t.Errorf("Document.getContents() = [%v], want [%v]", g, w)
-			}
-			if ok != tt.want1 {
-				t.Errorf("Document.getContents() ok = %v, want %v", ok, tt.want1)
-			}
-		})
-	}
-}
-
 func TestDocument_searchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -215,7 +179,7 @@ func TestDocument_searchLine(t *testing.T) {
 		{
 			name: "test forward search",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -228,7 +192,7 @@ func TestDocument_searchLine(t *testing.T) {
 		{
 			name: "test forward search not found",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -240,7 +204,9 @@ func TestDocument_searchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fields.FileName)
 			if err != nil {
 				t.Fatalf("OpenDocument %s", err)
@@ -262,6 +228,7 @@ func TestDocument_searchLine(t *testing.T) {
 }
 
 func TestDocument_backSearchLine(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		FileName string
 	}
@@ -280,7 +247,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		{
 			name: "test backword search",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -293,7 +260,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		{
 			name: "test backword search not found",
 			fields: fields{
-				FileName: "../testdata/normal.txt",
+				FileName: filepath.Join(testdata, "normal.txt"),
 			},
 			args: args{
 				ctx:      context.Background(),
@@ -305,7 +272,9 @@ func TestDocument_backSearchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			m, err := OpenDocument(tt.fields.FileName)
 			if err != nil {
 				t.Fatalf("OpenDocument %s", err)

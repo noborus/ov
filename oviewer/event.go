@@ -3,7 +3,7 @@ package oviewer
 import (
 	"context"
 	"log"
-	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -15,23 +15,13 @@ var UpdateInterval = 50 * time.Millisecond
 // eventLoop is manages and executes events in the eventLoop routine.
 func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
-		root.Doc.watchRestart.Store(true)
+		atomic.StoreInt32(&root.Doc.watchRestart, 1)
 	}
 	go root.updateInterval(ctx)
+	defer root.debugNumOfChunk()
 
 	for {
-		if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
-			root.follow()
-		}
-
-		if !root.skipDraw {
-			root.draw()
-		}
-		root.skipDraw = false
-		if root.Doc.watchRestart.Load() {
-			root.watchControl()
-			root.Doc.watchRestart.Store(false)
-		}
+		root.everyUpdate()
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -68,7 +58,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventNextBackSearch:
 			root.nextBackSearch(ctx, ev.str)
 		case *eventSearchMove:
-			root.searchGoLine(ev.value)
+			root.searchGo(ev.value)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:
@@ -91,6 +81,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.setMultiColor(ev.value)
 		case *eventJumpTarget:
 			root.setJumpTarget(ev.value)
+		case *eventSaveBuffer:
+			root.saveBuffer(ev.value)
 
 		// tcell events
 		case *tcell.EventResize:
@@ -103,6 +95,32 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			close(quitChan)
 			return
 		}
+	}
+}
+
+// everyUpdate is called every time before running the event.
+func (root *Root) everyUpdate() {
+	// If tmpLN is set, set top position to position from bottom.
+	// This process is executed when temporary read is switched to normal read.
+	if n := atomic.SwapInt32(&root.Doc.tmpLN, 0); n > 0 {
+		tmpN := int(n) - root.Doc.topLN
+		root.Doc.topLN = root.Doc.BufEndNum() - tmpN
+	}
+
+	root.Doc.width = root.scr.vWidth - root.scr.startX
+	root.Doc.height = root.Doc.statusPos - root.Doc.headerLen
+
+	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
+		root.follow()
+	}
+
+	if !root.skipDraw {
+		root.draw()
+	}
+	root.skipDraw = false
+
+	if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
+		root.watchControl()
 	}
 }
 
@@ -134,6 +152,10 @@ type eventAppQuit struct {
 
 // Quit fires the eventAppQuit event.
 func (root *Root) Quit() {
+	root.sendQuit()
+}
+
+func (root *Root) sendQuit() {
 	if !root.checkScreen() {
 		return
 	}
@@ -147,75 +169,18 @@ type eventAppSuspend struct {
 	tcell.EventTime
 }
 
-// Suspend fires the eventAppsuspend event.
+// Suspend fires the eventAppSuspend event.
 func (root *Root) Suspend() {
+	root.sendSuspend()
+}
+
+func (root *Root) sendSuspend() {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventAppSuspend{}
 	ev.SetEventNow()
-	err := root.Screen.PostEvent(ev)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-// Cancel follow mode and follow all mode.
-func (root *Root) Cancel() {
-	root.General.FollowAll = false
-	root.Doc.FollowMode = false
-}
-
-// WriteQuit sets the write flag and executes a quit event.
-func (root *Root) WriteQuit() {
-	root.IsWriteOriginal = true
-	root.Quit()
-}
-
-// follow updates the document in follow mode.
-func (root *Root) follow() {
-	if root.General.FollowAll {
-		root.followAll()
-	}
-
-	root.Doc.onceFollowMode()
-
-	num := root.Doc.BufEndNum()
-	if root.Doc.latestNum == num {
-		return
-	}
-
-	root.skipDraw = false
-	if root.Doc.FollowSection {
-		root.tailSection()
-	} else {
-		root.TailSync()
-	}
-	root.Doc.latestNum = num
-}
-
-// followAll monitors and switches all document updates
-// in follow all mode.
-func (root *Root) followAll() {
-	if root.screenMode != Docs {
-		return
-	}
-
-	current := root.CurrentDoc
-
-	root.mu.RLock()
-	for n, doc := range root.DocList {
-		doc.onceFollowMode()
-		if doc.latestNum != doc.BufEndNum() {
-			current = n
-		}
-	}
-	root.mu.RUnlock()
-
-	if root.CurrentDoc != current {
-		log.Printf("switch document: %d", current)
-		root.switchDocument(current)
-	}
+	root.postEvent(ev)
 }
 
 // updateInterval calls eventUpdate at regular intervals.
@@ -238,38 +203,19 @@ type eventUpdateEndNum struct {
 
 // regularUpdate fires an eventUpdateEndNum event when an update is required.
 func (root *Root) regularUpdate() {
+	root.sendUpdateEndNum()
+}
+
+func (root *Root) sendUpdateEndNum() {
 	if !root.checkScreen() {
 		return
 	}
-
 	if !root.hasDocChanged() {
 		return
 	}
-
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
 	root.postEvent(ev)
-}
-
-// MoveLine fires an eventGoto event that moves to the specified line.
-func (root *Root) MoveLine(num int) {
-	if !root.checkScreen() {
-		return
-	}
-	ev := &eventGoto{}
-	ev.value = strconv.Itoa(num)
-	ev.SetEventNow()
-	root.postEvent(ev)
-}
-
-// MoveTop fires the event of moving to top.
-func (root *Root) MoveTop() {
-	root.MoveLine(0)
-}
-
-// MoveBottom fires the event of moving to bottom.
-func (root *Root) MoveBottom() {
-	root.MoveLine(root.Doc.BufEndNum())
 }
 
 // eventDocument represents a set document event.
@@ -283,10 +229,16 @@ func (root *Root) SetDocument(docNum int) {
 	if !root.checkScreen() {
 		return
 	}
-	ev := &eventDocument{}
-	if docNum >= 0 && docNum < root.DocumentLen() {
-		ev.docNum = docNum
+
+	if docNum < 0 || docNum < root.DocumentLen() {
+		return
 	}
+	root.sendDocument(docNum)
+}
+
+func (root *Root) sendDocument(docNum int) {
+	ev := &eventDocument{}
+	ev.docNum = docNum
 	ev.SetEventNow()
 	root.postEvent(ev)
 }
@@ -299,6 +251,10 @@ type eventAddDocument struct {
 
 // AddDocument fires the eventAddDocument event.
 func (root *Root) AddDocument(m *Document) {
+	root.sendAddDocument(m)
+}
+
+func (root *Root) sendAddDocument(m *Document) {
 	if !root.checkScreen() {
 		return
 	}
@@ -315,6 +271,10 @@ type eventCloseDocument struct {
 
 // CloseDocument fires the eventCloseDocument event.
 func (root *Root) CloseDocument(m *Document) {
+	root.sendCloseDocument()
+}
+
+func (root *Root) sendCloseDocument() {
 	if !root.checkScreen() {
 		return
 	}
@@ -331,13 +291,14 @@ type eventReload struct {
 
 // Reload fires the eventReload event.
 func (root *Root) Reload() {
+	root.sendReload()
+}
+
+func (root *Root) sendReload() {
 	if !root.checkScreen() {
 		return
 	}
-	root.setMessagef("reload %s", root.Doc.FileName)
-	log.Printf("reload %s", root.Doc.FileName)
 	ev := &eventReload{}
-	ev.SetEventNow()
 	ev.m = root.Doc
 	ev.SetEventNow()
 	root.postEvent(ev)
