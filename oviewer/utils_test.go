@@ -7,6 +7,7 @@ import (
 )
 
 func Test_max(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		a int
 		b int
@@ -28,7 +29,9 @@ func Test_max(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := max(tt.args.a, tt.args.b); got != tt.want {
 				t.Errorf("max() = %v, want %v", got, tt.want)
 			}
@@ -37,6 +40,7 @@ func Test_max(t *testing.T) {
 }
 
 func Test_min(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		a int
 		b int
@@ -58,7 +62,9 @@ func Test_min(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := min(tt.args.a, tt.args.b); got != tt.want {
 				t.Errorf("min() = %v, want %v", got, tt.want)
 			}
@@ -67,6 +73,7 @@ func Test_min(t *testing.T) {
 }
 
 func Test_removeStr(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -102,7 +109,9 @@ func Test_removeStr(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
@@ -111,6 +120,7 @@ func Test_removeStr(t *testing.T) {
 }
 
 func Test_removeInt(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []int
 		c    int
@@ -146,7 +156,9 @@ func Test_removeInt(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := remove(tt.args.list, tt.args.c); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
@@ -155,6 +167,7 @@ func Test_removeInt(t *testing.T) {
 }
 
 func Test_containsInt(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []int
 		e    int
@@ -182,7 +195,9 @@ func Test_containsInt(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := contains(tt.args.list, tt.args.e); got != tt.want {
 				t.Errorf("containsInt() = %v, want %v", got, tt.want)
 			}
@@ -191,6 +206,7 @@ func Test_containsInt(t *testing.T) {
 }
 
 func Test_toAddTop(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -226,7 +242,9 @@ func Test_toAddTop(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := toAddTop(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("toTop() = %v, want %v", got, tt.want)
 			}
@@ -235,6 +253,7 @@ func Test_toAddTop(t *testing.T) {
 }
 
 func Test_toAddLast(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -287,7 +306,9 @@ func Test_toAddLast(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := toAddLast(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("toAddLast() = %v, want %v", got, tt.want)
 			}
@@ -296,6 +317,7 @@ func Test_toAddLast(t *testing.T) {
 }
 
 func Test_toLast(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -331,7 +353,9 @@ func Test_toLast(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := toLast(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("toLast() = %v, want %v", got, tt.want)
 			}
@@ -340,6 +364,7 @@ func Test_toLast(t *testing.T) {
 }
 
 func Test_remove(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -363,7 +388,9 @@ func Test_remove(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := remove(tt.args.list, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("remove() = %v, want %v", got, tt.want)
 			}
@@ -372,6 +399,7 @@ func Test_remove(t *testing.T) {
 }
 
 func Test_allIndex(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s      string
 		substr string
@@ -408,7 +436,9 @@ func Test_allIndex(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := allIndex(tt.args.s, tt.args.substr, tt.args.reg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("allIndex() = %v, want %v", got, tt.want)
 			}
@@ -417,6 +447,7 @@ func Test_allIndex(t *testing.T) {
 }
 
 func Test_allStringIndex(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s      string
 		substr string
@@ -455,7 +486,9 @@ func Test_allStringIndex(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := allStringIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("allIndex() = %v, want %v", got, tt.want)
 			}

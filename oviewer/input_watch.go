@@ -7,7 +7,7 @@ func (root *Root) setWatchIntervalMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.Event = newWatchIntevalEvent(input.WatchCandidate)
+	input.Event = newWatchIntervalEvent(input.WatchCandidate)
 }
 
 // watchCandidate returns the candidate to set to default.
@@ -21,15 +21,15 @@ func watchCandidate() *candidate {
 	}
 }
 
-// eventWatchInterval represents the WatchInteval input mode.
+// eventWatchInterval represents the WatchInterval input mode.
 type eventWatchInterval struct {
 	tcell.EventTime
 	clist *candidate
 	value string
 }
 
-// newWatchIntevalInputt returns watchIntervalEvent.
-func newWatchIntevalEvent(clist *candidate) *eventWatchInterval {
+// newWatchIntervalInput returns watchIntervalEvent.
+func newWatchIntervalEvent(clist *candidate) *eventWatchInterval {
 	return &eventWatchInterval{clist: clist}
 }
 

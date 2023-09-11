@@ -115,3 +115,10 @@ func (e *eventInputBackSearch) Down(str string) string {
 	e.clist.list = toAddTop(e.clist.list, str)
 	return e.clist.down()
 }
+
+// searchCandidates returns the list of search candidates.
+func (root *Root) searchCandidates(n int) []string {
+	listLen := len(root.input.SearchCandidate.list)
+	start := max(0, listLen-n)
+	return root.input.SearchCandidate.list[start:listLen]
+}

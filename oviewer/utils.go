@@ -65,7 +65,7 @@ func toAddLast(list []string, s string) []string {
 	return list
 }
 
-// toLast toLast moves the specified string to the end.
+// toLast moves the specified string to the end.
 func toLast(list []string, s string) []string {
 	if len(s) == 0 {
 		return list

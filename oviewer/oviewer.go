@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"syscall"
@@ -21,9 +22,6 @@ import (
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
-	// Config contains settings that determine the behavior of ov.
-	Config
-
 	// Doc contains the model of ov
 	Doc *Document
 	// help
@@ -31,79 +29,74 @@ type Root struct {
 	// log
 	logDoc *Document
 
-	// DocList
-	DocList    []*Document
-	CurrentDoc int
-	// mu controls the RWMutex.
-	mu sync.RWMutex
-
-	// screenMode represents the mode of screen.
-	screenMode ScreenMode
 	// input contains the input mode.
 	input *Input
-	// Original position at the start of search.
-	OriginPos int
-	// Original string.
-	OriginStr string
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchWord for on-screen highlighting.
-	searchWord string
-	// searchReg for on-screen highlighting.
-	searchReg *regexp.Regexp
+	// searcher is the searcher.
+	searcher Searcher
 
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
+	// Original string.
+	OriginStr string
+
 	// message is the message to display.
 	message string
+	// cancelKeys represents the cancellation key string.
+	cancelKeys []string
 
-	// vWidth represents the screen width.
-	vWidth int
-	// vHight represents the screen height.
-	vHight int
+	// DocList is the list of documents.
+	DocList []*Document
+	scr     SCR
+	Config
+	// screenMode represents the mode of screen.
+	screenMode ScreenMode
+	// Original position at the start of search.
+	OriginPos int
 
-	// startX is the start position of x.
-	startX int
-
-	// lines is the line information of the currently displayed screen.
-	// lines (number of logical lines and number of wrapping lines) from y on the screen.
-	lines []line
-
-	// skipDraw skips draw once when true.
-	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
-	skipDraw bool
-
+	// CurrentDoc is the index of the current document.
+	CurrentDoc int
+	// minStartX is the minimum start position of x.
+	minStartX int
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
 	x2 int
 	y2 int
 
+	// mu controls the RWMutex.
+	mu sync.RWMutex
+
+	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
+	skipDraw bool
 	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
 	// mouseSelect is a flag with mouse selection.
 	mouseSelect bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
-
-	// headerLen is the actual header length when wrapped.
-	headerLen int
-
-	// statusPos is the position of the status line.
-	statusPos int
-	// minStartX is the minimum start position of x.
-	minStartX int
-
-	// cancelKeys represents the cancellation key string.
-	cancelKeys []string
 }
 
-// Line is Number of logical lines and number of wrapping lines on the screen.
-type line struct {
+// SCR contains the screen information.
+type SCR struct {
+	// numbers is the line information of the currently displayed screen.
+	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
+	numbers []LineNumber
+	// vWidth represents the screen width.
+	vWidth int
+	// vHeight represents the screen height.
+	vHeight int
+	// startX is the start position of x.
+	startX int
+}
+
+// LineNumber is Number of logical lines and number of wrapping lines on the screen.
+type LineNumber struct {
 	number int
 	wrap   int
 }
@@ -111,64 +104,92 @@ type line struct {
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {
+	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
+	ColumnDelimiterReg *regexp.Regexp
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter string
+	// SectionDelimiterReg is a section delimiter.
+	SectionDelimiterReg *regexp.Regexp
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter string
+	// Specified string for jumpTarget.
+	JumpTarget string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
+
 	// TabWidth is tab stop num.
 	TabWidth int
 	// HeaderLen is number of header rows to be fixed.
 	Header int
 	// SkipLines is the rows to skip.
 	SkipLines int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition int
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
 	ColumnMode bool
+	// ColumnWidth is column width mode.
+	ColumnWidth bool
 	// ColumnRainbow is column rainbow.
 	ColumnRainbow bool
 	// LineNumMode displays line numbers.
 	LineNumMode bool
 	// Wrap is Wrap mode.
 	WrapMode bool
-	// ColumnDelimiter is a column delimiter.
-	ColumnDelimiter string
-	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
-	ColumnDelimiterReg *regexp.Regexp
 	// FollowMode is the follow mode.
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool
 	// FollowSection is a follow mode that uses section instead of line.
 	FollowSection bool
+	// FollowName is the mode to follow files by name.
+	FollowName bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
-	// WatchInterval is the watch interval (seconds).
-	WatchInterval int
-	// MarkStyleWidth is width to apply the style of the marked line.
-	MarkStyleWidth int
-	// SectionDelimiter is a section delimiter.
-	SectionDelimiter string
-	// SectionDelimiterReg is a section delimiter.
-	SectionDelimiterReg *regexp.Regexp
-	// SectionStartPosition is a section start position.
-	SectionStartPosition int
-	// Specified string for jumpTarget.
-	JumpTargetString string
-	// JumpTarget is the display position of search results.
-	JumpTarget int
-	// MultiColorWords specifies words to color separated by spaces.
-	MultiColorWords []string
+}
+
+// OVPromptConfigNormal is the normal prompt setting.
+type OVPromptConfigNormal struct {
+	// ShowFilename controls whether to display filename.
+	ShowFilename bool
+	// InvertColor controls whether the text is colored and inverted.
+	InvertColor bool
+}
+
+// OVPromptConfig is the prompt setting.
+type OVPromptConfig struct {
+	// Normal is the normal prompt setting.
+	Normal OVPromptConfigNormal
 }
 
 // Config represents the settings of ov.
 type Config struct {
-	// StyleAlternate is a style that applies line by line.
-	StyleAlternate OVStyle
+	// KeyBinding
+	Keybind map[string][]string
+	// Mode represents the operation of the customized mode.
+	Mode map[string]general
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
+	StyleColumnRainbow []OVStyle
+	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
+	StyleMultiColorHighlight []OVStyle
+
+	// Prompt is the prompt setting.
+	Prompt OVPromptConfig
+
 	// StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
-	// StyleHeader is the style that applies to the header.
+	// StyleBody is the style that applies to the body.
 	StyleBody OVStyle
-	// StyleOverStrike is a style that applies to overstrikes.
-	StyleOverStrike OVStyle
-	// OverLineS is a style that applies to overstrike underlines.
-	StyleOverLine OVStyle
 	// StyleLineNumber is a style that applies line number.
 	StyleLineNumber OVStyle
 	// StyleSearchHighlight is the style that applies to the search highlight.
@@ -179,58 +200,45 @@ type Config struct {
 	StyleMarkLine OVStyle
 	// StyleSectionLine is a style that section delimiter line.
 	StyleSectionLine OVStyle
-	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
-	StyleMultiColorHighlight []OVStyle
-	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
-	StyleColumnRainbow []OVStyle
 	// StyleJumpTargetLine is the line that displays the search results.
 	StyleJumpTargetLine OVStyle
-
+	// StyleAlternate is a style that applies line by line.
+	StyleAlternate OVStyle
+	// StyleOverStrike is a style that applies to overstrike.
+	StyleOverStrike OVStyle
+	// StyleOverLine is a style that applies to overstrike underlines.
+	StyleOverLine OVStyle
 	// General represents the general behavior.
 	General general
-	// Mode represents the operation of the customized mode.
-	Mode map[string]general
-
-	// Mouse support disable.
-	DisableMouse bool
-	// IsWriteOriginal is true, write the current screen on quit.
-	IsWriteOriginal bool
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
 	// AfterWriteOriginal specifies the number of lines after the current position.
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
-
-	// QuiteSmall Quit if the output fits on one screen.
+	// MemoryLimit is a number that limits chunk loading.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
+	// Mouse support disable.
+	DisableMouse bool
+	// IsWriteOriginal is true, write the current screen on quit.
+	IsWriteOriginal bool
+	// QuitSmall Quit if the output fits on one screen.
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
+	// SmartCaseSensitive is lowercase search ignores case, if true.
+	SmartCaseSensitive bool
 	// RegexpSearch is Regular expression search if true.
 	RegexpSearch bool
-	// Incsearch is incremental server if true.
+	// Incsearch is incremental search if true.
 	Incsearch bool
+
+	// DisableColumnCycle is disable column cycle.
+	DisableColumnCycle bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-	// KeyBinding
-	Keybind map[string][]string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
-	// Old setting.
-	// Deprecated: Alternating background color.
-	ColorAlternate string
-	// Deprecated: Header color.
-	ColorHeader string
-	// Deprecated: OverStrike color.
-	ColorOverStrike string
-	// Deprecated: OverLine color.
-	ColorOverLine string
 }
 
 // OVStyle represents a style in addition to the original style.
@@ -251,7 +259,7 @@ type OVStyle struct {
 	Reverse bool
 	// If true, add underline.
 	Underline bool
-	// If true, add strikethrough.
+	// If true, add strike through.
 	StrikeThrough bool
 	// If true, add overline (not yet supported).
 	OverLine bool
@@ -267,13 +275,18 @@ type OVStyle struct {
 	UnReverse bool
 	// If true, sub underline.
 	UnUnderline bool
-	// If true, sub strikethrough.
+	// If true, sub strike through.
 	UnStrikeThrough bool
 	// if true, sub underline (not yet supported).
 	UnOverLine bool
 }
 
 var (
+	// MemoryLimit is a number that limits the chunks to load into memory.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
+
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
@@ -302,15 +315,20 @@ const (
 	LogDoc
 )
 
+// MouseFlags represents which events of the mouse should be captured.
 // Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
 // Does not track mouse movements except when dragging.
 const MouseFlags = tcell.MouseDragEvents
 
+// MaxWriteLog is the maximum number of lines to output to the log
+// when the debug flag is enabled.
 const MaxWriteLog int = 10
 
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
+	// ErrNotInMemory indicates that value is not in memory.
+	ErrNotInMemory = errors.New("not in memory")
 	// ErrFatalCache indicates that the cache value had a fatal error.
 	ErrFatalCache = errors.New("fatal error in cache value")
 	// ErrMissingFile indicates that the file does not exist.
@@ -329,10 +347,26 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
-	// ErrNoColumn indicates that cusror specified a nonexistent column.
+	// ErrNoColumn indicates that cursor specified a nonexistent column.
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrOverScreen indicates that the specified screen is out of range.
+	ErrOverScreen = errors.New("over screen")
+	// ErrOutOfChunk indicates that the specified Chunk is out of range.
+	ErrOutOfChunk = errors.New("out of chunk")
+	// ErrNotLoaded indicates that it cannot be loaded.
+	ErrNotLoaded = errors.New("not loaded")
+	// ErrEOFreached indicates that EOF has been reached.
+	ErrEOFreached = errors.New("EOF reached")
+	// ErrPreventReload indicates that reload is prevented.
+	ErrPreventReload = errors.New("prevent reload")
+	// ErrOverChunkLimit indicates that the chunk limit has been exceeded.
+	ErrOverChunkLimit = errors.New("over chunk limit")
+	// ErrAlreadyLoaded indicates that the chunk already loaded.
+	ErrAlreadyLoaded = errors.New("chunk already loaded")
+	// ErrEvictedMemory indicates that it has been evicted from memory.
+	ErrEvictedMemory = errors.New("evicted memory")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
@@ -380,7 +414,7 @@ func NewRoot(r io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := m.ReadReader(r); err != nil {
+	if err := m.ControlReader(r, nil); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
@@ -467,16 +501,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
-				root.mu.Lock()
-				for _, doc := range root.DocList {
-					if doc.FileName == event.Name {
-						select {
-						case doc.changCh <- struct{}{}:
-						default:
-						}
-					}
-				}
-				root.mu.Unlock()
+				root.watchEvent(event)
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -487,13 +512,49 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}()
 
 	for _, doc := range root.DocList {
-		err := watcher.Add(doc.FileName)
+		fileName, err := filepath.Abs(doc.FileName)
 		if err != nil {
+			log.Println(err)
+			continue
+		}
+		doc.filepath = fileName
+
+		path := filepath.Dir(fileName)
+		if err := watcher.Add(path); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
 	}
 }
 
+// watchEvent sends a notification to the document.
+func (root *Root) watchEvent(event fsnotify.Event) {
+	root.mu.Lock()
+	defer root.mu.Unlock()
+
+	for _, m := range root.DocList {
+		if m.filepath == event.Name {
+			switch event.Op {
+			case fsnotify.Write:
+				root.sendRequest(m, requestFollow)
+			case fsnotify.Remove, fsnotify.Create:
+				if m.FollowName {
+					root.sendRequest(m, requestReload)
+				}
+			}
+		}
+	}
+}
+
+func (root *Root) sendRequest(m *Document, request request) {
+	select {
+	case m.ctlCh <- controlSpecifier{request: request}:
+		root.debugMessage(fmt.Sprintf("notify send %v", request))
+	default:
+		root.debugMessage(fmt.Sprintf("notify send fail %s", request))
+	}
+}
+
+// setKeyConfig sets key bindings.
 func (root *Root) setKeyConfig() (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config)
 	if err := root.setHandlers(keyBind); err != nil {
@@ -517,10 +578,9 @@ func (root *Root) SetKeyHandler(name string, keys []string, handler func()) erro
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Close()
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
@@ -547,6 +607,12 @@ func (root *Root) Run() error {
 		doc.general = root.Config.General
 		doc.regexpCompile()
 
+		if doc.FollowName {
+			doc.FollowMode = true
+		}
+		if doc.ColumnWidth {
+			doc.ColumnMode = true
+		}
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()
@@ -572,7 +638,6 @@ func (root *Root) Run() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
 	go func() {
 		// Undo screen when goroutine panic.
 		defer func() {
@@ -593,6 +658,7 @@ func (root *Root) Run() error {
 	}
 }
 
+// optimizedMan optimizes execution with the Man command.
 func (root *Root) optimizedMan() {
 	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
@@ -603,6 +669,7 @@ func (root *Root) optimizedMan() {
 	root.Doc.Caption = manPN
 }
 
+// setModeConfig sets mode config.
 func (root *Root) setModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
@@ -617,6 +684,7 @@ func (root *Root) Close() {
 	root.Screen.Fini()
 }
 
+// setMessage displays a message in status.
 func (root *Root) setMessage(msg string) {
 	if root.message == msg {
 		return
@@ -634,6 +702,9 @@ func (root *Root) setMessagef(format string, a ...any) {
 
 func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
+		return
+	}
+	if root.Doc == root.logDoc {
 		return
 	}
 	root.message = msg
@@ -728,6 +799,9 @@ func mergeGeneral(src general, dst general) general {
 	if dst.ColumnMode {
 		src.ColumnMode = dst.ColumnMode
 	}
+	if dst.ColumnWidth {
+		src.ColumnWidth = dst.ColumnWidth
+	}
 	if dst.ColumnRainbow {
 		src.ColumnRainbow = dst.ColumnRainbow
 	}
@@ -746,6 +820,9 @@ func mergeGeneral(src general, dst general) general {
 	if dst.FollowSection {
 		src.FollowSection = dst.FollowSection
 	}
+	if dst.FollowName {
+		src.FollowName = dst.FollowName
+	}
 	if dst.ColumnDelimiter != "" {
 		src.ColumnDelimiter = dst.ColumnDelimiter
 	}
@@ -761,13 +838,10 @@ func mergeGeneral(src general, dst general) general {
 	if dst.SectionStartPosition != 0 {
 		src.SectionStartPosition = dst.SectionStartPosition
 	}
-	if dst.JumpTargetString != "" {
-		src.JumpTargetString = dst.JumpTargetString
-	}
-	if dst.JumpTarget != 0 {
+	if dst.JumpTarget != "" {
 		src.JumpTarget = dst.JumpTarget
 	}
-	if dst.MultiColorWords != nil {
+	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
 	}
 	return src
@@ -776,14 +850,13 @@ func mergeGeneral(src general, dst general) general {
 // prepareView prepares when the screen size is changed.
 func (root *Root) prepareView() {
 	screen := root.Screen
-	root.vWidth, root.vHight = screen.Size()
+	root.scr.vWidth, root.scr.vHeight = screen.Size()
 
 	// Do not allow size 0.
-	root.vWidth = max(root.vWidth, 1)
-	root.vHight = max(root.vHight, 1)
-
-	root.lines = make([]line, root.vHight+1)
-	root.statusPos = root.vHight - statusLine
+	root.scr.vWidth = max(root.scr.vWidth, 1)
+	root.scr.vHeight = max(root.scr.vHeight, 1)
+	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
+	root.Doc.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -796,15 +869,15 @@ func (root *Root) docSmall() bool {
 	if !m.BufEOF() {
 		return false
 	}
-	hight := 0
+	height := 0
 	for y := 0; y < m.BufEndNum(); y++ {
-		lc, err := m.contentsLN(y, root.Doc.TabWidth)
+		lc, err := m.contents(y, root.Doc.TabWidth)
 		if err != nil {
 			log.Printf("docSmall %d: %s", y, err)
 			continue
 		}
-		hight += 1 + (len(lc) / root.vWidth)
-		if hight > root.vHight {
+		height += 1 + (len(lc) / root.scr.vWidth)
+		if height > root.scr.vHeight {
 			return false
 		}
 	}
@@ -835,10 +908,34 @@ func (root *Root) WriteLog() {
 	m.Export(os.Stdout, start, end)
 }
 
-// lineInfo returns the line information from y on the screen.
-func (root *Root) lineInfo(y int) line {
-	if y >= 0 && y <= len(root.lines) {
-		return root.lines[y]
+// lineNumber returns the line information from y on the screen.
+func (scr SCR) lineNumber(y int) LineNumber {
+	if y >= 0 && y <= len(scr.numbers) {
+		return scr.numbers[y]
 	}
-	return root.lines[0]
+	return scr.numbers[0]
+}
+
+func (root *Root) debugNumOfChunk() {
+	if !root.Debug {
+		return
+	}
+	log.Println("MemoryLimit:", root.MemoryLimit)
+	log.Println("MemoryLimitFile:", root.MemoryLimitFile)
+	for _, doc := range root.DocList {
+		if !doc.seekable {
+			if MemoryLimit > 0 {
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
+			}
+			continue
+		}
+		for n, chunk := range doc.store.chunks {
+			if n != 0 && len(chunk.lines) != 0 {
+				if !doc.store.loadedChunks.Contains(n) {
+					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
+				}
+			}
+		}
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
+	}
 }

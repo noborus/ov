@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"fmt"
 	"log"
 	"sync/atomic"
 )
@@ -19,7 +18,7 @@ func (root *Root) hasDocChanged() bool {
 	defer root.mu.RUnlock()
 	eventFlag := false
 	for _, doc := range root.DocList {
-		if atomic.SwapInt32(&doc.changed, 0) == 1 {
+		if atomic.SwapInt32(&doc.store.changed, 0) == 1 {
 			eventFlag = true
 		}
 	}
@@ -51,9 +50,7 @@ func (root *Root) closeDocument() {
 	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	log.Printf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
-	if err := root.DocList[root.CurrentDoc].close(); err != nil {
-		log.Printf("%s:%s", root.Doc.FileName, err)
-	}
+	root.DocList[root.CurrentDoc].requestClose()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
@@ -69,22 +66,19 @@ func (root *Root) nextDoc() {
 	root.setDocumentNum(root.CurrentDoc + 1)
 	root.input.Event = normal()
 	root.debugMessage("next document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
-// previouseDoc displays the previous document.
+// previousDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.Event = normal()
 	root.debugMessage("previous document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // switchDocument displays the document of the specified docNum.
 func (root *Root) switchDocument(docNum int) {
 	root.setDocumentNum(docNum)
 	root.debugMessage("switch document")
-	root.debugMessage(fmt.Sprintf("cache %v\n", root.Doc.cache.Metrics.String()))
 }
 
 // setDocumentNum actually specifies docNum to display the document.
@@ -104,9 +98,6 @@ func (root *Root) setDocumentNum(docNum int) {
 // setDocument sets the Document.
 func (root *Root) setDocument(m *Document) {
 	root.Doc = m
-	if m.WatchMode {
-		root.watchStart()
-	}
 	root.ViewSync()
 }
 

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	"github.com/jwalton/gchalk"
 )
@@ -16,15 +17,19 @@ func NewHelp(k KeyBind) (*Document, error) {
 		return nil, err
 	}
 
-	m.append("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
+	helpStr := bytes.NewBufferString("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
+	helpStr.WriteString("\n")
+	helpStr.WriteString(KeyBindString(k))
 
-	str := strings.Split(KeyBindString(k), "\n")
-	m.append(str...)
 	m.FileName = "Help"
-	m.eof = 1
+	m.store.eof = 1
 	m.preventReload = true
 	m.seekable = false
 	m.setSectionDelimiter("\t")
+	atomic.StoreInt32(&m.closed, 1)
+	if err := m.ControlReader(helpStr, nil); err != nil {
+		return nil, err
+	}
 	return m, err
 }
 

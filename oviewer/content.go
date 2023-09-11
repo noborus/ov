@@ -30,6 +30,7 @@ const (
 	ansiEscape
 	ansiSubstring
 	ansiControlSequence
+	otherSequence
 	systemSequence
 	oscHyperLink
 	oscParameter
@@ -44,26 +45,29 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
-// EOFContent is "~" only.
+// EOFC is the EOF character.
+const EOFC rune = '~'
+
+// EOFContent is EOFC only.
 var EOFContent = content{
-	mainc: '~',
+	mainc: EOFC,
 	combc: nil,
 	width: 1,
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
 
-// csicache caches escape sequences.
+// csiCache caches escape sequences.
 var csiCache sync.Map
 
 // parseState represents the affected state after parsing.
 type parseState struct {
-	state     int
+	style     tcell.Style
 	parameter strings.Builder
 	url       strings.Builder
-	style     tcell.Style
+	bsContent content
+	state     int
 	tabx      int
 	bsFlag    bool // backspace(^H) flag
-	bsContent content
 }
 
 // parseString converts a string to lineContents.
@@ -133,6 +137,9 @@ func parseString(str string, tabWidth int) contents {
 				}
 				continue
 			case mainc < 0x20: // control character
+				if mainc == '\r' { // CR
+					continue
+				}
 				c.mainc = mainc
 				c.width = 0
 				lc = append(lc, c)
@@ -181,11 +188,14 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			es.style = tcell.StyleDefault
 			es.state = ansiText
 			return true
-		case ']': // Operting System Command Sequence.
+		case ']': // Operating System Command Sequence.
 			es.state = systemSequence
 			return true
 		case 'P', 'X', '^', '_': // Substrings and commands.
 			es.state = ansiSubstring
+			return true
+		case '(':
+			es.state = otherSequence
 			return true
 		default: // Ignore.
 			es.state = ansiText
@@ -208,6 +218,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 		}
 		es.state = ansiText
 		return true
+	case otherSequence:
+		es.state = ansiEscape
+		return true
 	case systemSequence:
 		switch mainc {
 		case '8':
@@ -219,6 +232,9 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 		case 0x1b:
 			// unknown but for compatibility.
 			es.state = ansiControlSequence
+			return true
+		case 0x07:
+			es.state = ansiText
 			return true
 		}
 		log.Printf("invalid char %c", mainc)
@@ -236,21 +252,27 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 			es.parameter.WriteRune(mainc)
 			return true
 		}
-		urlid := es.parameter.String()
-		if urlid != "" {
-			es.style = es.style.UrlId(urlid)
+		urlID := es.parameter.String()
+		if urlID != "" {
+			es.style = es.style.UrlId(urlID)
 		}
 		es.parameter.Reset()
 		es.state = oscURL
 		return true
 	case oscURL:
-		if mainc != 0x1b {
-			es.url.WriteRune(mainc)
+		switch mainc {
+		case 0x1b:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = systemSequence
+			return true
+		case 0x07:
+			es.style = es.style.Url(es.url.String())
+			es.url.Reset()
+			es.state = ansiText
 			return true
 		}
-		es.style = es.style.Url(es.url.String())
-		es.url.Reset()
-		es.state = systemSequence
+		es.url.WriteRune(mainc)
 		return true
 	}
 	switch mainc {
@@ -457,18 +479,22 @@ func StrToContents(str string, tabWidth int) contents {
 	return parseString(str, tabWidth)
 }
 
+type widthPos []int
+
 // ContentsToStr returns a converted string
 // and byte position, as well as the content position conversion table.
-func ContentsToStr(lc contents) (string, map[int]int) {
+func ContentsToStr(lc contents) (string, widthPos) {
 	var buff strings.Builder
-	posCV := make(map[int]int)
+	pos := make(widthPos, 0, len(lc)*4)
 
-	bn := 0
+	i, bn := 0, 0
 	for n, c := range lc {
 		if c.mainc == 0 {
 			continue
 		}
-		posCV[bn] = n
+		for ; i <= bn; i++ {
+			pos = append(pos, n)
+		}
 		mn, err := buff.WriteRune(c.mainc)
 		if err != nil {
 			log.Println(err)
@@ -483,6 +509,34 @@ func ContentsToStr(lc contents) (string, map[int]int) {
 		}
 	}
 	str := buff.String()
-	posCV[bn] = len(lc)
-	return str, posCV
+	for ; i <= bn; i++ {
+		pos = append(pos, len(lc))
+	}
+	return str, pos
+}
+
+// x returns the x position on the screen.
+func (pos widthPos) x(x int) int {
+	if x < len(pos) {
+		return pos[x]
+	}
+	return pos[len(pos)-1]
+}
+
+// n return string position from content.
+func (pos widthPos) n(w int) int {
+	var x int
+	for _, c := range pos {
+		if c >= w {
+			x = c
+			break
+		}
+	}
+	// It should return the last byte of a multibyte character.
+	for i := len(pos) - 1; i >= 0; i-- {
+		if pos[i] == x {
+			return i
+		}
+	}
+	return len(pos) - 1
 }

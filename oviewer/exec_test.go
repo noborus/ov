@@ -46,3 +46,57 @@ func TestExecCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_Exec(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		args   []string
+		reload bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "testLs",
+			fields: fields{
+				args:   []string{"ls"},
+				reload: false,
+			},
+			wantErr: false,
+		},
+		{
+			name: "testNotFoundError",
+			fields: fields{
+				args:   []string{"notfound"},
+				reload: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "testLsReload",
+			fields: fields{
+				args:   []string{"ls"},
+				reload: true,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewCommand(tt.fields.args...)
+			_, err := cmd.Exec()
+			if tt.fields.reload {
+				cmd.Reload()
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Command.Exec() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
