@@ -7,6 +7,7 @@ import (
 )
 
 func Test_max(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		a int
 		b int
@@ -39,6 +40,7 @@ func Test_max(t *testing.T) {
 }
 
 func Test_min(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		a int
 		b int
@@ -71,6 +73,7 @@ func Test_min(t *testing.T) {
 }
 
 func Test_removeStr(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -117,6 +120,7 @@ func Test_removeStr(t *testing.T) {
 }
 
 func Test_removeInt(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []int
 		c    int
@@ -163,6 +167,7 @@ func Test_removeInt(t *testing.T) {
 }
 
 func Test_containsInt(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []int
 		e    int
@@ -201,6 +206,7 @@ func Test_containsInt(t *testing.T) {
 }
 
 func Test_toAddTop(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -247,6 +253,7 @@ func Test_toAddTop(t *testing.T) {
 }
 
 func Test_toAddLast(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -310,6 +317,7 @@ func Test_toAddLast(t *testing.T) {
 }
 
 func Test_toLast(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -356,6 +364,7 @@ func Test_toLast(t *testing.T) {
 }
 
 func Test_remove(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		list []string
 		s    string
@@ -390,6 +399,7 @@ func Test_remove(t *testing.T) {
 }
 
 func Test_allIndex(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s      string
 		substr string
@@ -437,6 +447,7 @@ func Test_allIndex(t *testing.T) {
 }
 
 func Test_allStringIndex(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		s      string
 		substr string

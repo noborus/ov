@@ -74,14 +74,16 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
+	actionSaveBuffer     = "save_buffer"
 
-	inputCaseSensitive = "input_casesensitive"
-	inputIncSearch     = "input_incsearch"
-	inputRegexpSearch  = "input_regexp_search"
-	inputPrevious      = "input_previous"
-	inputNext          = "input_next"
-	inputCopy          = "input_copy"
-	inputPaste         = "input_paste"
+	inputCaseSensitive      = "input_casesensitive"
+	inputSmartCaseSensitive = "input_smart_casesensitive"
+	inputIncSearch          = "input_incsearch"
+	inputRegexpSearch       = "input_regexp_search"
+	inputPrevious           = "input_previous"
+	inputNext               = "input_next"
+	inputCopy               = "input_copy"
+	inputPaste              = "input_paste"
 )
 
 // handlers returns a map of the action's handlers.
@@ -104,16 +106,16 @@ func (root *Root) handlers() map[string]func() {
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
-		actionMoveDown:       root.moveDown,
-		actionMoveUp:         root.moveUp,
+		actionMoveDown:       root.moveDownOne,
+		actionMoveUp:         root.moveUpOne,
 		actionMoveTop:        root.moveTop,
 		actionMoveBottom:     root.moveBottom,
 		actionMovePgUp:       root.movePgUp,
 		actionMovePgDn:       root.movePgDn,
 		actionMoveHfUp:       root.moveHfUp,
 		actionMoveHfDn:       root.moveHfDn,
-		actionMoveLeft:       root.moveLeft,
-		actionMoveRight:      root.moveRight,
+		actionMoveLeft:       root.moveLeftOne,
+		actionMoveRight:      root.moveRightOne,
 		actionMoveHfLeft:     root.moveHfLeft,
 		actionMoveHfRight:    root.moveHfRight,
 		actionMoveBeginLeft:  root.moveBeginLeft,
@@ -141,22 +143,24 @@ func (root *Root) handlers() map[string]func() {
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
 		actionGoLine:         root.setGoLineMode,
-		actionNextSearch:     root.setNextSearch,
-		actionNextBackSearch: root.setNextBackSearch,
+		actionNextSearch:     root.sendNextSearch,
+		actionNextBackSearch: root.sendNextBackSearch,
 		actionNextDoc:        root.nextDoc,
 		actionPreviousDoc:    root.previousDoc,
 		actionCloseDoc:       root.closeDocument,
 		actionToggleMouse:    root.toggleMouse,
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
+		actionSaveBuffer:     root.setSaveBuffer,
 
-		inputCaseSensitive: root.inputCaseSensitive,
-		inputIncSearch:     root.inputIncSearch,
-		inputRegexpSearch:  root.inputRegexpSearch,
-		inputPrevious:      root.inputPrevious,
-		inputNext:          root.inputNext,
-		inputCopy:          root.CopySelect,
-		inputPaste:         root.Paste,
+		inputCaseSensitive:      root.inputCaseSensitive,
+		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
+		inputIncSearch:          root.inputIncSearch,
+		inputRegexpSearch:       root.inputRegexpSearch,
+		inputPrevious:           root.inputPrevious,
+		inputNext:               root.inputNext,
+		inputCopy:               root.CopySelect,
+		inputPaste:              root.Paste,
 	}
 }
 
@@ -228,14 +232,16 @@ func defaultKeyBinds() KeyBind {
 		actionSuspend:        {"ctrl+z"},
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
+		actionSaveBuffer:     {"S"},
 
-		inputCaseSensitive: {"alt+c"},
-		inputIncSearch:     {"alt+i"},
-		inputRegexpSearch:  {"alt+r"},
-		inputPrevious:      {"Up"},
-		inputNext:          {"Down"},
-		inputCopy:          {"ctrl+c"},
-		inputPaste:         {"ctrl+v"},
+		inputCaseSensitive:      {"alt+c"},
+		inputSmartCaseSensitive: {"alt+s"},
+		inputIncSearch:          {"alt+i"},
+		inputRegexpSearch:       {"alt+r"},
+		inputPrevious:           {"Up"},
+		inputNext:               {"Down"},
+		inputCopy:               {"ctrl+c"},
+		inputPaste:              {"ctrl+v"},
 	}
 }
 
@@ -255,6 +261,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
 	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
+	k.writeKeyBind(&b, actionSaveBuffer, "save buffer to file")
 
 	fmt.Fprint(&b, "\n\tMoving\n")
 	fmt.Fprint(&b, "\n")
@@ -272,7 +279,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
 	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
 	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
-	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")
 	fmt.Fprint(&b, "\n")
@@ -313,7 +320,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
-	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 
 	fmt.Fprint(&b, "\n\tSection\n")
 	fmt.Fprint(&b, "\n")
@@ -334,6 +341,7 @@ func (k KeyBind) String() string {
 	fmt.Fprint(&b, "\n\tKey binding when typing\n")
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
+	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")

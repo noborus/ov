@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -28,6 +27,7 @@ const (
 	SectionStart               // SectionStart is a section start position input mode.
 	MultiColor                 // MultiColor is multi-word coloring.
 	JumpTarget                 // JumpTarget is the position to display the search results.
+	SaveBuffer                 // SaveBuffer is the save buffer.
 )
 
 // Input represents the status of various inputs.
@@ -48,6 +48,7 @@ type Input struct {
 	SectionStartCandidate *candidate
 	MultiColorCandidate   *candidate
 	JumpTargetCandidate   *candidate
+	SaveBufferCandidate   *candidate
 
 	value   string
 	cursorX int
@@ -68,6 +69,7 @@ func NewInput() *Input {
 	i.SectionStartCandidate = sectionStartCandidate()
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
+	i.SaveBufferCandidate = saveBufferCandidate()
 
 	i.Event = &eventNormal{}
 	return &i
@@ -91,10 +93,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// Fires a confirmed event.
 	input := root.input
 	nev := input.Event.Confirm(input.value)
-	if err := root.Screen.PostEvent(nev); err != nil {
-		log.Println(err)
-	}
-
+	root.postEvent(nev)
 	input.Event = normal()
 }
 
@@ -180,6 +179,17 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 // inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
+	if root.Config.CaseSensitive {
+		root.Config.SmartCaseSensitive = false
+	}
+}
+
+// inputSmartCaseSensitive toggles case sensitivity.
+func (root *Root) inputSmartCaseSensitive() {
+	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
+	if root.Config.SmartCaseSensitive {
+		root.Config.CaseSensitive = false
+	}
 }
 
 // inputIncSearch toggles incremental search.
