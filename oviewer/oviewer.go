@@ -22,7 +22,6 @@ import (
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
-
 	// Doc contains the model of ov
 	Doc *Document
 	// help
@@ -32,63 +31,47 @@ type Root struct {
 
 	// input contains the input mode.
 	input *Input
-
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searchReg for on-screen highlighting.
-	searchReg *regexp.Regexp
+	// searcher is the searcher.
+	searcher Searcher
 
 	// keyConfig contains the binding settings for the key.
 	keyConfig *cbind.Configuration
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
 
-	// searchWord for on-screen highlighting.
-	searchWord string
 	// Original string.
 	OriginStr string
 
 	// message is the message to display.
 	message string
-
-	// DocList
-	DocList []*Document
-
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
 
-	// Config contains settings that determine the behavior of ov.
+	// DocList is the list of documents.
+	DocList []*Document
+	scr     SCR
 	Config
-
 	// screenMode represents the mode of screen.
 	screenMode ScreenMode
-
-	// mu controls the RWMutex.
-	mu sync.RWMutex
-
 	// Original position at the start of search.
 	OriginPos int
 
 	// CurrentDoc is the index of the current document.
 	CurrentDoc int
-
-	scr SCR
+	// minStartX is the minimum start position of x.
+	minStartX int
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
 	x2 int
 	y2 int
 
-	// headerLen is the actual header length when wrapped.
-	headerLen int
+	// mu controls the RWMutex.
+	mu sync.RWMutex
 
-	// statusPos is the position of the status line.
-	statusPos int
-	// minStartX is the minimum start position of x.
-	minStartX int
-
-	// skipDraw skips draw once when true.
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
 	// mousePressed is a flag when the mouse selection button is pressed.
@@ -130,7 +113,7 @@ type general struct {
 	// SectionDelimiter is a section delimiter.
 	SectionDelimiter string
 	// Specified string for jumpTarget.
-	JumpTargetString string
+	JumpTarget string
 	// MultiColorWords specifies words to color separated by spaces.
 	MultiColorWords []string
 
@@ -146,8 +129,6 @@ type general struct {
 	MarkStyleWidth int
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
-	// JumpTarget is the display position of search results.
-	JumpTarget int
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -172,22 +153,43 @@ type general struct {
 	PlainMode bool
 }
 
+// OVPromptConfigNormal is the normal prompt setting.
+type OVPromptConfigNormal struct {
+	// ShowFilename controls whether to display filename.
+	ShowFilename bool
+	// InvertColor controls whether the text is colored and inverted.
+	InvertColor bool
+}
+
+// OVPromptConfig is the prompt setting.
+type OVPromptConfig struct {
+	// Normal is the normal prompt setting.
+	Normal OVPromptConfigNormal
+}
+
 // Config represents the settings of ov.
 type Config struct {
 	// KeyBinding
 	Keybind map[string][]string
 	// Mode represents the operation of the customized mode.
 	Mode map[string]general
-	// StyleAlternate is a style that applies line by line.
-	StyleAlternate OVStyle
+	// ViewMode represents the view mode.
+	// ViewMode sets several settings together and can be easily switched.
+	ViewMode string
+	// Default keybindings. Disabled if the default keybinding is "disable".
+	DefaultKeyBind string
+	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
+	StyleColumnRainbow []OVStyle
+	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
+	StyleMultiColorHighlight []OVStyle
+
+	// Prompt is the prompt setting.
+	Prompt OVPromptConfig
+
 	// StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
 	// StyleBody is the style that applies to the body.
 	StyleBody OVStyle
-	// StyleOverStrike is a style that applies to overstrike.
-	StyleOverStrike OVStyle
-	// StyleOverLine is a style that applies to overstrike underlines.
-	StyleOverLine OVStyle
 	// StyleLineNumber is a style that applies line number.
 	StyleLineNumber OVStyle
 	// StyleSearchHighlight is the style that applies to the search highlight.
@@ -198,34 +200,26 @@ type Config struct {
 	StyleMarkLine OVStyle
 	// StyleSectionLine is a style that section delimiter line.
 	StyleSectionLine OVStyle
-	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
-	StyleMultiColorHighlight []OVStyle
-	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
-	StyleColumnRainbow []OVStyle
 	// StyleJumpTargetLine is the line that displays the search results.
 	StyleJumpTargetLine OVStyle
-
+	// StyleAlternate is a style that applies line by line.
+	StyleAlternate OVStyle
+	// StyleOverStrike is a style that applies to overstrike.
+	StyleOverStrike OVStyle
+	// StyleOverLine is a style that applies to overstrike underlines.
+	StyleOverLine OVStyle
 	// General represents the general behavior.
 	General general
-
-	// MemoryLimit is a number that limits chunk loading.
-	MemoryLimit int
-	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
-	MemoryLimitFile int
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
 	// AfterWriteOriginal specifies the number of lines after the current position.
 	// 0 specifies the bottom of the screen.
 	AfterWriteOriginal int
-
-	// Default keybindings. Disabled if the default keybinding is "disable".
-	DefaultKeyBind string
-
-	// ViewMode represents the view mode.
-	// ViewMode sets several settings together and can be easily switched.
-	ViewMode string
-
+	// MemoryLimit is a number that limits chunk loading.
+	MemoryLimit int
+	// MemoryLimitFile is a number that limits the chunks loading a file into memory.
+	MemoryLimitFile int
 	// Mouse support disable.
 	DisableMouse bool
 	// IsWriteOriginal is true, write the current screen on quit.
@@ -234,11 +228,15 @@ type Config struct {
 	QuitSmall bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
+	// SmartCaseSensitive is lowercase search ignores case, if true.
+	SmartCaseSensitive bool
 	// RegexpSearch is Regular expression search if true.
 	RegexpSearch bool
 	// Incsearch is incremental search if true.
 	Incsearch bool
 
+	// DisableColumnCycle is disable column cycle.
+	DisableColumnCycle bool
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -293,6 +291,8 @@ var (
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
 	OverLineStyle tcell.Style
+	// SkipExtract is a flag to skip extracting compressed files.
+	SkipExtract bool
 )
 
 // ov output destination.
@@ -353,6 +353,8 @@ var (
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrOverScreen indicates that the specified screen is out of range.
+	ErrOverScreen = errors.New("over screen")
 	// ErrOutOfChunk indicates that the specified Chunk is out of range.
 	ErrOutOfChunk = errors.New("out of chunk")
 	// ErrNotLoaded indicates that it cannot be loaded.
@@ -501,32 +503,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 				if !ok {
 					return
 				}
-				root.mu.Lock()
-				for _, doc := range root.DocList {
-					if doc.filepath == event.Name {
-						switch event.Op {
-						case fsnotify.Write:
-							select {
-							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
-								root.debugMessage(fmt.Sprintf("notify send %v", event))
-							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %s", requestFollow))
-							}
-						case fsnotify.Remove, fsnotify.Create:
-							if !doc.FollowName {
-								continue
-							}
-							select {
-							case doc.ctlCh <- controlSpecifier{request: requestReload}:
-								root.debugMessage(fmt.Sprintf("notify send %v", event))
-							default:
-								root.debugMessage(fmt.Sprintf("notify send fail %s", requestReload))
-							}
-
-						}
-					}
-				}
-				root.mu.Unlock()
+				root.watchEvent(event)
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -548,6 +525,34 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 		if err := watcher.Add(path); err != nil {
 			root.debugMessage(fmt.Sprintf("watcher %s:%s", doc.FileName, err))
 		}
+	}
+}
+
+// watchEvent sends a notification to the document.
+func (root *Root) watchEvent(event fsnotify.Event) {
+	root.mu.Lock()
+	defer root.mu.Unlock()
+
+	for _, m := range root.DocList {
+		if m.filepath == event.Name {
+			switch event.Op {
+			case fsnotify.Write:
+				root.sendRequest(m, requestFollow)
+			case fsnotify.Remove, fsnotify.Create:
+				if m.FollowName {
+					root.sendRequest(m, requestReload)
+				}
+			}
+		}
+	}
+}
+
+func (root *Root) sendRequest(m *Document, request request) {
+	select {
+	case m.ctlCh <- controlSpecifier{request: request}:
+		root.debugMessage(fmt.Sprintf("notify send %v", request))
+	default:
+		root.debugMessage(fmt.Sprintf("notify send fail %s", request))
 	}
 }
 
@@ -681,6 +686,12 @@ func (root *Root) Close() {
 	root.Screen.Fini()
 }
 
+// setMessagef displays a formatted message in status.
+func (root *Root) setMessagef(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	root.setMessage(msg)
+}
+
 // setMessage displays a message in status.
 func (root *Root) setMessage(msg string) {
 	if root.message == msg {
@@ -692,11 +703,24 @@ func (root *Root) setMessage(msg string) {
 	root.Show()
 }
 
-func (root *Root) setMessagef(format string, a ...any) {
+// setMessageLogf displays a formatted message in the status and outputs it to the log.
+func (root *Root) setMessageLogf(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
-	root.setMessage(msg)
+	root.setMessageLog(msg)
 }
 
+// setMessageLog displays a message in the status and outputs it to the log.
+func (root *Root) setMessageLog(msg string) {
+	if root.message == msg {
+		return
+	}
+	root.message = msg
+	log.Print(msg)
+	root.drawStatus()
+	root.Show()
+}
+
+// debugMessage outputs a debug message.
 func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
@@ -704,7 +728,7 @@ func (root *Root) debugMessage(msg string) {
 	if root.Doc == root.logDoc {
 		return
 	}
-	root.message = msg
+
 	if len(msg) == 0 {
 		return
 	}
@@ -835,13 +859,10 @@ func mergeGeneral(src general, dst general) general {
 	if dst.SectionStartPosition != 0 {
 		src.SectionStartPosition = dst.SectionStartPosition
 	}
-	if dst.JumpTargetString != "" {
-		src.JumpTargetString = dst.JumpTargetString
-	}
-	if dst.JumpTarget != 0 {
+	if dst.JumpTarget != "" {
 		src.JumpTarget = dst.JumpTarget
 	}
-	if dst.MultiColorWords != nil {
+	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
 	}
 	return src
@@ -856,7 +877,7 @@ func (root *Root) prepareView() {
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
 	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
-	root.statusPos = root.scr.vHeight - statusLine
+	root.Doc.statusPos = root.scr.vHeight - statusLine
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
@@ -897,7 +918,9 @@ func (root *Root) WriteOriginal() {
 		end = m.topLN + root.AfterWriteOriginal - 1
 	}
 
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // WriteLog write to the log terminal.
@@ -905,7 +928,9 @@ func (root *Root) WriteLog() {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	m.Export(os.Stdout, start, end)
+	if err := m.Export(os.Stdout, start, end); err != nil {
+		log.Println(err)
+	}
 }
 
 // lineNumber returns the line information from y on the screen.
@@ -916,6 +941,7 @@ func (scr SCR) lineNumber(y int) LineNumber {
 	return scr.numbers[0]
 }
 
+// debugNumOfChunk outputs the number of chunks.
 func (root *Root) debugNumOfChunk() {
 	if !root.Debug {
 		return
@@ -925,17 +951,17 @@ func (root *Root) debugNumOfChunk() {
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if MemoryLimit > 0 {
-				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 			}
 			continue
 		}
-		for n, chunk := range doc.chunks {
+		for n, chunk := range doc.store.chunks {
 			if n != 0 && len(chunk.lines) != 0 {
-				if !doc.loadedChunks.Contains(n) {
+				if !doc.store.loadedChunks.Contains(n) {
 					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
 				}
 			}
 		}
-		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Len(), doc.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 	}
 }
