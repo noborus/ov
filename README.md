@@ -77,7 +77,7 @@ ov is a terminal pager.
 * Supports [follow-mode](#follow-mode) (like tail -f).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
-* Supports the [execution](#exec-mode) of commands that toggle both stdout and stder for display.
+* Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
 * Supports [watch](#watch) mode, which reads files on a regular basis.
 * Supports incremental [search](#search) and regular expression search.
 * Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
@@ -533,24 +533,13 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 ##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
 
-Since **v0.20.0** it no longer loads everything into memory.
-The first chunk from the beginning to the 10,000th line is loaded into memory 
+Since **v0.22.0** it no longer loads everything into memory.
+The first chunk from the beginning to the 10,000th line is loaded into memory
 and never freed.
 Therefore, files with less than 10,000 lines do not change behavior.
 
-###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
-
-Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
-The default limit for loading chunks is 100. To change this,
-use the `--file-load-limit` option or specify `FileLoadChunkLimit` in config. The minimum you can specify is 2.
-
-```console
-ov --file-load-limit 3 /var/log/syslog
-```
-
-```yaml
-FileLoadChunkLimit: 3
-```
+The `--memory-limit` option can be used to limit the chunks loaded into memory.
+Memory limits vary by file type.
 
 Also, go may use a lot of memory until the memory is freed by GC.
 Also consider setting the environment variable `GOMEMLIMIT`.
@@ -559,21 +548,40 @@ Also consider setting the environment variable `GOMEMLIMIT`.
 export GOMEMLIMIT=100MiB
 ```
 
+###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
+
+Normally large (10,000+ lines) files are loaded in chunks when needed. It also frees chunks that are no longer needed.
+If `--memory-limit` is not specified, it will be limited to 100.
+
+```console
+ov --memory-limit-file 3 /var/log/syslog
+```
+
+Specify `MemoryLimit` in the configuration file.
+
+```yaml
+MemoryLimitFile: 3
+```
+
+You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
+
 ###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
 
 Non-seekable files and pipes cannot be read again, so they must exist in memory.
 
-If you specify the upper limit of chunks with `--load-limit` or `LoadChunkLimit`,
+If you specify the upper limit of chunks with `--memory-limit` or `MemoryLimit`,
 it will read up to the upper limit first, but after that,
 when the displayed position advances, the old chunks will be released.
-The load-limit defaults to `-1`, which is unlimited. Minimum is `2`.
+Unlimited if `--memory-limit` is not specified.
 
 ```console
-cat /var/log/syslog | ov --load-limit 3
+cat /var/log/syslog | ov --memory-limit 10
 ```
 
+It is recommended to put a limit in the config file as you may receive output larger than memory.
+
 ```yaml
-LoadChunkLimit: 3
+MemoryLimit: 1000
 ```
 
 ##  5. <a name='command-option'></a>Command option
@@ -592,7 +600,7 @@ Flags:
   -d, --column-delimiter string    column delimiter (default ",")
   -c, --column-mode                column mode
       --column-rainbow             column rainbow
-      --column-width               column width mode                                           v0.20.0
+      --column-width               column width mode
       --completion string          generate completion script [bash|zsh|fish|powershell]
       --config string              config file (default is $XDG_CONFIG_HOME/ov/config.yaml)
       --debug                      debug mode
@@ -601,7 +609,6 @@ Flags:
   -X, --exit-write                 output the current screen when exiting
   -a, --exit-write-after int       NUM after the current lines when exiting
   -b, --exit-write-before int      NUM before the current lines when exiting
-      --file-load-limit int        Limit chunks loading files into memory (default 100)        v0.20.0
   -A, --follow-all                 follow all
   -f, --follow-mode                follow mode
       --follow-name                follow name mode
@@ -612,7 +619,8 @@ Flags:
       --incsearch                  incremental search (default true)
   -j, --jump-target string         jump-target
   -n, --line-number                line number mode
-      --load-limit int             Limit loading chunks (default -1)                           v0.20.0
+      --memory-limit int           Number of chunks to limit in memory (default -1)                       v0.22.0
+      --memory-limit-file int      The number of chunks to limit in memory for the file (default 100)     v0.22.0
   -M, --multi-color strings        multi-color
   -p, --plain                      disable original decoration
   -F, --quit-if-one-screen         quit if the output fits on one screen

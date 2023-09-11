@@ -80,16 +80,8 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		// Set a global variable to convert to a style before opening the file.
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
-
-		if config.FileLoadChunksLimit >= 0 && config.FileLoadChunksLimit < 2 {
-			config.FileLoadChunksLimit = 2
-		}
-		oviewer.FileLoadChunksLimit = config.FileLoadChunksLimit
-		if config.LoadChunksLimit >= 0 && config.LoadChunksLimit < 2 {
-			config.LoadChunksLimit = 2
-		}
-		oviewer.LoadChunksLimit = config.LoadChunksLimit
-
+		oviewer.MemoryLimit = config.MemoryLimit
+		oviewer.MemoryLimitFile = config.MemoryLimitFile
 		SetRedirect()
 
 		if execCommand {
@@ -317,11 +309,11 @@ func init() {
 	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
-	rootCmd.PersistentFlags().IntP("load-limit", "", -1, "Limit loading chunks")
-	_ = viper.BindPFlag("LoadChunksLimit", rootCmd.PersistentFlags().Lookup("load-limit"))
+	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "Number of chunks to limit in memory")
+	_ = viper.BindPFlag("MemoryLimit", rootCmd.PersistentFlags().Lookup("memory-limit"))
 
-	rootCmd.PersistentFlags().IntP("file-load-limit", "", 100, "Limit chunks loading files into memory")
-	_ = viper.BindPFlag("FileLoadChunksLimit", rootCmd.PersistentFlags().Lookup("file-load-limit"))
+	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "The number of chunks to limit in memory for the file")
+	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
