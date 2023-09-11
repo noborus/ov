@@ -17,12 +17,13 @@ import (
 func (root *Root) toggleWrapMode() {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
-	m.x = 0
-	if m.ColumnMode {
-		x, err := root.columnX(m.columnCursor)
-		if err != nil {
-			x = 0
-		}
+	// Move cursor to correct position
+	x, err := root.Doc.optimalX(m.columnCursor)
+	if err != nil {
+		root.setMessageLog(err.Error())
+	}
+	// Move if off screen
+	if x < m.x || x > m.x+(root.scr.vWidth-root.scr.startX) {
 		m.x = x
 	}
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
@@ -31,6 +32,10 @@ func (root *Root) toggleWrapMode() {
 // toggleColumnMode toggles ColumnMode each time it is called.
 func (root *Root) toggleColumnMode() {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
+
+	if root.Doc.ColumnMode {
+		root.Doc.columnCursor = root.Doc.optimalCursor(root.Doc.columnCursor)
+	}
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }
 
@@ -107,14 +112,13 @@ func (root *Root) closeFile() {
 		return
 	}
 	root.Doc.requestClose()
-	root.setMessagef("close file %s", root.Doc.FileName)
-	log.Printf("close file %s", root.Doc.FileName)
+	root.setMessageLogf("close file %s", root.Doc.FileName)
 }
 
 // reload performs a reload of the current document.
 func (root *Root) reload(m *Document) {
 	if err := m.reload(); err != nil {
-		root.setMessagef("cannot reload: %s", err)
+		root.setMessageLogf("cannot reload: %s", err)
 		return
 	}
 	root.releaseEventBuffer()
@@ -159,26 +163,38 @@ func (root *Root) watchControl() {
 				ev := &eventReload{}
 				ev.SetEventNow()
 				ev.m = m
-				if err := root.Screen.PostEvent(ev); err != nil {
-					log.Println(err)
-				}
+				root.postEvent(ev)
 			}
 		}
 	}()
 }
 
-func (root *Root) searchGoLine(lN int) {
-	root.Doc.topLN = lN - root.Doc.firstLine()
-	root.Doc.topLX = 0
-	root.moveNumUp(root.Doc.JumpTarget)
+// searchGo will go to the line with the matching term after searching.
+// Jump by section if JumpTargetSection is true.
+func (root *Root) searchGo(lN int) {
+	root.resetSelect()
+	x := root.searchXPos(lN)
+	if root.Doc.jumpTargetSection {
+		root.Doc.searchGoSection(lN, x)
+		return
+	}
+	root.Doc.searchGoTo(lN, x)
 }
 
 // goLine will move to the specified line.
+// decimal number > line number
+// 10 -> line 10
+// decimal number + "." + decimal number > line number + number of wrapping lines
+// 10.5 -> line 10 + 5 wrapping lines
+// "." + decimal is a percentage position
+// .5 -> 50% of the way down the file
+// decimal + "%" is a percentage position
+// 50% -> 50% of the way down the file
 func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := position(root.Doc.BufEndNum(), input)
+	num := docPosition(root.Doc.BufEndNum(), input)
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
@@ -204,7 +220,7 @@ func (root *Root) goLine(input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	lN, nTh = root.moveLineNth(lN-1, nTh)
+	lN, nTh = root.Doc.moveLineNth(lN-1, nTh)
 	root.setMessagef("Moved to line %d.%d", lN+1, nTh)
 }
 
@@ -330,11 +346,11 @@ func (root *Root) suspend() {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		log.Println(err)
+		root.setMessageLog(err.Error())
 	}
 	fmt.Println("resume ov")
 	if err := root.Screen.Resume(); err != nil {
-		log.Println(err)
+		root.setMessageLog(err.Error())
 	}
 	log.Println("Resume")
 }
@@ -411,40 +427,49 @@ func (root *Root) setWatchInterval(input string) {
 		root.Doc.watchMode()
 	}
 	atomic.StoreInt32(&root.Doc.watchRestart, 1)
-	log.Printf("Set watch interval %d", interval)
-	root.setMessagef("Set watch interval %d", interval)
+	root.setMessageLogf("Set watch interval %d", interval)
 }
 
 // setWriteBA sets the number before and after the line
 // to be written at the end.
 func (root *Root) setWriteBA(input string) {
-	ba := strings.Split(input, ":")
+	before, after, err := rangeBA(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	root.BeforeWriteOriginal = before
+	root.AfterWriteOriginal = after
+	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
+	root.IsWriteOriginal = true
+	root.Quit()
+}
+
+// rangeBA returns the before after number from a string.
+func rangeBA(str string) (int, int, error) {
+	ba := strings.Split(str, ":")
 	bstr := ba[0]
 	if bstr == "" {
 		bstr = "0"
 	}
 	before, err := strconv.Atoi(bstr)
 	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
+		return 0, 0, err
 	}
-	root.BeforeWriteOriginal = before
 
-	if len(ba) > 1 {
-		astr := ba[1]
-		if astr == "" {
-			astr = "0"
-		}
-		after, err := strconv.Atoi(astr)
-		if err != nil {
-			root.setMessage(ErrInvalidNumber.Error())
-			return
-		}
-		root.AfterWriteOriginal = after
+	if len(ba) == 1 {
+		return before, 0, nil
 	}
-	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
-	root.IsWriteOriginal = true
-	root.Quit()
+
+	astr := ba[1]
+	if astr == "" {
+		astr = "0"
+	}
+	after, err := strconv.Atoi(astr)
+	if err != nil {
+		return before, 0, err
+	}
+	return before, after, nil
 }
 
 // setSectionDelimiter sets the delimiter string.
@@ -481,16 +506,21 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num := jumpPosition(root.scr.vHeight, input)
+	num, section := jumpPosition(root.scr.vHeight, input)
+	root.Doc.jumpTargetSection = section
+	if root.Doc.jumpTargetSection {
+		root.setMessagef("Set JumpTarget section start")
+		return
+	}
 	if num < 0 || num > root.scr.vHeight-1 {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
-	if root.Doc.JumpTarget == num {
+	if root.Doc.jumpTargetNum == num {
 		return
 	}
-	root.Doc.JumpTargetString = input
-	root.Doc.JumpTarget = num
+	root.Doc.JumpTarget = input
+	root.Doc.jumpTargetNum = num
 	root.setMessagef("Set JumpTarget %d", num)
 }
 
@@ -500,24 +530,25 @@ func (root *Root) resize() {
 }
 
 // jumpPosition determines the position of the jump.
-func jumpPosition(height int, str string) int {
-	num := int(math.Round(position(height, str)))
-	if num < 0 {
-		return (height - 1) + num
+func jumpPosition(height int, str string) (int, bool) {
+	if len(str) == 0 {
+		return 0, false
 	}
-	return num
+	s := strings.ToLower(strings.Trim(str, " "))
+	if len(s) > 0 && s[0] == 's' {
+		return 0, true
+	}
+	num := int(math.Round(docPosition(height, s)))
+	if num < 0 {
+		return (height - 1) + num, false
+	}
+	return num, false
 }
 
-// position returns
-// the number of lines from the top for positive numbers (1),
-// dot.number for percentages (.5) = 50%,
-// and % after the number for percentages (50%).
-func position(height int, str string) float64 {
-	str = strings.TrimSpace(str)
-	if len(str) == 0 {
-		return 0
-	}
-
+// docPosition returns the number of lines from the top for positive
+// numbers (1), dot.number for percentages (.5) = 50%, and % after
+// the number for percentages (50%).
+func docPosition(height int, str string) float64 {
 	var p float64 = 0
 	if strings.HasPrefix(str, ".") {
 		str = strings.TrimLeft(str, ".")
@@ -555,12 +586,12 @@ func (root *Root) ViewSync() {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.JumpTarget = jumpPosition(root.scr.vHeight, root.Doc.JumpTargetString)
+	root.Doc.jumpTargetNum, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
 }
 
 // TailSync move to tail and sync.
 func (root *Root) TailSync() {
-	root.moveBottom()
+	root.Doc.moveBottom()
 	root.ViewSync()
 }
 
@@ -589,4 +620,56 @@ func (root *Root) updateEndNum() {
 	root.prepareStartX()
 	root.drawStatus()
 	root.Screen.Sync()
+}
+
+// follow updates the document in follow mode.
+func (root *Root) follow() {
+	if root.General.FollowAll {
+		root.followAll()
+	}
+	num := root.Doc.BufEndNum()
+	if root.Doc.latestNum == num {
+		return
+	}
+
+	root.skipDraw = false
+	if root.Doc.FollowSection {
+		root.tailSection()
+	} else {
+		root.TailSync()
+	}
+	root.Doc.latestNum = num
+}
+
+// followAll monitors and switches all document updates
+// in follow all mode.
+func (root *Root) followAll() {
+	if root.screenMode != Docs {
+		return
+	}
+
+	current := root.CurrentDoc
+	root.mu.RLock()
+	for n, doc := range root.DocList {
+		if doc.latestNum != doc.BufEndNum() {
+			current = n
+		}
+	}
+	root.mu.RUnlock()
+
+	if root.CurrentDoc != current {
+		root.switchDocument(current)
+	}
+}
+
+// Cancel follow mode and follow all mode.
+func (root *Root) Cancel() {
+	root.General.FollowAll = false
+	root.Doc.FollowMode = false
+}
+
+// WriteQuit sets the write flag and executes a quit event.
+func (root *Root) WriteQuit() {
+	root.IsWriteOriginal = true
+	root.Quit()
 }

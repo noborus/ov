@@ -2,10 +2,16 @@
 # Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
 #
 # CaseSensitive: false
+# SmartCaseSensitive: false
 # RegexpSearch: false
-# Incsearch: ftrue
+# Incsearch: true
 # BeforeWriteOriginal: 1000
 # AfterWriteOriginal: 0
+# MemoryLimit: 10000
+# Prompt:
+#   Normal:
+#     ShowFilename: true
+#     InvertColor: true
 
 General:
   TabWidth: 8
