@@ -19,7 +19,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		atomic.StoreInt32(&root.Doc.watchRestart, 1)
 	}
 	go root.updateInterval(ctx)
-
+	defer root.debugNumOfChunk()
 	for {
 		if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 			root.follow()
@@ -147,7 +147,7 @@ type eventAppSuspend struct {
 	tcell.EventTime
 }
 
-// Suspend fires the eventAppsuspend event.
+// Suspend fires the eventAppSuspend event.
 func (root *Root) Suspend() {
 	if !root.checkScreen() {
 		return

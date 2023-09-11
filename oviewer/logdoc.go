@@ -26,8 +26,8 @@ func NewLogDoc() (*Document, error) {
 // Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
 func (m *Document) Write(p []byte) (int, error) {
-	chunk := m.lastChunk()
-	m.append(chunk, string(p))
+	chunk := m.chunkForAdd()
+	m.append(chunk, p)
 	if len(chunk.lines) >= ChunkSize {
 		chunk = NewChunk(m.size)
 		m.mu.Lock()

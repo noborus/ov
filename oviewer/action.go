@@ -63,7 +63,7 @@ func (root *Root) toggleLineNumMode() {
 // togglePlain toggles plain mode.
 func (root *Root) togglePlain() {
 	root.Doc.PlainMode = !root.Doc.PlainMode
-	root.setMessagef("Set PrainMode %t", root.Doc.PlainMode)
+	root.setMessagef("Set PlainMode %t", root.Doc.PlainMode)
 }
 
 // togglePlain toggles column rainbow mode.
@@ -103,15 +103,15 @@ func (root *Root) closeFile() {
 		return
 	}
 	if root.Doc.seekable {
-		root.setMessage("cannnot close")
+		root.setMessage("cannot close")
 		return
 	}
-	root.Doc.closeControl()
+	root.Doc.requestClose()
 	root.setMessagef("close file %s", root.Doc.FileName)
 	log.Printf("close file %s", root.Doc.FileName)
 }
 
-// reload reload a current document.
+// reload performs a reload of the current document.
 func (root *Root) reload(m *Document) {
 	if err := m.reload(); err != nil {
 		root.setMessagef("cannot reload: %s", err)

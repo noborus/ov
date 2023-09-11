@@ -187,7 +187,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 		return 0, 0
 	}
 
-	//log.Println("len", root.scr.vHeight*root.scr.vWidth, len(lc))
 	for x := 0; ; x++ {
 		if lX+x >= len(lc) {
 			// EOL
@@ -322,8 +321,6 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 			iStart = iEnd + 1
 			iEnd = len(line.str)
 		}
-
-		log.Println(c, indexes)
 		if iStart < 0 || iEnd < 0 {
 			return
 		}
@@ -510,21 +507,25 @@ func (root *Root) inputLeftStatus() (contents, int) {
 	return leftContents, len(p) + input.cursorX
 }
 
+// inputOpts returns a string describing the current search mode.
 func (root *Root) inputOpts() string {
-	opt := ""
-	switch root.input.Event.Mode() {
-	case Search, Backsearch:
+	var opts string
+
+	// The current search mode.
+	mode := root.input.Event.Mode()
+	if mode == Search || mode == Backsearch {
 		if root.Config.RegexpSearch {
-			opt += "(R)"
+			opts += "(R)"
 		}
 		if root.Config.Incsearch {
-			opt += "(I)"
+			opts += "(I)"
 		}
 		if root.Config.CaseSensitive {
-			opt += "(Aa)"
+			opts += "(Aa)"
 		}
 	}
-	return opt
+
+	return opts
 }
 
 func (root *Root) rightStatus() contents {

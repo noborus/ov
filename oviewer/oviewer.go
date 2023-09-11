@@ -70,6 +70,7 @@ type Root struct {
 	// Original position at the start of search.
 	OriginPos int
 
+	// CurrentDoc is the index of the current document.
 	CurrentDoc int
 
 	scr SCR
@@ -98,6 +99,7 @@ type Root struct {
 	mouseRectangle bool
 }
 
+// SCR contains the screen information.
 type SCR struct {
 	// numbers is the line information of the currently displayed screen.
 	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
@@ -110,7 +112,7 @@ type SCR struct {
 	startX int
 }
 
-// Line is Number of logical lines and number of wrapping lines on the screen.
+// LineNumber is Number of logical lines and number of wrapping lines on the screen.
 type LineNumber struct {
 	number int
 	wrap   int
@@ -190,7 +192,7 @@ type Config struct {
 	StyleHeader OVStyle
 	// StyleHeader is the style that applies to the header.
 	StyleBody OVStyle
-	// StyleOverStrike is a style that applies to overstrikes.
+	// StyleOverStrike is a style that applies to overstrike.
 	StyleOverStrike OVStyle
 	// OverLineS is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
@@ -233,6 +235,10 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental server if true.
 	Incsearch bool
+	// LoadChunksLimit is a number that limits chunk loading.
+	LoadChunksLimit int
+	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunksLimit int
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -255,7 +261,7 @@ type OVStyle struct {
 	Reverse bool
 	// If true, add underline.
 	Underline bool
-	// If true, add strikethrough.
+	// If true, add strike through.
 	StrikeThrough bool
 	// If true, add overline (not yet supported).
 	OverLine bool
@@ -271,13 +277,18 @@ type OVStyle struct {
 	UnReverse bool
 	// If true, sub underline.
 	UnUnderline bool
-	// If true, sub strikethrough.
+	// If true, sub strike through.
 	UnStrikeThrough bool
 	// if true, sub underline (not yet supported).
 	UnOverLine bool
 }
 
 var (
+	// LoadChunksLimit is a number that limits the chunks to load into memory.
+	LoadChunksLimit int
+	// FileLoadChunksLimit is a number that limits the chunks loading a file into memory.
+	FileLoadChunksLimit int
+
 	// OverStrikeStyle represents the overstrike style.
 	OverStrikeStyle tcell.Style
 	// OverLineStyle represents the overline underline style.
@@ -306,10 +317,13 @@ const (
 	LogDoc
 )
 
+// MouseFlags represents which events of the mouse should be captured.
 // Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
 // Does not track mouse movements except when dragging.
 const MouseFlags = tcell.MouseDragEvents
 
+// MaxWriteLog is the maximum number of lines to output to the log
+// when the debug flag is enabled.
 const MaxWriteLog int = 10
 
 var (
@@ -335,10 +349,24 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
-	// ErrNoColumn indicates that cusror specified a nonexistent column.
+	// ErrNoColumn indicates that cursor specified a nonexistent column.
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrOutOfChunk indicates that the specified Chunk is out of range.
+	ErrOutOfChunk = errors.New("out of chunk")
+	// ErrNotLoaded indicates that it cannot be loaded.
+	ErrNotLoaded = errors.New("not loaded")
+	// ErrEOFreached indicates that EOF has been reached.
+	ErrEOFreached = errors.New("EOF reached")
+	// ErrPreventReload indicates that reload is prevented.
+	ErrPreventReload = errors.New("prevent reload")
+	// ErrOverChunkLimit indicates that the chunk limit has been exceeded.
+	ErrOverChunkLimit = errors.New("over chunk limit")
+	// ErrAlreadyLoaded indicates that the chunk already loaded.
+	ErrAlreadyLoaded = errors.New("chunk already loaded")
+	// ErrEvictedMemory indicates that it has been evicted from memory.
+	ErrEvictedMemory = errors.New("evicted memory")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
@@ -386,7 +414,7 @@ func NewRoot(r io.Reader) (*Root, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := m.ReadReader(r); err != nil {
+	if err := m.ControlReader(r, nil); err != nil {
 		return nil, err
 	}
 	return NewOviewer(m)
@@ -479,7 +507,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 						switch event.Op {
 						case fsnotify.Write:
 							select {
-							case doc.ctlCh <- controlSpecifier{control: followControl}:
+							case doc.ctlCh <- controlSpecifier{request: requestFollow}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
 								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
@@ -489,7 +517,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 								continue
 							}
 							select {
-							case doc.ctlCh <- controlSpecifier{control: reloadControl}:
+							case doc.ctlCh <- controlSpecifier{request: requestReload}:
 								root.debugMessage(fmt.Sprintf("notify send %v", event))
 							default:
 								root.debugMessage(fmt.Sprintf("notify send fail %d", len(doc.ctlCh)))
@@ -523,6 +551,7 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 	}
 }
 
+// setKeyConfig sets key bindings.
 func (root *Root) setKeyConfig() (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config)
 	if err := root.setHandlers(keyBind); err != nil {
@@ -546,10 +575,9 @@ func (root *Root) SetKeyHandler(name string, keys []string, handler func()) erro
 // Run starts the terminal pager.
 func (root *Root) Run() error {
 	defer root.Close()
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
@@ -607,7 +635,6 @@ func (root *Root) Run() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
 	go func() {
 		// Undo screen when goroutine panic.
 		defer func() {
@@ -628,6 +655,7 @@ func (root *Root) Run() error {
 	}
 }
 
+// optimizedMan optimizes execution with the Man command.
 func (root *Root) optimizedMan() {
 	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
@@ -638,6 +666,7 @@ func (root *Root) optimizedMan() {
 	root.Doc.Caption = manPN
 }
 
+// setModeConfig sets mode config.
 func (root *Root) setModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
@@ -652,6 +681,7 @@ func (root *Root) Close() {
 	root.Screen.Fini()
 }
 
+// setMessage displays a message in status.
 func (root *Root) setMessage(msg string) {
 	if root.message == msg {
 		return
@@ -884,4 +914,26 @@ func (scr SCR) lineNumber(y int) LineNumber {
 		return scr.numbers[y]
 	}
 	return scr.numbers[0]
+}
+
+func (root *Root) debugNumOfChunk() {
+	if !root.Debug {
+		return
+	}
+	for _, doc := range root.DocList {
+		if !doc.seekable {
+			if LoadChunksLimit > 0 {
+				log.Printf("%s: The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+			}
+			continue
+		}
+		for n, chunk := range doc.chunks {
+			if n != 0 && len(chunk.lines) != 0 {
+				if !doc.loadedChunks.Contains(n) {
+					log.Printf("chunk %d is not under control", n)
+				}
+			}
+		}
+		log.Printf("%s(seekable): The number of chunks is %d, of which %v are loaded", doc.FileName, len(doc.chunks), doc.loadedChunks.Keys())
+	}
 }

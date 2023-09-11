@@ -50,7 +50,7 @@ func (root *Root) closeDocument() {
 	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	log.Printf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
-	root.DocList[root.CurrentDoc].closeControl()
+	root.DocList[root.CurrentDoc].requestClose()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
@@ -68,7 +68,7 @@ func (root *Root) nextDoc() {
 	root.debugMessage("next document")
 }
 
-// previouseDoc displays the previous document.
+// previousDoc displays the previous document.
 func (root *Root) previousDoc() {
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.Event = normal()

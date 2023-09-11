@@ -114,8 +114,7 @@ func (root *Root) moveHfDn() {
 
 // numOfWrap returns the number of wrap from lX and lY.
 func (root *Root) numOfWrap(lX int, lY int) int {
-	m := root.Doc
-	listX := root.leftMostX(m.topLN + m.firstLine() + lY)
+	listX := root.leftMostX(lY)
 	if len(listX) == 0 {
 		return 0
 	}

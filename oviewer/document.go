@@ -1,18 +1,17 @@
 package oviewer
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
+	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
 )
 
@@ -34,12 +33,15 @@ type Document struct {
 	// chunks is the content of the file to be stored in chunks.
 	chunks []*chunk
 
-	// Specifies the chunk to read. -1 reads the new last line.
+	// loadedChunks manages chunks loaded into memory.
+	loadedChunks *lru.Cache[int, struct{}]
+	// currentChunk represents the current chunk number.
+	currentChunk int
+
+	// ctlCh is the channel for controlling the reader goroutine.
 	ctlCh chan controlSpecifier
 
-	cancel context.CancelFunc
-
-	cache *lru.Cache
+	cache *lru.Cache[int, LineC]
 
 	ticker     *time.Ticker
 	tickerDone chan struct{}
@@ -59,10 +61,12 @@ type Document struct {
 	// offset
 	offset int64
 
+	// startNum is the number of the first line that can be moved.
 	startNum int
 	// endNum is the number of the last line read.
 	endNum int
 
+	// markedPoint is the position of the marked line.
 	markedPoint int
 
 	// Last moved Section position.
@@ -94,8 +98,6 @@ type Document struct {
 
 	// 1 if EOF is reached.
 	eof int32
-	// openFollow represents the open followMode file.
-	openFollow int32
 	// 1 if there is a changed.
 	changed int32
 	// 1 if there is a closed.
@@ -110,7 +112,9 @@ type Document struct {
 	preventReload bool
 	// Is it possible to seek.
 	seekable bool
-	// formfeedtime adds time on formfeed.
+	// Is it possible to reopen.
+	reopenable bool
+	// formfeedTime adds time on formfeed.
 	formfeedTime bool
 }
 
@@ -126,7 +130,7 @@ type LineC struct {
 type chunk struct {
 	// lines stores the contents of the file in slices of strings.
 	// lines,endNum and eof is updated by reader goroutine.
-	lines []string
+	lines [][]byte
 	// start is the first position of the number of bytes read.
 	start int64
 }
@@ -143,6 +147,7 @@ func NewDocument() (*Document, error) {
 		},
 		ctlCh:         make(chan controlSpecifier),
 		seekable:      true,
+		reopenable:    true,
 		preventReload: false,
 		chunks: []*chunk{
 			NewChunk(0),
@@ -154,20 +159,22 @@ func NewDocument() (*Document, error) {
 	return m, nil
 }
 
+// NewChunk returns chunk.
 func NewChunk(start int64) *chunk {
 	return &chunk{
-		lines: make([]string, 0, ChunkSize),
+		lines: make([][]byte, 0, ChunkSize),
 		start: start,
 	}
 }
 
 // NewCache creates a new cache.
 func (m *Document) NewCache() error {
-	cache, err := lru.New(1024)
+	cache, err := lru.New[int, LineC](1024)
 	if err != nil {
-		return err
+		return fmt.Errorf("new cache %w", err)
 	}
 	m.cache = cache
+
 	return nil
 }
 
@@ -175,7 +182,7 @@ func (m *Document) NewCache() error {
 func OpenDocument(fileName string) (*Document, error) {
 	fi, err := os.Stat(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", fileName, err)
 	}
 	if fi.IsDir() {
 		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
@@ -185,17 +192,24 @@ func OpenDocument(fileName string) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// named pipe.
+	// Check if the file is a named pipe.
 	if fi.Mode()&fs.ModeNamedPipe != 0 {
-		m.seekable = false
+		m.reopenable = false
 	}
 
 	f, err := open(fileName)
 	if err != nil {
 		return nil, err
 	}
+	// Check if the file is seekable.
+	if n, err := f.Seek(1, io.SeekStart); n != 1 || err != nil {
+		m.seekable = false
+	} else {
+		_, _ = f.Seek(0, io.SeekStart)
+	}
+
 	m.FileName = fileName
+	// Read the control file.
 	if err := m.ControlFile(f); err != nil {
 		return nil, err
 	}
@@ -210,6 +224,7 @@ func STDINDocument() (*Document, error) {
 	}
 
 	m.seekable = false
+	m.reopenable = false
 	m.Caption = "(STDIN)"
 	f, err := open("")
 	if err != nil {
@@ -221,56 +236,46 @@ func STDINDocument() (*Document, error) {
 	return m, nil
 }
 
-// GetLine returns one line from buffer.
-func (m *Document) GetLine(n int) string {
-	if n < m.startNum || n >= m.endNum {
-		return ""
+// Line returns one line from buffer.
+func (m *Document) Line(n int) ([]byte, error) {
+	if n >= m.BufEndNum() {
+		return nil, fmt.Errorf("%w %d", ErrOutOfRange, n)
 	}
-	chunkNum := n / ChunkSize
-	if len(m.chunks)-1 < chunkNum {
-		log.Println("over chunk size: ", chunkNum)
-		return ""
-	}
-	chunk := m.chunks[chunkNum]
 
-	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
-		m.loadControl(chunkNum)
+	chunkNum := n / ChunkSize
+	if m.lastChunkNum() < chunkNum {
+		return nil, fmt.Errorf("%w %d", ErrOutOfRange, chunkNum)
+	}
+	if m.currentChunk != chunkNum {
+		m.requestLoad(chunkNum)
 	}
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	cn := n % ChunkSize
-	if cn < len(chunk.lines) {
-		return chunk.lines[cn]
+	chunk := m.chunks[chunkNum]
+	if cn := n % ChunkSize; cn < len(chunk.lines) {
+		return chunk.lines[cn], nil
 	}
-	log.Println("not load", n, m.endNum)
-	return ""
+	return nil, ErrEvictedMemory
 }
 
-// loadControl sends instructions to load chunks into memory.
-func (m *Document) loadControl(chunkNum int) {
-	sc := controlSpecifier{
-		control:  loadControl,
-		chunkNum: chunkNum,
-		done:     make(chan struct{}),
+// GetLine returns one line from buffer.
+// Deprecated: Use LineString instead.
+func (m *Document) GetLine(n int) string {
+	s, err := m.Line(n)
+	if err != nil {
+		return ""
 	}
-	m.ctlCh <- sc
-	<-sc.done
+	return string(s)
 }
 
-func (m *Document) closeControl() {
-	atomic.StoreInt32(&m.readCancel, 1)
-	sc := controlSpecifier{
-		control: closeControl,
-		done:    make(chan struct{}),
+// LineString returns one line from buffer.
+func (m *Document) LineString(n int) string {
+	s, err := m.Line(n)
+	if err != nil {
+		return gchalk.Red(err.Error())
 	}
-
-	log.Println("close send")
-	m.ctlCh <- sc
-	<-sc.done
-	log.Println("receive done")
-	atomic.StoreInt32(&m.readCancel, 0)
+	return string(s)
 }
 
 // CurrentLN returns the currently displayed line number.
@@ -284,7 +289,7 @@ func (m *Document) Export(w io.Writer, start int, end int) {
 		if n >= m.BufEndNum() {
 			break
 		}
-		fmt.Fprint(w, m.GetLine(n))
+		fmt.Fprint(w, m.LineString(n))
 	}
 }
 
@@ -305,22 +310,20 @@ func (m *Document) ClearCache() {
 	m.cache.Purge()
 }
 
-// contents returns contents from line number and tabwidth.
+// contents returns contents from line number and tabWidth.
 func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
 
-	str := m.GetLine(lN)
-	lc := parseString(str, tabWidth)
-	return lc, nil
+	str := m.LineString(lN)
+	return parseString(str, tabWidth), nil
 }
 
-// getLineC returns contents from line number and tabwidth.
+// getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
-	if v, ok := m.cache.Get(lN); ok {
-		line := v.(LineC)
+	if line, ok := m.cache.Get(lN); ok {
 		lc := make(contents, len(line.lc))
 		copy(lc, line.lc)
 		line.lc = lc
@@ -359,39 +362,26 @@ func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
-// SearchLine searches the document and returns the matching line number.
-func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = max(lN, 0)
-	end := m.BufEndNum()
-	for n := lN; n < end; n++ {
-		if searcher.Match(m.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
+// GetChunkLine returns one line from buffer.
+func (m *Document) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if len(m.chunks) <= chunkNum {
+		return nil, ErrOutOfChunk
 	}
+	chunk := m.chunks[chunkNum]
 
-	return 0, ErrNotFound
+	if cn >= len(chunk.lines) {
+		return nil, ErrOutOfRange
+	}
+	return chunk.lines[cn], nil
 }
 
-// BackSearchLine does a backward search on the document and returns a matching line number.
-func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = min(lN, m.BufEndNum()-1)
-
-	for n := lN; n >= 0; n-- {
-		if searcher.Match(m.GetLine(n)) {
-			return n, nil
-		}
-		select {
-		case <-ctx.Done():
-			return 0, ErrCancel
-		default:
-		}
-	}
-	return 0, ErrNotFound
+// chunkLine returns chunkNum and chunk line number from line number.
+func chunkLine(n int) (int, int) {
+	chunkNum := n / ChunkSize
+	cn := n % ChunkSize
+	return chunkNum, cn
 }
 
 // watchMode sets the document to watch mode.
@@ -442,12 +432,14 @@ func (m *Document) setColumnWidths() {
 	if m.BufEndNum() == 0 {
 		return
 	}
-	heaader := 0
-	if m.Header > 0 {
-		heaader = m.Header - 1
-	}
-	tl := min(1000, len(m.chunks[0].lines)-1)
-	lines := m.chunks[0].lines[m.SkipLines:tl]
 
-	m.columnWidths = guesswidth.Positions(lines, heaader, 2)
+	header := m.Header - 1
+	header = max(header, 0)
+	tl := min(1000, len(m.chunks[0].lines))
+	lines := m.chunks[0].lines[m.SkipLines:tl]
+	buf := make([]string, len(lines))
+	for n, line := range lines {
+		buf[n] = string(line)
+	}
+	m.columnWidths = guesswidth.Positions(buf, header, 2)
 }

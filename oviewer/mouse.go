@@ -77,6 +77,7 @@ func (root *Root) wheelRight() {
 		root.moveRightN(4)
 	}
 }
+
 func (root *Root) wheelLeft() {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
@@ -300,7 +301,7 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 			return buff.String(), nil
 		}
 		if _, err := buff.WriteString(str); err != nil {
-			return "", err
+			return "", fmt.Errorf("lineRangeToString: %w", err)
 		}
 
 		return buff.String(), nil
@@ -308,10 +309,10 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 
 	first := scr.selectLine(line1, m.x+x1+wx1, -1)
 	if _, err := buff.WriteString(first); err != nil {
-		return "", err
+		return "", fmt.Errorf("lineRangeToString: %w", err)
 	}
 	if err := buff.WriteByte('\n'); err != nil {
-		return "", err
+		return "", fmt.Errorf("lineRangeToString: %w", err)
 	}
 
 	for y := y1 + 1; y < y2; y++ {
@@ -325,16 +326,16 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 		}
 		str := scr.selectLine(line, 0, -1)
 		if _, err := buff.WriteString(str); err != nil {
-			return "", err
+			return "", fmt.Errorf("lineRangeToString: %w", err)
 		}
 		if err := buff.WriteByte('\n'); err != nil {
-			return "", err
+			return "", fmt.Errorf("lineRangeToString: %w", err)
 		}
 	}
 
 	last := scr.selectLine(line2, 0, m.x+x2+wx2+1)
 	if _, err := buff.WriteString(last); err != nil {
-		return "", err
+		return "", fmt.Errorf("lineRangeToString: %w", err)
 	}
 
 	return buff.String(), nil
@@ -351,15 +352,15 @@ func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error
 		ln := scr.lineNumber(y)
 		line, valid := m.getLineC(ln.number, m.TabWidth)
 		if !valid {
-			return "", ErrOutOfRange
+			return "", fmt.Errorf("rectangleToString: %w", ErrOutOfRange)
 		}
 		wx := scr.branchWidth(line.lc, ln.wrap)
 		str := scr.selectLine(line, m.x+x1+wx, m.x+x2+wx+1)
 		if _, err := buff.WriteString(str); err != nil {
-			return "", err
+			return "", fmt.Errorf("rectangleToString: %w", err)
 		}
 		if err := buff.WriteByte('\n'); err != nil {
-			return "", err
+			return "", fmt.Errorf("rectangleToString: %w", err)
 		}
 	}
 	return buff.String(), nil

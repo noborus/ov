@@ -121,7 +121,7 @@ func Test_searchWord_Match(t *testing.T) {
 			substr := searchWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("searchWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -167,7 +167,7 @@ func Test_sensitiveWord_Match(t *testing.T) {
 			substr := sensitiveWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("sensitiveWord.Match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -213,7 +213,7 @@ func Test_regexpWord_Match(t *testing.T) {
 			substr := regexpWord{
 				word: tt.fields.word,
 			}
-			if got := substr.Match(tt.args.s); got != tt.want {
+			if got := substr.MatchString(tt.args.s); got != tt.want {
 				t.Errorf("regexpWord.match() = %v, want %v", got, tt.want)
 			}
 		})
@@ -281,7 +281,7 @@ func Test_getSearchMatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
-			if got := searcher.Match(tt.word); got != tt.want {
+			if got := searcher.MatchString(tt.word); got != tt.want {
 				t.Errorf("getSearchMatch() = %v, want %v", got, tt.want)
 			}
 		})
@@ -604,6 +604,79 @@ func Test_condRegexpCompile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := condRegexpCompile(tt.args.in); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("condRegexpCompile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDocument_searchChunk(t *testing.T) {
+	type args struct {
+		chunkNum int
+		searcher Searcher
+	}
+	tests := []struct {
+		name     string
+		fileName string
+		args     args
+		want     int
+		wantErr  bool
+	}{
+		{
+			name:     "testNotFound",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:     "testFound",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("error", regexpCompile("error", false), true, false),
+			},
+			want:    3,
+			wantErr: false,
+		},
+		{
+			name:     "testCaseSensitive",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("EXCEPTION", regexpCompile("EXCEPTION", false), true, false),
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name:     "testRegexp",
+			fileName: filepath.Join(testdata, "ct.log"),
+			args: args{
+				chunkNum: 0,
+				searcher: NewSearcher("error", regexpCompile("error", true), true, true),
+			},
+			want:    3,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for !m.BufEOF() {
+			}
+			got, err := m.searchChunk(tt.args.chunkNum, tt.args.searcher)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.searchChunk() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.searchChunk() = %v, want %v", got, tt.want)
 			}
 		})
 	}

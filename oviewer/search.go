@@ -1,20 +1,24 @@
 package oviewer
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sync/errgroup"
 )
 
-//  1. serch key event(/)		back search key event(?)
+//  1. search key event(/)		back search key event(?)
 //  2. actionSearch				setBackSearchMode			(key event)
 //  3. root.setSearchMode()		root.setBackSearchMode()
 //  4. input...confirm			input...confirm
@@ -30,7 +34,8 @@ import (
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
 type Searcher interface {
-	Match(string) bool
+	Match([]byte) bool
+	MatchString(string) bool
 }
 
 // searchWord is a case-insensitive search.
@@ -39,8 +44,14 @@ type searchWord struct {
 }
 
 // searchWord Match is a case-insensitive search.
-func (substr searchWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr searchWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
+}
+
+// searchWord MatchString is a case-insensitive search.
+func (substr searchWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(strings.ToLower(s), substr.word)
 }
 
@@ -50,8 +61,14 @@ type sensitiveWord struct {
 }
 
 // sensitiveWord Match is a case-sensitive search.
-func (substr sensitiveWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr sensitiveWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return bytes.Contains(s, []byte(substr.word))
+}
+
+// sensitiveWord Match is a case-sensitive search.
+func (substr sensitiveWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return strings.Contains(s, substr.word)
 }
 
@@ -61,19 +78,34 @@ type regexpWord struct {
 }
 
 // regexpWord Match is a regular expression search.
-func (substr regexpWord) Match(s string) bool {
-	s = stripEscapeSequence(s)
+func (substr regexpWord) Match(s []byte) bool {
+	s = stripEscapeSequenceBytes(s)
+	return substr.word.Match(s)
+}
+
+// regexpWord Match is a regular expression search.
+func (substr regexpWord) MatchString(s string) bool {
+	s = stripEscapeSequenceString(s)
 	return substr.word.MatchString(s)
 }
 
 // stripRegexpES is a regular expression that excludes escape sequences.
 var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
-// stripEscapeSequence strips if it contains escape sequences.
-func stripEscapeSequence(s string) string {
+// stripEscapeSequenceString strips if it contains escape sequences.
+func stripEscapeSequenceString(s string) string {
 	// Remove EscapeSequence.
 	if strings.ContainsAny(s, "\x1b\b") {
 		s = stripRegexpES.ReplaceAllString(s, "")
+	}
+	return s
+}
+
+// stripEscapeSequence strips if it contains escape sequences.
+func stripEscapeSequenceBytes(s []byte) []byte {
+	// Remove EscapeSequence.
+	if bytes.ContainsAny(s, "\x1b\b") {
+		s = stripRegexpES.ReplaceAll(s, []byte(""))
 	}
 	return s
 }
@@ -86,6 +118,12 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 		}
 	}
 	if caseSensitive {
+		return sensitiveWord{
+			word: word,
+		}
+	}
+	// Use sensitiveWord when not needed.
+	if strings.ToLower(word) == strings.ToUpper(word) {
 		return sensitiveWord{
 			word: word,
 		}
@@ -201,10 +239,9 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	root.cancelFunc = cancel
 
 	eg.Go(func() error {
-		return root.cancelWait()
+		return root.cancelWait(cancel)
 	})
 
 	eg.Go(func() error {
@@ -229,14 +266,117 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	root.setMessagef("search:%v", root.searchWord)
 }
 
-// cancelWait waits for key to cancel.
-func (root *Root) cancelWait() error {
-	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
-		if root.cancelFunc != nil {
-			root.cancelFunc()
-			root.setMessage("cancel")
-			root.cancelFunc = nil
+// Search searches for the search term and moves to the nearest matching line.
+func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	if m.lastChunkNum() < chunkNum {
+		return 0, ErrOutOfChunk
+	}
+	chunk := m.chunks[chunkNum]
+	if m.seekable && len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+			return 0, ErrNotFound
 		}
+	}
+	for n := line; n < ChunkSize; n++ {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+// BackSearch searches backward from the specified line.
+func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 {
+		if !m.storageSearch(ctx, searcher, chunkNum, line) {
+			return 0, ErrNotFound
+		}
+	}
+	for n := line; n >= 0; n-- {
+		buf, err := m.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
+		}
+		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+// storageSearch searches for line not in memory(storage).
+func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
+	chunk := m.chunks[chunkNum]
+	if len(chunk.lines) == 0 && atomic.LoadInt32(&m.closed) == 0 {
+		if m.requestSearch(chunkNum, searcher) {
+			return true
+		}
+	}
+	return false
+}
+
+// SearchLine searches the document and returns the matching line number.
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = max(lN, m.startNum)
+	startChunk, sn := chunkLine(lN)
+	endChunk, _ := chunkLine(m.BufEndNum() - 1)
+
+	for cn := startChunk; cn <= endChunk; cn++ {
+		n, err := m.Search(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+		sn = 0
+	}
+
+	return 0, ErrNotFound
+}
+
+// BackSearchLine does a backward search on the document and returns a matching line number.
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
+	lN = min(lN, m.BufEndNum()-1)
+	startChunk, sn := chunkLine(lN)
+	minChunk, _ := chunkLine(m.startNum)
+	for cn := startChunk; cn >= minChunk; cn-- {
+		n, err := m.BackSearch(ctx, searcher, cn, sn)
+		if err == nil {
+			return cn*ChunkSize + n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+		sn = ChunkSize - 1
+	}
+	return 0, ErrNotFound
+}
+
+// cancelWait waits for key to cancel.
+func (root *Root) cancelWait(cancel context.CancelFunc) error {
+	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
+		cancel()
+		root.setMessage("cancel")
 		return nil
 	}
 
@@ -282,7 +422,7 @@ func (root *Root) searchQuit() {
 	root.postEvent(ev)
 }
 
-// eventSearchMove represents the moveo input mode.
+// eventSearchMove represents the move input mode.
 type eventSearchMove struct {
 	tcell.EventTime
 	value int
@@ -326,11 +466,8 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 		} else {
 			lN, err = root.Doc.BackSearchLine(ctx, searcher, lN)
 		}
-		root.searchQuit()
 		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Printf("incSearch %s", err)
-			}
+			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
 		root.searchGo(lN)
@@ -399,7 +536,7 @@ type eventNextSearch struct {
 	str string
 }
 
-// setNextSearch fires the exntNextSearch event.
+// setNextSearch fires the eventNextSearch event.
 func (root *Root) setNextSearch() {
 	ev := &eventNextSearch{}
 	ev.str = root.searchWord
@@ -413,7 +550,7 @@ type eventNextBackSearch struct {
 	str string
 }
 
-// setNextBackSearch fires the exntNextBackSearch event.
+// setNextBackSearch fires the eventNextBackSearch event.
 func (root *Root) setNextBackSearch() {
 	ev := &eventNextBackSearch{}
 	ev.str = root.searchWord
@@ -445,4 +582,43 @@ func (root *Root) BackSearch(str string) {
 	ev.str = str
 	ev.SetEventNow()
 	root.postEvent(ev)
+}
+
+// searchChunk searches in a Chunk without loading it into memory.
+func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
+	// Seek to the start of the chunk.
+	chunk := m.chunks[chunkNum]
+	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {
+		return 0, fmt.Errorf("seek:%w", err)
+	}
+
+	// Read the chunk line by line.
+	reader := bufio.NewReader(m.file)
+	var line bytes.Buffer
+	var isPrefix bool
+	num := 0
+	for num < ChunkSize {
+		// Read a line.
+		buf, err := reader.ReadSlice('\n')
+		if errors.Is(err, bufio.ErrBufferFull) {
+			isPrefix = true
+			err = nil
+		}
+		line.Write(buf)
+
+		// If the line is complete, check if it matches.
+		if !isPrefix {
+			if searcher.Match(line.Bytes()) {
+				return num, nil
+			}
+			num++
+			line.Reset()
+		}
+
+		// If we hit the end of the file, stop.
+		if err != nil {
+			break
+		}
+	}
+	return 0, ErrNotFound
 }
