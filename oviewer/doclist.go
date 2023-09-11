@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"log"
 	"sync/atomic"
 )
 
@@ -18,7 +17,7 @@ func (root *Root) hasDocChanged() bool {
 	defer root.mu.RUnlock()
 	eventFlag := false
 	for _, doc := range root.DocList {
-		if atomic.SwapInt32(&doc.changed, 0) == 1 {
+		if atomic.SwapInt32(&doc.store.changed, 0) == 1 {
 			eventFlag = true
 		}
 	}
@@ -27,7 +26,7 @@ func (root *Root) hasDocChanged() bool {
 
 // addDocument adds a document and displays it.
 func (root *Root) addDocument(m *Document) {
-	root.setMessagef("add %s", m.FileName)
+	root.setMessageLogf("add %s", m.FileName)
 	m.general = root.Config.General
 	m.regexpCompile()
 
@@ -47,8 +46,7 @@ func (root *Root) closeDocument() {
 		return
 	}
 
-	root.setMessagef("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
-	log.Printf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
+	root.setMessageLogf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
 	root.DocList[root.CurrentDoc].requestClose()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
