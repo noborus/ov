@@ -199,6 +199,7 @@ func TestRoot_Run(t *testing.T) {
 }
 
 func Test_applyStyle(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		style tcell.Style
 		s     OVStyle
@@ -221,7 +222,9 @@ func Test_applyStyle(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := applyStyle(tt.args.style, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("applyStyle() = %v, want %v", got, tt.want)
 			}
