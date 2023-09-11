@@ -3,7 +3,7 @@ Package oviewer provides a pager for terminals.
 
 oviewer displays the contents of the file or reader etc...
 on the current terminal screen.
-After running a Run, oveiwer does not return until the user finishes running.
+After running a Run, oviewer does not return until the user finishes running.
 So if you want to do something in concurrent, you need to use goroutine.
 
 There is also a simple usage example below:

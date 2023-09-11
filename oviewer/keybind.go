@@ -36,6 +36,8 @@ const (
 	actionMoveRight      = "right"
 	actionMoveHfLeft     = "half_left"
 	actionMoveHfRight    = "half_right"
+	actionMoveBeginLeft  = "begin_left"
+	actionMoveEndRight   = "end_right"
 	actionMoveBottom     = "bottom"
 	actionMovePgUp       = "page_up"
 	actionMovePgDn       = "page_down"
@@ -57,6 +59,7 @@ const (
 	actionSearch         = "search"
 	actionWrap           = "wrap_mode"
 	actionColumnMode     = "column_mode"
+	actionColumnWidth    = "column_width"
 	actionBackSearch     = "backsearch"
 	actionDelimiter      = "delimiter"
 	actionHeader         = "header"
@@ -72,11 +75,14 @@ const (
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
 
-	inputCaseSensitive = "input_casesensitive"
-	inputIncSearch     = "input_incsearch"
-	inputRegexpSearch  = "input_regexp_search"
-	inputPrevious      = "input_previous"
-	inputNext          = "input_next"
+	inputCaseSensitive      = "input_casesensitive"
+	inputSmartCaseSensitive = "input_smart_casesensitive"
+	inputIncSearch          = "input_incsearch"
+	inputRegexpSearch       = "input_regexp_search"
+	inputPrevious           = "input_previous"
+	inputNext               = "input_next"
+	inputCopy               = "input_copy"
+	inputPaste              = "input_paste"
 )
 
 // handlers returns a map of the action's handlers.
@@ -99,18 +105,20 @@ func (root *Root) handlers() map[string]func() {
 		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
-		actionMoveDown:       root.moveDown,
-		actionMoveUp:         root.moveUp,
+		actionMoveDown:       root.moveDownOne,
+		actionMoveUp:         root.moveUpOne,
 		actionMoveTop:        root.moveTop,
 		actionMoveBottom:     root.moveBottom,
 		actionMovePgUp:       root.movePgUp,
 		actionMovePgDn:       root.movePgDn,
 		actionMoveHfUp:       root.moveHfUp,
 		actionMoveHfDn:       root.moveHfDn,
-		actionMoveLeft:       root.moveLeft,
-		actionMoveRight:      root.moveRight,
+		actionMoveLeft:       root.moveLeftOne,
+		actionMoveRight:      root.moveRightOne,
 		actionMoveHfLeft:     root.moveHfLeft,
 		actionMoveHfRight:    root.moveHfRight,
+		actionMoveBeginLeft:  root.moveBeginLeft,
+		actionMoveEndRight:   root.moveEndRight,
 		actionSection:        root.setSectionDelimiterMode,
 		actionSectionStart:   root.setSectionStartMode,
 		actionNextSection:    root.nextSection,
@@ -121,6 +129,7 @@ func (root *Root) handlers() map[string]func() {
 		actionViewMode:       root.setViewInputMode,
 		actionWrap:           root.toggleWrapMode,
 		actionColumnMode:     root.toggleColumnMode,
+		actionColumnWidth:    root.toggleColumnWidth,
 		actionAlternate:      root.toggleAlternateRows,
 		actionLineNumMode:    root.toggleLineNumMode,
 		actionMark:           root.addMark,
@@ -133,8 +142,8 @@ func (root *Root) handlers() map[string]func() {
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
 		actionGoLine:         root.setGoLineMode,
-		actionNextSearch:     root.setNextSearch,
-		actionNextBackSearch: root.setNextBackSearch,
+		actionNextSearch:     root.sendNextSearch,
+		actionNextBackSearch: root.sendNextBackSearch,
 		actionNextDoc:        root.nextDoc,
 		actionPreviousDoc:    root.previousDoc,
 		actionCloseDoc:       root.closeDocument,
@@ -142,11 +151,14 @@ func (root *Root) handlers() map[string]func() {
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
 
-		inputCaseSensitive: root.inputCaseSensitive,
-		inputIncSearch:     root.inputIncSearch,
-		inputRegexpSearch:  root.inputRegexpSearch,
-		inputPrevious:      root.inputPrevious,
-		inputNext:          root.inputNext,
+		inputCaseSensitive:      root.inputCaseSensitive,
+		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
+		inputIncSearch:          root.inputIncSearch,
+		inputRegexpSearch:       root.inputRegexpSearch,
+		inputPrevious:           root.inputPrevious,
+		inputNext:               root.inputNext,
+		inputCopy:               root.CopySelect,
+		inputPaste:              root.Paste,
 	}
 }
 
@@ -184,6 +196,8 @@ func defaultKeyBinds() KeyBind {
 		actionMoveRight:      {"right"},
 		actionMoveHfLeft:     {"ctrl+left"},
 		actionMoveHfRight:    {"ctrl+right"},
+		actionMoveBeginLeft:  {"shift+Home"},
+		actionMoveEndRight:   {"shift+End"},
 		actionSection:        {"alt+d"},
 		actionSectionStart:   {"ctrl+F3", "alt+s"},
 		actionNextSection:    {"space"},
@@ -194,6 +208,7 @@ func defaultKeyBinds() KeyBind {
 		actionViewMode:       {"p", "P"},
 		actionWrap:           {"w", "W"},
 		actionColumnMode:     {"c"},
+		actionColumnWidth:    {"alt+o"},
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionMark:           {"m"},
@@ -216,11 +231,14 @@ func defaultKeyBinds() KeyBind {
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
 
-		inputCaseSensitive: {"alt+c"},
-		inputIncSearch:     {"alt+i"},
-		inputRegexpSearch:  {"alt+r"},
-		inputPrevious:      {"Up"},
-		inputNext:          {"Down"},
+		inputCaseSensitive:      {"alt+c"},
+		inputSmartCaseSensitive: {"alt+s"},
+		inputIncSearch:          {"alt+i"},
+		inputRegexpSearch:       {"alt+r"},
+		inputPrevious:           {"Up"},
+		inputNext:               {"Down"},
+		inputCopy:               {"ctrl+c"},
+		inputPaste:              {"ctrl+v"},
 	}
 }
 
@@ -255,7 +273,9 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
-	k.writeKeyBind(&b, actionGoLine, "go to line(input number and `.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
+	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
+	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
 
 	fmt.Fprint(&b, "\n\tMove document\n")
 	fmt.Fprint(&b, "\n")
@@ -282,6 +302,7 @@ func (k KeyBind) String() string {
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
+	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
@@ -295,7 +316,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
-	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` and `n%` allowed)")
+	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 
 	fmt.Fprint(&b, "\n\tSection\n")
 	fmt.Fprint(&b, "\n")
@@ -316,10 +337,13 @@ func (k KeyBind) String() string {
 	fmt.Fprint(&b, "\n\tKey binding when typing\n")
 	fmt.Fprint(&b, "\n")
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
+	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")
 	k.writeKeyBind(&b, inputNext, "next candidate")
+	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
+	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
 	return b.String()
 }
 
