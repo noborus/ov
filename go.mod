@@ -42,4 +42,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace code.rocketnine.space/tslocum/cbind v0.1.5 => github.com/noborus/cbind v0.1.5-0.20230908160312-b8340899f8df
+replace code.rocketnine.space/tslocum/cbind v0.1.5 => github.com/noborus/cbind v0.1.5-0.20230911135419-0c7b1567854d
