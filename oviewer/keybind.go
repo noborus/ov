@@ -410,12 +410,15 @@ func setHandler(c *cbind.Configuration, name string, keys []string, handler func
 				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
 			}
 		} else {
-			c.SetKey(mod, key, wrapEventHandler(handler))
-			// ctrl+h Backspace = backspace and ctrl+backspace
-			// ctrl+backspace = backspace2 and ctrl+backspace2
+			// ctrl+h, Backspace and ctrl+Backspace can only be assigned one handler.
 			if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
-				c.SetKey(tcell.ModCtrl, key, wrapEventHandler(handler))
+				c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(handler))
+				c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(handler))
+				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(handler))
+				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(handler))
+				continue
 			}
+			c.SetKey(mod, key, wrapEventHandler(handler))
 		}
 	}
 	return nil

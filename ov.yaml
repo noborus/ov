@@ -58,7 +58,7 @@ StyleJumpTargetLine:
 # Keybind
 # Special key
 #   "Enter","Backspace","Tab","Backtab","Esc",
-#   "Backspace2", "Delete", "Insert",
+#   "Delete", "Insert",
 #   "Up", "Down", "Left", "Right", "Home", "End",
 #   "F1...F64"
 # Modifier key
