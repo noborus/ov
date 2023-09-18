@@ -411,6 +411,11 @@ func setHandler(c *cbind.Configuration, name string, keys []string, handler func
 			}
 		} else {
 			c.SetKey(mod, key, wrapEventHandler(handler))
+			// ctrl+h Backspace = backspace and ctrl+backspace
+			// ctrl+backspace = backspace2 and ctrl+backspace2
+			if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
+				c.SetKey(tcell.ModCtrl, key, wrapEventHandler(handler))
+			}
 		}
 	}
 	return nil
