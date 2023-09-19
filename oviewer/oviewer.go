@@ -151,6 +151,8 @@ type general struct {
 	FollowName bool
 	// PlainMode is whether to enable the original character decoration.
 	PlainMode bool
+	// SectionHeader is whether to display the section header.
+	SectionHeader bool
 }
 
 // OVPromptConfigNormal is the normal prompt setting.

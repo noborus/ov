@@ -260,6 +260,10 @@ func (m *Document) searchGoSection(lN int, x int) {
 	if err != nil {
 		sN = 0
 	}
+	if m.SectionHeader {
+		sN = (sN - m.firstLine() + m.sectionHeaderNum) + m.SectionStartPosition
+		sN = max(sN, m.BufStartNum())
+	}
 	y := 0
 	if sN < m.firstLine() {
 		// topLN is negative if the section is less than header + skip.

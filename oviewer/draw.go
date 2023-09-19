@@ -35,6 +35,10 @@ func (root *Root) draw() {
 	}
 
 	lN = m.topLN + lN
+
+	// Section header
+	lN = root.sectionHeader(lN)
+
 	// Body
 	lX, lN = root.drawBody(lX, lN)
 
@@ -99,6 +103,35 @@ func (root *Root) drawHeader() int {
 		}
 	}
 	m.headerLen = y
+	return lN
+}
+
+// sectionHeader draws section header.
+func (root *Root) sectionHeader(lN int) int {
+	m := root.Doc
+	if !m.SectionHeader || m.SectionDelimiter == "" {
+		return lN
+	}
+	log.Println(m.SectionHeader)
+	sectionLN, err := root.Doc.prevSection(lN)
+	if err != nil {
+		log.Println(err)
+		return lN
+	}
+
+	if m.Header > sectionLN {
+		return lN
+	}
+
+	if lN > sectionLN {
+		sx, sn := 0, sectionLN
+		line, _ := m.getLineC(sn, m.TabWidth)
+		for y := m.headerLen; sn <= sectionLN; y++ {
+			sx, sn = root.drawLine(y, sx, sn, line.lc)
+			root.sectionLineHighlight(y, line.str)
+			m.headerLen += 1
+		}
+	}
 	return lN
 }
 

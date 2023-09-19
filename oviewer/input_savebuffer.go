@@ -5,7 +5,7 @@ import "github.com/gdamore/tcell/v2"
 // setSaveBuffer is a wrapper to move to setSaveBufferMode.
 func (root *Root) setSaveBuffer() {
 	if root.Doc.seekable {
-		root.setMessage("Saving regular files is not supported")
+		root.setMessage("Does not support saving regular files")
 		return
 	}
 	root.setSaveBufferMode()

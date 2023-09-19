@@ -288,6 +288,9 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 // searchMove searches forward/backward and moves to the nearest matching line.
 func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
 	if searcher == nil {
+		if root.Doc.jumpTargetSection {
+			root.Doc.jumpTargetNum = 0
+		}
 		return
 	}
 	word := root.searcher.String()
