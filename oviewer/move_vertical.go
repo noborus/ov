@@ -256,7 +256,7 @@ func (m *Document) moveNextSection() error {
 		m.movePgDn()
 		return ErrNoDelimiter
 	}
-	m.moveLine((lN - m.firstLine()) + m.SectionStartPosition)
+	m.moveLine((lN - m.firstLine() + m.sectionHeaderNum) + m.SectionStartPosition)
 	return nil
 }
 
@@ -266,11 +266,7 @@ func (m *Document) nextSection(n int) (int, error) {
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
-	n, err := m.SearchLine(ctx, searcher, lN)
-	if err != nil {
-		return n, err
-	}
-	return n, nil
+	return m.SearchLine(ctx, searcher, lN)
 }
 
 // movePrevSection moves to the previous section.
@@ -281,12 +277,14 @@ func (m *Document) movePrevSection() error {
 		return nil
 	}
 
-	lN, err := m.prevSection(m.topLN + m.firstLine())
+	lN, err := m.prevSection(m.topLN + m.firstLine() - m.sectionHeaderNum)
 	if err != nil {
 		m.moveTop()
 		return err
 	}
-	m.moveLine(lN)
+	lN = (lN - m.firstLine()) + m.SectionStartPosition
+	lN = max(lN, m.BufStartNum())
+	m.moveLine(lN + m.sectionHeaderNum)
 	return nil
 }
 
@@ -296,13 +294,7 @@ func (m *Document) prevSection(n int) (int, error) {
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
-	n, err := m.BackSearchLine(ctx, searcher, lN)
-	if err != nil {
-		return 0, err
-	}
-	n = (n - m.firstLine()) + m.SectionStartPosition
-	n = max(n, m.BufStartNum())
-	return n, nil
+	return m.BackSearchLine(ctx, searcher, lN)
 }
 
 // moveLastSection moves to the last section.

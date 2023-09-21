@@ -87,6 +87,8 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
+	// sectionHeaderNum is the number of lines in the section header.
+	sectionHeaderNum int
 	// jumpTargetNum is the display position of search results.
 	jumpTargetNum int
 	// jumpTargetSection is the display position of search results.
@@ -170,14 +172,12 @@ func NewDocument() (*Document, error) {
 			ColumnDelimiter: "",
 			TabWidth:        8,
 			MarkStyleWidth:  1,
-			PlainMode:       false,
 		},
-		ctlCh:         make(chan controlSpecifier),
-		memoryLimit:   100,
-		seekable:      true,
-		reopenable:    true,
-		preventReload: false,
-		store:         NewStore(),
+		ctlCh:       make(chan controlSpecifier),
+		memoryLimit: 100,
+		seekable:    true,
+		reopenable:  true,
+		store:       NewStore(),
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
@@ -458,6 +458,10 @@ func (m *Document) setDelimiter(delm string) {
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm
 	m.SectionDelimiterReg = regexpCompile(delm, true)
+	m.sectionHeaderNum = 0
+	if m.SectionHeader && m.SectionDelimiter != "" {
+		m.sectionHeaderNum = 1
+	}
 }
 
 // setMultiColorWords set multiple strings to highlight with multiple colors.
