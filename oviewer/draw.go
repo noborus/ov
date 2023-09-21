@@ -112,7 +112,7 @@ func (root *Root) sectionHeader(lN int) int {
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return lN
 	}
-	log.Println(m.SectionHeader)
+
 	sectionLN, err := root.Doc.prevSection(lN)
 	if err != nil {
 		log.Println(err)
@@ -126,10 +126,15 @@ func (root *Root) sectionHeader(lN int) int {
 	if lN > sectionLN {
 		sx, sn := 0, sectionLN
 		line, _ := m.getLineC(sn, m.TabWidth)
-		for y := m.headerLen; sn <= sectionLN; y++ {
-			sx, sn = root.drawLine(y, sx, sn, line.lc)
+		nextY := sn
+		for y := m.headerLen; sn < sectionLN+m.sectionHeaderNum; y++ {
+			sx, nextY = root.drawLine(y, sx, sn, line.lc)
 			root.sectionLineHighlight(y, line.str)
 			m.headerLen += 1
+			if nextY != sn {
+				sn = nextY
+				line, _ = m.getLineC(sn, m.TabWidth)
+			}
 		}
 	}
 	return lN
