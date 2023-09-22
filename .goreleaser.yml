@@ -68,7 +68,7 @@ nfpms:
 brews:
   -
     name: ov
-    tap:
+    repository:
       owner: noborus
       name: homebrew-tap
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
