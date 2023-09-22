@@ -63,7 +63,7 @@ nfpms:
       - deb
       - rpm
     bindir: /usr/bin
-    epoch: 1
+    epoch: "1"
 
 brews:
   -
