@@ -7,19 +7,23 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// saveSelection represents the state of the save selection.
 type saveSelection string
 
 const (
-	saveCancel    saveSelection = "cancel"
+	// saveCancel is a save cancel.
+	saveCancel saveSelection = "cancel"
+	// saveOverWrite is a save overwrite.
 	saveOverWrite saveSelection = "overwrite"
-	saveAppend    saveSelection = "append"
+	// saveAppend is a save append.
+	saveAppend saveSelection = "append"
 )
 
 // saveBuffer saves the buffer to the specified file.
 func (root *Root) saveBuffer(input string) {
 	fileName := strings.TrimSpace(input)
 
-	perm := os.FileMode(0644)
+	perm := os.FileMode(0o644)
 	flag := os.O_WRONLY | os.O_CREATE
 	_, err := os.Stat(fileName)
 	if err == nil {

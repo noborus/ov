@@ -88,16 +88,15 @@ func (root *Root) drawHeader() int {
 			root.blankLineNumber(y)
 		}
 
-		nextX, nextY := root.drawLine(y, lX, lN, line.lc)
+		nextX, nextN := root.drawLine(y, lX, lN, line.lc)
 		// header style
 		root.yStyle(y, root.StyleHeader)
 
 		lX = nextX
-		if nextY != lN {
-			lN = nextY
+		if nextN != lN {
+			lN = nextN
 			line, _ = m.getLineC(lN, m.TabWidth)
 			root.styleContent(lN, line)
-
 		}
 
 		if lX > 0 {
@@ -117,34 +116,42 @@ func (root *Root) drawSectionHeader(lN int) int {
 		return lN
 	}
 
-	if lN == 0 {
-		lN = 1
+	pn := lN
+	if pn == 0 {
+		pn = 1
 	}
-	sectionLN, err := m.prevSection(lN)
+	sectionLN, err := m.prevSection(pn)
 	if err != nil {
 		return lN
 	}
 
 	if m.Header > sectionLN {
-		return lN
+		return pn
 	}
 
 	sx, sn := 0, 0
-	if lN > sectionLN {
+	nextN := 0
+	if pn > sectionLN {
 		sn = sectionLN
-		line, _ := m.getLineC(sn, m.TabWidth)
-		nextY := sn
+		line, valid := m.getLineC(sn, m.TabWidth)
 		for y := m.headerLen; sn < sectionLN+m.sectionHeaderNum; y++ {
-			sx, nextY = root.drawLine(y, sx, sn, line.lc)
+			if root.Doc.LineNumMode {
+				if valid {
+					root.drawLineNumber(sn, y)
+				} else {
+					root.blankLineNumber(y)
+				}
+			}
+			sx, nextN = root.drawLine(y, sx, sn, line.lc)
 			root.sectionLineHighlight(y, line.str)
 			m.headerLen += 1
-			if nextY != sn {
-				sn = nextY
-				line, _ = m.getLineC(sn, m.TabWidth)
+			if nextN != sn {
+				sn = nextN
+				line, valid = m.getLineC(sn, m.TabWidth)
 			}
 		}
 	}
-	return lN
+	return pn
 }
 
 // drawBody draws body.
@@ -196,6 +203,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	return lX, lN
 }
 
+// styleContent applies the style of the content.
 func (root *Root) styleContent(lN int, line LineC) {
 	if root.Doc.PlainMode {
 		root.plainStyle(line.lc)
@@ -207,6 +215,7 @@ func (root *Root) styleContent(lN int, line LineC) {
 	root.searchHighlight(lN, line)
 }
 
+// coordinatesStyle applies the style of the coordinates.
 func (root *Root) coordinatesStyle(lN int, y int, str string) {
 	root.alternateRowsStyle(lN, y)
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
@@ -502,6 +511,7 @@ func (root *Root) drawStatus() {
 	root.Screen.ShowCursor(cursorPos, root.Doc.statusPos)
 }
 
+// leftStatus returns the status of the left side.
 func (root *Root) leftStatus() (contents, int) {
 	if root.input.Event.Mode() == Normal {
 		return root.normalLeftStatus()
@@ -509,6 +519,7 @@ func (root *Root) leftStatus() (contents, int) {
 	return root.inputLeftStatus()
 }
 
+// normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() (contents, int) {
 	number := ""
 	if root.DocumentLen() > 1 && root.screenMode == Docs {
@@ -556,6 +567,7 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	return leftContents, len(leftContents)
 }
 
+// inputLeftStatus returns the status of the left side of the input.
 func (root *Root) inputLeftStatus() (contents, int) {
 	input := root.input
 	p := root.inputOpts() + input.Event.Prompt()
@@ -587,6 +599,7 @@ func (root *Root) inputOpts() string {
 	return opts
 }
 
+// rightStatus returns the status of the right side.
 func (root *Root) rightStatus() contents {
 	next := ""
 	if !root.Doc.BufEOF() {
