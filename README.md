@@ -52,6 +52,7 @@ ov is a terminal pager.
   * 3.22. [Jump target](#jump-target)
   * 3.23. [View mode](#view-mode)
   * 3.24. [Output on exit](#output-on-exit)
+  * 3.25. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -619,6 +620,23 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 `--exit-write-after` specifies the number of lines after the current position (top of screen).
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
+
+###  3.25. <a name='save'></a>Save
+
+If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
+
+This will put you in input mode, so enter the file name.
+Only the buffer currently in memory is saved.
+
+```
+(Save)file:savefile.txt
+```
+
+If the file name already exists, select Overwrite, Append, or Cancel.
+
+```
+overwrite? (O)overwrite, (A)append, (N)cancel
+```
 
 ##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
 
