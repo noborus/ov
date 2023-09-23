@@ -201,6 +201,7 @@ func SetRedirect() {
 	}
 }
 
+// flagUsage returns the usage of the flags.
 func flagUsage(f *pflag.FlagSet) string {
 	buf := new(bytes.Buffer)
 
@@ -307,7 +308,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 
-	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extract")
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
 	// Config.General
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
@@ -484,6 +485,7 @@ func initConfig() {
 	}
 }
 
+// fileExists returns true if the file exists.
 func fileExists(path string) bool {
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return false
