@@ -47,21 +47,20 @@ func (e *eventInputSearch) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (e *eventInputSearch) Confirm(str string) tcell.Event {
 	e.value = str
-	e.clist.list = toLast(e.clist.list, str)
-	e.clist.p = 0
+	e.clist.toLast(str)
 	e.SetEventNow()
 	return e
 }
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventInputSearch) Up(str string) string {
-	e.clist.list = toAddLast(e.clist.list, str)
+	e.clist.toAddLast(str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventInputSearch) Down(str string) string {
-	e.clist.list = toAddTop(e.clist.list, str)
+	e.clist.toAddTop(str)
 	return e.clist.down()
 }
 
@@ -98,21 +97,20 @@ func (e *eventInputBackSearch) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (e *eventInputBackSearch) Confirm(str string) tcell.Event {
 	e.value = str
-	e.clist.list = toLast(e.clist.list, str)
-	e.clist.p = 0
+	e.clist.toLast(str)
 	e.SetEventNow()
 	return e
 }
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventInputBackSearch) Up(str string) string {
-	e.clist.list = toAddLast(e.clist.list, str)
+	e.clist.toAddLast(str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventInputBackSearch) Down(str string) string {
-	e.clist.list = toAddTop(e.clist.list, str)
+	e.clist.toAddTop(str)
 	return e.clist.down()
 }
 

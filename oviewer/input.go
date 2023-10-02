@@ -267,6 +267,21 @@ type candidate struct {
 	p    int
 }
 
+func (c *candidate) toLast(str string) {
+	c.list = toLast(c.list, str)
+	c.p = 0
+}
+
+func (c *candidate) toAddTop(str string) {
+	c.list = toAddTop(c.list, str)
+	c.p = 0
+}
+
+func (c *candidate) toAddLast(str string) {
+	c.list = toAddLast(c.list, str)
+	c.p = 0
+}
+
 // up returns the previous candidate.
 func (c *candidate) up() string {
 	if len(c.list) == 0 {

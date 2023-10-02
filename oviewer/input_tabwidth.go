@@ -48,8 +48,7 @@ func (e *eventTabWidth) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (e *eventTabWidth) Confirm(str string) tcell.Event {
 	e.value = str
-	e.clist.list = toLast(e.clist.list, str)
-	e.clist.p = 0
+	e.clist.toLast(str)
 	e.SetEventNow()
 	return e
 }

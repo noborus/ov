@@ -17,7 +17,7 @@ func (root *Root) setMultiColorMode() {
 
 	list := root.searchCandidates(searchCandidateListLen)
 	str := strings.Join(list, " ")
-	input.MultiColorCandidate.list = toLast(input.MultiColorCandidate.list, str)
+	input.MultiColorCandidate.toLast(str)
 
 	input.Event = newMultiColorEvent(input.MultiColorCandidate)
 }
@@ -57,20 +57,19 @@ func (e *eventMultiColor) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (e *eventMultiColor) Confirm(str string) tcell.Event {
 	e.value = str
-	e.clist.list = toLast(e.clist.list, str)
-	e.clist.p = 0
+	e.clist.toLast(str)
 	e.SetEventNow()
 	return e
 }
 
 // Up returns strings when the up key is pressed during input.
 func (e *eventMultiColor) Up(str string) string {
-	e.clist.list = toAddLast(e.clist.list, str)
+	e.clist.toAddLast(str)
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventMultiColor) Down(str string) string {
-	e.clist.list = toAddTop(e.clist.list, str)
+	e.clist.toAddTop(str)
 	return e.clist.down()
 }
