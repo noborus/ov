@@ -7,6 +7,9 @@ func (root *Root) setSectionDelimiterMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	input.SectionDelmCandidate.toLast(root.Doc.SectionDelimiter)
+
 	input.Event = newSectionDelimiterEvent(input.SectionDelmCandidate)
 }
 

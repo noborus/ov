@@ -1,12 +1,17 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 // setJumpTargetMode sets the inputMode to JumpTarget.
 func (root *Root) setJumpTargetMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	input.JumpTargetCandidate.toLast(root.Doc.JumpTarget)
+
 	input.Event = newJumpTargetEvent(input.JumpTargetCandidate)
 }
 

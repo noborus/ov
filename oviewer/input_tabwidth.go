@@ -1,12 +1,18 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"strconv"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setTabWidthMode sets the inputMode to TabWidth.
 func (root *Root) setTabWidthMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	input.TabWidthCandidate.toLast(strconv.Itoa(root.Doc.TabWidth))
 
 	input.Event = newTabWidthEvent(input.TabWidthCandidate)
 }
