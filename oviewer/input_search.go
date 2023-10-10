@@ -1,12 +1,19 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 // setSearchMode sets the inputMode to Search.
 func (root *Root) setSearchMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	if root.searcher != nil {
+		input.SearchCandidate.toLast(root.searcher.String())
+	}
+
 	input.Event = newSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
@@ -69,6 +76,11 @@ func (root *Root) setBackSearchMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	if root.searcher != nil {
+		input.SearchCandidate.toLast(root.searcher.String())
+	}
+
 	input.Event = newBackSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
@@ -116,6 +128,9 @@ func (e *eventInputBackSearch) Down(str string) string {
 
 // searchCandidates returns the list of search candidates.
 func (root *Root) searchCandidates(n int) []string {
+	root.input.SearchCandidate.mux.Lock()
+	defer root.input.SearchCandidate.mux.Unlock()
+
 	listLen := len(root.input.SearchCandidate.list)
 	start := max(0, listLen-n)
 	return root.input.SearchCandidate.list[start:listLen]

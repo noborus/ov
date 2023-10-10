@@ -466,6 +466,7 @@ func (m *Document) setSectionDelimiter(delm string) {
 
 // setMultiColorWords set multiple strings to highlight with multiple colors.
 func (m *Document) setMultiColorWords(words []string) {
+	m.MultiColorWords = words
 	m.multiColorRegexps = multiRegexpCompile(words)
 }
 

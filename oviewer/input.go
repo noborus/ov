@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -263,27 +264,37 @@ type Eventer interface {
 
 // candidate represents a input candidate list.
 type candidate struct {
+	mux  sync.Mutex
 	list []string
 	p    int
 }
 
 func (c *candidate) toLast(str string) {
+	if str == "" {
+		return
+	}
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.list = toLast(c.list, str)
 	c.p = 0
 }
 
 func (c *candidate) toAddTop(str string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.list = toAddTop(c.list, str)
-	c.p = 0
 }
 
 func (c *candidate) toAddLast(str string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.list = toAddLast(c.list, str)
-	c.p = 0
 }
 
 // up returns the previous candidate.
 func (c *candidate) up() string {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	if len(c.list) == 0 {
 		return ""
 	}
@@ -299,6 +310,8 @@ func (c *candidate) up() string {
 
 // down returns the next candidate.
 func (c *candidate) down() string {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	if len(c.list) == 0 {
 		return ""
 	}

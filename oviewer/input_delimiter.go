@@ -1,12 +1,17 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 // setDelimiterMode sets the inputMode to Delimiter.
 func (root *Root) setDelimiterMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
+
+	input.DelimiterCandidate.toLast(root.Doc.ColumnDelimiter)
+
 	input.Event = newDelimiterEvent(input.DelimiterCandidate)
 }
 
