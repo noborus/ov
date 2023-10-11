@@ -914,7 +914,7 @@ func (root *Root) WriteOriginal() {
 		m.bottomLN = m.BufEndNum()
 	}
 
-	start := max(0, m.topLN-root.BeforeWriteOriginal)
+	start := max(0, m.topLN-(m.sectionHeaderNum+root.BeforeWriteOriginal))
 	end := m.bottomLN - 1
 	if root.AfterWriteOriginal != 0 {
 		end = m.topLN + root.AfterWriteOriginal - 1
