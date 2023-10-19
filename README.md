@@ -896,9 +896,6 @@ StyleColumnRainbow:
 
 You can customize the bottom status line.
 
-Whether to display file names.
-Whether to invert the color of the file name.
-
 [Example]
 
 ```yaml
@@ -906,7 +903,14 @@ Prompt
   Normal:
     ShowFilename: false
     InvertColor: false
+    ProcessOfCount: false
 ```
+
+| item name | description | default |
+|:----------|:------------|:--------|
+| ShowFilename| Display file name | true |
+| InvertColor| Display file name inverted and changed color| true |
+| ProcessOfCount| Update the progress while counting the number of lines | true |
 
 ###  7.3. <a name='key-binding-customization'></a>Key binding customization
 
