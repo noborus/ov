@@ -358,6 +358,9 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 
 	lStart := 0
 	if indexes[0][0] == 0 {
+		if len(indexes) == 1 {
+			return
+		}
 		lStart = indexes[0][1]
 		indexes = indexes[1:]
 	}
