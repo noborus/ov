@@ -59,8 +59,9 @@ func NewConfig() Config {
 		},
 		Prompt: OVPromptConfig{
 			Normal: OVPromptConfigNormal{
-				ShowFilename: true,
-				InvertColor:  true,
+				ShowFilename:   true,
+				InvertColor:    true,
+				ProcessOfCount: true,
 			},
 		},
 	}

@@ -161,6 +161,8 @@ type OVPromptConfigNormal struct {
 	ShowFilename bool
 	// InvertColor controls whether the text is colored and inverted.
 	InvertColor bool
+	// ProcessOfCount controls whether to display the progress of the count.
+	ProcessOfCount bool
 }
 
 // OVPromptConfig is the prompt setting.

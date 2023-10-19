@@ -213,6 +213,9 @@ func (root *Root) sendUpdateEndNum() {
 	if !root.hasDocChanged() {
 		return
 	}
+	if !root.Config.Prompt.Normal.ProcessOfCount && !root.Doc.BufEOF() {
+		return
+	}
 	ev := &eventUpdateEndNum{}
 	ev.SetEventNow()
 	root.postEvent(ev)
