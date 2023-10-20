@@ -15,7 +15,7 @@ func (root *Root) setMultiColorMode() {
 	input.value = ""
 	input.cursorX = 0
 
-	searches := root.searchCandidates(searchCandidateListLen)
+	searches := root.input.searchCandidates(searchCandidateListLen)
 	input.MultiColorCandidate.toLast(strings.Join(searches, " "))
 	old := root.Doc.MultiColorWords
 	input.MultiColorCandidate.toLast(strings.Join(old, " "))
