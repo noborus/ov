@@ -127,11 +127,11 @@ func (e *eventInputBackSearch) Down(str string) string {
 }
 
 // searchCandidates returns the list of search candidates.
-func (root *Root) searchCandidates(n int) []string {
-	root.input.SearchCandidate.mux.Lock()
-	defer root.input.SearchCandidate.mux.Unlock()
+func (input *Input) searchCandidates(n int) []string {
+	input.SearchCandidate.mux.Lock()
+	defer input.SearchCandidate.mux.Unlock()
 
-	listLen := len(root.input.SearchCandidate.list)
+	listLen := len(input.SearchCandidate.list)
 	start := max(0, listLen-n)
-	return root.input.SearchCandidate.list[start:listLen]
+	return input.SearchCandidate.list[start:listLen]
 }

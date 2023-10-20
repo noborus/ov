@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -109,6 +110,90 @@ func TestInput_keyEvent(t *testing.T) {
 			}
 			if tt.wantValue != input.value {
 				t.Errorf("Input.value = %v, want %v", input.value, tt.wantValue)
+			}
+		})
+	}
+}
+
+func Test_candidate_up(t *testing.T) {
+	type fields struct {
+		mux  sync.Mutex
+		list []string
+		p    int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testUp1",
+			fields: fields{
+				list: []string{"a", "b", "c"},
+				p:    2,
+			},
+			want: "b",
+		},
+		{
+			name: "testUp2",
+			fields: fields{
+				list: []string{"a", "b", "c"},
+				p:    0,
+			},
+			want: "c",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &candidate{
+				mux:  tt.fields.mux,
+				list: tt.fields.list,
+				p:    tt.fields.p,
+			}
+			if got := c.up(); got != tt.want {
+				t.Errorf("candidate.up() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_candidate_down(t *testing.T) {
+	type fields struct {
+		mux  sync.Mutex
+		list []string
+		p    int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testDown1",
+			fields: fields{
+				list: []string{"a", "b", "c"},
+				p:    0,
+			},
+			want: "b",
+		},
+		{
+			name: "testDown2",
+			fields: fields{
+				list: []string{"a", "b", "c"},
+				p:    2,
+			},
+			want: "a",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &candidate{
+				mux:  tt.fields.mux,
+				list: tt.fields.list,
+				p:    tt.fields.p,
+			}
+			if got := c.down(); got != tt.want {
+				t.Errorf("candidate.down() = %v, want %v", got, tt.want)
 			}
 		})
 	}
