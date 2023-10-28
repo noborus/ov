@@ -283,6 +283,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
 	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
 	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
+	k.writeKeyBind(&b, actionMoveWidthLeft, "scroll left specified width")
+	k.writeKeyBind(&b, actionMoveWidthRight, "scroll right specified width")
 	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
 	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
 	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
