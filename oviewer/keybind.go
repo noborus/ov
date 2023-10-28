@@ -32,6 +32,8 @@ const (
 	actionMoveDown       = "down"
 	actionMoveUp         = "up"
 	actionMoveTop        = "top"
+	actionMoveWidthLeft  = "width_left"
+	actionMoveWidthRight = "width_right"
 	actionMoveLeft       = "left"
 	actionMoveRight      = "right"
 	actionMoveHfLeft     = "half_left"
@@ -114,6 +116,8 @@ func (root *Root) handlers() map[string]func() {
 		actionMovePgDn:       root.movePgDn,
 		actionMoveHfUp:       root.moveHfUp,
 		actionMoveHfDn:       root.moveHfDn,
+		actionMoveWidthLeft:  root.moveWidthLeft,
+		actionMoveWidthRight: root.moveWidthRight,
 		actionMoveLeft:       root.moveLeftOne,
 		actionMoveRight:      root.moveRightOne,
 		actionMoveHfLeft:     root.moveHfLeft,
@@ -194,6 +198,8 @@ func defaultKeyBinds() KeyBind {
 		actionMovePgDn:       {"PageDown", "ctrl+v"},
 		actionMoveHfUp:       {"ctrl+u"},
 		actionMoveHfDn:       {"ctrl+d"},
+		actionMoveWidthLeft:  {"ctrl+shift+left"},
+		actionMoveWidthRight: {"ctrl+shift+right"},
 		actionMoveLeft:       {"left"},
 		actionMoveRight:      {"right"},
 		actionMoveHfLeft:     {"ctrl+left"},

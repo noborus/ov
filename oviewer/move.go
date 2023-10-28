@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"log"
 	"strconv"
 )
 
@@ -157,13 +158,26 @@ func (root *Root) moveRightOne() {
 	root.moveRight(1)
 }
 
+// Move to the width of the screen to the left.
+// Called from a EventKey.
+func (root *Root) moveWidthLeft() {
+	root.moveLeft(root.Doc.ScrollWidthNum)
+}
+
+// Move to the width of the screen to the right.
+// Called from a EventKey.
+func (root *Root) moveWidthRight() {
+	log.Println("ScrollWidth", root.Doc.ScrollWidth)
+	root.moveRight(root.Doc.ScrollWidthNum)
+}
+
 // Move left by n amount.
 func (root *Root) moveLeft(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
 	if root.Doc.ColumnMode {
-		root.moveColumnLeft(n)
+		root.moveColumnLeft(1)
 		return
 	}
 	root.moveNormalLeft(n)
@@ -175,7 +189,7 @@ func (root *Root) moveRight(n int) {
 	defer root.releaseEventBuffer()
 
 	if root.Doc.ColumnMode {
-		root.moveColumnRight(n)
+		root.moveColumnRight(1)
 		return
 	}
 	root.moveNormalRight(n)

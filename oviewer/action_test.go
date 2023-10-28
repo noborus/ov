@@ -171,7 +171,7 @@ func Test_position(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := docPosition(tt.args.height, tt.args.str); got != tt.want {
+			if got := calculatePosition(tt.args.height, tt.args.str); got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
 			}
 		})
