@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -129,6 +130,10 @@ type general struct {
 	MarkStyleWidth int
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
+	// HScrollWidth is the horizontal scroll width.
+	HScrollWidth string
+	// HScrollWidthNum is the horizontal scroll width.
+	HScrollWidthNum int
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
@@ -866,6 +871,9 @@ func mergeGeneral(src general, dst general) general {
 	if dst.JumpTarget != "" {
 		src.JumpTarget = dst.JumpTarget
 	}
+	if dst.HScrollWidth != "" {
+		src.HScrollWidth = dst.HScrollWidth
+	}
 	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
 	}
@@ -880,6 +888,8 @@ func (root *Root) prepareView() {
 	// Do not allow size 0.
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
+	num := int(math.Round(calculatePosition(root.scr.vWidth, root.Doc.HScrollWidth)))
+	root.Doc.HScrollWidthNum = max(num, 1)
 	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	root.Doc.statusPos = root.scr.vHeight - statusLine
 }

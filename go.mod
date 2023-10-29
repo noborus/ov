@@ -5,11 +5,11 @@ go 1.19
 require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4
-	github.com/fsnotify/fsnotify v1.6.0
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.17.0
+	github.com/klauspost/compress v1.17.2
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/noborus/guesswidth v0.3.4
 	github.com/pierrec/lz4 v2.6.1+incompatible

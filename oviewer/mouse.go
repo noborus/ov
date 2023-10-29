@@ -74,7 +74,7 @@ func (root *Root) wheelRight() {
 	if root.Doc.ColumnMode {
 		root.moveRightOne()
 	} else {
-		root.moveRight(4)
+		root.moveRight(root.Doc.HScrollWidthNum)
 	}
 }
 
@@ -83,7 +83,7 @@ func (root *Root) wheelLeft() {
 	if root.Doc.ColumnMode {
 		root.moveLeftOne()
 	} else {
-		root.moveLeft(4)
+		root.moveLeft(root.Doc.HScrollWidthNum)
 	}
 }
 
