@@ -25,6 +25,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.store.eof = 1
 	m.preventReload = true
 	m.seekable = false
+	m.SectionHeader = true
 	m.setSectionDelimiter("\t")
 	atomic.StoreInt32(&m.closed, 1)
 	if err := m.ControlReader(helpStr, nil); err != nil {

@@ -386,8 +386,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int|'section']`")
 	_ = viper.BindPFlag("general.JumpTarget", rootCmd.PersistentFlags().Lookup("jump-target"))
 
-	rootCmd.PersistentFlags().StringP("scroll-width", "", ".1", "width to scroll horizontally `[int|int%|.int]`")
-	_ = viper.BindPFlag("general.ScrollWidth", rootCmd.PersistentFlags().Lookup("scroll-width"))
+	rootCmd.PersistentFlags().StringP("hscroll-width", "", "10%", "width to scroll horizontally `[int|int%|.int]`")
+	_ = viper.BindPFlag("general.HScrollWidth", rootCmd.PersistentFlags().Lookup("hscroll-width"))
 
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
