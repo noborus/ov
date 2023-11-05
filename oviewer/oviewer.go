@@ -94,6 +94,8 @@ type SCR struct {
 	vHeight int
 	// startX is the start position of x.
 	startX int
+	// Process as a section header if the remaining value is 1 or more.
+	sectionHeaderLeft int
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -130,6 +132,8 @@ type general struct {
 	MarkStyleWidth int
 	// SectionStartPosition is a section start position.
 	SectionStartPosition int
+	// SectionHeaderNum is the number of lines in the section header.
+	SectionHeaderNum int
 	// HScrollWidth is the horizontal scroll width.
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
@@ -929,7 +933,7 @@ func (root *Root) WriteOriginal() {
 		m.bottomLN = m.BufEndNum()
 	}
 
-	start := max(0, m.topLN-(m.sectionHeaderNum+root.BeforeWriteOriginal))
+	start := max(0, m.topLN-(m.SectionHeaderNum+root.BeforeWriteOriginal))
 	end := m.bottomLN - 1
 	if root.AfterWriteOriginal != 0 {
 		end = m.topLN + root.AfterWriteOriginal - 1

@@ -256,7 +256,7 @@ func (m *Document) moveNextSection() error {
 		m.movePgDn()
 		return ErrNoDelimiter
 	}
-	m.moveLine((lN - m.firstLine() + m.sectionHeaderNum) + m.SectionStartPosition)
+	m.moveLine((lN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition)
 	return nil
 }
 
@@ -277,14 +277,14 @@ func (m *Document) movePrevSection() error {
 		return nil
 	}
 
-	lN, err := m.prevSection(m.topLN + m.firstLine() - m.sectionHeaderNum)
+	lN, err := m.prevSection(m.topLN + m.firstLine() - m.SectionHeaderNum)
 	if err != nil {
 		m.moveTop()
 		return err
 	}
 	lN = (lN - m.firstLine()) + m.SectionStartPosition
 	lN = max(lN, m.BufStartNum())
-	m.moveLine(lN + m.sectionHeaderNum)
+	m.moveLine(lN + m.SectionHeaderNum)
 	return nil
 }
 
