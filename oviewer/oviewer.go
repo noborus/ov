@@ -888,10 +888,13 @@ func (root *Root) prepareView() {
 	// Do not allow size 0.
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
+	root.Doc.statusPos = root.scr.vHeight - statusLine
+
 	num := int(math.Round(calculatePosition(root.scr.vWidth, root.Doc.HScrollWidth)))
 	root.Doc.HScrollWidthNum = max(num, 1)
-	root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
-	root.Doc.statusPos = root.scr.vHeight - statusLine
+	if len(root.scr.numbers) != root.scr.vHeight+1 {
+		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
+	}
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.

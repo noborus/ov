@@ -1,40 +1,11 @@
 package oviewer
 
-import (
-	"strconv"
-)
+// Called by event key to change document position.
 
-// bottomMargin is the margin of the bottom line when specifying section
+// bottomMargin is the margin of the bottom line when specifying section.
 const bottomMargin = 2
 
-// MoveLine fires an eventGoto event that moves to the specified line.
-func (root *Root) MoveLine(num int) {
-	if !root.checkScreen() {
-		return
-	}
-	root.sendGoto(num)
-}
-
-// sendGoto fires an eventGoto event that moves to the specified line.
-func (root *Root) sendGoto(num int) {
-	ev := &eventGoto{}
-	ev.value = strconv.Itoa(num)
-	ev.SetEventNow()
-	root.postEvent(ev)
-}
-
-// MoveTop fires the event of moving to top.
-func (root *Root) MoveTop() {
-	root.MoveLine(root.Doc.BufStartNum())
-}
-
-// MoveBottom fires the event of moving to bottom.
-func (root *Root) MoveBottom() {
-	root.MoveLine(root.Doc.BufEndNum())
-}
-
 // Go to the top line.
-// Called from a EventKey.
 func (root *Root) moveTop() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -43,7 +14,6 @@ func (root *Root) moveTop() {
 }
 
 // Go to the bottom line.
-// Called from a EventKey.
 func (root *Root) moveBottom() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -52,7 +22,6 @@ func (root *Root) moveBottom() {
 }
 
 // Move up one screen.
-// Called from a EventKey.
 func (root *Root) movePgUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -61,7 +30,6 @@ func (root *Root) movePgUp() {
 }
 
 // Moves down one screen.
-// Called from a EventKey.
 func (root *Root) movePgDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -70,7 +38,6 @@ func (root *Root) movePgDn() {
 }
 
 // Moves up half a screen.
-// Called from a EventKey.
 func (root *Root) moveHfUp() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -79,7 +46,6 @@ func (root *Root) moveHfUp() {
 }
 
 // Moves down half a screen.
-// Called from a EventKey.
 func (root *Root) moveHfDn() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -88,13 +54,11 @@ func (root *Root) moveHfDn() {
 }
 
 // Move up one line.
-// Called from a EventKey.
 func (root *Root) moveUpOne() {
 	root.moveUp(1)
 }
 
 // Move down one line.
-// Called from a EventKey.
 func (root *Root) moveDownOne() {
 	root.moveDown(1)
 }
@@ -146,25 +110,21 @@ func (root *Root) lastSection() {
 }
 
 // Move to the left.
-// Called from a EventKey.
 func (root *Root) moveLeftOne() {
 	root.moveLeft(1)
 }
 
 // Move to the right.
-// Called from a EventKey.
 func (root *Root) moveRightOne() {
 	root.moveRight(1)
 }
 
 // Move to the width of the screen to the left.
-// Called from a EventKey.
 func (root *Root) moveWidthLeft() {
 	root.moveLeft(root.Doc.HScrollWidthNum)
 }
 
 // Move to the width of the screen to the right.
-// Called from a EventKey.
 func (root *Root) moveWidthRight() {
 	root.moveRight(root.Doc.HScrollWidthNum)
 }
@@ -194,7 +154,6 @@ func (root *Root) moveRight(n int) {
 }
 
 // Move to the left by half a screen.
-// Called from a EventKey.
 func (root *Root) moveHfLeft() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -204,7 +163,6 @@ func (root *Root) moveHfLeft() {
 }
 
 // Move to the right by half a screen.
-// Called from a EventKey.
 func (root *Root) moveHfRight() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
@@ -245,74 +203,5 @@ func (root *Root) moveColumnLeft(n int) {
 func (root *Root) moveColumnRight(n int) {
 	if err := root.Doc.moveColumnRight(n, root.scr, !root.Config.DisableColumnCycle); err != nil {
 		root.debugMessage(err.Error())
-	}
-}
-
-// searchGoTo moves to the specified line and position after searching.
-// Go to the specified line +root.Doc.JumpTarget Go to.
-// If the search term is off screen, move until the search term is visible.
-func (m *Document) searchGoTo(lN int, x int) {
-	m.searchGoX(x)
-
-	m.topLN = lN - m.firstLine()
-	m.moveYUp(m.jumpTargetNum)
-}
-
-// Bottom line of jumpTarget when specifying a section
-func (m *Document) bottomJumpTarget() int {
-	return m.statusPos - bottomMargin
-}
-
-// searchGoSection will go to the section with the matching term after searching.
-// Move the JumpTarget so that it can be seen from the beginning of the section.
-func (m *Document) searchGoSection(lN int, x int) {
-	m.searchGoX(x)
-
-	sN, err := m.prevSection(lN)
-	if err != nil {
-		sN = 0
-	}
-	if m.SectionHeader {
-		sN = (sN - m.firstLine() + m.sectionHeaderNum) + m.SectionStartPosition
-		sN = max(sN, m.BufStartNum())
-	}
-	y := 0
-	if sN < m.firstLine() {
-		// topLN is negative if the section is less than header + skip.
-		m.topLN = sN - m.firstLine()
-	} else {
-		m.topLN = sN
-		sN += m.firstLine()
-	}
-
-	if !m.WrapMode {
-		y = lN - sN
-	} else {
-		for n := sN; n < lN; n++ {
-			listX := m.leftMostX(n)
-			y += len(listX)
-		}
-	}
-
-	if m.bottomJumpTarget() > y+m.headerLen {
-		m.jumpTargetNum = y
-		return
-	}
-
-	m.jumpTargetNum = m.bottomJumpTarget() - (m.headerLen + 1)
-	m.moveYDown(y - m.jumpTargetNum)
-}
-
-// searchGoX moves to the specified x position.
-func (m *Document) searchGoX(x int) {
-	m.topLX = 0
-	// If the search term is outside the height of the screen when in WrapMode.
-	if nTh := x / m.width; nTh > m.height {
-		m.topLX = nTh * m.width
-	}
-
-	// If the search term is outside the width of the screen when in NoWrapMode.
-	if x < m.x || x > m.x+m.width-1 {
-		m.x = x
 	}
 }

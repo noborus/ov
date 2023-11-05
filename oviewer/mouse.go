@@ -11,6 +11,9 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// WheelScrollNum is the number of lines to scroll with the mouse wheel.
+var WheelScrollNum = 2
+
 // mouseEvent handles mouse events.
 func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 	button := ev.Buttons()
@@ -60,13 +63,13 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 // wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp() {
 	root.setMessage("")
-	root.moveUp(2)
+	root.moveUp(WheelScrollNum)
 }
 
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown() {
 	root.setMessage("")
-	root.moveDown(2)
+	root.moveDown(WheelScrollNum)
 }
 
 func (root *Root) wheelRight() {
