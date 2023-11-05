@@ -3,6 +3,7 @@ package oviewer
 import (
 	"context"
 	"log"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -96,6 +97,32 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			return
 		}
 	}
+}
+
+// sendGoto fires an eventGoto event that moves to the specified line.
+func (root *Root) sendGoto(num int) {
+	ev := &eventGoto{}
+	ev.value = strconv.Itoa(num)
+	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// MoveLine fires an eventGoto event that moves to the specified line.
+func (root *Root) MoveLine(num int) {
+	if !root.checkScreen() {
+		return
+	}
+	root.sendGoto(num)
+}
+
+// MoveTop fires the event of moving to top.
+func (root *Root) MoveTop() {
+	root.MoveLine(root.Doc.BufStartNum())
+}
+
+// MoveBottom fires the event of moving to bottom.
+func (root *Root) MoveBottom() {
+	root.MoveLine(root.Doc.BufEndNum())
 }
 
 // everyUpdate is called every time before running the event.
@@ -294,15 +321,15 @@ type eventReload struct {
 
 // Reload fires the eventReload event.
 func (root *Root) Reload() {
-	root.sendReload()
+	root.sendReload(root.Doc)
 }
 
-func (root *Root) sendReload() {
+func (root *Root) sendReload(m *Document) {
 	if !root.checkScreen() {
 		return
 	}
 	ev := &eventReload{}
-	ev.m = root.Doc
+	ev.m = m
 	ev.SetEventNow()
 	root.postEvent(ev)
 }

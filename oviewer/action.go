@@ -160,10 +160,7 @@ func (root *Root) watchControl() {
 				m.tickerDone <- struct{}{}
 				return
 			case <-m.ticker.C:
-				ev := &eventReload{}
-				ev.SetEventNow()
-				ev.m = m
-				root.postEvent(ev)
+				root.sendReload(m)
 			}
 		}
 	}()
@@ -549,6 +546,10 @@ func jumpPosition(height int, str string) (int, bool) {
 // numbers (1), returns dot.number for percentages (.5) = 50%,
 // and returns the % after the number for percentages (50%). return.
 func calculatePosition(length int, str string) float64 {
+	if len(str) == 0 || str == "0" {
+		return 0
+	}
+
 	var p float64 = 0
 	if strings.HasPrefix(str, ".") {
 		str = strings.TrimLeft(str, ".")
@@ -573,10 +574,8 @@ func calculatePosition(length int, str string) float64 {
 
 	num, err := strconv.ParseFloat(str, 64)
 	if err != nil {
-		log.Println(err)
 		return 0
 	}
-
 	return num
 }
 
