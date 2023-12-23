@@ -83,6 +83,11 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 			config.General.ColumnDelimiter = "\t"
 		}
 
+		// SectionHeader is enabled if SectionHeaderNum is greater than 0.
+		if config.General.SectionHeaderNum > 0 {
+			config.General.SectionHeader = true
+		}
+
 		// Set a global variable to convert to a style before opening the file.
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
@@ -364,6 +369,9 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("section-header", "", false, "enable section-delimiter line as Header")
 	_ = viper.BindPFlag("general.SectionHeader", rootCmd.PersistentFlags().Lookup("section-header"))
+
+	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of header lines")
+	_ = viper.BindPFlag("general.SectionHeaderNum", rootCmd.PersistentFlags().Lookup("section-header-num"))
 
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))

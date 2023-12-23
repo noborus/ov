@@ -25,7 +25,7 @@ func (m *Document) searchGoSection(lN int, x int) {
 		sN = 0
 	}
 	if m.SectionHeader {
-		sN = (sN - m.firstLine() + m.sectionHeaderNum) + m.SectionStartPosition
+		sN = (sN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition
 		sN = max(sN, m.BufStartNum())
 	}
 	y := 0
