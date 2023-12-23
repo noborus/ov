@@ -38,7 +38,7 @@ func (root *Root) draw() {
 
 	// Section header
 	n := root.drawSectionHeader(lN)
-	if lN != n {
+	if root.Doc.SectionHeaderNum > lN && lN != n {
 		lN = n
 		if m.topLN == 0 {
 			m.topLN = 1
@@ -115,6 +115,7 @@ func (root *Root) drawHeader() int {
 // drawSectionHeader advances the line
 // if the section header contains a line in the terminal.
 func (root *Root) drawSectionHeader(lN int) int {
+	log.Println("drawSectionHeader", lN)
 	m := root.Doc
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return lN

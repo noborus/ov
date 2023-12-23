@@ -5,11 +5,8 @@ package oviewer
 // If the search term is off screen, move until the search term is visible.
 func (m *Document) searchGoTo(lN int, x int) {
 	m.searchGoX(x)
-	sn := 0
-	if lN > m.firstLine()+m.SectionHeaderNum-1 {
-		sn = (m.SectionHeaderNum - 1)
-	}
-	m.topLN = lN - (m.firstLine() + sn)
+
+	m.topLN = lN - m.firstLine()
 	m.moveYUp(m.jumpTargetNum)
 }
 
