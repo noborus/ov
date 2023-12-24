@@ -38,13 +38,9 @@ func (root *Root) draw() {
 
 	// Section header
 	n := root.drawSectionHeader(lN)
-	if root.Doc.SectionHeaderNum > lN && lN != n {
+	if lN == 0 && lN <= root.Doc.SectionHeaderNum {
 		lN = n
-		if m.topLN == 0 {
-			m.topLN = 1
-		}
 	}
-
 	// Body
 	lX, lN = root.drawBody(lX, lN)
 
@@ -115,7 +111,6 @@ func (root *Root) drawHeader() int {
 // drawSectionHeader advances the line
 // if the section header contains a line in the terminal.
 func (root *Root) drawSectionHeader(lN int) int {
-	log.Println("drawSectionHeader", lN)
 	m := root.Doc
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return lN
@@ -154,6 +149,9 @@ func (root *Root) drawSectionHeader(lN int) int {
 			root.sectionLineHighlight(y, line.str)
 			m.headerLen += 1
 			if nextN != sn {
+				if root.scr.sectionHeaderLeft > 0 {
+					root.scr.sectionHeaderLeft--
+				}
 				sn = nextN
 				line, valid = m.getLineC(sn, m.TabWidth)
 			}
@@ -195,6 +193,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		lX = nextX
 		if nextY != lN {
 			lN = nextY
+			if root.scr.sectionHeaderLeft > 0 {
+				root.scr.sectionHeaderLeft--
+			}
 			line, valid = m.getLineC(lN, m.TabWidth)
 			root.bodyStyle(line.lc, root.StyleBody)
 			if valid {
@@ -656,10 +657,9 @@ func (root *Root) sectionLineHighlight(y int, str string) {
 	}
 	if root.scr.sectionHeaderLeft > 0 {
 		root.yStyle(y, root.StyleSectionLine)
-		root.scr.sectionHeaderLeft--
 	}
 	if root.Doc.SectionDelimiterReg.MatchString(str) {
 		root.yStyle(y, root.StyleSectionLine)
-		root.scr.sectionHeaderLeft = root.Doc.SectionHeaderNum - 1
+		root.scr.sectionHeaderLeft = root.Doc.SectionHeaderNum
 	}
 }
