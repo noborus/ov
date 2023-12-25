@@ -38,8 +38,11 @@ func (root *Root) draw() {
 
 	// Section header
 	n := root.drawSectionHeader(lN)
-	if lN == 0 && lN <= root.Doc.SectionHeaderNum {
+	if m.startTopFlag && lN < m.SectionHeaderNum {
 		lN = n
+		m.topLN = n
+	} else {
+		m.startTopFlag = false
 	}
 	// Body
 	lX, lN = root.drawBody(lX, lN)
@@ -117,6 +120,7 @@ func (root *Root) drawSectionHeader(lN int) int {
 	}
 
 	pn := lN
+	// If the line number is 0, it is the first line.
 	if pn == 0 {
 		pn = 1
 	}

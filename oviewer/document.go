@@ -113,6 +113,8 @@ type Document struct {
 	seekable bool
 	// Is it possible to reopen.
 	reopenable bool
+	// startTopFlag
+	startTopFlag bool
 }
 
 // store represents store management.
@@ -171,11 +173,12 @@ func NewDocument() (*Document, error) {
 			TabWidth:        8,
 			MarkStyleWidth:  1,
 		},
-		ctlCh:       make(chan controlSpecifier),
-		memoryLimit: 100,
-		seekable:    true,
-		reopenable:  true,
-		store:       NewStore(),
+		ctlCh:        make(chan controlSpecifier),
+		memoryLimit:  100,
+		seekable:     true,
+		reopenable:   true,
+		store:        NewStore(),
+		startTopFlag: true,
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
