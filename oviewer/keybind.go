@@ -257,8 +257,7 @@ func defaultKeyBinds() KeyBind {
 // String returns keybind as a string for help.
 func (k KeyBind) String() string {
 	var b strings.Builder
-	fmt.Fprint(&b, "\n\tKey binding\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Key binding")
 	k.writeKeyBind(&b, actionExit, "quit")
 	k.writeKeyBind(&b, actionCancel, "cancel")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
@@ -272,8 +271,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 	k.writeKeyBind(&b, actionSaveBuffer, "save buffer to file")
 
-	fmt.Fprint(&b, "\n\tMoving\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Moving")
 	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
 	k.writeKeyBind(&b, actionMoveUp, "backward by one line")
 	k.writeKeyBind(&b, actionMoveTop, "go to top of document")
@@ -292,29 +290,25 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
 	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
 
-	fmt.Fprint(&b, "\n\tMove document\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Move document")
 	k.writeKeyBind(&b, actionNextDoc, "next document")
 	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
 
-	fmt.Fprint(&b, "\n\tMark position\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Mark position")
 	k.writeKeyBind(&b, actionMark, "mark current position")
 	k.writeKeyBind(&b, actionRemoveMark, "remove mark current position")
 	k.writeKeyBind(&b, actionRemoveAllMark, "remove all mark")
 	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
 	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
 
-	fmt.Fprint(&b, "\n\tSearch\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Search")
 	k.writeKeyBind(&b, actionSearch, "forward search mode")
 	k.writeKeyBind(&b, actionBackSearch, "backward search mode")
 	k.writeKeyBind(&b, actionNextSearch, "repeat forward search")
 	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
 
-	fmt.Fprint(&b, "\n\tChange display\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Change display")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
@@ -323,8 +317,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
 
-	fmt.Fprint(&b, "\n\tChange Display with Input\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
 	k.writeKeyBind(&b, actionDelimiter, "column delimiter string")
 	k.writeKeyBind(&b, actionHeader, "number of header lines")
@@ -333,8 +326,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 
-	fmt.Fprint(&b, "\n\tSection\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Section")
 	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")
 	k.writeKeyBind(&b, actionSectionStart, "section start position")
 	k.writeKeyBind(&b, actionNextSection, "next section")
@@ -343,15 +335,13 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
 	k.writeKeyBind(&b, actionSectionNum, "section header number")
 
-	fmt.Fprint(&b, "\n\tClose and reload\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Close and reload")
 	k.writeKeyBind(&b, actionCloseFile, "close file")
 	k.writeKeyBind(&b, actionReload, "reload file")
 	k.writeKeyBind(&b, actionWatch, "watch mode")
 	k.writeKeyBind(&b, actionWatchInterval, "set watch interval")
 
-	fmt.Fprint(&b, "\n\tKey binding when typing\n")
-	fmt.Fprint(&b, "\n")
+	writeHeader(&b, "Key binding when typing")
 	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
 	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
@@ -361,6 +351,10 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
 	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
 	return b.String()
+}
+
+func writeHeader(w io.Writer, header string) {
+	fmt.Fprintf(w, "\n\t%s\n", header)
 }
 
 func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {

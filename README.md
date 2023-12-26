@@ -378,7 +378,7 @@ You can specify the number of lines using the `--section-header-num` option or k
 ```gitconfig
 [pager]
 	diff = "ov -F --section-delimiter '^diff' --section-header"
-  log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
+	log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
 ```
 
 ###  3.10. <a name='follow-mode'></a>Follow mode
