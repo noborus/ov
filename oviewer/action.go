@@ -321,6 +321,24 @@ func (root *Root) setSkipLines(input string) {
 	root.setMessagef("Set skip lines %d", num)
 }
 
+func (root *Root) setSectionNum(input string) {
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessagef("Set section header num: %s", ErrInvalidNumber.Error())
+		return
+	}
+	if num < 0 {
+		root.setMessagef("Set section header num: %s", ErrOutOfRange.Error())
+		return
+	}
+	if root.Doc.SectionHeaderNum == num {
+		return
+	}
+
+	root.Doc.SectionHeaderNum = num
+	root.setMessagef("Set section header num %d", num)
+}
+
 // suspend suspends the current screen display and runs the shell.
 // It will return when you exit the shell.
 func (root *Root) suspend() {

@@ -371,10 +371,14 @@ ov --section-delimiter "^#" --section-header README.md
 
 It is also useful as a pager for `git``.
 
+The number of lines in section-header can be changed.
+
+You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
+
 ```gitconfig
 [pager]
 	diff = "ov -F --section-delimiter '^diff' --section-header"
-	log = "ov -F --section-delimiter '^commit' --section-header"
+  log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
 ```
 
 ###  3.10. <a name='follow-mode'></a>Follow mode
@@ -721,6 +725,7 @@ MemoryLimit: 1000
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
 | -h,   | --help                                     | help for ov                                                    |
 |       | --help-key                                 | display key bind information                                   |
+|       | --hscroll-width [int\|int%\|.int]          | width to scroll horizontally [int\|int%\|.int] (default "10%") |
 |       | --incsearch[=true\|false]                  | incremental search (default true)                              |
 | -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                       |
 | -n,   | --line-number                              | line number mode                                               |
@@ -733,6 +738,7 @@ MemoryLimit: 1000
 |       | --regexp-search                            | regular expression search                                      |
 |       | --section-delimiter regexp                 | regexp for section delimiter .e.g. "^#"                        |
 |       | --section-header                           | enable section-delimiter line as Header                        |
+|       | --section-header-num int                   | number of header lines (default 1)                             |
 |       | --section-start int                        | section start position                                         |
 |       | --skip-extract                             | skip extracting compressed files                               |
 |       | --skip-lines int                           | skip the number of lines                                       |
@@ -774,6 +780,8 @@ It can also be changed after startup.
 | [right]                       | * scroll to right                                  |
 | [ctrl+left]                   | * scroll left half screen                          |
 | [ctrl+right]                  | * scroll right half screen                         |
+| [ctrl+shift+left]             | * scroll left specified width                      |
+| [ctrl+shift+right]            | * scroll right specified width                     |
 | [shift+Home]                  | * go to beginning of line                          |
 | [shift+End]                   | * go to end of line                                |
 | [g]                           | * go to line(input number or `.n` or `n%` allowed) |
@@ -815,6 +823,7 @@ It can also be changed after startup.
 | [^]                           | * previous section                                 |
 | [9]                           | * last section                                     |
 | [F2]                          | * follow section mode toggle                       |
+| [F7]                          | * section header number                            |
 | **Close and reload**          |                                                    |
 | [ctrl+F9], [ctrl+alt+s]       | * close file                                       |
 | [ctrl+alt+l], [F5]            | * reload file                                      |

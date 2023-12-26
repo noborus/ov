@@ -29,6 +29,7 @@ const (
 	MultiColor                 // MultiColor is multi-word coloring.
 	JumpTarget                 // JumpTarget is the position to display the search results.
 	SaveBuffer                 // SaveBuffer is the save buffer.
+	SectionNum                 // SectionNum is the section number.
 )
 
 // Input represents the status of various inputs.

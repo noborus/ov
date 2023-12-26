@@ -68,6 +68,7 @@ const (
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
 	actionGoLine         = "goto"
+	actionSectionNum     = "section_num"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
 	actionNextDoc        = "next_doc"
@@ -147,6 +148,7 @@ func (root *Root) handlers() map[string]func() {
 		actionSkipLines:      root.setSkipLinesMode,
 		actionTabWidth:       root.setTabWidthMode,
 		actionGoLine:         root.setGoLineMode,
+		actionSectionNum:     root.setSectionNumMode,
 		actionNextSearch:     root.sendNextSearch,
 		actionNextBackSearch: root.sendNextBackSearch,
 		actionNextDoc:        root.nextDoc,
@@ -229,6 +231,7 @@ func defaultKeyBinds() KeyBind {
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
 		actionGoLine:         {"g"},
+		actionSectionNum:     {"F7"},
 		actionNextSearch:     {"n"},
 		actionNextBackSearch: {"N"},
 		actionNextDoc:        {"]"},
@@ -338,6 +341,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionPrevSection, "previous section")
 	k.writeKeyBind(&b, actionLastSection, "last section")
 	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
+	k.writeKeyBind(&b, actionSectionNum, "section header number")
 
 	fmt.Fprint(&b, "\n\tClose and reload\n")
 	fmt.Fprint(&b, "\n")

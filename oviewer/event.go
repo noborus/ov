@@ -84,6 +84,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.setJumpTarget(ev.value)
 		case *eventSaveBuffer:
 			root.saveBuffer(ev.value)
+		case *eventSectionNum:
+			root.setSectionNum(ev.value)
 
 		// tcell events
 		case *tcell.EventResize:

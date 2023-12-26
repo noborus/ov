@@ -19,7 +19,7 @@ func viewModeCandidate() *candidate {
 	}
 }
 
-// eventViewMode represents the mode input mode.
+// eventViewMode represents the view mode input mode.
 type eventViewMode struct {
 	tcell.EventTime
 	clist *candidate
