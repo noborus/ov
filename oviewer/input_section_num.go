@@ -6,44 +6,44 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSkipLinesMode sets the inputMode to SkipLines.
-func (root *Root) setSkipLinesMode() {
+// setSectionNumMode sets the inputMode to SectionNum.
+func (root *Root) setSectionNumMode() {
 	input := root.input
 	input.value = ""
 	input.cursorX = 0
-	input.Event = newSkipLinesEvent()
+	input.Event = newSectionNumEvent()
 }
 
-// eventSkipLines represents the skip lines input mode.
-type eventSkipLines struct {
+// eventSectionNum represents the section num input mode.
+type eventSectionNum struct {
 	tcell.EventTime
 	value string
 }
 
-// newSkipLinesEvent returns skipLinesEvent.
-func newSkipLinesEvent() *eventSkipLines {
-	return &eventSkipLines{}
+// newSectionNumEvent returns Event.
+func newSectionNumEvent() *eventSectionNum {
+	return &eventSectionNum{}
 }
 
 // Mode returns InputMode.
-func (e *eventSkipLines) Mode() InputMode {
-	return SkipLines
+func (e *eventSectionNum) Mode() InputMode {
+	return SectionNum
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSkipLines) Prompt() string {
-	return "Skip lines:"
+func (e *eventSectionNum) Prompt() string {
+	return "Section Num:"
 }
 
 // Confirm returns the event when the input is confirmed.
-func (e *eventSkipLines) Confirm(str string) tcell.Event {
+func (e *eventSectionNum) Confirm(str string) tcell.Event {
 	e.value = str
 	e.SetEventNow()
 	return e
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSkipLines) Up(str string) string {
+func (e *eventSectionNum) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -52,7 +52,7 @@ func (e *eventSkipLines) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSkipLines) Down(str string) string {
+func (e *eventSectionNum) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

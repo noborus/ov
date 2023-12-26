@@ -120,7 +120,7 @@ func (root *Root) drawSectionHeader(lN int) int {
 	}
 
 	pn := lN
-	// If the line number is 0, it is the first line.
+	// prevSection searches for the section above the specified line.
 	if pn == 0 {
 		pn = 1
 	}

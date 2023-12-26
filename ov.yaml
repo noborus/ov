@@ -134,6 +134,8 @@ KeyBind:
     section_start:
         - "ctrl+F3"
         - "alt+s"
+    section_header_num:
+        - "F7"
     next_section:
         - "space"
     last_section:
