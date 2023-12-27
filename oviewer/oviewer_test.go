@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/spf13/viper"
 )
 
 const cwd = ".."
@@ -227,6 +228,58 @@ func Test_applyStyle(t *testing.T) {
 			t.Parallel()
 			if got := applyStyle(tt.args.style, tt.args.s); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("applyStyle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setKeyConfig(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	tests := []struct {
+		name    string
+		cfgFile string
+		want    []string
+		wantErr bool
+	}{
+		{
+			name:    "test-ov.yaml",
+			cfgFile: filepath.Join(cwd, "ov.yaml"),
+			want:    []string{"Enter", "Down", "ctrl+N"},
+			wantErr: false,
+		},
+		{
+			name:    "test-ov-less.yaml",
+			cfgFile: filepath.Join(cwd, "ov-less.yaml"),
+			want:    []string{"e", "ctrl+e", "j", "J", "ctrl+j", "Enter", "Down"},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(filepath.Join(testdata, "test.txt"))
+			if err != nil {
+				t.Fatalf("NewOviewer error = %v", err)
+			}
+			root.Screen = tcell.NewSimulationScreen("")
+			viper.SetConfigFile(tt.cfgFile)
+			var config Config
+			viper.AutomaticEnv() // read in environment variables that match
+			if err := viper.ReadInConfig(); err != nil {
+				t.Fatal("failed to read config file:", err)
+			}
+			viper.Unmarshal(&config)
+			root.SetConfig(config)
+			got, err := root.setKeyConfig()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Root.setKeyConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			action := "down"
+			if !reflect.DeepEqual(got[action], tt.want) {
+				t.Errorf("Root.setKeyConfig() = %v, want %v", got[action], tt.want)
 			}
 		})
 	}

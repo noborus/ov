@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -13,22 +12,22 @@ func Test_initConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		cfgFile string
-		errStr  string
+		wantErr bool
 	}{
 		{
 			name:    "test-ov.yaml",
 			cfgFile: "ov.yaml",
-			errStr:  "",
+			wantErr: false,
 		},
 		{
 			name:    "test-ov-less.yaml",
 			cfgFile: "ov-less.yaml",
-			errStr:  "",
+			wantErr: false,
 		},
 		{
 			name:    "no-file.yaml",
 			cfgFile: "no-file.yaml",
-			errStr:  "no such file or directory",
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -53,11 +52,10 @@ func Test_initConfig(t *testing.T) {
 
 			// Now you can assert capturedStderr
 			// For example, check if it contains a specific error message
-			if !strings.Contains(capturedStderr, tt.errStr) {
-				t.Errorf("initConfig() error = %v, wantErr %v", capturedStderr, tt.errStr)
+			got := len(capturedStderr) > 0
+			if got != tt.wantErr {
+				t.Errorf("initConfig() error = %v, wantErr %v", capturedStderr, tt.wantErr)
 			}
-			//keyBind := oviewer.GetKeyBinds(config)
-			//log.Println(oviewer.KeyBindString(keyBind))
 		})
 	}
 }

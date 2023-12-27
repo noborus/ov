@@ -68,7 +68,7 @@ const (
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
 	actionGoLine         = "goto"
-	actionSectionNum     = "section_num"
+	actionSectionNum     = "section_header_num"
 	actionNextSearch     = "next_search"
 	actionNextBackSearch = "next_backsearch"
 	actionNextDoc        = "next_doc"
