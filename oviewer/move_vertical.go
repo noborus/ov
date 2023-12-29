@@ -25,7 +25,6 @@ func (m *Document) moveLine(lN int) int {
 
 // moveTop moves to the top.
 func (m *Document) moveTop() {
-	m.startTopFlag = true
 	m.moveLine(m.BufStartNum())
 }
 
