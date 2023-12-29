@@ -10,6 +10,7 @@ func (root *Root) moveTop() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
+	root.Doc.startTopFlag = true
 	root.Doc.moveTop()
 }
 

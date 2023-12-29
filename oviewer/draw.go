@@ -121,7 +121,7 @@ func (root *Root) drawSectionHeader(lN int) int {
 
 	pn := lN
 	// prevSection searches for the section above the specified line.
-	if pn == 0 {
+	if m.startTopFlag && pn <= 0 {
 		pn = 1
 	}
 	sectionLN, err := m.prevSection(pn)
