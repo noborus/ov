@@ -143,7 +143,10 @@ pkg install ov
 
 You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
 
-AUR package: [https://aur.archlinux.org/packages/ov-bin](https://aur.archlinux.org/packages/ov-bin)
+Choose an AUR package:
+* [https://aur.archlinux.org/packages/ov](https://aur.archlinux.org/packages/ov) (build and install from latest stable source)
+* [https://aur.archlinux.org/packages/ov-bin](https://aur.archlinux.org/packages/ov-bin) (install pre-compiled binary)
+* [https://aur.archlinux.org/packages/ov-git](https://aur.archlinux.org/packages/ov-git) (build and install from latest git commit)
 
 ###  2.7. <a name='nix-(nixos,-linux,-or-macos)'></a>nix (nixOS, Linux, or macOS)
 
