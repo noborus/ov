@@ -173,6 +173,10 @@ func (m *Document) moveYDown(moveY int) {
 	}
 
 	// WrapMode
+	if m.topLN < 0 {
+		m.limitMoveDown(m.topLX, m.topLN+1)
+		return
+	}
 	lN := m.topLN + m.firstLine()
 	lX := m.topLX
 	listX := m.leftMostX(lN)
