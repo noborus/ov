@@ -201,7 +201,7 @@ func (m *Document) NewCache() error {
 func OpenDocument(fileName string) (*Document, error) {
 	fi, err := os.Stat(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", fileName, err)
+		return nil, fmt.Errorf("%s %w", fileName, ErrNotFound)
 	}
 	if fi.IsDir() {
 		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
