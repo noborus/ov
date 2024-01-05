@@ -328,11 +328,7 @@ func open(fileName string) (*os.File, error) {
 		return os.Stdin, nil
 	}
 
-	f, err := os.Open(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", fileName, err)
-	}
-	return f, nil
+	return os.Open(fileName)
 }
 
 // reload will read again.
