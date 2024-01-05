@@ -144,6 +144,7 @@ pkg install ov
 You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
 
 Choose an AUR package:
+
 * [https://aur.archlinux.org/packages/ov](https://aur.archlinux.org/packages/ov) (build and install from latest stable source)
 * [https://aur.archlinux.org/packages/ov-bin](https://aur.archlinux.org/packages/ov-bin) (install pre-compiled binary)
 * [https://aur.archlinux.org/packages/ov-git](https://aur.archlinux.org/packages/ov-git) (build and install from latest git commit)
@@ -372,7 +373,7 @@ If you specify `--section-header`, the section delimiter line is displayed as a 
 ov --section-delimiter "^#" --section-header README.md
 ```
 
-It is also useful as a pager for `git``.
+It is also useful as a pager for `git`.
 
 The number of lines in section-header can be changed.
 
@@ -635,13 +636,13 @@ If the file input is via a pipe, you can save it by pressing the `save buffer` (
 This will put you in input mode, so enter the file name.
 Only the buffer currently in memory is saved.
 
-```
+```ov:prompt
 (Save)file:savefile.txt
 ```
 
-If the file name already exists, select Overwrite, Append, or Cancel.
+If the file name already exists, select `Overwrite`, `Append`, or `Cancel`.
 
-```
+```ov:prompt
 overwrite? (O)overwrite, (A)append, (N)cancel
 ```
 
