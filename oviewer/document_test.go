@@ -245,7 +245,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test backword search",
+			name: "test backward search",
 			fields: fields{
 				FileName: filepath.Join(testdata, "normal.txt"),
 			},
@@ -258,7 +258,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "test backword search not found",
+			name: "test backward search not found",
 			fields: fields{
 				FileName: filepath.Join(testdata, "normal.txt"),
 			},

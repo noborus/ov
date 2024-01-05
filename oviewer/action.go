@@ -384,7 +384,7 @@ func (root *Root) toggleMouse() {
 }
 
 // setViewMode switches to the preset display mode.
-// Set header lines and columMode together.
+// Set header lines and columnMode together.
 func (root *Root) setViewMode(modeName string) {
 	c, ok := root.Config.Mode[modeName]
 	if !ok {
