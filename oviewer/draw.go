@@ -383,7 +383,7 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 	var iStart, iEnd int
 	for c := 0; c < len(indexes)+1; c++ {
 		switch {
-		case c == 0:
+		case c == 0 && lStart == 0:
 			iStart = lStart
 			iEnd = indexes[0][1] - 1
 			if iEnd < 0 {
