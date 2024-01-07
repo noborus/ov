@@ -64,6 +64,7 @@ ov is a terminal pager.
   * 7.3. [Key binding customization](#key-binding-customization)
 * 8. [VS](#vs)
 * 9. [Work together](#work-together)
+* 10. [Contributing](#contributing)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -971,7 +972,7 @@ The following are not actually pagers and do not conflict. can work together.
 * [delta](https://github.com/dandavison/delta)
   * `delta` processes the diff for easy viewing and displays it. Call the pager automatically.
 
-## Contributing
+##  10. <a name='contributing'></a>Contributing
 
 We welcome contributions to this project! Here are some ways you can contribute:
 
