@@ -970,3 +970,23 @@ The following are not actually pagers and do not conflict. can work together.
   * `bat` is an alternative to cat. It supports a lot of highlighting and automatically calls the pager.
 * [delta](https://github.com/dandavison/delta)
   * `delta` processes the diff for easy viewing and displays it. Call the pager automatically.
+
+## Contributing
+
+We welcome contributions to this project! Here are some ways you can contribute:
+
+1. Submit bugs and feature requests in the issue tracker.
+2. Review and test open pull requests.
+3. Improve or translate the documentation.
+4. Write code to fix bugs or add new features.
+
+Before contributing, please read our [Code of Conduct](CODE_OF_CONDUCT.md). We expect all contributors to follow these guidelines to ensure a welcoming and friendly environment for everyone.
+
+To start contributing:
+
+1. Fork the repository.
+2. Create a new branch for your changes.
+3. Make your changes in your branch.
+4. Submit a pull request with your changes.
+
+We will review your pull request as soon as possible. Thank you for your contribution!
