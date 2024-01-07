@@ -82,6 +82,27 @@ brews:
     install:
       bin.install "ov"
 
+winget:
+  -
+    name: ov
+    publisher: noborus
+    author: Noboru Saito
+    short_description: Feature rich terminal pager
+    homepage: https://noborus.github.io/ov/
+    license: MIT
+    repository:
+      owner: noborus
+      name: winget-pkgs
+      branch: "ov-{{ .Version }}"
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      pull_request:
+        enabled: true
+        draft: false
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+
 source:
   enabled: true
   files:
