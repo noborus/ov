@@ -125,15 +125,20 @@ func Completion(cmd *cobra.Command, arg string) error {
 	return ErrCompletion
 }
 
+// argsToFiles returns the file name from the argument.
 func argsToFiles(args []string) []string {
 	var files []string
 	for _, arg := range args {
 		argFiles, err := filepath.Glob(arg)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
 		files = append(files, argFiles...)
+	}
+	// If filePath.Glob does not match,
+	// return argument to return correct error
+	if len(files) == 0 {
+		return args
 	}
 	return files
 }
