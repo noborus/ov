@@ -125,9 +125,23 @@ func Completion(cmd *cobra.Command, arg string) error {
 	return ErrCompletion
 }
 
+func argsToFiles(args []string) []string {
+	var files []string
+	for _, arg := range args {
+		argFiles, err := filepath.Glob(arg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			continue
+		}
+		files = append(files, argFiles...)
+	}
+	return files
+}
+
 // RunOviewer displays the argument file.
 func RunOviewer(args []string) error {
-	ov, err := oviewer.Open(args...)
+	files := argsToFiles(args)
+	ov, err := oviewer.Open(files...)
 	if err != nil {
 		return err
 	}
