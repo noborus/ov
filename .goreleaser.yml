@@ -96,7 +96,7 @@ winget:
       branch: "ov-{{ .Version }}"
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
       pull_request:
-        enabled: true
+        enabled: false
         draft: false
         base:
           owner: microsoft
