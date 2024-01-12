@@ -17,10 +17,12 @@ import (
 func (root *Root) toggleWrapMode() {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
+
 	// Move cursor to correct position
-	x, err := root.Doc.optimalX(m.columnCursor)
+	x, err := m.optimalX(m.columnCursor)
 	if err != nil {
 		root.setMessageLog(err.Error())
+		return
 	}
 	// Move if off screen
 	if x < m.x || x > m.x+(root.scr.vWidth-root.scr.startX) {
