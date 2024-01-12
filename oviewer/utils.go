@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mattn/go-runewidth"
 	"golang.org/x/exp/constraints"
 )
 
@@ -90,11 +91,25 @@ func allStringIndex(s string, substr string) [][]int {
 		return nil
 	}
 	var result [][]int
+	width := wordWidth(substr)
 	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
-		s = s[pos+len(substr):]
-		result = append(result, []int{pos + offSet, pos + offSet + len(substr)})
-		offSet += pos + len(substr)
+		s = s[pos+width:]
+		result = append(result, []int{pos + offSet, pos + offSet + width})
+		offSet += pos + width
 		pos = strings.Index(s, substr)
 	}
 	return result
+}
+
+// wordWidth returns the width of the word.
+func wordWidth(str string) int {
+	width := 0
+	for _, r := range str {
+		w := runewidth.RuneWidth(r)
+		if w == 0 {
+			w = 1
+		}
+		width += w
+	}
+	return width
 }

@@ -423,6 +423,42 @@ func Test_allIndex(t *testing.T) {
 			},
 		},
 		{
+			name: "test2",
+			args: args{
+				s:      "a|b|c",
+				substr: "|",
+				reg:    nil,
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testTab",
+			args: args{
+				s:      "a	b	c",
+				substr: "	",
+				reg:    nil,
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testUnicode",
+			args: args{
+				s:      "a│b│c",
+				substr: "│",
+				reg:    nil,
+			},
+			want: [][]int{
+				{1, 2},
+				{5, 6},
+			},
+		},
+		{
 			name: "testRegex",
 			args: args{
 				s:      "a  b c",

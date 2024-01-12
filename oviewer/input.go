@@ -115,10 +115,10 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		if input.cursorX <= 0 {
 			return false
 		}
-		pos := stringWidth(input.value, input.cursorX)
+		pos := countToCursor(input.value, input.cursorX)
 		runes := []rune(input.value)
 		input.value = string(runes[:pos])
-		input.cursorX = runeWidth(input.value)
+		input.cursorX = stringWidth(input.value)
 		next := pos + 1
 		for ; next < len(runes); next++ {
 			if runewidth.RuneWidth(runes[next]) != 0 {
@@ -127,7 +127,7 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		}
 		input.value += string(runes[next:])
 	case tcell.KeyDelete:
-		pos := stringWidth(input.value, input.cursorX)
+		pos := countToCursor(input.value, input.cursorX)
 		runes := []rune(input.value)
 		dp := 1
 		if input.cursorX == 0 {
@@ -147,27 +147,27 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		if input.cursorX <= 0 {
 			return false
 		}
-		pos := stringWidth(input.value, input.cursorX)
+		pos := countToCursor(input.value, input.cursorX)
 		runes := []rune(input.value)
-		input.cursorX = runeWidth(string(runes[:pos]))
+		input.cursorX = stringWidth(string(runes[:pos]))
 		if pos > 0 && runes[pos-1] == '\t' {
 			input.cursorX--
 		}
 	case tcell.KeyRight:
-		pos := stringWidth(input.value, input.cursorX+1)
+		pos := countToCursor(input.value, input.cursorX+1)
 		runes := []rune(input.value)
 		if len(runes) > pos {
-			input.cursorX = runeWidth(string(runes[:pos+1]))
+			input.cursorX = stringWidth(string(runes[:pos+1]))
 		}
 	case tcell.KeyTAB:
-		pos := stringWidth(input.value, input.cursorX+1)
+		pos := countToCursor(input.value, input.cursorX+1)
 		runes := []rune(input.value)
 		input.value = string(runes[:pos])
 		input.value += "\t"
 		input.cursorX += 2
 		input.value += string(runes[pos:])
 	case tcell.KeyRune:
-		pos := stringWidth(input.value, input.cursorX+1)
+		pos := countToCursor(input.value, input.cursorX+1)
 		runes := []rune(input.value)
 		input.value = string(runes[:pos])
 		r := evKey.Rune()
@@ -209,7 +209,7 @@ func (root *Root) inputPrevious() {
 	input := root.input
 	input.value = input.Event.Up(input.value)
 	runes := []rune(input.value)
-	input.cursorX = runeWidth(string(runes))
+	input.cursorX = stringWidth(string(runes))
 }
 
 // inputNext searches the next history.
@@ -217,11 +217,24 @@ func (root *Root) inputNext() {
 	input := root.input
 	input.value = input.Event.Down(input.value)
 	runes := []rune(input.value)
-	input.cursorX = runeWidth(string(runes))
+	input.cursorX = stringWidth(string(runes))
 }
 
-// stringWidth returns the number of characters in the input.
-func stringWidth(str string, cursor int) int {
+// stringWidth returns the number of widths of the input.
+// Tab is 2 characters.
+func stringWidth(str string) int {
+	width := 0
+	for _, r := range str {
+		width += runewidth.RuneWidth(r)
+		if r == '\t' {
+			width += 2
+		}
+	}
+	return width
+}
+
+// countToCursor returns the number of characters in the input.
+func countToCursor(str string, cursor int) int {
 	width := 0
 	i := 0
 	for _, r := range str {
@@ -235,18 +248,6 @@ func stringWidth(str string, cursor int) int {
 		i++
 	}
 	return i
-}
-
-// runeWidth returns the number of widths of the input.
-func runeWidth(str string) int {
-	width := 0
-	for _, r := range str {
-		width += runewidth.RuneWidth(r)
-		if r == '\t' {
-			width += 2
-		}
-	}
-	return width
 }
 
 // Eventer is a generic interface for inputs.

@@ -215,7 +215,7 @@ func (root *Root) getClipboard(_ context.Context) {
 		return
 	}
 
-	pos := stringWidth(input.value, input.cursorX+1)
+	pos := countToCursor(input.value, input.cursorX+1)
 	runes := []rune(input.value)
 	input.value = string(runes[:pos])
 	input.value += str
