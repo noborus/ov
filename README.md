@@ -19,12 +19,13 @@ ov is a terminal pager.
   * 2.2. [rpm package](#rpm-package)
   * 2.3. [MacPorts (macOS)](#macports-(macos))
   * 2.4. [Homebrew(macOS or Linux)](#homebrew(macos-or-linux))
-  * 2.5. [pkg (FreeBSD)](#pkg-(freebsd))
-  * 2.6. [Arch Linux](#arch-linux)
-  * 2.7. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
-  * 2.8. [Binary](#binary)
-  * 2.9. [go install](#go-install)
-  * 2.10. [go get(details or developer version)](#go-get(details-or-developer-version))
+  * 2.5. [winget(windows)](#winget(windows))
+  * 2.6. [pkg (FreeBSD)](#pkg-(freebsd))
+  * 2.7. [Arch Linux](#arch-linux)
+  * 2.8. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
+  * 2.9. [Binary](#binary)
+  * 2.10. [go install](#go-install)
+  * 2.11. [go get(details or developer version)](#go-get(details-or-developer-version))
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -134,13 +135,19 @@ sudo port install ov
 brew install noborus/tap/ov
 ```
 
-###  2.5. <a name='pkg-(freebsd)'></a>pkg (FreeBSD)
+###  2.5. <a name='winget(windows)'></a>winget(windows)
+
+```console
+winget install noborus.ov
+```
+
+###  2.6. <a name='pkg-(freebsd)'></a>pkg (FreeBSD)
 
 ```console
 pkg install ov
 ```
 
-###  2.6. <a name='arch-linux'></a>Arch Linux
+###  2.7. <a name='arch-linux'></a>Arch Linux
 
 You can install ov using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
 
@@ -150,7 +157,7 @@ Choose an AUR package:
 * [https://aur.archlinux.org/packages/ov-bin](https://aur.archlinux.org/packages/ov-bin) (install pre-compiled binary)
 * [https://aur.archlinux.org/packages/ov-git](https://aur.archlinux.org/packages/ov-git) (build and install from latest git commit)
 
-###  2.7. <a name='nix-(nixos,-linux,-or-macos)'></a>nix (nixOS, Linux, or macOS)
+###  2.8. <a name='nix-(nixos,-linux,-or-macos)'></a>nix (nixOS, Linux, or macOS)
 
 ov is available as a nix package. You can install it with
 
@@ -164,7 +171,7 @@ if you use flakes, or using nix-env otherwise:
 nix-env -iA nixpkgs.ov
 ```
 
-###  2.8. <a name='binary'></a>Binary
+###  2.9. <a name='binary'></a>Binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
 
@@ -174,7 +181,7 @@ unzip ov_x.x.x_linux_amd64.zip
 sudo install ov /usr/local/bin
 ```
 
-###  2.9. <a name='go-install'></a>go install
+###  2.10. <a name='go-install'></a>go install
 
 It will be installed in $GOPATH/bin by the following command.
 
@@ -182,7 +189,7 @@ It will be installed in $GOPATH/bin by the following command.
 go install github.com/noborus/ov@latest
 ```
 
-###  2.10. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
+###  2.11. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
 
 First of all, download only with the following command without installing it.
 
