@@ -138,7 +138,7 @@ brew install noborus/tap/ov
 ###  2.5. <a name='winget(windows)'></a>winget(windows)
 
 ```console
-winget install noborus.ov
+winget install -e --id noborus.ov
 ```
 
 ###  2.6. <a name='pkg-(freebsd)'></a>pkg (FreeBSD)
