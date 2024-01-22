@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +10,11 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// statusLine is the number of lines in the status bar.
 const statusLine = 1
+
+// sectionTimeOut is the section header search timeout period.
+const sectionTimeOut = 1000
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw() {
@@ -126,6 +131,10 @@ func (root *Root) drawSectionHeader(lN int) int {
 	}
 	sectionLN, err := m.prevSection(pn)
 	if err != nil {
+		if errors.Is(err, ErrCancel) {
+			root.setMessageLogf("Section header search timed out")
+			m.SectionDelimiter = ""
+		}
 		return lN
 	}
 

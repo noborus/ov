@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync/atomic"
+	"time"
 )
 
 // lastLineMargin is the margin of the last line
@@ -297,8 +298,13 @@ func (m *Document) prevSection(n int) (int, error) {
 	lN := n - (1 + m.SectionStartPosition)
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
-	defer ctx.Done()
-	return m.BackSearchLine(ctx, searcher, lN)
+	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
+	defer cancel()
+	n, err := m.BackSearchLine(ctx, searcher, lN)
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
 }
 
 // moveLastSection moves to the last section.
