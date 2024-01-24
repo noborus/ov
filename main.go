@@ -506,7 +506,7 @@ func initConfig() {
 		var configNotFoundError *viper.ConfigFileNotFoundError
 		if !errors.As(err, &configNotFoundError) {
 			fmt.Fprintln(os.Stderr, "failed to read config file:", err)
-			return
+			// If the config file is not found, it is not an error and will continue.
 		}
 	}
 
