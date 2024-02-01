@@ -29,15 +29,16 @@ func (m *Document) Write(p []byte) (int, error) {
 	s := m.store
 	chunk := s.chunkForAdd(false, s.size)
 	s.append(chunk, true, p)
-	if len(chunk.lines) >= ChunkSize {
-		chunk = NewChunk(s.size)
-		s.mu.Lock()
-		if len(s.chunks) > 2 {
-			s.chunks[len(s.chunks)-2].lines = nil
-			atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
-		}
-		s.chunks = append(s.chunks, chunk)
-		s.mu.Unlock()
+	if len(chunk.lines) < ChunkSize {
+		return len(p), nil
 	}
+	chunk = NewChunk(s.size)
+	s.mu.Lock()
+	if len(s.chunks) > 2 {
+		s.chunks[len(s.chunks)-2].lines = nil
+		atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
+	}
+	s.chunks = append(s.chunks, chunk)
+	s.mu.Unlock()
 	return len(p), nil
 }

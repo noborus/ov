@@ -152,8 +152,8 @@ func (root *Root) sendCopySelect() {
 	root.postEvent(ev)
 }
 
-// putClipboard writes the selection to the clipboard.
-func (root *Root) putClipboard(_ context.Context) {
+// copyToClipboard writes the selection to the clipboard.
+func (root *Root) copyToClipboard(_ context.Context) {
 	x1 := root.x1
 	x2 := root.x2
 	y1 := root.y1
@@ -170,7 +170,7 @@ func (root *Root) putClipboard(_ context.Context) {
 	}
 	buff, err := root.rangeToString(x1, y1, x2, y2)
 	if err != nil {
-		root.debugMessage(fmt.Sprintf("putClipboard: %s", err.Error()))
+		root.debugMessage(fmt.Sprintf("copyToClipboard: %s", err.Error()))
 		return
 	}
 
@@ -178,7 +178,7 @@ func (root *Root) putClipboard(_ context.Context) {
 		return
 	}
 	if err := clipboard.WriteAll(buff); err != nil {
-		log.Printf("putClipboard: %v", err)
+		log.Printf("copyToClipboard: %v", err)
 	}
 	root.setMessage("Copy")
 }
@@ -201,8 +201,8 @@ func (root *Root) sendPaste() {
 	root.postEvent(ev)
 }
 
-// getClipboard writes a string from the clipboard.
-func (root *Root) getClipboard(_ context.Context) {
+// pasteFromClipboard writes a string from the clipboard.
+func (root *Root) pasteFromClipboard(_ context.Context) {
 	input := root.input
 	switch input.Event.Mode() {
 	case Normal:
@@ -211,7 +211,7 @@ func (root *Root) getClipboard(_ context.Context) {
 
 	str, err := clipboard.ReadAll()
 	if err != nil {
-		log.Printf("getClipboard: %v", err)
+		log.Printf("pasteFromClipboard: %v", err)
 		return
 	}
 

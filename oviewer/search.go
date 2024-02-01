@@ -224,7 +224,6 @@ func condRegexpCompile(in string) *regexp.Regexp {
 }
 
 // searchPosition returns the position where the search in the argument line matched.
-// searchPosition uses cache.
 func (root *Root) searchPosition(lN int, str string) [][]int {
 	return root.searcher.FindAll(str)
 }
