@@ -45,9 +45,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventCloseDocument:
 			root.closeDocument()
 		case *eventCopySelect:
-			root.putClipboard(ctx)
+			root.copyToClipboard(ctx)
 		case *eventPaste:
-			root.getClipboard(ctx)
+			root.pasteFromClipboard(ctx)
 		case *eventViewMode:
 			root.setViewMode(ev.value)
 		case *eventInputSearch:
