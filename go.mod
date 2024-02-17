@@ -9,18 +9,18 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.17.4
+	github.com/klauspost/compress v1.17.6
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/noborus/guesswidth v0.3.4
 	github.com/pierrec/lz4 v2.6.1+incompatible
-	github.com/rivo/uniseg v0.4.4
+	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e
+	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/sync v0.6.0
-	golang.org/x/term v0.16.0
+	golang.org/x/term v0.17.0
 )
 
 require (
@@ -39,7 +39,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
