@@ -454,8 +454,8 @@ func Test_allIndex(t *testing.T) {
 				reg:    nil,
 			},
 			want: [][]int{
-				{1, 2},
-				{5, 6},
+				{1, 4},
+				{5, 8},
 			},
 		},
 		{

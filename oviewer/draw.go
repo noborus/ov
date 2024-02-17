@@ -394,7 +394,7 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 		switch {
 		case c == 0 && lStart == 0:
 			iStart = lStart
-			iEnd = indexes[0][1] - 1
+			iEnd = indexes[0][1] - len(m.ColumnDelimiter)
 			if iEnd < 0 {
 				iEnd = 0
 			}
