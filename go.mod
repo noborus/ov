@@ -6,7 +6,7 @@ require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/gdamore/tcell/v2 v2.7.0
+	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.17.6
@@ -18,7 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
+	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	golang.org/x/sync v0.6.0
 	golang.org/x/term v0.17.0
 )
