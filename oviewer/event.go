@@ -111,9 +111,6 @@ func (root *Root) sendGoto(num int) {
 
 // MoveLine fires an eventGoto event that moves to the specified line.
 func (root *Root) MoveLine(num int) {
-	if !root.checkScreen() {
-		return
-	}
 	root.sendGoto(num)
 }
 
@@ -164,16 +161,6 @@ func (root *Root) keyEvent(ctx context.Context, ev *tcell.EventKey) {
 	}
 }
 
-// checkScreen returns true if the screen is ready.
-// checkScreen is used in case it is called directly from the outside.
-// True if called from the event loop.
-func (root *Root) checkScreen() bool {
-	if root == nil {
-		return false
-	}
-	return root.Screen != nil
-}
-
 // eventAppQuit represents a quit event.
 type eventAppQuit struct {
 	tcell.EventTime
@@ -185,9 +172,6 @@ func (root *Root) Quit() {
 }
 
 func (root *Root) sendQuit() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventAppQuit{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -204,9 +188,6 @@ func (root *Root) Suspend() {
 }
 
 func (root *Root) sendSuspend() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventAppSuspend{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -236,9 +217,6 @@ func (root *Root) regularUpdate() {
 }
 
 func (root *Root) sendUpdateEndNum() {
-	if !root.checkScreen() {
-		return
-	}
 	if !root.hasDocChanged() {
 		return
 	}
@@ -258,10 +236,6 @@ type eventDocument struct {
 
 // SetDocument fires the eventDocument event.
 func (root *Root) SetDocument(docNum int) {
-	if !root.checkScreen() {
-		return
-	}
-
 	if docNum < 0 || docNum < root.DocumentLen() {
 		return
 	}
@@ -287,9 +261,6 @@ func (root *Root) AddDocument(m *Document) {
 }
 
 func (root *Root) sendAddDocument(m *Document) {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventAddDocument{}
 	ev.m = m
 	ev.SetEventNow()
@@ -307,9 +278,6 @@ func (root *Root) CloseDocument(m *Document) {
 }
 
 func (root *Root) sendCloseDocument() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventCloseDocument{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -327,9 +295,6 @@ func (root *Root) Reload() {
 }
 
 func (root *Root) sendReload(m *Document) {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventReload{}
 	ev.m = m
 	ev.SetEventNow()
@@ -345,8 +310,22 @@ func (root *Root) releaseEventBuffer() {
 
 // postEvent is a wrapper for tcell.Event.
 func (root *Root) postEvent(ev tcell.Event) {
+	if !root.checkScreen() {
+		return
+	}
+
 	if err := root.Screen.PostEvent(ev); err != nil {
 		log.Printf("postEvent %s", err)
 		root.releaseEventBuffer()
 	}
+}
+
+// checkScreen returns true if the screen is ready.
+// checkScreen is used in case it is called directly from the outside.
+// True if called from the event loop.
+func (root *Root) checkScreen() bool {
+	if root == nil {
+		return false
+	}
+	return root.Screen != nil
 }

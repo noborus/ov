@@ -813,6 +813,16 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	if s.UnStrikeThrough {
 		style = style.StrikeThrough(false)
 	}
+	if s.OverLine {
+		// tcell does not support overline.
+		//style = style.OverLine(true)
+		style = style.Underline(true)
+	}
+	if s.UnOverLine {
+		// tcell does not support unOverline.
+		//style = style.UnOverLine(false)
+		style = style.Underline(false)
+	}
 	return style
 }
 

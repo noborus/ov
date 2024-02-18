@@ -144,9 +144,6 @@ func (root *Root) CopySelect() {
 }
 
 func (root *Root) sendCopySelect() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventCopySelect{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -193,9 +190,6 @@ func (root *Root) Paste() {
 }
 
 func (root *Root) sendPaste() {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventPaste{}
 	ev.SetEventNow()
 	root.postEvent(ev)
@@ -415,7 +409,7 @@ func (scr SCR) selectLine(line LineC, x1 int, x2 int) string {
 	start := line.pos.n(x1)
 	end := line.pos.n(x2)
 
-	if start > len(line.str) || end > len(line.str) {
+	if start > len(line.str) || end > len(line.str) || start > end {
 		log.Printf("selectLine:len(%d):start(%d):end(%d)", len(line.str), start, end)
 		return ""
 	}

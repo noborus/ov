@@ -495,19 +495,12 @@ func ContentsToStr(lc contents) (string, widthPos) {
 		for ; i <= bn; i++ {
 			pos = append(pos, n)
 		}
-		mn, err := buff.WriteRune(c.mainc)
-		if err != nil {
-			log.Println(err)
-		}
-		bn += mn
+		bn += writeRune(&buff, c.mainc)
 		for _, r := range c.combc {
-			cn, err := buff.WriteRune(r)
-			if err != nil {
-				log.Println(err)
-			}
-			bn += cn
+			bn += writeRune(&buff, r)
 		}
 	}
+
 	str := buff.String()
 	for ; i <= bn; i++ {
 		pos = append(pos, len(lc))
@@ -515,17 +508,27 @@ func ContentsToStr(lc contents) (string, widthPos) {
 	return str, pos
 }
 
+func writeRune(w *strings.Builder, r rune) int {
+	n, err := w.WriteRune(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return n
+}
+
 // x returns the x position on the screen.
-func (pos widthPos) x(x int) int {
-	if x < len(pos) {
-		return pos[x]
+// [n]byte -> x.
+func (pos widthPos) x(n int) int {
+	if n < len(pos) {
+		return pos[n]
 	}
 	return pos[len(pos)-1]
 }
 
 // n return string position from content.
+// x -> [n]byte.
 func (pos widthPos) n(w int) int {
-	var x int
+	x := w
 	for _, c := range pos {
 		if c >= w {
 			x = c
