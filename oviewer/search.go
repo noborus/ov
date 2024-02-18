@@ -639,9 +639,6 @@ func (root *Root) Search(str string) {
 }
 
 func (root *Root) sendForwardSearch(str string) {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventNextSearch{}
 	ev.str = str
 	ev.SetEventNow()
@@ -656,9 +653,6 @@ func (root *Root) BackSearch(str string) {
 }
 
 func (root *Root) sendBackSearch(str string) {
-	if !root.checkScreen() {
-		return
-	}
 	ev := &eventNextBackSearch{}
 	ev.str = str
 	ev.SetEventNow()

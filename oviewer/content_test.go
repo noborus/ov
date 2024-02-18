@@ -196,8 +196,7 @@ func Test_parseStringOverlapping(t *testing.T) {
 		})
 	}
 }
-
-func Test_parseStringStyle(t *testing.T) {
+func Test_parseStringStyle1(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		line     string
@@ -350,6 +349,47 @@ func Test_parseStringStyle(t *testing.T) {
 			got := parseString(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseStringStyle2(t *testing.T) {
+	type args struct {
+		str      string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want contents
+	}{
+		{
+			name: "OverLine",
+			args: args{
+				str: "\x1B[53mol\x1B[m", tabWidth: 8,
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('o'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('l'), combc: nil},
+			},
+		},
+		{
+			name: "UnOverLine",
+			args: args{
+				str: "\x1B[53mo\x1B[m\x1B[55mu\x1B[m\x1B[53ml\x1B[m", tabWidth: 8,
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('o'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Underline(false), mainc: rune('u'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('l'), combc: nil},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseString(tt.args.str, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseString() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -780,10 +820,16 @@ func Test_widthPos_x(t *testing.T) {
 			want: 8,
 		},
 		{
-			name: "testあいうえお",
+			name: "あいうえお",
 			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
 			args: args{12},
 			want: 8,
+		},
+		{
+			name: "あいうえお2",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{20},
+			want: 10,
 		},
 	}
 	for _, tt := range tests {
@@ -815,15 +861,21 @@ func Test_widthPos_n(t *testing.T) {
 			want: 2,
 		},
 		{
-			name: "testあいうえお",
+			name: "あいうえお",
 			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
 			args: args{8},
 			want: 12,
 		},
 		{
-			name: "test2あいうえお",
+			name: "あいうえお2",
 			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
 			args: args{9},
+			want: 15,
+		},
+		{
+			name: "あいうえお3",
+			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
+			args: args{20},
 			want: 15,
 		},
 	}
