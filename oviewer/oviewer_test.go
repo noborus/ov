@@ -270,7 +270,9 @@ func TestRoot_setKeyConfig(t *testing.T) {
 			if err := viper.ReadInConfig(); err != nil {
 				t.Fatal("failed to read config file:", err)
 			}
-			viper.Unmarshal(&config)
+			if err := viper.Unmarshal(&config); err != nil {
+				t.Fatal("failed to unmarshal config:", err)
+			}
 			root.SetConfig(config)
 			got, err := root.setKeyConfig()
 			if (err != nil) != tt.wantErr {

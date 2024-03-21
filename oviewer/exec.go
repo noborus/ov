@@ -7,10 +7,19 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync/atomic"
+	"time"
 
+	"github.com/creack/pty"
 	"golang.org/x/term"
+)
+
+// virtual terminal size.
+const (
+	COLS = 80
+	ROWS = 24
 )
 
 // Command is the structure of the command.
@@ -78,7 +87,6 @@ func (cmd *Command) Wait() {
 	if err := cmd.command.Process.Kill(); err != nil {
 		log.Println(err)
 	}
-
 	// Wait for the command to exit.
 	if err := cmd.command.Wait(); err != nil {
 		log.Println(err)
@@ -126,6 +134,7 @@ func (cmd *Command) stderrReload() *bufio.Reader {
 
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
+// obsolete: use NewCommand and Exec instead.
 func ExecCommand(command *exec.Cmd) (*Root, error) {
 	docout, docerr, err := newOutErrDocument()
 	if err != nil {
@@ -173,28 +182,76 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 		command.Stdin = os.Stdin
 	}
 
-	// STDOUT
-	outReader, err := command.StdoutPipe()
+	var so, se io.Reader
+	var err error
+	if runtime.GOOS == "windows" {
+		so, se, err = pipeOutput(command)
+	} else {
+		so, se, err = ptyOutput(command)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return so, se, nil
+}
+
+// pipeOutput returns the stdout and stderr of the command.
+// pipeOutput is used on Windows.
+func pipeOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
+	so, err := command.StdoutPipe()
 	if err != nil {
 		return nil, nil, fmt.Errorf("stdout pipe error: %w", err)
 	}
+
+	se, err := command.StderrPipe()
+	if err != nil {
+		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
+	}
+	if err := command.Start(); err != nil {
+		return nil, nil, fmt.Errorf("command start error: %w", err)
+	}
+
+	return so, se, nil
+}
+
+// ptyOutput returns the stdout and stderr of the command.
+func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
+	// STDOUT
+	stdout, outReader, err := pty.Open()
+	if err != nil {
+		return nil, nil, fmt.Errorf("pty open error: %w", err)
+	}
+	if err := pty.Setsize(stdout, &pty.Winsize{Cols: COLS, Rows: ROWS}); err != nil {
+		return nil, nil, fmt.Errorf("pty setsize error: %w", err)
+	}
+	command.Stdout = stdout
 	var so io.Reader = outReader
 	if STDOUTPIPE != nil {
 		so = io.TeeReader(so, STDOUTPIPE)
 	}
 
 	// STDERR
-	errReader, err := command.StderrPipe()
+	stderr, errReader, err := pty.Open()
 	if err != nil {
-		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
+		return nil, nil, fmt.Errorf("pty open error: %w", err)
 	}
+	command.Stderr = stderr
 	var se io.Reader = errReader
 	if STDERRPIPE != nil {
 		se = io.TeeReader(se, STDERRPIPE)
 	}
-
 	if err := command.Start(); err != nil {
 		return nil, nil, fmt.Errorf("command start error: %w", err)
 	}
+
+	go func() {
+		if err := command.Wait(); err != nil {
+			log.Printf("wait: %s", err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		stdout.Close()
+		stderr.Close()
+	}()
 	return so, se, nil
 }

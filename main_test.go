@@ -47,7 +47,9 @@ func Test_initConfig(t *testing.T) {
 
 			// Read captured stderr output
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			if _, err := io.Copy(&buf, r); err != nil {
+				t.Fatal(err)
+			}
 			capturedStderr := buf.String()
 
 			// Now you can assert capturedStderr
