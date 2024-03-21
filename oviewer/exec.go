@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/kr/pty"
+	"github.com/creack/pty/v2"
 	"golang.org/x/term"
 )
 
