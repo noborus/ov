@@ -16,6 +16,12 @@ import (
 	"golang.org/x/term"
 )
 
+// virtual terminal size.
+const (
+	COLS = 80
+	ROWS = 24
+)
+
 // Command is the structure of the command.
 type Command struct {
 	stdout  io.Reader
@@ -186,9 +192,6 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := command.Start(); err != nil {
-		return nil, nil, fmt.Errorf("command start error: %w", err)
-	}
 
 	return so, se, nil
 }
@@ -205,6 +208,10 @@ func pipeOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
 	}
+	if err := command.Start(); err != nil {
+		return nil, nil, fmt.Errorf("command start error: %w", err)
+	}
+
 	return so, se, nil
 }
 
@@ -214,6 +221,9 @@ func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	stdout, outReader, err := pty.Open()
 	if err != nil {
 		return nil, nil, fmt.Errorf("pty open error: %w", err)
+	}
+	if err := pty.Setsize(stdout, &pty.Winsize{Cols: COLS, Rows: ROWS}); err != nil {
+		return nil, nil, fmt.Errorf("pty setsize error: %w", err)
 	}
 	command.Stdout = stdout
 	var so io.Reader = outReader
@@ -231,9 +241,13 @@ func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if STDERRPIPE != nil {
 		se = io.TeeReader(se, STDERRPIPE)
 	}
+	if err := command.Start(); err != nil {
+		return nil, nil, fmt.Errorf("command start error: %w", err)
+	}
+
 	go func() {
 		if err := command.Wait(); err != nil {
-			log.Println(err)
+			log.Printf("wait: %s", err)
 		}
 		time.Sleep(100 * time.Millisecond)
 		stdout.Close()
