@@ -7,11 +7,12 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"time"
 
-	"github.com/creack/pty/v2"
+	"github.com/creack/pty"
 	"golang.org/x/term"
 )
 
@@ -175,6 +176,40 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 		command.Stdin = os.Stdin
 	}
 
+	var so, se io.Reader
+	var err error
+	if runtime.GOOS == "windows" {
+		so, se, err = pipeOutput(command)
+	} else {
+		so, se, err = ptyOutput(command)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := command.Start(); err != nil {
+		return nil, nil, fmt.Errorf("command start error: %w", err)
+	}
+
+	return so, se, nil
+}
+
+// pipeOutput returns the stdout and stderr of the command.
+// pipeOutput is used on Windows.
+func pipeOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
+	so, err := command.StdoutPipe()
+	if err != nil {
+		return nil, nil, fmt.Errorf("stdout pipe error: %w", err)
+	}
+
+	se, err := command.StderrPipe()
+	if err != nil {
+		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
+	}
+	return so, se, nil
+}
+
+// ptyOutput returns the stdout and stderr of the command.
+func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	// STDOUT
 	stdout, outReader, err := pty.Open()
 	if err != nil {
@@ -196,19 +231,13 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if STDERRPIPE != nil {
 		se = io.TeeReader(se, STDERRPIPE)
 	}
-
-	if err := command.Start(); err != nil {
-		return nil, nil, fmt.Errorf("command start error: %w", err)
-	}
 	go func() {
 		if err := command.Wait(); err != nil {
 			log.Println(err)
 		}
 		time.Sleep(100 * time.Millisecond)
-		log.Println("command done close")
 		stdout.Close()
 		stderr.Close()
 	}()
-
 	return so, se, nil
 }
