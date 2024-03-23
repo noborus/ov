@@ -132,9 +132,9 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 // If it's a seekable file, it just reserves it for later reading.
 func (m *Document) addOrReserveChunk(chunk *chunk, reader *bufio.Reader, start int, end int) error {
 	if m.seekable {
-		return m.reserveChunk(reader, start, ChunkSize)
+		return m.reserveChunk(reader, start, end)
 	}
-	return m.store.readLines(chunk, reader, start, ChunkSize, true)
+	return m.store.readLines(chunk, reader, start, end, true)
 }
 
 // reserveChunk reserves ChunkSize lines.

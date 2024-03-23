@@ -104,6 +104,10 @@ type LineNumber struct {
 	wrap   int
 }
 
+func newLineNumber(number, wrap int) LineNumber {
+	return LineNumber{number: number, wrap: wrap}
+}
+
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {

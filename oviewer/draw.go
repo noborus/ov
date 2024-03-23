@@ -82,19 +82,16 @@ func (root *Root) drawHeader() int {
 			break
 		}
 
-		root.scr.numbers[y] = LineNumber{
-			number: lN,
-			wrap:   wrapNum,
-		}
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 
 		if root.Doc.ColumnMode {
 			root.columnHighlight(line)
 		}
+
+		nextX, nextN := root.drawLine(y, lX, lN, line.lc)
 		if root.Doc.LineNumMode {
 			root.blankLineNumber(y)
 		}
-
-		nextX, nextN := root.drawLine(y, lX, lN, line.lc)
 		// header style
 		root.yStyle(y, root.StyleHeader)
 
@@ -102,7 +99,7 @@ func (root *Root) drawHeader() int {
 		if nextN != lN {
 			lN = nextN
 			line, _ = m.getLineC(lN, m.TabWidth)
-			root.styleContent(lN, line)
+			root.styleContent(line)
 		}
 
 		if lX > 0 {
@@ -147,18 +144,15 @@ func (root *Root) drawSectionHeader(lN int) int {
 	if pn > sectionLN {
 		sn = sectionLN
 		line, valid := m.getLineC(sn, m.TabWidth)
+		wrapNum := m.numOfWrap(sx, sn)
 		for y := m.headerLen; sn < sectionLN+m.SectionHeaderNum; y++ {
-			if root.Doc.LineNumMode {
-				if valid {
-					root.drawLineNumber(sn, y)
-				} else {
-					root.blankLineNumber(y)
-				}
-			}
-			if valid {
-				root.styleContent(lN, line)
-			}
+			root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 			sx, nextN = root.drawLine(y, sx, sn, line.lc)
+
+			root.drawLineNumber(sn, y, valid)
+			if valid {
+				root.styleContent(line)
+			}
 			root.sectionLineHighlight(y, line.str)
 			m.headerLen += 1
 			if nextN != sn {
@@ -167,6 +161,11 @@ func (root *Root) drawSectionHeader(lN int) int {
 				}
 				sn = nextN
 				line, valid = m.getLineC(sn, m.TabWidth)
+			}
+			if sx > 0 {
+				wrapNum++
+			} else {
+				wrapNum = 0
 			}
 		}
 	}
@@ -181,24 +180,14 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	line, valid := m.getLineC(lN, m.TabWidth)
 	root.bodyStyle(line.lc, root.StyleBody)
 	if valid {
-		root.styleContent(lN, line)
+		root.styleContent(line)
 	}
 	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
-		root.scr.numbers[y] = LineNumber{
-			number: lN,
-			wrap:   wrapNum,
-		}
-
-		if root.Doc.LineNumMode {
-			if valid {
-				root.drawLineNumber(lN, y)
-			} else {
-				root.blankLineNumber(y)
-			}
-		}
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 
 		nextX, nextY := root.drawLine(y, lX, lN, line.lc)
 
+		root.drawLineNumber(lN, y, valid)
 		if valid {
 			root.coordinatesStyle(lN, y, line.str)
 		}
@@ -212,7 +201,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 			line, valid = m.getLineC(lN, m.TabWidth)
 			root.bodyStyle(line.lc, root.StyleBody)
 			if valid {
-				root.styleContent(lN, line)
+				root.styleContent(line)
 			}
 		}
 
@@ -226,7 +215,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 }
 
 // styleContent applies the style of the content.
-func (root *Root) styleContent(lN int, line LineC) {
+func (root *Root) styleContent(line LineC) {
 	if root.Doc.PlainMode {
 		root.plainStyle(line.lc)
 	}
@@ -234,7 +223,7 @@ func (root *Root) styleContent(lN int, line LineC) {
 		root.columnHighlight(line)
 	}
 	root.multiColorHighlight(line)
-	root.searchHighlight(lN, line)
+	root.searchHighlight(line)
 }
 
 // coordinatesStyle applies the style of the coordinates.
@@ -313,12 +302,12 @@ func (root *Root) bodyStyle(lc contents, s OVStyle) {
 
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
-func (root *Root) searchHighlight(lN int, line LineC) {
+func (root *Root) searchHighlight(line LineC) {
 	if root.searcher == nil || root.searcher.String() == "" {
 		return
 	}
 
-	indexes := root.searchPosition(lN, line.str)
+	indexes := root.searchPosition(line.str)
 	for _, idx := range indexes {
 		RangeStyle(line.lc, line.pos.x(idx[0]), line.pos.x(idx[1]), root.StyleSearchHighlight)
 	}
@@ -351,8 +340,14 @@ func (root *Root) blankLineNumber(y int) {
 }
 
 // drawLineNumber draws the line number.
-func (root *Root) drawLineNumber(lN int, y int) {
+func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	m := root.Doc
+	if !m.LineNumMode {
+		return
+	}
+	if !valid {
+		root.blankLineNumber(y)
+	}
 	// Line numbers start at 1 except for skip and header lines.
 	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, lN-m.firstLine()+1), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
