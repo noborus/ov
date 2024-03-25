@@ -59,6 +59,7 @@ const (
 	actionAlternate      = "alter_rows_mode"
 	actionLineNumMode    = "line_number_mode"
 	actionSearch         = "search"
+	actionFilter         = "filter"
 	actionWrap           = "wrap_mode"
 	actionColumnMode     = "column_mode"
 	actionColumnWidth    = "column_width"
@@ -143,6 +144,7 @@ func (root *Root) handlers() map[string]func() {
 		actionRemoveAllMark:  root.removeAllMark,
 		actionSearch:         root.setSearchMode,
 		actionBackSearch:     root.setBackSearchMode,
+		actionFilter:         root.setSearchFilterMode,
 		actionDelimiter:      root.setDelimiterMode,
 		actionHeader:         root.setHeaderMode,
 		actionSkipLines:      root.setSkipLinesMode,
@@ -226,6 +228,7 @@ func defaultKeyBinds() KeyBind {
 		actionRemoveMark:     {"M"},
 		actionSearch:         {"/"},
 		actionBackSearch:     {"?"},
+		actionFilter:         {"&"},
 		actionDelimiter:      {"d"},
 		actionHeader:         {"H"},
 		actionSkipLines:      {"ctrl+s"},
@@ -307,6 +310,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionBackSearch, "backward search mode")
 	k.writeKeyBind(&b, actionNextSearch, "repeat forward search")
 	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
+	k.writeKeyBind(&b, actionFilter, "filter search mode")
 
 	writeHeader(&b, "Change display")
 	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")

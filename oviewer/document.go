@@ -15,6 +15,7 @@ import (
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
+	"github.com/noborus/ov/biomap"
 )
 
 // The Document structure contains the values
@@ -24,6 +25,10 @@ type Document struct {
 	file *os.File
 
 	cache *lru.Cache[int, LineC]
+
+	// parent is the parent document.
+	parent     *Document
+	lineNumMap *biomap.Map[int, int]
 
 	ticker     *time.Ticker
 	tickerDone chan struct{}

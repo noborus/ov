@@ -11,6 +11,15 @@ func (root *Root) DocumentLen() int {
 	return len(root.DocList)
 }
 
+func (root *Root) getDocument(docNum int) *Document {
+	root.mu.RLock()
+	defer root.mu.RUnlock()
+	if docNum < 0 || docNum >= len(root.DocList) {
+		return nil
+	}
+	return root.DocList[docNum]
+}
+
 // hasDocChanged() returns if doc has changed.
 func (root *Root) hasDocChanged() bool {
 	root.mu.RLock()
@@ -68,8 +77,19 @@ func (root *Root) nextDoc() {
 
 // previousDoc displays the previous document.
 func (root *Root) previousDoc() {
+	lineNum := 0
+	targetNum := root.CurrentDoc - 1
+	targetDoc := root.getDocument(targetNum)
+	if targetDoc == root.Doc.parent && root.Doc.lineNumMap != nil {
+		if n, ok := root.Doc.lineNumMap.LoadForward(root.Doc.topLN + root.Doc.firstLine()); ok {
+			lineNum = n
+		}
+	}
 	root.setDocumentNum(root.CurrentDoc - 1)
 	root.input.Event = normal()
+	if lineNum > 0 {
+		root.sendGoto(lineNum - root.Doc.firstLine() + 1)
+	}
 	root.debugMessage("previous document")
 }
 
@@ -115,7 +135,7 @@ func (root *Root) logDisplay() {
 		root.toNormal()
 		return
 	}
-	root.setDocument(root.logDoc)
+	root.setDocument(root.logDoc.Document)
 	root.screenMode = LogDoc
 }
 

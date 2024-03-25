@@ -347,9 +347,20 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	}
 	if !valid {
 		root.blankLineNumber(y)
+		return
 	}
+
+	number := lN
+	if m.lineNumMap != nil {
+		n, ok := m.lineNumMap.LoadForward(number)
+		if ok {
+			number = n
+		}
+	}
+	number = number - m.firstLine()
+
 	// Line numbers start at 1 except for skip and header lines.
-	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, lN-m.firstLine()+1), m.TabWidth)
+	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, number), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
 		numC[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
 	}
@@ -602,12 +613,14 @@ func (root *Root) inputOpts() string {
 
 	// The current search mode.
 	mode := root.input.Event.Mode()
-	if mode == Search || mode == Backsearch {
+	if mode == Search || mode == Backsearch || mode == Filter {
 		if root.Config.RegexpSearch {
 			opts += "(R)"
 		}
-		if root.Config.Incsearch {
-			opts += "(I)"
+		if mode != Filter {
+			if root.Config.Incsearch {
+				opts += "(I)"
+			}
 		}
 		if root.Config.SmartCaseSensitive {
 			opts += "(S)"

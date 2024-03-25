@@ -629,6 +629,10 @@ func (root *Root) tailSection() {
 func (root *Root) prepareStartX() {
 	root.scr.startX = 0
 	if root.Doc.LineNumMode {
+		if root.Doc.parent != nil {
+			root.scr.startX = len(fmt.Sprintf("%d", root.Doc.parent.BufEndNum())) + 1
+			return
+		}
 		root.scr.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
 	}
 }

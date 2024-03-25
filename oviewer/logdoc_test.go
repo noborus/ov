@@ -39,12 +39,12 @@ func TestDocument_Write(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := NewDocument()
+			l, err := NewLogDoc()
 			if err != nil {
 				t.Fatal(err)
 			}
 			for i := 0; i < tt.repeat; i++ {
-				got, err := m.Write(tt.args.log)
+				got, err := l.Write(tt.args.log)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Document.Write() error = %v, wantErr %v", err, tt.wantErr)
 					return

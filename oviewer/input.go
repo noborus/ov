@@ -17,6 +17,7 @@ const (
 	ViewMode                   // ViewMode is a view selection input mode.
 	Search                     // Search is a search input mode.
 	Backsearch                 // Backsearch is a backward search input mode.
+	Filter                     // Filter is a filter input mode.
 	Goline                     // Goline is a move input mode.
 	Header                     // Header is the number of headers input mode.
 	Delimiter                  // Delimiter is a delimiter input mode.
