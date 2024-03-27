@@ -31,6 +31,9 @@ var (
 	// pattern is search pattern.
 	pattern string
 
+	// filter is filter pattern.
+	filter string
+
 	// ver is version information.
 	ver bool
 	// helpKey is key bind information.
@@ -156,7 +159,9 @@ func RunOviewer(args []string) error {
 	if pattern != "" {
 		ov.Search(pattern)
 	}
-
+	if filter != "" {
+		ov.Filter(filter)
+	}
 	if err := ov.Run(); err != nil {
 		return err
 	}
@@ -331,7 +336,7 @@ func init() {
 	})
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
-
+	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
 	// Config.General
