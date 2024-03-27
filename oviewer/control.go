@@ -176,6 +176,9 @@ func (m *Document) controlReader(sc controlSpecifier, reader *bufio.Reader, relo
 			reader = reload()
 			m.requestStart()
 		}
+	case requestClose:
+		log.Println("close")
+		return reader, nil
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
 	}

@@ -28,7 +28,7 @@ type Root struct {
 	// help
 	helpDoc *Document
 	// log
-	logDoc *Document
+	logDoc *LogDocument
 
 	// input contains the input mode.
 	input *Input
@@ -742,7 +742,7 @@ func (root *Root) debugMessage(msg string) {
 	if !root.Debug {
 		return
 	}
-	if root.Doc == root.logDoc {
+	if root.Doc == root.logDoc.Document {
 		return
 	}
 

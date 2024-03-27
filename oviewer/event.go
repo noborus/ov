@@ -60,6 +60,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.nextBackSearch(ctx, ev.str)
 		case *eventSearchMove:
 			root.searchGo(ev.value)
+		case *eventInputFilter:
+			root.filter(ctx)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:

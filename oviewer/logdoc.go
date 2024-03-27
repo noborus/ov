@@ -5,9 +5,13 @@ import (
 	"sync/atomic"
 )
 
+type LogDocument struct {
+	*Document
+}
+
 // NewLogDoc generates a document for log.
 // NewLogDoc makes LogDoc the output destination of go's standard logger.
-func NewLogDoc() (*Document, error) {
+func NewLogDoc() (*LogDocument, error) {
 	m, err := NewDocument()
 	if err != nil {
 		return nil, err
@@ -19,13 +23,16 @@ func NewLogDoc() (*Document, error) {
 	if err := m.ControlLog(); err != nil {
 		return nil, err
 	}
-	log.SetOutput(m)
-	return m, nil
+	l := &LogDocument{
+		Document: m,
+	}
+	log.SetOutput(l)
+	return l, nil
 }
 
 // Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
-func (m *Document) Write(p []byte) (int, error) {
+func (m *LogDocument) Write(p []byte) (int, error) {
 	s := m.store
 	chunk := s.chunkForAdd(false, s.size)
 	s.append(chunk, true, p)

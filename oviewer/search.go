@@ -229,8 +229,8 @@ func (root *Root) searchPosition(str string) [][]int {
 }
 
 // searchXPos returns the x position of the first match.
-func (root *Root) searchXPos(lN int) int {
-	line, _ := root.Doc.getLineC(lN, root.Doc.TabWidth)
+func (root *Root) searchXPos(lineNum int) int {
+	line, _ := root.Doc.getLineC(lineNum, root.Doc.TabWidth)
 	indexes := root.searchPosition(line.str)
 	if len(indexes) == 0 {
 		return 0
@@ -285,7 +285,7 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 }
 
 // searchMove searches forward/backward and moves to the nearest matching line.
-func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher Searcher) {
+func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, searcher Searcher) {
 	if searcher == nil {
 		if root.Doc.jumpTargetSection {
 			root.Doc.jumpTargetNum = 0
@@ -303,7 +303,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 	})
 
 	eg.Go(func() error {
-		n, err := root.Doc.searchLine(ctx, searcher, forward, lN)
+		n, err := root.Doc.searchLine(ctx, searcher, forward, lineNum)
 		root.sendSearchQuit()
 		if err != nil {
 			return fmt.Errorf("search:%w:%v", err, word)
@@ -320,15 +320,15 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lN int, searcher
 }
 
 // searchLine is a forward/backward search wrap function
-func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bool, lN int) (int, error) {
+func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bool, lineNum int) (int, error) {
 	if forward {
-		return m.SearchLine(ctx, searcher, lN)
+		return m.SearchLine(ctx, searcher, lineNum)
 	}
-	return m.BackSearchLine(ctx, searcher, lN)
+	return m.BackSearchLine(ctx, searcher, lineNum)
 }
 
 // Search searches for the search term and moves to the nearest matching line.
-func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, lineNum int) (int, error) {
 	if !m.seekable {
 		if chunkNum != 0 && m.store.lastChunkNum() <= chunkNum {
 			m.requestLoad(chunkNum)
@@ -337,12 +337,12 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 		if m.store.lastChunkNum() < chunkNum {
 			return 0, ErrOutOfChunk
 		}
-		if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+		if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(searcher, chunkNum) {
 			return 0, ErrNotFound
 		}
 	}
 
-	for n := line; n < ChunkSize; n++ {
+	for n := lineNum; n < ChunkSize; n++ {
 		buf, err := m.store.GetChunkLine(chunkNum, n)
 		if err != nil {
 			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
@@ -361,7 +361,7 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 
 // BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
-	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(ctx, searcher, chunkNum, line) {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(searcher, chunkNum) {
 		return 0, ErrNotFound
 	}
 
@@ -383,7 +383,7 @@ func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum i
 }
 
 // storageSearch searches for line not in memory(storage).
-func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) bool {
+func (m *Document) storageSearch(searcher Searcher, chunkNum int) bool {
 	if !m.store.isLoadedChunk(chunkNum, m.seekable) && atomic.LoadInt32(&m.closed) == 0 {
 		if m.requestSearch(chunkNum, searcher) {
 			return true
@@ -393,9 +393,9 @@ func (m *Document) storageSearch(ctx context.Context, searcher Searcher, chunkNu
 }
 
 // SearchLine searches the document and returns the matching line number.
-func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = max(lN, m.BufStartNum())
-	startChunk, sn := chunkLineNum(lN)
+func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lineNum int) (int, error) {
+	lineNum = max(lineNum, m.BufStartNum())
+	startChunk, sn := chunkLineNum(lineNum)
 
 	for cn := startChunk; ; cn++ {
 		n, err := m.Search(ctx, searcher, cn, sn)
@@ -419,9 +419,9 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lN int) (i
 }
 
 // BackSearchLine does a backward search on the document and returns a matching line number.
-func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lN int) (int, error) {
-	lN = min(lN, m.BufEndNum()-1)
-	startChunk, sn := chunkLineNum(lN)
+func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lineNum int) (int, error) {
+	lineNum = min(lineNum, m.BufEndNum()-1)
+	startChunk, sn := chunkLineNum(lineNum)
 	minChunk, _ := chunkLineNum(m.BufStartNum())
 	for cn := startChunk; cn >= minChunk; cn-- {
 		n, err := m.BackSearch(ctx, searcher, cn, sn)
@@ -494,10 +494,10 @@ type eventSearchMove struct {
 	value int
 }
 
-func (root *Root) sendSearchMove(lN int) {
+func (root *Root) sendSearchMove(lineNum int) {
 	ev := &eventSearchMove{}
 	ev.SetEventNow()
-	ev.value = lN
+	ev.value = lineNum
 	root.postEvent(ev)
 }
 
@@ -516,7 +516,7 @@ func (root *Root) incrementalSearch(ctx context.Context) {
 }
 
 // incSearch implements incremental forward/back search.
-func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
+func (root *Root) incSearch(ctx context.Context, forward bool, lineNum int) {
 	root.Doc.topLN = root.returnStartPosition()
 
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
@@ -526,7 +526,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lN int) {
 
 	ctx = root.cancelRestart(ctx)
 	go func() {
-		n, err := root.Doc.searchLine(ctx, searcher, forward, lN)
+		n, err := root.Doc.searchLine(ctx, searcher, forward, lineNum)
 		if err != nil {
 			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
