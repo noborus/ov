@@ -5,15 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
-)
-
-const (
-	// Recheck interval after reaching the last line.
-	recheckInterval = 1 * time.Second
 )
 
 // eventInputFilter represents the filter input mode.
@@ -94,79 +87,66 @@ func (root *Root) filter(ctx context.Context) {
 		return
 	}
 	word := root.searcher.String()
-	root.setMessagef("filter:%v (%v)Cancel", word, strings.Join(root.cancelKeys, ","))
+	root.setMessagef("filter:%v", word)
 
 	m := root.Doc
 	r, w := io.Pipe()
-	filterDoc, err := renderDoc(m, r)
+	renderDoc, err := renderDoc(m, r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	filterDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
-	filterDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
-	root.addDocument(filterDoc.Document)
+	renderDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
+	renderDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
+	root.addDocument(renderDoc.Document)
 
-	filterDoc.writer = w
-	filterDoc.Header = m.Header
-	filterDoc.SkipLines = m.SkipLines
+	renderDoc.writer = w
+	renderDoc.Header = m.Header
+	renderDoc.SkipLines = m.SkipLines
 
 	// Copy the header
-	if filterDoc.Header > 0 {
-		for ln := filterDoc.SkipLines; ln < filterDoc.Header; ln++ {
+	if renderDoc.Header > 0 {
+		for ln := renderDoc.SkipLines; ln < renderDoc.Header; ln++ {
 			line, err := m.Line(ln)
 			if err != nil {
 				break
 			}
-			filterDoc.lineNumMap.Store(ln, ln)
-			w.Write(line)
-			w.Write([]byte("\n"))
+			renderDoc.lineNumMap.Store(ln, ln)
+			renderDoc.writeLine(line)
 		}
 	}
-
-	go m.searchWriter(ctx, searcher, filterDoc, m.firstLine())
-
+	go m.searchWriter(ctx, searcher, renderDoc, m.firstLine())
 	root.setMessagef("filter:%v", word)
 }
 
 // searchWriter searches the document and writes the result to w.
 func (m *Document) searchWriter(ctx context.Context, searcher Searcher, renderDoc *renderDocument, ln int) {
 	defer renderDoc.writer.Close()
-	originLN := ln
-	renderLN := ln
-	for {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
-			lineNum, err := m.searchLine(ctx, searcher, true, originLN)
-			if err != nil {
-				// Not found
-				originLN = lineNum
-				break
-			}
-			// Found
-			line, err := m.Line(lineNum)
-			if err != nil {
-				break
-			}
-			num := lineNum
-			if m.lineNumMap != nil {
-				if n, ok := m.lineNumMap.LoadForward(num); ok {
-					num = n
-				}
-			}
-			renderDoc.lineNumMap.Store(renderLN, num)
-			renderDoc.writer.Write(line)
-			renderDoc.writer.Write([]byte("\n"))
-			renderLN++
-			originLN = lineNum + 1
+	for originLN, renderLN := ln, ln; ; {
+		select {
+		case <-ctx.Done():
+			return
+		default:
 		}
-		// Wait for the buffer to be updated.
-		for originLN >= m.BufEndNum() {
-			time.Sleep(recheckInterval)
+		lineNum, err := m.searchLine(ctx, searcher, true, originLN)
+		if err != nil {
+			// Not found
+			break
 		}
+		// Found
+		line, err := m.Line(lineNum)
+		if err != nil {
+			break
+		}
+		num := lineNum
+		if m.lineNumMap != nil {
+			if n, ok := m.lineNumMap.LoadForward(num); ok {
+				num = n
+			}
+		}
+		renderDoc.lineNumMap.Store(renderLN, num)
+		renderDoc.writeLine(line)
+		renderLN++
+		originLN = lineNum + 1
 	}
 }

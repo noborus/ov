@@ -28,3 +28,12 @@ func renderDoc(parent *Document, reader io.Reader) (*renderDocument, error) {
 	}
 	return &renderDocument{Document: doc}, nil
 }
+
+func (render *renderDocument) writeLine(line []byte) {
+	if _, err := render.writer.Write(line); err != nil {
+		panic(err)
+	}
+	if _, err := render.writer.Write([]byte("\n")); err != nil {
+		panic(err)
+	}
+}
