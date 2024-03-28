@@ -162,6 +162,7 @@ func RunOviewer(args []string) error {
 	if filter != "" {
 		ov.Filter(filter)
 	}
+
 	if err := ov.Run(); err != nil {
 		return err
 	}

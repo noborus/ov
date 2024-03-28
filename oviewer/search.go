@@ -410,12 +410,13 @@ func (m *Document) SearchLine(ctx context.Context, searcher Searcher, lineNum in
 
 		// lastChunkNum may be updated by Search.
 		if cn >= m.store.lastChunkNum() {
+			lineNum = cn*ChunkSize + n
 			break
 		}
 		sn = 0
 	}
 
-	return 0, ErrNotFound
+	return lineNum, ErrNotFound
 }
 
 // BackSearchLine does a backward search on the document and returns a matching line number.
