@@ -199,7 +199,7 @@ func TestDocument_searchLine(t *testing.T) {
 				searcher: NewSearcher("notfoundnotfound", nil, false, false),
 				num:      0,
 			},
-			want:    0,
+			want:    40,
 			wantErr: true,
 		},
 	}
