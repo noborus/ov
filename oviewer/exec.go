@@ -24,12 +24,12 @@ const (
 
 // Command is the structure of the command.
 type Command struct {
-	stdout  io.Reader
-	stderr  io.Reader
-	command *exec.Cmd
-	docout  *Document
-	docerr  *Document
-	args    []string
+	stdout io.Reader
+	stderr io.Reader
+	cmd    *exec.Cmd
+	docout *Document
+	docerr *Document
+	args   []string
 }
 
 // NewCommand return the structure of Command.
@@ -40,118 +40,115 @@ func NewCommand(args ...string) *Command {
 }
 
 // Exec return the structure of oviewer.
-func (cmd *Command) Exec() (*Root, error) {
+func (command *Command) Exec() (*Root, error) {
 	docout, docerr, err := newOutErrDocument()
 	if err != nil {
 		return nil, err
 	}
-	cmd.docout = docout
-	cmd.docerr = docerr
+	command.docout = docout
+	command.docerr = docerr
 
-	cmd.command = exec.Command(cmd.args[0], cmd.args[1:]...)
-	so, se, err := commandStart(cmd.command)
+	command.cmd = exec.Command(command.args[0], command.args[1:]...)
+	so, se, err := commandStart(command.cmd)
 	if err != nil {
 		return nil, err
 	}
-	cmd.stdout = so
-	cmd.stderr = se
+	command.stdout = so
+	command.stderr = se
 
-	cmd.docout.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docout.FileName
-	cmd.docerr.Caption = "(" + cmd.command.Args[0] + ")" + cmd.docerr.FileName
-	atomic.StoreInt32(&cmd.docout.closed, 0)
-	atomic.StoreInt32(&cmd.docerr.closed, 0)
-	cmd.docout.seekable = false
-	cmd.docerr.seekable = false
-	cmd.docout.store.formfeedTime = true
-	cmd.docerr.store.formfeedTime = true
+	command.docout.Caption = "(" + command.cmd.Args[0] + ")" + command.docout.FileName
+	command.docerr.Caption = "(" + command.cmd.Args[0] + ")" + command.docerr.FileName
+	atomic.StoreInt32(&command.docout.closed, 0)
+	atomic.StoreInt32(&command.docerr.closed, 0)
+	command.docout.seekable = false
+	command.docerr.seekable = false
+	command.docout.store.formfeedTime = true
+	command.docerr.store.formfeedTime = true
 
-	if err = cmd.docout.ControlReader(so, cmd.Reload); err != nil {
+	if err = command.docout.ControlReader(so, command.Reload); err != nil {
 		log.Printf("%s", err)
 	}
-	if err = cmd.docerr.ControlReader(se, cmd.stderrReload); err != nil {
+	if err = command.docerr.ControlReader(se, command.stderrReload); err != nil {
 		log.Printf("%s", err)
 	}
-	return NewOviewer(cmd.docout, cmd.docerr)
+	return NewOviewer(command.docout, command.docerr)
 }
 
 // Wait waits for the command to exit.
-func (cmd *Command) Wait() {
-	if cmd.command == nil || cmd.command.Process == nil {
+// Wait does not actually `wait` because it is Waiting in the goroutine at the start.
+func (command *Command) Wait() {
+	if command.cmd == nil || command.cmd.Process == nil {
 		return
 	}
 
-	atomic.StoreInt32(&cmd.docout.closed, 1)
-	atomic.StoreInt32(&cmd.docerr.closed, 1)
+	atomic.StoreInt32(&command.docout.closed, 1)
+	atomic.StoreInt32(&command.docerr.closed, 1)
 
 	// Kill the command if it hasn't exited yet.
-	if err := cmd.command.Process.Kill(); err != nil {
-		log.Println(err)
-	}
-	// Wait for the command to exit.
-	if err := cmd.command.Wait(); err != nil {
+	if err := command.cmd.Process.Kill(); err != nil {
 		log.Println(err)
 	}
 }
 
 // Reload restarts the command.
-func (cmd *Command) Reload() *bufio.Reader {
-	cmd.Wait()
-	if cmd.docout.WatchMode {
-		s := cmd.docout.store
+func (command *Command) Reload() *bufio.Reader {
+	command.Wait()
+	if command.docout.WatchMode {
+		s := command.docout.store
 		s.appendFormFeed(s.chunkForAdd(false, s.size))
 	} else {
-		cmd.docout.reset()
+		command.docout.reset()
 	}
-	cmd.command = exec.Command(cmd.args[0], cmd.args[1:]...)
-	so, se, err := commandStart(cmd.command)
+	command.cmd = exec.Command(command.args[0], command.args[1:]...)
+	so, se, err := commandStart(command.cmd)
 	if err != nil {
 		log.Println(err)
 		str := fmt.Sprintf("command error: %s", err)
 		reader := bufio.NewReader(strings.NewReader(str))
 		return reader
 	}
-	cmd.stdout = so
-	cmd.stderr = se
+	command.stdout = so
+	command.stderr = se
 
-	cmd.docerr.requestReload()
-	atomic.StoreInt32(&cmd.docerr.store.readCancel, 0)
+	command.docerr.requestReload()
+	atomic.StoreInt32(&command.docerr.store.readCancel, 0)
 	log.Println("stderr receive done")
 
 	return bufio.NewReader(so)
 }
 
 // stderrReload is called when the command is restarted.
-func (cmd *Command) stderrReload() *bufio.Reader {
-	if !cmd.docout.WatchMode {
-		cmd.docerr.reset()
+func (command *Command) stderrReload() *bufio.Reader {
+	if !command.docout.WatchMode {
+		command.docerr.reset()
 	} else {
-		s := cmd.docerr.store
+		s := command.docerr.store
 		s.appendFormFeed(s.chunkForAdd(false, s.size))
 	}
 
-	return bufio.NewReader(cmd.stderr)
+	return bufio.NewReader(command.stderr)
 }
 
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
 // obsolete: use NewCommand and Exec instead.
-func ExecCommand(command *exec.Cmd) (*Root, error) {
+func ExecCommand(cmd *exec.Cmd) (*Root, error) {
 	docout, docerr, err := newOutErrDocument()
 	if err != nil {
 		return nil, err
 	}
 
-	so, se, err := commandStart(command)
+	so, se, err := commandStart(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	docout.Caption = "(" + command.Args[0] + ")" + docout.FileName
+	docout.Caption = "(" + cmd.Args[0] + ")" + docout.FileName
 	err = docout.ControlReader(so, nil)
 	if err != nil {
 		log.Printf("%s", err)
 	}
-	docerr.Caption = "(" + command.Args[0] + ")" + docerr.FileName
+	docerr.Caption = "(" + cmd.Args[0] + ")" + docerr.FileName
 	err = docerr.ControlReader(se, nil)
 	if err != nil {
 		log.Printf("%s", err)
@@ -177,17 +174,17 @@ func newOutErrDocument() (*Document, *Document, error) {
 }
 
 // commandStart starts the command.
-func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
+func commandStart(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		command.Stdin = os.Stdin
+		cmd.Stdin = os.Stdin
 	}
 
 	var so, se io.Reader
 	var err error
 	if runtime.GOOS == "windows" {
-		so, se, err = pipeOutput(command)
+		so, se, err = pipeOutput(cmd)
 	} else {
-		so, se, err = ptyOutput(command)
+		so, se, err = ptyOutput(cmd)
 	}
 	if err != nil {
 		return nil, nil, err
@@ -198,17 +195,17 @@ func commandStart(command *exec.Cmd) (io.Reader, io.Reader, error) {
 
 // pipeOutput returns the stdout and stderr of the command.
 // pipeOutput is used on Windows.
-func pipeOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
-	so, err := command.StdoutPipe()
+func pipeOutput(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
+	so, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, nil, fmt.Errorf("stdout pipe error: %w", err)
 	}
 
-	se, err := command.StderrPipe()
+	se, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, nil, fmt.Errorf("stderr pipe error: %w", err)
 	}
-	if err := command.Start(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return nil, nil, fmt.Errorf("command start error: %w", err)
 	}
 
@@ -216,7 +213,7 @@ func pipeOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 }
 
 // ptyOutput returns the stdout and stderr of the command.
-func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
+func ptyOutput(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 	// STDOUT
 	stdout, outReader, err := pty.Open()
 	if err != nil {
@@ -225,7 +222,7 @@ func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if err := pty.Setsize(stdout, &pty.Winsize{Cols: COLS, Rows: ROWS}); err != nil {
 		return nil, nil, fmt.Errorf("pty setsize error: %w", err)
 	}
-	command.Stdout = stdout
+	cmd.Stdout = stdout
 	var so io.Reader = outReader
 	if STDOUTPIPE != nil {
 		so = io.TeeReader(so, STDOUTPIPE)
@@ -236,22 +233,23 @@ func ptyOutput(command *exec.Cmd) (io.Reader, io.Reader, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("pty open error: %w", err)
 	}
-	command.Stderr = stderr
+	cmd.Stderr = stderr
 	var se io.Reader = errReader
 	if STDERRPIPE != nil {
 		se = io.TeeReader(se, STDERRPIPE)
 	}
-	if err := command.Start(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return nil, nil, fmt.Errorf("command start error: %w", err)
 	}
 
 	go func() {
-		if err := command.Wait(); err != nil {
+		if err := cmd.Wait(); err != nil {
 			log.Printf("wait: %s", err)
 		}
 		time.Sleep(100 * time.Millisecond)
 		stdout.Close()
 		stderr.Close()
 	}()
+
 	return so, se, nil
 }
