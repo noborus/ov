@@ -267,10 +267,11 @@ func (m *Document) moveNextSection() error {
 
 // nextSection returns the line number of the previous section.
 func (m *Document) nextSection(n int) (int, error) {
-	lN := n + (1 - m.SectionStartPosition)
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	defer ctx.Done()
+
+	lN := n + (1 - m.SectionStartPosition)
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	return m.SearchLine(ctx, searcher, lN)
 }
 
@@ -295,25 +296,23 @@ func (m *Document) movePrevSection() error {
 
 // prevSection returns the line number of the previous section.
 func (m *Document) prevSection(n int) (int, error) {
-	lN := n - (1 + m.SectionStartPosition)
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
 	defer cancel()
-	n, err := m.BackSearchLine(ctx, searcher, lN)
-	if err != nil {
-		return 0, err
-	}
-	return n, nil
+
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
+	lN := n - (1 + m.SectionStartPosition)
+	return m.BackSearchLine(ctx, searcher, lN)
 }
 
 // moveLastSection moves to the last section.
 func (m *Document) moveLastSection() {
+	ctx := context.Background()
+	defer ctx.Done()
+
 	// +1 to avoid if the bottom line is a session delimiter.
 	lN := m.BufEndNum() - 2
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	ctx := context.Background()
-	defer ctx.Done()
 	n, err := m.BackSearchLine(ctx, searcher, lN)
 	if err != nil {
 		log.Printf("last section:%v", err)

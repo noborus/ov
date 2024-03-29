@@ -91,37 +91,38 @@ func (root *Root) filter(ctx context.Context) {
 
 	m := root.Doc
 	r, w := io.Pipe()
-	renderDoc, err := renderDoc(m, r)
+	filterDoc, err := renderDoc(m, r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	renderDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
-	renderDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
-	root.addDocument(renderDoc.Document)
+	filterDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
+	filterDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
+	root.addDocument(filterDoc.Document)
+	filterDoc.Document.general = mergeGeneral(m.general, filterDoc.Document.general)
 
-	renderDoc.writer = w
-	renderDoc.Header = m.Header
-	renderDoc.SkipLines = m.SkipLines
+	filterDoc.writer = w
+	filterDoc.Header = m.Header
+	filterDoc.SkipLines = m.SkipLines
 
 	// Copy the header
-	if renderDoc.Header > 0 {
-		for ln := renderDoc.SkipLines; ln < renderDoc.Header; ln++ {
+	if filterDoc.Header > 0 {
+		for ln := filterDoc.SkipLines; ln < filterDoc.Header; ln++ {
 			line, err := m.Line(ln)
 			if err != nil {
 				break
 			}
-			renderDoc.lineNumMap.Store(ln, ln)
-			renderDoc.writeLine(line)
+			filterDoc.lineNumMap.Store(ln, ln)
+			filterDoc.writeLine(line)
 		}
 	}
-	go m.searchWriter(ctx, searcher, renderDoc, m.firstLine())
+	go m.searchWriter(ctx, searcher, filterDoc, m.firstLine())
 	root.setMessagef("filter:%v", word)
 }
 
 // searchWriter searches the document and writes the result to w.
-func (m *Document) searchWriter(ctx context.Context, searcher Searcher, renderDoc *renderDocument, ln int) {
-	defer renderDoc.writer.Close()
+func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDoc *renderDocument, ln int) {
+	defer filterDoc.writer.Close()
 	for originLN, renderLN := ln, ln; ; {
 		select {
 		case <-ctx.Done():
@@ -144,8 +145,8 @@ func (m *Document) searchWriter(ctx context.Context, searcher Searcher, renderDo
 				num = n
 			}
 		}
-		renderDoc.lineNumMap.Store(renderLN, num)
-		renderDoc.writeLine(line)
+		filterDoc.lineNumMap.Store(renderLN, num)
+		filterDoc.writeLine(line)
 		renderLN++
 		originLN = lineNum + 1
 	}
