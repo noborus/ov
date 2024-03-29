@@ -618,7 +618,7 @@ func (root *Root) TailSync() {
 // and adjusts to its original position.
 func (root *Root) tailSection() {
 	moved := root.Doc.topLN - root.Doc.lastSectionPosNum
-	root.lastSection()
+	root.Doc.moveLastSection()
 	if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
 		root.Doc.moveLine(root.Doc.topLN + moved)
 	}

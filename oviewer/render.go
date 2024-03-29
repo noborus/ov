@@ -19,7 +19,6 @@ func renderDoc(parent *Document, reader io.Reader) (*renderDocument, error) {
 		return nil, err
 	}
 	doc.parent = parent
-	doc.general = mergeGeneral(parent.general, doc.general)
 	doc.lineNumMap = biomap.NewMap[int, int]()
 	doc.preventReload = true
 	doc.seekable = false
