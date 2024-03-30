@@ -320,13 +320,13 @@ func (s *store) appendLine(chunk *chunk, line []byte) {
 // joinLast joins the new content to the last line.
 // This is used when the last line is added without a newline and EOF.
 func (s *store) joinLast(chunk *chunk, line []byte) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	size := len(line)
 	if size == 0 {
 		return false
 	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	num := len(chunk.lines) - 1
 	buf := chunk.lines[num]

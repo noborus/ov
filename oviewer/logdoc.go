@@ -7,6 +7,7 @@ import (
 
 type LogDocument struct {
 	*Document
+	channel chan []byte
 }
 
 // NewLogDoc generates a document for log.
@@ -24,29 +25,40 @@ func NewLogDoc() (*LogDocument, error) {
 	if err := m.ControlLog(); err != nil {
 		return nil, err
 	}
-	l := &LogDocument{
+	logDoc := &LogDocument{
 		Document: m,
+		channel:  make(chan []byte, 1),
 	}
-	log.SetOutput(l)
-	return l, nil
+	go logDoc.chanWrite()
+	log.SetOutput(logDoc)
+	return logDoc, nil
 }
 
 // Write matches the interface of io.Writer(so package log is possible).
 // Therefore, the log.Print output is displayed by logDoc.
-func (m *LogDocument) Write(p []byte) (int, error) {
-	s := m.store
-	chunk := s.chunkForAdd(false, s.size)
-	s.append(chunk, true, p)
-	if len(chunk.lines) < ChunkSize {
-		return len(p), nil
+func (logDoc *LogDocument) Write(p []byte) (int, error) {
+	line := make([]byte, len(p))
+	copy(line, p)
+	logDoc.channel <- line
+	return len(line), nil
+}
+
+func (logDoc *LogDocument) chanWrite() {
+	for p := range logDoc.channel {
+		s := logDoc.store
+		chunk := s.chunkForAdd(false, s.size)
+		s.append(chunk, true, p)
+		if len(chunk.lines) < ChunkSize {
+			continue
+		}
+		chunk = NewChunk(s.size)
+
+		s.mu.Lock()
+		if len(s.chunks) > 2 {
+			s.chunks[len(s.chunks)-2].lines = nil
+			atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
+		}
+		s.chunks = append(s.chunks, chunk)
+		s.mu.Unlock()
 	}
-	chunk = NewChunk(s.size)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if len(s.chunks) > 2 {
-		s.chunks[len(s.chunks)-2].lines = nil
-		atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
-	}
-	s.chunks = append(s.chunks, chunk)
-	return len(p), nil
 }
