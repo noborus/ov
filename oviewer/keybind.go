@@ -75,6 +75,7 @@ const (
 	actionNextDoc        = "next_doc"
 	actionPreviousDoc    = "previous_doc"
 	actionCloseDoc       = "close_doc"
+	actionCloseAllFilter = "close_all_filter"
 	actionToggleMouse    = "toggle_mouse"
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
@@ -156,6 +157,7 @@ func (root *Root) handlers() map[string]func() {
 		actionNextDoc:        root.nextDoc,
 		actionPreviousDoc:    root.previousDoc,
 		actionCloseDoc:       root.closeDocument,
+		actionCloseAllFilter: root.closeAllFilter,
 		actionToggleMouse:    root.toggleMouse,
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
@@ -240,6 +242,7 @@ func defaultKeyBinds() KeyBind {
 		actionNextDoc:        {"]"},
 		actionPreviousDoc:    {"["},
 		actionCloseDoc:       {"ctrl+k"},
+		actionCloseAllFilter: {"K"},
 		actionToggleMouse:    {"ctrl+alt+r"},
 		actionSuspend:        {"ctrl+z"},
 		actionMultiColor:     {"."},
@@ -297,6 +300,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionNextDoc, "next document")
 	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
+	k.writeKeyBind(&b, actionCloseAllFilter, "close all filtered documents")
 
 	writeHeader(&b, "Mark position")
 	k.writeKeyBind(&b, actionMark, "mark current position")

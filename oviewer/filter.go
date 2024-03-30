@@ -96,6 +96,7 @@ func (root *Root) filter(ctx context.Context) {
 		log.Println(err)
 		return
 	}
+	filterDoc.documentType = DocFilter
 	filterDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
 	filterDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
 	root.addDocument(filterDoc.Document)
@@ -150,4 +151,8 @@ func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDo
 		renderLN++
 		originLN = lineNum + 1
 	}
+}
+
+func (m *Document) isFilterDocument() bool {
+	return m.documentType == DocFilter
 }

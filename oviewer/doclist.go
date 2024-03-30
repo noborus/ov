@@ -40,9 +40,10 @@ func (root *Root) addDocument(m *Document) {
 	m.regexpCompile()
 
 	root.mu.Lock()
+	defer root.mu.Unlock()
 	root.DocList = append(root.DocList, m)
 	root.CurrentDoc = len(root.DocList) - 1
-	root.mu.Unlock()
+	root.showDocNum = true
 
 	root.setDocument(m)
 }
@@ -57,14 +58,36 @@ func (root *Root) closeDocument() {
 
 	root.setMessageLogf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
 	root.mu.Lock()
+	defer root.mu.Unlock()
 	root.DocList[root.CurrentDoc].requestClose()
 	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
 	if root.CurrentDoc > 0 {
 		root.CurrentDoc--
 	}
 	doc := root.DocList[root.CurrentDoc]
-	root.mu.Unlock()
+	root.setDocument(doc)
+}
 
+// closeAllFilter closes all filter documents.
+func (root *Root) closeAllFilter() {
+	root.mu.Lock()
+
+	for i := len(root.DocList) - 1; i >= 0; i-- {
+		if len(root.DocList) <= 1 {
+			break
+		}
+		doc := root.DocList[i]
+		if doc.isFilterDocument() {
+			root.DocList = append(root.DocList[:i], root.DocList[i+1:]...)
+		}
+	}
+	if root.CurrentDoc >= len(root.DocList) {
+		root.CurrentDoc = len(root.DocList) - 1
+	}
+	doc := root.DocList[root.CurrentDoc]
+
+	root.setMessageLog("close all filter")
+	root.mu.Unlock()
 	root.setDocument(doc)
 }
 
@@ -106,10 +129,10 @@ func (root *Root) setDocumentNum(docNum int) {
 	docNum = min(root.DocumentLen()-1, docNum)
 
 	root.mu.Lock()
+	defer root.mu.Unlock()
+
 	root.CurrentDoc = docNum
 	m := root.DocList[root.CurrentDoc]
-	root.mu.Unlock()
-
 	root.setDocument(m)
 }
 
@@ -121,30 +144,27 @@ func (root *Root) setDocument(m *Document) {
 
 // helpDisplay is to switch between helpDisplay screen and normal screen.
 func (root *Root) helpDisplay() {
-	if root.screenMode == Help {
+	if root.Doc.documentType == DocHelp {
 		root.toNormal()
 		return
 	}
 	root.setDocument(root.helpDoc)
-	root.screenMode = Help
 }
 
 // LogDisplay is to switch between Log screen and normal screen.
 func (root *Root) logDisplay() {
-	if root.screenMode == LogDoc {
+	if root.Doc.documentType == DocLog {
 		root.toNormal()
 		return
 	}
 	root.setDocument(root.logDoc.Document)
-	root.screenMode = LogDoc
 }
 
 // toNormal displays a normal document.
 func (root *Root) toNormal() {
 	root.mu.RLock()
-	m := root.DocList[root.CurrentDoc]
-	root.mu.RUnlock()
+	defer root.mu.RUnlock()
 
+	m := root.DocList[root.CurrentDoc]
 	root.setDocument(m)
-	root.screenMode = Docs
 }

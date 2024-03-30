@@ -26,7 +26,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
-			if root.screenMode == Docs {
+			if root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 				close(quitChan)
 				return
 			}
@@ -44,6 +44,8 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.addDocument(ev.m)
 		case *eventCloseDocument:
 			root.closeDocument()
+		case *eventCloseAllFilter:
+			root.closeAllFilter()
 		case *eventCopySelect:
 			root.copyToClipboard(ctx)
 		case *eventPaste:
@@ -281,6 +283,20 @@ func (root *Root) CloseDocument(m *Document) {
 
 func (root *Root) sendCloseDocument() {
 	ev := &eventCloseDocument{}
+	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+type eventCloseAllFilter struct {
+	tcell.EventTime
+}
+
+func (root *Root) CloseAllFilter() {
+	root.sendCloseAllFilter()
+}
+
+func (root *Root) sendCloseAllFilter() {
+	ev := &eventCloseAllFilter{}
 	ev.SetEventNow()
 	root.postEvent(ev)
 }

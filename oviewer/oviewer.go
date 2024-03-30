@@ -54,9 +54,8 @@ type Root struct {
 	// DocList is the list of documents.
 	DocList []*Document
 	scr     SCR
+	// Config is the configuration of ov.
 	Config
-	// screenMode represents the mode of screen.
-	screenMode ScreenMode
 	// Original position at the start of search.
 	OriginPos int
 
@@ -81,6 +80,8 @@ type Root struct {
 	mouseSelect bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
+	// Show document number
+	showDocNum bool
 }
 
 // SCR contains the screen information.
@@ -322,18 +323,6 @@ var (
 	STDERRPIPE *os.File
 )
 
-// ScreenMode represents the state of the screen.
-type ScreenMode int
-
-const (
-	// Docs is a normal document screen mode.
-	Docs ScreenMode = iota
-	// Help is Help screen mode.
-	Help
-	// LogDoc is Error screen mode.
-	LogDoc
-)
-
 // MouseFlags represents which events of the mouse should be captured.
 // Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
 // Does not track mouse movements except when dragging.
@@ -406,7 +395,6 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	root.input = NewInput()
-	root.screenMode = Docs
 
 	screen, err := tcellNewScreen()
 	if err != nil {
@@ -422,6 +410,10 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		return nil, err
 	}
 	root.logDoc = logDoc
+
+	if root.DocumentLen() > 1 {
+		root.showDocNum = true
+	}
 
 	return root, nil
 }
