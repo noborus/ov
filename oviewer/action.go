@@ -101,7 +101,7 @@ func (root *Root) toggleFollowSection() {
 
 // closeFile close the file.
 func (root *Root) closeFile() {
-	if root.screenMode != Docs {
+	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
 		return
 	}
 
@@ -667,7 +667,7 @@ func (root *Root) follow() {
 // followAll monitors and switches all document updates
 // in follow all mode.
 func (root *Root) followAll() {
-	if root.screenMode != Docs {
+	if root.Doc.documentType != DocNormal {
 		return
 	}
 

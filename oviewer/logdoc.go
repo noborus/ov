@@ -16,6 +16,7 @@ func NewLogDoc() (*LogDocument, error) {
 	if err != nil {
 		return nil, err
 	}
+	m.documentType = DocLog
 	m.FollowMode = true
 	m.Caption = "Log"
 	m.seekable = false
@@ -41,11 +42,11 @@ func (m *LogDocument) Write(p []byte) (int, error) {
 	}
 	chunk = NewChunk(s.size)
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	if len(s.chunks) > 2 {
 		s.chunks[len(s.chunks)-2].lines = nil
 		atomic.StoreInt32(&s.startNum, int32(ChunkSize*(len(s.chunks)-1)))
 	}
 	s.chunks = append(s.chunks, chunk)
-	s.mu.Unlock()
 	return len(p), nil
 }

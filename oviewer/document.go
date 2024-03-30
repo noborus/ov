@@ -18,9 +18,21 @@ import (
 	"github.com/noborus/ov/biomap"
 )
 
+// document type.
+const (
+	DocNormal = iota
+	DocHelp
+	DocLog
+	DocFilter
+)
+
+type documentType int
+
 // The Document structure contains the values
 // for the logical screen.
 type Document struct {
+	// documentType is the type of document.
+	documentType documentType
 	// File is the os.File.
 	file *os.File
 
@@ -172,7 +184,8 @@ type LineC struct {
 // NewDocument returns Document.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		tickerDone: make(chan struct{}),
+		documentType: DocNormal,
+		tickerDone:   make(chan struct{}),
 		general: general{
 			ColumnDelimiter: "",
 			TabWidth:        8,

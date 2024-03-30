@@ -16,7 +16,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	m.documentType = DocHelp
 	helpStr := bytes.NewBufferString("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
 	helpStr.WriteString("\n")
 	helpStr.WriteString(KeyBindString(k))

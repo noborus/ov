@@ -553,7 +553,7 @@ func (root *Root) leftStatus() (contents, int) {
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() (contents, int) {
 	number := ""
-	if root.DocumentLen() > 1 && root.screenMode == Docs {
+	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 		number = fmt.Sprintf("[%d]", root.CurrentDoc)
 	}
 
