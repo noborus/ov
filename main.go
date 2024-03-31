@@ -34,8 +34,8 @@ var (
 	// filter is filter pattern.
 	filter string
 
-	// no match filter pattern.
-	noMatchFilter string
+	// non match filter pattern.
+	nonMatchFilter string
 
 	// ver is version information.
 	ver bool
@@ -165,8 +165,8 @@ func RunOviewer(args []string) error {
 	if filter != "" {
 		ov.Filter(filter, false)
 	}
-	if noMatchFilter != "" {
-		ov.Filter(noMatchFilter, true)
+	if nonMatchFilter != "" {
+		ov.Filter(nonMatchFilter, true)
 	}
 
 	if err := ov.Run(); err != nil {
@@ -344,7 +344,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
-	rootCmd.PersistentFlags().StringVarP(&noMatchFilter, "no-match-filter", "", "", "filter no match search pattern")
+	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
 	// Config.General
