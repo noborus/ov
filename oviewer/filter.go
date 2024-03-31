@@ -22,6 +22,7 @@ func (root *Root) setSearchFilterMode() {
 	input.value = ""
 	input.cursorX = 0
 
+	root.Doc.nonMatch = false
 	if root.searcher != nil {
 		input.SearchCandidate.toLast(root.searcher.String())
 	}
@@ -69,7 +70,8 @@ func (e *eventInputFilter) Down(str string) string {
 }
 
 // Filter fires the filter event.
-func (root *Root) Filter(str string) {
+func (root *Root) Filter(str string, nonMatch bool) {
+	root.Doc.nonMatch = nonMatch
 	root.input.value = str
 	ev := &eventInputFilter{
 		value: str,
@@ -87,6 +89,9 @@ func (root *Root) filter(ctx context.Context) {
 		return
 	}
 	word := root.searcher.String()
+	if root.Doc.nonMatch {
+		word = fmt.Sprintf("!%s", word)
+	}
 	root.setMessagef("filter:%v", word)
 
 	m := root.Doc
@@ -102,6 +107,7 @@ func (root *Root) filter(ctx context.Context) {
 	root.addDocument(filterDoc.Document)
 	filterDoc.Document.general = mergeGeneral(m.general, filterDoc.Document.general)
 
+	filterDoc.nonMatch = m.nonMatch
 	filterDoc.writer = w
 	filterDoc.Header = m.Header
 	filterDoc.SkipLines = m.SkipLines

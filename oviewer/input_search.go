@@ -14,6 +14,7 @@ func (root *Root) setSearchMode() {
 		input.SearchCandidate.toLast(root.searcher.String())
 	}
 
+	root.Doc.nonMatch = false
 	input.Event = newSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }
@@ -81,6 +82,7 @@ func (root *Root) setBackSearchMode() {
 		input.SearchCandidate.toLast(root.searcher.String())
 	}
 
+	root.Doc.nonMatch = false
 	input.Event = newBackSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
 }

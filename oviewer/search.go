@@ -19,19 +19,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-//  1. search key event(/)		back search key event(?)
-//  2. actionSearch				setBackSearchMode			(key event)
-//  3. root.setSearchMode()		root.setBackSearchMode()
-//  4. input...confirm			input...confirm
-//  5. *eventInputSearch		*eventInputBackSearch		(event)
-//  6. root.firstSearch()		root.firstBackSearch()
-//
-//  7. next search key event(n)	next backsearch key event(N)
-//  8. actionNextSearch			actionNextBackSearch		(key event)
-//  9. root.setNextSearch()		root.setNextBackSearch()
-// 10. *eventNextSearch			*eventNextBackSearch		(event)
-// 11. root.nextSearch()		root.nextBackSearch()
-
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
 type Searcher interface {
@@ -342,6 +329,14 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 		}
 	}
 
+	if m.nonMatch {
+		return m.SearchChunkNonMatch(ctx, searcher, chunkNum, lineNum)
+	}
+	return m.SearchChunk(ctx, searcher, chunkNum, lineNum)
+}
+
+// SearchChunk searches forward from the specified line.
+func (m *Document) SearchChunk(ctx context.Context, searcher Searcher, chunkNum int, lineNum int) (int, error) {
 	for n := lineNum; n < ChunkSize; n++ {
 		buf, err := m.store.GetChunkLine(chunkNum, n)
 		if err != nil {
@@ -359,18 +354,63 @@ func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, 
 	return 0, ErrNotFound
 }
 
+// SearchChunkNonMatch returns unmatched line number.
+func (m *Document) SearchChunkNonMatch(ctx context.Context, searcher Searcher, chunkNum int, lineNum int) (int, error) {
+	for n := lineNum; n < ChunkSize; n++ {
+		buf, err := m.store.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
+		}
+		if !searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
 // BackSearch searches backward from the specified line.
 func (m *Document) BackSearch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(searcher, chunkNum) {
 		return 0, ErrNotFound
 	}
+	if m.nonMatch {
+		return m.BackSearchChunkNonMatch(ctx, searcher, chunkNum, line)
+	}
+	return m.BackSearchChunk(ctx, searcher, chunkNum, line)
+}
 
+// BackSearchChunk searches backward from the specified line.
+func (m *Document) BackSearchChunk(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
 	for n := line; n >= 0; n-- {
 		buf, err := m.store.GetChunkLine(chunkNum, n)
 		if err != nil {
 			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
 		}
 		if searcher.Match(buf) {
+			return n, nil
+		}
+		select {
+		case <-ctx.Done():
+			return 0, ErrCancel
+		default:
+		}
+	}
+	return 0, ErrNotFound
+}
+
+// BackSearchChunkNonMatch returns unmatched line number.
+func (m *Document) BackSearchChunkNonMatch(ctx context.Context, searcher Searcher, chunkNum int, line int) (int, error) {
+	for n := line; n >= 0; n-- {
+		buf, err := m.store.GetChunkLine(chunkNum, n)
+		if err != nil {
+			return n, fmt.Errorf("%w: %d:%d", err, chunkNum, n)
+		}
+		if !searcher.Match(buf) {
 			return n, nil
 		}
 		select {

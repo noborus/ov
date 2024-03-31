@@ -43,11 +43,11 @@ func (root *Root) draw() {
 
 	// Section header
 	n := root.drawSectionHeader(lN)
-	if m.startTopFlag && lN < m.SectionHeaderNum {
+	if m.dupSectionHeader && lN < m.SectionHeaderNum {
 		lN = n
 		m.topLN = n
 	} else {
-		m.startTopFlag = false
+		m.dupSectionHeader = false
 	}
 	// Body
 	lX, lN = root.drawBody(lX, lN)
@@ -123,7 +123,7 @@ func (root *Root) drawSectionHeader(lN int) int {
 
 	pn := lN
 	// prevSection searches for the section above the specified line.
-	if m.startTopFlag && pn <= 0 {
+	if m.dupSectionHeader && pn <= 0 {
 		pn = 1
 	}
 	sectionLN, err := m.prevSection(pn)
@@ -614,6 +614,9 @@ func (root *Root) inputOpts() string {
 	// The current search mode.
 	mode := root.input.Event.Mode()
 	if mode == Search || mode == Backsearch || mode == Filter {
+		if root.Doc.nonMatch {
+			opts += "Non-match"
+		}
 		if root.Config.RegexpSearch {
 			opts += "(R)"
 		}

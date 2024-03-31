@@ -85,6 +85,7 @@ const (
 	inputSmartCaseSensitive = "input_smart_casesensitive"
 	inputIncSearch          = "input_incsearch"
 	inputRegexpSearch       = "input_regexp_search"
+	inputNonMatch           = "input_non_match"
 	inputPrevious           = "input_previous"
 	inputNext               = "input_next"
 	inputCopy               = "input_copy"
@@ -167,6 +168,7 @@ func (root *Root) handlers() map[string]func() {
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
 		inputIncSearch:          root.inputIncSearch,
 		inputRegexpSearch:       root.inputRegexpSearch,
+		inputNonMatch:           root.inputNonMatch,
 		inputPrevious:           root.inputPrevious,
 		inputNext:               root.inputNext,
 		inputCopy:               root.CopySelect,
@@ -253,6 +255,7 @@ func defaultKeyBinds() KeyBind {
 		inputSmartCaseSensitive: {"alt+s"},
 		inputIncSearch:          {"alt+i"},
 		inputRegexpSearch:       {"alt+r"},
+		inputNonMatch:           {"!"},
 		inputPrevious:           {"Up"},
 		inputNext:               {"Down"},
 		inputCopy:               {"ctrl+c"},
@@ -354,6 +357,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
 	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
 	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
+	k.writeKeyBind(&b, inputNonMatch, "non-match toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")
 	k.writeKeyBind(&b, inputNext, "next candidate")
 	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
