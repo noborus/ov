@@ -10,7 +10,7 @@ func (root *Root) moveTop() {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.startTopFlag = true
+	root.Doc.dupSectionHeader = true
 	root.Doc.moveTop()
 }
 

@@ -205,6 +205,10 @@ func (root *Root) inputRegexpSearch() {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
 
+func (root *Root) inputNonMatch() {
+	root.Doc.nonMatch = !root.Doc.nonMatch
+}
+
 // inputPrevious searches the previous history.
 func (root *Root) inputPrevious() {
 	input := root.input

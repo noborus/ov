@@ -130,8 +130,10 @@ type Document struct {
 	seekable bool
 	// Is it possible to reopen.
 	reopenable bool
-	// startTopFlag
-	startTopFlag bool
+	// dupSectionHeader is true for lines that are duplicated in section header.
+	dupSectionHeader bool
+	// If nonMatch is true, non-matching lines are searched.
+	nonMatch bool
 }
 
 // store represents store management.
@@ -191,12 +193,12 @@ func NewDocument() (*Document, error) {
 			TabWidth:        8,
 			MarkStyleWidth:  1,
 		},
-		ctlCh:        make(chan controlSpecifier),
-		memoryLimit:  100,
-		seekable:     true,
-		reopenable:   true,
-		store:        NewStore(),
-		startTopFlag: true,
+		ctlCh:            make(chan controlSpecifier),
+		memoryLimit:      100,
+		seekable:         true,
+		reopenable:       true,
+		store:            NewStore(),
+		dupSectionHeader: true,
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
