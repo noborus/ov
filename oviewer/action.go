@@ -135,7 +135,7 @@ func (root *Root) toggleWatch() {
 	} else {
 		root.Doc.watchMode()
 	}
-	atomic.StoreInt32(&root.Doc.watchRestart, 1)
+	root.Doc.watchRestart.Store(true)
 }
 
 // watchControl start/stop watch mode.
@@ -443,7 +443,7 @@ func (root *Root) setWatchInterval(input string) {
 	} else {
 		root.Doc.watchMode()
 	}
-	atomic.StoreInt32(&root.Doc.watchRestart, 1)
+	root.Doc.watchRestart.Store(true)
 	root.setMessageLogf("Set watch interval %d", interval)
 }
 

@@ -112,7 +112,7 @@ type Document struct {
 	// CFormat is a compressed format.
 	CFormat Compressed
 
-	watchRestart int32
+	watchRestart atomic.Bool
 	tickerState  int32
 	// 1 if there is a closed.
 	closed int32
