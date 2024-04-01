@@ -255,6 +255,8 @@ type Config struct {
 
 	// DisableColumnCycle is disable column cycle.
 	DisableColumnCycle bool
+	// Caption is the caption of the document.
+	Caption string
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -613,6 +615,9 @@ func (root *Root) Run() error {
 	}
 
 	root.optimizedMan()
+	if root.Caption != "" {
+		root.Doc.Caption = root.Caption
+	}
 	root.setModeConfig()
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General

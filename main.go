@@ -469,6 +469,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
 
+	rootCmd.PersistentFlags().StringP("caption", "", "", "caption")
+	_ = viper.BindPFlag("Caption", rootCmd.PersistentFlags().Lookup("caption"))
+
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
@@ -512,6 +515,7 @@ func initConfig() {
 		}
 	}
 
+	viper.SetEnvPrefix("ov")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
