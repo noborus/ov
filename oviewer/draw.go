@@ -334,8 +334,10 @@ func (root *Root) multiColorHighlight(line LineC) {
 
 // blankLineNumber should be blank for the line number.
 func (root *Root) blankLineNumber(y int) {
-	m := root.Doc
-	numC := StrToContents(strings.Repeat(" ", root.scr.startX-1), m.TabWidth)
+	if root.scr.startX <= 0 {
+		return
+	}
+	numC := StrToContents(strings.Repeat(" ", root.scr.startX-1), root.Doc.TabWidth)
 	root.setContentString(0, y, numC)
 }
 
@@ -347,6 +349,9 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	}
 	if !valid {
 		root.blankLineNumber(y)
+		return
+	}
+	if root.scr.startX <= 0 {
 		return
 	}
 
