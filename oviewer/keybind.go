@@ -424,7 +424,7 @@ func setHandler(c *cbind.Configuration, name string, keys []string, handler func
 		if key == tcell.KeyRune {
 			c.SetRune(mod, ch, wrapEventHandler(handler))
 			// Added "shift+N" instead of 'N' to get it on windows.
-			if 'A' <= ch && ch <= 'Z' {
+			if 0x21 <= ch && ch <= 0x60 {
 				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
 			}
 		} else {
