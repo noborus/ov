@@ -27,6 +27,10 @@ ov is a terminal pager.
   * 2.10. [go install](#go-install)
   * 2.11. [go get(details or developer version)](#go-get(details-or-developer-version))
   * 2.12. [Comletion](#comletion)
+    * 2.12.1. [bash](#bash)
+    * 2.12.2. [zsh](#zsh)
+    * 2.12.3. [fish](#fish)
+    * 2.12.4. [powershell](#powershell)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -46,15 +50,17 @@ ov is a terminal pager.
   * 3.14. [Exec mode](#exec-mode)
   * 3.15. [Search](#search)
   * 3.16. [Pattern](#pattern)
-  * 3.17. [Mark](#mark)
-  * 3.18. [Watch](#watch)
-  * 3.19. [Mouse support](#mouse-support)
-  * 3.20. [Multi color highlight](#multi-color-highlight)
-  * 3.21. [Plain](#plain)
-  * 3.22. [Jump target](#jump-target)
-  * 3.23. [View mode](#view-mode)
-  * 3.24. [Output on exit](#output-on-exit)
-  * 3.25. [Save](#save)
+  * 3.17. [filter](#filter)
+  * 3.18. [caption](#caption)
+  * 3.19. [Mark](#mark)
+  * 3.20. [Watch](#watch)
+  * 3.21. [Mouse support](#mouse-support)
+  * 3.22. [Multi color highlight](#multi-color-highlight)
+  * 3.23. [Plain](#plain)
+  * 3.24. [Jump target](#jump-target)
+  * 3.25. [View mode](#view-mode)
+  * 3.26. [Output on exit](#output-on-exit)
+  * 3.27. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -103,7 +109,6 @@ ov is a terminal pager.
 ###  1.1. <a name='not-supported'></a>Not supported
 
 * Does not support syntax highlighting for file types (source code, markdown, etc.)
-* Does not support Filter function (`&pattern` equivalent of `less`)
 
 ##  2. <a name='install'></a>Install
 
@@ -219,13 +224,13 @@ You can generate completion scripts for bash, zsh, fish, and powershell.
 
 Example:
 
-#### bash
+####  2.12.1. <a name='bash'></a>bash
 
 ```console
 ov --completion bash > /etc/bash_completion.d/ov
 ```
 
-#### zsh
+####  2.12.2. <a name='zsh'></a>zsh
 
 ```console
 ov --completion zsh > /usr/share/zsh/site-functions/_ov
@@ -237,13 +242,13 @@ For zinit users.
 zinit load 'https://github.com/noborus/ov/blob/master/ov.plugin.zsh'
 ```
 
-#### fish
+####  2.12.3. <a name='fish'></a>fish
 
 ```console
 ov --completion fish > ~/.config/fish/completions/ov.fish
 ```
 
-#### powershell
+####  2.12.4. <a name='powershell'></a>powershell
 
 ```console
 ov --completion powershell completion powershell | Out-String | Invoke-Expression
@@ -485,6 +490,13 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
+In exec mode (other than Windows) the output is opened by opening a `pty`.
+Therefore, the command is likely to be printed in color.
+
+```console
+ov --exec -- eza -l
+```
+
 ###  3.15. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(default).
@@ -515,7 +527,53 @@ The pattern option allows you to specify a search at startup.
 ov --pattern install README.md
 ```
 
-###  3.17. <a name='mark'></a>Mark
+###  3.17. <a name='filter'></a>filter
+
+Filter input is possible using the `&` key(default).
+The filter input creates a new document only for the lines that match the filter.
+
+Move Document `]` and `[` key(default) allow you to move between the filter document and the original document.
+
+The 'K' key (default) closes all documents created by the filter.
+
+You can also specify a filter using the command line option `--filter`.
+
+```console
+ov --filter "install" README.md
+```
+
+The filter is a regular expression.
+
+```console
+ov --filter "^#" README.md
+```
+
+Also, specify the non-matching line instead of the non-matching line.
+
+If you press `!` on `&` while inputting a filter, non-matching lines will be targeted.
+
+The command line option for this can be specified with `--non-match-filter`.
+
+```console
+ov --non-match-filter info /var/log/syslog
+```
+
+###  3.18. <a name='caption'></a>caption
+
+You can specify a caption instead of the file name in status line to display it.
+
+```console
+ls -alF|ov --caption "ls -alF"
+```
+
+It can also be specified as an environment variable.
+
+```console
+export OV_CAPTION="ls -alF"
+ls -alF|ov
+```
+
+###  3.19. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -525,7 +583,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.18. <a name='watch'></a>Watch
+###  3.20. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -539,7 +597,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.19. <a name='mouse-support'></a>Mouse support
+###  3.21. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
@@ -556,7 +614,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
 
-###  3.20. <a name='multi-color-highlight'></a>Multi color highlight
+###  3.22. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(default) enters multi-word input mode.
@@ -591,12 +649,12 @@ StyleMultiColorHighlight:
   - Foreground: "#c0c0c0"
 ```
 
-###  3.21. <a name='plain'></a>Plain
+###  3.23. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  3.22. <a name='jump-target'></a>Jump target
+###  3.24. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -614,7 +672,7 @@ and the jump-target will be changed.
 ov --section-delimiter "^#" --jump-target section README.md
 ```
 
-###  3.23. <a name='view-mode'></a>View mode
+###  3.25. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -653,7 +711,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-###  3.24. <a name='output-on-exit'></a>Output on exit
+###  3.26. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -674,7 +732,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  3.25. <a name='save'></a>Save
+###  3.27. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
