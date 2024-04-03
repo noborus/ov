@@ -26,6 +26,7 @@ ov is a terminal pager.
   * 2.9. [Binary](#binary)
   * 2.10. [go install](#go-install)
   * 2.11. [go get(details or developer version)](#go-get(details-or-developer-version))
+  * 2.12. [Comletion](#comletion)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -210,6 +211,42 @@ Or, install it in a PATH location for other users to use
 ```console
 make
 sudo install ov /usr/local/bin
+```
+
+###  2.12. <a name='comletion'></a>Comletion
+
+You can generate completion scripts for bash, zsh, fish, and powershell.
+
+Example:
+
+#### bash
+
+```console
+ov --completion bash > /etc/bash_completion.d/ov
+```
+
+#### zsh
+
+```console
+ov --completion zsh > /usr/share/zsh/site-functions/_ov
+```
+
+For zinit users.
+
+```console
+zinit load 'https://github.com/noborus/ov/blob/master/ov.plugin.zsh'
+```
+
+#### fish
+
+```console
+ov --completion fish > ~/.config/fish/completions/ov.fish
+```
+
+#### powershell
+
+```console
+ov --completion powershell completion powershell | Out-String | Invoke-Expression
 ```
 
 ##  3. <a name='usage'></a>Usage
