@@ -477,60 +477,6 @@ func Test_searchPositionReg(t *testing.T) {
 	}
 }
 
-func Test_searchPosition(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		caseSensitive bool
-		s             string
-		substr        string
-	}
-	tests := []struct {
-		name string
-		args args
-		want [][]int
-	}{
-		{
-			name: "testNil",
-			args: args{
-				caseSensitive: false,
-				s:             "t",
-				substr:        "",
-			},
-			want: nil,
-		},
-		{
-			name: "testTest",
-			args: args{
-				caseSensitive: false,
-				s:             "test",
-				substr:        "t",
-			},
-			want: [][]int{
-				{0, 1},
-				{3, 4},
-			},
-		},
-		{
-			name: "testNone",
-			args: args{
-				caseSensitive: false,
-				s:             "",
-				substr:        "test",
-			},
-			want: nil,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := searchPositionStr(tt.args.caseSensitive, tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("searchPosition() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRoot_setSearch(t *testing.T) {
 	t.Parallel()
 	type fields struct {

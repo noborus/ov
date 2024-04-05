@@ -234,20 +234,6 @@ func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	return re.FindAllStringIndex(s, -1)
 }
 
-// searchPositionStr returns an array of the beginning and end of the string
-// that matched the string search.
-func searchPositionStr(caseSensitive bool, s string, substr string) [][]int {
-	if substr == "" {
-		return nil
-	}
-
-	if !caseSensitive {
-		s = strings.ToLower(s)
-		substr = strings.ToLower(substr)
-	}
-	return allStringIndex(s, substr)
-}
-
 // setSearcher is a wrapper for NewSearcher and returns a Searcher interface.
 // Returns nil if there is no search term.
 func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
