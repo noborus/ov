@@ -26,12 +26,12 @@ func newSkipLinesEvent() *eventSkipLines {
 }
 
 // Mode returns InputMode.
-func (e *eventSkipLines) Mode() InputMode {
+func (*eventSkipLines) Mode() InputMode {
 	return SkipLines
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSkipLines) Prompt() string {
+func (*eventSkipLines) Prompt() string {
 	return "Skip lines:"
 }
 
@@ -43,7 +43,7 @@ func (e *eventSkipLines) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSkipLines) Up(str string) string {
+func (*eventSkipLines) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -52,7 +52,7 @@ func (e *eventSkipLines) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSkipLines) Down(str string) string {
+func (*eventSkipLines) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

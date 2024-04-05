@@ -43,12 +43,12 @@ func newSearchEvent(clist *candidate) *eventInputSearch {
 }
 
 // Mode returns InputMode.
-func (e *eventInputSearch) Mode() InputMode {
+func (*eventInputSearch) Mode() InputMode {
 	return Search
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventInputSearch) Prompt() string {
+func (*eventInputSearch) Prompt() string {
 	return "/"
 }
 
@@ -100,12 +100,12 @@ func newBackSearchEvent(clist *candidate) *eventInputBackSearch {
 }
 
 // Mode returns InputMode.
-func (e *eventInputBackSearch) Mode() InputMode {
+func (*eventInputBackSearch) Mode() InputMode {
 	return Backsearch
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventInputBackSearch) Prompt() string {
+func (*eventInputBackSearch) Prompt() string {
 	return "?"
 }
 

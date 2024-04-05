@@ -401,7 +401,7 @@ func (m *Document) ReadFile(fileName string) error {
 // ContinueReadAll continues to read even if it reaches EOF.
 //
 // Deprecated: Use ControlFile instead.
-func (m *Document) ContinueReadAll(ctx context.Context, r io.Reader) error {
+func (m *Document) ContinueReadAll(_ context.Context, r io.Reader) error {
 	return m.ReadAll(r)
 }
 

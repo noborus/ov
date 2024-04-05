@@ -39,12 +39,12 @@ func newSectionDelimiterEvent(clist *candidate) *eventSectionDelimiter {
 }
 
 // Mode returns InputMode.
-func (e *eventSectionDelimiter) Mode() InputMode {
+func (*eventSectionDelimiter) Mode() InputMode {
 	return SectionDelimiter
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSectionDelimiter) Prompt() string {
+func (*eventSectionDelimiter) Prompt() string {
 	return "Section delimiter:"
 }
 
@@ -57,11 +57,11 @@ func (e *eventSectionDelimiter) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSectionDelimiter) Up(str string) string {
+func (e *eventSectionDelimiter) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSectionDelimiter) Down(str string) string {
+func (e *eventSectionDelimiter) Down(_ string) string {
 	return e.clist.down()
 }

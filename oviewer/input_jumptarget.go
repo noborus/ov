@@ -37,12 +37,12 @@ func newJumpTargetEvent(clist *candidate) *eventJumpTarget {
 }
 
 // Mode returns InputMode.
-func (e *eventJumpTarget) Mode() InputMode {
+func (*eventJumpTarget) Mode() InputMode {
 	return JumpTarget
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventJumpTarget) Prompt() string {
+func (*eventJumpTarget) Prompt() string {
 	return "Jump Target line:"
 }
 
@@ -55,11 +55,11 @@ func (e *eventJumpTarget) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventJumpTarget) Up(str string) string {
+func (e *eventJumpTarget) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventJumpTarget) Down(str string) string {
+func (e *eventJumpTarget) Down(_ string) string {
 	return e.clist.down()
 }

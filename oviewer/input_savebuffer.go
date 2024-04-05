@@ -39,12 +39,12 @@ func newSaveBufferEvent(clist *candidate) *eventSaveBuffer {
 }
 
 // Mode returns InputMode.
-func (e *eventSaveBuffer) Mode() InputMode {
+func (*eventSaveBuffer) Mode() InputMode {
 	return SaveBuffer
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSaveBuffer) Prompt() string {
+func (*eventSaveBuffer) Prompt() string {
 	return "(Save)file:"
 }
 
@@ -56,11 +56,11 @@ func (e *eventSaveBuffer) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSaveBuffer) Up(str string) string {
+func (e *eventSaveBuffer) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSaveBuffer) Down(str string) string {
+func (e *eventSaveBuffer) Down(_ string) string {
 	return e.clist.down()
 }
