@@ -11,6 +11,7 @@ func (root *Root) DocumentLen() int {
 	return len(root.DocList)
 }
 
+// getDocument returns the document of the specified docNum.
 func (root *Root) getDocument(docNum int) *Document {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
@@ -68,25 +69,23 @@ func (root *Root) closeDocument() {
 	root.setDocument(doc)
 }
 
-// closeAllFilter closes all filter documents.
-func (root *Root) closeAllFilter() {
+// closeAllDocument closes all documents of the specified type.
+func (root *Root) closeAllDocument(dType documentType) {
 	root.mu.Lock()
-
 	for i := len(root.DocList) - 1; i >= 0; i-- {
 		if len(root.DocList) <= 1 {
 			break
 		}
 		doc := root.DocList[i]
-		if doc.isFilterDocument() {
+		if doc.documentType == dType {
 			root.DocList = append(root.DocList[:i], root.DocList[i+1:]...)
+			root.setMessageLogf("close %s", doc.FileName)
 		}
 	}
 	if root.CurrentDoc >= len(root.DocList) {
 		root.CurrentDoc = len(root.DocList) - 1
 	}
 	doc := root.DocList[root.CurrentDoc]
-
-	root.setMessageLog("close all filter")
 	root.mu.Unlock()
 	root.setDocument(doc)
 }
