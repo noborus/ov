@@ -286,18 +286,18 @@ func (es *parseState) parseEscapeSequence(mainc rune) bool {
 }
 
 // overstrike set style for overstrike.
-func (state *parseState) overstrike(m content, style tcell.Style) tcell.Style {
-	if !state.bsFlag {
+func (es *parseState) overstrike(m content, style tcell.Style) tcell.Style {
+	if !es.bsFlag {
 		return style
 	}
 
-	if state.bsContent.mainc == m.mainc {
+	if es.bsContent.mainc == m.mainc {
 		style = OverStrikeStyle
-	} else if state.bsContent.mainc == '_' {
+	} else if es.bsContent.mainc == '_' {
 		style = OverLineStyle
 	}
-	state.bsFlag = false
-	state.bsContent = DefaultContent
+	es.bsFlag = false
+	es.bsContent = DefaultContent
 	return style
 }
 
