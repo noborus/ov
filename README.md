@@ -534,7 +534,7 @@ The filter input creates a new document only for the lines that match the filter
 
 Move Document `]` and `[` key(default) allow you to move between the filter document and the original document.
 
-The 'K' key (default) closes all documents created by the filter.
+The `K` key (default) closes all documents created by the filter.
 
 You can also specify a filter using the command line option `--filter`.
 
@@ -811,6 +811,7 @@ MemoryLimit: 1000
 | short |                    long                    |                            purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
 | -C,   | --alternate-rows                           | alternately change the line color                              |
+|       | --caption string                           | caption                                                        |
 | -i,   | --case-sensitive                           | case-sensitive in search                                       |
 | -d,   | --column-delimiter character               | column delimiter character (default ",")                       |
 | -c,   | --column-mode                              | column mode                                                    |
@@ -825,6 +826,7 @@ MemoryLimit: 1000
 | -X,   | --exit-write                               | output the current screen when exiting                         |
 | -a,   | --exit-write-after int                     | number after the current lines when exiting                    |
 | -b,   | --exit-write-before int                    | number before the current lines when exiting                   |
+|       | --filter string                            | filter search pattern                                          |
 | -A,   | --follow-all                               | follow mode to switch to updated files                         |
 | -f,   | --follow-mode                              | follow mode                                                    |
 |       | --follow-name                              | file name follow mode                                          |
@@ -839,6 +841,7 @@ MemoryLimit: 1000
 |       | --memory-limit int                         | number of chunks to limit in memory (default -1)               |
 |       | --memory-limit-file int                    | number of chunks to limit in memory for the file (default 100) |
 | -M,   | --multi-color strings                      | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
+|       | --non-match-filter string                  | filter non match search pattern                                |
 |       | --pattern string                           | search pattern                                                 |
 | -p,   | --plain                                    | disable original decoration                                    |
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
@@ -896,6 +899,7 @@ It can also be changed after startup.
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
 | [ctrl+k]                      | * close current document                           |
+| [K]                           | * close all filtered documents                     |
 | **Mark position**             |                                                    |
 | [m]                           | * mark current position                            |
 | [M]                           | * remove mark current position                     |
@@ -907,6 +911,7 @@ It can also be changed after startup.
 | [?]                           | * backward search mode                             |
 | [n]                           | * repeat forward search                            |
 | [N]                           | * repeat backward search                           |
+| [&]                           | * filter search mode                               |
 | **Change display**            |                                                    |
 | [w], [W]                      | * wrap/nowrap toggle                               |
 | [c]                           | * column mode toggle                               |
@@ -941,6 +946,7 @@ It can also be changed after startup.
 | [alt+s]                       | * smart case-sensitive toggle                      |
 | [alt+r]                       | * regular expression search toggle                 |
 | [alt+i]                       | * incremental search toggle                        |
+| [!]                           | * non-match toggle                                 |
 | [Up]                          | * previous candidate                               |
 | [Down]                        | * next candidate                                   |
 | [ctrl+c]                      | * copy to clipboard.                               |
