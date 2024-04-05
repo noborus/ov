@@ -159,6 +159,7 @@ func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDo
 	}
 }
 
-func (m *Document) isFilterDocument() bool {
-	return m.documentType == DocFilter
+// closeAllFilter closes all filter documents.
+func (root *Root) closeAllFilter() {
+	root.closeAllDocument(DocFilter)
 }
