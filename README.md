@@ -26,7 +26,11 @@ ov is a terminal pager.
   * 2.9. [Binary](#binary)
   * 2.10. [go install](#go-install)
   * 2.11. [go get(details or developer version)](#go-get(details-or-developer-version))
-  * 2.12. [Comletion](#comletion)
+  * 2.12. [Completion](#completion)
+    * 2.12.1. [bash](#bash)
+    * 2.12.2. [zsh](#zsh)
+    * 2.12.3. [fish](#fish)
+    * 2.12.4. [powershell](#powershell)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
   * 3.2. [Config](#config)
@@ -39,22 +43,25 @@ ov is a terminal pager.
   * 3.8. [Alternate-Rows](#alternate-rows)
   * 3.9. [Section](#section)
     * 3.9.1. [Section header](#section-header)
-  * 3.10. [Follow mode](#follow-mode)
-  * 3.11. [Follow name](#follow-name)
-  * 3.12. [Follow all mode](#follow-all-mode)
-  * 3.13. [Follow section mode](#follow-section-mode)
-  * 3.14. [Exec mode](#exec-mode)
-  * 3.15. [Search](#search)
-  * 3.16. [Pattern](#pattern)
-  * 3.17. [Mark](#mark)
-  * 3.18. [Watch](#watch)
-  * 3.19. [Mouse support](#mouse-support)
-  * 3.20. [Multi color highlight](#multi-color-highlight)
-  * 3.21. [Plain](#plain)
-  * 3.22. [Jump target](#jump-target)
-  * 3.23. [View mode](#view-mode)
-  * 3.24. [Output on exit](#output-on-exit)
-  * 3.25. [Save](#save)
+  * 3.10. [Multiple files](#multiple-files)
+  * 3.11. [Follow mode](#follow-mode)
+  * 3.12. [Follow name](#follow-name)
+  * 3.13. [Follow all mode](#follow-all-mode)
+  * 3.14. [Follow section mode](#follow-section-mode)
+  * 3.15. [Exec mode](#exec-mode)
+  * 3.16. [Search](#search)
+  * 3.17. [Pattern](#pattern)
+  * 3.18. [Filter](#filter)
+  * 3.19. [caption](#caption)
+  * 3.20. [Mark](#mark)
+  * 3.21. [Watch](#watch)
+  * 3.22. [Mouse support](#mouse-support)
+  * 3.23. [Multi color highlight](#multi-color-highlight)
+  * 3.24. [Plain](#plain)
+  * 3.25. [Jump target](#jump-target)
+  * 3.26. [View mode](#view-mode)
+  * 3.27. [Output on exit](#output-on-exit)
+  * 3.28. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -99,11 +106,11 @@ ov is a terminal pager.
 * Better support for Unicode and East Asian Width.
 * Supports compressed files (gzip, bzip2, zstd, lz4, xz).
 * Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
+* Support [filter](#filter) function (`&pattern` equivalent of `less`) (**v0.34.0 or later**).
 
 ###  1.1. <a name='not-supported'></a>Not supported
 
 * Does not support syntax highlighting for file types (source code, markdown, etc.)
-* Does not support Filter function (`&pattern` equivalent of `less`)
 
 ##  2. <a name='install'></a>Install
 
@@ -213,19 +220,19 @@ make
 sudo install ov /usr/local/bin
 ```
 
-###  2.12. <a name='comletion'></a>Comletion
+###  2.12. <a name='completion'></a>Completion
 
 You can generate completion scripts for bash, zsh, fish, and powershell.
 
 Example:
 
-#### bash
+####  2.12.1. <a name='bash'></a>bash
 
 ```console
 ov --completion bash > /etc/bash_completion.d/ov
 ```
 
-#### zsh
+####  2.12.2. <a name='zsh'></a>zsh
 
 ```console
 ov --completion zsh > /usr/share/zsh/site-functions/_ov
@@ -237,13 +244,13 @@ For zinit users.
 zinit load 'https://github.com/noborus/ov/blob/master/ov.plugin.zsh'
 ```
 
-#### fish
+####  2.12.3. <a name='fish'></a>fish
 
 ```console
 ov --completion fish > ~/.config/fish/completions/ov.fish
 ```
 
-#### powershell
+####  2.12.4. <a name='powershell'></a>powershell
 
 ```console
 ov --completion powershell completion powershell | Out-String | Invoke-Expression
@@ -430,7 +437,17 @@ You can specify the number of lines using the `--section-header-num` option or k
 	log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
 ```
 
-###  3.10. <a name='follow-mode'></a>Follow mode
+###  3.10. <a name='multiple-files'></a>Multiple files
+
+`ov` can also open multiple files.
+
+```console
+ov file1 file2
+```
+
+Multiple files are each opened as a document and can be navigated using the Next Document `]` key (default), Previous Document `[` key (default).
+
+###  3.11. <a name='follow-mode'></a>Follow mode
 
 `--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
@@ -442,7 +459,7 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-###  3.11. <a name='follow-name'></a>Follow name
+###  3.12. <a name='follow-name'></a>Follow name
 
 You can specify the file name to follow with `--follow-name`(like `tail -F`).
 Monitor file names instead of file descriptors.
@@ -451,7 +468,7 @@ Monitor file names instead of file descriptors.
 ov --follow-name /var/log/nginx/access.log
 ```
 
-###  3.12. <a name='follow-all-mode'></a>Follow all mode
+###  3.13. <a name='follow-all-mode'></a>Follow all mode
 
 `--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
@@ -459,7 +476,7 @@ ov --follow-name /var/log/nginx/access.log
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.13. <a name='follow-section-mode'></a>Follow section mode
+###  3.14. <a name='follow-section-mode'></a>Follow section mode
 
 Use the `--follow-section`(default key `F2`) option to follow by section.
 Follow mode is line-by-line, while follow section mode is section-by-section.
@@ -474,7 +491,7 @@ ov --section-delimiter "^#" --follow-section README.md
 >
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
-###  3.14. <a name='exec-mode'></a>Exec mode
+###  3.15. <a name='exec-mode'></a>Exec mode
 
 Use the `--exec` (`-e`) option to run the command and display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
@@ -485,7 +502,14 @@ Shows the stderr screen as soon as an error occurs, when used with `--follow-all
 ov --follow-all --exec -- make
 ```
 
-###  3.15. <a name='search'></a>Search
+In exec mode (other than Windows) the output is opened by opening a `pty`.
+Therefore, the command is likely to be printed in color.
+
+```console
+ov --exec -- eza -l
+```
+
+###  3.16. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(default).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -507,7 +531,7 @@ Incsearch: true
 SmartCaseSensitive: true
 ```
 
-###  3.16. <a name='pattern'></a>Pattern
+###  3.17. <a name='pattern'></a>Pattern
 
 The pattern option allows you to specify a search at startup.
 
@@ -515,7 +539,53 @@ The pattern option allows you to specify a search at startup.
 ov --pattern install README.md
 ```
 
-###  3.17. <a name='mark'></a>Mark
+###  3.18. <a name='filter'></a>Filter
+
+Filter input is possible using the `&` key(default).
+The filter input creates a new document only for the lines that match the filter.
+
+Move next document `]` and previous document `[` key(default) allow you to move between the filter document and the original document.
+
+The `K` key (default) closes all documents created by the filter.
+
+You can also specify a filter using the command line option `--filter`.
+
+```console
+ov --filter "install" README.md
+```
+
+The filter is a regular expression.
+
+```console
+ov --filter "^#" README.md
+```
+
+Also, specify the non-matching line instead of the non-matching line.
+
+If you press `!` on `&` while inputting a filter, non-matching lines will be targeted.
+
+The command line option for this can be specified with `--non-match-filter`.
+
+```console
+ov --non-match-filter info /var/log/syslog
+```
+
+###  3.19. <a name='caption'></a>caption
+
+You can specify a caption instead of the file name in status line to display it.
+
+```console
+ls -alF|ov --caption "ls -alF"
+```
+
+It can also be specified as an environment variable.
+
+```console
+export OV_CAPTION="ls -alF"
+ls -alF|ov
+```
+
+###  3.20. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -525,7 +595,7 @@ It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-###  3.18. <a name='watch'></a>Watch
+###  3.21. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -539,7 +609,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.19. <a name='mouse-support'></a>Mouse support
+###  3.22. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
@@ -556,7 +626,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
 
-###  3.20. <a name='multi-color-highlight'></a>Multi color highlight
+###  3.23. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(default) enters multi-word input mode.
@@ -591,12 +661,12 @@ StyleMultiColorHighlight:
   - Foreground: "#c0c0c0"
 ```
 
-###  3.21. <a name='plain'></a>Plain
+###  3.24. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  3.22. <a name='jump-target'></a>Jump target
+###  3.25. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -614,7 +684,7 @@ and the jump-target will be changed.
 ov --section-delimiter "^#" --jump-target section README.md
 ```
 
-###  3.23. <a name='view-mode'></a>View mode
+###  3.26. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -653,7 +723,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-###  3.24. <a name='output-on-exit'></a>Output on exit
+###  3.27. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -674,7 +744,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  3.25. <a name='save'></a>Save
+###  3.28. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
@@ -753,6 +823,7 @@ MemoryLimit: 1000
 | short |                    long                    |                            purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
 | -C,   | --alternate-rows                           | alternately change the line color                              |
+|       | --caption string                           | caption                                                        |
 | -i,   | --case-sensitive                           | case-sensitive in search                                       |
 | -d,   | --column-delimiter character               | column delimiter character (default ",")                       |
 | -c,   | --column-mode                              | column mode                                                    |
@@ -767,6 +838,7 @@ MemoryLimit: 1000
 | -X,   | --exit-write                               | output the current screen when exiting                         |
 | -a,   | --exit-write-after int                     | number after the current lines when exiting                    |
 | -b,   | --exit-write-before int                    | number before the current lines when exiting                   |
+|       | --filter string                            | filter search pattern                                          |
 | -A,   | --follow-all                               | follow mode to switch to updated files                         |
 | -f,   | --follow-mode                              | follow mode                                                    |
 |       | --follow-name                              | file name follow mode                                          |
@@ -781,6 +853,7 @@ MemoryLimit: 1000
 |       | --memory-limit int                         | number of chunks to limit in memory (default -1)               |
 |       | --memory-limit-file int                    | number of chunks to limit in memory for the file (default 100) |
 | -M,   | --multi-color strings                      | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
+|       | --non-match-filter string                  | filter non match search pattern                                |
 |       | --pattern string                           | search pattern                                                 |
 | -p,   | --plain                                    | disable original decoration                                    |
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
@@ -838,6 +911,7 @@ It can also be changed after startup.
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
 | [ctrl+k]                      | * close current document                           |
+| [K]                           | * close all filtered documents                     |
 | **Mark position**             |                                                    |
 | [m]                           | * mark current position                            |
 | [M]                           | * remove mark current position                     |
@@ -849,6 +923,7 @@ It can also be changed after startup.
 | [?]                           | * backward search mode                             |
 | [n]                           | * repeat forward search                            |
 | [N]                           | * repeat backward search                           |
+| [&]                           | * filter search mode                               |
 | **Change display**            |                                                    |
 | [w], [W]                      | * wrap/nowrap toggle                               |
 | [c]                           | * column mode toggle                               |
@@ -883,6 +958,7 @@ It can also be changed after startup.
 | [alt+s]                       | * smart case-sensitive toggle                      |
 | [alt+r]                       | * regular expression search toggle                 |
 | [alt+i]                       | * incremental search toggle                        |
+| [!]                           | * non-match toggle                                 |
 | [Up]                          | * previous candidate                               |
 | [Down]                        | * next candidate                                   |
 | [ctrl+c]                      | * copy to clipboard.                               |
