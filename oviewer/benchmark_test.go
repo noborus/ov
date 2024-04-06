@@ -15,10 +15,12 @@ func BenchmarkParseString_AnsiEscape(b *testing.B) {
 }
 
 func BenchmarkParseString_ChromaTerm(b *testing.B) {
+	b.Helper()
 	Parse_Helper(b, filepath.Join(testdata, "ct.log"))
 }
 
 func Parse_Helper(b *testing.B, fileName string) {
+	b.Helper()
 	f, err := os.ReadFile(fileName)
 	if err != nil {
 		b.Fatal(err)
