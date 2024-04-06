@@ -45,12 +45,12 @@ func newMultiColorEvent(clist *candidate) *eventMultiColor {
 }
 
 // Mode returns InputMode.
-func (e *eventMultiColor) Mode() InputMode {
+func (*eventMultiColor) Mode() InputMode {
 	return MultiColor
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventMultiColor) Prompt() string {
+func (*eventMultiColor) Prompt() string {
 	return "multicolor:"
 }
 

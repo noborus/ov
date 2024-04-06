@@ -30,12 +30,12 @@ func newWriteBAEvent(clist *candidate) *eventWriteBA {
 }
 
 // Mode returns InputMode.
-func (e *eventWriteBA) Mode() InputMode {
+func (*eventWriteBA) Mode() InputMode {
 	return WriteBA
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventWriteBA) Prompt() string {
+func (*eventWriteBA) Prompt() string {
 	return "WriteAndQuit Before:After:"
 }
 
@@ -48,11 +48,11 @@ func (e *eventWriteBA) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventWriteBA) Up(str string) string {
+func (e *eventWriteBA) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventWriteBA) Down(str string) string {
+func (e *eventWriteBA) Down(_ string) string {
 	return e.clist.down()
 }

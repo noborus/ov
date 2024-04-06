@@ -26,12 +26,12 @@ func newHeaderEvent() *eventHeader {
 }
 
 // Mode returns InputMode.
-func (e *eventHeader) Mode() InputMode {
+func (*eventHeader) Mode() InputMode {
 	return Header
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventHeader) Prompt() string {
+func (*eventHeader) Prompt() string {
 	return "Header length:"
 }
 
@@ -43,7 +43,7 @@ func (e *eventHeader) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventHeader) Up(str string) string {
+func (*eventHeader) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -52,7 +52,7 @@ func (e *eventHeader) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventHeader) Down(str string) string {
+func (*eventHeader) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

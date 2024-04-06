@@ -34,12 +34,12 @@ func newWatchIntervalEvent(clist *candidate) *eventWatchInterval {
 }
 
 // Mode returns InputMode.
-func (e *eventWatchInterval) Mode() InputMode {
+func (*eventWatchInterval) Mode() InputMode {
 	return Watch
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventWatchInterval) Prompt() string {
+func (*eventWatchInterval) Prompt() string {
 	return "Watch interval:"
 }
 
@@ -52,11 +52,11 @@ func (e *eventWatchInterval) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventWatchInterval) Up(str string) string {
+func (e *eventWatchInterval) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventWatchInterval) Down(str string) string {
+func (e *eventWatchInterval) Down(_ string) string {
 	return e.clist.down()
 }

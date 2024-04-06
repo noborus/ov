@@ -30,12 +30,12 @@ func newGotoEvent(clist *candidate) *eventGoto {
 }
 
 // Mode returns InputMode.
-func (e *eventGoto) Mode() InputMode {
+func (*eventGoto) Mode() InputMode {
 	return Goline
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventGoto) Prompt() string {
+func (*eventGoto) Prompt() string {
 	return "Goto line:"
 }
 
@@ -48,11 +48,11 @@ func (e *eventGoto) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventGoto) Up(str string) string {
+func (e *eventGoto) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventGoto) Down(str string) string {
+func (e *eventGoto) Down(_ string) string {
 	return e.clist.down()
 }

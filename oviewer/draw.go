@@ -296,7 +296,7 @@ func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, i
 
 // bodyStyle applies the style from the beginning to the end of one line of the body.
 // Apply style to contents.
-func (root *Root) bodyStyle(lc contents, s OVStyle) {
+func (*Root) bodyStyle(lc contents, s OVStyle) {
 	RangeStyle(lc, 0, len(lc), s)
 }
 
@@ -314,7 +314,7 @@ func (root *Root) searchHighlight(line LineC) {
 }
 
 // plainStyle defaults to the original style.
-func (root *Root) plainStyle(lc contents) {
+func (*Root) plainStyle(lc contents) {
 	for x := 0; x < len(lc); x++ {
 		lc[x].style = tcell.StyleDefault
 	}

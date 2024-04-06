@@ -34,12 +34,12 @@ func newSectionStartEvent(clist *candidate) *eventSectionStart {
 }
 
 // Mode returns InputMode.
-func (e *eventSectionStart) Mode() InputMode {
+func (*eventSectionStart) Mode() InputMode {
 	return SectionStart
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSectionStart) Prompt() string {
+func (*eventSectionStart) Prompt() string {
 	return "Section start:"
 }
 
@@ -52,11 +52,11 @@ func (e *eventSectionStart) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSectionStart) Up(str string) string {
+func (e *eventSectionStart) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSectionStart) Down(str string) string {
+func (e *eventSectionStart) Down(_ string) string {
 	return e.clist.down()
 }

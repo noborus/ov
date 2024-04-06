@@ -481,7 +481,7 @@ func (m *Document) BackSearchLine(ctx context.Context, searcher Searcher, lineNu
 
 // cancelWait waits for key to cancel.
 func (root *Root) cancelWait(cancel context.CancelFunc) error {
-	cancelApp := func(ev *tcell.EventKey) *tcell.EventKey {
+	cancelApp := func(_ *tcell.EventKey) *tcell.EventKey {
 		cancel()
 		root.setMessage("cancel")
 		return nil

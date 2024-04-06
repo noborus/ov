@@ -35,12 +35,12 @@ func newSearchFilterEvent(clist *candidate) *eventInputFilter {
 }
 
 // Mode returns InputMode.
-func (e *eventInputFilter) Mode() InputMode {
+func (*eventInputFilter) Mode() InputMode {
 	return Filter
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventInputFilter) Prompt() string {
+func (*eventInputFilter) Prompt() string {
 	return "&"
 }
 

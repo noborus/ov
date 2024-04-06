@@ -26,12 +26,12 @@ func newSectionNumEvent() *eventSectionNum {
 }
 
 // Mode returns InputMode.
-func (e *eventSectionNum) Mode() InputMode {
+func (*eventSectionNum) Mode() InputMode {
 	return SectionNum
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventSectionNum) Prompt() string {
+func (*eventSectionNum) Prompt() string {
 	return "Section Num:"
 }
 
@@ -43,7 +43,7 @@ func (e *eventSectionNum) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventSectionNum) Up(str string) string {
+func (*eventSectionNum) Up(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		return "0"
@@ -52,7 +52,7 @@ func (e *eventSectionNum) Up(str string) string {
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventSectionNum) Down(str string) string {
+func (*eventSectionNum) Down(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {
 		return "0"

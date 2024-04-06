@@ -42,12 +42,12 @@ func newTabWidthEvent(clist *candidate) *eventTabWidth {
 }
 
 // Mode returns InputMode.
-func (e *eventTabWidth) Mode() InputMode {
+func (*eventTabWidth) Mode() InputMode {
 	return TabWidth
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventTabWidth) Prompt() string {
+func (*eventTabWidth) Prompt() string {
 	return "TAB width:"
 }
 
@@ -60,11 +60,11 @@ func (e *eventTabWidth) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventTabWidth) Up(str string) string {
+func (e *eventTabWidth) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventTabWidth) Down(str string) string {
+func (e *eventTabWidth) Down(_ string) string {
 	return e.clist.down()
 }

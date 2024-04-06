@@ -32,12 +32,12 @@ func newViewModeEvent(clist *candidate) *eventViewMode {
 }
 
 // Mode returns InputMode.
-func (e *eventViewMode) Mode() InputMode {
+func (*eventViewMode) Mode() InputMode {
 	return ViewMode
 }
 
 // Prompt returns the prompt string in the input field.
-func (e *eventViewMode) Prompt() string {
+func (*eventViewMode) Prompt() string {
 	return "Mode:"
 }
 
@@ -49,11 +49,11 @@ func (e *eventViewMode) Confirm(str string) tcell.Event {
 }
 
 // Up returns strings when the up key is pressed during input.
-func (e *eventViewMode) Up(str string) string {
+func (e *eventViewMode) Up(_ string) string {
 	return e.clist.up()
 }
 
 // Down returns strings when the down key is pressed during input.
-func (e *eventViewMode) Down(str string) string {
+func (e *eventViewMode) Down(_ string) string {
 	return e.clist.down()
 }

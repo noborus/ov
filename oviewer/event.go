@@ -277,7 +277,7 @@ type eventCloseDocument struct {
 }
 
 // CloseDocument fires the eventCloseDocument event.
-func (root *Root) CloseDocument(m *Document) {
+func (root *Root) CloseDocument(_ *Document) {
 	root.sendCloseDocument()
 }
 
