@@ -7,6 +7,12 @@ import (
 	"log"
 )
 
+// filterDocument is a document for filtering.
+type filterDocument struct {
+	*Document
+	w io.WriteCloser
+}
+
 // Filter fires the filter event.
 func (root *Root) Filter(str string, nonMatch bool) {
 	root.Doc.nonMatch = nonMatch
@@ -34,41 +40,45 @@ func (root *Root) filter(ctx context.Context) {
 
 	m := root.Doc
 	r, w := io.Pipe()
-	filterDoc, err := renderDoc(m, r)
+	render, err := renderDoc(m, r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	filterDoc.documentType = DocFilter
-	filterDoc.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
-	filterDoc.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
-	root.addDocument(filterDoc.Document)
-	filterDoc.Document.general = mergeGeneral(m.general, filterDoc.Document.general)
+	render.documentType = DocFilter
+	render.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
+	render.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
+	root.addDocument(render)
+	render.general = mergeGeneral(m.general, render.general)
 
-	filterDoc.nonMatch = m.nonMatch
-	filterDoc.writer = w
-	filterDoc.Header = m.Header
-	filterDoc.SkipLines = m.SkipLines
+	render.nonMatch = m.nonMatch
+	render.Header = m.Header
+	render.SkipLines = m.SkipLines
+
+	filterDoc := &filterDocument{
+		Document: render,
+		w:        w,
+	}
 
 	// Copy the header
-	if filterDoc.Header > 0 {
-		for ln := filterDoc.SkipLines; ln < filterDoc.Header; ln++ {
+	if render.Header > 0 {
+		for ln := render.SkipLines; ln < render.Header; ln++ {
 			line, err := m.Line(ln)
 			if err != nil {
 				break
 			}
-			filterDoc.lineNumMap.Store(ln, ln)
-			filterDoc.writeLine(line)
+			render.lineNumMap.Store(ln, ln)
+			writeLine(w, line)
 		}
 	}
-	go m.searchWriter(ctx, searcher, filterDoc, m.firstLine())
+	go m.filterWriter(ctx, searcher, m.firstLine(), filterDoc)
 	root.setMessagef("filter:%v", word)
 }
 
-// searchWriter searches the document and writes the result to w.
-func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDoc *renderDocument, ln int) {
-	defer filterDoc.writer.Close()
-	for originLN, renderLN := ln, ln; ; {
+// filterWriter searches and writes to filterDoc.
+func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN int, filterDoc *filterDocument) {
+	defer filterDoc.w.Close()
+	for originLN, renderLN := startLN, startLN; ; {
 		select {
 		case <-ctx.Done():
 			return
@@ -82,17 +92,13 @@ func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDo
 		// Found
 		line, err := m.Line(lineNum)
 		if err != nil {
+			// deleted?
 			break
 		}
-		num := lineNum
-		if m.lineNumMap != nil {
-			if n, ok := m.lineNumMap.LoadForward(num); ok {
-				num = n
-			}
-		}
-		filterDoc.lineNumMap.Store(renderLN, num)
-		filterDoc.writeLine(line)
+		filterDoc.lineNumMap.Store(renderLN, lineNum)
+		writeLine(filterDoc.w, line)
 		renderLN++
+
 		originLN = lineNum + 1
 	}
 }
@@ -100,4 +106,15 @@ func (m *Document) searchWriter(ctx context.Context, searcher Searcher, filterDo
 // closeAllFilter closes all filter documents.
 func (root *Root) closeAllFilter() {
 	root.closeAllDocument(DocFilter)
+}
+
+// writeLine writes a line to w.
+// It adds a newline to the end of the line.
+func writeLine(w io.Writer, line []byte) {
+	if _, err := w.Write(line); err != nil {
+		panic(err)
+	}
+	if _, err := w.Write([]byte("\n")); err != nil {
+		panic(err)
+	}
 }
