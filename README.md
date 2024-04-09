@@ -315,6 +315,8 @@ The `--header` (`-H`) (default key `H`) option fixedly displays the specified nu
 ov --header 1 README.md
 ```
 
+[Related styling](#style-customization): `StyleHeader`.
+
 ####  3.3.1. <a name='skip'></a>Skip
 
 When used with the `--skip-lines` (default key `ctrl+s`) option, it hides the number of lines specified by skip and then displays the header.
@@ -337,6 +339,8 @@ Enclose in '/' when using regular expressions.
 ```console
 ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 ```
+
+[Related styling](#style-customization): `StyleColumnHighlight`,`StyleColumnRainbow`.
 
 ###  3.5. <a name='column-rainbow-mode'></a>Column rainbow mode
 
@@ -404,6 +408,8 @@ The style can be set with [Style customization](#style-customization).
 ov --alternate-rows test.csv
 ```
 
+[Related styling](#style-customization): `StyleAlternate`.
+
 ###  3.9. <a name='section'></a>Section
 
 You specify `--section-delimiter`(default key `alt+d`), you can move up and down in section units.
@@ -436,6 +442,8 @@ You can specify the number of lines using the `--section-header-num` option or k
 	diff = "ov -F --section-delimiter '^diff' --section-header"
 	log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
 ```
+
+[Related styling](#style-customization): `StyleSectionLine`.
 
 ###  3.10. <a name='multiple-files'></a>Multiple files
 
@@ -531,6 +539,8 @@ Incsearch: true
 SmartCaseSensitive: true
 ```
 
+[Related styling](#style-customization): `StyleSearchHighlight`
+
 ###  3.17. <a name='pattern'></a>Pattern
 
 The pattern option allows you to specify a search at startup.
@@ -594,6 +604,8 @@ Marks can be erased individually with the `M` key(default).
 It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
+
+[Related styling](#style-customization): `StyleMarkLine`.
 
 ###  3.21. <a name='watch'></a>Watch
 
@@ -661,6 +673,8 @@ StyleMultiColorHighlight:
   - Foreground: "#c0c0c0"
 ```
 
+[Related styling](#style-customization): `StyleMultiColorHighlight`.
+
 ###  3.24. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
@@ -683,6 +697,8 @@ and the jump-target will be changed.
 ```console
 ov --section-delimiter "^#" --jump-target section README.md
 ```
+
+[Related styling](#style-customization): `StyleJumpTarget`.
 
 ###  3.26. <a name='view-mode'></a>View mode
 
