@@ -618,10 +618,10 @@ func (root *Root) inputOpts() string {
 
 	// The current search mode.
 	mode := root.input.Event.Mode()
+	if mode == Filter && root.Doc.nonMatch {
+		opts += "Non-match"
+	}
 	if mode == Search || mode == Backsearch || mode == Filter {
-		if root.Doc.nonMatch {
-			opts += "Non-match"
-		}
 		if root.Config.RegexpSearch {
 			opts += "(R)"
 		}
