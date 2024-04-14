@@ -52,7 +52,7 @@ ov is a terminal pager.
   * 3.16. [Search](#search)
   * 3.17. [Pattern](#pattern)
   * 3.18. [Filter](#filter)
-  * 3.19. [caption](#caption)
+  * 3.19. [Caption](#caption)
   * 3.20. [Mark](#mark)
   * 3.21. [Watch](#watch)
   * 3.22. [Mouse support](#mouse-support)
@@ -303,8 +303,7 @@ Create a `config.yaml` file in one of the above directories. If the file is in t
 
 Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
 
-> **Note**
->
+> [!NOTE]
 > If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
 ###  3.3. <a name='header'></a>Header
@@ -378,6 +377,8 @@ StyleColumnRainbow:
     - Foreground: "yellowgreen"
     - Foreground: "red"
 ```
+
+[Related styling](#style-customization): `StyleColumnRainbow`.
 
 ###  3.6. <a name='column-width'></a>Column-width
 
@@ -455,6 +456,8 @@ ov file1 file2
 
 Multiple files are each opened as a document and can be navigated using the Next Document `]` key (default), Previous Document `[` key (default).
 
+Related Styling: [Customizing the bottom status line](#customizing-the-bottom-status-line).
+
 ###  3.11. <a name='follow-mode'></a>Follow mode
 
 `--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
@@ -495,8 +498,7 @@ The following example is displayed from the header (#) at the bottom.
 ov --section-delimiter "^#" --follow-section README.md
 ```
 
-> **Note**
->
+> [!NOTE]
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
 ###  3.15. <a name='exec-mode'></a>Exec mode
@@ -556,7 +558,7 @@ The filter input creates a new document only for the lines that match the filter
 
 Move next document `]` and previous document `[` key(default) allow you to move between the filter document and the original document.
 
-The `K` key (default) closes all documents created by the filter.
+The `K`(`shift+k`) key (default) closes all documents created by the filter.
 
 You can also specify a filter using the command line option `--filter`.
 
@@ -580,7 +582,7 @@ The command line option for this can be specified with `--non-match-filter`.
 ov --non-match-filter info /var/log/syslog
 ```
 
-###  3.19. <a name='caption'></a>caption
+###  3.19. <a name='caption'></a>Caption
 
 You can specify a caption instead of the file name in status line to display it.
 
