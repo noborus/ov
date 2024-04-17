@@ -14,16 +14,8 @@ func (root *Root) setSaveBuffer() {
 // setSaveBufferMode sets the inputMode to SaveBuffer.
 func (root *Root) setSaveBufferMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newSaveBufferEvent(input.SaveBufferCandidate)
-}
-
-// saveBufferCandidate returns the candidate to set to default.
-func saveBufferCandidate() *candidate {
-	return &candidate{
-		list: []string{},
-	}
 }
 
 // eventSaveBuffer represents the mode input mode.

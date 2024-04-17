@@ -9,8 +9,7 @@ import (
 // setSkipLinesMode sets the inputMode to SkipLines.
 func (root *Root) setSkipLinesMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newSkipLinesEvent()
 }
 

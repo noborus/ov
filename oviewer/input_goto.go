@@ -5,16 +5,8 @@ import "github.com/gdamore/tcell/v2"
 // setGoLineMode sets the inputMode to Goline.
 func (root *Root) setGoLineMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newGotoEvent(input.GoCandidate)
-}
-
-// gotoCandidate returns the candidate to set to default.
-func gotoCandidate() *candidate {
-	return &candidate{
-		list: []string{},
-	}
 }
 
 // eventGoto represents the goto input mode.

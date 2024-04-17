@@ -5,8 +5,7 @@ import "github.com/gdamore/tcell/v2"
 // setViewModeMode sets the inputMode to ViewMode.
 func (root *Root) setViewInputMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newViewModeEvent(input.ModeCandidate)
 }
 

@@ -143,7 +143,7 @@ func Test_candidate_up(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := searchCandidate()
+			c := blankCandidate()
 			c.list = tt.fields.list
 			c.p = tt.fields.p
 			if got := c.up(); got != tt.want {
@@ -182,7 +182,7 @@ func Test_candidate_down(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := searchCandidate()
+			c := blankCandidate()
 			c.list = tt.fields.list
 			c.p = tt.fields.p
 			if got := c.down(); got != tt.want {

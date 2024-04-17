@@ -5,11 +5,8 @@ import "github.com/gdamore/tcell/v2"
 // setSectionDelimiterMode sets the inputMode to SectionDelimiter.
 func (root *Root) setSectionDelimiterMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
-
+	input.reset()
 	input.SectionDelmCandidate.toLast(root.Doc.SectionDelimiter)
-
 	input.Event = newSectionDelimiterEvent(input.SectionDelmCandidate)
 }
 

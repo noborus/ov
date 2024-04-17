@@ -5,16 +5,8 @@ import "github.com/gdamore/tcell/v2"
 // setWriteBAMode sets the inputMode to WriteBA.
 func (root *Root) setWriteBAMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newWriteBAEvent(input.WriteBACandidate)
-}
-
-// baCandidate returns the candidate to set to default.
-func baCandidate() *candidate {
-	return &candidate{
-		list: []string{},
-	}
 }
 
 // eventWriteBA represents the writeBA input mode.

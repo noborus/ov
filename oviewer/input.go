@@ -62,17 +62,17 @@ func NewInput() *Input {
 	i := Input{}
 
 	i.ModeCandidate = viewModeCandidate()
-	i.SearchCandidate = searchCandidate()
-	i.GoCandidate = gotoCandidate()
+	i.SearchCandidate = blankCandidate()
+	i.GoCandidate = blankCandidate()
 	i.DelimiterCandidate = delimiterCandidate()
 	i.TabWidthCandidate = tabWidthCandidate()
 	i.WatchCandidate = watchCandidate()
-	i.WriteBACandidate = baCandidate()
+	i.WriteBACandidate = blankCandidate()
 	i.SectionDelmCandidate = sectionDelimiterCandidate()
 	i.SectionStartCandidate = sectionStartCandidate()
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
-	i.SaveBufferCandidate = saveBufferCandidate()
+	i.SaveBufferCandidate = blankCandidate()
 
 	i.Event = &eventNormal{}
 	return &i
@@ -179,6 +179,12 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	return false
 }
 
+// reset resets the input.
+func (input *Input) reset() {
+	input.value = ""
+	input.cursorX = 0
+}
+
 // inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive() {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
@@ -276,6 +282,7 @@ type candidate struct {
 	p    int
 }
 
+// toLast returns the candidate list with the specified string at the end.
 func (c *candidate) toLast(str string) {
 	if str == "" {
 		return
@@ -286,12 +293,14 @@ func (c *candidate) toLast(str string) {
 	c.p = 0
 }
 
+// toAddTop returns the candidate list with the specified string at the top.
 func (c *candidate) toAddTop(str string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.list = toAddTop(c.list, str)
 }
 
+// toAddLast returns the candidate list with the specified string at the end.
 func (c *candidate) toAddLast(str string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -330,4 +339,11 @@ func (c *candidate) down() string {
 
 	c.p = 0
 	return c.list[c.p]
+}
+
+// blankCandidate returns the candidate to set to default.
+func blankCandidate() *candidate {
+	return &candidate{
+		list: []string{},
+	}
 }

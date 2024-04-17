@@ -17,8 +17,9 @@ type filterDocument struct {
 func (root *Root) Filter(str string, nonMatch bool) {
 	root.Doc.nonMatch = nonMatch
 	root.input.value = str
-	ev := &eventInputFilter{
-		value: str,
+	ev := &eventInputSearch{
+		searchType: filter,
+		value:      str,
 	}
 	root.postEvent(ev)
 }

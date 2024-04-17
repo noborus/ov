@@ -9,11 +9,8 @@ import (
 // setTabWidthMode sets the inputMode to TabWidth.
 func (root *Root) setTabWidthMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
-
+	input.reset()
 	input.TabWidthCandidate.toLast(strconv.Itoa(root.Doc.TabWidth))
-
 	input.Event = newTabWidthEvent(input.TabWidthCandidate)
 }
 

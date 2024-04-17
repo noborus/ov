@@ -53,17 +53,13 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventViewMode:
 			root.setViewMode(ev.value)
 		case *eventInputSearch:
-			root.firstSearch(ctx)
+			root.firstSearch(ctx, ev.searchType)
 		case *eventNextSearch:
 			root.nextSearch(ctx, ev.str)
-		case *eventInputBackSearch:
-			root.firstBackSearch(ctx)
 		case *eventNextBackSearch:
 			root.nextBackSearch(ctx, ev.str)
 		case *eventSearchMove:
 			root.searchGo(ev.value)
-		case *eventInputFilter:
-			root.filter(ctx)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:

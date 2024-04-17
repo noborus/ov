@@ -12,8 +12,7 @@ const searchCandidateListLen = 10
 // setMultiColorMode sets the inputMode to MultiColor.
 func (root *Root) setMultiColorMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 
 	searches := root.input.searchCandidates(searchCandidateListLen)
 	input.MultiColorCandidate.toLast(strings.Join(searches, " "))

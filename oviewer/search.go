@@ -596,7 +596,21 @@ func (root *Root) startSearchLN() int {
 }
 
 // firstSearch performs the first search immediately after the input.
-func (root *Root) firstSearch(ctx context.Context) {
+func (root *Root) firstSearch(ctx context.Context, t searchType) {
+	switch t {
+	case forward:
+		root.firstForwardSearch(ctx)
+		return
+	case backward:
+		root.firstBackSearch(ctx)
+		return
+	case filter:
+		root.filter(ctx)
+	}
+}
+
+// firstForwardSearch performs the first forward search immediately after the input.
+func (root *Root) firstForwardSearch(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	root.searchMove(ctx, true, root.startSearchLN(), searcher)
 }

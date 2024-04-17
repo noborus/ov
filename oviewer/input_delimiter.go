@@ -7,11 +7,8 @@ import (
 // setDelimiterMode sets the inputMode to Delimiter.
 func (root *Root) setDelimiterMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
-
+	input.reset()
 	input.DelimiterCandidate.toLast(root.Doc.ColumnDelimiter)
-
 	input.Event = newDelimiterEvent(input.DelimiterCandidate)
 }
 
