@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -557,9 +558,9 @@ func (root *Root) leftStatus() (contents, int) {
 
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() (contents, int) {
-	number := ""
+	var leftStatus bytes.Buffer
 	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
-		number = fmt.Sprintf("[%d]", root.CurrentDoc)
+		leftStatus.WriteString(fmt.Sprintf("[%d]", root.CurrentDoc))
 	}
 
 	modeStatus := ""
@@ -572,23 +573,22 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	if root.General.FollowAll {
 		modeStatus = "(Follow All)"
 	}
-
 	// Watch mode doubles as FollowSection mode.
 	if root.Doc.WatchMode {
 		modeStatus += "(Watch)"
 	} else if root.Doc.FollowSection {
 		modeStatus = "(Follow Section)"
 	}
+	leftStatus.WriteString(modeStatus)
 
-	caption := ""
 	if root.Doc.Caption != "" {
-		caption = root.Doc.Caption
+		leftStatus.WriteString(root.Doc.Caption)
 	} else if root.Config.Prompt.Normal.ShowFilename {
-		caption = root.Doc.FileName
+		leftStatus.WriteString(root.Doc.FileName)
 	}
-
-	leftStatus := fmt.Sprintf("%s%s%s:%s", number, modeStatus, caption, root.message)
-	leftContents := StrToContents(leftStatus, -1)
+	leftStatus.WriteString(":")
+	leftStatus.WriteString(root.message)
+	leftContents := StrToContents(leftStatus.String(), -1)
 
 	if root.Config.Prompt.Normal.InvertColor {
 		color := tcell.ColorWhite
@@ -605,39 +605,40 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 // inputLeftStatus returns the status of the left side of the input.
 func (root *Root) inputLeftStatus() (contents, int) {
-	input := root.input
-	p := root.inputOpts() + input.Event.Prompt()
-	leftStatus := p + input.value
+	leftStatus := root.inputPrompt()
 	leftContents := StrToContents(leftStatus, -1)
-	return leftContents, len(p) + input.cursorX
+	return leftContents, len(leftContents)
 }
 
-// inputOpts returns a string describing the current search mode.
-func (root *Root) inputOpts() string {
-	var opts string
-
-	// The current search mode.
+// inputPrompt returns a string describing the input field.
+func (root *Root) inputPrompt() string {
+	var prompt bytes.Buffer
 	mode := root.input.Event.Mode()
-	if mode == Filter && root.Doc.nonMatch {
-		opts += "Non-match"
-	}
-	if mode == Search || mode == Backsearch || mode == Filter {
-		if root.Config.RegexpSearch {
-			opts += "(R)"
-		}
-		if mode != Filter {
-			if root.Config.Incsearch {
-				opts += "(I)"
-			}
-		}
-		if root.Config.SmartCaseSensitive {
-			opts += "(S)"
-		} else if root.Config.CaseSensitive {
-			opts += "(Aa)"
-		}
+	modePrompt := root.input.Event.Prompt()
+
+	if mode != Search && mode != Backsearch && mode != Filter {
+		prompt.WriteString(modePrompt)
+		prompt.WriteString(root.input.value)
+		return prompt.String()
 	}
 
-	return opts
+	if mode == Filter && root.Doc.nonMatch {
+		prompt.WriteString("Non-match")
+	}
+	if root.Config.RegexpSearch {
+		prompt.WriteString("(R)")
+	}
+	if mode != Filter && root.Config.Incsearch {
+		prompt.WriteString("(I)")
+	}
+	if root.Config.SmartCaseSensitive {
+		prompt.WriteString("(S)")
+	} else if root.Config.CaseSensitive {
+		prompt.WriteString("(Aa)")
+	}
+	prompt.WriteString(modePrompt)
+	prompt.WriteString(root.input.value)
+	return prompt.String()
 }
 
 // rightStatus returns the status of the right side.

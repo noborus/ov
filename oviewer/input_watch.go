@@ -5,8 +5,7 @@ import "github.com/gdamore/tcell/v2"
 // setWatchIntervalMode sets the inputMode to Watch.
 func (root *Root) setWatchIntervalMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newWatchIntervalEvent(input.WatchCandidate)
 }
 

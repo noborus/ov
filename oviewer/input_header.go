@@ -9,8 +9,7 @@ import (
 // setHeaderMode sets the inputMode to Header.
 func (root *Root) setHeaderMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newHeaderEvent()
 }
 

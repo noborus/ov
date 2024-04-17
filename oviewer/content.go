@@ -535,7 +535,7 @@ func (pos widthPos) n(w int) int {
 			break
 		}
 	}
-	// It should return the last byte of a multibyte character.
+	// It should return the last byte of a multi-byte character.
 	for i := len(pos) - 1; i >= 0; i-- {
 		if pos[i] == x {
 			return i

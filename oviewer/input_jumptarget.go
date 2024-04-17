@@ -7,8 +7,7 @@ import (
 // setJumpTargetMode sets the inputMode to JumpTarget.
 func (root *Root) setJumpTargetMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 
 	input.JumpTargetCandidate.toLast(root.Doc.JumpTarget)
 

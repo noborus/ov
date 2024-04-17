@@ -4,19 +4,44 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSearchMode sets the inputMode to Search.
-func (root *Root) setSearchMode() {
+// searchType is the type of search.
+type searchType int
+
+// Responsible for forward search / backward search / filter search input.
+const (
+	forward searchType = iota
+	backward
+	filter
+)
+
+func (root *Root) setCommonSearchMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 
 	if root.searcher != nil {
 		input.SearchCandidate.toLast(root.searcher.String())
 	}
 
 	root.Doc.nonMatch = false
-	input.Event = newSearchEvent(input.SearchCandidate)
 	root.OriginPos = root.Doc.topLN
+}
+
+// setSearchMode sets the inputMode to Search.
+func (root *Root) setSearchMode() {
+	root.setCommonSearchMode()
+	root.input.Event = newSearchEvent(root.input.SearchCandidate, forward)
+}
+
+// setBackSearchMode sets the inputMode to Backsearch.
+func (root *Root) setBackSearchMode() {
+	root.setCommonSearchMode()
+	root.input.Event = newSearchEvent(root.input.SearchCandidate, backward)
+}
+
+// setSearchFilterMode sets the inputMode to Filter.
+func (root *Root) setSearchFilterMode() {
+	root.setCommonSearchMode()
+	root.input.Event = newSearchEvent(root.input.SearchCandidate, filter)
 }
 
 // searchCandidate returns the candidate to set to default.
@@ -29,27 +54,45 @@ func searchCandidate() *candidate {
 // eventInputSearch represents the search input mode.
 type eventInputSearch struct {
 	tcell.EventTime
-	clist *candidate
-	value string
+	clist      *candidate
+	value      string
+	searchType searchType
 }
 
 // newSearchEvent returns SearchInput.
-func newSearchEvent(clist *candidate) *eventInputSearch {
+func newSearchEvent(clist *candidate, searchType searchType) *eventInputSearch {
 	return &eventInputSearch{
-		value:     "",
-		clist:     clist,
-		EventTime: tcell.EventTime{},
+		value:      "",
+		searchType: searchType,
+		clist:      clist,
+		EventTime:  tcell.EventTime{},
 	}
 }
 
 // Mode returns InputMode.
-func (*eventInputSearch) Mode() InputMode {
-	return Search
+func (e *eventInputSearch) Mode() InputMode {
+	switch e.searchType {
+	case forward:
+		return Search
+	case backward:
+		return Backsearch
+	case filter:
+		return Filter
+	}
+	panic("invalid searchType")
 }
 
 // Prompt returns the prompt string in the input field.
-func (*eventInputSearch) Prompt() string {
-	return "/"
+func (e *eventInputSearch) Prompt() string {
+	switch e.searchType {
+	case forward:
+		return "/"
+	case backward:
+		return "?"
+	case filter:
+		return "&"
+	}
+	panic("invalid searchType")
 }
 
 // Confirm returns the event when the input is confirmed.
@@ -68,63 +111,6 @@ func (e *eventInputSearch) Up(str string) string {
 
 // Down returns strings when the down key is pressed during input.
 func (e *eventInputSearch) Down(str string) string {
-	e.clist.toAddTop(str)
-	return e.clist.down()
-}
-
-// setBackSearchMode sets the inputMode to Backsearch.
-func (root *Root) setBackSearchMode() {
-	input := root.input
-	input.value = ""
-	input.cursorX = 0
-
-	if root.searcher != nil {
-		input.SearchCandidate.toLast(root.searcher.String())
-	}
-
-	root.Doc.nonMatch = false
-	input.Event = newBackSearchEvent(input.SearchCandidate)
-	root.OriginPos = root.Doc.topLN
-}
-
-// eventInputBackSearch represents the back search input mode.
-type eventInputBackSearch struct {
-	tcell.EventTime
-	clist *candidate
-	value string
-}
-
-// newBackSearchEvent returns backSearchEvent.
-func newBackSearchEvent(clist *candidate) *eventInputBackSearch {
-	return &eventInputBackSearch{clist: clist}
-}
-
-// Mode returns InputMode.
-func (*eventInputBackSearch) Mode() InputMode {
-	return Backsearch
-}
-
-// Prompt returns the prompt string in the input field.
-func (*eventInputBackSearch) Prompt() string {
-	return "?"
-}
-
-// Confirm returns the event when the input is confirmed.
-func (e *eventInputBackSearch) Confirm(str string) tcell.Event {
-	e.value = str
-	e.clist.toLast(str)
-	e.SetEventNow()
-	return e
-}
-
-// Up returns strings when the up key is pressed during input.
-func (e *eventInputBackSearch) Up(str string) string {
-	e.clist.toAddLast(str)
-	return e.clist.up()
-}
-
-// Down returns strings when the down key is pressed during input.
-func (e *eventInputBackSearch) Down(str string) string {
 	e.clist.toAddTop(str)
 	return e.clist.down()
 }

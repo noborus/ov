@@ -9,8 +9,7 @@ import (
 // setSectionNumMode sets the inputMode to SectionNum.
 func (root *Root) setSectionNumMode() {
 	input := root.input
-	input.value = ""
-	input.cursorX = 0
+	input.reset()
 	input.Event = newSectionNumEvent()
 }
 
