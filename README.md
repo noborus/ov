@@ -841,7 +841,7 @@ MemoryLimit: 1000
 | short |                    long                    |                            purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
 | -C,   | --alternate-rows                           | alternately change the line color                              |
-|       | --caption string                           | caption                                                        |
+|       | --caption string                           | custom caption                                                 |
 | -i,   | --case-sensitive                           | case-sensitive in search                                       |
 | -d,   | --column-delimiter character               | column delimiter character (default ",")                       |
 | -c,   | --column-mode                              | column mode                                                    |
@@ -857,9 +857,9 @@ MemoryLimit: 1000
 | -a,   | --exit-write-after int                     | number after the current lines when exiting                    |
 | -b,   | --exit-write-before int                    | number before the current lines when exiting                   |
 |       | --filter string                            | filter search pattern                                          |
-| -A,   | --follow-all                               | follow mode to switch to updated files                         |
-| -f,   | --follow-mode                              | follow mode                                                    |
-|       | --follow-name                              | file name follow mode                                          |
+| -A,   | --follow-all                               | follow multiple files and show the most recently updated one   |
+| -f,   | --follow-mode                              | monitor file and display new content as it is written          |
+|       | --follow-name                              | follow mode to monitor by file name                            |
 |       | --follow-section                           | section-by-section follow mode                                 |
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
 | -h,   | --help                                     | help for ov                                                    |
@@ -885,7 +885,7 @@ MemoryLimit: 1000
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
 | -v,   | --version                                  | display version information                                    |
-|       | --view-mode string                         | view mode                                                      |
+|       | --view-mode string                         | apply predefined settings for a specific mode                  |
 | -T,   | --watch seconds                            | watch mode interval(seconds)                                   |
 | -w,   | --wrap[=true\|false]                       | wrap mode (default true)                                       |
 
