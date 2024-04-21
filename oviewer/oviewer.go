@@ -112,6 +112,8 @@ func newLineNumber(number, wrap int) LineNumber {
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {
+	// Caption is an additional caption to display after the file name.
+	Caption string
 	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
 	ColumnDelimiterReg *regexp.Regexp
 	// ColumnDelimiter is a column delimiter.
@@ -255,8 +257,6 @@ type Config struct {
 
 	// DisableColumnCycle is disable column cycle.
 	DisableColumnCycle bool
-	// Caption is the caption of the document.
-	Caption string
 	// Debug represents whether to enable the debug output.
 	Debug bool
 }
@@ -615,9 +615,10 @@ func (root *Root) Run() error {
 	}
 
 	root.optimizedMan()
-	if root.Caption != "" {
-		root.Doc.Caption = root.Caption
+	if root.General.Caption != "" {
+		root.Doc.Caption = root.General.Caption
 	}
+
 	root.setModeConfig()
 	for n, doc := range root.DocList {
 		doc.general = root.Config.General
@@ -891,6 +892,12 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if len(dst.MultiColorWords) > 0 {
 		src.MultiColorWords = dst.MultiColorWords
+	}
+	if dst.SectionHeaderNum != 0 {
+		src.SectionHeaderNum = dst.SectionHeaderNum
+	}
+	if dst.Caption != "" {
+		src.Caption = dst.Caption
 	}
 	return src
 }
