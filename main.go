@@ -429,6 +429,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("hscroll-width", "", "10%", "width to scroll horizontally `[int|int%|.int]`")
 	_ = viper.BindPFlag("general.HScrollWidth", rootCmd.PersistentFlags().Lookup("hscroll-width"))
 
+	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
+	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
+
 	// Config
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
 	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
@@ -468,9 +471,6 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
-
-	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
-	_ = viper.BindPFlag("Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))

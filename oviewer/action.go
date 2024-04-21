@@ -398,6 +398,9 @@ func (root *Root) setViewMode(modeName string) {
 	}
 
 	root.Doc.general = mergeGeneral(root.Doc.general, c)
+	if root.Doc.general.Caption != "" {
+		root.Doc.Caption = root.Doc.general.Caption
+	}
 	root.Doc.regexpCompile()
 	root.Doc.ClearCache()
 	root.ViewSync()
