@@ -405,16 +405,16 @@ func init() {
 	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of header lines")
 	_ = viper.BindPFlag("general.SectionHeaderNum", rootCmd.PersistentFlags().Lookup("section-header-num"))
 
-	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "follow mode")
+	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "monitor file and display new content as it is written")
 	_ = viper.BindPFlag("general.FollowMode", rootCmd.PersistentFlags().Lookup("follow-mode"))
 
-	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow mode to switch to updated files")
+	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow multiple files and show the most recently updated one")
 	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
 
 	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "section-by-section follow mode")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
-	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "file name follow mode")
+	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow mode to monitor by file name")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
@@ -457,7 +457,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
 	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
 
-	rootCmd.PersistentFlags().StringP("view-mode", "", "", "view mode")
+	rootCmd.PersistentFlags().StringP("view-mode", "", "", "apply predefined settings for a specific mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
 	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "number of chunks to limit in memory")
@@ -469,7 +469,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
 
-	rootCmd.PersistentFlags().StringP("caption", "", "", "caption")
+	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
 	_ = viper.BindPFlag("Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
