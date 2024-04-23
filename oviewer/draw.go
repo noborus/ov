@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -558,7 +557,7 @@ func (root *Root) leftStatus() (contents, int) {
 
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() (contents, int) {
-	var leftStatus bytes.Buffer
+	var leftStatus strings.Builder
 	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 		leftStatus.WriteString(fmt.Sprintf("[%d]", root.CurrentDoc))
 	}
@@ -605,14 +604,15 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 // inputLeftStatus returns the status of the left side of the input.
 func (root *Root) inputLeftStatus() (contents, int) {
-	leftStatus := root.inputPrompt()
-	leftContents := StrToContents(leftStatus, -1)
-	return leftContents, len(leftContents)
+	input := root.input
+	prompt := root.inputPrompt()
+	leftContents := StrToContents(prompt+input.value, -1)
+	return leftContents, len(prompt) + input.cursorX
 }
 
 // inputPrompt returns a string describing the input field.
 func (root *Root) inputPrompt() string {
-	var prompt bytes.Buffer
+	var prompt strings.Builder
 	mode := root.input.Event.Mode()
 	modePrompt := root.input.Event.Prompt()
 
@@ -637,7 +637,6 @@ func (root *Root) inputPrompt() string {
 		prompt.WriteString("(Aa)")
 	}
 	prompt.WriteString(modePrompt)
-	prompt.WriteString(root.input.value)
 	return prompt.String()
 }
 
