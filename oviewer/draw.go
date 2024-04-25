@@ -618,7 +618,6 @@ func (root *Root) inputPrompt() string {
 
 	if mode != Search && mode != Backsearch && mode != Filter {
 		prompt.WriteString(modePrompt)
-		prompt.WriteString(root.input.value)
 		return prompt.String()
 	}
 
