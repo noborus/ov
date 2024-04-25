@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"path/filepath"
 	"reflect"
@@ -106,7 +107,7 @@ func TestOpen(t *testing.T) {
 				t.Errorf("Open() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			root.Quit()
+			root.Quit(context.Background())
 		})
 	}
 }
@@ -194,7 +195,7 @@ func TestRoot_Run(t *testing.T) {
 					t.Errorf("Root.Run() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			}()
-			root.Quit()
+			root.Quit(context.Background())
 		})
 	}
 }
@@ -274,7 +275,7 @@ func TestRoot_setKeyConfig(t *testing.T) {
 				t.Fatal("failed to unmarshal config:", err)
 			}
 			root.SetConfig(config)
-			got, err := root.setKeyConfig()
+			got, err := root.setKeyConfig(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Root.setKeyConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

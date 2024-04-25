@@ -22,7 +22,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	defer root.debugNumOfChunk()
 
 	for {
-		root.everyUpdate()
+		root.everyUpdate(ctx)
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *eventAppQuit:
@@ -31,27 +31,27 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 				return
 			}
 			// Help and logDoc return to Doc display.
-			root.toNormal()
+			root.toNormal(ctx)
 		case *eventReload:
 			root.reload(ev.m)
 		case *eventAppSuspend:
-			root.suspend()
+			root.suspend(ctx)
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		case *eventDocument:
-			root.switchDocument(ev.docNum)
+			root.switchDocument(ctx, ev.docNum)
 		case *eventAddDocument:
-			root.addDocument(ev.m)
+			root.addDocument(ctx, ev.m)
 		case *eventCloseDocument:
-			root.closeDocument()
+			root.closeDocument(ctx)
 		case *eventCloseAllFilter:
-			root.closeAllFilter()
+			root.closeAllFilter(ctx)
 		case *eventCopySelect:
 			root.copyToClipboard(ctx)
 		case *eventPaste:
 			root.pasteFromClipboard(ctx)
 		case *eventViewMode:
-			root.setViewMode(ev.value)
+			root.setViewMode(ctx, ev.value)
 		case *eventInputSearch:
 			root.firstSearch(ctx, ev.searchType)
 		case *eventNextSearch:
@@ -59,7 +59,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventNextBackSearch:
 			root.nextBackSearch(ctx, ev.str)
 		case *eventSearchMove:
-			root.searchGo(ev.value)
+			root.searchGo(ctx, ev.value)
 		case *eventGoto:
 			root.goLine(ev.value)
 		case *eventHeader:
@@ -73,7 +73,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 		case *eventWatchInterval:
 			root.setWatchInterval(ev.value)
 		case *eventWriteBA:
-			root.setWriteBA(ev.value)
+			root.setWriteBA(ctx, ev.value)
 		case *eventSectionDelimiter:
 			root.setSectionDelimiter(ev.value)
 		case *eventSectionStart:
@@ -89,9 +89,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 
 		// tcell events
 		case *tcell.EventResize:
-			root.resize()
+			root.resize(ctx)
 		case *tcell.EventMouse:
-			root.mouseEvent(ev)
+			root.mouseEvent(ctx, ev)
 		case *tcell.EventKey:
 			root.keyEvent(ctx, ev)
 		case nil:
@@ -125,7 +125,7 @@ func (root *Root) MoveBottom() {
 }
 
 // everyUpdate is called every time before running the event.
-func (root *Root) everyUpdate() {
+func (root *Root) everyUpdate(ctx context.Context) {
 	// If tmpLN is set, set top position to position from bottom.
 	// This process is executed when temporary read is switched to normal read.
 	if n := atomic.SwapInt32(&root.Doc.tmpLN, 0); n > 0 {
@@ -137,11 +137,11 @@ func (root *Root) everyUpdate() {
 	root.Doc.height = root.Doc.statusPos - root.Doc.headerLen
 
 	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
-		root.follow()
+		root.follow(ctx)
 	}
 
 	if !root.skipDraw {
-		root.draw()
+		root.draw(ctx)
 	}
 	root.skipDraw = false
 
@@ -167,7 +167,7 @@ type eventAppQuit struct {
 }
 
 // Quit fires the eventAppQuit event.
-func (root *Root) Quit() {
+func (root *Root) Quit(context.Context) {
 	root.sendQuit()
 }
 
@@ -304,7 +304,7 @@ type eventReload struct {
 }
 
 // Reload fires the eventReload event.
-func (root *Root) Reload() {
+func (root *Root) Reload(context.Context) {
 	root.sendReload(root.Doc)
 }
 

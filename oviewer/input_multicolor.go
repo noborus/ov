@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -10,7 +11,7 @@ import (
 const searchCandidateListLen = 10
 
 // setMultiColorMode sets the inputMode to MultiColor.
-func (root *Root) setMultiColorMode() {
+func (root *Root) setMultiColorMode(context.Context) {
 	input := root.input
 	input.reset()
 

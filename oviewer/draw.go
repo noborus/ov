@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -17,7 +18,7 @@ const statusLine = 1
 const sectionTimeOut = 1000
 
 // draw is the main routine that draws the screen.
-func (root *Root) draw() {
+func (root *Root) draw(ctx context.Context) {
 	m := root.Doc
 
 	if root.scr.vHeight == 0 {
@@ -42,7 +43,7 @@ func (root *Root) draw() {
 	lN = m.topLN + lN
 
 	// Section header
-	n := root.drawSectionHeader(lN)
+	n := root.drawSectionHeader(ctx, lN)
 	if m.dupSectionHeader && lN < m.SectionHeaderNum {
 		lN = n
 		m.topLN = n
@@ -115,7 +116,7 @@ func (root *Root) drawHeader() int {
 // drawSectionHeader draws section header.
 // drawSectionHeader advances the line
 // if the section header contains a line in the terminal.
-func (root *Root) drawSectionHeader(lN int) int {
+func (root *Root) drawSectionHeader(ctx context.Context, lN int) int {
 	m := root.Doc
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return lN
@@ -126,7 +127,7 @@ func (root *Root) drawSectionHeader(lN int) int {
 	if m.dupSectionHeader && pn <= 0 {
 		pn = 1
 	}
-	sectionLN, err := m.prevSection(pn)
+	sectionLN, err := m.prevSection(ctx, pn)
 	if err != nil {
 		if errors.Is(err, ErrCancel) {
 			root.setMessageLogf("Section header search timed out")

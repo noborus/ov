@@ -1,12 +1,14 @@
 package oviewer
 
+import "context"
+
 // Called by event key to change document position.
 
 // bottomMargin is the margin of the bottom line when specifying section.
 const bottomMargin = 2
 
 // Go to the top line.
-func (root *Root) moveTop() {
+func (root *Root) moveTop(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -15,7 +17,7 @@ func (root *Root) moveTop() {
 }
 
 // Go to the bottom line.
-func (root *Root) moveBottom() {
+func (root *Root) moveBottom(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -23,7 +25,7 @@ func (root *Root) moveBottom() {
 }
 
 // Move up one screen.
-func (root *Root) movePgUp() {
+func (root *Root) movePgUp(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -31,7 +33,7 @@ func (root *Root) movePgUp() {
 }
 
 // Moves down one screen.
-func (root *Root) movePgDn() {
+func (root *Root) movePgDn(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -39,7 +41,7 @@ func (root *Root) movePgDn() {
 }
 
 // Moves up half a screen.
-func (root *Root) moveHfUp() {
+func (root *Root) moveHfUp(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -47,7 +49,7 @@ func (root *Root) moveHfUp() {
 }
 
 // Moves down half a screen.
-func (root *Root) moveHfDn() {
+func (root *Root) moveHfDn(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -55,12 +57,12 @@ func (root *Root) moveHfDn() {
 }
 
 // Move up one line.
-func (root *Root) moveUpOne() {
+func (root *Root) moveUpOne(context.Context) {
 	root.moveUp(1)
 }
 
 // Move down one line.
-func (root *Root) moveDownOne() {
+func (root *Root) moveDownOne(context.Context) {
 	root.moveDown(1)
 }
 
@@ -81,52 +83,52 @@ func (root *Root) moveDown(n int) {
 }
 
 // nextSection moves down to the next section's delimiter.
-func (root *Root) nextSection() {
+func (root *Root) nextSection(ctx context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	if err := root.Doc.moveNextSection(); err != nil {
+	if err := root.Doc.moveNextSection(ctx); err != nil {
 		// Last section or no section.
 		root.setMessage("No more next sections")
 	}
 }
 
 // prevSection moves up to the delimiter of the previous section.
-func (root *Root) prevSection() {
+func (root *Root) prevSection(ctx context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	if err := root.Doc.movePrevSection(); err != nil {
+	if err := root.Doc.movePrevSection(ctx); err != nil {
 		root.setMessage("No more previous sections")
 		return
 	}
 }
 
 // lastSection moves to the last section.
-func (root *Root) lastSection() {
+func (root *Root) lastSection(ctx context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveLastSection()
+	root.Doc.moveLastSection(ctx)
 }
 
 // Move to the left.
-func (root *Root) moveLeftOne() {
+func (root *Root) moveLeftOne(context.Context) {
 	root.moveLeft(1)
 }
 
 // Move to the right.
-func (root *Root) moveRightOne() {
+func (root *Root) moveRightOne(context.Context) {
 	root.moveRight(1)
 }
 
 // Move to the width of the screen to the left.
-func (root *Root) moveWidthLeft() {
+func (root *Root) moveWidthLeft(context.Context) {
 	root.moveLeft(root.Doc.HScrollWidthNum)
 }
 
 // Move to the width of the screen to the right.
-func (root *Root) moveWidthRight() {
+func (root *Root) moveWidthRight(context.Context) {
 	root.moveRight(root.Doc.HScrollWidthNum)
 }
 
@@ -155,7 +157,7 @@ func (root *Root) moveRight(n int) {
 }
 
 // Move to the left by half a screen.
-func (root *Root) moveHfLeft() {
+func (root *Root) moveHfLeft(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -164,7 +166,7 @@ func (root *Root) moveHfLeft() {
 }
 
 // Move to the right by half a screen.
-func (root *Root) moveHfRight() {
+func (root *Root) moveHfRight(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -172,13 +174,13 @@ func (root *Root) moveHfRight() {
 }
 
 // moveBeginLeft moves to the beginning of the line.
-func (root *Root) moveBeginLeft() {
+func (root *Root) moveBeginLeft(context.Context) {
 	root.Doc.moveBeginLeft()
 }
 
 // moveEndRight moves to the end of the line.
 // Move so that the end of the currently displayed line is visible.
-func (root *Root) moveEndRight() {
+func (root *Root) moveEndRight(context.Context) {
 	root.Doc.moveEndRight(root.scr)
 }
 

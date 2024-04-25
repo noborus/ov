@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setSectionStartMode sets the inputMode to SectionStart.
-func (root *Root) setSectionStartMode() {
+func (root *Root) setSectionStartMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSectionStartEvent(input.SectionStartCandidate)

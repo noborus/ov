@@ -186,7 +186,7 @@ func (input *Input) reset() {
 }
 
 // inputCaseSensitive toggles case sensitivity.
-func (root *Root) inputCaseSensitive() {
+func (root *Root) inputCaseSensitive(context.Context) {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
 	if root.Config.CaseSensitive {
 		root.Config.SmartCaseSensitive = false
@@ -194,7 +194,7 @@ func (root *Root) inputCaseSensitive() {
 }
 
 // inputSmartCaseSensitive toggles case sensitivity.
-func (root *Root) inputSmartCaseSensitive() {
+func (root *Root) inputSmartCaseSensitive(context.Context) {
 	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
 	if root.Config.SmartCaseSensitive {
 		root.Config.CaseSensitive = false
@@ -202,21 +202,21 @@ func (root *Root) inputSmartCaseSensitive() {
 }
 
 // inputIncSearch toggles incremental search.
-func (root *Root) inputIncSearch() {
+func (root *Root) inputIncSearch(context.Context) {
 	root.Config.Incsearch = !root.Config.Incsearch
 }
 
 // inputRegexpSearch toggles regexp search.
-func (root *Root) inputRegexpSearch() {
+func (root *Root) inputRegexpSearch(context.Context) {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 }
 
-func (root *Root) inputNonMatch() {
+func (root *Root) inputNonMatch(context.Context) {
 	root.Doc.nonMatch = !root.Doc.nonMatch
 }
 
 // inputPrevious searches the previous history.
-func (root *Root) inputPrevious() {
+func (root *Root) inputPrevious(context.Context) {
 	input := root.input
 	input.value = input.Event.Up(input.value)
 	runes := []rune(input.value)
@@ -224,7 +224,7 @@ func (root *Root) inputPrevious() {
 }
 
 // inputNext searches the next history.
-func (root *Root) inputNext() {
+func (root *Root) inputNext(context.Context) {
 	input := root.input
 	input.value = input.Event.Down(input.value)
 	runes := []rune(input.value)

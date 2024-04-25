@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -93,8 +94,8 @@ const (
 )
 
 // handlers returns a map of the action's handlers.
-func (root *Root) handlers() map[string]func() {
-	return map[string]func(){
+func (root *Root) handlers() map[string]func(context.Context) {
+	return map[string]func(context.Context){
 		actionExit:           root.Quit,
 		actionWriteBA:        root.setWriteBAMode,
 		actionCancel:         root.Cancel,
@@ -389,7 +390,7 @@ func GetKeyBinds(config Config) KeyBind {
 }
 
 // setHandlers sets keys to action handlers.
-func (root *Root) setHandlers(keyBind KeyBind) error {
+func (root *Root) setHandlers(ctx context.Context, keyBind KeyBind) error {
 	c := root.keyConfig
 	in := root.inputKeyConfig
 
@@ -402,12 +403,12 @@ func (root *Root) setHandlers(keyBind KeyBind) error {
 		}
 
 		if strings.HasPrefix(name, "input_") {
-			if err := setHandler(in, name, keys, handler); err != nil {
+			if err := setHandler(ctx, in, name, keys, handler); err != nil {
 				return err
 			}
 			continue
 		}
-		if err := setHandler(c, name, keys, handler); err != nil {
+		if err := setHandler(ctx, c, name, keys, handler); err != nil {
 			return err
 		}
 	}
@@ -415,37 +416,37 @@ func (root *Root) setHandlers(keyBind KeyBind) error {
 }
 
 // setHandler sets multiple keys in one action handler.
-func setHandler(c *cbind.Configuration, name string, keys []string, handler func()) error {
+func setHandler(ctx context.Context, c *cbind.Configuration, name string, keys []string, handler func(context.Context)) error {
 	for _, k := range keys {
 		mod, key, ch, err := cbind.Decode(k)
 		if err != nil {
-			return fmt.Errorf("%w [%s] for %s: %s", ErrFailedKeyBind, k, name, err)
+			return fmt.Errorf("%w [%s] for %s: %w", ErrFailedKeyBind, k, name, err)
 		}
 		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, wrapEventHandler(handler))
+			c.SetRune(mod, ch, wrapEventHandler(ctx, handler))
 			// Added "shift+N" instead of 'N' to get it on windows.
 			if 0x21 <= ch && ch <= 0x60 {
-				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(handler))
+				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(ctx, handler))
 			}
 		} else {
 			// ctrl+h, Backspace and ctrl+Backspace can only be assigned one handler.
 			if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
-				c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(handler))
-				c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(handler))
-				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(handler))
-				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(handler))
+				c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
+				c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
+				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
+				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
 				continue
 			}
-			c.SetKey(mod, key, wrapEventHandler(handler))
+			c.SetKey(mod, key, wrapEventHandler(ctx, handler))
 		}
 	}
 	return nil
 }
 
 // wrapEventHandler is a wrapper for matching func types.
-func wrapEventHandler(f func()) func(_ *tcell.EventKey) *tcell.EventKey {
+func wrapEventHandler(ctx context.Context, f func(context.Context)) func(_ *tcell.EventKey) *tcell.EventKey {
 	return func(_ *tcell.EventKey) *tcell.EventKey {
-		f()
+		f(ctx)
 		return nil
 	}
 }

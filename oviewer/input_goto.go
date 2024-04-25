@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setGoLineMode sets the inputMode to Goline.
-func (root *Root) setGoLineMode() {
+func (root *Root) setGoLineMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newGotoEvent(input.GoCandidate)

@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setWriteBAMode sets the inputMode to WriteBA.
-func (root *Root) setWriteBAMode() {
+func (root *Root) setWriteBAMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newWriteBAEvent(input.WriteBACandidate)

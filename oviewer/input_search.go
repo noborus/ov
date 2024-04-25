@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"context"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -27,19 +29,19 @@ func (root *Root) setCommonSearchMode() {
 }
 
 // setSearchMode sets the inputMode to Search.
-func (root *Root) setSearchMode() {
+func (root *Root) setSearchMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, forward)
 }
 
 // setBackSearchMode sets the inputMode to Backsearch.
-func (root *Root) setBackSearchMode() {
+func (root *Root) setBackSearchMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, backward)
 }
 
 // setSearchFilterMode sets the inputMode to Filter.
-func (root *Root) setSearchFilterMode() {
+func (root *Root) setSearchFilterMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, filter)
 }

@@ -1,13 +1,14 @@
 package oviewer
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 // setSkipLinesMode sets the inputMode to SkipLines.
-func (root *Root) setSkipLinesMode() {
+func (root *Root) setSkipLinesMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSkipLinesEvent()

@@ -249,14 +249,14 @@ func leftX(width int, lc contents) []int {
 }
 
 // moveNextSection moves to the next section.
-func (m *Document) moveNextSection() error {
+func (m *Document) moveNextSection(ctx context.Context) error {
 	// Move by page, if there is no section delimiter.
 	if m.SectionDelimiter == "" {
 		m.movePgDn()
 		return nil
 	}
 
-	lN, err := m.nextSection(m.topLN + m.firstLine())
+	lN, err := m.nextSection(ctx, m.topLN+m.firstLine())
 	if err != nil {
 		m.movePgDn()
 		return ErrNoDelimiter
@@ -266,24 +266,21 @@ func (m *Document) moveNextSection() error {
 }
 
 // nextSection returns the line number of the previous section.
-func (m *Document) nextSection(n int) (int, error) {
-	ctx := context.Background()
-	defer ctx.Done()
-
+func (m *Document) nextSection(ctx context.Context, n int) (int, error) {
 	lN := n + (1 - m.SectionStartPosition)
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	return m.SearchLine(ctx, searcher, lN)
 }
 
 // movePrevSection moves to the previous section.
-func (m *Document) movePrevSection() error {
+func (m *Document) movePrevSection(ctx context.Context) error {
 	// Move by page, if there is no section delimiter.
 	if m.SectionDelimiter == "" {
 		m.movePgUp()
 		return nil
 	}
 
-	lN, err := m.prevSection(m.topLN + m.firstLine() - m.SectionHeaderNum)
+	lN, err := m.prevSection(ctx, m.topLN+m.firstLine()-m.SectionHeaderNum)
 	if err != nil {
 		m.moveTop()
 		return err
@@ -295,8 +292,7 @@ func (m *Document) movePrevSection() error {
 }
 
 // prevSection returns the line number of the previous section.
-func (m *Document) prevSection(n int) (int, error) {
-	ctx := context.Background()
+func (m *Document) prevSection(ctx context.Context, n int) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
 	defer cancel()
 
@@ -306,10 +302,7 @@ func (m *Document) prevSection(n int) (int, error) {
 }
 
 // moveLastSection moves to the last section.
-func (m *Document) moveLastSection() {
-	ctx := context.Background()
-	defer ctx.Done()
-
+func (m *Document) moveLastSection(ctx context.Context) {
 	// +1 to avoid if the bottom line is a session delimiter.
 	lN := m.BufEndNum() - 2
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)

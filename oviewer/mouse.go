@@ -15,7 +15,7 @@ import (
 var WheelScrollNum = 2
 
 // mouseEvent handles mouse events.
-func (root *Root) mouseEvent(ev *tcell.EventMouse) {
+func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 	button := ev.Buttons()
 	mod := ev.Modifiers()
 
@@ -26,33 +26,33 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 
 	if button&tcell.WheelUp != 0 {
 		if horizontal {
-			root.wheelLeft()
+			root.wheelLeft(ctx)
 			return
 		}
-		root.wheelUp()
+		root.wheelUp(ctx)
 		return
 	}
 
 	if button&tcell.WheelDown != 0 {
 		if horizontal {
-			root.wheelRight()
+			root.wheelRight(ctx)
 			return
 		}
-		root.wheelDown()
+		root.wheelDown(ctx)
 		return
 	}
 
 	if button&tcell.WheelLeft != 0 {
-		root.wheelLeft()
+		root.wheelLeft(ctx)
 		return
 	}
 	if button&tcell.WheelRight != 0 {
-		root.wheelRight()
+		root.wheelRight(ctx)
 		return
 	}
 
 	if button != tcell.ButtonNone || root.mouseSelect {
-		root.selectRange(ev)
+		root.selectRange(ctx, ev)
 		return
 	}
 
@@ -61,30 +61,30 @@ func (root *Root) mouseEvent(ev *tcell.EventMouse) {
 }
 
 // wheelUp moves the mouse wheel up.
-func (root *Root) wheelUp() {
+func (root *Root) wheelUp(context.Context) {
 	root.setMessage("")
 	root.moveUp(WheelScrollNum)
 }
 
 // wheelDown moves the mouse wheel down.
-func (root *Root) wheelDown() {
+func (root *Root) wheelDown(context.Context) {
 	root.setMessage("")
 	root.moveDown(WheelScrollNum)
 }
 
-func (root *Root) wheelRight() {
+func (root *Root) wheelRight(ctx context.Context) {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveRightOne()
+		root.moveRightOne(ctx)
 	} else {
 		root.moveRight(root.Doc.HScrollWidthNum)
 	}
 }
 
-func (root *Root) wheelLeft() {
+func (root *Root) wheelLeft(ctx context.Context) {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
-		root.moveLeftOne()
+		root.moveLeftOne(ctx)
 	} else {
 		root.moveLeft(root.Doc.HScrollWidthNum)
 	}
@@ -92,10 +92,10 @@ func (root *Root) wheelLeft() {
 
 // selectRange saves the position by selecting the range with the mouse.
 // The selection range is represented by (x1, y1), (x2, y2).
-func (root *Root) selectRange(ev *tcell.EventMouse) {
+func (root *Root) selectRange(ctx context.Context, ev *tcell.EventMouse) {
 	button := ev.Buttons()
 	if button == tcell.ButtonMiddle {
-		root.Paste()
+		root.Paste(ctx)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (root *Root) selectRange(ev *tcell.EventMouse) {
 		} else if !root.mousePressed {
 			root.resetSelect()
 			if button == tcell.ButtonPrimary || button == tcell.ButtonSecondary {
-				root.CopySelect()
+				root.CopySelect(ctx)
 			}
 		}
 	}
@@ -139,7 +139,7 @@ type eventCopySelect struct {
 }
 
 // CopySelect fires the eventCopySelect event.
-func (root *Root) CopySelect() {
+func (root *Root) CopySelect(context.Context) {
 	root.sendCopySelect()
 }
 
@@ -185,7 +185,7 @@ type eventPaste struct {
 }
 
 // Paste fires the eventPaste event.
-func (root *Root) Paste() {
+func (root *Root) Paste(context.Context) {
 	root.sendPaste()
 }
 
@@ -196,7 +196,7 @@ func (root *Root) sendPaste() {
 }
 
 // pasteFromClipboard writes a string from the clipboard.
-func (root *Root) pasteFromClipboard(_ context.Context) {
+func (root *Root) pasteFromClipboard(context.Context) {
 	input := root.input
 	switch input.Event.Mode() {
 	case Normal:
