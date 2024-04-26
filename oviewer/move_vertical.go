@@ -296,6 +296,9 @@ func (m *Document) movePrevSection() error {
 
 // prevSection returns the line number of the previous section.
 func (m *Document) prevSection(n int) (int, error) {
+	// TODO: Timeout should be specified in the caller instead of here.
+	// If it takes a long time to find the section header,
+	// it will freeze during that time, so a timeout is set.
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
 	defer cancel()
