@@ -16,6 +16,7 @@ const (
 	filter
 )
 
+// setSearchMode sets the inputMode to Search.
 func (root *Root) setCommonSearchMode() {
 	input := root.input
 	input.reset()
