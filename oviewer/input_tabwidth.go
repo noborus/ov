@@ -1,13 +1,14 @@
 package oviewer
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 // setTabWidthMode sets the inputMode to TabWidth.
-func (root *Root) setTabWidthMode() {
+func (root *Root) setTabWidthMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.TabWidthCandidate.toLast(strconv.Itoa(root.Doc.TabWidth))

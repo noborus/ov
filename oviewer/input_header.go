@@ -1,13 +1,14 @@
 package oviewer
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 // setHeaderMode sets the inputMode to Header.
-func (root *Root) setHeaderMode() {
+func (root *Root) setHeaderMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newHeaderEvent()

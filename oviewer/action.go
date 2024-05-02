@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -14,7 +15,7 @@ import (
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
-func (root *Root) toggleWrapMode() {
+func (root *Root) toggleWrapMode(context.Context) {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
 
@@ -32,7 +33,7 @@ func (root *Root) toggleWrapMode() {
 }
 
 // toggleColumnMode toggles ColumnMode each time it is called.
-func (root *Root) toggleColumnMode() {
+func (root *Root) toggleColumnMode(context.Context) {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
 
 	if root.Doc.ColumnMode {
@@ -42,7 +43,7 @@ func (root *Root) toggleColumnMode() {
 }
 
 // toggleColumnWidth toggles ColumnWidth each time it is called.
-func (root *Root) toggleColumnWidth() {
+func (root *Root) toggleColumnWidth(context.Context) {
 	if root.Doc.ColumnWidth {
 		root.Doc.ColumnWidth = false
 		root.Doc.ColumnMode = false
@@ -55,37 +56,37 @@ func (root *Root) toggleColumnWidth() {
 }
 
 // toggleAlternateRows toggles the AlternateRows each time it is called.
-func (root *Root) toggleAlternateRows() {
+func (root *Root) toggleAlternateRows(context.Context) {
 	root.Doc.AlternateRows = !root.Doc.AlternateRows
 	root.setMessagef("Set AlternateRows %t", root.Doc.AlternateRows)
 }
 
 // toggleLineNumMode toggles LineNumMode every time it is called.
-func (root *Root) toggleLineNumMode() {
+func (root *Root) toggleLineNumMode(ctx context.Context) {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
-	root.ViewSync()
+	root.ViewSync(ctx)
 	root.setMessagef("Set LineNumMode %t", root.Doc.LineNumMode)
 }
 
 // togglePlain toggles plain mode.
-func (root *Root) togglePlain() {
+func (root *Root) togglePlain(context.Context) {
 	root.Doc.PlainMode = !root.Doc.PlainMode
 	root.setMessagef("Set PlainMode %t", root.Doc.PlainMode)
 }
 
 // togglePlain toggles column rainbow mode.
-func (root *Root) toggleRainbow() {
+func (root *Root) toggleRainbow(context.Context) {
 	root.Doc.ColumnRainbow = !root.Doc.ColumnRainbow
 	root.setMessagef("Set Column Rainbow Mode %t", root.Doc.ColumnRainbow)
 }
 
 // toggleFollowMode toggles follow mode.
-func (root *Root) toggleFollowMode() {
+func (root *Root) toggleFollowMode(context.Context) {
 	root.Doc.FollowMode = !root.Doc.FollowMode
 }
 
 // toggleFollowAll toggles follow all mode.
-func (root *Root) toggleFollowAll() {
+func (root *Root) toggleFollowAll(context.Context) {
 	root.General.FollowAll = !root.General.FollowAll
 	root.mu.Lock()
 	for _, doc := range root.DocList {
@@ -95,12 +96,12 @@ func (root *Root) toggleFollowAll() {
 }
 
 // toggleFollowSection toggles follow section mode.
-func (root *Root) toggleFollowSection() {
+func (root *Root) toggleFollowSection(context.Context) {
 	root.Doc.FollowSection = !root.Doc.FollowSection
 }
 
 // closeFile close the file.
-func (root *Root) closeFile() {
+func (root *Root) closeFile(context.Context) {
 	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
 		return
 	}
@@ -129,7 +130,7 @@ func (root *Root) reload(m *Document) {
 }
 
 // toggleWatch toggles watch mode.
-func (root *Root) toggleWatch() {
+func (root *Root) toggleWatch(context.Context) {
 	if root.Doc.WatchMode {
 		root.Doc.unWatchMode()
 	} else {
@@ -170,11 +171,11 @@ func (root *Root) watchControl() {
 
 // searchGo will go to the line with the matching term after searching.
 // Jump by section if JumpTargetSection is true.
-func (root *Root) searchGo(lN int) {
+func (root *Root) searchGo(ctx context.Context, lN int) {
 	root.resetSelect()
 	x := root.searchXPos(lN)
 	if root.Doc.jumpTargetSection {
-		root.Doc.searchGoSection(lN, x)
+		root.Doc.searchGoSection(ctx, lN, x)
 		return
 	}
 	root.Doc.searchGoTo(lN, x)
@@ -230,7 +231,7 @@ func (root *Root) goLineNumber(ln int) {
 }
 
 // markNext moves to the next mark.
-func (root *Root) markNext() {
+func (root *Root) markNext(context.Context) {
 	if len(root.Doc.marked) == 0 {
 		return
 	}
@@ -244,7 +245,7 @@ func (root *Root) markNext() {
 }
 
 // markPrev moves to the previous mark.
-func (root *Root) markPrev() {
+func (root *Root) markPrev(context.Context) {
 	if len(root.Doc.marked) == 0 {
 		return
 	}
@@ -258,7 +259,7 @@ func (root *Root) markPrev() {
 }
 
 // addMark marks the current line number.
-func (root *Root) addMark() {
+func (root *Root) addMark(context.Context) {
 	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
 	root.Doc.marked = remove(root.Doc.marked, c)
 	root.Doc.marked = append(root.Doc.marked, c)
@@ -266,7 +267,7 @@ func (root *Root) addMark() {
 }
 
 // removeMark removes the current line number from the mark.
-func (root *Root) removeMark() {
+func (root *Root) removeMark(context.Context) {
 	c := root.Doc.topLN + root.Doc.firstLine()
 	marked := remove(root.Doc.marked, c)
 	if len(root.Doc.marked) == len(marked) {
@@ -278,7 +279,7 @@ func (root *Root) removeMark() {
 }
 
 // removeAllMark removes all marks.
-func (root *Root) removeAllMark() {
+func (root *Root) removeAllMark(context.Context) {
 	root.Doc.marked = nil
 	root.Doc.markedPoint = 0
 	root.setMessage("Remove all marks")
@@ -343,7 +344,7 @@ func (root *Root) setSectionNum(input string) {
 
 // suspend suspends the current screen display and runs the shell.
 // It will return when you exit the shell.
-func (root *Root) suspend() {
+func (root *Root) suspend(context.Context) {
 	log.Println("Suspend")
 	if err := root.Screen.Suspend(); err != nil {
 		log.Println(err)
@@ -374,7 +375,7 @@ func (root *Root) suspend() {
 
 // toggleMouse toggles mouse control.
 // When disabled, the mouse is controlled on the terminal side.
-func (root *Root) toggleMouse() {
+func (root *Root) toggleMouse(context.Context) {
 	root.Config.DisableMouse = !root.Config.DisableMouse
 	if root.Config.DisableMouse {
 		root.Screen.DisableMouse()
@@ -387,7 +388,7 @@ func (root *Root) toggleMouse() {
 
 // setViewMode switches to the preset display mode.
 // Set header lines and columnMode together.
-func (root *Root) setViewMode(modeName string) {
+func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	c, ok := root.Config.Mode[modeName]
 	if !ok {
 		if modeName != "general" {
@@ -403,7 +404,7 @@ func (root *Root) setViewMode(modeName string) {
 	}
 	root.Doc.regexpCompile()
 	root.Doc.ClearCache()
-	root.ViewSync()
+	root.ViewSync(ctx)
 	root.setMessagef("Set mode %s", modeName)
 }
 
@@ -452,7 +453,7 @@ func (root *Root) setWatchInterval(input string) {
 
 // setWriteBA sets the number before and after the line
 // to be written at the end.
-func (root *Root) setWriteBA(input string) {
+func (root *Root) setWriteBA(ctx context.Context, input string) {
 	before, after, err := rangeBA(input)
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
@@ -462,7 +463,7 @@ func (root *Root) setWriteBA(input string) {
 	root.AfterWriteOriginal = after
 	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
 	root.IsWriteOriginal = true
-	root.Quit()
+	root.Quit(ctx)
 }
 
 // rangeBA returns the before after number from a string.
@@ -545,8 +546,8 @@ func (root *Root) setJumpTarget(input string) {
 }
 
 // resize is a wrapper function that calls viewSync.
-func (root *Root) resize() {
-	root.ViewSync()
+func (root *Root) resize(ctx context.Context) {
+	root.ViewSync(ctx)
 }
 
 // jumpPosition determines the position of the jump.
@@ -603,7 +604,7 @@ func calculatePosition(length int, str string) float64 {
 }
 
 // ViewSync redraws the whole thing.
-func (root *Root) ViewSync() {
+func (root *Root) ViewSync(context.Context) {
 	root.resetSelect()
 	root.prepareStartX()
 	root.prepareView()
@@ -612,16 +613,16 @@ func (root *Root) ViewSync() {
 }
 
 // TailSync move to tail and sync.
-func (root *Root) TailSync() {
+func (root *Root) TailSync(ctx context.Context) {
 	root.Doc.moveBottom()
-	root.ViewSync()
+	root.ViewSync(ctx)
 }
 
 // tailSection moves to the last section
 // and adjusts to its original position.
-func (root *Root) tailSection() {
+func (root *Root) tailSection(ctx context.Context) {
 	moved := root.Doc.topLN - root.Doc.lastSectionPosNum
-	root.Doc.moveLastSection()
+	root.Doc.moveLastSection(ctx)
 	if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
 		root.Doc.moveLine(root.Doc.topLN + moved)
 	}
@@ -649,9 +650,9 @@ func (root *Root) updateEndNum() {
 }
 
 // follow updates the document in follow mode.
-func (root *Root) follow() {
+func (root *Root) follow(ctx context.Context) {
 	if root.General.FollowAll {
-		root.followAll()
+		root.followAll(ctx)
 	}
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum == num {
@@ -660,16 +661,16 @@ func (root *Root) follow() {
 
 	root.skipDraw = false
 	if root.Doc.FollowSection {
-		root.tailSection()
+		root.tailSection(ctx)
 	} else {
-		root.TailSync()
+		root.TailSync(ctx)
 	}
 	root.Doc.latestNum = num
 }
 
 // followAll monitors and switches all document updates
 // in follow all mode.
-func (root *Root) followAll() {
+func (root *Root) followAll(ctx context.Context) {
 	if root.Doc.documentType != DocNormal {
 		return
 	}
@@ -684,18 +685,18 @@ func (root *Root) followAll() {
 	root.mu.RUnlock()
 
 	if root.CurrentDoc != current {
-		root.switchDocument(current)
+		root.switchDocument(ctx, current)
 	}
 }
 
 // Cancel follow mode and follow all mode.
-func (root *Root) Cancel() {
+func (root *Root) Cancel(context.Context) {
 	root.General.FollowAll = false
 	root.Doc.FollowMode = false
 }
 
 // WriteQuit sets the write flag and executes a quit event.
-func (root *Root) WriteQuit() {
+func (root *Root) WriteQuit(ctx context.Context) {
 	root.IsWriteOriginal = true
-	root.Quit()
+	root.Quit(ctx)
 }

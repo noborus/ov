@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"sync/atomic"
 )
 
@@ -35,7 +36,7 @@ func (root *Root) hasDocChanged() bool {
 }
 
 // addDocument adds a document and displays it.
-func (root *Root) addDocument(m *Document) {
+func (root *Root) addDocument(ctx context.Context,m *Document) {
 	root.setMessageLogf("add %s", m.FileName)
 	m.general = root.Config.General
 	m.regexpCompile()
@@ -46,11 +47,11 @@ func (root *Root) addDocument(m *Document) {
 	root.CurrentDoc = len(root.DocList) - 1
 	root.showDocNum = true
 
-	root.setDocument(m)
+	root.setDocument(ctx, m)
 }
 
 // closeDocument closes the document.
-func (root *Root) closeDocument() {
+func (root *Root) closeDocument(ctx context.Context) {
 	// If there is only one document, do nothing.
 	if root.DocumentLen() == 1 {
 		root.setMessage("only this document")
@@ -66,11 +67,11 @@ func (root *Root) closeDocument() {
 		root.CurrentDoc--
 	}
 	doc := root.DocList[root.CurrentDoc]
-	root.setDocument(doc)
+	root.setDocument(ctx, doc)
 }
 
 // closeAllDocument closes all documents of the specified type.
-func (root *Root) closeAllDocument(dType documentType) {
+func (root *Root) closeAllDocument(ctx context.Context, dType documentType) {
 	root.mu.Lock()
 	for i := len(root.DocList) - 1; i >= 0; i-- {
 		if len(root.DocList) <= 1 {
@@ -87,18 +88,18 @@ func (root *Root) closeAllDocument(dType documentType) {
 	}
 	doc := root.DocList[root.CurrentDoc]
 	root.mu.Unlock()
-	root.setDocument(doc)
+	root.setDocument(ctx, doc)
 }
 
 // nextDoc displays the next document.
-func (root *Root) nextDoc() {
-	root.setDocumentNum(root.CurrentDoc + 1)
+func (root *Root) nextDoc(ctx context.Context) {
+	root.setDocumentNum(ctx, root.CurrentDoc+1)
 	root.input.Event = normal()
 	root.debugMessage("next document")
 }
 
 // previousDoc displays the previous document.
-func (root *Root) previousDoc() {
+func (root *Root) previousDoc(ctx context.Context) {
 	lineNum := 0
 	targetNum := root.CurrentDoc - 1
 	targetDoc := root.getDocument(targetNum)
@@ -107,7 +108,7 @@ func (root *Root) previousDoc() {
 			lineNum = n
 		}
 	}
-	root.setDocumentNum(root.CurrentDoc - 1)
+	root.setDocumentNum(ctx, root.CurrentDoc-1)
 	root.input.Event = normal()
 	if lineNum > 0 {
 		root.sendGoto(lineNum - root.Doc.firstLine() + 1)
@@ -116,14 +117,14 @@ func (root *Root) previousDoc() {
 }
 
 // switchDocument displays the document of the specified docNum.
-func (root *Root) switchDocument(docNum int) {
-	root.setDocumentNum(docNum)
+func (root *Root) switchDocument(ctx context.Context, docNum int) {
+	root.setDocumentNum(ctx, docNum)
 	root.debugMessage("switch document")
 }
 
 // setDocumentNum actually specifies docNum to display the document.
 // This function is called internally from next / previous / switch / add.
-func (root *Root) setDocumentNum(docNum int) {
+func (root *Root) setDocumentNum(ctx context.Context, docNum int) {
 	docNum = max(0, docNum)
 	docNum = min(root.DocumentLen()-1, docNum)
 
@@ -132,38 +133,38 @@ func (root *Root) setDocumentNum(docNum int) {
 
 	root.CurrentDoc = docNum
 	m := root.DocList[root.CurrentDoc]
-	root.setDocument(m)
+	root.setDocument(ctx, m)
 }
 
 // setDocument sets the Document.
-func (root *Root) setDocument(m *Document) {
+func (root *Root) setDocument(ctx context.Context, m *Document) {
 	root.Doc = m
-	root.ViewSync()
+	root.ViewSync(ctx)
 }
 
 // helpDisplay is to switch between helpDisplay screen and normal screen.
-func (root *Root) helpDisplay() {
+func (root *Root) helpDisplay(ctx context.Context) {
 	if root.Doc.documentType == DocHelp {
-		root.toNormal()
+		root.toNormal(ctx)
 		return
 	}
-	root.setDocument(root.helpDoc)
+	root.setDocument(ctx, root.helpDoc)
 }
 
 // LogDisplay is to switch between Log screen and normal screen.
-func (root *Root) logDisplay() {
+func (root *Root) logDisplay(ctx context.Context) {
 	if root.Doc.documentType == DocLog {
-		root.toNormal()
+		root.toNormal(ctx)
 		return
 	}
-	root.setDocument(root.logDoc.Document)
+	root.setDocument(ctx, root.logDoc.Document)
 }
 
 // toNormal displays a normal document.
-func (root *Root) toNormal() {
+func (root *Root) toNormal(ctx context.Context) {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
 
 	m := root.DocList[root.CurrentDoc]
-	root.setDocument(m)
+	root.setDocument(ctx, m)
 }

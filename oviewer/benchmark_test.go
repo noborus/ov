@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,10 +49,13 @@ func Draw_Helper(b *testing.B, fileName string) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	root.ViewSync()
+
+	ctx := context.Background()
+
+	root.ViewSync(ctx)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		root.draw()
+		root.draw(ctx)
 		root.Doc.ClearCache()
 	}
 	root.Close()

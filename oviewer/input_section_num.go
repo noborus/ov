@@ -1,13 +1,14 @@
 package oviewer
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 // setSectionNumMode sets the inputMode to SectionNum.
-func (root *Root) setSectionNumMode() {
+func (root *Root) setSectionNumMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSectionNumEvent()

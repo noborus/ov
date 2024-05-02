@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"bytes"
+	"context"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -32,7 +33,7 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 				t.Fatal(err)
 			}
 			root.Doc.ColumnMode = tt.columnMode
-			root.toggleColumnMode()
+			root.toggleColumnMode(context.Background())
 			if root.Doc.ColumnMode == tt.columnMode {
 				t.Errorf("root.toggleColumnMode() = %v, want %v", root.Doc.ColumnMode, !tt.columnMode)
 			}

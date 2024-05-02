@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setSectionDelimiterMode sets the inputMode to SectionDelimiter.
-func (root *Root) setSectionDelimiterMode() {
+func (root *Root) setSectionDelimiterMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.SectionDelmCandidate.toLast(root.Doc.SectionDelimiter)

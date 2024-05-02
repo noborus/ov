@@ -49,7 +49,7 @@ func (root *Root) filter(ctx context.Context) {
 	render.documentType = DocFilter
 	render.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
 	render.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
-	root.addDocument(render)
+	root.addDocument(ctx, render)
 	render.general = mergeGeneral(m.general, render.general)
 
 	render.nonMatch = m.nonMatch
@@ -105,8 +105,8 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 }
 
 // closeAllFilter closes all filter documents.
-func (root *Root) closeAllFilter() {
-	root.closeAllDocument(DocFilter)
+func (root *Root) closeAllFilter(ctx context.Context) {
+	root.closeAllDocument(ctx, DocFilter)
 }
 
 // writeLine writes a line to w.

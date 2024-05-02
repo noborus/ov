@@ -643,7 +643,7 @@ type eventNextSearch struct {
 }
 
 // sendNextSearch fires the eventNextSearch event.
-func (root *Root) sendNextSearch() {
+func (root *Root) sendNextSearch(context.Context) {
 	if root.searcher == nil {
 		return
 	}
@@ -661,7 +661,7 @@ type eventNextBackSearch struct {
 }
 
 // sendNextBackSearch fires the eventNextBackSearch event.
-func (root *Root) sendNextBackSearch() {
+func (root *Root) sendNextBackSearch(context.Context) {
 	if root.searcher == nil {
 		return
 	}

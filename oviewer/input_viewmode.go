@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setViewModeMode sets the inputMode to ViewMode.
-func (root *Root) setViewInputMode() {
+func (root *Root) setViewInputMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newViewModeEvent(input.ModeCandidate)

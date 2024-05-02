@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"sync"
 	"time"
@@ -37,6 +38,6 @@ func main() {
 	ov.Search("import")
 
 	time.Sleep(time.Second * 10)
-	ov.Quit()
+	ov.Quit(context.Background())
 	wg.Wait()
 }

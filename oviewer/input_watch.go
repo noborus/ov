@@ -1,9 +1,13 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"context"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // setWatchIntervalMode sets the inputMode to Watch.
-func (root *Root) setWatchIntervalMode() {
+func (root *Root) setWatchIntervalMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newWatchIntervalEvent(input.WatchCandidate)

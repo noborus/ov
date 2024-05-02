@@ -1,11 +1,13 @@
 package oviewer
 
 import (
+	"context"
+
 	"github.com/gdamore/tcell/v2"
 )
 
 // setJumpTargetMode sets the inputMode to JumpTarget.
-func (root *Root) setJumpTargetMode() {
+func (root *Root) setJumpTargetMode(context.Context) {
 	input := root.input
 	input.reset()
 

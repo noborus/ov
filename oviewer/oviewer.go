@@ -568,9 +568,9 @@ func (root *Root) sendRequest(m *Document, request request) {
 }
 
 // setKeyConfig sets key bindings.
-func (root *Root) setKeyConfig() (map[string][]string, error) {
+func (root *Root) setKeyConfig(ctx context.Context) (map[string][]string, error) {
 	keyBind := GetKeyBinds(root.Config)
-	if err := root.setHandlers(keyBind); err != nil {
+	if err := root.setHandlers(ctx, keyBind); err != nil {
 		return nil, err
 	}
 
@@ -584,12 +584,16 @@ func (root *Root) setKeyConfig() (map[string][]string, error) {
 }
 
 // SetKeyHandler assigns a new key handler.
-func (root *Root) SetKeyHandler(name string, keys []string, handler func()) error {
-	return setHandler(root.keyConfig, name, keys, handler)
+func (root *Root) SetKeyHandler(ctx context.Context, name string, keys []string, handler func(context.Context)) error {
+	return setHandler(ctx, root.keyConfig, name, keys, handler)
 }
 
 // Run starts the terminal pager.
 func (root *Root) Run() error {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	defer root.Close()
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -600,7 +604,7 @@ func (root *Root) Run() error {
 
 	// Do not set the key bindings in NewOviewer
 	// because it is done after loading the config.
-	keyBind, err := root.setKeyConfig()
+	keyBind, err := root.setKeyConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -638,7 +642,7 @@ func (root *Root) Run() error {
 		log.Printf("open [%d]%s%s", n, doc.FileName, w)
 	}
 
-	root.ViewSync()
+	root.ViewSync(ctx)
 	// Exit if fits on screen
 	if root.QuitSmall && root.docSmall() {
 		root.IsWriteOriginal = true
@@ -652,9 +656,6 @@ func (root *Root) Run() error {
 
 	quitChan := make(chan struct{})
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	go func() {
 		// Undo screen when goroutine panic.
 		defer func() {

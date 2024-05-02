@@ -1,5 +1,7 @@
 package oviewer
 
+import "context"
+
 // searchGoTo moves to the specified line and position after searching.
 // Go to the specified line +root.Doc.JumpTarget Go to.
 // If the search term is off screen, move until the search term is visible.
@@ -17,10 +19,10 @@ func (m *Document) bottomJumpTarget() int {
 
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
-func (m *Document) searchGoSection(lN int, x int) {
+func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 	m.searchGoX(x)
 
-	sN, err := m.prevSection(lN)
+	sN, err := m.prevSection(ctx, lN)
 	if err != nil {
 		sN = 0
 	}
