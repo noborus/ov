@@ -1108,7 +1108,7 @@ The following are not actually pagers and do not conflict. can work together.
 * [bat](https://github.com/sharkdp/bat)
   * `bat` is an alternative to cat. It supports a lot of highlighting and automatically calls the pager.
 * [delta](https://github.com/dandavison/delta)
-  * `delta` processes the diff for easy viewing and displays it. Call the pager automatically. 
+  * `delta` processes the diff for easy viewing and displays it. Call the pager automatically.
 
 Please look at the [documentation portal](https://noborus.github.io/ov/index.html) to configure them.
 

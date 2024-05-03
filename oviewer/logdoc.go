@@ -43,6 +43,7 @@ func (logDoc *LogDocument) Write(p []byte) (int, error) {
 	return len(line), nil
 }
 
+// chanWrite writes the log output to the logDoc.
 func (logDoc *LogDocument) chanWrite() {
 	for p := range logDoc.channel {
 		s := logDoc.store

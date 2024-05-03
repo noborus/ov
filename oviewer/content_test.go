@@ -196,6 +196,7 @@ func Test_parseStringOverlapping(t *testing.T) {
 		})
 	}
 }
+
 func Test_parseStringStyle1(t *testing.T) {
 	t.Parallel()
 	type args struct {

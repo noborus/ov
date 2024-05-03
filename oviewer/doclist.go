@@ -36,7 +36,7 @@ func (root *Root) hasDocChanged() bool {
 }
 
 // addDocument adds a document and displays it.
-func (root *Root) addDocument(ctx context.Context,m *Document) {
+func (root *Root) addDocument(ctx context.Context, m *Document) {
 	root.setMessageLogf("add %s", m.FileName)
 	m.general = root.Config.General
 	m.regexpCompile()
