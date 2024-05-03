@@ -83,7 +83,6 @@ type eventInputSearch struct {
 	clist      *candidate
 	value      string
 	searchType searchType
-	prompt     string
 }
 
 // newSearchEvent returns SearchInput.
