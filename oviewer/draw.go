@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -14,7 +15,7 @@ import (
 // statusLine is the number of lines in the status bar.
 const statusLine = 1
 
-// sectionTimeOut is the section header search timeout period.
+// sectionTimeOut is the section header search timeout(in milliseconds) period.
 const sectionTimeOut = 1000
 
 // draw is the main routine that draws the screen.
@@ -127,6 +128,8 @@ func (root *Root) drawSectionHeader(ctx context.Context, lN int) int {
 	if m.dupSectionHeader && pn <= 0 {
 		pn = 1
 	}
+	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
+	defer cancel()
 	sectionLN, err := m.prevSection(ctx, pn)
 	if err != nil {
 		if errors.Is(err, ErrCancel) {

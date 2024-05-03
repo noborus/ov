@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"sync/atomic"
-	"time"
 )
 
 // lastLineMargin is the margin of the last line
@@ -293,12 +292,6 @@ func (m *Document) movePrevSection(ctx context.Context) error {
 
 // prevSection returns the line number of the previous section.
 func (m *Document) prevSection(ctx context.Context, n int) (int, error) {
-	// TODO: Timeout should be specified in the caller instead of here.
-	// If it takes a long time to find the section header,
-	// it will freeze during that time, so a timeout is set.
-	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
-	defer cancel()
-
 	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
 	lN := n - (1 + m.SectionStartPosition)
 	return m.BackSearchLine(ctx, searcher, lN)
