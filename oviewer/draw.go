@@ -617,24 +617,8 @@ func (root *Root) inputPrompt() string {
 	mode := root.input.Event.Mode()
 	modePrompt := root.input.Event.Prompt()
 
-	if mode != Search && mode != Backsearch && mode != Filter {
-		prompt.WriteString(modePrompt)
-		return prompt.String()
-	}
-
-	if mode == Filter && root.Doc.nonMatch {
-		prompt.WriteString("Non-match")
-	}
-	if root.Config.RegexpSearch {
-		prompt.WriteString("(R)")
-	}
-	if mode != Filter && root.Config.Incsearch {
-		prompt.WriteString("(I)")
-	}
-	if root.Config.SmartCaseSensitive {
-		prompt.WriteString("(S)")
-	} else if root.Config.CaseSensitive {
-		prompt.WriteString("(Aa)")
+	if mode == Search || mode == Backsearch || mode == Filter {
+		prompt.WriteString(root.searchOpt)
 	}
 	prompt.WriteString(modePrompt)
 	return prompt.String()

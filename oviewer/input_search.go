@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -33,25 +34,47 @@ func (root *Root) setCommonSearchMode() {
 func (root *Root) setSearchMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, forward)
+	root.setPromptOpt()
 }
 
 // setBackSearchMode sets the inputMode to Backsearch.
 func (root *Root) setBackSearchMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, backward)
+	root.setPromptOpt()
 }
 
 // setSearchFilterMode sets the inputMode to Filter.
 func (root *Root) setSearchFilterMode(context.Context) {
 	root.setCommonSearchMode()
 	root.input.Event = newSearchEvent(root.input.SearchCandidate, filter)
+	root.setPromptOpt()
 }
 
-// searchCandidate returns the candidate to set to default.
-func searchCandidate() *candidate {
-	return &candidate{
-		list: []string{},
+// setPromptOpt returns a string describing the input field.
+func (root *Root) setPromptOpt() {
+	var opt strings.Builder
+	mode := root.input.Event.Mode()
+
+	if mode != Search && mode != Backsearch && mode != Filter {
+		root.searchOpt = opt.String()
 	}
+
+	if mode == Filter && root.Doc.nonMatch {
+		opt.WriteString("Non-match")
+	}
+	if root.Config.RegexpSearch {
+		opt.WriteString("(R)")
+	}
+	if mode != Filter && root.Config.Incsearch {
+		opt.WriteString("(I)")
+	}
+	if root.Config.SmartCaseSensitive {
+		opt.WriteString("(S)")
+	} else if root.Config.CaseSensitive {
+		opt.WriteString("(Aa)")
+	}
+	root.searchOpt = opt.String()
 }
 
 // eventInputSearch represents the search input mode.
@@ -60,6 +83,7 @@ type eventInputSearch struct {
 	clist      *candidate
 	value      string
 	searchType searchType
+	prompt     string
 }
 
 // newSearchEvent returns SearchInput.

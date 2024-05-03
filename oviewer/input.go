@@ -191,6 +191,7 @@ func (root *Root) inputCaseSensitive(context.Context) {
 	if root.Config.CaseSensitive {
 		root.Config.SmartCaseSensitive = false
 	}
+	root.setPromptOpt()
 }
 
 // inputSmartCaseSensitive toggles case sensitivity.
@@ -199,20 +200,24 @@ func (root *Root) inputSmartCaseSensitive(context.Context) {
 	if root.Config.SmartCaseSensitive {
 		root.Config.CaseSensitive = false
 	}
+	root.setPromptOpt()
 }
 
 // inputIncSearch toggles incremental search.
 func (root *Root) inputIncSearch(context.Context) {
 	root.Config.Incsearch = !root.Config.Incsearch
+	root.setPromptOpt()
 }
 
 // inputRegexpSearch toggles regexp search.
 func (root *Root) inputRegexpSearch(context.Context) {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
+	root.setPromptOpt()
 }
 
 func (root *Root) inputNonMatch(context.Context) {
 	root.Doc.nonMatch = !root.Doc.nonMatch
+	root.setPromptOpt()
 }
 
 // inputPrevious searches the previous history.

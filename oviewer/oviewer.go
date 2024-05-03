@@ -46,6 +46,9 @@ type Root struct {
 	// Original string.
 	OriginStr string
 
+	// searchOpt is the search option.
+	searchOpt string
+
 	// message is the message to display.
 	message string
 	// cancelKeys represents the cancellation key string.

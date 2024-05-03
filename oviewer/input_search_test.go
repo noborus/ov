@@ -47,7 +47,7 @@ func Test_eventInputSearch_Confirm(t *testing.T) {
 			name: "key enter",
 			fields: fields{
 				EventTime: tcell.EventTime{},
-				clist:     searchCandidate(),
+				clist:     blankCandidate(),
 				value:     "",
 			},
 			args: args{
