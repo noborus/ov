@@ -433,8 +433,8 @@ func init() {
 	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
 	// Config
-	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
-	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
+	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
+	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
 	_ = viper.BindPFlag("IsWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write"))
@@ -444,9 +444,6 @@ func init() {
 
 	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "number after the current lines when exiting")
 	_ = viper.BindPFlag("AfterWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-after"))
-
-	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
-	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
@@ -460,17 +457,20 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
 	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
 
-	rootCmd.PersistentFlags().StringP("view-mode", "", "", "apply predefined settings for a specific mode")
-	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
-
 	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "number of chunks to limit in memory")
 	_ = viper.BindPFlag("MemoryLimit", rootCmd.PersistentFlags().Lookup("memory-limit"))
 
 	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "number of chunks to limit in memory for the file")
 	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
+	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
+	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
+
 	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
+
+	rootCmd.PersistentFlags().StringP("view-mode", "", "", "apply predefined settings for a specific mode")
+	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))

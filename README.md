@@ -61,7 +61,8 @@ ov is a terminal pager.
   * 3.25. [Jump target](#jump-target)
   * 3.26. [View mode](#view-mode)
   * 3.27. [Output on exit](#output-on-exit)
-  * 3.28. [Save](#save)
+  * 3.28. [Quit if one screen](#quit-if-one-screen)
+  * 3.29. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -743,7 +744,7 @@ Mode:
 
 ###  3.27. <a name='output-on-exit'></a>Output on exit
 
-`--exit-write` `-X`(default key `Q`) option prints the current screen on exit.
+`--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
 
 By default, it outputs the amount of the displayed screen and exits.
@@ -762,7 +763,18 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  3.28. <a name='save'></a>Save
+###  3.28. <a name='quit-if-one-screen'></a>Quit if one screen
+
+The `--quit-if-one-screen`, `-F` option allows the program to exit immediately if the content fits within one screen.
+This can be useful when you only want to view small files or when you want to quickly check the content without scrolling.
+
+If you want to enable this option by default, set `QuitSmall` to `true` in the configuration file.
+
+```yaml
+QuitSmall: true
+```
+
+###  3.29. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 

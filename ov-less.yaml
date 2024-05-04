@@ -2,10 +2,31 @@
 # Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
 # Thanks to hupfdule (Marco Herrn) for the less keybinding information.
 #
-# CaseSensitive: false
-# RegexpSearch: false
-# Incsearch: true
-# MemoryLimit: 10000
+# QuitSmall: false # Quit if the file size is smaller than the terminal size.
+# IsWriteOriginal: false # Write the original content when exiting.
+# BeforeWriteOriginal: 0 # Write the number of lines before the current location when exiting.
+# AfterWriteOriginal: 0 # Write the number of lines after the current location when exiting.
+#
+# CaseSensitive: false # Case sensitive search.
+# SmartCaseSensitive: false # Case sensitive search if the search string contains uppercase characters.
+# RegexpSearch: false # Regular expression search.
+# Incsearch: true # Incremental search.
+#
+# MemoryLimit: -1 # The maximum number of lines that can be loaded into memory.
+# MemoryLimitFile: 100 # The maximum number of lines that can be loaded into memory when opening a file.
+#
+# DisableMouse: false # Disable mouse support.
+# DisableColumnCycle: false # Disable cycling when moving columns.
+#
+# ViewMode: markdown # Default view mode.
+#
+# Debug: false # Debug mode.
+#
+Prompt:
+  Normal:
+#    ShowFilename: true # Show the filename.
+#    InvertColor: true # Invert the color of the prompt.
+#    ProcessOfCount: true # Show the process of count.
 
 General:
   TabWidth: 4
@@ -202,6 +223,9 @@ KeyBind:
         - "alt+j"
 
 Mode:
+  markdown:
+    SectionDelimiter: "^#"
+    WrapMode: true
   psql:
     Header: 2
     AlternateRows: true
@@ -209,7 +233,7 @@ Mode:
     LineNumMode: false
     WrapMode: true
     ColumnDelimiter: "|"
-  MySQL:
+  mysql:
     Header: 3
     AlternateRows: true
     ColumnMode: true
