@@ -183,13 +183,13 @@ func (root *Root) searchGo(ctx context.Context, lN int) {
 
 // goLine will move to the specified line.
 // decimal number > line number
-// 10 -> line 10
+// 10 -> line 10.
 // decimal number + "." + decimal number > line number + number of wrapping lines
-// 10.5 -> line 10 + 5 wrapping lines
+// 10.5 -> line 10 + 5 wrapping lines.
 // "." + decimal is a percentage position
-// .5 -> 50% of the way down the file
+// .5 -> 50% of the way down the file.
 // decimal + "%" is a percentage position
-// 50% -> 50% of the way down the file
+// 50% -> 50% of the way down the file.
 func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
@@ -592,7 +592,7 @@ func calculatePosition(length int, str string) float64 {
 		p = i / 100
 	}
 
-	if p != 0 {
+	if p > 0 {
 		return float64(length) * p
 	}
 
@@ -633,11 +633,11 @@ func (root *Root) tailSection(ctx context.Context) {
 func (root *Root) prepareStartX() {
 	root.scr.startX = 0
 	if root.Doc.LineNumMode {
-		if root.Doc.parent != nil {
-			root.scr.startX = len(fmt.Sprintf("%d", root.Doc.parent.BufEndNum())) + 1
-			return
+		m := root.Doc
+		if m.parent != nil {
+			m = m.parent
 		}
-		root.scr.startX = len(fmt.Sprintf("%d", root.Doc.BufEndNum())) + 1
+		root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
 	}
 }
 

@@ -12,7 +12,7 @@ func (m *Document) searchGoTo(lN int, x int) {
 	m.moveYUp(m.jumpTargetNum)
 }
 
-// Bottom line of jumpTarget when specifying a section
+// Bottom line of jumpTarget when specifying a section.
 func (m *Document) bottomJumpTarget() int {
 	return m.statusPos - bottomMargin
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -563,7 +564,9 @@ func (root *Root) leftStatus() (contents, int) {
 func (root *Root) normalLeftStatus() (contents, int) {
 	var leftStatus strings.Builder
 	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
-		leftStatus.WriteString(fmt.Sprintf("[%d]", root.CurrentDoc))
+		leftStatus.WriteString("[")
+		leftStatus.WriteString(strconv.Itoa(root.CurrentDoc))
+		leftStatus.WriteString("]")
 	}
 
 	modeStatus := ""
@@ -578,11 +581,12 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	}
 	// Watch mode doubles as FollowSection mode.
 	if root.Doc.WatchMode {
-		modeStatus += "(Watch)"
+		leftStatus.WriteString(modeStatus)
+		leftStatus.WriteString("(Watch)")
 	} else if root.Doc.FollowSection {
 		modeStatus = "(Follow Section)"
+		leftStatus.WriteString(modeStatus)
 	}
-	leftStatus.WriteString(modeStatus)
 
 	if root.Doc.Caption != "" {
 		leftStatus.WriteString(root.Doc.Caption)

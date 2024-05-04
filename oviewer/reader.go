@@ -275,7 +275,7 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	return reader
 }
 
-// openFileReader opens a file,
+// openFileReader opens a file.
 func (m *Document) openFileReader(fileName string) (io.Reader, error) {
 	f, err := open(fileName)
 	if err != nil {
