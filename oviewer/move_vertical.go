@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 )
 
-// lastLineMargin is the margin of the last line
+// lastLineMargin is the margin of the last line.
 const lastLineMargin = 1
 
 // moveLine moves to the specified line.

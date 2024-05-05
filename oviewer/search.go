@@ -292,7 +292,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, sea
 	root.setMessagef("search:%v", word)
 }
 
-// searchLine is a forward/backward search wrap function
+// searchLine is a forward/backward search wrap function.
 func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bool, lineNum int) (int, error) {
 	if forward {
 		return m.SearchLine(ctx, searcher, lineNum)
@@ -478,7 +478,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	for _, k := range root.cancelKeys {
 		mod, key, ch, err := cbind.Decode(k)
 		if err != nil {
-			return fmt.Errorf("%w [%s] for cancel: %s", ErrFailedKeyBind, k, err)
+			return fmt.Errorf("%w [%s] for cancel: %w", ErrFailedKeyBind, k, err)
 		}
 		if key == tcell.KeyRune {
 			c.SetRune(mod, ch, cancelApp)

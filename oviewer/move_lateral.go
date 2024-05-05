@@ -263,7 +263,7 @@ func screenAdjustX(left int, right int, cl int, cr int, widths []int, cursor int
 	return cl - columnMargin, cursor, nil
 }
 
-// splitByDelimiter return a slice split by delimiter
+// splitByDelimiter return a slice split by delimiter.
 func splitByDelimiter(str string, delimiter string, delimiterReg *regexp.Regexp) []int {
 	indexes := allIndex(str, delimiter, delimiterReg)
 	if len(indexes) == 0 {
