@@ -317,11 +317,10 @@ func (m *Document) moveNormalRight(n int) {
 
 // moveColumnLeft moves to the left column.
 func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
-	if m.columnCursor <= 0 && m.x <= 2 {
+	if m.columnCursor <= 0 && m.x <= columnMargin {
 		if cycle {
-			cursor := m.rightmostColumn()
-			m.x = max(0, m.endRight(scr)+columnMargin)
-			m.columnCursor = cursor
+			m.columnCursor = m.rightmostColumn()
+			m.x = max(0, m.endRight(scr))
 			return nil
 		}
 	}
@@ -334,15 +333,14 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 // moveColumnRight moves to the right column.
 func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	x, cursor, err := m.moveTo(scr, n)
-	if err != nil {
-		if errors.Is(err, ErrOverScreen) {
-			if cycle {
-				m.x = 0
-				m.columnCursor = 0
-				return nil
-			}
+	if err != nil && errors.Is(err, ErrOverScreen) {
+		if cycle {
+			m.x = 0
+			m.columnCursor = 0
+			return nil
 		}
 	}
+
 	m.x = x
 	m.columnCursor = cursor
 	return nil
