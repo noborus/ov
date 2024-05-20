@@ -23,11 +23,11 @@ import (
 // if the search word matches the argument string.
 type Searcher interface {
 	// Match searches for bytes.
-	Match([]byte) bool
+	Match(target []byte) bool
 	// MatchString searches for strings.
-	MatchString(string) bool
+	MatchString(target string) bool
 	// FindAll searches for strings and returns the index of the match.
-	FindAll(string) [][]int
+	FindAll(target string) [][]int
 	// String returns the search word.
 	String() string
 }
@@ -38,21 +38,21 @@ type searchWord struct {
 }
 
 // searchWord Match is a case-insensitive search for bytes.
-func (substr searchWord) Match(s []byte) bool {
-	s = stripEscapeSequenceBytes(s)
-	return bytes.Contains(bytes.ToLower(s), []byte(substr.word))
+func (substr searchWord) Match(target []byte) bool {
+	target = stripEscapeSequenceBytes(target)
+	return bytes.Contains(bytes.ToLower(target), []byte(substr.word))
 }
 
 // searchWord MatchString is a case-insensitive search for string.
-func (substr searchWord) MatchString(s string) bool {
-	s = stripEscapeSequenceString(s)
-	return strings.Contains(strings.ToLower(s), substr.word)
+func (substr searchWord) MatchString(target string) bool {
+	target = stripEscapeSequenceString(target)
+	return strings.Contains(strings.ToLower(target), substr.word)
 }
 
 // searchWord FindAll searches for strings and returns the index of the match.
-func (substr searchWord) FindAll(s string) [][]int {
-	s = strings.ToLower(s)
-	return allStringIndex(s, substr.word)
+func (substr searchWord) FindAll(target string) [][]int {
+	target = strings.ToLower(target)
+	return allStringIndex(target, substr.word)
 }
 
 // searchWord String returns the search word.
@@ -66,20 +66,20 @@ type sensitiveWord struct {
 }
 
 // sensitiveWord Match is a case-sensitive search for bytes.
-func (substr sensitiveWord) Match(s []byte) bool {
-	s = stripEscapeSequenceBytes(s)
-	return bytes.Contains(s, []byte(substr.word))
+func (substr sensitiveWord) Match(target []byte) bool {
+	target = stripEscapeSequenceBytes(target)
+	return bytes.Contains(target, []byte(substr.word))
 }
 
 // sensitiveWord MatchString is a case-sensitive search for string.
-func (substr sensitiveWord) MatchString(s string) bool {
-	s = stripEscapeSequenceString(s)
-	return strings.Contains(s, substr.word)
+func (substr sensitiveWord) MatchString(target string) bool {
+	target = stripEscapeSequenceString(target)
+	return strings.Contains(target, substr.word)
 }
 
 // sensitiveWord FindAll searches for strings and returns the index of the match.
-func (substr sensitiveWord) FindAll(s string) [][]int {
-	return allStringIndex(s, substr.word)
+func (substr sensitiveWord) FindAll(target string) [][]int {
+	return allStringIndex(target, substr.word)
 }
 
 // String returns the search word.
@@ -94,20 +94,20 @@ type regexpWord struct {
 }
 
 // regexpWord Match is a regular expression search for bytes.
-func (substr regexpWord) Match(s []byte) bool {
-	s = stripEscapeSequenceBytes(s)
-	return substr.regexp.Match(s)
+func (substr regexpWord) Match(target []byte) bool {
+	target = stripEscapeSequenceBytes(target)
+	return substr.regexp.Match(target)
 }
 
 // regexpWord MatchString is a regular expression search for string.
-func (substr regexpWord) MatchString(s string) bool {
-	s = stripEscapeSequenceString(s)
-	return substr.regexp.MatchString(s)
+func (substr regexpWord) MatchString(target string) bool {
+	target = stripEscapeSequenceString(target)
+	return substr.regexp.MatchString(target)
 }
 
 // regexpWord FindAll searches for strings and returns the index of the match.
-func (substr regexpWord) FindAll(s string) [][]int {
-	return substr.regexp.FindAllStringIndex(s, -1)
+func (substr regexpWord) FindAll(target string) [][]int {
+	return substr.regexp.FindAllStringIndex(target, -1)
 }
 
 // regexpWord String returns the search word.
@@ -119,21 +119,21 @@ func (substr regexpWord) String() string {
 var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
 
 // stripEscapeSequenceString strips if it contains escape sequences.
-func stripEscapeSequenceString(s string) string {
-	// Remove EscapeSequence.
-	if strings.ContainsAny(s, "\x1b\b") {
-		s = stripRegexpES.ReplaceAllString(s, "")
+func stripEscapeSequenceString(src string) string {
+	if !strings.ContainsAny(src, "\x1b\b") {
+		return src
 	}
-	return s
+	// Remove EscapeSequence.
+	return stripRegexpES.ReplaceAllString(src, "")
 }
 
 // stripEscapeSequence strips if it contains escape sequences.
-func stripEscapeSequenceBytes(s []byte) []byte {
-	// Remove EscapeSequence.
-	if bytes.ContainsAny(s, "\x1b\b") {
-		s = stripRegexpES.ReplaceAll(s, []byte(""))
+func stripEscapeSequenceBytes(src []byte) []byte {
+	if !bytes.ContainsAny(src, "\x1b\b") {
+		return src
 	}
-	return s
+	// Remove EscapeSequence.
+	return stripRegexpES.ReplaceAll(src, []byte(""))
 }
 
 // NewSearcher returns the Searcher interface suitable for the search term.
