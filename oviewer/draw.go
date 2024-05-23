@@ -362,7 +362,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 			number = n
 		}
 	}
-	number = number - m.firstLine()
+	number = number - m.firstLine() + 1
 
 	// Line numbers start at 1 except for skip and header lines.
 	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, number), m.TabWidth)
