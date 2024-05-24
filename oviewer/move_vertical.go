@@ -249,16 +249,13 @@ func leftX(width int, lc contents) []int {
 
 // moveNextSection moves to the next section.
 func (m *Document) moveNextSection(ctx context.Context) error {
-	// Move by page, if there is no section delimiter.
 	if m.SectionDelimiter == "" {
-		m.movePgDn()
-		return nil
+		return ErrNoDelimiter
 	}
 
 	lN, err := m.nextSection(ctx, m.topLN+m.firstLine())
 	if err != nil {
-		m.movePgDn()
-		return ErrNoDelimiter
+		return ErrNoMoreSection
 	}
 	m.moveLine((lN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition)
 	return nil
@@ -273,16 +270,18 @@ func (m *Document) nextSection(ctx context.Context, n int) (int, error) {
 
 // movePrevSection moves to the previous section.
 func (m *Document) movePrevSection(ctx context.Context) error {
-	// Move by page, if there is no section delimiter.
+	return m.movePrevSectionLN(ctx, m.topLN)
+}
+
+// movePrevSectionLN moves to the previous section by line number.
+func (m *Document) movePrevSectionLN(ctx context.Context, start int) error {
 	if m.SectionDelimiter == "" {
-		m.movePgUp()
-		return nil
+		return ErrNoDelimiter
 	}
 
-	lN, err := m.prevSection(ctx, m.topLN+m.firstLine()-m.SectionHeaderNum)
+	lN, err := m.prevSection(ctx, start+m.firstLine()-m.SectionHeaderNum)
 	if err != nil {
-		m.moveTop()
-		return err
+		return ErrNoMoreSection
 	}
 	lN = (lN - m.firstLine()) + m.SectionStartPosition
 	lN = max(lN, m.BufStartNum())
@@ -299,14 +298,7 @@ func (m *Document) prevSection(ctx context.Context, n int) (int, error) {
 
 // moveLastSection moves to the last section.
 func (m *Document) moveLastSection(ctx context.Context) {
-	// +1 to avoid if the bottom line is a session delimiter.
-	lN := m.BufEndNum() - 2
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	n, err := m.BackSearchLine(ctx, searcher, lN)
-	if err != nil {
+	if err := m.movePrevSectionLN(ctx, m.BufEndNum()+1); err != nil {
 		log.Printf("last section:%v", err)
-		return
 	}
-	n = (n - m.firstLine()) + m.SectionStartPosition
-	m.moveLine(n)
 }

@@ -364,6 +364,8 @@ var (
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
 	ErrNoDelimiter = errors.New("no delimiter")
+	// ErrNoMoreSection indicates that the section could not be found.
+	ErrNoMoreSection = errors.New("no more section")
 	// ErrOverScreen indicates that the specified screen is out of range.
 	ErrOverScreen = errors.New("over screen")
 	// ErrOutOfChunk indicates that the specified Chunk is out of range.

@@ -182,6 +182,7 @@ func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
 		if len(widths) <= 0 {
 			continue
 		}
+
 		if cursor >= 0 && cursor < len(widths) {
 			cl := line.pos.x(widths[cursor])
 			cr := line.pos.x(len(line.str))
@@ -189,11 +190,11 @@ func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
 				cr = line.pos.x(widths[cursor+1])
 			}
 			return screenAdjustX(m.x, m.x+width, cl, cr, widths, cursor)
-		} else {
-			cl := line.pos.x(widths[len(widths)-1])
-			cr := line.pos.x(len(line.str))
-			return screenAdjustX(m.x, m.x+width, cl, cr, widths, cursor)
 		}
+		// rightmost column.
+		cl := line.pos.x(widths[len(widths)-1])
+		cr := line.pos.x(len(line.str))
+		return screenAdjustX(m.x, m.x+width, cl, cr, widths, cursor)
 	}
 
 	if maxColumn > 0 {

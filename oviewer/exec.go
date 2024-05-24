@@ -178,19 +178,14 @@ func commandStart(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
 		cmd.Stdin = os.Stdin
 	}
+	return cmdOutput(cmd)
+}
 
-	var so, se io.Reader
-	var err error
+func cmdOutput(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 	if runtime.GOOS == "windows" {
-		so, se, err = pipeOutput(cmd)
-	} else {
-		so, se, err = ptyOutput(cmd)
+		return pipeOutput(cmd)
 	}
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return so, se, nil
+	return ptyOutput(cmd)
 }
 
 // pipeOutput returns the stdout and stderr of the command.

@@ -1,6 +1,9 @@
 package oviewer
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 // Called by event key to change document position.
 
@@ -88,8 +91,12 @@ func (root *Root) nextSection(ctx context.Context) {
 	defer root.releaseEventBuffer()
 
 	if err := root.Doc.moveNextSection(ctx); err != nil {
+		// Move by page if there is no section.
+		root.Doc.movePgDn()
 		// Last section or no section.
-		root.setMessage("No more next sections")
+		if errors.Is(err, ErrNoMoreSection) {
+			root.setMessage("No more next sections")
+		}
 	}
 }
 
@@ -99,7 +106,12 @@ func (root *Root) prevSection(ctx context.Context) {
 	defer root.releaseEventBuffer()
 
 	if err := root.Doc.movePrevSection(ctx); err != nil {
-		root.setMessage("No more previous sections")
+		// Move by page, if there is no section delimiter.
+		root.Doc.movePgUp()
+		// First section or no section.
+		if errors.Is(err, ErrNoMoreSection) {
+			root.setMessage("No more previous sections")
+		}
 		return
 	}
 }
