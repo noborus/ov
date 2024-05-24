@@ -450,6 +450,7 @@ func (m *Document) watchMode() {
 	if m.SectionDelimiter == "" {
 		m.setSectionDelimiter("^" + FormFeed)
 	}
+	m.SectionHeader = false
 	m.SectionStartPosition = 1
 	m.FollowSection = true
 }
