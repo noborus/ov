@@ -48,6 +48,7 @@ func (command *Command) Exec() (*Root, error) {
 	command.docout = docout
 	command.docerr = docerr
 
+	//nolint:gosec
 	command.cmd = exec.Command(command.args[0], command.args[1:]...)
 	so, se, err := commandStart(command.cmd)
 	if err != nil {
@@ -99,6 +100,7 @@ func (command *Command) Reload() *bufio.Reader {
 	} else {
 		command.docout.reset()
 	}
+	//nolint:gosec
 	command.cmd = exec.Command(command.args[0], command.args[1:]...)
 	so, se, err := commandStart(command.cmd)
 	if err != nil {

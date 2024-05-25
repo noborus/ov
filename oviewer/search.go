@@ -497,8 +497,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 		case *eventUpdateEndNum:
 			root.updateEndNum()
 		default:
-			root.setMessageLogf("unexpected event %#v", ev)
-			return nil
+			// ignore other events.
 		}
 	}
 }

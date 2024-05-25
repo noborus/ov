@@ -37,6 +37,7 @@ func TestExecCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:gosec
 			command := exec.Command(tt.args.cmdStr[0], tt.args.cmdStr[1:]...)
 			_, err := ExecCommand(command)
 			if (err != nil) != tt.wantErr {
