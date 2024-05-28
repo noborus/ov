@@ -264,7 +264,7 @@ func STDINDocument() (*Document, error) {
 
 	m.seekable = false
 	m.reopenable = false
-	m.Caption = "(STDIN)"
+	m.FileName = "(STDIN)"
 	f, err := open("")
 	if err != nil {
 		return nil, err
