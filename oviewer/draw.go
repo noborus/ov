@@ -569,24 +569,7 @@ func (root *Root) normalLeftStatus() (contents, int) {
 		leftStatus.WriteString("]")
 	}
 
-	modeStatus := ""
-	if root.Doc.FollowMode {
-		modeStatus = "(Follow Mode)"
-	}
-	if root.Doc.FollowMode && root.Doc.FollowName {
-		modeStatus = "(Follow Name)"
-	}
-	if root.General.FollowAll {
-		modeStatus = "(Follow All)"
-	}
-	// Watch mode doubles as FollowSection mode.
-	if root.Doc.WatchMode {
-		leftStatus.WriteString(modeStatus)
-		leftStatus.WriteString("(Watch)")
-	} else if root.Doc.FollowSection {
-		modeStatus = "(Follow Section)"
-		leftStatus.WriteString(modeStatus)
-	}
+	leftStatus.WriteString(root.statusDisplay())
 
 	if root.Doc.Caption != "" {
 		leftStatus.WriteString(root.Doc.Caption)
@@ -608,6 +591,27 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	}
 
 	return leftContents, len(leftContents)
+}
+
+// statusDisplay returns the status mode of the document.
+func (root *Root) statusDisplay() string {
+	if root.Doc.WatchMode {
+		// Watch mode doubles as FollowSection mode.
+		return "(Watch)"
+	}
+	if root.Doc.FollowSection {
+		return "(Follow Section)"
+	}
+	if root.General.FollowAll {
+		return "(Follow All)"
+	}
+	if root.Doc.FollowMode && root.Doc.FollowName {
+		return "(Follow Name)"
+	}
+	if root.Doc.FollowMode {
+		return "(Follow Mode)"
+	}
+	return ""
 }
 
 // inputLeftStatus returns the status of the left side of the input.
