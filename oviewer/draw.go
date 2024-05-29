@@ -30,9 +30,8 @@ func (root *Root) draw(ctx context.Context) {
 		return
 	}
 
-	if m.ColumnWidth && len(m.columnWidths) == 0 {
-		m.setColumnWidths()
-	}
+	// Prepare the contents.
+	root.prepareContents(ctx)
 
 	// Header
 	lN := root.drawHeader()
@@ -41,17 +40,17 @@ func (root *Root) draw(ctx context.Context) {
 	if m.WrapMode {
 		lX = m.topLX
 	}
-
 	lN = m.topLN + lN
 
 	// Section header
-	n := root.drawSectionHeader(ctx, lN)
+	n := root.drawSectionHeader(lN)
 	if m.dupSectionHeader && lN < m.SectionHeaderNum {
 		lN = n
 		m.topLN = n
 	} else {
 		m.dupSectionHeader = false
 	}
+
 	// Body
 	lX, lN = root.drawBody(lX, lN)
 
@@ -66,157 +65,69 @@ func (root *Root) draw(ctx context.Context) {
 	root.Show()
 }
 
-// drawHeader draws header.
-func (root *Root) drawHeader() int {
+// Prepare the contents.
+func (root *Root) prepareContents(ctx context.Context) {
 	m := root.Doc
 
-	// lN is a logical line number.
-	lN := m.SkipLines
-	// lX is the logical x position of Contents.
-	lX := 0
-
-	// wrapNum is the number of wrapped lines.
-	wrapNum := 0
-	line, _ := m.getLineC(lN, m.TabWidth)
-	// y is the y-coordinate.
-	y := 0
-	for ; lN < m.firstLine(); y++ {
-		if y > root.scr.vHeight {
-			break
-		}
-
-		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-
-		if root.Doc.ColumnMode {
-			root.columnHighlight(line)
-		}
-
-		nextX, nextN := root.drawLine(y, lX, lN, line.lc)
-		if root.Doc.LineNumMode {
-			root.blankLineNumber(y)
-		}
-		// header style
-		root.yStyle(y, root.StyleHeader)
-
-		lX = nextX
-		if nextN != lN {
-			lN = nextN
-			line, _ = m.getLineC(lN, m.TabWidth)
-			root.styleContent(line)
-		}
-
-		if lX > 0 {
-			wrapNum++
-		} else {
-			wrapNum = 0
-		}
+	// clear contents
+	for k := range root.scr.contents {
+		delete(root.scr.contents, k)
 	}
-	m.headerLen = y
-	return lN
+
+	// header
+	root.setContents(m.SkipLines, m.firstLine())
+
+	// body
+	endLN := m.topLN + root.scr.vHeight // vHeight is the max line of logical lines.
+	root.setContents(m.topLN, endLN)
+
+	// sectionHeader
+	sLN, err := root.searchSectionHeader(ctx)
+	if err != nil {
+		root.scr.sectionHeaderLN = -1
+		return
+	}
+	root.scr.sectionHeaderLN = sLN
+	root.setContents(sLN, sLN+m.SectionHeaderNum)
 }
 
-// drawSectionHeader draws section header.
-// drawSectionHeader advances the line
-// if the section header contains a line in the terminal.
-func (root *Root) drawSectionHeader(ctx context.Context, lN int) int {
+// searchSectionHeader searches for the section header.
+func (root *Root) searchSectionHeader(ctx context.Context) (int, error) {
 	m := root.Doc
+	lN := m.topLN + 1
 	if !m.SectionHeader || m.SectionDelimiter == "" {
-		return lN
+		return 0, ErrNoDelimiter
 	}
 
-	pn := lN
-	// prevSection searches for the section above the specified line.
-	if m.dupSectionHeader && pn <= 0 {
-		pn = 1
-	}
 	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
 	defer cancel()
-	sectionLN, err := m.prevSection(ctx, pn)
+	sLN, err := m.prevSection(ctx, lN)
 	if err != nil {
 		if errors.Is(err, ErrCancel) {
 			root.setMessageLogf("Section header search timed out")
 			m.SectionDelimiter = ""
 		}
-		return lN
+		return 0, ErrNoMoreSection
 	}
 
-	if m.Header > sectionLN {
-		return pn
+	if m.Header > sLN {
+		return 0, ErrNoMoreSection
 	}
 
-	sx, sn := 0, 0
-	nextN := 0
-	if pn > sectionLN {
-		sn = sectionLN
-		line, valid := m.getLineC(sn, m.TabWidth)
-		wrapNum := m.numOfWrap(sx, sn)
-		for y := m.headerLen; sn < sectionLN+m.SectionHeaderNum; y++ {
-			root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-			sx, nextN = root.drawLine(y, sx, sn, line.lc)
-
-			root.drawLineNumber(sn, y, valid)
-			if valid {
-				root.styleContent(line)
-			}
-			root.sectionLineHighlight(y, line.str)
-			m.headerLen += 1
-			if nextN != sn {
-				if root.scr.sectionHeaderLeft > 0 {
-					root.scr.sectionHeaderLeft--
-				}
-				sn = nextN
-				line, valid = m.getLineC(sn, m.TabWidth)
-			}
-			if sx > 0 {
-				wrapNum++
-			} else {
-				wrapNum = 0
-			}
-		}
-	}
-	return pn + (m.SectionHeaderNum - 1)
+	return sLN, nil
 }
 
-// drawBody draws body.
-func (root *Root) drawBody(lX int, lN int) (int, int) {
+// setContents sets the contents of the specified range.
+func (root *Root) setContents(start int, end int) {
 	m := root.Doc
-
-	wrapNum := m.numOfWrap(lX, lN)
-	line, valid := m.getLineC(lN, m.TabWidth)
-	root.bodyStyle(line.lc, root.StyleBody)
-	if valid {
-		root.styleContent(line)
+	for lN := start; lN < end; lN++ {
+		line := m.getLineC(lN, m.TabWidth)
+		if line.valid {
+			RangeStyle(line.lc, 0, len(line.lc), root.StyleBody)
+			root.styleContent(line)
+		}
+		root.scr.contents[lN] = line
 	}
-	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
-		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-
-		nextX, nextY := root.drawLine(y, lX, lN, line.lc)
-
-		root.drawLineNumber(lN, y, valid)
-		if valid {
-			root.coordinatesStyle(lN, y, line.str)
-		}
-
-		lX = nextX
-		if nextY != lN {
-			lN = nextY
-			if root.scr.sectionHeaderLeft > 0 {
-				root.scr.sectionHeaderLeft--
-			}
-			line, valid = m.getLineC(lN, m.TabWidth)
-			root.bodyStyle(line.lc, root.StyleBody)
-			if valid {
-				root.styleContent(line)
-			}
-		}
-
-		if lX > 0 {
-			wrapNum++
-		} else {
-			wrapNum = 0
-		}
-	}
-	return lX, lN
 }
 
 // styleContent applies the style of the content.
@@ -229,6 +140,125 @@ func (root *Root) styleContent(line LineC) {
 	}
 	root.multiColorHighlight(line)
 	root.searchHighlight(line)
+}
+
+// drawHeader draws header.
+func (root *Root) drawHeader() int {
+	m := root.Doc
+
+	// lN is a logical line number.
+	lN := m.SkipLines
+	// lX is the logical x position of Contents.
+	lX := 0
+
+	// wrapNum is the number of wrapped lines.
+	wrapNum := 0
+	// y is the y-coordinate.
+	y := 0
+	for ; lN < m.firstLine(); y++ {
+		if y > root.scr.vHeight {
+			break
+		}
+		line := root.scr.contents[lN]
+
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+
+		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+		if root.Doc.LineNumMode {
+			root.blankLineNumber(y)
+		}
+		// header style
+		root.yStyle(y, root.StyleHeader)
+
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
+
+		lX = nextLX
+		lN = nextLN
+	}
+	m.headerLen = y
+	return lN
+}
+
+// drawSectionHeader draws section header.
+// drawSectionHeader advances the line
+// if the section header contains a line in the terminal.
+func (root *Root) drawSectionHeader(lN int) int {
+	m := root.Doc
+	if !m.SectionHeader || m.SectionDelimiter == "" {
+		return lN
+	}
+
+	pn := lN
+
+	sLN := root.scr.sectionHeaderLN
+	if m.Header > sLN {
+		return pn
+	}
+	if pn <= sLN {
+		return pn + (m.SectionHeaderNum - 1)
+	}
+
+	sx := 0
+	sn := sLN
+	wrapNum := m.numOfWrap(sx, sn)
+	for y := m.headerLen; sn < sLN+m.SectionHeaderNum; y++ {
+		line := root.scr.contents[sn]
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		nextLX, nextLN := root.drawLine(y, sx, sn, line.lc)
+
+		root.drawLineNumber(sn, y, line.valid)
+		root.sectionLineHighlight(y, line.str)
+		m.headerLen += 1
+
+		if nextLN != sn {
+			if root.scr.sectionHeaderLeft > 0 {
+				root.scr.sectionHeaderLeft--
+			}
+		}
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
+
+		sx = nextLX
+		sn = nextLN
+	}
+
+	return pn + (m.SectionHeaderNum - 1)
+}
+
+// drawBody draws body.
+func (root *Root) drawBody(lX int, lN int) (int, int) {
+	m := root.Doc
+
+	wrapNum := m.numOfWrap(lX, lN)
+	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		line := root.scr.contents[lN]
+		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+
+		root.drawLineNumber(lN, y, line.valid)
+		if line.valid {
+			root.coordinatesStyle(lN, y, line.str)
+		}
+
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
+		if nextLN != lN {
+			if root.scr.sectionHeaderLeft > 0 {
+				root.scr.sectionHeaderLeft--
+			}
+		}
+
+		lX = nextLX
+		lN = nextLN
+	}
+	return lX, lN
 }
 
 // coordinatesStyle applies the style of the coordinates.
@@ -297,12 +327,6 @@ func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, i
 	lN++
 
 	return startX, lN
-}
-
-// bodyStyle applies the style from the beginning to the end of one line of the body.
-// Apply style to contents.
-func (*Root) bodyStyle(lc contents, s OVStyle) {
-	RangeStyle(lc, 0, len(lc), s)
 }
 
 // searchHighlight applies the style of the search highlight.

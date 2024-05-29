@@ -277,8 +277,8 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 	var buff strings.Builder
 
 	l1 := scr.lineNumber(y1)
-	line1, valid := m.getLineC(l1.number, m.TabWidth)
-	if !valid {
+	line1 := m.getLineC(l1.number, m.TabWidth)
+	if !line1.valid {
 		return "", ErrOutOfRange
 	}
 	wx1 := scr.branchWidth(line1.lc, l1.wrap)
@@ -292,8 +292,8 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 			break
 		}
 	}
-	line2, valid := m.getLineC(l2.number, m.TabWidth)
-	if !valid {
+	line2 := m.getLineC(l2.number, m.TabWidth)
+	if !line2.valid {
 		return "", ErrOutOfRange
 	}
 	wx2 := scr.branchWidth(line2.lc, l2.wrap)
@@ -325,8 +325,8 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 		if ln.number == l1.number || ln.number == l2.number || ln.wrap > 0 {
 			continue
 		}
-		line, valid := m.getLineC(ln.number, m.TabWidth)
-		if !valid {
+		line := m.getLineC(ln.number, m.TabWidth)
+		if !line.valid {
 			break
 		}
 		str := scr.selectLine(line, 0, -1)
@@ -355,8 +355,8 @@ func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error
 	var buff strings.Builder
 	for y := y1; y <= y2; y++ {
 		ln := scr.lineNumber(y)
-		line, valid := m.getLineC(ln.number, m.TabWidth)
-		if !valid {
+		line := m.getLineC(ln.number, m.TabWidth)
+		if !line.valid {
 			return "", fmt.Errorf("rectangleToString: %w", ErrOutOfRange)
 		}
 		wx := scr.branchWidth(line.lc, ln.wrap)

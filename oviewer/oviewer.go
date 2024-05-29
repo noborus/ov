@@ -89,6 +89,8 @@ type Root struct {
 
 // SCR contains the screen information.
 type SCR struct {
+	// contents is the contents of the screen.
+	contents map[int]LineC
 	// numbers is the line information of the currently displayed screen.
 	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
 	numbers []LineNumber
@@ -100,6 +102,8 @@ type SCR struct {
 	startX int
 	// Process as a section header if the remaining value is 1 or more.
 	sectionHeaderLeft int
+	// sectionHeaderLN is the number of section headers.
+	sectionHeaderLN int
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -923,6 +927,12 @@ func (root *Root) prepareView() {
 	if len(root.scr.numbers) != root.scr.vHeight+1 {
 		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	}
+
+	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
+		root.Doc.setColumnWidths()
+	}
+
+	root.scr.contents = make(map[int]LineC)
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.

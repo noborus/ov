@@ -178,9 +178,10 @@ type chunk struct {
 // LineC is one line of information.
 // Contains content, string, location information.
 type LineC struct {
-	lc  contents
-	str string
-	pos widthPos
+	lc    contents
+	str   string
+	pos   widthPos
+	valid bool
 }
 
 // NewDocument returns Document.
@@ -405,12 +406,13 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 
 // getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
+func (m *Document) getLineC(lN int, tabWidth int) LineC {
 	if line, ok := m.cache.Get(lN); ok {
 		lc := make(contents, len(line.lc))
 		copy(lc, line.lc)
 		line.lc = lc
-		return line, true
+		line.valid = true
+		return line
 	}
 
 	org, err := m.contents(lN, tabWidth)
@@ -418,10 +420,11 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
 		return LineC{
-			lc:  lc,
-			str: string(EOFC),
-			pos: widthPos{0: 0, 1: 1},
-		}, false
+			lc:    lc,
+			str:   string(EOFC),
+			pos:   widthPos{0: 0, 1: 1},
+			valid: false,
+		}
 	}
 	str, pos := ContentsToStr(org)
 	line := LineC{
@@ -436,7 +439,8 @@ func (m *Document) getLineC(lN int, tabWidth int) (LineC, bool) {
 	lc := make(contents, len(org))
 	copy(lc, org)
 	line.lc = lc
-	return line, true
+	line.valid = true
+	return line
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.
