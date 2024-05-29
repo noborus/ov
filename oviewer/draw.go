@@ -69,10 +69,6 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) prepareContents(ctx context.Context) {
 	m := root.Doc
 
-	if m.ColumnWidth && len(m.columnWidths) == 0 {
-		m.setColumnWidths()
-	}
-
 	// clear contents
 	for k := range root.scr.contents {
 		delete(root.scr.contents, k)
@@ -174,16 +170,13 @@ func (root *Root) drawHeader() int {
 		// header style
 		root.yStyle(y, root.StyleHeader)
 
-		lX = nextLX
-		if nextLN != lN {
-			lN = nextLN
-		}
-
-		if lX > 0 {
-			wrapNum++
-		} else {
+		wrapNum++
+		if nextLX == 0 {
 			wrapNum = 0
 		}
+
+		lX = nextLX
+		lN = nextLN
 	}
 	m.headerLen = y
 	return lN
@@ -204,33 +197,36 @@ func (root *Root) drawSectionHeader(lN int) int {
 	if m.Header > sLN {
 		return pn
 	}
+	if pn <= sLN {
+		return pn + (m.SectionHeaderNum - 1)
+	}
 
-	sx, sn := 0, 0
-	nextN := 0
-	if pn > sLN {
-		sn = sLN
-		wrapNum := m.numOfWrap(sx, sn)
-		for y := m.headerLen; sn < sLN+m.SectionHeaderNum; y++ {
-			line := root.scr.contents[sn]
-			root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-			sx, nextN = root.drawLine(y, sx, sn, line.lc)
+	sx := 0
+	sn := sLN
+	wrapNum := m.numOfWrap(sx, sn)
+	for y := m.headerLen; sn < sLN+m.SectionHeaderNum; y++ {
+		line := root.scr.contents[sn]
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		nextLX, nextLN := root.drawLine(y, sx, sn, line.lc)
 
-			root.drawLineNumber(sn, y, line.valid)
-			root.sectionLineHighlight(y, line.str)
-			m.headerLen += 1
-			if nextN != sn {
-				if root.scr.sectionHeaderLeft > 0 {
-					root.scr.sectionHeaderLeft--
-				}
-				sn = nextN
-			}
-			if sx > 0 {
-				wrapNum++
-			} else {
-				wrapNum = 0
+		root.drawLineNumber(sn, y, line.valid)
+		root.sectionLineHighlight(y, line.str)
+		m.headerLen += 1
+
+		if nextLN != sn {
+			if root.scr.sectionHeaderLeft > 0 {
+				root.scr.sectionHeaderLeft--
 			}
 		}
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
+
+		sx = nextLX
+		sn = nextLN
 	}
+
 	return pn + (m.SectionHeaderNum - 1)
 }
 
@@ -249,19 +245,18 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 			root.coordinatesStyle(lN, y, line.str)
 		}
 
-		lX = nextLX
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
 		if nextLN != lN {
-			lN = nextLN
 			if root.scr.sectionHeaderLeft > 0 {
 				root.scr.sectionHeaderLeft--
 			}
 		}
 
-		if lX > 0 {
-			wrapNum++
-		} else {
-			wrapNum = 0
-		}
+		lX = nextLX
+		lN = nextLN
 	}
 	return lX, lN
 }

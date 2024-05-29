@@ -927,6 +927,11 @@ func (root *Root) prepareView() {
 	if len(root.scr.numbers) != root.scr.vHeight+1 {
 		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	}
+
+	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
+		root.Doc.setColumnWidths()
+	}
+
 	root.scr.contents = make(map[int]LineC)
 }
 
