@@ -38,8 +38,8 @@ func (m *Document) optimalCursor(cursor int) int {
 
 // optimalCursorWidth returns the optimal cursor position when in columnWidth mode.
 func (m *Document) optimalCursorWidth(cursor int) int {
-	line, valid := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
-	if !valid {
+	line := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
+	if !line.valid {
 		return cursor
 	}
 	return optimalCursor(line, m.columnWidths, cursor, m.x, m.x+m.width)
@@ -48,8 +48,8 @@ func (m *Document) optimalCursorWidth(cursor int) int {
 // optimalCursorDelimiter returns the optimal cursor position when in columnDelimiter mode.
 func (m *Document) optimalCursorDelimiter(cursor int) int {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !valid {
+		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -119,8 +119,8 @@ func (m *Document) optimalXWidth(cursor int) (int, error) {
 // optimalXDelimiter returns the best x position of the column at the specified cursor position.
 func (m *Document) optimalXDelimiter(cursor int) (int, error) {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !valid {
+		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -173,8 +173,8 @@ func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
 	cursor := max(0, m.columnCursor+moveTo)
 	// m.firstLine()+TargetLineDelimiter = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !valid {
+		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -375,8 +375,8 @@ func (m *Document) rightmostColumn() int {
 
 	maxColumn := 0
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, valid := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !valid {
+		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+		if !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
