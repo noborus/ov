@@ -100,10 +100,10 @@ type SCR struct {
 	vHeight int
 	// startX is the start position of x.
 	startX int
-	// Process as a section header if the remaining value is 1 or more.
-	sectionHeaderLeft int
 	// sectionHeaderLN is the number of section headers.
 	sectionHeaderLN int
+	// sectionHeaderLeft is the number of remaining lines in sectionHeader.
+	sectionHeaderLeft int
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
@@ -136,7 +136,7 @@ type general struct {
 
 	// TabWidth is tab stop num.
 	TabWidth int
-	// HeaderLen is number of header rows to be fixed.
+	// Header is number of header lines to be fixed.
 	Header int
 	// SkipLines is the rows to skip.
 	SkipLines int
@@ -148,6 +148,8 @@ type general struct {
 	SectionStartPosition int
 	// SectionHeaderNum is the number of lines in the section header.
 	SectionHeaderNum int
+	// sectionHeaderLen is the number of section headers.
+	sectionHeaderLen int
 	// HScrollWidth is the horizontal scroll width.
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
@@ -928,11 +930,14 @@ func (root *Root) prepareView() {
 		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	}
 
+	if root.scr.contents == nil {
+		root.scr.contents = make(map[int]LineC)
+	}
+	root.scr.sectionHeaderLN = -1
+
 	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
 		root.Doc.setColumnWidths()
 	}
-
-	root.scr.contents = make(map[int]LineC)
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.

@@ -587,11 +587,15 @@ func (root *Root) returnStartPosition() int {
 
 // startSearchLN returns the start position of the search.
 func (root *Root) startSearchLN() int {
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.jumpTargetNum)
-	if l.number-root.Doc.topLN > root.Doc.topLN {
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
+	lN := l.number
+	if lN-root.Doc.topLN > root.Doc.topLN {
 		return 0
 	}
-	return l.number
+	if root.Doc.lastSearchNum >= 0 && lN >= root.Doc.lastSearchNum && root.Doc.lastSearchNum-lN <= root.Doc.SectionHeaderNum {
+		lN = root.Doc.lastSearchNum
+	}
+	return lN
 }
 
 // firstSearch performs the first search immediately after the input.
@@ -611,14 +615,19 @@ func (root *Root) firstSearch(ctx context.Context, t searchType) {
 // firstForwardSearch performs the first forward search immediately after the input.
 func (root *Root) firstForwardSearch(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	root.searchMove(ctx, true, root.startSearchLN(), searcher)
+	lN := root.startSearchLN()
+	root.searchMove(ctx, true, lN, searcher)
 }
 
 // nextSearch performs the next search.
 func (root *Root) nextSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.jumpTargetNum)
-	root.searchMove(ctx, true, l.number+1, searcher)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
+	lN := l.number
+	if root.Doc.lastSearchNum >= 0 && lN >= root.Doc.lastSearchNum && root.Doc.lastSearchNum-lN <= root.Doc.SectionHeaderNum {
+		lN = root.Doc.lastSearchNum
+	}
+	root.searchMove(ctx, true, lN+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
@@ -631,8 +640,12 @@ func (root *Root) firstBackSearch(ctx context.Context) {
 // nextBackSearch performs the next back search.
 func (root *Root) nextBackSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.jumpTargetNum)
-	root.searchMove(ctx, false, l.number-1, searcher)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
+	lN := l.number
+	if root.Doc.lastSearchNum >= 0 && lN-root.Doc.lastSearchNum <= root.Doc.SectionHeaderNum {
+		lN = root.Doc.lastSearchNum
+	}
+	root.searchMove(ctx, false, lN-1, searcher)
 }
 
 // eventNextSearch represents search event.
