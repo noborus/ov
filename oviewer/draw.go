@@ -33,7 +33,7 @@ func (root *Root) draw(ctx context.Context) {
 	// Prepare the contents.
 	root.prepareContents(ctx)
 
-	// Header
+	// Header.
 	lN := root.drawHeader()
 
 	lX := 0
@@ -42,7 +42,7 @@ func (root *Root) draw(ctx context.Context) {
 	}
 	lN = m.topLN + lN
 
-	// Body
+	// Body.
 	lX, lN = root.drawBody(lX, lN)
 
 	// Section header
@@ -63,14 +63,14 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) prepareContents(ctx context.Context) {
 	m := root.Doc
 
-	// clear contents
+	// clear contents.
 	for k := range root.scr.contents {
 		delete(root.scr.contents, k)
 	}
-	// header
+	// Header.
 	root.setContents(m.SkipLines, m.firstLine())
 
-	// sectionHeader
+	// SectionHeader.
 	sLN, err := root.searchSectionHeader(ctx)
 	if err != nil {
 		root.scr.sectionHeaderLN = -1
@@ -91,16 +91,34 @@ func (root *Root) prepareContents(ctx context.Context) {
 		}
 	}
 
-	if m.showGotoF && root.scr.sectionHeaderLN >= 0 && m.jumpTargetNum == 0 {
-		if m.topLN >= sLN+m.SectionHeaderNum {
-			m.moveYUp(root.Doc.sectionHeaderLen)
-		}
+	if m.showGotoF {
+		root.showRequireLines(sLN)
 	}
-	m.showGotoF = false
 
-	// body
+	// Body.
 	endLN := m.topLN + root.scr.vHeight // vHeight is the max line of logical lines.
 	root.setContents(m.topLN, endLN)
+}
+
+// showRequireLines shows the required lines.
+func (root *Root) showRequireLines(lN int) {
+	m := root.Doc
+	m.showGotoF = false
+
+	if m.jumpTargetNum != 0 {
+		return
+	}
+	if root.scr.sectionHeaderLN < 0 {
+		return
+	}
+	if m.topLN-m.SectionHeaderNum < 0 {
+		m.topLN = 0
+		return
+	}
+	// Moves lN into visible position if it is obscured by a section header.
+	if lN <= m.topLN-m.SectionHeaderNum {
+		m.moveYUp(root.Doc.sectionHeaderLen)
+	}
 }
 
 // searchSectionHeader searches for the section header.
@@ -216,6 +234,9 @@ func (root *Root) drawSectionHeader() {
 		root.yStyle(y, root.StyleSectionLine)
 		markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 		root.markStyle(sn, y, markStyleWidth)
+		if sn == m.lastSearchNum {
+			root.yStyle(y, OVStyle{Underline: true})
+		}
 
 		wrapNum++
 		if nextLX == 0 {

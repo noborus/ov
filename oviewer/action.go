@@ -203,7 +203,6 @@ func (root *Root) goLine(input string) {
 			root.setMessage(ErrInvalidNumber.Error())
 			return
 		}
-		lN = max(0, lN-1)
 		lN = root.Doc.moveLine(lN)
 		root.setMessagef("Moved to line %d", lN+1)
 		return
