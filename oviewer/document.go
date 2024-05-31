@@ -104,6 +104,11 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
+	// lastSearchNum is the last search number.
+	lastSearchNum int
+	// showGotoF displays the specified line if it is true.
+	showGotoF bool
+
 	// jumpTargetNum is the display position of search results.
 	jumpTargetNum int
 	// jumpTargetSection is the display position of search results.
@@ -130,8 +135,6 @@ type Document struct {
 	seekable bool
 	// Is it possible to reopen.
 	reopenable bool
-	// dupSectionHeader is true for lines that are duplicated in section header.
-	dupSectionHeader bool
 	// If nonMatch is true, non-matching lines are searched.
 	nonMatch bool
 }
@@ -194,12 +197,12 @@ func NewDocument() (*Document, error) {
 			TabWidth:        8,
 			MarkStyleWidth:  1,
 		},
-		ctlCh:            make(chan controlSpecifier),
-		memoryLimit:      100,
-		seekable:         true,
-		reopenable:       true,
-		store:            NewStore(),
-		dupSectionHeader: true,
+		ctlCh:         make(chan controlSpecifier),
+		memoryLimit:   100,
+		seekable:      true,
+		reopenable:    true,
+		store:         NewStore(),
+		lastSearchNum: -1,
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err

@@ -1,13 +1,16 @@
 package oviewer
 
-import "context"
+import (
+	"context"
+)
 
 // searchGoTo moves to the specified line and position after searching.
 // Go to the specified line +root.Doc.JumpTarget Go to.
 // If the search term is off screen, move until the search term is visible.
 func (m *Document) searchGoTo(lN int, x int) {
 	m.searchGoX(x)
-
+	m.showGotoF = true
+	m.lastSearchNum = lN
 	m.topLN = lN - m.firstLine()
 	m.moveYUp(m.jumpTargetNum)
 }

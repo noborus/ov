@@ -14,6 +14,7 @@ func (m *Document) moveLine(lN int) int {
 	if m.BufEndNum() == 0 {
 		return 0
 	}
+	m.showGotoF = true
 
 	if endLN := m.BufEndNum() - 1; lN > endLN {
 		lN = endLN
@@ -56,7 +57,6 @@ func (m *Document) moveLineNth(lN int, nTh int) (int, int) {
 
 	m.topLN = lN
 	m.topLX = listX[nTh]
-
 	return lN, nTh
 }
 
@@ -257,7 +257,7 @@ func (m *Document) moveNextSection(ctx context.Context) error {
 	if err != nil {
 		return ErrNoMoreSection
 	}
-	m.moveLine((lN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition)
+	m.moveLine((lN - m.firstLine()))
 	return nil
 }
 
@@ -279,13 +279,13 @@ func (m *Document) movePrevSectionLN(ctx context.Context, start int) error {
 		return ErrNoDelimiter
 	}
 
-	lN, err := m.prevSection(ctx, start+m.firstLine()-m.SectionHeaderNum)
+	lN, err := m.prevSection(ctx, start+m.firstLine())
 	if err != nil {
 		return ErrNoMoreSection
 	}
 	lN = (lN - m.firstLine()) + m.SectionStartPosition
 	lN = max(lN, m.BufStartNum())
-	m.moveLine(lN + m.SectionHeaderNum)
+	m.moveLine(lN)
 	return nil
 }
 

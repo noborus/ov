@@ -15,7 +15,6 @@ func (root *Root) moveTop(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.dupSectionHeader = true
 	root.Doc.moveTop()
 }
 
