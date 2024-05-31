@@ -91,7 +91,7 @@ func (root *Root) prepareContents(ctx context.Context) {
 		}
 	}
 
-	if m.showGotoF && root.scr.sectionHeaderLN >= 0 {
+	if m.showGotoF && root.scr.sectionHeaderLN >= 0 && m.jumpTargetNum == 0 {
 		if m.topLN >= sLN+m.SectionHeaderNum {
 			m.moveYUp(root.Doc.sectionHeaderLen)
 		}
