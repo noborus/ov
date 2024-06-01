@@ -622,12 +622,23 @@ func (root *Root) firstForwardSearch(ctx context.Context) {
 // nextSearch performs the next search.
 func (root *Root) nextSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
-	lN := l.number
-	if root.Doc.lastSearchNum >= 0 && lN >= root.Doc.lastSearchNum && root.Doc.lastSearchNum-lN <= root.Doc.SectionHeaderNum {
-		lN = root.Doc.lastSearchNum
+	if root.Doc.topLN > root.Doc.lastSearchNum || root.Doc.bottomLN < root.Doc.lastSearchNum {
+		// reset lastSearchNum.
+		root.Doc.lastSearchNum = root.Doc.topLN
 	}
-	root.searchMove(ctx, true, lN+1, searcher)
+	// jumpTarget = section.
+	if root.Doc.jumpTargetSection && root.Doc.lastSearchNum > 0 {
+		root.searchMove(ctx, true, root.Doc.lastSearchNum+1, searcher)
+		return
+	}
+
+	lN := root.Doc.topLN + root.Doc.jumpTargetNum
+	if root.Doc.lastSearchNum >= 0 && lN >= root.Doc.lastSearchNum && root.Doc.lastSearchNum-lN <= root.Doc.SectionHeaderNum {
+		root.searchMove(ctx, true, root.Doc.lastSearchNum+1, searcher)
+		return
+	}
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen)
+	root.searchMove(ctx, true, l.number+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
@@ -640,11 +651,21 @@ func (root *Root) firstBackSearch(ctx context.Context) {
 // nextBackSearch performs the next back search.
 func (root *Root) nextBackSearch(ctx context.Context, str string) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
-	lN := l.number
-	if root.Doc.lastSearchNum >= 0 && lN-root.Doc.lastSearchNum <= root.Doc.SectionHeaderNum {
-		lN = root.Doc.lastSearchNum
+	if root.Doc.topLN > root.Doc.lastSearchNum || root.Doc.bottomLN < root.Doc.lastSearchNum {
+		// reset lastSearchNum.
+		root.Doc.lastSearchNum = root.Doc.bottomLN
 	}
+	if root.Doc.jumpTargetSection {
+		root.searchMove(ctx, false, root.Doc.lastSearchNum-1, searcher)
+		return
+	}
+	lN := root.Doc.topLN
+	if root.Doc.lastSearchNum >= 0 && lN-root.Doc.lastSearchNum <= root.Doc.SectionHeaderNum {
+		root.searchMove(ctx, false, root.Doc.lastSearchNum-1, searcher)
+		return
+	}
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
+	lN = l.number
 	root.searchMove(ctx, false, lN-1, searcher)
 }
 
