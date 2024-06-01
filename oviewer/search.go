@@ -626,18 +626,19 @@ func (root *Root) nextSearch(ctx context.Context, str string) {
 		// reset lastSearchNum.
 		root.Doc.lastSearchNum = root.Doc.topLN
 	}
+	// jumpTarget = section.
 	if root.Doc.jumpTargetSection && root.Doc.lastSearchNum > 0 {
 		root.searchMove(ctx, true, root.Doc.lastSearchNum+1, searcher)
 		return
 	}
-	lN := root.Doc.topLN
+
+	lN := root.Doc.topLN + root.Doc.jumpTargetNum
 	if root.Doc.lastSearchNum >= 0 && lN >= root.Doc.lastSearchNum && root.Doc.lastSearchNum-lN <= root.Doc.SectionHeaderNum {
 		root.searchMove(ctx, true, root.Doc.lastSearchNum+1, searcher)
 		return
 	}
-	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen + root.Doc.jumpTargetNum)
-	lN = l.number
-	root.searchMove(ctx, true, lN+1, searcher)
+	l := root.scr.lineNumber(root.Doc.headerLen + root.Doc.sectionHeaderLen)
+	root.searchMove(ctx, true, l.number+1, searcher)
 }
 
 // firstBackSearch performs the first back search immediately after the input.
