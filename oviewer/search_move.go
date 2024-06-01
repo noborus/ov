@@ -10,7 +10,6 @@ import (
 func (m *Document) searchGoTo(lN int, x int) {
 	m.searchGoX(x)
 	m.showGotoF = true
-	m.lastSearchNum = lN
 	m.topLN = lN - m.firstLine()
 	m.moveYUp(m.jumpTargetNum)
 }
@@ -29,7 +28,7 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 	if err != nil {
 		sN = 0
 	}
-	if m.SectionHeader {
+	if !m.jumpTargetSection && m.SectionHeader {
 		sN = (sN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition
 		sN = max(sN, m.BufStartNum())
 	}

@@ -173,6 +173,7 @@ func (root *Root) watchControl() {
 // Jump by section if JumpTargetSection is true.
 func (root *Root) searchGo(ctx context.Context, lN int) {
 	root.resetSelect()
+	root.Doc.lastSearchNum = lN
 	x := root.searchXPos(lN)
 	if root.Doc.jumpTargetSection {
 		root.Doc.searchGoSection(ctx, lN, x)
