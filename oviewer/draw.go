@@ -45,7 +45,7 @@ func (root *Root) draw(ctx context.Context) {
 	// Body.
 	lX, lN = root.drawBody(lX, lN)
 
-	// Section header
+	// Section header.
 	root.drawSectionHeader()
 
 	m.bottomLN = max(lN, 0)
@@ -67,37 +67,45 @@ func (root *Root) prepareContents(ctx context.Context) {
 	for k := range root.scr.contents {
 		delete(root.scr.contents, k)
 	}
+
 	// Header.
 	root.setContents(m.SkipLines, m.firstLine())
-
-	// SectionHeader.
-	sLN, err := root.searchSectionHeader(ctx)
-	if err != nil {
-		root.scr.sectionHeaderLN = -1
-
-	} else {
-		root.scr.sectionHeaderLN = sLN
-		root.setContents(sLN, sLN+m.SectionHeaderNum)
-	}
-
-	m.sectionHeaderLen = 0
-	// set the length of the section header.
-	if !m.WrapMode {
-		root.Doc.sectionHeaderLen = m.SectionHeaderNum
-	} else {
-		root.Doc.sectionHeaderLen = 0
-		for i := sLN; i < sLN+m.SectionHeaderNum; i++ {
-			root.Doc.sectionHeaderLen += len(m.leftMostX(i))
+	m.headerHeight = max(m.Header, 0)
+	if m.WrapMode {
+		m.headerHeight = 0
+		for i := m.SkipLines; i < m.firstLine(); i++ {
+			m.headerHeight += len(m.leftMostX(i))
 		}
 	}
 
+	// SectionHeader.
+	num := min(m.SectionHeaderNum, root.scr.vHeight)
+	sLN, err := root.searchSectionHeader(ctx)
+	if err != nil {
+		// If the section header is not found, the section header is not displayed.
+		num = 0
+	}
+	root.setContents(sLN, sLN+num)
+	root.scr.sectionHeaderLN = sLN
+
+	// set the height of the section header.
+	m.sectionHeaderHeight = num
+	if m.WrapMode {
+		m.sectionHeaderHeight = 0
+		for i := sLN; i < sLN+num; i++ {
+			m.sectionHeaderHeight += len(m.leftMostX(i))
+		}
+	}
+
+	// Shift so that sLN is always displayed.
 	if m.showGotoF {
 		root.showRequireLines(sLN)
 	}
 
 	// Body.
-	endLN := m.topLN + root.scr.vHeight // vHeight is the max line of logical lines.
-	root.setContents(m.topLN, endLN)
+	startLN := m.topLN + m.firstLine()
+	endLN := startLN + root.scr.vHeight // vHeight is the max line of logical lines.
+	root.setContents(startLN, endLN)
 }
 
 // showRequireLines shows the required lines.
@@ -105,26 +113,27 @@ func (root *Root) showRequireLines(lN int) {
 	m := root.Doc
 	m.showGotoF = false
 
-	if m.jumpTargetNum != 0 {
+	if m.jumpTargetHeight != 0 {
 		return
 	}
-	if root.scr.sectionHeaderLN < 0 {
+	if m.sectionHeaderHeight <= 0 {
 		return
 	}
+
 	if m.topLN-m.SectionHeaderNum < 0 {
 		m.topLN = 0
 		return
 	}
 	// Moves lN into visible position if it is obscured by a section header.
-	if lN <= m.topLN-m.SectionHeaderNum {
-		m.moveYUp(root.Doc.sectionHeaderLen)
+	if lN <= m.topLN+m.firstLine()-m.SectionHeaderNum {
+		m.moveYUp(root.Doc.sectionHeaderHeight)
 	}
 }
 
 // searchSectionHeader searches for the section header.
 func (root *Root) searchSectionHeader(ctx context.Context) (int, error) {
 	m := root.Doc
-	lN := m.topLN + 1
+	lN := m.topLN + m.firstLine() + 1
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return 0, ErrNoDelimiter
 	}
@@ -140,7 +149,7 @@ func (root *Root) searchSectionHeader(ctx context.Context) (int, error) {
 		return 0, ErrNoMoreSection
 	}
 
-	if m.Header > sLN {
+	if m.firstLine() > sLN {
 		return 0, ErrNoMoreSection
 	}
 
@@ -176,29 +185,60 @@ func (root *Root) styleContent(line LineC) {
 func (root *Root) drawHeader() int {
 	m := root.Doc
 
-	// lN is a logical line number.
-	lN := m.SkipLines
+	if m.headerHeight <= 0 {
+		return m.SkipLines
+	}
+
 	// lX is the logical x position of Contents.
 	lX := 0
-
+	// lN is a logical line number.
+	lN := m.SkipLines
 	// wrapNum is the number of wrapped lines.
 	wrapNum := 0
-	// y is the y-coordinate.
-	y := 0
-	for ; lN < m.firstLine(); y++ {
-		if y > root.scr.vHeight {
-			break
-		}
+	for y := 0; y < m.headerHeight && lN < m.firstLine(); y++ {
 		line := root.scr.contents[lN]
-
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		root.blankLineNumber(y)
+
+		lX, lN = root.drawLine(y, lX, lN, line.lc)
+		// header style.
+		root.yStyle(y, root.StyleHeader)
+
+		wrapNum++
+		if lX == 0 {
+			wrapNum = 0
+		}
+	}
+
+	return lN
+}
+
+// drawSectionHeader draws section header.
+func (root *Root) drawSectionHeader() {
+	m := root.Doc
+
+	if m.sectionHeaderHeight <= 0 {
+		return
+	}
+
+	lX := 0
+	lN := root.scr.sectionHeaderLN
+	wrapNum := 0
+	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight; y++ {
+		line := root.scr.contents[lN]
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		root.drawLineNumber(lN, y, line.valid)
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
-		if root.Doc.LineNumMode {
-			root.blankLineNumber(y)
+		// section header style.
+		root.yStyle(y, root.StyleSectionLine)
+		// markstyle is displayed above the section header.
+		markStyleWidth := min(root.scr.vWidth, m.general.MarkStyleWidth)
+		root.markStyle(lN, y, markStyleWidth)
+		// Underline search lines when they overlap in section headers.
+		if lN == m.lastSearchNum {
+			root.yStyle(y, OVStyle{Underline: true})
 		}
-		// header style
-		root.yStyle(y, root.StyleHeader)
 
 		wrapNum++
 		if nextLX == 0 {
@@ -208,44 +248,6 @@ func (root *Root) drawHeader() int {
 		lX = nextLX
 		lN = nextLN
 	}
-	m.headerLen = y
-	return lN
-}
-
-// drawSectionHeader draws section header.
-func (root *Root) drawSectionHeader() {
-	m := root.Doc
-	if !m.SectionHeader || m.SectionDelimiter == "" {
-		return
-	}
-
-	if root.scr.sectionHeaderLN < 0 {
-		return
-	}
-
-	sx := 0
-	sn := root.scr.sectionHeaderLN
-	wrapNum := 0
-	for y := m.headerLen; sn < root.scr.sectionHeaderLN+m.SectionHeaderNum; y++ {
-		line := root.scr.contents[sn]
-		root.scr.numbers[y] = newLineNumber(sn, wrapNum)
-		root.drawLineNumber(sn, y, line.valid)
-		nextLX, nextLN := root.drawLine(y, sx, sn, line.lc)
-		root.yStyle(y, root.StyleSectionLine)
-		markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
-		root.markStyle(sn, y, markStyleWidth)
-		if sn == m.lastSearchNum {
-			root.yStyle(y, OVStyle{Underline: true})
-		}
-
-		wrapNum++
-		if nextLX == 0 {
-			wrapNum = 0
-		}
-
-		sx = nextLX
-		sn = nextLN
-	}
 }
 
 // drawBody draws body.
@@ -253,12 +255,12 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
 	wrapNum := m.numOfWrap(lX, lN)
-	for y := m.headerLen; y < root.scr.vHeight-statusLine; y++ {
-		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line := root.scr.contents[lN]
-		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
-
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, line.valid)
+
+		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
 		if line.valid {
 			root.coordinatesStyle(lN, y, line.str)
 		}
@@ -280,7 +282,7 @@ func (root *Root) coordinatesStyle(lN int, y int, str string) {
 	root.sectionLineHighlight(y, str)
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 	root.markStyle(lN, y, markStyleWidth)
-	if root.Doc.jumpTargetNum != 0 && root.Doc.headerLen+root.Doc.jumpTargetNum == y {
+	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
 		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }
@@ -376,6 +378,9 @@ func (root *Root) multiColorHighlight(line LineC) {
 
 // blankLineNumber should be blank for the line number.
 func (root *Root) blankLineNumber(y int) {
+	if !root.Doc.LineNumMode {
+		return
+	}
 	if root.scr.startX <= 0 {
 		return
 	}
@@ -708,20 +713,21 @@ func (root *Root) clearY(y int) {
 
 // sectionLineHighlight applies the style of the section line highlight.
 func (root *Root) sectionLineHighlight(y int, str string) {
-	if root.Doc.SectionDelimiter == "" {
+	m := root.Doc
+	if m.SectionDelimiter == "" {
+		return
+	}
+	if m.SectionDelimiterReg == nil {
+		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
 		return
 	}
 
-	if root.Doc.SectionDelimiterReg == nil {
-		log.Printf("Regular expression is not set: %s", root.Doc.SectionDelimiter)
-		return
-	}
 	root.scr.sectionHeaderLeft--
 	if root.scr.sectionHeaderLeft > 0 {
 		root.yStyle(y, root.StyleSectionLine)
 	}
-	if root.Doc.SectionDelimiterReg.MatchString(str) {
+	if m.SectionDelimiterReg.MatchString(str) {
 		root.yStyle(y, root.StyleSectionLine)
-		root.scr.sectionHeaderLeft = root.Doc.SectionHeaderNum
+		root.scr.sectionHeaderLeft = m.SectionHeaderNum
 	}
 }

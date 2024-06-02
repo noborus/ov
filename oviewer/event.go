@@ -134,7 +134,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	}
 
 	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.Doc.statusPos - root.Doc.headerLen
+	root.Doc.height = root.Doc.statusPos - root.Doc.headerHeight
 
 	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 		root.follow(ctx)

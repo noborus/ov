@@ -179,6 +179,7 @@ func (root *Root) searchGo(ctx context.Context, lN int) {
 		root.Doc.searchGoSection(ctx, lN, x)
 		return
 	}
+	root.debugMessage(fmt.Sprintf("searchGo:%d->%d", root.Doc.topLN, lN))
 	root.Doc.searchGoTo(lN, x)
 }
 
@@ -204,7 +205,8 @@ func (root *Root) goLine(input string) {
 			root.setMessage(ErrInvalidNumber.Error())
 			return
 		}
-		lN = root.Doc.moveLine(lN)
+		lN = root.Doc.moveLine(lN - 1)
+		root.Doc.showGotoF = true
 		root.setMessagef("Moved to line %d", lN+1)
 		return
 	}
@@ -226,9 +228,9 @@ func (root *Root) goLine(input string) {
 }
 
 // goLineNumber moves to the specified line number.
-func (root *Root) goLineNumber(ln int) {
-	ln = root.Doc.moveLine(ln - root.Doc.firstLine())
-	root.setMessagef("Moved to line %d", ln+1)
+func (root *Root) goLineNumber(lN int) {
+	lN = root.Doc.moveLine(lN - root.Doc.firstLine())
+	root.setMessagef("Moved to line %d", lN+1)
 }
 
 // markNext moves to the next mark.
@@ -538,11 +540,11 @@ func (root *Root) setJumpTarget(input string) {
 		root.setMessagef("Set JumpTarget %d: %s", num, ErrOutOfRange.Error())
 		return
 	}
-	if root.Doc.jumpTargetNum == num {
+	if root.Doc.jumpTargetHeight == num {
 		return
 	}
 	root.Doc.JumpTarget = input
-	root.Doc.jumpTargetNum = num
+	root.Doc.jumpTargetHeight = num
 	root.setMessagef("Set JumpTarget %d", num)
 }
 
@@ -610,7 +612,7 @@ func (root *Root) ViewSync(context.Context) {
 	root.prepareStartX()
 	root.prepareView()
 	root.Screen.Sync()
-	root.Doc.jumpTargetNum, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
+	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
 }
 
 // TailSync move to tail and sync.

@@ -148,8 +148,6 @@ type general struct {
 	SectionStartPosition int
 	// SectionHeaderNum is the number of lines in the section header.
 	SectionHeaderNum int
-	// sectionHeaderLen is the number of section headers.
-	sectionHeaderLen int
 	// HScrollWidth is the horizontal scroll width.
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
