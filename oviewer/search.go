@@ -613,40 +613,26 @@ func (root *Root) startSearchLN() int {
 func (root *Root) firstSearch(ctx context.Context, t searchType) {
 	switch t {
 	case forward:
-		root.firstForwardSearch(ctx)
+		root.forwardSearch(ctx, root.input.value, 0)
 		return
 	case backward:
-		root.firstBackSearch(ctx)
+		root.backSearch(ctx, root.input.value, 0)
 		return
 	case filter:
 		root.filter(ctx)
 	}
 }
 
-// firstForwardSearch performs the first forward search immediately after the input.
-func (root *Root) firstForwardSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	root.searchMove(ctx, true, root.startSearchLN(), searcher)
-}
-
-// nextSearch performs the next search.
-func (root *Root) nextSearch(ctx context.Context, str string) {
+// forwardSearch performs the forward search.
+func (root *Root) forwardSearch(ctx context.Context, str string, next int) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	root.searchMove(ctx, true, root.startSearchLN()+1, searcher)
+	root.searchMove(ctx, true, root.startSearchLN()+next, searcher)
 }
 
-// firstBackSearch performs the first back search immediately after the input.
-func (root *Root) firstBackSearch(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
-	current := root.scr.lineNumber(root.Doc.headerHeight)
-	root.searchMove(ctx, false, current.number, searcher)
-}
-
-// nextBackSearch performs the next back search.
-func (root *Root) nextBackSearch(ctx context.Context, str string) {
+// backSearch performs the back search.
+func (root *Root) backSearch(ctx context.Context, str string, next int) {
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
-	lN := root.startSearchLN() - 1
-	root.searchMove(ctx, false, lN, searcher)
+	root.searchMove(ctx, false, root.startSearchLN()+next, searcher)
 }
 
 // eventNextSearch represents search event.
@@ -689,17 +675,18 @@ func (root *Root) sendNextBackSearch(context.Context) {
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
 func (root *Root) Search(str string) {
-	root.sendForwardSearch(str)
+	root.sendSearch(str)
 }
 
-// SearchFromTop fires a forward search event from the top.
-func (root *Root) SearchFromTop(str string) {
-	root.MoveLine(-1)
-	root.sendForwardSearch(str)
+// eventSearch represents search event.
+type eventSearch struct {
+	tcell.EventTime
+	str string
 }
 
-func (root *Root) sendForwardSearch(str string) {
-	ev := &eventNextSearch{}
+// sendSearch fires the eventSearch event.
+func (root *Root) sendSearch(str string) {
+	ev := &eventSearch{}
 	ev.str = str
 	ev.SetEventNow()
 	root.postEvent(ev)

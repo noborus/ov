@@ -165,7 +165,7 @@ func RunOviewer(args []string) error {
 	ov.SetConfig(config)
 
 	if pattern != "" {
-		ov.SearchFromTop(pattern)
+		ov.Search(pattern)
 	}
 	if filter != "" {
 		ov.Filter(filter, false)
