@@ -72,7 +72,9 @@ func (m *Document) shiftSectionHeader(lN int) {
 	hidden := m.topLN + m.firstLine() - m.SectionHeaderNum
 	if lN <= hidden {
 		m.moveYUp(m.sectionHeaderHeight)
+		return
 	}
+	m.topLN = lN
 }
 
 // searchSectionHeader searches for the section header.
