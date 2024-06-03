@@ -100,8 +100,15 @@ type SCR struct {
 	vHeight int
 	// startX is the start position of x.
 	startX int
+
+	// HeaderLN is the number of header lines.
+	headerLN int
+	// headerEnd is the end of the header.
+	headerEnd int
 	// sectionHeaderLN is the number of section headers.
 	sectionHeaderLN int
+	// sectionHeaderEnd is the end of the section header.
+	sectionHeaderEnd int
 	// sectionHeaderLeft is the number of remaining lines in sectionHeader.
 	sectionHeaderLeft int
 }

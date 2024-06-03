@@ -2,22 +2,14 @@ package oviewer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
-	"sync/atomic"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
 
-// statusLine is the number of lines in the status bar.
-const statusLine = 1
-
-// sectionTimeOut is the section header search timeout(in milliseconds) period.
-const sectionTimeOut = 1000
+var defaultStyle = tcell.StyleDefault
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
@@ -59,128 +51,6 @@ func (root *Root) draw(ctx context.Context) {
 	root.Show()
 }
 
-// Prepare the contents.
-func (root *Root) prepareContents(ctx context.Context) {
-	m := root.Doc
-
-	// clear contents.
-	for k := range root.scr.contents {
-		delete(root.scr.contents, k)
-	}
-
-	// Header.
-	root.setContents(m.SkipLines, m.firstLine())
-	m.headerHeight = max(m.Header, 0)
-	if m.WrapMode {
-		m.headerHeight = 0
-		for i := m.SkipLines; i < m.firstLine(); i++ {
-			m.headerHeight += len(m.leftMostX(i))
-		}
-	}
-
-	// SectionHeader.
-	num := min(m.SectionHeaderNum, root.scr.vHeight)
-	sLN, err := root.searchSectionHeader(ctx)
-	if err != nil {
-		// If the section header is not found, the section header is not displayed.
-		num = 0
-	}
-	root.setContents(sLN, sLN+num)
-	root.scr.sectionHeaderLN = sLN
-
-	// set the height of the section header.
-	m.sectionHeaderHeight = num
-	if m.WrapMode {
-		m.sectionHeaderHeight = 0
-		for i := sLN; i < sLN+num; i++ {
-			m.sectionHeaderHeight += len(m.leftMostX(i))
-		}
-	}
-
-	// Shift so that sLN is always displayed.
-	if m.showGotoF {
-		root.showRequireLines(sLN)
-	}
-
-	// Body.
-	startLN := m.topLN + m.firstLine()
-	endLN := startLN + root.scr.vHeight // vHeight is the max line of logical lines.
-	root.setContents(startLN, endLN)
-}
-
-// showRequireLines shows the required lines.
-func (root *Root) showRequireLines(lN int) {
-	m := root.Doc
-	m.showGotoF = false
-
-	if m.jumpTargetHeight != 0 {
-		return
-	}
-	if m.sectionHeaderHeight <= 0 {
-		return
-	}
-
-	if m.topLN-m.SectionHeaderNum < 0 {
-		m.topLN = 0
-		return
-	}
-	// Moves lN into visible position if it is obscured by a section header.
-	if lN <= m.topLN+m.firstLine()-m.SectionHeaderNum {
-		m.moveYUp(root.Doc.sectionHeaderHeight)
-	}
-}
-
-// searchSectionHeader searches for the section header.
-func (root *Root) searchSectionHeader(ctx context.Context) (int, error) {
-	m := root.Doc
-	lN := m.topLN + m.firstLine() + 1
-	if !m.SectionHeader || m.SectionDelimiter == "" {
-		return 0, ErrNoDelimiter
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
-	defer cancel()
-	sLN, err := m.prevSection(ctx, lN)
-	if err != nil {
-		if errors.Is(err, ErrCancel) {
-			root.setMessageLogf("Section header search timed out")
-			m.SectionDelimiter = ""
-		}
-		return 0, ErrNoMoreSection
-	}
-
-	if m.firstLine() > sLN {
-		return 0, ErrNoMoreSection
-	}
-
-	return sLN, nil
-}
-
-// setContents sets the contents of the specified range.
-func (root *Root) setContents(start int, end int) {
-	m := root.Doc
-	for lN := start; lN < end; lN++ {
-		line := m.getLineC(lN, m.TabWidth)
-		if line.valid {
-			RangeStyle(line.lc, 0, len(line.lc), root.StyleBody)
-			root.styleContent(line)
-		}
-		root.scr.contents[lN] = line
-	}
-}
-
-// styleContent applies the style of the content.
-func (root *Root) styleContent(line LineC) {
-	if root.Doc.PlainMode {
-		root.plainStyle(line.lc)
-	}
-	if root.Doc.ColumnMode {
-		root.columnHighlight(line)
-	}
-	root.multiColorHighlight(line)
-	root.searchHighlight(line)
-}
-
 // drawHeader draws header.
 func (root *Root) drawHeader() int {
 	m := root.Doc
@@ -196,7 +66,10 @@ func (root *Root) drawHeader() int {
 	// wrapNum is the number of wrapped lines.
 	wrapNum := 0
 	for y := 0; y < m.headerHeight && lN < m.firstLine(); y++ {
-		line := root.scr.contents[lN]
+		line, ok := root.scr.contents[lN]
+		if !ok {
+			panic(fmt.Sprintf("line is not found %d", lN))
+		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.blankLineNumber(y)
 
@@ -213,7 +86,37 @@ func (root *Root) drawHeader() int {
 	return lN
 }
 
+// drawBody draws body.
+func (root *Root) drawBody(lX int, lN int) (int, int) {
+	m := root.Doc
+
+	wrapNum := m.numOfWrap(lX, lN)
+	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
+		line, ok := root.scr.contents[lN]
+		if !ok {
+			panic(fmt.Sprintf("line is not found %d", lN))
+		}
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		root.drawLineNumber(lN, y, line.valid)
+
+		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+		if line.valid {
+			root.coordinatesStyle(lN, y, line.str)
+		}
+
+		wrapNum++
+		if nextLX == 0 {
+			wrapNum = 0
+		}
+
+		lX = nextLX
+		lN = nextLN
+	}
+	return lX, lN
+}
+
 // drawSectionHeader draws section header.
+// The section header overrides the body.
 func (root *Root) drawSectionHeader() {
 	m := root.Doc
 
@@ -225,7 +128,10 @@ func (root *Root) drawSectionHeader() {
 	lN := root.scr.sectionHeaderLN
 	wrapNum := 0
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight; y++ {
-		line := root.scr.contents[lN]
+		line, ok := root.scr.contents[lN]
+		if !ok {
+			panic(fmt.Sprintf("line is not found %d", lN))
+		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, line.valid)
 
@@ -247,43 +153,6 @@ func (root *Root) drawSectionHeader() {
 
 		lX = nextLX
 		lN = nextLN
-	}
-}
-
-// drawBody draws body.
-func (root *Root) drawBody(lX int, lN int) (int, int) {
-	m := root.Doc
-
-	wrapNum := m.numOfWrap(lX, lN)
-	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
-		line := root.scr.contents[lN]
-		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-		root.drawLineNumber(lN, y, line.valid)
-
-		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
-		if line.valid {
-			root.coordinatesStyle(lN, y, line.str)
-		}
-
-		wrapNum++
-		if nextLX == 0 {
-			wrapNum = 0
-		}
-
-		lX = nextLX
-		lN = nextLN
-	}
-	return lX, lN
-}
-
-// coordinatesStyle applies the style of the coordinates.
-func (root *Root) coordinatesStyle(lN int, y int, str string) {
-	root.alternateRowsStyle(lN, y)
-	root.sectionLineHighlight(y, str)
-	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
-	root.markStyle(lN, y, markStyleWidth)
-	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
-		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }
 
@@ -344,38 +213,6 @@ func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, i
 	return startX, lN
 }
 
-// searchHighlight applies the style of the search highlight.
-// Apply style to contents.
-func (root *Root) searchHighlight(line LineC) {
-	if root.searcher == nil || root.searcher.String() == "" {
-		return
-	}
-
-	indexes := root.searchPosition(line.str)
-	for _, idx := range indexes {
-		RangeStyle(line.lc, line.pos.x(idx[0]), line.pos.x(idx[1]), root.StyleSearchHighlight)
-	}
-}
-
-// plainStyle defaults to the original style.
-func (*Root) plainStyle(lc contents) {
-	for x := 0; x < len(lc); x++ {
-		lc[x].style = tcell.StyleDefault
-	}
-}
-
-// multiColorHighlight applies styles to multiple words (regular expressions) individually.
-// The style of the first specified word takes precedence.
-func (root *Root) multiColorHighlight(line LineC) {
-	numC := len(root.StyleMultiColorHighlight)
-	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
-		indexes := searchPositionReg(line.str, root.Doc.multiColorRegexps[i])
-		for _, idx := range indexes {
-			RangeStyle(line.lc, line.pos.x(idx[0]), line.pos.x(idx[1]), root.StyleMultiColorHighlight[i%numC])
-		}
-	}
-}
-
 // blankLineNumber should be blank for the line number.
 func (root *Root) blankLineNumber(y int) {
 	if !root.Doc.LineNumMode {
@@ -414,142 +251,40 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	// Line numbers start at 1 except for skip and header lines.
 	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, number), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
-		numC[i].style = applyStyle(tcell.StyleDefault, root.StyleLineNumber)
+		numC[i].style = applyStyle(defaultStyle, root.StyleLineNumber)
 	}
 	root.setContentString(0, y, numC)
 }
 
-// columnHighlight applies the style of the column highlight.
-func (root *Root) columnHighlight(line LineC) {
-	if root.Doc.ColumnWidth {
-		root.columnWidthHighlight(line)
-		return
+// setContentString is a helper function that draws a string with setContent.
+func (root *Root) setContentString(vx int, vy int, lc contents) {
+	screen := root.Screen
+	for x, content := range lc {
+		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
 	}
-	root.columnDelimiterHighlight(line)
+	screen.SetContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
 }
 
-// columnHighlight applies the style of the column highlight.
-func (root *Root) columnDelimiterHighlight(line LineC) {
-	m := root.Doc
-	indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
-	if len(indexes) == 0 {
-		return
-	}
-
-	lStart := 0
-	if indexes[0][0] == 0 {
-		if len(indexes) == 1 {
-			return
-		}
-		lStart = indexes[0][1]
-		indexes = indexes[1:]
-	}
-
-	numC := len(root.StyleColumnRainbow)
-
-	var iStart, iEnd int
-	for c := 0; c < len(indexes)+1; c++ {
-		switch {
-		case c == 0 && lStart == 0:
-			iStart = lStart
-			iEnd = indexes[0][1] - len(m.ColumnDelimiter)
-			if iEnd < 0 {
-				iEnd = 0
-			}
-		case c < len(indexes):
-			iStart = iEnd + 1
-			iEnd = indexes[c][0]
-		case c == len(indexes):
-			iStart = iEnd + 1
-			iEnd = len(line.str)
-		}
-		if iStart < 0 || iEnd < 0 {
-			return
-		}
-		start, end := line.pos.x(iStart), line.pos.x(iEnd)
-		if m.ColumnRainbow {
-			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
-		}
-		if c == m.columnCursor {
-			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
-		}
+// clearEOL clears from the specified position to the right end.
+func (root *Root) clearEOL(x int, y int) {
+	for ; x < root.scr.vWidth; x++ {
+		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
 	}
 }
 
-func (root *Root) columnWidthHighlight(line LineC) {
-	m := root.Doc
-	indexes := m.columnWidths
-	if len(indexes) == 0 {
-		return
-	}
-	iStart, iEnd := 0, 0
-	numC := len(root.StyleColumnRainbow)
-	for c := 0; c < len(indexes)+1; c++ {
-		switch {
-		case c == 0:
-			iStart = 0
-			iEnd = findBounds(line.lc, indexes[0]-1, indexes, c)
-		case c < len(indexes):
-			iStart = iEnd + 1
-			iEnd = findBounds(line.lc, indexes[c], indexes, c)
-		case c == len(indexes):
-			iStart = iEnd + 1
-			iEnd = len(line.str)
-		}
-		iEnd = min(iEnd, len(line.lc))
-
-		if m.ColumnRainbow {
-			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnRainbow[c%numC])
-		}
-
-		if c == m.columnCursor {
-			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnHighlight)
-		}
-	}
+// clearY clear the specified line.
+func (root *Root) clearY(y int) {
+	root.clearEOL(0, y)
 }
 
-// findBounds finds the bounds of values that extend beyond the column position.
-func findBounds(lc contents, p int, pos []int, n int) int {
-	if len(lc) <= p {
-		return p
-	}
-	if lc[p].mainc == ' ' {
-		return p
-	}
-	f := p
-	fp := 0
-	for ; f < len(lc) && lc[f].mainc != ' '; f++ {
-		fp++
-	}
-
-	b := p
-	bp := 0
-	for ; b > 0 && lc[b].mainc != ' '; b-- {
-		bp++
-	}
-
-	if b == pos[n] {
-		return f
-	}
-	if n < len(pos)-1 {
-		if f == pos[n+1] {
-			return b
-		}
-		if b == pos[n] {
-			return f
-		}
-		if b > pos[n] && b < pos[n+1] {
-			return b
-		}
-	}
-	return f
-}
-
-// RangeStyle applies the style to the specified range.
-// Apply style to contents.
-func RangeStyle(lc contents, start int, end int, s OVStyle) {
-	for x := start; x < end; x++ {
-		lc[x].style = applyStyle(lc[x].style, s)
+// coordinatesStyle applies the style of the coordinates.
+func (root *Root) coordinatesStyle(lN int, y int, str string) {
+	root.alternateRowsStyle(lN, y)
+	root.sectionLineHighlight(y, str)
+	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
+	root.markStyle(lN, y, markStyleWidth)
+	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
+		root.yStyle(y, root.StyleJumpTargetLine)
 	}
 }
 
@@ -577,138 +312,9 @@ func (root *Root) markStyle(lN int, y int, width int) {
 	if contains(m.marked, lN) {
 		for x := 0; x < width; x++ {
 			r, c, style, _ := root.GetContent(x, y)
-			root.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
+			root.Screen.SetContent(x, y, r, c, applyStyle(style, root.StyleMarkLine))
 		}
 	}
-}
-
-// drawStatus draws a status line.
-func (root *Root) drawStatus() {
-	root.clearY(root.Doc.statusPos)
-	leftContents, cursorPos := root.leftStatus()
-	root.setContentString(0, root.Doc.statusPos, leftContents)
-
-	rightContents := root.rightStatus()
-	root.setContentString(root.scr.vWidth-len(rightContents), root.Doc.statusPos, rightContents)
-
-	root.Screen.ShowCursor(cursorPos, root.Doc.statusPos)
-}
-
-// leftStatus returns the status of the left side.
-func (root *Root) leftStatus() (contents, int) {
-	if root.input.Event.Mode() == Normal {
-		return root.normalLeftStatus()
-	}
-	return root.inputLeftStatus()
-}
-
-// normalLeftStatus returns the status of the left side of the normal mode.
-func (root *Root) normalLeftStatus() (contents, int) {
-	var leftStatus strings.Builder
-	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
-		leftStatus.WriteString("[")
-		leftStatus.WriteString(strconv.Itoa(root.CurrentDoc))
-		leftStatus.WriteString("]")
-	}
-
-	leftStatus.WriteString(root.statusDisplay())
-
-	if root.Doc.Caption != "" {
-		leftStatus.WriteString(root.Doc.Caption)
-	} else if root.Config.Prompt.Normal.ShowFilename {
-		leftStatus.WriteString(root.Doc.FileName)
-	}
-	leftStatus.WriteString(":")
-	leftStatus.WriteString(root.message)
-	leftContents := StrToContents(leftStatus.String(), -1)
-
-	if root.Config.Prompt.Normal.InvertColor {
-		color := tcell.ColorWhite
-		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
-		}
-		for i := 0; i < len(leftContents); i++ {
-			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
-		}
-	}
-
-	return leftContents, len(leftContents)
-}
-
-// statusDisplay returns the status mode of the document.
-func (root *Root) statusDisplay() string {
-	if root.Doc.WatchMode {
-		// Watch mode doubles as FollowSection mode.
-		return "(Watch)"
-	}
-	if root.Doc.FollowSection {
-		return "(Follow Section)"
-	}
-	if root.General.FollowAll {
-		return "(Follow All)"
-	}
-	if root.Doc.FollowMode && root.Doc.FollowName {
-		return "(Follow Name)"
-	}
-	if root.Doc.FollowMode {
-		return "(Follow Mode)"
-	}
-	return ""
-}
-
-// inputLeftStatus returns the status of the left side of the input.
-func (root *Root) inputLeftStatus() (contents, int) {
-	input := root.input
-	prompt := root.inputPrompt()
-	leftContents := StrToContents(prompt+input.value, -1)
-	return leftContents, len(prompt) + input.cursorX
-}
-
-// inputPrompt returns a string describing the input field.
-func (root *Root) inputPrompt() string {
-	var prompt strings.Builder
-	mode := root.input.Event.Mode()
-	modePrompt := root.input.Event.Prompt()
-
-	if mode == Search || mode == Backsearch || mode == Filter {
-		prompt.WriteString(root.searchOpt)
-	}
-	prompt.WriteString(modePrompt)
-	return prompt.String()
-}
-
-// rightStatus returns the status of the right side.
-func (root *Root) rightStatus() contents {
-	next := ""
-	if !root.Doc.BufEOF() {
-		next = "..."
-	}
-	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
-	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
-		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
-	}
-	return StrToContents(str, -1)
-}
-
-// setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, lc contents) {
-	screen := root.Screen
-	for x, content := range lc {
-		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
-	}
-	screen.SetContent(vx+len(lc), vy, 0, nil, tcell.StyleDefault.Normal())
-}
-
-// clearEOL clears from the specified position to the right end.
-func (root *Root) clearEOL(x int, y int) {
-	for ; x < root.scr.vWidth; x++ {
-		root.Screen.SetContent(x, y, ' ', nil, tcell.StyleDefault)
-	}
-}
-
-// clearY clear the specified line.
-func (root *Root) clearY(y int) {
-	root.clearEOL(0, y)
 }
 
 // sectionLineHighlight applies the style of the section line highlight.
