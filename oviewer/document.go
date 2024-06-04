@@ -74,8 +74,11 @@ type Document struct {
 	// currentChunk represents the current chunk number.
 	currentChunk int
 
-	// headerLen is the actual header length when wrapped.
-	headerLen int
+	// headerHeight is the height of the header.
+	headerHeight int
+	// sectionHeaderHeight is the height of the section header.
+	sectionHeaderHeight int
+
 	// statusPos is the position of the status line.
 	statusPos int
 
@@ -109,8 +112,8 @@ type Document struct {
 	// showGotoF displays the specified line if it is true.
 	showGotoF bool
 
-	// jumpTargetNum is the display position of search results.
-	jumpTargetNum int
+	// jumpTargetHeight is the display position of search results.
+	jumpTargetHeight int
 	// jumpTargetSection is the display position of search results.
 	jumpTargetSection bool
 

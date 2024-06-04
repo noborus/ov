@@ -54,10 +54,12 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 			root.setViewMode(ctx, ev.value)
 		case *eventInputSearch:
 			root.firstSearch(ctx, ev.searchType)
+		case *eventSearch:
+			root.forwardSearch(ctx, ev.str, 0)
 		case *eventNextSearch:
-			root.nextSearch(ctx, ev.str)
+			root.forwardSearch(ctx, ev.str, 1)
 		case *eventNextBackSearch:
-			root.nextBackSearch(ctx, ev.str)
+			root.backSearch(ctx, ev.str, -1)
 		case *eventSearchMove:
 			root.searchGo(ctx, ev.value)
 		case *eventGoto:
@@ -134,7 +136,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	}
 
 	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.Doc.statusPos - root.Doc.headerLen
+	root.Doc.height = root.Doc.statusPos - root.Doc.headerHeight
 
 	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 		root.follow(ctx)

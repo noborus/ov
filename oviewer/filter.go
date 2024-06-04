@@ -29,7 +29,7 @@ func (root *Root) filter(ctx context.Context) {
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	if searcher == nil {
 		if root.Doc.jumpTargetSection {
-			root.Doc.jumpTargetNum = 0
+			root.Doc.jumpTargetHeight = 0
 		}
 		return
 	}

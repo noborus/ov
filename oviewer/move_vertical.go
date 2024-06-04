@@ -128,7 +128,7 @@ func numOfReverseSlice(listX []int, x int) int {
 // bottomLineNum returns the display start line
 // when the last line number as an argument.
 func (m *Document) bottomLineNum(lN int, height int) (int, int) {
-	if lN < m.headerLen {
+	if lN < m.headerHeight {
 		return 0, 0
 	}
 	if !m.WrapMode {

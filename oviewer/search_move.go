@@ -11,7 +11,7 @@ func (m *Document) searchGoTo(lN int, x int) {
 	m.searchGoX(x)
 	m.showGotoF = true
 	m.topLN = lN - m.firstLine()
-	m.moveYUp(m.jumpTargetNum)
+	m.moveYUp(m.jumpTargetHeight)
 }
 
 // Bottom line of jumpTarget when specifying a section.
@@ -50,13 +50,13 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 		}
 	}
 
-	if m.bottomJumpTarget() > y+m.headerLen {
-		m.jumpTargetNum = y
+	if m.bottomJumpTarget() > y+m.headerHeight {
+		m.jumpTargetHeight = y
 		return
 	}
 
-	m.jumpTargetNum = m.bottomJumpTarget() - (m.headerLen + 1)
-	m.moveYDown(y - m.jumpTargetNum)
+	m.jumpTargetHeight = m.bottomJumpTarget() - (m.headerHeight + 1)
+	m.moveYDown(y - m.jumpTargetHeight)
 }
 
 // searchGoX moves to the specified x position.
