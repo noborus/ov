@@ -62,19 +62,15 @@ func (m *Document) shiftSectionHeader(lN int) {
 		return
 	}
 
-	// Suppress line scrolling if the first line is a section-header.
-	if m.topLN-m.SectionHeaderNum < 0 {
-		m.topLN = 0
+	// Move to the first line of the section, if within the section header.
+	headerEndLN := (lN - m.firstLine()) + m.SectionHeaderNum
+	if m.topLN < headerEndLN {
+		m.topLN = lN - m.firstLine()
 		return
 	}
 
-	// Moves lN into visible position if it is obscured by a section header.
-	hidden := m.topLN + m.firstLine() - m.SectionHeaderNum
-	if lN <= hidden {
-		m.moveYUp(m.sectionHeaderHeight)
-		return
-	}
-	m.topLN = lN
+	// Go to the first line after the section header.
+	m.moveYUp(m.sectionHeaderHeight)
 }
 
 // searchSectionHeader searches for the section header.
