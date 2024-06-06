@@ -9,27 +9,55 @@ import (
 // sectionTimeOut is the section header search timeout(in milliseconds) period.
 const sectionTimeOut = 1000
 
-// prepareContents prepares the contents.
-func (root *Root) prepareContents(ctx context.Context) {
+// prepareDraw prepares the screen for drawing.
+func (root *Root) prepareDraw(ctx context.Context) {
 	// Header.
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Section header.
-	root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx)
-	// Header and Section header height.
-	root.Doc.setHeaderHeight(root.scr)
+	root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd)
+	// Set the header height.
+	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
+	// and Section header height.
+	root.Doc.sectionHeaderHeight = root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
 
+	// Shift the initial position of the body to the displayed position.
 	if root.Doc.showGotoF {
-		root.Doc.shiftSectionHeader(root.scr.sectionHeaderLN)
+		lX, lN := root.Doc.topLX, root.Doc.topLN+root.scr.headerEnd
+		lX, lN = root.Doc.shiftBody(lX, lN, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+		root.Doc.topLX, root.Doc.topLN = lX, lN-root.scr.headerEnd
+		root.Doc.showGotoF = false
 	}
 
+	// Prepare the contents.
 	root.scr.contents = root.screenContents(root.scr.contents)
 }
 
-// sectionHeader sets the header line number.
-func (root *Root) sectionHeader(ctx context.Context) (int, int) {
+// shiftBody shifts the section header so that it is not hidden by it.
+func (m *Document) shiftBody(lX int, lN int, shStart int, shEnd int) (int, int) {
+	if m.jumpTargetHeight != 0 {
+		return lX, lN
+	}
+	if m.sectionHeaderHeight <= 0 {
+		return lX, lN
+	}
+
+	// Move to the first line of the section, if within the section header.
+	if lN < shEnd {
+		return lX, shStart
+	}
+
+	// Go to the first line after the section header.
+	if !m.WrapMode {
+		return lX, lN - m.sectionHeaderHeight
+	}
+	return m.numUp(lX, lN, m.sectionHeaderHeight)
+}
+
+// sectionHeader returns the start and end of the section header.
+func (root *Root) sectionHeader(ctx context.Context, topLN int) (int, int) {
 	m := root.Doc
-	topLN := m.topLN + m.firstLine()
+
 	// SectionHeader.
 	shNum := min(m.SectionHeaderNum, root.scr.vHeight)
 	shStart, err := m.searchSectionHeader(ctx, topLN+1)
@@ -42,35 +70,6 @@ func (root *Root) sectionHeader(ctx context.Context) (int, int) {
 		shNum = 0
 	}
 	return shStart, shStart + shNum
-}
-
-// setHeaderHeight sets the header height.
-func (m *Document) setHeaderHeight(scr SCR) {
-	m.headerHeight = m.getHeight(scr.headerLN, scr.headerEnd)
-	m.sectionHeaderHeight = m.getHeight(scr.sectionHeaderLN, scr.sectionHeaderEnd)
-}
-
-// shiftSectionHeader shifts the section header so that it is not hidden by it.
-// sectionHeaderHeight should be updated before calling this function.
-func (m *Document) shiftSectionHeader(lN int) {
-	m.showGotoF = false
-
-	if m.jumpTargetHeight != 0 {
-		return
-	}
-	if m.sectionHeaderHeight <= 0 {
-		return
-	}
-
-	// Move to the first line of the section, if within the section header.
-	headerEndLN := (lN - m.firstLine()) + m.SectionHeaderNum
-	if m.topLN < headerEndLN {
-		m.topLN = lN - m.firstLine()
-		return
-	}
-
-	// Go to the first line after the section header.
-	m.moveYUp(m.sectionHeaderHeight)
 }
 
 // searchSectionHeader searches for the section header.

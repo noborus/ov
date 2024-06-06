@@ -51,7 +51,7 @@ func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 		return
 	}
 
-	if button != tcell.ButtonNone || root.mouseSelect {
+	if button != tcell.ButtonNone || root.scr.mouseSelect {
 		root.selectRange(ctx, ev)
 		return
 	}
@@ -99,26 +99,26 @@ func (root *Root) selectRange(ctx context.Context, ev *tcell.EventMouse) {
 		return
 	}
 
-	if !root.mouseSelect && button == tcell.ButtonPrimary {
+	if !root.scr.mouseSelect && button == tcell.ButtonPrimary {
 		root.setMessage("")
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
-			root.mouseRectangle = true
+			root.scr.mouseRectangle = true
 		} else {
-			root.mouseRectangle = false
+			root.scr.mouseRectangle = false
 		}
-		root.mouseSelect = true
-		root.mousePressed = true
-		root.x1, root.y1 = ev.Position()
+		root.scr.mouseSelect = true
+		root.scr.mousePressed = true
+		root.scr.x1, root.scr.y1 = ev.Position()
 	}
 
-	if root.mousePressed {
-		root.x2, root.y2 = ev.Position()
+	if root.scr.mousePressed {
+		root.scr.x2, root.scr.y2 = ev.Position()
 	}
 
-	if root.mouseSelect {
+	if root.scr.mouseSelect {
 		if button == tcell.ButtonNone {
-			root.mousePressed = false
-		} else if !root.mousePressed {
+			root.scr.mousePressed = false
+		} else if !root.scr.mousePressed {
 			root.resetSelect()
 			if button == tcell.ButtonPrimary || button == tcell.ButtonSecondary {
 				root.CopySelect(ctx)
@@ -129,8 +129,8 @@ func (root *Root) selectRange(ctx context.Context, ev *tcell.EventMouse) {
 
 // resetSelect resets the selection.
 func (root *Root) resetSelect() {
-	root.mouseSelect = false
-	root.mousePressed = false
+	root.scr.mouseSelect = false
+	root.scr.mousePressed = false
 }
 
 // eventCopySelect represents a mouse select event.
@@ -151,10 +151,10 @@ func (root *Root) sendCopySelect() {
 
 // copyToClipboard writes the selection to the clipboard.
 func (root *Root) copyToClipboard(_ context.Context) {
-	x1 := root.x1
-	x2 := root.x2
-	y1 := root.y1
-	y2 := root.y2
+	x1 := root.scr.x1
+	x2 := root.scr.x2
+	y1 := root.scr.y1
+	y2 := root.scr.y2
 
 	if y2 < y1 {
 		y1, y2 = y2, y1
@@ -232,7 +232,7 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		root.reverseLine(y1, x1, x2+1, sel)
 		return
 	}
-	if root.mouseRectangle {
+	if root.scr.mouseRectangle {
 		for y := y1; y <= y2; y++ {
 			root.reverseLine(y, x1, x2+1, sel)
 		}
@@ -262,7 +262,7 @@ func (root *Root) reverseLine(y int, start int, end int, sel bool) {
 }
 
 func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
-	if root.mouseRectangle {
+	if root.scr.mouseRectangle {
 		return root.scr.rectangleToString(root.Doc, x1, y1, x2, y2)
 	}
 	return root.scr.lineRangeToString(root.Doc, x1, y1, x2, y2)

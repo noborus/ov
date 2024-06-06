@@ -15,75 +15,35 @@ var defaultStyle = tcell.StyleDefault
 func (root *Root) draw(ctx context.Context) {
 	m := root.Doc
 
-	if root.scr.vHeight == 0 {
-		m.topLN = 0
-		root.drawStatus()
-		root.Show()
-		return
-	}
-
-	// Prepare the contents.
-	root.prepareContents(ctx)
-
-	// Header.
-	lN := root.drawHeader()
-
-	lX := 0
-	if m.WrapMode {
-		lX = m.topLX
-	}
-	lN = m.topLN + lN
+	// Prepare the screen for drawing.
+	root.prepareDraw(ctx)
 
 	// Body.
+	lX := m.topLX
+	lN := m.topLN + root.scr.headerEnd
+	// If WrapMode is off, lX is always 0.
+	if !m.WrapMode {
+		lX = 0
+	}
 	lX, lN = root.drawBody(lX, lN)
-
-	// Section header.
-	root.drawSectionHeader()
-
-	m.bottomLN = max(lN, 0)
 	m.bottomLX = lX
+	m.bottomLN = lN
 
-	if root.mouseSelect {
-		root.drawSelect(root.x1, root.y1, root.x2, root.y2, true)
+	// Header.
+	if m.headerHeight > 0 {
+		root.drawHeader()
+	}
+	// Section header.
+	if m.sectionHeaderHeight > 0 {
+		root.drawSectionHeader()
+	}
+
+	if root.scr.mouseSelect {
+		root.drawSelect(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2, true)
 	}
 
 	root.drawStatus()
 	root.Show()
-}
-
-// drawHeader draws header.
-func (root *Root) drawHeader() int {
-	m := root.Doc
-
-	if m.headerHeight <= 0 {
-		return m.SkipLines
-	}
-
-	// lX is the logical x position of Contents.
-	lX := 0
-	// lN is a logical line number.
-	lN := m.SkipLines
-	// wrapNum is the number of wrapped lines.
-	wrapNum := 0
-	for y := 0; y < m.headerHeight && lN < m.firstLine(); y++ {
-		line, ok := root.scr.contents[lN]
-		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
-		}
-		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-		root.blankLineNumber(y)
-
-		lX, lN = root.drawLine(y, lX, lN, line.lc)
-		// header style.
-		root.yStyle(y, root.StyleHeader)
-
-		wrapNum++
-		if lX == 0 {
-			wrapNum = 0
-		}
-	}
-
-	return lN
 }
 
 // drawBody draws body.
@@ -115,19 +75,42 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	return lX, lN
 }
 
+// drawHeader draws header.
+func (root *Root) drawHeader() {
+	m := root.Doc
+
+	// wrapNum is the number of wrapped lines.
+	wrapNum := 0
+	lX := 0
+	lN := root.scr.headerLN
+	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
+		line, ok := root.scr.contents[lN]
+		if !ok {
+			panic(fmt.Sprintf("line is not found %d", lN))
+		}
+		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
+		root.blankLineNumber(y)
+
+		lX, lN = root.drawLine(y, lX, lN, line.lc)
+		// header style.
+		root.yStyle(y, root.StyleHeader)
+
+		wrapNum++
+		if lX == 0 {
+			wrapNum = 0
+		}
+	}
+}
+
 // drawSectionHeader draws section header.
 // The section header overrides the body.
 func (root *Root) drawSectionHeader() {
 	m := root.Doc
 
-	if m.sectionHeaderHeight <= 0 {
-		return
-	}
-
+	wrapNum := 0
 	lX := 0
 	lN := root.scr.sectionHeaderLN
-	wrapNum := 0
-	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight; y++ {
+	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
 		line, ok := root.scr.contents[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
