@@ -81,6 +81,7 @@ const (
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
 	actionSaveBuffer     = "save_buffer"
+	actionHideOther      = "hide_other"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -164,6 +165,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionMultiColor:     root.setMultiColorMode,
 		actionJumpTarget:     root.setJumpTargetMode,
 		actionSaveBuffer:     root.setSaveBuffer,
+		actionHideOther:      root.toggleHideOtherSection,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -251,6 +253,7 @@ func defaultKeyBinds() KeyBind {
 		actionMultiColor:     {"."},
 		actionJumpTarget:     {"j"},
 		actionSaveBuffer:     {"S"},
+		actionHideOther:      {"alt+-"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -328,6 +331,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
+	k.writeKeyBind(&b, actionHideOther, "toggle hide other section")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")

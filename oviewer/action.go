@@ -100,6 +100,11 @@ func (root *Root) toggleFollowSection(context.Context) {
 	root.Doc.FollowSection = !root.Doc.FollowSection
 }
 
+func (root *Root) toggleHideOtherSection(context.Context) {
+	root.Doc.HideOtherSection = !root.Doc.HideOtherSection
+	root.setMessagef("Set HideOtherSection %t", root.Doc.HideOtherSection)
+}
+
 // closeFile close the file.
 func (root *Root) closeFile(context.Context) {
 	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
