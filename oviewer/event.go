@@ -142,7 +142,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 		root.follow(ctx)
 	}
 
-	if !root.skipDraw {
+	if !root.skipDraw && root.Doc.height > 0 {
 		root.draw(ctx)
 	}
 	root.skipDraw = false

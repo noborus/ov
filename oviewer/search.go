@@ -218,7 +218,7 @@ func (root *Root) searchPosition(str string) [][]int {
 // searchXPos returns the x position of the first match.
 func (root *Root) searchXPos(lineNum int) int {
 	line := root.Doc.getLineC(lineNum, root.Doc.TabWidth)
-	indexes := root.searchPosition(line.str)
+	indexes := root.searcher.FindAll(line.str)
 	if len(indexes) == 0 {
 		return 0
 	}

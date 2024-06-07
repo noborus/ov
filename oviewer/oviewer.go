@@ -56,7 +56,8 @@ type Root struct {
 
 	// DocList is the list of documents.
 	DocList []*Document
-	scr     SCR
+	// scr contains the screen information.
+	scr SCR
 	// Config is the configuration of ov.
 	Config
 	// Original position at the start of search.
@@ -66,23 +67,12 @@ type Root struct {
 	CurrentDoc int
 	// minStartX is the minimum start position of x.
 	minStartX int
-	// x1, y1, x2, y2 are the coordinates selected by the mouse.
-	x1 int
-	y1 int
-	x2 int
-	y2 int
 
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
-	// mousePressed is a flag when the mouse selection button is pressed.
-	mousePressed bool
-	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
-	// mouseRectangle is a flag for rectangle selection.
-	mouseRectangle bool
 	// Show document number
 	showDocNum bool
 }
@@ -111,6 +101,18 @@ type SCR struct {
 	sectionHeaderEnd int
 	// sectionHeaderLeft is the number of remaining lines in sectionHeader.
 	sectionHeaderLeft int
+
+	// x1, y1, x2, y2 are the coordinates selected by the mouse.
+	x1 int
+	y1 int
+	x2 int
+	y2 int
+	// mouseSelect is a flag with mouse selection.
+	mouseSelect bool
+	// mousePressed is a flag when the mouse selection button is pressed.
+	mousePressed bool
+	// mouseRectangle is a flag for rectangle selection.
+	mouseRectangle bool
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.
