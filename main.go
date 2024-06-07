@@ -437,6 +437,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
 	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
+	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
+	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
+
 	// Config
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
 	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))

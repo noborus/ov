@@ -185,6 +185,8 @@ type general struct {
 	PlainMode bool
 	// SectionHeader is whether to display the section header.
 	SectionHeader bool
+	// HideOtherSection is whether to hide other sections.
+	HideOtherSection bool
 }
 
 // OVPromptConfigNormal is the normal prompt setting.
@@ -917,6 +919,9 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if dst.Caption != "" {
 		src.Caption = dst.Caption
+	}
+	if dst.HideOtherSection {
+		src.HideOtherSection = dst.HideOtherSection
 	}
 	return src
 }

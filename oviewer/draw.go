@@ -50,6 +50,7 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
+	var hidden bool
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line, ok := root.scr.contents[lN]
@@ -61,7 +62,11 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
 		if line.valid {
-			root.coordinatesStyle(lN, y, line.str)
+			root.coordinatesStyle(lN, y)
+		}
+		sectionF := root.sectionLineHighlight(y, line.str)
+		if root.Doc.HideOtherSection {
+			hidden = root.hideOtherSection(y, hidden, sectionF)
 		}
 
 		wrapNum++
@@ -137,6 +142,16 @@ func (root *Root) drawSectionHeader() {
 		lX = nextLX
 		lN = nextLN
 	}
+}
+
+func (root *Root) hideOtherSection(y int, hidden bool, sectionF bool) bool {
+	if sectionF && !hidden && y > root.Doc.headerHeight {
+		hidden = true
+	}
+	if hidden {
+		root.clearY(y)
+	}
+	return hidden
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -261,9 +276,8 @@ func (root *Root) clearY(y int) {
 }
 
 // coordinatesStyle applies the style of the coordinates.
-func (root *Root) coordinatesStyle(lN int, y int, str string) {
+func (root *Root) coordinatesStyle(lN int, y int) {
 	root.alternateRowsStyle(lN, y)
-	root.sectionLineHighlight(y, str)
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 	root.markStyle(lN, y, markStyleWidth)
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
@@ -301,14 +315,14 @@ func (root *Root) markStyle(lN int, y int, width int) {
 }
 
 // sectionLineHighlight applies the style of the section line highlight.
-func (root *Root) sectionLineHighlight(y int, str string) {
+func (root *Root) sectionLineHighlight(y int, str string) bool {
 	m := root.Doc
 	if m.SectionDelimiter == "" {
-		return
+		return false
 	}
 	if m.SectionDelimiterReg == nil {
 		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
-		return
+		return false
 	}
 
 	root.scr.sectionHeaderLeft--
@@ -318,5 +332,7 @@ func (root *Root) sectionLineHighlight(y int, str string) {
 	if m.SectionDelimiterReg.MatchString(str) {
 		root.yStyle(y, root.StyleSectionLine)
 		root.scr.sectionHeaderLeft = m.SectionHeaderNum
+		return true
 	}
+	return false
 }
