@@ -400,3 +400,166 @@ func TestRoot_styleContent(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_searchHighlight(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	searchHighlight := tcell.StyleDefault.Reverse(true)
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		searcher Searcher
+	}
+	type args struct {
+		lineNum int
+	}
+	type want struct {
+		str   string
+		start int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "Test searchHighlight",
+			fields: fields{
+				searcher: NewSearcher("dy", regexpCompile("dy", false), false, false),
+			},
+			args: args{
+				lineNum: 6,
+			},
+			want: want{
+				str:   "body 1",
+				start: 2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(filepath.Join(testdata, "section-header.txt"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.searcher = tt.fields.searcher
+			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			root.StyleSearchHighlight = OVStyle{Reverse: true}
+			root.searchHighlight(line)
+			if line.str != tt.want.str {
+				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
+			}
+			if line.lc[tt.want.start].style != searchHighlight {
+				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, searchHighlight)
+			}
+		})
+	}
+}
+
+func TestRoot_columnDelimiterHighlight(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	columnDelimiterHighlight := tcell.StyleDefault.Bold(true)
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		columnDelimiter string
+		columnCursor    int
+	}
+	type args struct {
+		lineNum int
+	}
+	type want struct {
+		str   string
+		start int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "Test columnDelimiterHighlight1",
+			fields: fields{
+				columnDelimiter: "|",
+				columnCursor:    0,
+			},
+			args: args{
+				lineNum: 2,
+			},
+			want: want{
+				str:   "| 4     | 5     | 6     |",
+				start: 1,
+			},
+		},
+		{
+			name: "Test columnDelimiterHighlight2",
+			fields: fields{
+				columnDelimiter: "|",
+				columnCursor:    1,
+			},
+			args: args{
+				lineNum: 2,
+			},
+			want: want{
+				str:   "| 4     | 5     | 6     |",
+				start: 11,
+			},
+		},
+		{
+			name: "Test columnDelimiterHighlight3",
+			fields: fields{
+				columnDelimiter: "|",
+				columnCursor:    2,
+			},
+			args: args{
+				lineNum: 2,
+			},
+			want: want{
+				str:   "| 4     | 5     | 6     |",
+				start: 19,
+			},
+		},
+		{
+			name: "Test columnDelimiterHighlight4",
+			fields: fields{
+				columnDelimiter: "|",
+				columnCursor:    3,
+			},
+			args: args{
+				lineNum: 0,
+			},
+			want: want{
+				str:   "| test1 | test2 | test3 |a",
+				start: 25,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(filepath.Join(testdata, "column.txt"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			m := root.Doc
+			for !m.BufEOF() {
+			}
+			m.ColumnDelimiter = tt.fields.columnDelimiter
+			m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
+			m.columnCursor = tt.fields.columnCursor
+			root.StyleColumnHighlight = OVStyle{Bold: true}
+			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			root.columnDelimiterHighlight(line)
+			if line.str != tt.want.str {
+				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
+			}
+			if line.lc[tt.want.start].style != columnDelimiterHighlight {
+				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnDelimiterHighlight)
+			}
+		})
+	}
+}

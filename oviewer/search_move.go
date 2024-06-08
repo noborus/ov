@@ -29,7 +29,7 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 		sN = 0
 	}
 	if !m.jumpTargetSection && m.SectionHeader {
-		sN = (sN - m.firstLine() + m.SectionHeaderNum) + m.SectionStartPosition
+		sN = (sN - m.firstLine() + m.SectionHeaderNum)
 		sN = max(sN, m.BufStartNum())
 	}
 	y := 0

@@ -15,7 +15,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Section header.
-	root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd)
+	root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition)
 	// Set the header height.
 	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
 	// and Section header height.
@@ -23,9 +23,9 @@ func (root *Root) prepareDraw(ctx context.Context) {
 
 	// Shift the initial position of the body to the displayed position.
 	if root.Doc.showGotoF {
-		lX, lN := root.Doc.topLX, root.Doc.topLN+root.scr.headerEnd
-		lX, lN = root.Doc.shiftBody(lX, lN, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
-		root.Doc.topLX, root.Doc.topLN = lX, lN-root.scr.headerEnd
+		fX, fN := root.Doc.topLX, root.Doc.topLN+root.scr.headerEnd
+		tX, tN := root.Doc.shiftBody(fX, fN, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+		root.Doc.topLX, root.Doc.topLN = tX, tN-root.scr.headerEnd
 		root.Doc.showGotoF = false
 	}
 
@@ -85,6 +85,7 @@ func (m *Document) searchSectionHeader(ctx context.Context, lN int) (int, error)
 		return 0, err
 	}
 
+	sLN += m.SectionStartPosition
 	if m.firstLine() > sLN {
 		return 0, ErrNoMoreSection
 	}
