@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -926,38 +925,12 @@ func mergeGeneral(src general, dst general) general {
 	return src
 }
 
-// prepareView prepares when the screen size is changed.
-func (root *Root) prepareView() {
-	screen := root.Screen
-	root.scr.vWidth, root.scr.vHeight = screen.Size()
-
-	// Do not allow size 0.
-	root.scr.vWidth = max(root.scr.vWidth, 1)
-	root.scr.vHeight = max(root.scr.vHeight, 1)
-	root.Doc.statusPos = root.scr.vHeight - statusLine
-
-	num := int(math.Round(calculatePosition(root.scr.vWidth, root.Doc.HScrollWidth)))
-	root.Doc.HScrollWidthNum = max(num, 1)
-	if len(root.scr.numbers) != root.scr.vHeight+1 {
-		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
-	}
-
-	if root.scr.contents == nil {
-		root.scr.contents = make(map[int]LineC)
-	}
-	root.scr.sectionHeaderLN = -1
-
-	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
-		root.Doc.setColumnWidths()
-	}
-}
-
 // docSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) docSmall() bool {
 	if len(root.DocList) > 1 {
 		return false
 	}
-	root.prepareView()
+	root.prepareScreen()
 	m := root.Doc
 	if !m.BufEOF() {
 		return false

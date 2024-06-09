@@ -247,25 +247,30 @@ func leftX(width int, lc contents) []int {
 	return listX
 }
 
+// nextSection returns the line number of the next section.
+func (m *Document) nextSection(ctx context.Context, lN int) (int, error) {
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
+	return m.SearchLine(ctx, searcher, lN+1)
+}
+
+// prevSection returns the line number of the previous section.
+func (m *Document) prevSection(ctx context.Context, lN int) (int, error) {
+	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
+	return m.BackSearchLine(ctx, searcher, lN-1)
+}
+
 // moveNextSection moves to the next section.
 func (m *Document) moveNextSection(ctx context.Context) error {
 	if m.SectionDelimiter == "" {
 		return ErrNoDelimiter
 	}
 
-	lN, err := m.nextSection(ctx, m.topLN+m.firstLine())
+	lN, err := m.nextSection(ctx, m.topLN+m.firstLine()-m.SectionStartPosition)
 	if err != nil {
 		return ErrNoMoreSection
 	}
 	m.moveLine((lN - m.firstLine()))
 	return nil
-}
-
-// nextSection returns the line number of the previous section.
-func (m *Document) nextSection(ctx context.Context, n int) (int, error) {
-	lN := n + (1 - m.SectionStartPosition)
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	return m.SearchLine(ctx, searcher, lN)
 }
 
 // movePrevSection moves to the previous section.
@@ -279,21 +284,14 @@ func (m *Document) movePrevSectionLN(ctx context.Context, start int) error {
 		return ErrNoDelimiter
 	}
 
-	lN, err := m.prevSection(ctx, start+m.firstLine())
+	lN, err := m.prevSection(ctx, start+m.firstLine()-m.SectionStartPosition)
 	if err != nil {
 		return ErrNoMoreSection
 	}
-	lN = (lN - m.firstLine()) + m.SectionStartPosition
+	lN = (lN - m.firstLine())
 	lN = max(lN, m.BufStartNum())
 	m.moveLine(lN)
 	return nil
-}
-
-// prevSection returns the line number of the previous section.
-func (m *Document) prevSection(ctx context.Context, n int) (int, error) {
-	searcher := NewSearcher(m.SectionDelimiter, m.SectionDelimiterReg, true, true)
-	lN := n - (1 + m.SectionStartPosition)
-	return m.BackSearchLine(ctx, searcher, lN)
 }
 
 // moveLastSection moves to the last section.
