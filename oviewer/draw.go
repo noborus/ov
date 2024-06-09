@@ -145,7 +145,7 @@ func (root *Root) drawSectionHeader() {
 }
 
 func (root *Root) hideOtherSection(y int, hidden bool, sectionF bool) bool {
-	if sectionF && !hidden && y > root.Doc.headerHeight {
+	if sectionF && y > root.Doc.headerHeight+root.Doc.sectionHeaderHeight {
 		hidden = true
 	}
 	if hidden {

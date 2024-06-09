@@ -269,7 +269,7 @@ func (m *Document) moveNextSection(ctx context.Context) error {
 	if err != nil {
 		return ErrNoMoreSection
 	}
-	m.moveLine((lN - m.firstLine()))
+	m.moveLine((lN - m.firstLine() + m.SectionStartPosition))
 	return nil
 }
 
@@ -288,7 +288,7 @@ func (m *Document) movePrevSectionLN(ctx context.Context, start int) error {
 	if err != nil {
 		return ErrNoMoreSection
 	}
-	lN = (lN - m.firstLine())
+	lN = (lN - m.firstLine() + m.SectionStartPosition)
 	lN = max(lN, m.BufStartNum())
 	m.moveLine(lN)
 	return nil
