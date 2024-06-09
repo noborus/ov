@@ -3,23 +3,50 @@ package oviewer
 import (
 	"context"
 	"errors"
+	"math"
 	"time"
 )
 
 // sectionTimeOut is the section header search timeout(in milliseconds) period.
 const sectionTimeOut = 1000
 
+// prepareScreen prepares when the screen size is changed.
+func (root *Root) prepareScreen() {
+	root.scr.vWidth, root.scr.vHeight = root.Screen.Size()
+	// Do not allow size 0.
+	root.scr.vWidth = max(root.scr.vWidth, 1)
+	root.scr.vHeight = max(root.scr.vHeight, 1)
+	root.Doc.statusPos = root.scr.vHeight - statusLine
+
+	num := int(math.Round(calculatePosition(root.scr.vWidth, root.Doc.HScrollWidth)))
+	root.Doc.HScrollWidthNum = max(num, 1)
+
+	if len(root.scr.numbers) < root.scr.vHeight+1 {
+		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
+	}
+
+	if root.scr.contents == nil {
+		root.scr.contents = make(map[int]LineC)
+	}
+}
+
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
 	// Header.
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
-	// Section header.
-	root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition)
 	// Set the header height.
 	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
-	// and Section header height.
-	root.Doc.sectionHeaderHeight = root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+
+	// Section header.
+	root.scr.sectionHeaderLN = -1
+	root.scr.sectionHeaderEnd = 0
+	root.Doc.sectionHeaderHeight = 0
+	if root.Doc.SectionHeader {
+		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition)
+		// Set the section header height.
+		root.Doc.sectionHeaderHeight = root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+	}
 
 	// Shift the initial position of the body to the displayed position.
 	if root.Doc.showGotoF {
@@ -27,6 +54,9 @@ func (root *Root) prepareDraw(ctx context.Context) {
 		tX, tN := root.Doc.shiftBody(fX, fN, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
 		root.Doc.topLX, root.Doc.topLN = tX, tN-root.scr.headerEnd
 		root.Doc.showGotoF = false
+	}
+	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
+		root.Doc.setColumnWidths()
 	}
 
 	// Prepare the contents.

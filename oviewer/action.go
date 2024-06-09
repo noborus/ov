@@ -615,7 +615,7 @@ func calculatePosition(length int, str string) float64 {
 func (root *Root) ViewSync(context.Context) {
 	root.resetSelect()
 	root.prepareStartX()
-	root.prepareView()
+	root.prepareScreen()
 	root.Screen.Sync()
 	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
 }

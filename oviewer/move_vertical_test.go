@@ -1,9 +1,12 @@
 package oviewer
 
 import (
+	"context"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 func moveText(t *testing.T) *Document {
@@ -17,6 +20,22 @@ func moveText(t *testing.T) *Document {
 	m.width = 80
 	m.height = 23
 	return m
+}
+
+func sectionText(t *testing.T) *Root {
+	t.Helper()
+	root, err := Open(filepath.Join(testdata, "section.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := root.Doc
+	m.width = 80
+	root.scr.vHeight = 24
+	m.topLX = 0
+	root.scr.contents = make(map[int]LineC)
+	for !m.BufEOF() {
+	}
+	return root
 }
 
 func TestDocument_moveLine(t *testing.T) {
@@ -642,6 +661,128 @@ func TestDocument_limitMoveDown(t *testing.T) {
 			}
 			if m.topLN != tt.wantLN {
 				t.Errorf("Document.limitMoveDown() LN = %v, wantLN %v", m.topLN, tt.wantLN)
+			}
+		})
+	}
+}
+
+func TestDocument_nextSection(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		sectionDelimiter string
+	}
+	type args struct {
+		ctx context.Context
+		lN  int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "nextSection1",
+			fields: fields{
+				sectionDelimiter: "^#",
+			},
+			args: args{
+				ctx: context.Background(),
+				lN:  0,
+			},
+			want:    2,
+			wantErr: false,
+		},
+		{
+			name: "nextSection2",
+			fields: fields{
+				sectionDelimiter: "^#",
+			},
+			args: args{
+				ctx: context.Background(),
+				lN:  2,
+			},
+			want:    4,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := sectionText(t)
+			m := root.Doc
+			m.setSectionDelimiter(tt.fields.sectionDelimiter)
+			got, err := m.nextSection(tt.args.ctx, tt.args.lN)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.nextSection() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.nextSection() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDocument_prevSection(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		sectionDelimiter string
+	}
+	type args struct {
+		ctx context.Context
+		lN  int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "prevSection1",
+			fields: fields{
+				sectionDelimiter: "^#",
+			},
+			args: args{
+				ctx: context.Background(),
+				lN:  4,
+			},
+			want:    2,
+			wantErr: false,
+		},
+		{
+			name: "prevSection2",
+			fields: fields{
+				sectionDelimiter: "^#",
+			},
+			args: args{
+				ctx: context.Background(),
+				lN:  2,
+			},
+			want:    0,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := sectionText(t)
+			m := root.Doc
+			m.setSectionDelimiter(tt.fields.sectionDelimiter)
+			got, err := m.prevSection(tt.args.ctx, tt.args.lN)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.prevSection() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.prevSection() = %v, want %v", got, tt.want)
 			}
 		})
 	}

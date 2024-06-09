@@ -1,12 +1,30 @@
 package oviewer
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
+
+func sectionHeaderText(t *testing.T) *Root {
+	t.Helper()
+	root, err := Open(filepath.Join(testdata, "section-header.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := root.Doc
+	m.width = 80
+	root.scr.vHeight = 24
+	m.topLX = 0
+	root.scr.contents = make(map[int]LineC)
+	for !m.BufEOF() {
+	}
+	return root
+}
 
 func TestRoot_prepareDraw_sectionHeader(t *testing.T) {
 	tcellNewScreen = fakeScreen
@@ -208,14 +226,8 @@ func TestRoot_prepareDraw_sectionHeader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "section-header.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := sectionHeaderText(t)
 			m := root.Doc
-			m.width = 80
-			root.scr.vHeight = 24
-			m.topLX = 0
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
 			m.WrapMode = tt.fields.wrapMode
@@ -225,16 +237,92 @@ func TestRoot_prepareDraw_sectionHeader(t *testing.T) {
 			m.showGotoF = tt.fields.showGotoF
 			m.topLN = tt.fields.topLN
 			m.jumpTargetHeight = tt.fields.jumpTargetHeight
+
 			ctx := context.Background()
-			for !m.BufEOF() {
-			}
-			root.scr.contents = make(map[int]LineC)
 			root.prepareDraw(ctx)
 			if root.Doc.headerHeight != tt.want.headerHeight {
 				t.Errorf("header height got: %d, want: %d", root.Doc.headerHeight, tt.want.headerHeight)
 			}
 			if root.Doc.sectionHeaderHeight != tt.want.sectionHeaderHeight {
 				t.Errorf("section header height got: %d, want: %d", root.Doc.sectionHeaderHeight, tt.want.sectionHeaderHeight)
+			}
+			if root.Doc.topLN != tt.want.topLN {
+				t.Errorf("topLN got: %d, want: %d", root.Doc.topLN, tt.want.topLN)
+			}
+		})
+	}
+}
+
+func TestRoot_prepareDraw_sectionStart(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		wrapMode         bool
+		skipLines        int
+		header           int
+		sectionHeader    bool
+		sectionDelimiter string
+		sectionHeaderNum int
+		sectionStart     int
+		showGotoF        bool
+		topLN            int
+		jumpTargetHeight int
+	}
+	type want struct {
+		headerHeight    int
+		sectionHeaderLN int
+		topLN           int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   want
+	}{
+		{
+			name: "Test section-start1",
+			fields: fields{
+				wrapMode:         true,
+				skipLines:        0,
+				header:           0,
+				sectionHeader:    true,
+				sectionDelimiter: "^#",
+				sectionHeaderNum: 3,
+				sectionStart:     1,
+				showGotoF:        false,
+				topLN:            10,
+				jumpTargetHeight: 0,
+			},
+			want: want{
+				headerHeight:    0,
+				sectionHeaderLN: 4,
+				topLN:           10,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := sectionHeaderText(t)
+			m := root.Doc
+			m.SkipLines = tt.fields.skipLines
+			m.Header = tt.fields.header
+			m.WrapMode = tt.fields.wrapMode
+			m.SectionHeader = tt.fields.sectionHeader
+			m.setSectionDelimiter(tt.fields.sectionDelimiter)
+			m.SectionHeaderNum = tt.fields.sectionHeaderNum
+			m.SectionStartPosition = tt.fields.sectionStart
+			m.showGotoF = tt.fields.showGotoF
+			m.topLN = tt.fields.topLN
+			m.jumpTargetHeight = tt.fields.jumpTargetHeight
+
+			ctx := context.Background()
+			root.prepareDraw(ctx)
+			if root.Doc.headerHeight != tt.want.headerHeight {
+				t.Errorf("header height got: %d, want: %d", root.Doc.headerHeight, tt.want.headerHeight)
+			}
+			if root.scr.sectionHeaderLN != tt.want.sectionHeaderLN {
+				t.Errorf("section header LineNumber got: %d, want: %d", root.scr.sectionHeaderLN, tt.want.sectionHeaderLN)
 			}
 			if root.Doc.topLN != tt.want.topLN {
 				t.Errorf("topLN got: %d, want: %d", root.Doc.topLN, tt.want.topLN)
@@ -281,22 +369,14 @@ func TestRoot_screenContents(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "section-header.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := sectionHeaderText(t)
 			m := root.Doc
-			m.width = 80
-			root.scr.vHeight = 24
-			m.topLX = 0
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
 			m.WrapMode = tt.fields.wrapMode
 			m.SectionHeader = tt.fields.sectionHeader
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
 			m.SectionHeaderNum = tt.fields.sectionHeaderNum
-			for !m.BufEOF() {
-			}
 			root.scr.contents = make(map[int]LineC)
 			root.screenContents(root.scr.contents)
 			if len(root.scr.contents) != tt.want.num {
@@ -375,22 +455,14 @@ func TestRoot_styleContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "section-header.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := sectionHeaderText(t)
 			m := root.Doc
-			m.width = 80
-			root.scr.vHeight = 24
-			m.topLX = 0
 			m.PlainMode = tt.fields.PlainMode
 			m.ColumnMode = tt.fields.ColumnMode
 			m.ColumnWidth = tt.fields.ColumnWidth
 			m.setMultiColorWords(tt.fields.multiColorWords)
 			m.setDelimiter(tt.fields.ColumnDelimiter)
 			m.setColumnWidths()
-			for !m.BufEOF() {
-			}
 			root.scr.contents = make(map[int]LineC)
 			root.prepareDraw(context.Background())
 			line := m.getLineC(tt.args.lineNum, m.TabWidth)
@@ -439,14 +511,10 @@ func TestRoot_searchHighlight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "section-header.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !root.Doc.BufEOF() {
-			}
-			root.searcher = tt.fields.searcher
+			root := sectionHeaderText(t)
+
 			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			root.searcher = tt.fields.searcher
 			root.StyleSearchHighlight = OVStyle{Reverse: true}
 			root.searchHighlight(line)
 			if line.str != tt.want.str {
@@ -461,7 +529,7 @@ func TestRoot_searchHighlight(t *testing.T) {
 
 func TestRoot_columnDelimiterHighlight(t *testing.T) {
 	tcellNewScreen = fakeScreen
-	columnDelimiterHighlight := tcell.StyleDefault.Bold(true)
+	columnHighlight := tcell.StyleDefault.Bold(true)
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
@@ -557,8 +625,88 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			if line.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
 			}
-			if line.lc[tt.want.start].style != columnDelimiterHighlight {
-				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnDelimiterHighlight)
+			if line.lc[tt.want.start].style != columnHighlight {
+				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnHighlight)
+			}
+		})
+	}
+}
+
+func TestRoot_columnWidthHighlight(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	columnHighlight := tcell.StyleDefault.Bold(true)
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		columnCursor int
+	}
+	type args struct {
+		lineNum int
+	}
+	type want struct {
+		str   string
+		start int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "Test columnWidthHighlight1",
+			fields: fields{
+				columnCursor: 0,
+			},
+			args: args{
+				lineNum: 2,
+			},
+			want: want{
+				str:   "root           2  0.0  0.0      0     0 ?        S    Mar11   0:00 [kthreadd]",
+				start: 1,
+			},
+		},
+		{
+			name: "Test columnWidthHighlight2",
+			fields: fields{
+				columnCursor: 10,
+			},
+			args: args{
+				lineNum: 2,
+			},
+			want: want{
+				str:   "root           2  0.0  0.0      0     0 ?        S    Mar11   0:00 [kthreadd]",
+				start: 67,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(filepath.Join(testdata, "ps.txt"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			root.StyleColumnHighlight = OVStyle{Bold: true}
+			m := root.Doc
+			m.ColumnWidth = true
+			m.ColumnMode = true
+			for !m.BufEOF() {
+			}
+			m.setColumnWidths()
+			m.columnCursor = tt.fields.columnCursor
+			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			root.columnWidthHighlight(line)
+			if line.str != tt.want.str {
+				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
+			}
+			if line.lc[tt.want.start].style != columnHighlight {
+				v := bytes.Buffer{}
+				for i, l := range line.lc {
+					v.WriteString(fmt.Sprintf("%d:%v", i, l.style))
+				}
+				t.Logf("style: %v", v.String())
+				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnHighlight)
 			}
 		})
 	}
