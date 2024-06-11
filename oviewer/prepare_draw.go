@@ -3,7 +3,9 @@ package oviewer
 import (
 	"context"
 	"errors"
+	"log"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -150,6 +152,9 @@ func (root *Root) screenContents(contents map[int]LineC) map[int]LineC {
 	endLN := startLN + root.scr.vHeight // vHeight is the max line of logical lines.
 	contents = root.contentsRange(contents, startLN, endLN)
 
+	if root.Doc.SectionHeader {
+		contents = root.sectionNum(contents)
+	}
 	return contents
 }
 
@@ -164,6 +169,52 @@ func (root *Root) contentsRange(contents map[int]LineC, startLN int, endLN int) 
 		}
 		contents[lN] = line
 	}
+	return contents
+}
+
+// sectionNum sets the section number.
+func (root *Root) sectionNum(contents map[int]LineC) map[int]LineC {
+	m := root.Doc
+	if m.SectionDelimiter == "" {
+		return contents
+	}
+	if m.SectionDelimiterReg == nil {
+		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
+		return contents
+	}
+	var lNs []int
+	for k := range contents {
+		lNs = append(lNs, k)
+	}
+	sort.Ints(lNs)
+	num := 1
+	section := 0
+	for _, lN := range lNs {
+		if lN < root.scr.sectionHeaderLN {
+			section = 0
+		} else if lN < root.scr.sectionHeaderEnd {
+			section = 1
+			if lN == root.scr.sectionHeaderLN {
+				num = 1
+			}
+		} else {
+			sp, ok := contents[lN-m.SectionStartPosition]
+			if !ok {
+				sp = m.getLineC(lN-m.SectionStartPosition, m.TabWidth)
+			}
+			if m.SectionDelimiterReg.MatchString(sp.str) {
+				num = 1
+				section++
+			}
+		}
+
+		line := contents[lN]
+		line.section = section
+		line.sectionNm = num
+		contents[lN] = line
+		num++
+	}
+
 	return contents
 }
 

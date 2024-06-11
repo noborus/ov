@@ -98,8 +98,6 @@ type SCR struct {
 	sectionHeaderLN int
 	// sectionHeaderEnd is the end of the section header.
 	sectionHeaderEnd int
-	// sectionHeaderLeft is the number of remaining lines in sectionHeader.
-	sectionHeaderLeft int
 
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
