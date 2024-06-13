@@ -50,7 +50,6 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	var hidden bool
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line, ok := root.scr.contents[lN]
@@ -64,9 +63,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		if line.valid {
 			root.coordinatesStyle(lN, y)
 		}
-		sectionF := root.sectionLineHighlight(y, line.str)
-		if root.Doc.HideOtherSection {
-			hidden = root.hideOtherSection(y, hidden, sectionF)
+		if root.Doc.SectionHeader {
+			root.sectionLineHighlight(y, line)
+			root.hideOtherSection(y, line)
 		}
 
 		wrapNum++
@@ -142,16 +141,6 @@ func (root *Root) drawSectionHeader() {
 		lX = nextLX
 		lN = nextLN
 	}
-}
-
-func (root *Root) hideOtherSection(y int, hidden bool, sectionF bool) bool {
-	if sectionF && y > root.Doc.headerHeight+root.Doc.sectionHeaderHeight {
-		hidden = true
-	}
-	if hidden {
-		root.clearY(y)
-	}
-	return hidden
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -315,24 +304,15 @@ func (root *Root) markStyle(lN int, y int, width int) {
 }
 
 // sectionLineHighlight applies the style of the section line highlight.
-func (root *Root) sectionLineHighlight(y int, str string) bool {
-	m := root.Doc
-	if m.SectionDelimiter == "" {
-		return false
+func (root *Root) sectionLineHighlight(y int, line LineC) {
+	if line.section > 0 && line.sectionNm > 0 && line.sectionNm <= root.Doc.SectionHeaderNum {
+		root.yStyle(y, root.StyleSectionLine)
 	}
-	if m.SectionDelimiterReg == nil {
-		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
-		return false
-	}
+}
 
-	root.scr.sectionHeaderLeft--
-	if root.scr.sectionHeaderLeft > 0 {
-		root.yStyle(y, root.StyleSectionLine)
+// hideOtherSection hides other sections.
+func (root *Root) hideOtherSection(y int, line LineC) {
+	if root.Doc.HideOtherSection && line.section > 1 {
+		root.clearY(y)
 	}
-	if m.SectionDelimiterReg.MatchString(str) {
-		root.yStyle(y, root.StyleSectionLine)
-		root.scr.sectionHeaderLeft = m.SectionHeaderNum
-		return true
-	}
-	return false
 }

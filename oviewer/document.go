@@ -184,10 +184,12 @@ type chunk struct {
 // LineC is one line of information.
 // Contains content, string, location information.
 type LineC struct {
-	lc    contents
-	str   string
-	pos   widthPos
-	valid bool
+	lc        contents
+	str       string
+	pos       widthPos
+	valid     bool
+	section   int
+	sectionNm int
 }
 
 // NewDocument returns Document.
