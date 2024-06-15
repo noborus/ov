@@ -105,6 +105,19 @@ func (root *Root) toggleHideOtherSection(context.Context) {
 	root.setMessagef("Set HideOtherSection %t", root.Doc.HideOtherSection)
 }
 
+// toggleMouse toggles mouse control.
+// When disabled, the mouse is controlled on the terminal side.
+func (root *Root) toggleMouse(context.Context) {
+	root.Config.DisableMouse = !root.Config.DisableMouse
+	if root.Config.DisableMouse {
+		root.Screen.DisableMouse()
+		root.setMessage("Disable Mouse")
+	} else {
+		root.Screen.EnableMouse(MouseFlags)
+		root.setMessage("Enable Mouse")
+	}
+}
+
 // closeFile close the file.
 func (root *Root) closeFile(context.Context) {
 	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
@@ -381,19 +394,6 @@ func (root *Root) suspend(context.Context) {
 	log.Println("Resume")
 }
 
-// toggleMouse toggles mouse control.
-// When disabled, the mouse is controlled on the terminal side.
-func (root *Root) toggleMouse(context.Context) {
-	root.Config.DisableMouse = !root.Config.DisableMouse
-	if root.Config.DisableMouse {
-		root.Screen.DisableMouse()
-		root.setMessage("Disable Mouse")
-	} else {
-		root.Screen.EnableMouse(MouseFlags)
-		root.setMessage("Enable Mouse")
-	}
-}
-
 // setViewMode switches to the preset display mode.
 // Set header lines and columnMode together.
 func (root *Root) setViewMode(ctx context.Context, modeName string) {
@@ -611,15 +611,6 @@ func calculatePosition(length int, str string) float64 {
 	return num
 }
 
-// ViewSync redraws the whole thing.
-func (root *Root) ViewSync(context.Context) {
-	root.resetSelect()
-	root.prepareStartX()
-	root.prepareScreen()
-	root.Screen.Sync()
-	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
-}
-
 // TailSync move to tail and sync.
 func (root *Root) TailSync(ctx context.Context) {
 	root.Doc.moveBottom()
@@ -635,18 +626,6 @@ func (root *Root) tailSection(ctx context.Context) {
 		root.Doc.moveLine(root.Doc.topLN + moved)
 	}
 	root.Doc.lastSectionPosNum = root.Doc.topLN
-}
-
-// prepareStartX prepares startX.
-func (root *Root) prepareStartX() {
-	root.scr.startX = 0
-	if root.Doc.LineNumMode {
-		m := root.Doc
-		if m.parent != nil {
-			m = m.parent
-		}
-		root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
-	}
 }
 
 // updateEndNum updates the last line number.

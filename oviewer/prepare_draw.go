@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -30,6 +31,30 @@ func (root *Root) prepareScreen() {
 	if root.scr.contents == nil {
 		root.scr.contents = make(map[int]LineC)
 	}
+}
+
+// prepareStartX prepares the start position of the x.
+func (root *Root) prepareStartX() {
+	root.scr.startX = 0
+	m := root.Doc
+	if !m.LineNumMode {
+		return
+	}
+
+	if m.parent != nil {
+		m = m.parent
+	}
+	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+
+}
+
+// ViewSync redraws the whole thing.
+func (root *Root) ViewSync(context.Context) {
+	root.resetSelect()
+	root.prepareStartX()
+	root.prepareScreen()
+	root.Screen.Sync()
+	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
 }
 
 // prepareDraw prepares the screen for drawing.

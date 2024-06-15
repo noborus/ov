@@ -8,36 +8,75 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func TestRoot_toggleColumnMode(t *testing.T) {
-	tests := []struct {
-		name       string
-		columnMode bool
-	}{
-		{
-			name:       "test1",
-			columnMode: false,
-		},
-		{
-			name:       "test2",
-			columnMode: true,
-		},
-	}
+func fakeRootHelper(t *testing.T) *Root {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			root.Doc.ColumnMode = tt.columnMode
-			root.toggleColumnMode(context.Background())
-			if root.Doc.ColumnMode == tt.columnMode {
-				t.Errorf("root.toggleColumnMode() = %v, want %v", root.Doc.ColumnMode, !tt.columnMode)
-			}
-		})
+	root, err := NewRoot(bytes.NewBufferString("test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+func TestRoot_toggle(t *testing.T) {
+	root := fakeRootHelper(t)
+	var v bool
+	v = root.Doc.ColumnMode
+	root.toggleColumnMode(context.Background())
+	if v == root.Doc.ColumnMode {
+		t.Errorf("toggleColumnMode() = %v, want %v", root.Doc.ColumnMode, !v)
+	}
+	v = root.Doc.WrapMode
+	root.toggleWrapMode(context.Background())
+	if v == root.Doc.WrapMode {
+		t.Errorf("toggleWrapMode() = %v, want %v", root.Doc.WrapMode, !v)
+	}
+	v = root.Doc.LineNumMode
+	root.toggleLineNumMode(context.Background())
+	if v == root.Doc.LineNumMode {
+		t.Errorf("toggleLineNumberMode() = %v, want %v", root.Doc.LineNumMode, !v)
+	}
+	v = root.Doc.ColumnWidth
+	root.toggleColumnWidth(context.Background())
+	if v == root.Doc.ColumnWidth {
+		t.Errorf("toggleColumnWidth() = %v, want %v", root.Doc.ColumnWidth, !v)
+	}
+	v = root.Doc.AlternateRows
+	root.toggleAlternateRows(context.Background())
+	if v == root.Doc.AlternateRows {
+		t.Errorf("toggleAlternateRows() = %v, want %v", root.Doc.AlternateRows, !v)
+	}
+	v = root.Doc.PlainMode
+	root.togglePlain(context.Background())
+	if v == root.Doc.PlainMode {
+		t.Errorf("togglePlainMode() = %v, want %v", root.Doc.PlainMode, !v)
+	}
+	v = root.Doc.ColumnRainbow
+	root.toggleRainbow(context.Background())
+	if v == root.Doc.ColumnRainbow {
+		t.Errorf("toggleRainbow() = %v, want %v", root.Doc.ColumnRainbow, !v)
+	}
+	v = root.Doc.FollowMode
+	root.toggleFollowMode(context.Background())
+	if v == root.Doc.FollowMode {
+		t.Errorf("toggleFollow() = %v, want %v", root.Doc.FollowMode, !v)
+	}
+	v = root.General.FollowAll
+	root.toggleFollowAll(context.Background())
+	if v == root.General.FollowAll {
+		t.Errorf("toggleFollowAll() = %v, want %v", root.General.FollowAll, !v)
+	}
+	v = root.Doc.FollowSection
+	root.toggleFollowSection(context.Background())
+	if v == root.Doc.FollowSection {
+		t.Errorf("toggleFollowSection() = %v, want %v", root.Doc.FollowSection, !v)
+	}
+	v = root.Doc.HideOtherSection
+	root.toggleHideOtherSection(context.Background())
+	if v == root.Doc.HideOtherSection {
+		t.Errorf("toggleHideOtherSection() = %v, want %v", root.Doc.HideOtherSection, !v)
 	}
 }
 

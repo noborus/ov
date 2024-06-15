@@ -16,7 +16,9 @@ const cwd = ".."
 
 var testdata = filepath.Join(cwd, "testdata")
 
+// fakeScreen returns a fake screen.
 func fakeScreen() (tcell.Screen, error) {
+	// width, height := 80, 25
 	return tcell.NewSimulationScreen(""), nil
 }
 
