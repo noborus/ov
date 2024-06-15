@@ -58,6 +58,26 @@ func TestRoot_toggle(t *testing.T) {
 	if v == root.Doc.ColumnRainbow {
 		t.Errorf("toggleRainbow() = %v, want %v", root.Doc.ColumnRainbow, !v)
 	}
+	v = root.Doc.FollowMode
+	root.toggleFollowMode(context.Background())
+	if v == root.Doc.FollowMode {
+		t.Errorf("toggleFollow() = %v, want %v", root.Doc.FollowMode, !v)
+	}
+	v = root.General.FollowAll
+	root.toggleFollowAll(context.Background())
+	if v == root.General.FollowAll {
+		t.Errorf("toggleFollowAll() = %v, want %v", root.General.FollowAll, !v)
+	}
+	v = root.Doc.FollowSection
+	root.toggleFollowSection(context.Background())
+	if v == root.Doc.FollowSection {
+		t.Errorf("toggleFollowSection() = %v, want %v", root.Doc.FollowSection, !v)
+	}
+	v = root.Doc.HideOtherSection
+	root.toggleHideOtherSection(context.Background())
+	if v == root.Doc.HideOtherSection {
+		t.Errorf("toggleHideOtherSection() = %v, want %v", root.Doc.HideOtherSection, !v)
+	}
 }
 
 func Test_rangeBA(t *testing.T) {

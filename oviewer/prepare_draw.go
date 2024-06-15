@@ -37,12 +37,15 @@ func (root *Root) prepareScreen() {
 func (root *Root) prepareStartX() {
 	root.scr.startX = 0
 	m := root.Doc
-	if m.LineNumMode {
-		if m.parent != nil {
-			m = m.parent
-		}
-		root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+	if !m.LineNumMode {
+		return
 	}
+
+	if m.parent != nil {
+		m = m.parent
+	}
+	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+
 }
 
 // ViewSync redraws the whole thing.
