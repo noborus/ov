@@ -950,18 +950,39 @@ func (root *Root) docSmall() bool {
 
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
+	output := os.Stdout
+	root.writeOriginal(output)
+}
+
+func (root *Root) writeOriginal(output io.Writer) {
 	m := root.Doc
 	if m.bottomLN == 0 {
 		m.bottomLN = m.BufEndNum()
 	}
 
-	start := max(0, m.topLN-(m.SectionHeaderNum+root.BeforeWriteOriginal))
+	// header
+	header := max(0, root.scr.headerLN)
+	headerEnd := max(0, root.scr.headerEnd)
+	if root.Doc.headerHeight > 0 {
+		if err := m.Export(output, header, headerEnd-1); err != nil {
+			log.Println(err)
+		}
+	}
+	// section header
+	secAdd := 0
+	if m.sectionHeaderHeight > 0 {
+		if err := m.Export(output, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd-1); err != nil {
+			log.Println(err)
+		}
+		secAdd = m.SectionHeaderNum
+	}
+	// body
+	start := max(m.topLN+m.firstLine()+secAdd, root.scr.sectionHeaderEnd) - root.BeforeWriteOriginal
 	end := m.bottomLN - 1
 	if root.AfterWriteOriginal != 0 {
 		end = m.topLN + root.AfterWriteOriginal - 1
 	}
-
-	if err := m.Export(os.Stdout, start, end); err != nil {
+	if err := m.Export(output, start, end); err != nil {
 		log.Println(err)
 	}
 }

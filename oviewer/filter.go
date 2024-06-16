@@ -38,7 +38,10 @@ func (root *Root) filter(ctx context.Context) {
 		word = fmt.Sprintf("!%s", word)
 	}
 	root.setMessagef("filter:%v", word)
+	root.filterDocument(ctx, searcher)
+}
 
+func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	m := root.Doc
 	r, w := io.Pipe()
 	render, err := renderDoc(m, r)
@@ -47,8 +50,8 @@ func (root *Root) filter(ctx context.Context) {
 		return
 	}
 	render.documentType = DocFilter
-	render.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, word)
-	render.Caption = fmt.Sprintf("%s:%v", m.FileName, word)
+	render.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, searcher.String())
+	render.Caption = fmt.Sprintf("%s:%v", m.FileName, searcher.String())
 	root.addDocument(ctx, render)
 	render.general = mergeGeneral(m.general, render.general)
 
@@ -73,7 +76,7 @@ func (root *Root) filter(ctx context.Context) {
 		}
 	}
 	go m.filterWriter(ctx, searcher, m.firstLine(), filterDoc)
-	root.setMessagef("filter:%v", word)
+	root.setMessagef("filter:%v", searcher.String())
 }
 
 // filterWriter searches and writes to filterDoc.

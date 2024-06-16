@@ -73,7 +73,7 @@ func TestOpen(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				fileNames: []string{filepath.Join(testdata, "/test.txt")},
+				fileNames: []string{filepath.Join(testdata, "test.txt")},
 			},
 			wantErr: false,
 		},
@@ -224,6 +224,16 @@ func Test_applyStyle(t *testing.T) {
 			},
 			want: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
 		},
+		{
+			name: "test2",
+			args: args{
+				style: tcell.StyleDefault,
+				s: OVStyle{
+					UnDim: true,
+				},
+			},
+			want: tcell.StyleDefault.Dim(false),
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -285,6 +295,197 @@ func TestRoot_setKeyConfig(t *testing.T) {
 			action := "down"
 			if !reflect.DeepEqual(got[action], tt.want) {
 				t.Errorf("Root.setKeyConfig() = %v, want %v", got[action], tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_writeOriginal(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		header             int
+		topLN              int
+		sectionDelimiter   string
+		sectionNum         int
+		AfterWriteOriginal int
+	}
+	type args struct {
+		fileNames []string
+	}
+	type want struct {
+		output string
+	}
+	tests := []struct {
+		name   string
+		args   args
+		fields fields
+		want   want
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				topLN:              0,
+				header:             0,
+				sectionDelimiter:   "",
+				sectionNum:         0,
+				AfterWriteOriginal: 3,
+			},
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test.txt")},
+			},
+			want: want{
+				output: "test\n",
+			},
+		},
+		{
+			name: "test3-1",
+			fields: fields{
+				topLN:              4,
+				header:             0,
+				sectionDelimiter:   "1",
+				sectionNum:         1,
+				AfterWriteOriginal: 4,
+			},
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+			},
+			want: want{
+				output: "1\n6\n7\n8\n",
+			},
+		},
+		{
+			name: "test3-2",
+			fields: fields{
+				topLN:              0,
+				header:             3,
+				sectionDelimiter:   "2",
+				sectionNum:         1,
+				AfterWriteOriginal: 4,
+			},
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+			},
+			want: want{
+				output: "1\n2\n3\n4\n",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.args.fileNames...)
+			if err != nil {
+				t.Fatalf("NewOviewer error = %v", err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.Doc.Header = tt.fields.header
+			root.Doc.topLN = tt.fields.topLN
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			if tt.fields.sectionNum > 0 {
+				root.Doc.SectionHeaderNum = tt.fields.sectionNum
+				root.Doc.SectionHeader = true
+			}
+			root.prepareScreen()
+			ctx := context.Background()
+			root.prepareDraw(ctx)
+			root.AfterWriteOriginal = tt.fields.AfterWriteOriginal
+			output := &bytes.Buffer{}
+			root.writeOriginal(output)
+			if gotOutput := output.String(); gotOutput != tt.want.output {
+				t.Errorf("Root.writeOriginal() = %v, want %v", gotOutput, tt.want.output)
+			}
+		})
+	}
+}
+
+func TestRoot_docSmall(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+	}
+	type args struct {
+		fileNames []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "test1",
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test.txt")},
+			},
+			want: true,
+		},
+		{
+			name: "test3",
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+			},
+			want: false,
+		},
+		{
+			name: "test multiple",
+			args: args{
+				fileNames: []string{
+					filepath.Join(testdata, "test.txt"),
+					filepath.Join(testdata, "test2.txt"),
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.args.fileNames...)
+			if err != nil {
+				t.Fatalf("NewOviewer error = %v", err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			if got := root.docSmall(); got != tt.want {
+				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_mergeGeneral(t *testing.T) {
+	type args struct {
+		src general
+		dst general
+	}
+	tests := []struct {
+		name string
+		args args
+		want general
+	}{
+		{
+			name: "test1",
+			args: args{
+				src: general{},
+				dst: general{
+					TabWidth: 4,
+					Header:   1,
+				},
+			},
+			want: general{
+				TabWidth: 4,
+				Header:   1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mergeGeneral(tt.args.src, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("mergeGeneral() = %v, want %v", got, tt.want)
 			}
 		})
 	}

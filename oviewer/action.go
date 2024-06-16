@@ -685,5 +685,18 @@ func (root *Root) Cancel(context.Context) {
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit(ctx context.Context) {
 	root.IsWriteOriginal = true
+	if !root.Doc.HideOtherSection {
+		root.Quit(ctx)
+		return
+	}
+
+	for lN := 0; lN < root.Doc.BufEndNum(); lN++ {
+		line := root.scr.contents[lN]
+		if line.section > 1 {
+			root.AfterWriteOriginal = lN - root.Doc.topLN
+			root.Quit(ctx)
+			return
+		}
+	}
 	root.Quit(ctx)
 }
