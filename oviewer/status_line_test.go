@@ -260,7 +260,7 @@ func TestRoot_leftStatus2(t *testing.T) {
 				eventer:   normal(),
 				inputMode: Normal,
 			},
-			want: "[0]../testdata/test.txt:",
+			want: "[0]" + filepath.Join(testdata, "test.txt") + ":",
 		},
 	}
 	for _, tt := range tests {
