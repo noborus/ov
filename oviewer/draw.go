@@ -318,7 +318,7 @@ func (root *Root) sectionLineHighlight(y int, line LineC) {
 
 // hideOtherSection hides other sections.
 func (root *Root) hideOtherSection(y int, line LineC) {
-	if line.section == 1 { // 1 is the first section.
+	if line.section <= 1 { // 1 is the first section.
 		return
 	}
 

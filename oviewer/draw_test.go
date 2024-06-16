@@ -241,6 +241,7 @@ func TestRoot_draw2(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_section2(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -324,20 +325,20 @@ func TestRoot_section2(t *testing.T) {
 				fileNames:        []string{filepath.Join(testdata, "section2.txt")},
 				header:           0,
 				sectionDelimiter: "^-",
-				sectionHeaderNum: 3,
+				sectionHeaderNum: 1,
 				hideOtherSection: true,
 				wrapMode:         true,
 				lineNumMode:      true,
-				topLN:            0,
+				topLN:            3,
 			},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				bottomLN:            24,
+				bottomLN:            27,
 				bottomLX:            0,
-				sectionHeaderHeight: 0,
-				wantY:               0,
+				sectionHeaderHeight: 1,
+				wantY:               10,
 				wantStr:             "          ",
 			},
 		},
