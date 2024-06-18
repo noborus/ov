@@ -167,3 +167,52 @@ func TestRoot_filterDocument(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_closeAllFilter(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames []string
+	}
+	type args struct {
+		searcher Searcher
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "test.txt",
+			fields: fields{
+				fileNames: []string{filepath.Join(testdata, "test.txt")},
+			},
+			args: args{
+				searcher: NewSearcher("test", nil, false, false),
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.fields.fileNames...)
+			if err != nil {
+				t.Fatalf("NewOviewer error = %v", err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.filterDocument(context.Background(), tt.args.searcher)
+			filterDoc := root.DocList[len(root.DocList)-1]
+			for !filterDoc.BufEOF() {
+			}
+			ctx := context.Background()
+			root.closeAllFilter(ctx)
+			if len(root.DocList) != tt.want {
+				t.Errorf("closeAllFilter() = %v, want %v", len(root.DocList), tt.want)
+			}
+		})
+	}
+}
