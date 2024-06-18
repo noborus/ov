@@ -217,50 +217,6 @@ func (root *Root) pasteFromClipboard(context.Context) {
 	input.cursorX += runewidth.StringWidth(str)
 }
 
-// drawSelect highlights the selection.
-// Multi-line selection is included until the end of the line,
-// but if the rectangle flag is true, the rectangle will be the range.
-func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
-	}
-	if y1 == y2 {
-		if x2 < x1 {
-			x1, x2 = x2, x1
-		}
-		root.reverseLine(y1, x1, x2+1, sel)
-		return
-	}
-	if root.scr.mouseRectangle {
-		for y := y1; y <= y2; y++ {
-			root.reverseLine(y, x1, x2+1, sel)
-		}
-		return
-	}
-
-	root.reverseLine(y1, x1, root.scr.vWidth, sel)
-	for y := y1 + 1; y < y2; y++ {
-		root.reverseLine(y, 0, root.scr.vWidth, sel)
-	}
-	root.reverseLine(y2, 0, x2+1, sel)
-}
-
-// reverseLine reverses one line.
-func (root *Root) reverseLine(y int, start int, end int, sel bool) {
-	if start >= end {
-		return
-	}
-	for x := start; x < end; x++ {
-		mainc, combc, style, width := root.Screen.GetContent(x, y)
-		style = style.Reverse(sel)
-		root.Screen.SetContent(x, y, mainc, combc, style)
-		if width == 2 {
-			x++
-		}
-	}
-}
-
 func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
 	if root.scr.mouseRectangle {
 		return root.scr.rectangleToString(root.Doc, x1, y1, x2, y2)
