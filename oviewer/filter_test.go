@@ -168,6 +168,60 @@ func TestRoot_filterDocument(t *testing.T) {
 	}
 }
 
+func TestRoot_filterLink(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames []string
+		header    int
+	}
+	type args struct {
+		searcher Searcher
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "test3.txt",
+			fields: fields{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+				header:    0,
+			},
+			args: args{
+				searcher: NewSearcher("1000", nil, false, false),
+			},
+			want: 10000,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.fields.fileNames...)
+			if err != nil {
+				t.Fatalf("NewOviewer error = %v", err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.Doc.Header = tt.fields.header
+			root.input.value = "1000"
+			ctx := context.Background()
+			root.filterDocument(ctx, tt.args.searcher)
+			for !root.Doc.BufEOF() {
+			}
+			root.Doc.topLN = 2
+			root.previousDoc(ctx)
+			t.Log(root.Doc.topLN)
+			if root.Doc.topLN != tt.want {
+				t.Errorf("filterDocument() = %v, want %v", root.Doc.topLN, tt.want)
+			}
+		})
+	}
+}
+
 func TestRoot_closeAllFilter(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {

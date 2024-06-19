@@ -21,7 +21,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	helpStr.WriteString("\n")
 	helpStr.WriteString(KeyBindString(k))
 
-	m.FileName = "Help"
+	m.Caption = "Help"
 	m.store.eof = 1
 	m.preventReload = true
 	m.seekable = false
