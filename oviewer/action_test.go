@@ -3,12 +3,13 @@ package oviewer
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
 
-func fakeRootHelper(t *testing.T) *Root {
+func rootHelper(t *testing.T) *Root {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -21,60 +22,61 @@ func fakeRootHelper(t *testing.T) *Root {
 }
 
 func TestRoot_toggle(t *testing.T) {
-	root := fakeRootHelper(t)
+	root := rootHelper(t)
+	ctx := context.Background()
 	var v bool
 	v = root.Doc.ColumnMode
-	root.toggleColumnMode(context.Background())
+	root.toggleColumnMode(ctx)
 	if v == root.Doc.ColumnMode {
 		t.Errorf("toggleColumnMode() = %v, want %v", root.Doc.ColumnMode, !v)
 	}
 	v = root.Doc.WrapMode
-	root.toggleWrapMode(context.Background())
+	root.toggleWrapMode(ctx)
 	if v == root.Doc.WrapMode {
 		t.Errorf("toggleWrapMode() = %v, want %v", root.Doc.WrapMode, !v)
 	}
 	v = root.Doc.LineNumMode
-	root.toggleLineNumMode(context.Background())
+	root.toggleLineNumMode(ctx)
 	if v == root.Doc.LineNumMode {
 		t.Errorf("toggleLineNumberMode() = %v, want %v", root.Doc.LineNumMode, !v)
 	}
 	v = root.Doc.ColumnWidth
-	root.toggleColumnWidth(context.Background())
+	root.toggleColumnWidth(ctx)
 	if v == root.Doc.ColumnWidth {
 		t.Errorf("toggleColumnWidth() = %v, want %v", root.Doc.ColumnWidth, !v)
 	}
 	v = root.Doc.AlternateRows
-	root.toggleAlternateRows(context.Background())
+	root.toggleAlternateRows(ctx)
 	if v == root.Doc.AlternateRows {
 		t.Errorf("toggleAlternateRows() = %v, want %v", root.Doc.AlternateRows, !v)
 	}
 	v = root.Doc.PlainMode
-	root.togglePlain(context.Background())
+	root.togglePlain(ctx)
 	if v == root.Doc.PlainMode {
 		t.Errorf("togglePlainMode() = %v, want %v", root.Doc.PlainMode, !v)
 	}
 	v = root.Doc.ColumnRainbow
-	root.toggleRainbow(context.Background())
+	root.toggleRainbow(ctx)
 	if v == root.Doc.ColumnRainbow {
 		t.Errorf("toggleRainbow() = %v, want %v", root.Doc.ColumnRainbow, !v)
 	}
 	v = root.Doc.FollowMode
-	root.toggleFollowMode(context.Background())
+	root.toggleFollowMode(ctx)
 	if v == root.Doc.FollowMode {
 		t.Errorf("toggleFollow() = %v, want %v", root.Doc.FollowMode, !v)
 	}
 	v = root.General.FollowAll
-	root.toggleFollowAll(context.Background())
+	root.toggleFollowAll(ctx)
 	if v == root.General.FollowAll {
 		t.Errorf("toggleFollowAll() = %v, want %v", root.General.FollowAll, !v)
 	}
 	v = root.Doc.FollowSection
-	root.toggleFollowSection(context.Background())
+	root.toggleFollowSection(ctx)
 	if v == root.Doc.FollowSection {
 		t.Errorf("toggleFollowSection() = %v, want %v", root.Doc.FollowSection, !v)
 	}
 	v = root.Doc.HideOtherSection
-	root.toggleHideOtherSection(context.Background())
+	root.toggleHideOtherSection(ctx)
 	if v == root.Doc.HideOtherSection {
 		t.Errorf("toggleHideOtherSection() = %v, want %v", root.Doc.HideOtherSection, !v)
 	}
@@ -304,6 +306,174 @@ func Test_jumpPosition(t *testing.T) {
 			}
 			if got1 != tt.want1 {
 				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_toggleColumnMode(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName    string
+		wrapMode    bool
+		columnWidth bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "test column noWrap",
+			fields: fields{
+				fileName:    filepath.Join(testdata, "column.txt"),
+				wrapMode:    false,
+				columnWidth: false,
+			},
+		},
+		{
+			name: "test column wrap",
+			fields: fields{
+				fileName:    filepath.Join(testdata, "column.txt"),
+				wrapMode:    true,
+				columnWidth: false,
+			},
+		},
+		{
+			name: "test column width noWrap",
+			fields: fields{
+				fileName:    filepath.Join(testdata, "ps.txt"),
+				wrapMode:    false,
+				columnWidth: true,
+			},
+		},
+		{
+			name: "test column width wrap",
+			fields: fields{
+				fileName:    filepath.Join(testdata, "ps.txt"),
+				wrapMode:    true,
+				columnWidth: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			root.Doc.ColumnMode = false
+			root.Doc.WrapMode = tt.fields.wrapMode
+			root.Doc.ColumnWidth = tt.fields.columnWidth
+			root.prepareScreen()
+			ctx := context.Background()
+			root.everyUpdate(ctx)
+			root.toggleColumnMode(ctx)
+			if root.Doc.ColumnMode == false {
+				t.Errorf("toggleColumnMode() = %v, want %v", root.Doc.ColumnMode, true)
+			}
+		})
+	}
+}
+
+func TestRoot_toggleMouse(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		disableMouse bool
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name:   "testDisable",
+			fields: fields{disableMouse: true},
+			want:   false,
+		},
+		{
+			name:   "testEnable",
+			fields: fields{disableMouse: false},
+			want:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Config.DisableMouse = tt.fields.disableMouse
+			root.toggleMouse(context.Background())
+			if root.Config.DisableMouse != tt.want {
+				t.Errorf("toggleMouse() = %v, want %v", root.Config.DisableMouse, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_goLine(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+	}
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "testGoLine10",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+			},
+			args: args{
+				input: "10",
+			},
+			want: 9,
+		},
+		{
+			name: "testGoLine.5",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+			},
+			args: args{
+				input: ".5",
+			},
+			want: 499,
+		},
+		{
+			name: "testGoLine20%",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+			},
+			args: args{
+				input: "20%",
+			},
+			want: 199,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.goLine(tt.args.input)
+			if root.Doc.topLN != tt.want {
+				t.Errorf("goLine() = %v, want %v", root.Doc.topLN, tt.want)
 			}
 		})
 	}

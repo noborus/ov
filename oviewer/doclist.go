@@ -100,20 +100,25 @@ func (root *Root) nextDoc(ctx context.Context) {
 
 // previousDoc displays the previous document.
 func (root *Root) previousDoc(ctx context.Context) {
-	lineNum := 0
-	targetNum := root.CurrentDoc - 1
-	targetDoc := root.getDocument(targetNum)
-	if targetDoc == root.Doc.parent && root.Doc.lineNumMap != nil {
-		if n, ok := root.Doc.lineNumMap.LoadForward(root.Doc.topLN + root.Doc.firstLine()); ok {
-			lineNum = n
-		}
-	}
-	root.setDocumentNum(ctx, root.CurrentDoc-1)
+	fromNum := root.CurrentDoc
+	fromDoc := root.getDocument(fromNum)
+	toNum := root.CurrentDoc - 1
+	toDoc := root.getDocument(toNum)
+
+	root.setDocumentNum(ctx, toNum)
 	root.input.Event = normal()
-	if lineNum > 0 {
-		root.sendGoto(lineNum - root.Doc.firstLine() + 1)
-	}
 	root.debugMessage("previous document")
+
+	if fromDoc.parent != toDoc {
+		return
+	}
+	if fromDoc.lineNumMap == nil {
+		return
+	}
+	if n, ok := fromDoc.lineNumMap.LoadForward(fromDoc.topLN + fromDoc.firstLine()); ok {
+		root.debugMessage("Move parent line number")
+		toDoc.moveLine(n)
+	}
 }
 
 // switchDocument displays the document of the specified docNum.
