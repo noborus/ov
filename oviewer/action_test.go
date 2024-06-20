@@ -478,3 +478,172 @@ func TestRoot_goLine(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_setHeader(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetHeaderNil",
+			args: args{
+				input: "",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetHeaderMinus",
+			args: args{
+				input: "-1",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetHeader1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetHeaderNoChange",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setHeader(tt.args.input)
+			if root.Doc.Header != tt.want {
+				t.Errorf("setHeader() = %v, want %v", root.Doc.Header, tt.want)
+			}
+		})
+	}
+}
+func TestRoot_setSkipLines(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetSkipLines1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetSkipLinesNoChange",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setSkipLines(tt.args.input)
+			if root.Doc.SkipLines != tt.want {
+				t.Errorf("setSkipLines() = %v, want %v", root.Doc.SkipLines, tt.want)
+			}
+		})
+	}
+}
+func TestRoot_setSectioNum(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetSectionNum1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetSectionNumNoChange",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setSectionNum(tt.args.input)
+			if root.Doc.SectionHeaderNum != tt.want {
+				t.Errorf("setSectionNum() = %v, want %v", root.Doc.SectionHeaderNum, tt.want)
+			}
+		})
+	}
+}
+func TestRoot_setSectionStart(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetSectionStartNil",
+			args: args{
+				input: "",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetSectionStartMinus",
+			args: args{
+				input: "-1",
+			},
+			want: -1,
+		},
+		{
+			name: "testSetSectionStart1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetSectionStartOutOfrange",
+			args: args{
+				input: "100",
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setSectionStart(tt.args.input)
+			if root.Doc.SectionStartPosition != tt.want {
+				t.Errorf("setSectionStart() = %v, want %v", root.Doc.SectionStartPosition, tt.want)
+			}
+		})
+	}
+}

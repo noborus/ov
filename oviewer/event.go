@@ -24,83 +24,90 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	for {
 		root.everyUpdate(ctx)
 		ev := root.Screen.PollEvent()
-		switch ev := ev.(type) {
-		case *eventAppQuit:
-			if root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
-				close(quitChan)
-				return
-			}
-			// Help and logDoc return to Doc display.
-			root.toNormal(ctx)
-		case *eventReload:
-			root.reload(ev.m)
-		case *eventAppSuspend:
-			root.suspend(ctx)
-		case *eventUpdateEndNum:
-			root.updateEndNum()
-		case *eventDocument:
-			root.switchDocument(ctx, ev.docNum)
-		case *eventAddDocument:
-			root.addDocument(ctx, ev.m)
-		case *eventCloseDocument:
-			root.closeDocument(ctx)
-		case *eventCloseAllFilter:
-			root.closeAllFilter(ctx)
-		case *eventCopySelect:
-			root.copyToClipboard(ctx)
-		case *eventPaste:
-			root.pasteFromClipboard(ctx)
-		case *eventViewMode:
-			root.setViewMode(ctx, ev.value)
-		case *eventInputSearch:
-			root.firstSearch(ctx, ev.searchType)
-		case *eventSearch:
-			root.forwardSearch(ctx, ev.str, 0)
-		case *eventNextSearch:
-			root.forwardSearch(ctx, ev.str, 1)
-		case *eventNextBackSearch:
-			root.backSearch(ctx, ev.str, -1)
-		case *eventSearchMove:
-			root.searchGo(ctx, ev.value)
-		case *eventGoto:
-			root.goLine(ev.value)
-		case *eventHeader:
-			root.setHeader(ev.value)
-		case *eventSkipLines:
-			root.setSkipLines(ev.value)
-		case *eventDelimiter:
-			root.setDelimiter(ev.value)
-		case *eventTabWidth:
-			root.setTabWidth(ev.value)
-		case *eventWatchInterval:
-			root.setWatchInterval(ev.value)
-		case *eventWriteBA:
-			root.setWriteBA(ctx, ev.value)
-		case *eventSectionDelimiter:
-			root.setSectionDelimiter(ev.value)
-		case *eventSectionStart:
-			root.setSectionStart(ev.value)
-		case *eventMultiColor:
-			root.setMultiColor(ev.value)
-		case *eventJumpTarget:
-			root.setJumpTarget(ev.value)
-		case *eventSaveBuffer:
-			root.saveBuffer(ev.value)
-		case *eventSectionNum:
-			root.setSectionNum(ev.value)
-
-		// tcell events
-		case *tcell.EventResize:
-			root.resize(ctx)
-		case *tcell.EventMouse:
-			root.mouseEvent(ctx, ev)
-		case *tcell.EventKey:
-			root.keyEvent(ctx, ev)
-		case nil:
+		if quit := root.event(ctx, ev); quit {
 			close(quitChan)
 			return
 		}
 	}
+}
+
+// event represents the event processing.
+func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
+	switch ev := ev.(type) {
+	case *eventAppQuit:
+		if root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
+			return true
+		}
+		// Help and logDoc return to Doc display.
+		root.toNormal(ctx)
+	case *eventReload:
+		root.reload(ev.m)
+	case *eventAppSuspend:
+		root.suspend(ctx)
+	case *eventUpdateEndNum:
+		root.updateEndNum()
+	case *eventDocument:
+		root.switchDocument(ctx, ev.docNum)
+	case *eventAddDocument:
+		root.addDocument(ctx, ev.m)
+	case *eventCloseDocument:
+		root.closeDocument(ctx)
+	case *eventCloseAllFilter:
+		root.closeAllFilter(ctx)
+	case *eventCopySelect:
+		root.copyToClipboard(ctx)
+	case *eventPaste:
+		root.pasteFromClipboard(ctx)
+	case *eventViewMode:
+		root.setViewMode(ctx, ev.value)
+	case *eventInputSearch:
+		root.firstSearch(ctx, ev.searchType)
+	case *eventSearch:
+		root.forwardSearch(ctx, ev.str, 0)
+	case *eventNextSearch:
+		root.forwardSearch(ctx, ev.str, 1)
+	case *eventNextBackSearch:
+		root.backSearch(ctx, ev.str, -1)
+	case *eventSearchMove:
+		root.searchGo(ctx, ev.value)
+	case *eventGoto:
+		root.goLine(ev.value)
+	case *eventHeader:
+		root.setHeader(ev.value)
+	case *eventSkipLines:
+		root.setSkipLines(ev.value)
+	case *eventDelimiter:
+		root.setDelimiter(ev.value)
+	case *eventTabWidth:
+		root.setTabWidth(ev.value)
+	case *eventWatchInterval:
+		root.setWatchInterval(ev.value)
+	case *eventWriteBA:
+		root.setWriteBA(ctx, ev.value)
+	case *eventSectionDelimiter:
+		root.setSectionDelimiter(ev.value)
+	case *eventSectionStart:
+		root.setSectionStart(ev.value)
+	case *eventMultiColor:
+		root.setMultiColor(ev.value)
+	case *eventJumpTarget:
+		root.setJumpTarget(ev.value)
+	case *eventSaveBuffer:
+		root.saveBuffer(ev.value)
+	case *eventSectionNum:
+		root.setSectionNum(ev.value)
+
+	// tcell events
+	case *tcell.EventResize:
+		root.resize(ctx)
+	case *tcell.EventMouse:
+		root.mouseEvent(ctx, ev)
+	case *tcell.EventKey:
+		root.keyEvent(ctx, ev)
+	case nil:
+		return true
+	}
+	return false
 }
 
 // sendGoto fires an eventGoto event that moves to the specified line.
