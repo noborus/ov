@@ -308,13 +308,9 @@ func (root *Root) removeAllMark(context.Context) {
 
 // setHeader sets the number of lines in the header.
 func (root *Root) setHeader(input string) {
-	num, err := strconv.Atoi(input)
+	num, err := specifyOnScreen(input, root.scr.vHeight-1)
 	if err != nil {
-		root.setMessagef("Set header: %s", ErrInvalidNumber.Error())
-		return
-	}
-	if num < 0 || num > root.scr.vHeight-1 {
-		root.setMessagef("Set header %d: %s", num, ErrOutOfRange.Error())
+		root.setMessagef("Set header lines: %s", err.Error())
 		return
 	}
 	if root.Doc.Header == num {
@@ -328,13 +324,9 @@ func (root *Root) setHeader(input string) {
 
 // setSkipLines sets the number of lines to skip.
 func (root *Root) setSkipLines(input string) {
-	num, err := strconv.Atoi(input)
+	num, err := specifyOnScreen(input, root.scr.vHeight-1)
 	if err != nil {
-		root.setMessagef("Set skip line: %s", ErrInvalidNumber.Error())
-		return
-	}
-	if num < 0 {
-		root.setMessagef("Set skip line: %s", ErrOutOfRange.Error())
+		root.setMessagef("Set skip lines: %s", err.Error())
 		return
 	}
 	if root.Doc.SkipLines == num {
@@ -346,13 +338,9 @@ func (root *Root) setSkipLines(input string) {
 }
 
 func (root *Root) setSectionNum(input string) {
-	num, err := strconv.Atoi(input)
+	num, err := specifyOnScreen(input, root.scr.vHeight-1)
 	if err != nil {
-		root.setMessagef("Set section header num: %s", ErrInvalidNumber.Error())
-		return
-	}
-	if num < 0 {
-		root.setMessagef("Set section header num: %s", ErrOutOfRange.Error())
+		root.setMessagef("Set section header num: %s", err.Error())
 		return
 	}
 	if root.Doc.SectionHeaderNum == num {
@@ -361,6 +349,17 @@ func (root *Root) setSectionNum(input string) {
 
 	root.Doc.SectionHeaderNum = num
 	root.setMessagef("Set section header num %d", num)
+}
+
+func specifyOnScreen(input string, max int) (int, error) {
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		return 0, ErrInvalidNumber
+	}
+	if num < 0 || num > max {
+		return 0, ErrOutOfRange
+	}
+	return num, nil
 }
 
 // suspend suspends the current screen display and runs the shell.
@@ -514,7 +513,10 @@ func (root *Root) setSectionStart(input string) {
 		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())
 		return
 	}
-
+	if num < -root.scr.vHeight || num > root.scr.vHeight-1 {
+		root.setMessagef("Set section start position: %s", ErrOutOfRange.Error())
+		return
+	}
 	root.Doc.SectionStartPosition = num
 	root.setMessagef("Set section start position %s", input)
 }
