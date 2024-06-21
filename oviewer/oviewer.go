@@ -78,8 +78,8 @@ type Root struct {
 
 // SCR contains the screen information.
 type SCR struct {
-	// contents is the contents of the screen.
-	contents map[int]LineC
+	// lines is the lines of the screen.
+	lines map[int]LineC
 	// numbers is the line information of the currently displayed screen.
 	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
 	numbers []LineNumber

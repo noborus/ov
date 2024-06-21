@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -220,11 +221,80 @@ func Test_position(t *testing.T) {
 	}
 }
 
+func TestRoot_setJumpTarget(t *testing.T) {
+	root := rootHelper(t)
+	type fields struct {
+	}
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantBool bool
+		want     int
+	}{
+		{
+			name: "testJumpTargetOutOfRange",
+			args: args{
+				input: "200",
+			},
+			wantBool: false,
+			want:     0,
+		},
+		{
+			name: "testJumpTarget1",
+			args: args{
+				input: "1",
+			},
+			wantBool: false,
+			want:     1,
+		},
+		{
+			name: "testJumpTarget0",
+			args: args{
+				input: "0",
+			},
+			wantBool: false,
+			want:     0,
+		},
+		{
+			name: "testJumpTarget section",
+			args: args{
+				input: "section",
+			},
+			wantBool: true,
+			want:     0,
+		},
+		{
+			name: "testJumpTargetMinus",
+			args: args{
+				input: "-1",
+			},
+			wantBool: false,
+			want:     23,
+		},
+	}
+	for _, tt := range tests {
+		root.prepareScreen()
+		t.Run(tt.name, func(t *testing.T) {
+			root.setJumpTarget(tt.args.input)
+			if root.Doc.jumpTargetSection != tt.wantBool {
+				t.Errorf("setJumpTarget() = %v, want %v", root.Doc.JumpTarget, tt.wantBool)
+			}
+			if root.Doc.jumpTargetHeight != tt.want {
+				t.Errorf("setJumpTarget() height = %v, want %v", root.Doc.jumpTargetHeight, tt.want)
+			}
+		})
+	}
+}
+
 func Test_jumpPosition(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		height int
 		str    string
+		height int
 	}
 	tests := []struct {
 		name  string
@@ -235,8 +305,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				height: 30,
 				str:    "1",
+				height: 30,
 			},
 			want:  1,
 			want1: false,
@@ -244,8 +314,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "test.3",
 			args: args{
-				height: 10,
 				str:    ".3",
+				height: 10,
 			},
 			want:  3,
 			want1: false,
@@ -253,8 +323,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "testMinus",
 			args: args{
-				height: 30,
 				str:    "-10",
+				height: 30,
 			},
 			want:  19,
 			want1: false,
@@ -262,8 +332,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "testInvalid",
 			args: args{
-				height: 30,
 				str:    "invalid",
+				height: 30,
 			},
 			want:  0,
 			want1: false,
@@ -271,8 +341,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "testInvalid2",
 			args: args{
-				height: 30,
 				str:    ".i",
+				height: 30,
 			},
 			want:  0,
 			want1: false,
@@ -280,8 +350,8 @@ func Test_jumpPosition(t *testing.T) {
 		{
 			name: "testInvalid3",
 			args: args{
-				height: 30,
 				str:    "p%",
+				height: 30,
 			},
 			want:  0,
 			want1: false,
@@ -300,7 +370,7 @@ func Test_jumpPosition(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, got1 := jumpPosition(tt.args.height, tt.args.str)
+			got, got1 := jumpPosition(tt.args.str, tt.args.height)
 			if got != tt.want {
 				t.Errorf("jumpPosition() = %v, want %v", got, tt.want)
 			}
@@ -643,6 +713,455 @@ func TestRoot_setSectionStart(t *testing.T) {
 			root.setSectionStart(tt.args.input)
 			if root.Doc.SectionStartPosition != tt.want {
 				t.Errorf("setSectionStart() = %v, want %v", root.Doc.SectionStartPosition, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_searchGo(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName          string
+		searchWord        string
+		jumpTargetSection bool
+		sectionDelimiter  string
+	}
+	type args struct {
+		lN int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "testSearchGo1",
+			fields: fields{
+				fileName:          filepath.Join(testdata, "MOCK_DATA.csv"),
+				searchWord:        "1",
+				sectionDelimiter:  "",
+				jumpTargetSection: false,
+			},
+			args: args{
+				lN: 1,
+			},
+			want: 1,
+		},
+		{
+			name: "testSearchGo2",
+			fields: fields{
+				fileName:          filepath.Join(testdata, "section2.txt"),
+				searchWord:        "5",
+				sectionDelimiter:  "^-",
+				jumpTargetSection: true,
+			},
+			args: args{
+				lN: 5,
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := Open(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for !root.Doc.BufEOF() {
+			}
+			root.Doc.WrapMode = true
+			root.prepareScreen()
+			ctx := context.Background()
+			root.everyUpdate(ctx)
+			root.prepareDraw(ctx)
+			root.setSearcher(tt.fields.searchWord, false)
+			root.Doc.jumpTargetSection = tt.fields.jumpTargetSection
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.searchGo(ctx, tt.args.lN)
+			if root.Doc.topLN != tt.want {
+				t.Errorf("searchGo() = %v, want %v", root.Doc.topLN, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setMultiColor(t *testing.T) {
+	root := rootHelper(t)
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "testSetMultiColor",
+			args: args{
+				input: "red,blue",
+			},
+			want: []string{"red", "blue"},
+		},
+		{
+			name: "testSetMultiColor2",
+			args: args{
+				input: "red,\"blue\"",
+			},
+			want: []string{"red", "blue"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setMultiColor(tt.args.input)
+			if reflect.DeepEqual(root.Doc.MultiColorWords, tt.want) {
+				t.Errorf("setMultiColor() = %v, want %v", root.Doc.MultiColorWords, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setTabWidth(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetTabWidth4",
+			args: args{
+				input: "4",
+			},
+			want: 4,
+		},
+		{
+			name: "testSetTabWidth8",
+			args: args{
+				input: "8",
+			},
+			want: 8,
+		},
+		{
+			name: "testSetTabWidth0",
+			args: args{
+				input: "0",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetTabWidthInvalid",
+			args: args{
+				input: "invalid",
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.TabWidth = 0
+			root.setTabWidth(tt.args.input)
+			if root.Doc.TabWidth != tt.want {
+				t.Errorf("got %v, want %v", root.Doc.TabWidth, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := Open(filepath.Join(testdata, "MOCK_DATA.csv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	type fields struct {
+		wrapMode     bool
+		x            int
+		columnCursor int
+	}
+	type want struct {
+		wrapMode     bool
+		x            int
+		columnCursor int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   want
+	}{
+		{
+			name: "testWrapMode0",
+			fields: fields{
+				x:            0,
+				columnCursor: 0,
+				wrapMode:     false,
+			},
+			want: want{
+				x:            0,
+				columnCursor: 0,
+				wrapMode:     true,
+			},
+		},
+		{
+			name: "testWrapMode1",
+			fields: fields{
+				x:            10,
+				columnCursor: 1,
+				wrapMode:     false,
+			},
+			want: want{
+				x:            2,
+				columnCursor: 1,
+				wrapMode:     true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			root.setDelimiter(",")
+			root.Doc.ColumnMode = true
+			root.Doc.WrapMode = tt.fields.wrapMode
+			root.Doc.x = tt.fields.x
+			root.Doc.columnCursor = tt.fields.columnCursor
+			root.toggleWrapMode(ctx)
+			if root.Doc.WrapMode != tt.want.wrapMode {
+				t.Errorf("ColumnDelimiter WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
+			}
+			if root.Doc.x != tt.want.x {
+				t.Errorf("ColumnDelimiter WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			}
+			if root.Doc.columnCursor != tt.want.columnCursor {
+				t.Errorf("ColumnDelimiter WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)
+			}
+		})
+	}
+}
+
+func TestRoot_ColumnWidthWrapMode(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := Open(filepath.Join(testdata, "ps.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !root.Doc.BufEOF() {
+	}
+	root.prepareScreen()
+	type fields struct {
+		wrapMode     bool
+		x            int
+		columnCursor int
+	}
+	type want struct {
+		wrapMode     bool
+		x            int
+		columnCursor int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   want
+	}{
+		{
+			name: "testWrapMode0",
+			fields: fields{
+				x:            0,
+				columnCursor: 0,
+				wrapMode:     false,
+			},
+			want: want{
+				x:            0,
+				columnCursor: 0,
+				wrapMode:     true,
+			},
+		},
+		{
+			name: "testWrapMode1",
+			fields: fields{
+				x:            10,
+				columnCursor: 1,
+				wrapMode:     false,
+			},
+			want: want{
+				x:            9,
+				columnCursor: 1,
+				wrapMode:     true,
+			},
+		},
+		{
+			name: "testWrapMode2",
+			fields: fields{
+				x:            10,
+				columnCursor: 15,
+				wrapMode:     false,
+			},
+			want: want{
+				x:            10,
+				columnCursor: 15,
+				wrapMode:     true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			root.Doc.ColumnWidth = true
+			root.Doc.WrapMode = tt.fields.wrapMode
+			root.Doc.x = tt.fields.x
+			root.Doc.columnCursor = tt.fields.columnCursor
+			root.prepareDraw(ctx)
+			root.toggleWrapMode(ctx)
+			if root.Doc.WrapMode != tt.want.wrapMode {
+				t.Errorf("ColumnWidth WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
+			}
+			if root.Doc.x != tt.want.x {
+				t.Errorf("ColumnWidth WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			}
+			if root.Doc.columnCursor != tt.want.columnCursor {
+				t.Errorf("ColumnWidth WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)
+			}
+		})
+	}
+}
+func TestRoot_Mark(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := Open(filepath.Join(testdata, "test3.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !root.Doc.BufEOF() {
+	}
+	t.Run("TestMark", func(t *testing.T) {
+		ctx := context.Background()
+		root.Doc.topLN = 1
+		root.addMark(ctx)
+		if !reflect.DeepEqual(root.Doc.marked, []int{1}) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1})
+		}
+		root.Doc.topLN = 10
+		root.addMark(ctx)
+		if !reflect.DeepEqual(root.Doc.marked, []int{1, 10}) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1, 10})
+		}
+		root.Doc.topLN = 1
+		root.removeMark(ctx)
+		if !reflect.DeepEqual(root.Doc.marked, []int{10}) {
+			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int{10})
+		}
+		root.Doc.topLN = 2
+		root.addMark(ctx)
+		if !reflect.DeepEqual(root.Doc.marked, []int{10, 2}) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{10, 2})
+		}
+		root.removeAllMark(ctx)
+		if !reflect.DeepEqual(root.Doc.marked, []int(nil)) {
+			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int(nil))
+		}
+	})
+}
+func TestRoot_markNext(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := Open(filepath.Join(testdata, "test3.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !root.Doc.BufEOF() {
+	}
+	root.prepareScreen()
+	root.Doc.marked = []int{1, 3, 5}
+	tests := []struct {
+		name        string
+		markedPoint int
+		wantLine    int
+	}{
+		{
+			name:        "testMarkNext1",
+			markedPoint: 0,
+			wantLine:    3,
+		},
+		{
+			name:        "testMarkNext2",
+			markedPoint: 1,
+			wantLine:    5,
+		},
+		{
+			name:        "testMarkNext3",
+			markedPoint: 2,
+			wantLine:    1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.markedPoint = tt.markedPoint
+			root.markNext(context.Background())
+			if root.Doc.topLN != tt.wantLine {
+				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
+			}
+		})
+	}
+}
+
+func TestRoot_markPrev(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := Open(filepath.Join(testdata, "test3.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !root.Doc.BufEOF() {
+	}
+	root.prepareScreen()
+	root.Doc.marked = []int{1, 3, 5}
+	tests := []struct {
+		name        string
+		markedPoint int
+		wantLine    int
+	}{
+		{
+			name:        "testMarkPrev1",
+			markedPoint: 2,
+			wantLine:    3,
+		},
+		{
+			name:        "testMarkPrev2",
+			markedPoint: 1,
+			wantLine:    1,
+		},
+		{
+			name:        "testMarkPrev3",
+			markedPoint: 0,
+			wantLine:    5,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.markedPoint = tt.markedPoint
+			root.markPrev(context.Background())
+			if root.Doc.topLN != tt.wantLine {
+				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
 			}
 		})
 	}

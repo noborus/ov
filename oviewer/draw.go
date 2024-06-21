@@ -52,7 +52,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
-		line, ok := root.scr.contents[lN]
+		line, ok := root.scr.lines[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
 		}
@@ -90,7 +90,7 @@ func (root *Root) drawHeader() {
 	lX := 0
 	lN := root.scr.headerLN
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
-		line, ok := root.scr.contents[lN]
+		line, ok := root.scr.lines[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
 		}
@@ -117,7 +117,7 @@ func (root *Root) drawSectionHeader() {
 	lX := 0
 	lN := root.scr.sectionHeaderLN
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
-		line, ok := root.scr.contents[lN]
+		line, ok := root.scr.lines[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
 		}
