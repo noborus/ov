@@ -28,8 +28,8 @@ func (root *Root) prepareScreen() {
 		root.scr.numbers = make([]LineNumber, root.scr.vHeight+1)
 	}
 
-	if root.scr.contents == nil {
-		root.scr.contents = make(map[int]LineC)
+	if root.scr.lines == nil {
+		root.scr.lines = make(map[int]LineC)
 	}
 }
 
@@ -54,7 +54,7 @@ func (root *Root) ViewSync(context.Context) {
 	root.prepareStartX()
 	root.prepareScreen()
 	root.Screen.Sync()
-	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.scr.vHeight, root.Doc.JumpTarget)
+	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.Doc.JumpTarget, root.scr.vHeight)
 }
 
 // prepareDraw prepares the screen for drawing.
@@ -86,8 +86,8 @@ func (root *Root) prepareDraw(ctx context.Context) {
 		root.Doc.setColumnWidths()
 	}
 
-	// Prepare the contents.
-	root.scr.contents = root.screenContents(root.scr.contents)
+	// Prepare the lines.
+	root.scr.lines = root.prepareLines(root.scr.lines)
 }
 
 // shiftBody shifts the section header so that it is not hidden by it.
@@ -162,29 +162,29 @@ func (m *Document) getHeight(startLN int, endLN int) int {
 	return height
 }
 
-// screenContents returns the contents of the screen.
-func (root *Root) screenContents(contents map[int]LineC) map[int]LineC {
-	// clear contents.
-	for k := range contents {
-		delete(contents, k)
+// prepareLines returns the contents of the screen.
+func (root *Root) prepareLines(lines map[int]LineC) map[int]LineC {
+	// clear lines.
+	for k := range lines {
+		delete(lines, k)
 	}
 	// Header.
-	contents = root.contentsRange(contents, root.scr.headerLN, root.scr.headerEnd)
+	lines = root.setLines(lines, root.scr.headerLN, root.scr.headerEnd)
 	// Section header.
-	contents = root.contentsRange(contents, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+	lines = root.setLines(lines, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
 	// Body.
 	startLN := root.Doc.topLN + root.Doc.firstLine()
 	endLN := startLN + root.scr.vHeight // vHeight is the max line of logical lines.
-	contents = root.contentsRange(contents, startLN, endLN)
+	lines = root.setLines(lines, startLN, endLN)
 
 	if root.Doc.SectionHeader {
-		contents = root.sectionNum(contents)
+		lines = root.sectionNum(lines)
 	}
-	return contents
+	return lines
 }
 
-// contentsRange sets the contents of the specified range.
-func (root *Root) contentsRange(contents map[int]LineC, startLN int, endLN int) map[int]LineC {
+// setLines sets the lines of the specified range.
+func (root *Root) setLines(lines map[int]LineC, startLN int, endLN int) map[int]LineC {
 	m := root.Doc
 	for lN := startLN; lN < endLN; lN++ {
 		line := m.getLineC(lN, m.TabWidth)
@@ -192,23 +192,23 @@ func (root *Root) contentsRange(contents map[int]LineC, startLN int, endLN int) 
 			RangeStyle(line.lc, 0, len(line.lc), root.StyleBody)
 			root.styleContent(line)
 		}
-		contents[lN] = line
+		lines[lN] = line
 	}
-	return contents
+	return lines
 }
 
 // sectionNum sets the section number.
-func (root *Root) sectionNum(contents map[int]LineC) map[int]LineC {
+func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 	m := root.Doc
 	if m.SectionDelimiter == "" {
-		return contents
+		return lines
 	}
 	if m.SectionDelimiterReg == nil {
 		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
-		return contents
+		return lines
 	}
 	var lNs []int
-	for k := range contents {
+	for k := range lines {
 		lNs = append(lNs, k)
 	}
 	sort.Ints(lNs)
@@ -223,7 +223,7 @@ func (root *Root) sectionNum(contents map[int]LineC) map[int]LineC {
 				num = 1
 			}
 		} else {
-			sp, ok := contents[lN-m.SectionStartPosition]
+			sp, ok := lines[lN-m.SectionStartPosition]
 			if !ok {
 				sp = m.getLineC(lN-m.SectionStartPosition, m.TabWidth)
 			}
@@ -233,14 +233,14 @@ func (root *Root) sectionNum(contents map[int]LineC) map[int]LineC {
 			}
 		}
 
-		line := contents[lN]
+		line := lines[lN]
 		line.section = section
 		line.sectionNm = num
-		contents[lN] = line
+		lines[lN] = line
 		num++
 	}
 
-	return contents
+	return lines
 }
 
 // styleContent applies the style of the content.

@@ -281,22 +281,22 @@ func (root *Root) markPrev(context.Context) {
 
 // addMark marks the current line number.
 func (root *Root) addMark(context.Context) {
-	c := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
-	root.Doc.marked = remove(root.Doc.marked, c)
-	root.Doc.marked = append(root.Doc.marked, c)
-	root.setMessagef("Marked to line %d", c-root.Doc.firstLine()+1)
+	lN := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
+	root.Doc.marked = remove(root.Doc.marked, lN)
+	root.Doc.marked = append(root.Doc.marked, lN)
+	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
 }
 
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark(context.Context) {
-	c := root.Doc.topLN + root.Doc.firstLine()
-	marked := remove(root.Doc.marked, c)
+	lN := root.Doc.topLN + root.Doc.firstLine()
+	marked := remove(root.Doc.marked, lN)
 	if len(root.Doc.marked) == len(marked) {
-		root.setMessagef("Not marked line %d", c-root.Doc.firstLine()+1)
+		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
 		return
 	}
 	root.Doc.marked = marked
-	root.setMessagef("Remove the mark at line %d", c-root.Doc.firstLine()+1)
+	root.setMessagef("Remove the mark at line %d", lN-root.Doc.firstLine()+1)
 }
 
 // removeAllMark removes all marks.
@@ -537,7 +537,7 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
-	num, section := jumpPosition(root.scr.vHeight, input)
+	num, section := jumpPosition(input, root.scr.vHeight)
 	root.Doc.jumpTargetSection = section
 	if root.Doc.jumpTargetSection {
 		root.setMessagef("Set JumpTarget section start")
@@ -561,7 +561,7 @@ func (root *Root) resize(ctx context.Context) {
 }
 
 // jumpPosition determines the position of the jump.
-func jumpPosition(height int, str string) (int, bool) {
+func jumpPosition(str string, height int) (int, bool) {
 	if len(str) == 0 {
 		return 0, false
 	}
@@ -693,7 +693,7 @@ func (root *Root) WriteQuit(ctx context.Context) {
 	}
 
 	for lN := 0; lN < root.Doc.BufEndNum(); lN++ {
-		line := root.scr.contents[lN]
+		line := root.scr.lines[lN]
 		if line.section > 1 {
 			root.AfterWriteOriginal = lN - root.Doc.topLN
 			root.Quit(ctx)

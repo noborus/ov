@@ -32,7 +32,7 @@ func sectionText(t *testing.T) *Root {
 	m.width = 80
 	root.scr.vHeight = 24
 	m.topLX = 0
-	root.scr.contents = make(map[int]LineC)
+	root.scr.lines = make(map[int]LineC)
 	for !m.BufEOF() {
 	}
 	return root

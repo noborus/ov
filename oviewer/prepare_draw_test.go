@@ -30,7 +30,7 @@ func sectionHeaderText(t *testing.T, fileName string) *Root {
 	m.width = 80
 	root.scr.vHeight = 24
 	m.topLX = 0
-	root.scr.contents = make(map[int]LineC)
+	root.scr.lines = make(map[int]LineC)
 	for !m.BufEOF() {
 	}
 	return root
@@ -39,9 +39,9 @@ func sectionHeaderText(t *testing.T, fileName string) *Root {
 func sectionStr(t *testing.T, root *Root) string {
 	t.Helper()
 
-	contents := root.scr.contents
+	lines := root.scr.lines
 	var lNs []int
-	for k := range contents {
+	for k := range lines {
 		lNs = append(lNs, k)
 	}
 	sort.Ints(lNs)
@@ -49,7 +49,7 @@ func sectionStr(t *testing.T, root *Root) string {
 	var buf bytes.Buffer
 	buf.WriteString("|")
 	for _, lN := range lNs {
-		line := contents[lN]
+		line := lines[lN]
 		buf.WriteString(fmt.Sprintf("(%d)%d-%02d|", lN, line.section, line.sectionNm))
 	}
 	return buf.String()
@@ -465,7 +465,7 @@ func TestRoot_prepareDraw_sectionStart(t *testing.T) {
 	}
 }
 
-func TestRoot_screenContents(t *testing.T) {
+func TestRoot_prepareLines(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -487,7 +487,7 @@ func TestRoot_screenContents(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "Test screenContents",
+			name: "Test prepareLines",
 			fields: fields{
 				wrapMode:         true,
 				skipLines:        0,
@@ -511,14 +511,14 @@ func TestRoot_screenContents(t *testing.T) {
 			m.SectionHeader = tt.fields.sectionHeader
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
 			m.SectionHeaderNum = tt.fields.sectionHeaderNum
-			root.scr.contents = make(map[int]LineC)
-			root.screenContents(root.scr.contents)
-			if len(root.scr.contents) != tt.want.num {
-				t.Errorf("screen contents len got: %d, want: %d", len(root.scr.contents), tt.want.num)
+			root.scr.lines = make(map[int]LineC)
+			root.prepareLines(root.scr.lines)
+			if len(root.scr.lines) != tt.want.num {
+				t.Errorf("screen lines len got: %d, want: %d", len(root.scr.lines), tt.want.num)
 			}
-			root.screenContents(root.scr.contents)
-			if len(root.scr.contents) != tt.want.num {
-				t.Errorf("screen contents len got: %d, want: %d", len(root.scr.contents), tt.want.num)
+			root.prepareLines(root.scr.lines)
+			if len(root.scr.lines) != tt.want.num {
+				t.Errorf("screen lines len got: %d, want: %d", len(root.scr.lines), tt.want.num)
 			}
 		})
 	}
@@ -597,7 +597,7 @@ func TestRoot_styleContent(t *testing.T) {
 			m.setMultiColorWords(tt.fields.multiColorWords)
 			m.setDelimiter(tt.fields.ColumnDelimiter)
 			m.setColumnWidths()
-			root.scr.contents = make(map[int]LineC)
+			root.scr.lines = make(map[int]LineC)
 			root.prepareDraw(context.Background())
 			line := m.getLineC(tt.args.lineNum, m.TabWidth)
 			if line.lc == nil {
