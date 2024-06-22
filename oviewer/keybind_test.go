@@ -59,8 +59,8 @@ func TestKeyBind_String(t *testing.T) {
 					count++
 				}
 			}
-			if count != len(kb) {
-				t.Errorf("number of KeyBind String = %v, want %v", count, len(kb))
+			if count != len(kb)+1 {
+				t.Errorf("number of KeyBind String = %v, want %v", count, len(kb)+1)
 			}
 		})
 	}
