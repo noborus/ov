@@ -146,7 +146,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionMark:           root.addMark,
 		actionRemoveMark:     root.removeMark,
 		actionRemoveAllMark:  root.removeAllMark,
-		actionSearch:         root.setSearchMode,
+		actionSearch:         root.setForwardSearchMode,
 		actionBackSearch:     root.setBackSearchMode,
 		actionFilter:         root.setSearchFilterMode,
 		actionDelimiter:      root.setDelimiterMode,

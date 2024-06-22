@@ -185,6 +185,18 @@ func (input *Input) reset() {
 	input.cursorX = 0
 }
 
+func (input *Input) previous() {
+	input.value = input.Event.Up(input.value)
+	runes := []rune(input.value)
+	input.cursorX = stringWidth(string(runes))
+}
+
+func (input *Input) next() {
+	input.value = input.Event.Down(input.value)
+	runes := []rune(input.value)
+	input.cursorX = stringWidth(string(runes))
+}
+
 // inputCaseSensitive toggles case sensitivity.
 func (root *Root) inputCaseSensitive(context.Context) {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
@@ -222,18 +234,12 @@ func (root *Root) inputNonMatch(context.Context) {
 
 // inputPrevious searches the previous history.
 func (root *Root) inputPrevious(context.Context) {
-	input := root.input
-	input.value = input.Event.Up(input.value)
-	runes := []rune(input.value)
-	input.cursorX = stringWidth(string(runes))
+	root.input.previous()
 }
 
 // inputNext searches the next history.
 func (root *Root) inputNext(context.Context) {
-	input := root.input
-	input.value = input.Event.Down(input.value)
-	runes := []rune(input.value)
-	input.cursorX = stringWidth(string(runes))
+	root.input.next()
 }
 
 // stringWidth returns the number of widths of the input.

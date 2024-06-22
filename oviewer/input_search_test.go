@@ -184,3 +184,86 @@ func TestInput_searchCandidates(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_setSearchMode(t *testing.T) {
+	root := rootHelper(t)
+	type fields struct {
+		SmartCaseSensitive bool
+		CaseSensitive      bool
+		Regexp             bool
+		nonMatch           bool
+	}
+	type args struct {
+		searchType searchType
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			name: "forwardsearchMode",
+			fields: fields{
+				SmartCaseSensitive: true,
+				CaseSensitive:      false,
+				Regexp:             true,
+				nonMatch:           false,
+			},
+			args: args{
+				searchType: forward,
+			},
+			want: "(R)(S)",
+		},
+		{
+			name: "backsearchMode",
+			fields: fields{
+				SmartCaseSensitive: false,
+				CaseSensitive:      false,
+				Regexp:             true,
+				nonMatch:           false,
+			},
+			args: args{
+				searchType: backward,
+			},
+			want: "(R)",
+		},
+		{
+			name: "backsearchModeCase",
+			fields: fields{
+				SmartCaseSensitive: false,
+				CaseSensitive:      true,
+				Regexp:             false,
+				nonMatch:           false,
+			},
+			args: args{
+				searchType: backward,
+			},
+			want: "(Aa)",
+		},
+		{
+			name: "filterMode",
+			fields: fields{
+				SmartCaseSensitive: false,
+				CaseSensitive:      false,
+				Regexp:             true,
+				nonMatch:           false,
+			},
+			args: args{
+				searchType: filter,
+			},
+			want: "(R)",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Config.SmartCaseSensitive = tt.fields.SmartCaseSensitive
+			root.Config.CaseSensitive = tt.fields.CaseSensitive
+			root.Config.RegexpSearch = tt.fields.Regexp
+			root.setSearchMode(tt.args.searchType)
+			if got := root.searchOpt; got != tt.want {
+				t.Errorf("Root.setSearchMode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
