@@ -384,7 +384,7 @@ func (root *Root) suspend(context.Context) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		root.setMessageLog(err.Error())
+		fmt.Fprintf(os.Stderr, "failed to run shell: %s\n", err)
 	}
 	fmt.Println("resume ov")
 	if err := root.Screen.Resume(); err != nil {
