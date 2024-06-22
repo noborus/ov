@@ -17,49 +17,46 @@ const (
 	filter
 )
 
+// setForwardSearchMode sets the inputMode to Forwardsearch.
+func (root *Root) setForwardSearchMode(context.Context) {
+	root.setSearchMode(forward)
+}
+
+// setBackSearchMode sets the inputMode to Backsearch.
+func (root *Root) setBackSearchMode(context.Context) {
+	root.setSearchMode(backward)
+}
+
+// setSearchFilterMode sets the inputMode to Filter.
+func (root *Root) setSearchFilterMode(context.Context) {
+	root.setSearchMode(filter)
+}
+
 // setSearchMode sets the inputMode to Search.
-func (root *Root) setCommonSearchMode() {
+func (root *Root) setSearchMode(searchType searchType) {
 	input := root.input
 	input.reset()
+	input.Event = newSearchEvent(input.SearchCandidate, searchType)
 
 	if root.searcher != nil {
 		input.SearchCandidate.toLast(root.searcher.String())
 	}
 
-	root.Doc.nonMatch = false
+	root.Doc.nonMatch = false // Reset nonMatch.
 	root.OriginPos = root.Doc.topLN
-}
-
-// setSearchMode sets the inputMode to Search.
-func (root *Root) setSearchMode(context.Context) {
-	root.setCommonSearchMode()
-	root.input.Event = newSearchEvent(root.input.SearchCandidate, forward)
-	root.setPromptOpt()
-}
-
-// setBackSearchMode sets the inputMode to Backsearch.
-func (root *Root) setBackSearchMode(context.Context) {
-	root.setCommonSearchMode()
-	root.input.Event = newSearchEvent(root.input.SearchCandidate, backward)
-	root.setPromptOpt()
-}
-
-// setSearchFilterMode sets the inputMode to Filter.
-func (root *Root) setSearchFilterMode(context.Context) {
-	root.setCommonSearchMode()
-	root.input.Event = newSearchEvent(root.input.SearchCandidate, filter)
 	root.setPromptOpt()
 }
 
 // setPromptOpt returns a string describing the input field.
 func (root *Root) setPromptOpt() {
-	var opt strings.Builder
 	mode := root.input.Event.Mode()
 
 	if mode != Search && mode != Backsearch && mode != Filter {
-		root.searchOpt = opt.String()
+		root.searchOpt = ""
+		return
 	}
 
+	var opt strings.Builder
 	if mode == Filter && root.Doc.nonMatch {
 		opt.WriteString("Non-match")
 	}

@@ -51,7 +51,7 @@ func (*eventMultiColor) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventMultiColor) Prompt() string {
-	return "multicolor:"
+	return "Multi color:"
 }
 
 // Confirm returns the event when the input is confirmed.
