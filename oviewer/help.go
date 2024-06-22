@@ -25,6 +25,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.store.eof = 1
 	m.preventReload = true
 	m.seekable = false
+	m.Header = 2
 	m.SectionHeader = true
 	m.setSectionDelimiter("\t")
 	m.SectionHeaderNum = 1

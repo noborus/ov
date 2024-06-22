@@ -270,7 +270,7 @@ func defaultKeyBinds() KeyBind {
 // String returns keybind as a string for help.
 func (k KeyBind) String() string {
 	var b strings.Builder
-	writeHeader(&b, "Key binding")
+	writeHeaderTh(&b)
 	k.writeKeyBind(&b, actionExit, "quit")
 	k.writeKeyBind(&b, actionCancel, "cancel")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
@@ -370,12 +370,15 @@ func (k KeyBind) String() string {
 	return b.String()
 }
 
+func writeHeaderTh(w io.Writer) {
+	fmt.Fprintf(w, " %-30s %s\n", "Key", "Action")
+}
 func writeHeader(w io.Writer, header string) {
 	fmt.Fprintf(w, "\n\t%s\n", header)
 }
 
 func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
-	fmt.Fprintf(w, " %-28s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
+	fmt.Fprintf(w, " %-30s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
 
 // GetKeyBinds returns the current key mapping.
