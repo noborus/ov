@@ -8,6 +8,32 @@ import (
 	"testing"
 )
 
+func docHelper(t *testing.T, str string) *Document {
+	t.Helper()
+	m, err := NewDocument()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := m.ReadAll(bytes.NewBufferString(str)); err != nil {
+		t.Fatal(err)
+	}
+	for !m.BufEOF() {
+	}
+	return m
+}
+
+func docFileReadHelper(t *testing.T, fileName string) *Document {
+	t.Helper()
+	m, err := OpenDocument(fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !m.BufEOF() {
+	}
+
+	return m
+}
+
 func TestOpenDocument(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -81,15 +107,7 @@ func TestDocument_lineToContents(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := m.ReadAll(bytes.NewBufferString(tt.str)); err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docHelper(t, tt.str)
 			t.Logf("num:%d", m.BufEndNum())
 			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
 			if (err != nil) != tt.wantErr {
@@ -138,13 +156,7 @@ func TestDocument_Export(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := m.ReadAll(bytes.NewBufferString(tt.str)); err != nil {
-				t.Fatal(err)
-			}
+			m := docHelper(t, tt.str)
 			w := &bytes.Buffer{}
 			for !m.BufEOF() {
 			}
@@ -207,14 +219,7 @@ func TestDocument_searchLine(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-
-			for !m.BufEOF() {
-			}
-
+			m := docFileReadHelper(t, tt.fields.FileName)
 			got, err := m.SearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.searchLine() error = %v, wantErr %v", err, tt.wantErr)
@@ -275,14 +280,7 @@ func TestDocument_backSearchLine(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-
-			for !m.BufEOF() {
-			}
-
+			m := docFileReadHelper(t, tt.fields.FileName)
 			got, err := m.BackSearchLine(tt.args.ctx, tt.args.searcher, tt.args.num)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.backSearchLine() error = %v, wantErr %v", err, tt.wantErr)

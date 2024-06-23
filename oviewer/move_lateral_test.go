@@ -19,10 +19,7 @@ func TestDocument_moveBeginLeft(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
+			m := docHelper(t, "test")
 			m.moveBeginLeft()
 			if m.x != tt.wantX {
 				t.Errorf("screenAdjustX() gotX = %v, wantX %v", m.x, tt.wantX)
@@ -380,16 +377,11 @@ func TestDocument_optimalCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			m.WrapMode = tt.fields.wrap
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
 			m.width = tt.fields.width
-			for !m.BufEOF() {
-			}
 			if got := m.optimalCursor(tt.args.cursor); got != tt.want {
 				t.Errorf("Document.correctCursor() = %v, want %v", got, tt.want)
 			}
@@ -399,12 +391,7 @@ func TestDocument_optimalCursor(t *testing.T) {
 
 func moveColumnWidth(t *testing.T) *Document {
 	t.Helper()
-	m, err := OpenDocument(filepath.Join(testdata, "ps.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !m.BufEOF() {
-	}
+	m := docFileReadHelper(t, filepath.Join(testdata, "ps.txt"))
 	m.ColumnWidth = true
 	m.width = 80
 	m.height = 23
@@ -595,12 +582,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 
 func moveColumnDelimiter(t *testing.T) *Document {
 	t.Helper()
-	m, err := OpenDocument(filepath.Join(testdata, "MOCK_DATA.csv"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !m.BufEOF() {
-	}
+	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
 	m.width = 80
 	m.height = 23
 	m.setDelimiter(",")

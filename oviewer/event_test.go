@@ -32,10 +32,7 @@ func TestRoot_MoveLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootHelper(t)
 			root.MoveLine(tt.args.num)
 		})
 	}
@@ -71,10 +68,7 @@ func TestRoot_SetDocument(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootHelper(t)
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
 			defaultFlags := log.Flags()
@@ -157,10 +151,7 @@ func TestRoot_event(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootHelper(t)
 			ctx := context.Background()
 			if got := root.event(ctx, tt.args.ev); got != tt.want {
 				t.Errorf("Root.event() = %v, want %v", got, tt.want)

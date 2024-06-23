@@ -44,12 +44,7 @@ func TestRoot_DocumentList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			if got := root.DocumentLen(); got != tt.wantLen {
 				t.Errorf("Root.DocumentLen() = %v, want %v", got, tt.wantLen)
 			}
@@ -72,10 +67,7 @@ func TestRoot_SwitchingDoc(t *testing.T) {
 	}()
 	fileName1 := filepath.Join(testdata, "test.txt")
 	fileName2 := filepath.Join(testdata, "test2.txt")
-	root, err := Open(fileName1, fileName2)
-	if err != nil {
-		t.Fatalf("NewOviewer error = %v", err)
-	}
+	root := rootFileReadHelper(t, fileName1, fileName2)
 	ctx := context.Background()
 	keyBind, err := root.setKeyConfig(ctx)
 	if err != nil {
@@ -86,8 +78,6 @@ func TestRoot_SwitchingDoc(t *testing.T) {
 		t.Fatal(err)
 	}
 	root.helpDoc = help
-	for !root.Doc.BufEOF() {
-	}
 	logDoc, err := NewLogDoc()
 	if err != nil {
 		t.Fatal(err)

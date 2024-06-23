@@ -14,7 +14,7 @@ func TestRoot_Filter(t *testing.T) {
 		tcellNewScreen = tcell.NewScreen
 	}()
 	type fields struct {
-		fileNames []string
+		fileName string
 	}
 	type args struct {
 		str      string
@@ -29,7 +29,7 @@ func TestRoot_Filter(t *testing.T) {
 		{
 			name: "Filter",
 			fields: fields{
-				fileNames: []string{filepath.Join(testdata, "test.txt")},
+				fileName: filepath.Join(testdata, "test.txt"),
 			},
 			args: args{
 				str:      "test",
@@ -40,12 +40,7 @@ func TestRoot_Filter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.Filter(tt.args.str, tt.args.nonMatch)
 		})
 	}
@@ -94,12 +89,7 @@ func TestRoot_filter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.input.value = tt.args.str
 			root.filter(context.Background())
 		})
@@ -149,12 +139,7 @@ func TestRoot_filterDocument(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.Header = tt.fields.header
 			root.filterDocument(context.Background(), tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
@@ -200,19 +185,15 @@ func TestRoot_filterLink(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.Header = tt.fields.header
 			root.input.value = "1000"
 			ctx := context.Background()
 			root.filterDocument(ctx, tt.args.searcher)
-			for !root.Doc.BufEOF() {
+			filterDoc := root.DocList[len(root.DocList)-1]
+			for !filterDoc.BufEOF() {
 			}
-			root.Doc.topLN = 2
+			filterDoc.topLN = 2
 			root.previousDoc(ctx)
 			t.Log(root.Doc.topLN)
 			if root.Doc.topLN != tt.want {
@@ -252,12 +233,7 @@ func TestRoot_closeAllFilter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.filterDocument(context.Background(), tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
 			for !filterDoc.BufEOF() {
