@@ -22,6 +22,30 @@ func fakeScreen() (tcell.Screen, error) {
 	return tcell.NewSimulationScreen(""), nil
 }
 
+func rootHelper(t *testing.T) *Root {
+	t.Helper()
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root, err := NewRoot(bytes.NewBufferString("test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
+	t.Helper()
+	root, err := Open(fileNames...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for !root.Doc.BufEOF() {
+	}
+	return root
+}
+
 func TestNewOviewer(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -375,12 +399,7 @@ func TestRoot_writeOriginal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.args.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.args.fileNames...)
 			root.Doc.Header = tt.fields.header
 			root.Doc.topLN = tt.fields.topLN
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
@@ -444,12 +463,7 @@ func TestRoot_docSmall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.args.fileNames...)
-			if err != nil {
-				t.Fatalf("NewOviewer error = %v", err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.args.fileNames...)
 			if got := root.docSmall(); got != tt.want {
 				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
 			}

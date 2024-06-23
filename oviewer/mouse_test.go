@@ -1,15 +1,9 @@
 package oviewer
 
 import (
+	"path/filepath"
 	"testing"
 )
-
-func normalDocument() *Document {
-	m, _ := OpenDocument("../testdata/normal.txt")
-	for !m.BufEOF() {
-	}
-	return m
-}
 
 func TestSCR_lineRangeToString(t *testing.T) {
 	t.Parallel()
@@ -20,7 +14,6 @@ func TestSCR_lineRangeToString(t *testing.T) {
 		startX  int
 	}
 	type args struct {
-		m  *Document
 		x1 int
 		y1 int
 		x2 int
@@ -41,7 +34,7 @@ func TestSCR_lineRangeToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 0, y1: 0, x2: 10, y2: 0},
+			args:    args{x1: 0, y1: 0, x2: 10, y2: 0},
 			want:    "khaki	med",
 			wantErr: false,
 		},
@@ -53,7 +46,7 @@ func TestSCR_lineRangeToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 0, y1: 3, x2: 10, y2: 4},
+			args:    args{x1: 0, y1: 3, x2: 10, y2: 4},
 			want:    "darkolivegreen	darkkhaki	orchid	olive	darkslateblue	mediumseagreen\nchocolate	",
 			wantErr: false,
 		},
@@ -65,7 +58,7 @@ func TestSCR_lineRangeToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 4, y1: 1, x2: 10, y2: 4},
+			args:    args{x1: 4, y1: 1, x2: 10, y2: 4},
 			want:    "brown	khaki	darkkhaki	mediumturquoise	mediumseagreen	darkgoldenrod\nplum	darkslateblue	teal	darkkhaki	turquoise	mediumorchid\ndarkolivegreen	darkkhaki	orchid	olive	darkslateblue	mediumseagreen\nchocolate	",
 			wantErr: false,
 		},
@@ -80,7 +73,8 @@ func TestSCR_lineRangeToString(t *testing.T) {
 				vHeight: tt.fields.vHeight,
 				startX:  tt.fields.startX,
 			}
-			got, err := scr.lineRangeToString(tt.args.m, tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2)
+			m := docFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
+			got, err := scr.lineRangeToString(m, tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SCR.lineRangeToString() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -101,7 +95,6 @@ func TestSCR_rectangleToString(t *testing.T) {
 		startX  int
 	}
 	type args struct {
-		m  *Document
 		x1 int
 		y1 int
 		x2 int
@@ -122,7 +115,7 @@ func TestSCR_rectangleToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 0, y1: 0, x2: 10, y2: 0},
+			args:    args{x1: 0, y1: 0, x2: 10, y2: 0},
 			want:    "khaki	med\n",
 			wantErr: false,
 		},
@@ -134,7 +127,7 @@ func TestSCR_rectangleToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 0, y1: 3, x2: 10, y2: 4},
+			args:    args{x1: 0, y1: 3, x2: 10, y2: 4},
 			want:    "darkolivegr\nchocolate	\n",
 			wantErr: false,
 		},
@@ -146,7 +139,7 @@ func TestSCR_rectangleToString(t *testing.T) {
 				vHeight: 24,
 				startX:  0,
 			},
-			args:    args{m: normalDocument(), x1: 4, y1: 1, x2: 10, y2: 4},
+			args:    args{x1: 4, y1: 1, x2: 10, y2: 4},
 			want:    "brown	\n	dar\nolivegr\nolate	\n",
 			wantErr: false,
 		},
@@ -161,7 +154,8 @@ func TestSCR_rectangleToString(t *testing.T) {
 				vHeight: tt.fields.vHeight,
 				startX:  tt.fields.startX,
 			}
-			got, err := scr.rectangleToString(tt.args.m, tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2)
+			m := docFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
+			got, err := scr.rectangleToString(m, tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SCR.rectangleToString() error = %v, wantErr %v", err, tt.wantErr)
 				return

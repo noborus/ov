@@ -56,15 +56,10 @@ func TestRoot_moveVertical(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
-			for !root.Doc.BufEOF() {
-			}
 			root.Doc.topLN = tt.fields.topLN
 			root.moveTop(ctx)
 			if root.Doc.topLN != tt.want.top {
@@ -167,15 +162,10 @@ func TestRoot_moveSection(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
-			for !root.Doc.BufEOF() {
-			}
 			root.Doc.topLN = tt.fields.topLN
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.nextSection(ctx)
@@ -250,15 +240,10 @@ func TestRoot_moveLateral(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
-			for !root.Doc.BufEOF() {
-			}
 			root.Doc.ColumnMode = false
 			root.Doc.WrapMode = false
 			root.Doc.x = tt.fields.x
@@ -337,15 +322,10 @@ func TestRoot_moveColumn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
-			for !root.Doc.BufEOF() {
-			}
 			root.Doc.ColumnMode = true
 			root.Doc.setDelimiter(",")
 

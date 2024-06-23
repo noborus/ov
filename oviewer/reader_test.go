@@ -119,12 +119,7 @@ func TestDocument_reset(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := OpenDocument(tt.fields.FileName)
-			if err != nil {
-				t.Fatalf("OpenDocument %s", err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fields.FileName)
 			m.reset()
 			if m.BufEndNum() != tt.wantNum {
 				t.Errorf("Document.reset() %v != %v", m.BufEndNum(), tt.wantNum)

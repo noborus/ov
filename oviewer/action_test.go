@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"bytes"
 	"context"
 	"path/filepath"
 	"reflect"
@@ -9,18 +8,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 )
-
-func rootHelper(t *testing.T) *Root {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	root, err := NewRoot(bytes.NewBufferString("test"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return root
-}
 
 func TestRoot_toggle(t *testing.T) {
 	root := rootHelper(t)
@@ -430,10 +417,7 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.Doc.ColumnMode = false
 			root.Doc.WrapMode = tt.fields.wrapMode
 			root.Doc.ColumnWidth = tt.fields.columnWidth
@@ -535,12 +519,7 @@ func TestRoot_goLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.goLine(tt.args.input)
 			if root.Doc.topLN != tt.want {
 				t.Errorf("goLine() = %v, want %v", root.Doc.topLN, tt.want)
@@ -767,12 +746,7 @@ func TestRoot_searchGo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !root.Doc.BufEOF() {
-			}
+			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.Doc.WrapMode = true
 			root.prepareScreen()
 			ctx := context.Background()
@@ -880,10 +854,7 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root, err := Open(filepath.Join(testdata, "MOCK_DATA.csv"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := rootFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
 	type fields struct {
 		wrapMode     bool
 		x            int
@@ -953,12 +924,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root, err := Open(filepath.Join(testdata, "ps.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !root.Doc.BufEOF() {
-	}
+	root := rootFileReadHelper(t, filepath.Join(testdata, "ps.txt"))
 	root.prepareScreen()
 	type fields struct {
 		wrapMode     bool
@@ -1041,12 +1007,7 @@ func TestRoot_Mark(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root, err := Open(filepath.Join(testdata, "test3.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !root.Doc.BufEOF() {
-	}
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	t.Run("TestMark", func(t *testing.T) {
 		ctx := context.Background()
 		root.Doc.topLN = 1
@@ -1080,12 +1041,7 @@ func TestRoot_markNext(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root, err := Open(filepath.Join(testdata, "test3.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !root.Doc.BufEOF() {
-	}
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	root.prepareScreen()
 	root.Doc.marked = []int{1, 3, 5}
 	tests := []struct {
@@ -1126,12 +1082,7 @@ func TestRoot_markPrev(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root, err := Open(filepath.Join(testdata, "test3.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !root.Doc.BufEOF() {
-	}
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	root.prepareScreen()
 	root.Doc.marked = []int{1, 3, 5}
 	tests := []struct {

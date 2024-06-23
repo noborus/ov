@@ -11,31 +11,10 @@ import (
 
 func moveText(t *testing.T) *Document {
 	t.Helper()
-	m, err := OpenDocument(filepath.Join(testdata, "MOCK_DATA.csv"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for !m.BufEOF() {
-	}
+	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
 	m.width = 80
 	m.height = 23
 	return m
-}
-
-func sectionText(t *testing.T) *Root {
-	t.Helper()
-	root, err := Open(filepath.Join(testdata, "section.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	m := root.Doc
-	m.width = 80
-	root.scr.vHeight = 24
-	m.topLX = 0
-	root.scr.lines = make(map[int]LineC)
-	for !m.BufEOF() {
-	}
-	return root
 }
 
 func TestDocument_moveLine(t *testing.T) {
@@ -94,12 +73,7 @@ func TestDocument_moveLineFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			if got := m.moveLine(tt.args.lN); got != tt.want {
 				t.Errorf("Document.moveLine() = %v, want %v", got, tt.want)
 			}
@@ -126,12 +100,7 @@ func TestDocument_moveTopFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			m.moveTop()
 			if got := m.topLN; got != tt.want {
 				t.Errorf("Document.moveLine() = %v, want %v", got, tt.want)
@@ -202,12 +171,7 @@ func TestDocument_moveLineNth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			m.width = tt.fields.width
 			m.WrapMode = tt.fields.wrap
 			got, got1 := m.moveLineNth(tt.args.lN, tt.args.nTh)
@@ -259,15 +223,10 @@ func TestDocument_moveBottomFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			m.width = tt.fields.width
 			m.height = tt.fields.height
 			m.WrapMode = tt.fields.wrap
-			for !m.BufEOF() {
-			}
 			m.moveBottom()
 			if got := m.topLX; got != tt.want {
 				t.Errorf("Document.moveLine() LX = %v, want %v", got, tt.want)
@@ -380,12 +339,7 @@ func TestDocument_moveYUp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m, err := OpenDocument(tt.fields.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fields.fileName)
 			m.width = tt.fields.width
 			m.height = tt.fields.height
 			m.WrapMode = tt.fields.wrap
@@ -712,8 +666,7 @@ func TestDocument_nextSection(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionText(t)
-			m := root.Doc
+			m := docFileReadHelper(t, filepath.Join(testdata, "section.txt"))
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
 			got, err := m.nextSection(tt.args.ctx, tt.args.lN)
 			if (err != nil) != tt.wantErr {
@@ -773,8 +726,7 @@ func TestDocument_prevSection(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionText(t)
-			m := root.Doc
+			m := docFileReadHelper(t, filepath.Join(testdata, "section.txt"))
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
 			got, err := m.prevSection(tt.args.ctx, tt.args.lN)
 			if (err != nil) != tt.wantErr {

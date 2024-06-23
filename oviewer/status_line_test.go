@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"bytes"
 	"path/filepath"
 	"testing"
 
@@ -44,10 +43,7 @@ func TestRoot_leftStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootHelper(t)
 			root.Doc.Caption = tt.fields.caption
 			root.input.Event = tt.fields.eventer
 			got, _ := root.leftStatus()
@@ -86,10 +82,7 @@ func TestRoot_leftStatus2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.input.Event = tt.fields.eventer
 			got, _ := root.leftStatus()
 			gotStr, _ := ContentsToStr(got)
@@ -156,10 +149,7 @@ func TestRoot_statusDisplay(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := NewRoot(bytes.NewBufferString("test"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootHelper(t)
 			root.Doc.WatchMode = tt.fields.WatchMode
 			root.Doc.FollowSection = tt.fields.FollowSection
 			root.General.FollowAll = tt.fields.FollowAll

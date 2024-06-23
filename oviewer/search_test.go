@@ -730,12 +730,7 @@ func TestDocument_searchChunk(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := OpenDocument(tt.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for !m.BufEOF() {
-			}
+			m := docFileReadHelper(t, tt.fileName)
 			got, err := m.searchChunk(tt.args.chunkNum, tt.args.searcher)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.searchChunk() error = %v, wantErr %v", err, tt.wantErr)

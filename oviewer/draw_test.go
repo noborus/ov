@@ -93,15 +93,8 @@ func TestRoot_draw(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatal(err)
-			}
-
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.Header = tt.fields.header
-			// Wait for loading the file.
-			for !root.Doc.BufEOF() {
-			}
 			root.Doc.WrapMode = tt.fields.wrapMode
 			root.Doc.LineNumMode = tt.fields.lineNumMode
 			root.ViewSync(tt.args.ctx)
@@ -208,20 +201,13 @@ func TestRoot_draw2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatal(err)
-			}
-
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.Header = tt.fields.header
 			if tt.fields.sectionDelimiter != "" {
 				root.Doc.setSectionDelimiter(tt.fields.sectionDelimiter)
 				root.Doc.SectionHeaderNum = 1
 				root.Doc.SectionHeader = true
 				root.Doc.HideOtherSection = tt.fields.hideOtherSection
-			}
-			// Wait for loading the file.
-			for !root.Doc.BufEOF() {
 			}
 			root.Doc.topLN = tt.fields.topLN
 			root.Doc.WrapMode = tt.fields.wrapMode
@@ -345,20 +331,13 @@ func TestRoot_section2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(tt.fields.fileNames...)
-			if err != nil {
-				t.Fatal(err)
-			}
-
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.Header = tt.fields.header
 			if tt.fields.sectionDelimiter != "" {
 				root.Doc.setSectionDelimiter(tt.fields.sectionDelimiter)
 				root.Doc.SectionHeaderNum = tt.fields.sectionHeaderNum
 				root.Doc.SectionHeader = true
 				root.Doc.HideOtherSection = tt.fields.hideOtherSection
-			}
-			// Wait for loading the file.
-			for !root.Doc.BufEOF() {
 			}
 			root.Doc.topLN = tt.fields.topLN
 			root.Doc.WrapMode = tt.fields.wrapMode

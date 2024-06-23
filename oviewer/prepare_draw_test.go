@@ -22,17 +22,13 @@ func sectionHeader2(t *testing.T) *Root {
 }
 
 func sectionHeaderText(t *testing.T, fileName string) *Root {
-	root, err := Open(filepath.Join(testdata, fileName))
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Helper()
+	root := rootFileReadHelper(t, filepath.Join(testdata, fileName))
 	m := root.Doc
 	m.width = 80
 	root.scr.vHeight = 24
 	m.topLX = 0
 	root.scr.lines = make(map[int]LineC)
-	for !m.BufEOF() {
-	}
 	return root
 }
 
@@ -743,13 +739,8 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "column.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, filepath.Join(testdata, "column.txt"))
 			m := root.Doc
-			for !m.BufEOF() {
-			}
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 			m.columnCursor = tt.fields.columnCursor
@@ -817,16 +808,11 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root, err := Open(filepath.Join(testdata, "ps.txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
+			root := rootFileReadHelper(t, filepath.Join(testdata, "ps.txt"))
 			root.StyleColumnHighlight = OVStyle{Bold: true}
 			m := root.Doc
 			m.ColumnWidth = true
 			m.ColumnMode = true
-			for !m.BufEOF() {
-			}
 			m.setColumnWidths()
 			m.columnCursor = tt.fields.columnCursor
 			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
