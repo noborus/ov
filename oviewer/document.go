@@ -107,8 +107,8 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
-	// lastSearchNum is the last search number.
-	lastSearchNum int
+	// lastSearchLN is the last search line number.
+	lastSearchLN int
 	// showGotoF displays the specified line if it is true.
 	showGotoF bool
 
@@ -202,12 +202,12 @@ func NewDocument() (*Document, error) {
 			TabWidth:        8,
 			MarkStyleWidth:  1,
 		},
-		ctlCh:         make(chan controlSpecifier),
-		memoryLimit:   100,
-		seekable:      true,
-		reopenable:    true,
-		store:         NewStore(),
-		lastSearchNum: -1,
+		ctlCh:        make(chan controlSpecifier),
+		memoryLimit:  100,
+		seekable:     true,
+		reopenable:   true,
+		store:        NewStore(),
+		lastSearchLN: -1,
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err

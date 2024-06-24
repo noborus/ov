@@ -28,10 +28,6 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 	if err != nil {
 		sN = 0
 	}
-	if !m.jumpTargetSection && m.SectionHeader {
-		sN = (sN - m.firstLine() + m.SectionHeaderNum)
-		sN = max(sN, m.BufStartNum())
-	}
 	y := 0
 	if sN < m.firstLine() {
 		// topLN is negative if the section is less than header + skip.
@@ -61,6 +57,9 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 
 // searchGoX moves to the specified x position.
 func (m *Document) searchGoX(x int) {
+	if m.width == 0 {
+		return
+	}
 	m.topLX = 0
 	// If the search term is outside the height of the screen when in WrapMode.
 	if nTh := x / m.width; nTh > m.height {

@@ -425,8 +425,7 @@ func TestRoot_docSmall(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	type fields struct {
-	}
+	type fields struct{}
 	type args struct {
 		fileNames []string
 	}

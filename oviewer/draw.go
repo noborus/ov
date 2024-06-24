@@ -131,7 +131,7 @@ func (root *Root) drawSectionHeader() {
 		markStyleWidth := min(root.scr.vWidth, m.general.MarkStyleWidth)
 		root.markStyle(lN, y, markStyleWidth)
 		// Underline search lines when they overlap in section headers.
-		if lN == m.lastSearchNum {
+		if lN == m.lastSearchLN {
 			root.yStyle(y, OVStyle{Underline: true})
 		}
 

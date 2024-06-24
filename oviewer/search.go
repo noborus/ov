@@ -258,14 +258,14 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 }
 
 // searchMove searches forward/backward and moves to the nearest matching line.
-func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, searcher Searcher) {
+func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, searcher Searcher) bool {
 	if searcher == nil {
 		if root.Doc.jumpTargetSection {
 			root.Doc.jumpTargetHeight = 0
 		}
-		return
+		return false
 	}
-	word := root.searcher.String()
+	word := searcher.String()
 	root.setMessagef("search:%v (%v)Cancel", word, strings.Join(root.cancelKeys, ","))
 	eg, ctx := errgroup.WithContext(ctx)
 	ctx, cancel := context.WithCancel(ctx)
@@ -287,9 +287,10 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, sea
 
 	if err := eg.Wait(); err != nil {
 		root.setMessageLog(err.Error())
-		return
+		return false
 	}
 	root.setMessagef("search:%v", word)
+	return true
 }
 
 // searchLine is a forward/backward search wrap function.
@@ -593,20 +594,19 @@ func (root *Root) startSearchLN() int {
 		top = top - current.number
 	}
 
-	if root.Doc.lastSearchNum < 0 {
+	if root.Doc.lastSearchLN < 0 {
 		return top
 	}
-	if top > root.Doc.lastSearchNum || root.Doc.bottomLN < root.Doc.lastSearchNum {
+	if top > root.Doc.lastSearchLN || root.Doc.bottomLN < root.Doc.lastSearchLN {
 		return top
 	}
-	if root.Doc.lastSearchNum < current.number-root.Doc.SectionHeaderNum {
+	if root.Doc.lastSearchLN < current.number-root.Doc.SectionHeaderNum {
 		return top
 	}
-	if root.Doc.lastSearchNum > current.number+root.Doc.SectionHeaderNum {
+	if root.Doc.lastSearchLN > current.number+root.Doc.SectionHeaderNum {
 		return top
 	}
-	return root.Doc.lastSearchNum
-
+	return root.Doc.lastSearchLN
 }
 
 // firstSearch performs the first search immediately after the input.
