@@ -850,7 +850,7 @@ MemoryLimit: 1000
 
 ##  5. <a name='command-option'></a>Command option
 
-| short |                    long                    |                            purpose                             |
+| Short |                    Long                    |                            Purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
 | -C,   | --alternate-rows                           | alternately change the line color                              |
 |       | --caption string                           | custom caption                                                 |
@@ -876,6 +876,7 @@ MemoryLimit: 1000
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
 | -h,   | --help                                     | help for ov                                                    |
 |       | --help-key                                 | display key bind information                                   |
+|       | --hide-other-section                       | hide other section                                             |
 |       | --hscroll-width [int\|int%\|.int]          | width to scroll horizontally [int\|int%\|.int] (default "10%") |
 |       | --incsearch[=true\|false]                  | incremental search (default true)                              |
 | -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                       |
@@ -905,7 +906,7 @@ It can also be changed after startup.
 
 ##  6. <a name='key-bindings'></a>Key bindings
 
-|              key              |                       action                       |
+|              Key              |                       Action                       |
 |-------------------------------|----------------------------------------------------|
 | [Escape], [q]                 | * quit                                             |
 | [ctrl+c]                      | * cancel                                           |
@@ -962,6 +963,7 @@ It can also be changed after startup.
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
+| [alt+-]                       | * toggle hide other section                        |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
