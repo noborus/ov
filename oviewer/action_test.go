@@ -33,6 +33,10 @@ func TestRoot_toggle(t *testing.T) {
 	if v == root.Doc.ColumnWidth {
 		t.Errorf("toggleColumnWidth() = %v, want %v", root.Doc.ColumnWidth, !v)
 	}
+	root.toggleColumnWidth(ctx)
+	if v != root.Doc.ColumnWidth {
+		t.Errorf("toggleColumnWidth() = %v, want %v", root.Doc.ColumnWidth, v)
+	}
 	v = root.Doc.AlternateRows
 	root.toggleAlternateRows(ctx)
 	if v == root.Doc.AlternateRows {
@@ -210,8 +214,7 @@ func Test_position(t *testing.T) {
 
 func TestRoot_setJumpTarget(t *testing.T) {
 	root := rootHelper(t)
-	type fields struct {
-	}
+	type fields struct{}
 	type args struct {
 		input string
 	}
@@ -577,6 +580,7 @@ func TestRoot_setHeader(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_setSkipLines(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()
@@ -612,6 +616,7 @@ func TestRoot_setSkipLines(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_setSectioNum(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()
@@ -647,6 +652,7 @@ func TestRoot_setSectioNum(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_setSectionStart(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()
@@ -731,7 +737,20 @@ func TestRoot_searchGo(t *testing.T) {
 			want: 1,
 		},
 		{
-			name: "testSearchGo2",
+			name: "test section2-1",
+			fields: fields{
+				fileName:          filepath.Join(testdata, "section2.txt"),
+				searchWord:        "5",
+				sectionDelimiter:  "^-",
+				jumpTargetSection: false,
+			},
+			args: args{
+				lN: 1,
+			},
+			want: 1,
+		},
+		{
+			name: "test section2-2",
 			fields: fields{
 				fileName:          filepath.Join(testdata, "section2.txt"),
 				searchWord:        "5",
@@ -755,6 +774,7 @@ func TestRoot_searchGo(t *testing.T) {
 			root.setSearcher(tt.fields.searchWord, false)
 			root.Doc.jumpTargetSection = tt.fields.jumpTargetSection
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.Doc.SectionHeader = true
 			root.searchGo(ctx, tt.args.lN)
 			if root.Doc.topLN != tt.want {
 				t.Errorf("searchGo() = %v, want %v", root.Doc.topLN, tt.want)
@@ -1002,6 +1022,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_Mark(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -1036,6 +1057,7 @@ func TestRoot_Mark(t *testing.T) {
 		}
 	})
 }
+
 func TestRoot_markNext(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -1113,6 +1135,56 @@ func TestRoot_markPrev(t *testing.T) {
 			root.markPrev(context.Background())
 			if root.Doc.topLN != tt.wantLine {
 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
+			}
+		})
+	}
+}
+
+func TestRoot_setWriteBA(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+	}
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "testWriteBA",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				input: "1:2",
+			},
+			want: true,
+		},
+		{
+			name: "testWriteBA",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				input: "err",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			ctx := context.Background()
+			root.setWriteBA(ctx, tt.args.input)
+			if root.IsWriteOriginal != tt.want {
+				t.Errorf("setWriteBA() = %v, want %v", root.IsWriteOriginal, tt.want)
 			}
 		})
 	}

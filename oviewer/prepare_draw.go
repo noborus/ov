@@ -45,7 +45,6 @@ func (root *Root) prepareStartX() {
 		m = m.parent
 	}
 	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
-
 }
 
 // ViewSync redraws the whole thing.

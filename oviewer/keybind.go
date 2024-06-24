@@ -373,6 +373,7 @@ func (k KeyBind) String() string {
 func writeHeaderTh(w io.Writer) {
 	fmt.Fprintf(w, " %-30s %s\n", "Key", "Action")
 }
+
 func writeHeader(w io.Writer, header string) {
 	fmt.Fprintf(w, "\n\t%s\n", header)
 }

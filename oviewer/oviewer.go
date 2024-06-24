@@ -999,6 +999,9 @@ func (root *Root) WriteLog() {
 
 // lineNumber returns the line information from y on the screen.
 func (scr SCR) lineNumber(y int) LineNumber {
+	if len(scr.numbers) == 0 {
+		return LineNumber{}
+	}
 	if y >= 0 && y <= len(scr.numbers) {
 		return scr.numbers[y]
 	}

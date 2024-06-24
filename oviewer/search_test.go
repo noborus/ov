@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -857,6 +858,200 @@ func Test_search_String(t *testing.T) {
 			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
 			if got := substr.String(); got != tt.want {
 				t.Errorf("searchWord.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_startSearchLN(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName         string
+		topLN            int
+		lastSearchLN     int
+		sectionHeaderNum int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   int
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				fileName:         filepath.Join(testdata, "test3.txt"),
+				topLN:            10,
+				lastSearchLN:     -1,
+				sectionHeaderNum: 0,
+			},
+			want: 10,
+		},
+		{
+			name: "test lastSearchLN",
+			fields: fields{
+				fileName:         filepath.Join(testdata, "test3.txt"),
+				topLN:            10,
+				lastSearchLN:     11,
+				sectionHeaderNum: 3,
+			},
+			want: 11,
+		},
+		{
+			name: "test topLN",
+			fields: fields{
+				fileName:         filepath.Join(testdata, "test3.txt"),
+				topLN:            10,
+				lastSearchLN:     9,
+				sectionHeaderNum: 3,
+			},
+			want: 10,
+		},
+		{
+			name: "test topLN2",
+			fields: fields{
+				fileName:         filepath.Join(testdata, "test3.txt"),
+				topLN:            10,
+				lastSearchLN:     14,
+				sectionHeaderNum: 3,
+			},
+			want: 10,
+		},
+		{
+			name: "test topLN3",
+			fields: fields{
+				fileName:         filepath.Join(testdata, "test3.txt"),
+				topLN:            10,
+				lastSearchLN:     8,
+				sectionHeaderNum: 3,
+			},
+			want: 10,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			root.Doc.topLN = tt.fields.topLN
+			root.Doc.lastSearchLN = tt.fields.lastSearchLN
+			root.Doc.SectionHeaderNum = tt.fields.sectionHeaderNum
+			ctx := context.Background()
+			root.draw(ctx)
+			if got := root.startSearchLN(); got != tt.want {
+				t.Errorf("Root.startSearchLN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_searchMove(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+	}
+	type args struct {
+		forward  bool
+		lineNum  int
+		searcher Searcher
+		nonMatch bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want1  bool
+		want2  bool
+	}{
+		{
+			name: "test3 forward",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  true,
+				lineNum:  0,
+				searcher: NewSearcher("10", regexpCompile("10", false), false, false),
+				nonMatch: false,
+			},
+			want1: true,
+			want2: true,
+		},
+		{
+			name: "test3 backForward",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  false,
+				lineNum:  9000,
+				searcher: NewSearcher("1000", regexpCompile("1000", false), false, false),
+				nonMatch: false,
+			},
+			want1: true,
+			want2: true,
+		},
+		{
+			name: "test3 not found",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  true,
+				lineNum:  0,
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+				nonMatch: false,
+			},
+			want1: false,
+			want2: false,
+		},
+		{
+			name: "test3 nonMatch",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  true,
+				lineNum:  0,
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+				nonMatch: true,
+			},
+			want1: true,
+			want2: true,
+		},
+		{
+			name: "test3 backSearch nonMatch",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  false,
+				lineNum:  1000,
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+				nonMatch: true,
+			},
+			want1: true,
+			want2: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			ctx := context.Background()
+			root.everyUpdate(ctx)
+			root.draw(ctx)
+			root.Doc.nonMatch = tt.args.nonMatch
+			root.searcher = tt.args.searcher
+			if got := root.searchMove(ctx, tt.args.forward, tt.args.lineNum, tt.args.searcher); got != tt.want1 {
+				t.Errorf("Root.searchMove() = %v, want %v", got, tt.want1)
+			}
+			if eventF := root.Screen.HasPendingEvent(); eventF != tt.want2 {
+				t.Errorf("Root.searchMove() HasPendingEvent() = %v, want %v", eventF, tt.want2)
 			}
 		})
 	}
