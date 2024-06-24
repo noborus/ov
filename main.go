@@ -248,7 +248,7 @@ func flagUsage(f *pflag.FlagSet) string {
 
 	lines := make([]string, 0)
 
-	lines = append(lines, "short   long\x00purpose")
+	lines = append(lines, "Short   Long\x00Purpose")
 
 	maxlen := 0
 	f.VisitAll(func(flag *pflag.Flag) {
