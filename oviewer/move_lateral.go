@@ -179,7 +179,7 @@ func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		maxColumn = max(maxColumn, len(widths)-1)
-		if len(widths) <= 0 {
+		if len(widths) == 0 {
 			continue
 		}
 

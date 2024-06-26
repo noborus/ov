@@ -475,17 +475,9 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	}
 
 	c := cbind.NewConfiguration()
-
-	for _, k := range root.cancelKeys {
-		mod, key, ch, err := cbind.Decode(k)
-		if err != nil {
-			return fmt.Errorf("%w [%s] for cancel: %w", ErrFailedKeyBind, k, err)
-		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, cancelApp)
-		} else {
-			c.SetKey(mod, key, cancelApp)
-		}
+	c, err := cancelKeys(c, root.cancelKeys, cancelApp)
+	if err != nil {
+		return err
 	}
 	// Allow only some events while searching.
 	for {
@@ -501,6 +493,22 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 			// ignore other events.
 		}
 	}
+}
+
+// cancelKeys sets the cancel key.
+func cancelKeys(c *cbind.Configuration, cancelKeys []string, cancelApp func(_ *tcell.EventKey) *tcell.EventKey) (*cbind.Configuration, error) {
+	for _, k := range cancelKeys {
+		mod, key, ch, err := cbind.Decode(k)
+		if err != nil {
+			return c, fmt.Errorf("%w [%s] for cancel: %w", ErrFailedKeyBind, k, err)
+		}
+		if key == tcell.KeyRune {
+			c.SetRune(mod, ch, cancelApp)
+		} else {
+			c.SetKey(mod, key, cancelApp)
+		}
+	}
+	return c, nil
 }
 
 // eventSearchQuit represents a search quit event.
@@ -614,10 +622,8 @@ func (root *Root) firstSearch(ctx context.Context, t searchType) {
 	switch t {
 	case forward:
 		root.forwardSearch(ctx, root.input.value, 0)
-		return
 	case backward:
 		root.backSearch(ctx, root.input.value, 0)
-		return
 	case filter:
 		root.filter(ctx)
 	}

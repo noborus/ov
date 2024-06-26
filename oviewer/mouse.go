@@ -165,16 +165,16 @@ func (root *Root) copyToClipboard(_ context.Context) {
 			x1, x2 = x2, x1
 		}
 	}
-	buff, err := root.rangeToString(x1, y1, x2, y2)
+	str, err := root.rangeToString(x1, y1, x2, y2)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("copyToClipboard: %s", err.Error()))
 		return
 	}
 
-	if len(buff) == 0 {
+	if len(str) == 0 {
 		return
 	}
-	if err := clipboard.WriteAll(buff); err != nil {
+	if err := clipboard.WriteAll(str); err != nil {
 		log.Printf("copyToClipboard: %v", err)
 	}
 	root.setMessage("Copy")
@@ -198,8 +198,7 @@ func (root *Root) sendPaste() {
 // pasteFromClipboard writes a string from the clipboard.
 func (root *Root) pasteFromClipboard(context.Context) {
 	input := root.input
-	switch input.Event.Mode() {
-	case Normal:
+	if input.Event.Mode() == Normal {
 		return
 	}
 

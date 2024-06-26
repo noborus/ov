@@ -333,7 +333,10 @@ func (root *Root) releaseEventBuffer() {
 
 // postEvent is a wrapper for tcell.Event.
 func (root *Root) postEvent(ev tcell.Event) {
-	if !root.checkScreen() {
+	if root == nil {
+		return
+	}
+	if root.Screen == nil {
 		return
 	}
 
@@ -341,14 +344,4 @@ func (root *Root) postEvent(ev tcell.Event) {
 		log.Printf("postEvent %s", err)
 		root.releaseEventBuffer()
 	}
-}
-
-// checkScreen returns true if the screen is ready.
-// checkScreen is used in case it is called directly from the outside.
-// True if called from the event loop.
-func (root *Root) checkScreen() bool {
-	if root == nil {
-		return false
-	}
-	return root.Screen != nil
 }

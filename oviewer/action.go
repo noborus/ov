@@ -100,6 +100,7 @@ func (root *Root) toggleFollowSection(context.Context) {
 	root.Doc.FollowSection = !root.Doc.FollowSection
 }
 
+// toggleHideOtherSection toggles hide other section mode.
 func (root *Root) toggleHideOtherSection(context.Context) {
 	root.Doc.HideOtherSection = !root.Doc.HideOtherSection
 	root.setMessagef("Set HideOtherSection %t", root.Doc.HideOtherSection)
@@ -337,6 +338,7 @@ func (root *Root) setSkipLines(input string) {
 	root.setMessagef("Set skip lines %d", num)
 }
 
+// setSectionNum sets the number of section headers.
 func (root *Root) setSectionNum(input string) {
 	num, err := specifyOnScreen(input, root.scr.vHeight-1)
 	if err != nil {
