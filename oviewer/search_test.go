@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"code.rocketnine.space/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -1052,6 +1053,88 @@ func TestRoot_searchMove(t *testing.T) {
 			}
 			if eventF := root.Screen.HasPendingEvent(); eventF != tt.want2 {
 				t.Errorf("Root.searchMove() HasPendingEvent() = %v, want %v", eventF, tt.want2)
+			}
+		})
+	}
+}
+
+func TestRoot_incSearch(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+		topLN    int
+		word     string
+	}
+	type args struct {
+		forward bool
+		lineNum int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name: "test3 forward",
+
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				word:     "10",
+			},
+			args: args{
+				forward: true,
+				lineNum: 0,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.Doc.topLN = tt.fields.topLN
+			root.input.value = tt.fields.word
+			root.prepareScreen()
+			ctx := context.Background()
+			root.incSearch(ctx, tt.args.forward, tt.args.lineNum)
+			root.returnStartPosition()
+			if got := root.Doc.topLN; got != tt.fields.topLN {
+				t.Errorf("Root.returnStartPosition() = %v, want %v", got, tt.fields.topLN)
+			}
+		})
+	}
+}
+
+func Test_cancelKeys(t *testing.T) {
+	type args struct {
+		c          *cbind.Configuration
+		cancelKeys []string
+		cancelApp  func(_ *tcell.EventKey) *tcell.EventKey
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *cbind.Configuration
+		wantErr bool
+	}{
+		{
+			name: "test1",
+
+			args: args{
+				c:          cbind.NewConfiguration(),
+				cancelKeys: []string{"ctrl+c", "c"},
+				cancelApp:  nil,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := cancelKeys(tt.args.c, tt.args.cancelKeys, tt.args.cancelApp)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("cancelKeys() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

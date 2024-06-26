@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"sort"
+	"reflect"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -34,14 +34,8 @@ func sectionHeaderText(t *testing.T, fileName string) *Root {
 
 func sectionStr(t *testing.T, root *Root) string {
 	t.Helper()
-
 	lines := root.scr.lines
-	var lNs []int
-	for k := range lines {
-		lNs = append(lNs, k)
-	}
-	sort.Ints(lNs)
-
+	lNs := lineNumbers(lines)
 	var buf bytes.Buffer
 	buf.WriteString("|")
 	for _, lN := range lNs {
@@ -829,5 +823,22 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnHighlight)
 			}
 		})
+	}
+}
+
+func TestRoot_sectionNum(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := sectionHeader1(t)
+	root.prepareScreen()
+	root.prepareDraw(context.Background())
+	if got := root.sectionNum(root.scr.lines); !reflect.DeepEqual(got, root.scr.lines) {
+		t.Errorf("Root.sectionNum() = %v, want %v", got, root.scr.lines)
+	}
+	root.Doc.SectionDelimiter = "errordelimiter"
+	if got := root.sectionNum(root.scr.lines); !reflect.DeepEqual(got, root.scr.lines) {
+		t.Errorf("Root.sectionNum() = %v, want %v", got, root.scr.lines)
 	}
 }
