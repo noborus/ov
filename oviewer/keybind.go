@@ -331,7 +331,6 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
-	k.writeKeyBind(&b, actionHideOther, "toggle hide other section")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
@@ -349,7 +348,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionPrevSection, "previous section")
 	k.writeKeyBind(&b, actionLastSection, "last section")
 	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
-	k.writeKeyBind(&b, actionSectionNum, "section header number")
+	k.writeKeyBind(&b, actionSectionNum, "number of section header lines")
+	k.writeKeyBind(&b, actionHideOther, "toggle hide other section")
 
 	writeHeader(&b, "Close and reload")
 	k.writeKeyBind(&b, actionCloseFile, "close file")
