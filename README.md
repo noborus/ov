@@ -42,7 +42,8 @@ ov is a terminal pager.
   * 3.7. [Wrap/NoWrap](#wrap/nowrap)
   * 3.8. [Alternate-Rows](#alternate-rows)
   * 3.9. [Section](#section)
-    * 3.9.1. [Section header](#section-header)
+    * 3.9.1. [section example](#section-example)
+    * 3.9.2. [hide other sections](#hide-other-sections)
   * 3.10. [Multiple files](#multiple-files)
   * 3.11. [Follow mode](#follow-mode)
   * 3.12. [Follow name](#follow-name)
@@ -414,38 +415,46 @@ ov --alternate-rows test.csv
 
 ###  3.9. <a name='section'></a>Section
 
-You specify `--section-delimiter`(default key `alt+d`), you can move up and down in section units.
+You can specify a section delimiter using `--section-delimiter` (default key `alt+d`).
+
+This allows you to move between sections (default keys `space` and `^`).
+
+The specified line will also be treated as a **section header** and will remain fixed at the specified position until the next section appears at the specified position.
+
 The start of the section can be adjusted with `--section-start`(default key `ctrl+F3`, `alt+s`).
 
 ![section.png](docs/section.png)
 
-The section-delimiter is written in a regular expression (for example: "^#").
+The `--section-delimiter` is written in a regular expression (for example: "^#").
 (Line breaks are not included in matching lines).
 
 For example, if you specify "^diff" for a diff that contains multiple files,
 you can move the diff for each file.
 
-####  3.9.1. <a name='section-header'></a>Section header
-
-If you specify `--section-header`, the section delimiter line is displayed as a header.
-
-```console
-ov --section-delimiter "^#" --section-header README.md
-```
-
-It is also useful as a pager for `git`.
-
 The number of lines in section-header can be changed.
-
 You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
+
+####  3.9.1. <a name='section-example'></a>section example
+
+This is an example of using the `git` pager.
 
 ```gitconfig
 [pager]
-	diff = "ov -F --section-delimiter '^diff' --section-header"
-	log = "ov -F --section-delimiter '^commit' --section-header --section-header-num 3"
+	diff = "ov -F --section-delimiter '^diff'"
+	log = "ov -F --section-delimiter '^commit' --section-header-num 3"
 ```
 
 [Related styling](#style-customization): `StyleSectionLine`.
+
+####  3.9.2. <a name='hide-other-sections'></a>hide other sections
+
+If you specify `--hide-other-section`(default key `alt+-`), only the current section is displayed.
+
+```console
+ov --section-delimiter "^#" --hide-other-section README.md
+```
+
+This is just hidden, so it will be displayed when you move to the next section.
 
 ###  3.10. <a name='multiple-files'></a>Multiple files
 
