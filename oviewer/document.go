@@ -184,11 +184,17 @@ type chunk struct {
 // LineC is one line of information.
 // Contains content, string, location information.
 type LineC struct {
-	lc        contents
-	str       string
-	pos       widthPos
-	valid     bool
-	section   int
+	// line contents.
+	lc contents
+	// string representation of the line.
+	str string
+	// for converting the width of str and lc.
+	pos widthPos
+	// valid is true if the line is valid.
+	valid bool
+	// The number of the section in the screen.
+	section int
+	// Line number within a section.
 	sectionNm int
 }
 
