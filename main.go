@@ -409,7 +409,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("section-header", "", false, "enable section-delimiter line as Header")
 	_ = viper.BindPFlag("general.SectionHeader", rootCmd.PersistentFlags().Lookup("section-header"))
 
-	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of header lines")
+	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of section header lines")
 	_ = viper.BindPFlag("general.SectionHeaderNum", rootCmd.PersistentFlags().Lookup("section-header-num"))
 
 	rootCmd.PersistentFlags().BoolP("follow-mode", "f", false, "monitor file and display new content as it is written")
