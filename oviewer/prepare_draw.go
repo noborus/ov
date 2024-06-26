@@ -206,24 +206,25 @@ func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
 		return lines
 	}
-	var lNs []int
-	for k := range lines {
-		lNs = append(lNs, k)
-	}
-	sort.Ints(lNs)
+	lNs := lineNumbers(lines)
 	num := 1
 	section := 0
 	for _, lN := range lNs {
-		if lN < root.scr.sectionHeaderLN {
+		switch {
+		case lN < root.scr.sectionHeaderLN:
+			// Before the first section header.
 			section = 0
-		} else if lN < root.scr.sectionHeaderEnd {
+		case lN < root.scr.sectionHeaderEnd:
+			// The first section header.
 			section = 1
 			if lN == root.scr.sectionHeaderLN {
 				num = 1
 			}
-		} else {
+		default:
+			// After the first section header.
 			sp, ok := lines[lN-m.SectionStartPosition]
 			if !ok {
+				// section starts off screen.
 				sp = m.getLineC(lN-m.SectionStartPosition, m.TabWidth)
 			}
 			if m.SectionDelimiterReg.MatchString(sp.str) {
@@ -240,6 +241,16 @@ func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 	}
 
 	return lines
+}
+
+// lineNumbers returns the line numbers.
+func lineNumbers(s map[int]LineC) []int {
+	result := make([]int, 0, len(s))
+	for k := range s {
+		result = append(result, k)
+	}
+	sort.Ints(result)
+	return result
 }
 
 // styleContent applies the style of the content.

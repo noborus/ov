@@ -9,11 +9,11 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func getContents(t *testing.T, root *Root, Y int, width int) string {
+func getContents(t *testing.T, root *Root, y int, width int) string {
 	t.Helper()
 	var buf strings.Builder
 	for x := 0; x < width; x++ {
-		r, _, _, _ := root.Screen.GetContent(x, Y)
+		r, _, _, _ := root.Screen.GetContent(x, y)
 		buf.WriteRune(r)
 	}
 	return buf.String()
