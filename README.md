@@ -205,7 +205,7 @@ First of all, clone this repo with either `git clone` or `gh repo clone`, then `
 
 ```console
 git clone https://github.com/noborus/ov.git
-cd ov
+cd ./ov/
 ```
 
 Next, to install to $GOPATH/bin, run the make install command.
