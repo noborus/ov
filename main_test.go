@@ -11,27 +11,40 @@ func Test_initConfig(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
+		xdg     string
 		cfgFile string
 		wantErr bool
 	}{
 		{
 			name:    "test-ov.yaml",
+			xdg:     "",
 			cfgFile: "ov.yaml",
 			wantErr: false,
 		},
 		{
 			name:    "test-ov-less.yaml",
+			xdg:     "",
 			cfgFile: "ov-less.yaml",
 			wantErr: false,
 		},
 		{
 			name:    "no-file.yaml",
+			xdg:     "",
 			cfgFile: "no-file.yaml",
 			wantErr: true,
+		},
+		{
+			name:    "not found",
+			xdg:     "dummy",
+			cfgFile: "",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.xdg != "" {
+				os.Setenv("XDG_CONFIG_HOME", tt.xdg)
+			}
 			cfgFile = tt.cfgFile
 			// Backup original stderr
 			origStderr := os.Stderr
