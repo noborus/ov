@@ -199,6 +199,12 @@ It will be installed in $GOPATH/bin by the following command.
 go install github.com/noborus/ov@latest
 ```
 
+Or to install the latest commit from master:
+
+```console
+go install github.com/noborus/ov@master
+```
+
 ###  2.11. <a name='build-from-source'></a>Build from source
 
 First of all, clone this repo with either `git clone` or `gh repo clone`, then `cd` to the directory, for example:
