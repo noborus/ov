@@ -25,7 +25,7 @@ ov is a terminal pager.
   * 2.8. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
   * 2.9. [Binary](#binary)
   * 2.10. [go install](#go-install)
-  * 2.11. [go get(details or developer version)](#go-get(details-or-developer-version))
+  * 2.11. [Build from source](#build-from-source)
   * 2.12. [Completion](#completion)
     * 2.12.1. [bash](#bash)
     * 2.12.2. [zsh](#zsh)
@@ -199,13 +199,19 @@ It will be installed in $GOPATH/bin by the following command.
 go install github.com/noborus/ov@latest
 ```
 
-###  2.11. <a name='go-get(details-or-developer-version)'></a>go get(details or developer version)
-
-First of all, download only with the following command without installing it.
+Or to install the latest commit from master:
 
 ```console
-go get -d github.com/noborus/ov
-cd $GOPATH/src/github.com/noborus/ov
+go install github.com/noborus/ov@master
+```
+
+###  2.11. <a name='build-from-source'></a>Build from source
+
+First of all, clone this repo with either `git clone` or `gh repo clone`, then `cd` to the directory, for example:
+
+```console
+git clone https://github.com/noborus/ov.git
+cd ov
 ```
 
 Next, to install to $GOPATH/bin, run the make install command.
