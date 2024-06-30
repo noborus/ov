@@ -25,19 +25,11 @@ func (root *Root) Filter(str string, nonMatch bool) {
 }
 
 // filter filters the document by the input value.
-func (root *Root) filter(ctx context.Context) {
-	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
+func (root *Root) filter(ctx context.Context, str string) {
+	searcher := root.setSearcher(str, root.Config.CaseSensitive)
 	if searcher == nil {
-		if root.Doc.jumpTargetSection {
-			root.Doc.jumpTargetHeight = 0
-		}
 		return
 	}
-	word := root.searcher.String()
-	if root.Doc.nonMatch {
-		word = fmt.Sprintf("!%s", word)
-	}
-	root.setMessagef("filter:%v", word)
 	root.filterDocument(ctx, searcher)
 }
 
@@ -50,8 +42,12 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 		return
 	}
 	render.documentType = DocFilter
-	render.FileName = fmt.Sprintf("filter:%s:%v", m.FileName, searcher.String())
-	render.Caption = fmt.Sprintf("%s:%v", m.FileName, searcher.String())
+	match := searcher.String()
+	if m.nonMatch {
+		match = "!" + match
+	}
+	render.Caption = fmt.Sprintf("filter:%s", match)
+	msg := fmt.Sprintf("search:%s", match)
 	root.addDocument(ctx, render)
 	render.general = mergeGeneral(m.general, render.general)
 
@@ -76,7 +72,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 		}
 	}
 	go m.filterWriter(ctx, searcher, m.firstLine(), filterDoc)
-	root.setMessagef("filter:%v", searcher.String())
+	root.setMessagef(msg)
 }
 
 // filterWriter searches and writes to filterDoc.

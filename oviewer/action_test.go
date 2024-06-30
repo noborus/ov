@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -162,8 +163,8 @@ func Test_rangeBA(t *testing.T) {
 func Test_position(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		height int
 		str    string
+		height int
 	}
 	tests := []struct {
 		name string
@@ -173,32 +174,32 @@ func Test_position(t *testing.T) {
 		{
 			name: "test1",
 			args: args{
-				height: 30,
 				str:    "1",
+				height: 30,
 			},
 			want: 1,
 		},
 		{
 			name: "test.5",
 			args: args{
-				height: 30,
 				str:    ".5",
+				height: 30,
 			},
 			want: 15,
 		},
 		{
 			name: "test20%",
 			args: args{
-				height: 30,
 				str:    "20%",
+				height: 30,
 			},
 			want: 6,
 		},
 		{
 			name: "test.3",
 			args: args{
-				height: 45,
 				str:    "30%",
+				height: 45,
 			},
 			want: 13.5,
 		},
@@ -207,7 +208,7 @@ func Test_position(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := calculatePosition(tt.args.height, tt.args.str); got != tt.want {
+			if got := calculatePosition(tt.args.str, tt.args.height); got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
 			}
 		})
@@ -228,6 +229,22 @@ func TestRoot_setJumpTarget(t *testing.T) {
 		wantBool bool
 		want     int
 	}{
+		{
+			name: "testJumpTargetBlank",
+			args: args{
+				input: "",
+			},
+			wantBool: false,
+			want:     0,
+		},
+		{
+			name: "testJumpTargetBlank2",
+			args: args{
+				input: "",
+			},
+			wantBool: false,
+			want:     0,
+		},
 		{
 			name: "testJumpTargetOutOfRange",
 			args: args{
@@ -596,6 +613,13 @@ func TestRoot_setSkipLines(t *testing.T) {
 		want int
 	}{
 		{
+			name: "testSetSkipErr",
+			args: args{
+				input: "err",
+			},
+			want: 0,
+		},
+		{
 			name: "testSetSkipLines1",
 			args: args{
 				input: "1",
@@ -631,6 +655,13 @@ func TestRoot_setSectioNum(t *testing.T) {
 		args args
 		want int
 	}{
+		{
+			name: "testSetSectionNumNil",
+			args: args{
+				input: "",
+			},
+			want: 0,
+		},
 		{
 			name: "testSetSectionNum1",
 			args: args{
@@ -1049,6 +1080,7 @@ func TestRoot_Mark(t *testing.T) {
 		if !reflect.DeepEqual(root.Doc.marked, []int{10}) {
 			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int{10})
 		}
+		root.removeMark(ctx)
 		root.Doc.topLN = 2
 		root.addMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, []int{10, 2}) {
@@ -1068,7 +1100,6 @@ func TestRoot_markNext(t *testing.T) {
 	}()
 	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	root.prepareScreen()
-	root.Doc.marked = []int{1, 3, 5}
 	tests := []struct {
 		name        string
 		markedPoint int
@@ -1093,6 +1124,8 @@ func TestRoot_markNext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			root.markNext(context.Background()) // no marked
+			root.Doc.marked = []int{1, 3, 5}
 			root.Doc.markedPoint = tt.markedPoint
 			root.markNext(context.Background())
 			if root.Doc.topLN != tt.wantLine {
@@ -1109,7 +1142,6 @@ func TestRoot_markPrev(t *testing.T) {
 	}()
 	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	root.prepareScreen()
-	root.Doc.marked = []int{1, 3, 5}
 	tests := []struct {
 		name        string
 		markedPoint int
@@ -1134,6 +1166,8 @@ func TestRoot_markPrev(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			root.markPrev(context.Background()) // no marked
+			root.Doc.marked = []int{1, 3, 5}
 			root.Doc.markedPoint = tt.markedPoint
 			root.markPrev(context.Background())
 			if root.Doc.topLN != tt.wantLine {
@@ -1190,5 +1224,81 @@ func TestRoot_setWriteBA(t *testing.T) {
 				t.Errorf("setWriteBA() = %v, want %v", root.IsWriteOriginal, tt.want)
 			}
 		})
+	}
+}
+
+func TestRoot_modeConfig(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type args struct {
+		modeName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    general
+		wantErr bool
+	}{
+		{
+			name: "testModeConfig error",
+			args: args{
+				modeName: "test",
+			},
+			want:    general{},
+			wantErr: true,
+		},
+		{
+			name: "testModeConfig general",
+			args: args{
+				modeName: "general",
+			},
+			want:    general{},
+			wantErr: false,
+		},
+		{
+			name: "testModeConfig a",
+			args: args{
+				modeName: "a",
+			},
+			want:    general{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Config = Config{
+				General: general{},
+				Mode: map[string]general{
+					"a": {},
+					"b": {},
+				},
+			}
+			got, err := root.modeConfig(tt.args.modeName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Root.modeConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Root.modeConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_suspend(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := rootHelper(t)
+	shell := os.Getenv("SHELL")
+	if got := root.shellSuspendResume(shell); got != nil {
+		t.Errorf("shellSuspendResume() = %v, want %v", got, nil)
+	}
+	if got := root.shellSuspendResume(""); got != nil {
+		t.Errorf("shellSuspendResume() = %v, want %v", got, nil)
 	}
 }
