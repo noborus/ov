@@ -53,45 +53,60 @@ func TestRoot_filter(t *testing.T) {
 	}()
 	type fields struct {
 		fileNames []string
+		nonMatch  bool
 	}
 	type args struct {
-		str      string
-		nonMatch bool
+		str string
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   string
+		want   int
 	}{
 		{
 			name: "filter-nil",
 			fields: fields{
 				fileNames: []string{filepath.Join(testdata, "test.txt")},
+				nonMatch:  false,
 			},
 			args: args{
-				str:      "test",
-				nonMatch: false,
+				str: "",
 			},
-			want: "test",
+			want: 1,
 		},
 		{
 			name: "filter1",
 			fields: fields{
 				fileNames: []string{filepath.Join(testdata, "test.txt")},
+				nonMatch:  false,
 			},
 			args: args{
-				str:      "test",
-				nonMatch: false,
+				str: "test",
 			},
-			want: "test",
+			want: 2,
+		},
+		{
+			name: "filter non-match",
+			fields: fields{
+				fileNames: []string{filepath.Join(testdata, "test.txt")},
+				nonMatch:  true,
+			},
+			args: args{
+				str: "non",
+			},
+			want: 2,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
-			root.input.value = tt.args.str
-			root.filter(context.Background())
+			root.Doc.jumpTargetSection = true
+			root.Doc.nonMatch = tt.fields.nonMatch
+			root.filter(context.Background(), tt.args.str)
+			if root.DocumentLen() != tt.want {
+				t.Errorf("filter() = %v, want %v", root.DocumentLen(), tt.want)
+			}
 		})
 	}
 }
@@ -150,6 +165,26 @@ func TestRoot_filterDocument(t *testing.T) {
 				t.Errorf("filterDocument() = %v, want %v", string(line.str), tt.want)
 			}
 		})
+	}
+}
+
+func TestRoot_filterCancel(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
+	searcher := NewSearcher("test", nil, false, false)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	cancel()
+	root.filterDocument(ctx, searcher)
+	if root.DocumentLen() != 2 {
+		t.Errorf("filterDocument() = %v, want %v", root.DocumentLen(), 2)
+	}
+	filterDoc := root.getDocument(1)
+	if filterDoc.BufEndNum() != 0 {
+		t.Errorf("filterDocument() = %v, want %v", filterDoc.BufEndNum(), 0)
 	}
 }
 
@@ -229,6 +264,16 @@ func TestRoot_closeAllFilter(t *testing.T) {
 				searcher: NewSearcher("test", nil, false, false),
 			},
 			want: 1,
+		},
+		{
+			name: "test.txt-2",
+			fields: fields{
+				fileNames: []string{filepath.Join(testdata, "test.txt"), filepath.Join(testdata, "test2.txt")},
+			},
+			args: args{
+				searcher: NewSearcher("test", nil, false, false),
+			},
+			want: 2,
 		},
 	}
 	for _, tt := range tests {

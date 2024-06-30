@@ -331,6 +331,25 @@ func open(fileName string) (*os.File, error) {
 	return os.Open(fileName)
 }
 
+// closeFile requests the file to be closed.
+func (m *Document) closeFile() error {
+	if m.documentType == DocHelp || m.documentType == DocLog {
+		return ErrCannotClose
+	}
+	if m.checkClose() {
+		return ErrAlreadyClose
+	}
+	if m.seekable {
+		return ErrCannotClose
+	}
+
+	if !m.requestClose() {
+		return ErrRequestClose
+	}
+
+	return nil
+}
+
 // reload will read again.
 // Regular files are reopened and reread increase.
 // The pipe will reset what it has read.

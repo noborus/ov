@@ -969,6 +969,20 @@ func TestRoot_searchMove(t *testing.T) {
 		want2  bool
 	}{
 		{
+			name: "searcher nil",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				forward:  true,
+				lineNum:  0,
+				searcher: nil,
+				nonMatch: false,
+			},
+			want1: false,
+			want2: false,
+		},
+		{
 			name: "test3 forward",
 			fields: fields{
 				fileName: filepath.Join(testdata, "test3.txt"),

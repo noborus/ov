@@ -260,9 +260,6 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 // searchMove searches forward/backward and moves to the nearest matching line.
 func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, searcher Searcher) bool {
 	if searcher == nil {
-		if root.Doc.jumpTargetSection {
-			root.Doc.jumpTargetHeight = 0
-		}
 		return false
 	}
 	word := searcher.String()
@@ -597,7 +594,11 @@ func (root *Root) returnStartPosition() int {
 // startSearchLN returns the start position of the search.
 func (root *Root) startSearchLN() int {
 	top := root.Doc.topLN + root.Doc.firstLine()
-	current := root.scr.lineNumber(root.Doc.headerHeight + root.Doc.sectionHeaderHeight + root.Doc.jumpTargetHeight)
+	height := root.Doc.sectionHeaderHeight
+	if root.Doc.jumpTargetHeight > 0 {
+		height = root.Doc.jumpTargetHeight
+	}
+	current := root.scr.lineNumber(root.Doc.headerHeight + height)
 	if root.Doc.topLN == 0 && root.Doc.jumpTargetHeight > 0 {
 		top = top - current.number
 	}
@@ -625,7 +626,7 @@ func (root *Root) firstSearch(ctx context.Context, t searchType) {
 	case backward:
 		root.backSearch(ctx, root.input.value, 0)
 	case filter:
-		root.filter(ctx)
+		root.filter(ctx, root.input.value)
 	}
 }
 
