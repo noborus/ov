@@ -119,21 +119,12 @@ func (root *Root) toggleMouse(context.Context) {
 	}
 }
 
-// closeFile close the file.
+// closeFile requests the file to be closed.
 func (root *Root) closeFile(context.Context) {
-	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
+	if err := root.Doc.closeFile(); err != nil {
+		root.setMessageLog(err.Error())
 		return
 	}
-
-	if root.Doc.checkClose() {
-		root.setMessage("already closed")
-		return
-	}
-	if root.Doc.seekable {
-		root.setMessage("cannot close")
-		return
-	}
-	root.Doc.requestClose()
 	root.setMessageLogf("close file %s", root.Doc.FileName)
 }
 
@@ -215,7 +206,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := calculatePosition(root.Doc.BufEndNum(), input)
+	num := calculatePosition(input, root.Doc.BufEndNum())
 	str := strconv.FormatFloat(num, 'f', 1, 64)
 	if strings.HasSuffix(str, ".0") {
 		// Line number only.
@@ -368,12 +359,22 @@ func specifyOnScreen(input string, max int) (int, error) {
 // It will return when you exit the shell.
 func (root *Root) suspend(context.Context) {
 	log.Println("Suspend")
-	if err := root.Screen.Suspend(); err != nil {
-		log.Println(err)
-		return
-	}
-	fmt.Println("suspended ov")
 	shell := os.Getenv("SHELL")
+	if err := root.shellSuspendResume(shell); err != nil {
+		root.setMessageLog(err.Error())
+	}
+	log.Println("Resume")
+}
+
+func (root *Root) shellSuspendResume(shell string) error {
+	if err := root.Screen.Suspend(); err != nil {
+		return err
+	}
+	defer func() error {
+		return root.Screen.Resume()
+	}()
+
+	fmt.Println("suspended ov")
 	if shell == "" {
 		if runtime.GOOS == "windows" {
 			shell = "CMD.EXE"
@@ -386,35 +387,43 @@ func (root *Root) suspend(context.Context) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to run shell: %s\n", err)
+		return err
 	}
 	fmt.Println("resume ov")
-	if err := root.Screen.Resume(); err != nil {
-		root.setMessageLog(err.Error())
-	}
-	log.Println("Resume")
+	return nil
 }
 
 // setViewMode switches to the preset display mode.
 // Set header lines and columnMode together.
 func (root *Root) setViewMode(ctx context.Context, modeName string) {
-	c, ok := root.Config.Mode[modeName]
-	if !ok {
-		if modeName != "general" {
-			root.setMessagef("%s mode not found", modeName)
-			return
-		}
-		c = root.General
+	c, err := root.modeConfig(modeName)
+	if err != nil {
+		root.setMessage(err.Error())
+		return
 	}
 
 	root.Doc.general = mergeGeneral(root.Doc.general, c)
-	if root.Doc.general.Caption != "" {
-		root.Doc.Caption = root.Doc.general.Caption
-	}
 	root.Doc.regexpCompile()
 	root.Doc.ClearCache()
 	root.ViewSync(ctx)
+	// Set caption.
+	if root.Doc.general.Caption != "" {
+		root.Doc.Caption = root.Doc.general.Caption
+	}
 	root.setMessagef("Set mode %s", modeName)
+}
+
+// modeConfig returns the configuration of the specified mode.
+func (root *Root) modeConfig(modeName string) (general, error) {
+	if modeName == "general" {
+		return root.General, nil
+	}
+
+	c, ok := root.Config.Mode[modeName]
+	if !ok {
+		return general{}, fmt.Errorf("%s mode not found", modeName)
+	}
+	return c, nil
 }
 
 // setDelimiter sets the delimiter string.
@@ -539,6 +548,11 @@ func (root *Root) setMultiColor(input string) {
 
 // setJumpTarget sets the position of the search result.
 func (root *Root) setJumpTarget(input string) {
+	if input == "" {
+		return // no change
+	}
+
+	root.Doc.JumpTarget = input
 	num, section := jumpPosition(input, root.scr.vHeight)
 	root.Doc.jumpTargetSection = section
 	if root.Doc.jumpTargetSection {
@@ -552,7 +566,6 @@ func (root *Root) setJumpTarget(input string) {
 	if root.Doc.jumpTargetHeight == num {
 		return
 	}
-	root.Doc.JumpTarget = input
 	root.Doc.jumpTargetHeight = num
 	root.setMessagef("Set JumpTarget %d", num)
 }
@@ -564,14 +577,15 @@ func (root *Root) resize(ctx context.Context) {
 
 // jumpPosition determines the position of the jump.
 func jumpPosition(str string, height int) (int, bool) {
-	if len(str) == 0 {
+	s := strings.ToLower(strings.Trim(str, " "))
+	if len(s) == 0 {
 		return 0, false
 	}
-	s := strings.ToLower(strings.Trim(str, " "))
-	if len(s) > 0 && s[0] == 's' {
+	if s[0] == 's' {
 		return 0, true
 	}
-	num := int(math.Round(calculatePosition(height, s)))
+
+	num := int(math.Round(calculatePosition(s, height)))
 	if num < 0 {
 		return (height - 1) + num, false
 	}
@@ -581,7 +595,7 @@ func jumpPosition(str string, height int) (int, bool) {
 // CalculatePosition returns the number from the length for positive
 // numbers (1), returns dot.number for percentages (.5) = 50%,
 // and returns the % after the number for percentages (50%). return.
-func calculatePosition(length int, str string) float64 {
+func calculatePosition(str string, length int) float64 {
 	if len(str) == 0 || str == "0" {
 		return 0
 	}

@@ -372,6 +372,10 @@ var (
 	ErrSignalCatch = errors.New("signal catch")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
+	// ErrCannotClose indicates that it cannot be closed.
+	ErrCannotClose = errors.New("cannot close")
+	// ErrRequestClose indicates that the request is to close.
+	ErrRequestClose = errors.New("request close")
 	// ErrNoColumn indicates that cursor specified a nonexistent column.
 	ErrNoColumn = errors.New("no column")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
