@@ -842,3 +842,124 @@ func TestRoot_sectionNum(t *testing.T) {
 		t.Errorf("Root.sectionNum() = %v, want %v", got, root.scr.lines)
 	}
 }
+
+func Test_findColumnEnd(t *testing.T) {
+	type args struct {
+		str string
+		pos []int
+		n   int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "Test findColumnEnd1Over",
+			args: args{
+				str: "012345678901234567890123",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 24,
+		},
+		{
+			name: "Test findColumnEnd2",
+			args: args{
+				str: "header1 header2 header3",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 7,
+		},
+		{
+			name: "Test findColumnEnd3",
+			args: args{
+				str: "1       2       3",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 7,
+		},
+		{
+			name: "Test findColumnEnd4",
+			args: args{
+				str: "     1       2        3",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 7,
+		},
+		{
+			name: "Test findColumnEnd6Over1",
+			args: args{
+				str: "123   456789012 345678901234",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 5,
+		},
+		{
+			name: "Test findColumnEnd6Over2",
+			args: args{
+				str: "123   456789012 345678901234",
+				pos: []int{7, 15},
+				n:   1,
+			},
+			want: 15,
+		},
+		{
+			name: "Test findColumnEnd7Over1",
+			args: args{
+				str: "abedefghi jkujik mnoopqr",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 9,
+		},
+		{
+			name: "Test findColumnEnd7Over2",
+			args: args{
+				str: "abedefghi jkujikl mnoopqr",
+				pos: []int{7, 15},
+				n:   1,
+			},
+			want: 17,
+		},
+		{
+			name: "Test findColumnEnd8Over1",
+			args: args{
+				str: "abedefghi jkujikl mnoopqr",
+				pos: []int{7, 15},
+				n:   0,
+			},
+			want: 9,
+		},
+		{
+			name: "Test findColumnEnd8Over2",
+			args: args{
+				str: "あいうえお かきくけこ さしすせそ",
+				pos: []int{7, 15},
+				n:   1,
+			},
+			want: 21,
+		},
+		{
+			name: "Test findColumnEnd9Over",
+			args: args{
+				str: "abedefg hijkujiklmnoopqrstuvxyz",
+				pos: []int{7, 15},
+				n:   1,
+			},
+			want: 31,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := StrToContents(tt.args.str, 8)
+			if got := findColumnEnd(lc, tt.args.pos, tt.args.n); got != tt.want {
+				t.Errorf("findColumnEnd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -11,7 +11,6 @@ import (
 )
 
 func TestRoot_toggle(t *testing.T) {
-	t.Parallel()
 	root := rootHelper(t)
 	ctx := context.Background()
 	var v bool
@@ -216,7 +215,6 @@ func Test_position(t *testing.T) {
 }
 
 func TestRoot_setJumpTarget(t *testing.T) {
-	t.Parallel()
 	root := rootHelper(t)
 	type fields struct{}
 	type args struct {

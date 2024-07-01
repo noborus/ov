@@ -314,6 +314,8 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 		return
 	}
 
+	numC := len(root.StyleColumnRainbow)
+
 	lStart := 0
 	if indexes[0][0] == 0 {
 		if len(indexes) == 1 {
@@ -322,8 +324,6 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 		lStart = indexes[0][1]
 		indexes = indexes[1:]
 	}
-
-	numC := len(root.StyleColumnRainbow)
 
 	var iStart, iEnd int
 	for c := 0; c < len(indexes)+1; c++ {
@@ -354,69 +354,62 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 	}
 }
 
+// columnWidthHighlight applies the style of the column width highlight.
 func (root *Root) columnWidthHighlight(line LineC) {
 	m := root.Doc
 	indexes := m.columnWidths
 	if len(indexes) == 0 {
 		return
 	}
-	iStart, iEnd := 0, 0
+
 	numC := len(root.StyleColumnRainbow)
+
+	start, end := -1, -1
 	for c := 0; c < len(indexes)+1; c++ {
-		switch {
-		case c == 0:
-			iStart = 0
-			iEnd = findBounds(line.lc, indexes[0]-1, indexes, c)
-		case c < len(indexes):
-			iStart = iEnd + 1
-			iEnd = findBounds(line.lc, indexes[c], indexes, c)
-		case c == len(indexes):
-			iStart = iEnd + 1
-			iEnd = len(line.str)
-		}
-		iEnd = min(iEnd, len(line.lc))
+		start = end + 1
+		end = findColumnEnd(line.lc, indexes, c)
 
 		if m.ColumnRainbow {
-			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnRainbow[c%numC])
+			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
 		}
-
 		if c == m.columnCursor {
-			RangeStyle(line.lc, iStart, iEnd, root.StyleColumnHighlight)
+			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 		}
 	}
 }
 
-// findBounds finds the bounds of values that extend beyond the column position.
-func findBounds(lc contents, p int, pos []int, n int) int {
-	if len(lc) <= p {
-		return p
+// findColumnEnd returns the position of the end of a column.
+func findColumnEnd(lc contents, indexes []int, n int) int {
+	if len(indexes) <= n {
+		return len(lc)
 	}
-	if lc[p].mainc == ' ' {
-		return p
+	width := indexes[n]
+	if width >= len(lc) {
+		return len(lc)
 	}
-	f := p
-	fp := 0
+
+	if lc[width].mainc == ' ' {
+		return width
+	}
+
+	f := width
 	for ; f < len(lc) && lc[f].mainc != ' '; f++ {
-		fp++
 	}
-
-	b := p
-	bp := 0
+	b := width
 	for ; b > 0 && lc[b].mainc != ' '; b-- {
-		bp++
 	}
 
-	if b == pos[n] {
+	if b == indexes[n] {
 		return f
 	}
-	if n < len(pos)-1 {
-		if f == pos[n+1] {
+	if n < len(indexes)-1 {
+		if f == indexes[n+1] {
 			return b
 		}
-		if b == pos[n] {
+		if b == indexes[n] {
 			return f
 		}
-		if b > pos[n] && b < pos[n+1] {
+		if b > indexes[n] && b < indexes[n+1] {
 			return b
 		}
 	}
