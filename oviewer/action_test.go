@@ -1300,3 +1300,172 @@ func TestRoot_suspend(t *testing.T) {
 		t.Errorf("shellSuspendResume() = %v, want %v", got, nil)
 	}
 }
+
+func TestRoot_follow(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		wrapMode bool
+	}
+	type args struct {
+		fileNames []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "testFollow1",
+			fields: fields{
+				wrapMode: false,
+			},
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+			},
+			want: 12322,
+		},
+		{
+			name: "testFollow2",
+			fields: fields{
+				wrapMode: true,
+			},
+			args: args{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+			},
+			want: 12322,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.args.fileNames...)
+			root.Doc.WrapMode = tt.fields.wrapMode
+			ctx := context.Background()
+			root.prepareScreen()
+			root.everyUpdate(ctx)
+			root.follow(ctx)
+			if root.Doc.topLN != tt.want {
+				t.Errorf("follow() topLN = %v, want %v", root.Doc.topLN, tt.want)
+			}
+			root.Cancel(ctx)
+		})
+	}
+}
+
+func TestRoot_followAll(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		wrapMode bool
+	}
+	type args struct {
+		fileNames []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "testFollowAll1",
+			fields: fields{
+				wrapMode: false,
+			},
+			args: args{
+				fileNames: []string{
+					filepath.Join(testdata, "test3.txt"),
+					filepath.Join(testdata, "test.txt"),
+				},
+			},
+			want: 12322,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.args.fileNames...)
+			root.General.FollowAll = true
+			root.Doc.WrapMode = tt.fields.wrapMode
+			ctx := context.Background()
+			root.prepareScreen()
+			root.everyUpdate(ctx)
+			root.follow(ctx)
+			if root.Doc.topLN != tt.want {
+				t.Errorf("follow() topLN = %v, want %v", root.Doc.topLN, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_WriteQuit(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames        []string
+		sectionDelimiter string
+		HideOtherSection bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   int
+	}{
+		{
+			name: "testWriteQuit1",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "",
+				HideOtherSection: false,
+			},
+			want: 0,
+		},
+		{
+			name: "testWriteQuit2",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "",
+				HideOtherSection: true,
+			},
+			want: 0,
+		},
+		{
+			name: "testWriteQuit3",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^#",
+				HideOtherSection: true,
+			},
+			want: 2,
+		},
+		{
+			name: "testWriteQuit4",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^notfound",
+				HideOtherSection: true,
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
+			root.prepareScreen()
+			ctx := context.Background()
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.prepareDraw(context.Background())
+			root.Doc.HideOtherSection = tt.fields.HideOtherSection
+			root.WriteQuit(ctx)
+			if got := root.AfterWriteOriginal; got != tt.want {
+				t.Errorf("WriteQuit() AfterWriteOriginal = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

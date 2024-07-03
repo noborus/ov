@@ -137,6 +137,7 @@ func (root *Root) reload(m *Document) {
 	root.releaseEventBuffer()
 	// Reserve time to read.
 	time.Sleep(100 * time.Millisecond)
+	root.setMessageLogf("reload file %s", root.Doc.FileName)
 }
 
 // toggleWatch toggles watch mode.
@@ -663,7 +664,6 @@ func (root *Root) follow(ctx context.Context) {
 	if root.Doc.latestNum == num {
 		return
 	}
-
 	root.skipDraw = false
 	if root.Doc.FollowSection {
 		root.tailSection(ctx)
@@ -703,18 +703,21 @@ func (root *Root) Cancel(context.Context) {
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit(ctx context.Context) {
 	root.IsWriteOriginal = true
-	if !root.Doc.HideOtherSection {
-		root.Quit(ctx)
-		return
-	}
-
-	for lN := 0; lN < root.Doc.BufEndNum(); lN++ {
-		line := root.scr.lines[lN]
-		if line.section > 1 {
-			root.AfterWriteOriginal = lN - root.Doc.topLN
-			root.Quit(ctx)
-			return
-		}
+	if root.Doc.HideOtherSection && root.AfterWriteOriginal == 0 {
+		// hide other section.
+		root.AfterWriteOriginal = root.bottomSectionLN(ctx)
 	}
 	root.Quit(ctx)
+}
+
+// bottomSectionLN returns the number of lines to write.
+func (root *Root) bottomSectionLN(ctx context.Context) int {
+	if root.Doc.SectionDelimiter == "" {
+		return root.AfterWriteOriginal
+	}
+	lN, err := root.Doc.nextSection(ctx, root.Doc.topLN+root.Doc.firstLine()-root.Doc.SectionStartPosition)
+	if err != nil {
+		return root.AfterWriteOriginal
+	}
+	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }

@@ -92,6 +92,10 @@ func TestRoot_SwitchingDoc(t *testing.T) {
 	if root.Doc.FileName != fileName1 {
 		t.Errorf("Root.previousDoc() = %v, want %v", root.Doc.FileName, fileName1)
 	}
+	root.previousDoc(ctx)
+	if root.Doc.FileName != fileName1 {
+		t.Errorf("Root.previousDoc() = %v, want %v", root.Doc.FileName, fileName1)
+	}
 	root.switchDocument(ctx, 2)
 	if root.Doc.FileName != fileName2 {
 		t.Errorf("Root.switchDocument() = %v, want %v", root.Doc.FileName, fileName2)
@@ -109,5 +113,9 @@ func TestRoot_SwitchingDoc(t *testing.T) {
 	root.toNormal(ctx)
 	if root.Doc.FileName != fileName2 {
 		t.Errorf("Root.switchDocument() = %v, want %v", root.Doc.FileName, fileName2)
+	}
+	root.closeDocument(ctx)
+	if root.Doc.FileName != fileName1 {
+		t.Errorf("Root.switchDocument() = %v, want %v", root.Doc.FileName, fileName1)
 	}
 }
