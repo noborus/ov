@@ -41,8 +41,12 @@ func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for !root.Doc.BufEOF() {
+	root.mu.RLock()
+	for _, doc := range root.DocList {
+		for !doc.BufEOF() {
+		}
 	}
+	root.mu.RUnlock()
 	return root
 }
 
