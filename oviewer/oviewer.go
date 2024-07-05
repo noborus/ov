@@ -964,6 +964,9 @@ func (root *Root) writeOriginal(output io.Writer) {
 		m.bottomLN = m.BufEndNum()
 	}
 
+	ctx := context.Background()
+	root.prepareDraw(ctx)
+
 	// header
 	header := max(0, root.scr.headerLN)
 	headerEnd := max(0, root.scr.headerEnd)
