@@ -412,8 +412,6 @@ func TestRoot_writeOriginal(t *testing.T) {
 				root.Doc.SectionHeader = true
 			}
 			root.prepareScreen()
-			ctx := context.Background()
-			root.prepareDraw(ctx)
 			root.AfterWriteOriginal = tt.fields.AfterWriteOriginal
 			output := &bytes.Buffer{}
 			root.writeOriginal(output)
