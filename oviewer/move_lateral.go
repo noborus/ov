@@ -21,35 +21,35 @@ func (m *Document) moveBeginLeft() {
 // moveEndRight move to the right edge of the screen.
 func (m *Document) moveEndRight(scr SCR) {
 	m.x = m.endRight(scr)
-	m.columnCursor = m.rightmostColumn()
+	m.columnCursor = m.rightmostColumn(scr)
 }
 
 // optimalCursor returns the optimal cursor position from the current x position.
-func (m *Document) optimalCursor(cursor int) int {
+func (m *Document) optimalCursor(scr SCR, cursor int) int {
 	if m.WrapMode {
 		return cursor
 	}
 
 	if m.ColumnWidth {
-		return m.optimalCursorWidth(cursor)
+		return m.optimalCursorWidth(scr, cursor)
 	}
-	return m.optimalCursorDelimiter(cursor)
+	return m.optimalCursorDelimiter(scr, cursor)
 }
 
 // optimalCursorWidth returns the optimal cursor position when in columnWidth mode.
-func (m *Document) optimalCursorWidth(cursor int) int {
-	line := m.getLineC(m.topLN+m.firstLine(), m.TabWidth)
-	if !line.valid {
+func (m *Document) optimalCursorWidth(scr SCR, cursor int) int {
+	line, ok := scr.lines[m.topLN+m.firstLine()]
+	if !ok || !line.valid {
 		return cursor
 	}
 	return optimalCursor(line, m.columnWidths, cursor, m.x, m.x+m.width)
 }
 
 // optimalCursorDelimiter returns the optimal cursor position when in columnDelimiter mode.
-func (m *Document) optimalCursorDelimiter(cursor int) int {
+func (m *Document) optimalCursorDelimiter(scr SCR, cursor int) int {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !line.valid {
+		line, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -97,30 +97,27 @@ func optimalCursor(line LineC, widths []int, cursor int, start int, end int) int
 }
 
 // optimalX returns the optimal x position from the cursor.
-func (m *Document) optimalX(cursor int) (int, error) {
+func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 	if cursor == 0 {
 		return 0, nil
 	}
-
 	if m.ColumnWidth {
 		return m.optimalXWidth(cursor)
 	}
-	return m.optimalXDelimiter(cursor)
+	return m.optimalXDelimiter(scr, cursor)
 }
 
 // optimalXWidth returns the optimal x position of the column at the specified cursor position.
 func (m *Document) optimalXWidth(cursor int) (int, error) {
-	if cursor < len(m.columnWidths) {
-		return m.columnWidths[cursor-1], nil
-	}
-	return m.columnWidths[len(m.columnWidths)-1], nil
+	cursor = min(cursor, len(m.columnWidths)) - 1
+	return m.columnWidths[cursor], nil
 }
 
 // optimalXDelimiter returns the best x position of the column at the specified cursor position.
-func (m *Document) optimalXDelimiter(cursor int) (int, error) {
+func (m *Document) optimalXDelimiter(scr SCR, cursor int) (int, error) {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !line.valid {
+		line, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -138,7 +135,7 @@ func (m *Document) moveTo(scr SCR, moveTo int) (int, int, error) {
 	if m.ColumnWidth {
 		return m.moveToWidth(scr, moveTo)
 	}
-	return m.moveToDelimiter(moveTo)
+	return m.moveToDelimiter(scr, moveTo)
 }
 
 // moveToWidth returns x and cursor from the orientation to move.
@@ -163,7 +160,7 @@ func (m *Document) moveToWidth(scr SCR, moveTo int) (int, int, error) {
 }
 
 // moveToDelimiter returns x and cursor from the orientation to move.
-func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
+func (m *Document) moveToDelimiter(scr SCR, moveTo int) (int, int, error) {
 	width := m.width
 	if m.WrapMode {
 		// dummy width
@@ -173,8 +170,8 @@ func (m *Document) moveToDelimiter(moveTo int) (int, int, error) {
 	cursor := max(0, m.columnCursor+moveTo)
 	// m.firstLine()+TargetLineDelimiter = Maximum columnMode target.
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
-		if !line.valid {
+		line, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !line.valid {
 			continue
 		}
 		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
@@ -320,7 +317,7 @@ func (m *Document) moveNormalRight(n int) {
 func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	if m.columnCursor <= 0 && m.x <= columnMargin {
 		if cycle {
-			m.columnCursor = m.rightmostColumn()
+			m.columnCursor = m.rightmostColumn(scr)
 			m.x = max(0, m.endRight(scr))
 			return nil
 		}
@@ -334,12 +331,13 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 // moveColumnRight moves to the right column.
 func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	x, cursor, err := m.moveTo(scr, n)
-	if err != nil && errors.Is(err, ErrOverScreen) {
-		if cycle {
-			m.x = 0
-			m.columnCursor = 0
-			return nil
+	if err != nil {
+		if !errors.Is(err, ErrOverScreen) || !cycle {
+			return err
 		}
+		m.x = 0
+		m.columnCursor = 0
+		return nil
 	}
 
 	m.x = x
@@ -357,25 +355,24 @@ func (m *Document) endRight(scr SCR) int {
 // rightmost of the content displayed on the screen.
 func (m *Document) rightmost(scr SCR) int {
 	maxLen := 0
-	for _, line := range scr.numbers {
-		lc, err := m.contents(line.number, m.TabWidth)
-		if err != nil {
+	for _, line := range scr.lines {
+		if !line.valid {
 			continue
 		}
+		lc := line.lc
 		maxLen = max(maxLen, len(lc)-1)
 	}
 	return maxLen
 }
 
 // rightmostColumn returns the number of rightmost columns.
-func (m *Document) rightmostColumn() int {
+func (m *Document) rightmostColumn(scr SCR) int {
 	if m.ColumnWidth {
 		return len(m.columnWidths)
 	}
 
 	maxColumn := 0
-	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line := m.getLineC(m.topLN+m.firstLine()+i, m.TabWidth)
+	for _, line := range scr.lines {
 		if !line.valid {
 			continue
 		}

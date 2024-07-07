@@ -151,21 +151,7 @@ func (root *Root) sendCopySelect() {
 
 // copyToClipboard writes the selection to the clipboard.
 func (root *Root) copyToClipboard(_ context.Context) {
-	x1 := root.scr.x1
-	x2 := root.scr.x2
-	y1 := root.scr.y1
-	y2 := root.scr.y2
-
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
-	}
-	if y1 == y2 {
-		if x2 < x1 {
-			x1, x2 = x2, x1
-		}
-	}
-	str, err := root.rangeToString(x1, y1, x2, y2)
+	str, err := root.rangeToString(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2)
 	if err != nil {
 		root.debugMessage(fmt.Sprintf("copyToClipboard: %s", err.Error()))
 		return
@@ -217,10 +203,24 @@ func (root *Root) pasteFromClipboard(context.Context) {
 }
 
 func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
+	x1, y1, x2, y2 = normalizeRange(x1, y1, x2, y2)
 	if root.scr.mouseRectangle {
 		return root.scr.rectangleToString(root.Doc, x1, y1, x2, y2)
 	}
 	return root.scr.lineRangeToString(root.Doc, x1, y1, x2, y2)
+}
+
+func normalizeRange(x1, y1, x2, y2 int) (int, int, int, int) {
+	if y2 < y1 {
+		y1, y2 = y2, y1
+		x1, x2 = x2, x1
+	}
+	if y1 == y2 {
+		if x2 < x1 {
+			x1, x2 = x2, x1
+		}
+	}
+	return x1, y1, x2, y2
 }
 
 // lineRangeToString returns the selection.
@@ -232,8 +232,8 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 	var buff strings.Builder
 
 	l1 := scr.lineNumber(y1)
-	line1 := m.getLineC(l1.number, m.TabWidth)
-	if !line1.valid {
+	line1, ok := scr.lines[l1.number]
+	if !ok || !line1.valid {
 		return "", ErrOutOfRange
 	}
 	wx1 := scr.branchWidth(line1.lc, l1.wrap)
@@ -247,8 +247,9 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 			break
 		}
 	}
-	line2 := m.getLineC(l2.number, m.TabWidth)
-	if !line2.valid {
+
+	line2, ok := scr.lines[l2.number]
+	if !ok || !line2.valid {
 		return "", ErrOutOfRange
 	}
 	wx2 := scr.branchWidth(line2.lc, l2.wrap)
@@ -280,8 +281,8 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 		if ln.number == l1.number || ln.number == l2.number || ln.wrap > 0 {
 			continue
 		}
-		line := m.getLineC(ln.number, m.TabWidth)
-		if !line.valid {
+		line, ok := scr.lines[ln.number]
+		if !ok || !line.valid {
 			break
 		}
 		str := scr.selectLine(line, 0, -1)
@@ -310,9 +311,9 @@ func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error
 	var buff strings.Builder
 	for y := y1; y <= y2; y++ {
 		ln := scr.lineNumber(y)
-		line := m.getLineC(ln.number, m.TabWidth)
-		if !line.valid {
-			return "", fmt.Errorf("rectangleToString: %w", ErrOutOfRange)
+		line, ok := scr.lines[ln.number]
+		if !ok || !line.valid {
+			break
 		}
 		wx := scr.branchWidth(line.lc, ln.wrap)
 		str := scr.selectLine(line, m.x+x1+wx, m.x+x2+wx+1)
