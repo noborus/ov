@@ -906,7 +906,6 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root := rootFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
 	type fields struct {
 		wrapMode     bool
 		x            int
@@ -951,7 +950,10 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
+			root.prepareScreen()
 			ctx := context.Background()
+			root.prepareDraw(ctx)
 			root.setDelimiter(",")
 			root.Doc.ColumnMode = true
 			root.Doc.WrapMode = tt.fields.wrapMode
@@ -1465,6 +1467,51 @@ func TestRoot_WriteQuit(t *testing.T) {
 			root.WriteQuit(ctx)
 			if got := root.AfterWriteOriginal; got != tt.want {
 				t.Errorf("WriteQuit() AfterWriteOriginal = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_tailSection(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames        []string
+		sectionDelimiter string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   int
+	}{
+		{
+			name: "testTailSection",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^#",
+			},
+			want: 8,
+		},
+		{
+			name: "testTailSectionErr",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^testtesttest",
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
+			root.prepareScreen()
+			ctx := context.Background()
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.tailSection(ctx)
+			if got := root.Doc.lastSectionPosNum; got != tt.want {
+				t.Errorf("tailSection() lastSectionPosNum = %v, want %v", got, tt.want)
 			}
 		})
 	}

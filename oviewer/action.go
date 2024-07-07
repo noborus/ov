@@ -20,7 +20,7 @@ func (root *Root) toggleWrapMode(context.Context) {
 	m.WrapMode = !m.WrapMode
 
 	// Move cursor to correct position
-	x, err := m.optimalX(m.columnCursor)
+	x, err := m.optimalX(root.scr, m.columnCursor)
 	if err != nil {
 		root.setMessageLog(err.Error())
 		return
@@ -37,7 +37,7 @@ func (root *Root) toggleColumnMode(context.Context) {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
 
 	if root.Doc.ColumnMode {
-		root.Doc.columnCursor = root.Doc.optimalCursor(root.Doc.columnCursor)
+		root.Doc.columnCursor = root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
 	}
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
 }

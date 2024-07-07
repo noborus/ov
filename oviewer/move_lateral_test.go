@@ -349,7 +349,9 @@ func TestDocument_optimalCursor(t *testing.T) {
 				fileName: filepath.Join(testdata, "normal.txt"),
 				wrap:     true,
 			},
-			args: args{cursor: 10},
+			args: args{
+				cursor: 10,
+			},
 			want: 10,
 		},
 		{
@@ -360,7 +362,9 @@ func TestDocument_optimalCursor(t *testing.T) {
 				x:               10,
 				width:           10,
 			},
-			args: args{cursor: 4},
+			args: args{
+				cursor: 4,
+			},
 			want: 2,
 		},
 		{
@@ -371,7 +375,9 @@ func TestDocument_optimalCursor(t *testing.T) {
 				x:               30,
 				width:           10,
 			},
-			args: args{cursor: 0},
+			args: args{
+				cursor: 0,
+			},
 			want: 4,
 		},
 	}
@@ -382,7 +388,8 @@ func TestDocument_optimalCursor(t *testing.T) {
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
 			m.width = tt.fields.width
-			if got := m.optimalCursor(tt.args.cursor); got != tt.want {
+			scr := setupSCRHelper(t, m)
+			if got := m.optimalCursor(scr, tt.args.cursor); got != tt.want {
 				t.Errorf("Document.correctCursor() = %v, want %v", got, tt.want)
 			}
 		})
@@ -550,7 +557,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 				n:     1,
 				cycle: false,
 			},
-			wantErr:    false,
+			wantErr:    true,
 			wantCursor: 10,
 		},
 	}
@@ -580,7 +587,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 	}
 }
 
-func moveColumnDelimiter(t *testing.T) *Document {
+func MOCKDATADoc(t *testing.T) *Document {
 	t.Helper()
 	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
 	m.width = 80
@@ -655,23 +662,62 @@ func TestDocument_moveColumnDelimiterLeft(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := moveColumnDelimiter(t)
+			m := MOCKDATADoc(t)
 			m.columnCursor = tt.fields.cursor
-			numbers := make([]LineNumber, m.height)
-			for i := 0; i < m.height; i++ {
-				numbers[i] = LineNumber{
-					number: i,
-					wrap:   1,
-				}
+			lines := make(map[int]LineC, 1)
+			lines[0] = LineC{
+				valid: true,
+				str:   "id,first_name,last_name,email,gender,ip_address,animal,app",
+				pos:   []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 5},
 			}
 			scr := SCR{
-				numbers: numbers,
+				lines: lines,
 			}
 			if err := m.moveColumnLeft(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnDelimiterLeft() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if got := m.columnCursor; got != tt.wantCursor {
 				t.Errorf("Document.moveColumnDelimiterLeft() = %v, want %v", got, tt.wantCursor)
+			}
+		})
+	}
+}
+
+func TestDocument_optimalXWidth(t *testing.T) {
+	type args struct {
+		cursor int
+	}
+	type fields struct {
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "csv1",
+			args: args{cursor: 1},
+			want: 9,
+		},
+		{
+			name: "csvOver",
+			args: args{cursor: 11},
+			want: 66,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := MOCKDATADoc(t)
+			m.columnWidths = []int{9, 16, 21, 26, 33, 39, 48, 53, 59, 66}
+			got, err := m.optimalXWidth(tt.args.cursor)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.optimalXWidth() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.optimalXWidth() = %v, want %v", got, tt.want)
 			}
 		})
 	}

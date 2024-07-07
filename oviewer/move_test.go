@@ -297,6 +297,7 @@ func TestRoot_moveColumn(t *testing.T) {
 	}()
 	type fields struct {
 		fileName     string
+		delimiter    string
 		columnCursor int
 	}
 	type want struct {
@@ -309,14 +310,63 @@ func TestRoot_moveColumn(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "Test no section",
+			name: "Test MOCK_DATA err",
 			fields: fields{
 				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				delimiter:    "|",
+				columnCursor: 4,
+			},
+			want: want{
+				leftOne:  4,
+				rightOne: 4,
+			},
+		},
+		{
+			name: "Test MOCK_DATA1",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				delimiter:    ",",
 				columnCursor: 4,
 			},
 			want: want{
 				leftOne:  3,
 				rightOne: 5,
+			},
+		},
+		{
+			name: "Test MOCK_DATA2",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				delimiter:    ",",
+				columnCursor: 0,
+			},
+			want: want{
+				leftOne:  7,
+				rightOne: 2,
+			},
+		},
+		{
+			name: "Test column1",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "column.txt"),
+				delimiter:    "|",
+				columnCursor: 1,
+			},
+			want: want{
+				leftOne:  0,
+				rightOne: 2,
+			},
+		},
+		{
+			name: "Test column2",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "column.txt"),
+				delimiter:    "|",
+				columnCursor: 3,
+			},
+			want: want{
+				leftOne:  2,
+				rightOne: 0,
 			},
 		},
 	}
@@ -327,7 +377,8 @@ func TestRoot_moveColumn(t *testing.T) {
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
 			root.Doc.ColumnMode = true
-			root.Doc.setDelimiter(",")
+			root.Doc.WrapMode = true
+			root.Doc.setDelimiter(tt.fields.delimiter)
 
 			root.Doc.columnCursor = tt.fields.columnCursor
 			root.moveLeftOne(ctx)
