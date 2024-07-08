@@ -109,6 +109,9 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 
 // optimalXWidth returns the optimal x position of the column at the specified cursor position.
 func (m *Document) optimalXWidth(cursor int) (int, error) {
+	if len(m.columnWidths) == 0 {
+		return 0, ErrNoColumn
+	}
 	cursor = min(cursor, len(m.columnWidths)) - 1
 	return m.columnWidths[cursor], nil
 }

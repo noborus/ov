@@ -586,7 +586,7 @@ func TestRoot_styleContent(t *testing.T) {
 			m.ColumnWidth = tt.fields.ColumnWidth
 			m.setMultiColorWords(tt.fields.multiColorWords)
 			m.setDelimiter(tt.fields.ColumnDelimiter)
-			m.setColumnWidths()
+			m.setColumnWidths(root.scr)
 			root.scr.lines = make(map[int]LineC)
 			root.prepareDraw(context.Background())
 			line := m.getLineC(tt.args.lineNum, m.TabWidth)
@@ -807,7 +807,10 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 			m := root.Doc
 			m.ColumnWidth = true
 			m.ColumnMode = true
-			m.setColumnWidths()
+			root.prepareScreen()
+			root.prepareDraw(context.Background())
+			m.setColumnWidths(root.scr)
+			t.Log(m.columnWidths)
 			m.columnCursor = tt.fields.columnCursor
 			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
 			root.columnWidthHighlight(line)

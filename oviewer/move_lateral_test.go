@@ -396,12 +396,13 @@ func TestDocument_optimalCursor(t *testing.T) {
 	}
 }
 
-func moveColumnWidth(t *testing.T) *Document {
+func moveColumnWidthHelper(t *testing.T) *Document {
 	t.Helper()
 	m := docFileReadHelper(t, filepath.Join(testdata, "ps.txt"))
 	m.ColumnWidth = true
 	m.width = 80
 	m.height = 23
+	m.columnWidths = []int{9, 16, 21, 26, 33, 39, 48, 53, 59, 66}
 	return m
 }
 
@@ -471,7 +472,7 @@ func TestDocument_moveColumnWithLeft(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := moveColumnWidth(t)
+			m := moveColumnWidthHelper(t)
 			m.columnCursor = tt.fields.cursor
 			numbers := make([]LineNumber, m.height)
 			for i := 0; i < m.height; i++ {
@@ -483,7 +484,6 @@ func TestDocument_moveColumnWithLeft(t *testing.T) {
 			scr := SCR{
 				numbers: numbers,
 			}
-			m.setColumnWidths()
 			if err := m.moveColumnLeft(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnWidthLeft() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -563,7 +563,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := moveColumnWidth(t)
+			m := moveColumnWidthHelper(t)
 			m.columnCursor = tt.fields.cursor
 			numbers := make([]LineNumber, m.height)
 			for i := 0; i < m.height; i++ {
@@ -575,7 +575,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 			scr := SCR{
 				numbers: numbers,
 			}
-			m.setColumnWidths()
+			m.setColumnWidths(scr)
 			m.x = tt.fields.x
 			if err := m.moveColumnRight(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnWidthRight() error = %v, wantErr %v", err, tt.wantErr)

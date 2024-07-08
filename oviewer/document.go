@@ -512,19 +512,20 @@ func (m *Document) setColumnWidths(scr SCR) {
 	if len(scr.lines) == 0 {
 		return
 	}
-	buf := make([]string, len(scr.lines))
-	for n, ln := range lineNumbers(scr.lines) {
-		buf[n] = scr.lines[ln].str
+	buf := make([]string, 0, len(scr.lines))
+	for _, ln := range lineNumbers(scr.lines) {
+		line := scr.lines[ln]
+		if !line.valid {
+			continue
+		}
+		buf = append(buf, line.str)
 	}
 
-	header := m.Header - 1
-	header = max(header, 0)
-	for header >= 0 {
+	for header := max(m.Header-1, 0); header >= 0; header-- {
 		widths := guesswidth.Positions(buf, header, 2)
 		if len(widths) != 0 {
 			m.columnWidths = widths
 			return
 		}
-		header--
 	}
 }
