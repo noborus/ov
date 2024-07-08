@@ -507,19 +507,24 @@ func (m *Document) setMultiColorWords(words []string) {
 }
 
 // setColumnWidths sets the column widths.
-// Guess the width of the columns using the first 1000 lines (maximum) and the headers.
-func (m *Document) setColumnWidths() {
-	if m.BufEndNum() == 0 {
+// Guess the width of the columns using the screen contents.
+func (m *Document) setColumnWidths(scr SCR) {
+	if len(scr.lines) == 0 {
 		return
+	}
+	buf := make([]string, len(scr.lines))
+	for n, line := range scr.lines {
+		buf[n] = line.str
 	}
 
 	header := m.Header - 1
 	header = max(header, 0)
-	tl := min(1000, len(m.store.chunks[0].lines))
-	lines := m.store.chunks[0].lines[m.SkipLines:tl]
-	buf := make([]string, len(lines))
-	for n, line := range lines {
-		buf[n] = string(line)
+	for header >= 0 {
+		widths := guesswidth.Positions(buf, header, 2)
+		if len(widths) != 0 {
+			m.columnWidths = widths
+			return
+		}
+		header--
 	}
-	m.columnWidths = guesswidth.Positions(buf, header, 2)
 }
