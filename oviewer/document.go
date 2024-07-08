@@ -513,8 +513,8 @@ func (m *Document) setColumnWidths(scr SCR) {
 		return
 	}
 	buf := make([]string, len(scr.lines))
-	for n, line := range scr.lines {
-		buf[n] = line.str
+	for n, ln := range lineNumbers(scr.lines) {
+		buf[n] = scr.lines[ln].str
 	}
 
 	header := m.Header - 1
