@@ -82,7 +82,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 		root.Doc.showGotoF = false
 	}
 	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
-		root.Doc.setColumnWidths()
+		root.Doc.setColumnWidths(root.scr)
 	}
 
 	// Prepare the lines.
