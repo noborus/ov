@@ -229,8 +229,6 @@ func normalizeRange(x1, y1, x2, y2 int) (int, int, int, int) {
 // ◻◻◻◻◻◻◻◻
 // ◻◻◻◼......
 func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error) {
-	var buff strings.Builder
-
 	l1 := scr.lineNumber(y1)
 	line1, ok := scr.lines[l1.number]
 	if !ok || !line1.valid {
@@ -257,24 +255,14 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 	if l1.number == l2.number {
 		x1 := m.x + x1 + wx1
 		x2 := m.x + x2 + wx2
-		str := scr.selectLine(line1, x1, x2+1)
-		if len(str) == 0 {
-			return buff.String(), nil
-		}
-		if _, err := buff.WriteString(str); err != nil {
-			return "", fmt.Errorf("lineRangeToString: %w", err)
-		}
-
-		return buff.String(), nil
+		return scr.selectLine(line1, x1, x2+1), nil
 	}
+
+	var buff strings.Builder
 
 	first := scr.selectLine(line1, m.x+x1+wx1, -1)
-	if _, err := buff.WriteString(first); err != nil {
-		return "", fmt.Errorf("lineRangeToString: %w", err)
-	}
-	if err := buff.WriteByte('\n'); err != nil {
-		return "", fmt.Errorf("lineRangeToString: %w", err)
-	}
+	buff.WriteString(first)
+	buff.WriteByte('\n')
 
 	for y := y1 + 1; y < y2; y++ {
 		ln := scr.lineNumber(y)
@@ -286,19 +274,12 @@ func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error
 			break
 		}
 		str := scr.selectLine(line, 0, -1)
-		if _, err := buff.WriteString(str); err != nil {
-			return "", fmt.Errorf("lineRangeToString: %w", err)
-		}
-		if err := buff.WriteByte('\n'); err != nil {
-			return "", fmt.Errorf("lineRangeToString: %w", err)
-		}
+		buff.WriteString(str)
+		buff.WriteByte('\n')
 	}
 
 	last := scr.selectLine(line2, 0, m.x+x2+wx2+1)
-	if _, err := buff.WriteString(last); err != nil {
-		return "", fmt.Errorf("lineRangeToString: %w", err)
-	}
-
+	buff.WriteString(last)
 	return buff.String(), nil
 }
 
@@ -317,12 +298,8 @@ func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error
 		}
 		wx := scr.branchWidth(line.lc, ln.wrap)
 		str := scr.selectLine(line, m.x+x1+wx, m.x+x2+wx+1)
-		if _, err := buff.WriteString(str); err != nil {
-			return "", fmt.Errorf("rectangleToString: %w", err)
-		}
-		if err := buff.WriteByte('\n'); err != nil {
-			return "", fmt.Errorf("rectangleToString: %w", err)
-		}
+		buff.WriteString(str)
+		buff.WriteByte('\n')
 	}
 	return buff.String(), nil
 }

@@ -34,6 +34,85 @@ func NewLineC(t *testing.T, str string, tabWidth int) LineC {
 	return line
 }
 
+func TestRoot_mouseEvent(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		ev *tcell.EventMouse
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "testWheelUp",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelUp, tcell.ModNone),
+			},
+			want: false,
+		},
+		{
+			name: "testWheelDown",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelDown, tcell.ModNone),
+			},
+			want: false,
+		},
+		{
+			name: "testWheelLeft",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelLeft, tcell.ModNone),
+			},
+			want: false,
+		},
+		{
+			name: "testWheelRight",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelRight, tcell.ModNone),
+			},
+			want: false,
+		},
+		{
+			name: "testShifWheelUp",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelUp, tcell.ModShift),
+			},
+			want: false,
+		},
+		{
+			name: "testShiftWheelDown",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.WheelDown, tcell.ModShift),
+			},
+			want: false,
+		},
+		{
+			name: "testButtonNone",
+			fields: fields{
+				ev: tcell.NewEventMouse(0, 0, tcell.ButtonNone, tcell.ModNone),
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
+			root.prepareScreen()
+			ctx := context.Background()
+			root.prepareDraw(ctx)
+			root.draw(ctx)
+			root.mouseEvent(context.Background(), tt.fields.ev)
+			if got := root.skipDraw; got != tt.want {
+				t.Errorf("Root.mouseEvent() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRoot_rangeToString(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
