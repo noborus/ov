@@ -506,12 +506,12 @@ func (m *Document) setMultiColorWords(words []string) {
 	m.multiColorRegexps = multiRegexpCompile(words)
 }
 
-// setColumnWidths sets the column widths.
-// Guess the width of the columns using the screen contents.
+// setColumnWidths sets the column widths based on the screen contents.
 func (m *Document) setColumnWidths(scr SCR) {
 	if len(scr.lines) == 0 {
 		return
 	}
+
 	buf := make([]string, 0, len(scr.lines))
 	for _, ln := range lineNumbers(scr.lines) {
 		line := scr.lines[ln]
@@ -521,6 +521,9 @@ func (m *Document) setColumnWidths(scr SCR) {
 		buf = append(buf, line.str)
 	}
 
+	// Attempt to determine column widths starting from the lowest header line and moving upwards.
+	// This is useful when there are multiple header lines.
+	// If there is no header, it will be determined by the first line only.
 	for header := max(m.Header-1, 0); header >= 0; header-- {
 		widths := guesswidth.Positions(buf, header, 2)
 		if len(widths) != 0 {
