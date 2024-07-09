@@ -13,7 +13,7 @@ require (
 	github.com/klauspost/compress v1.17.9
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/noborus/guesswidth v0.3.4
-	github.com/pierrec/lz4 v2.6.1+incompatible
+	github.com/pierrec/lz4/v4 v4.1.21
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
