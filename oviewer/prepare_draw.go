@@ -11,7 +11,7 @@ import (
 )
 
 // sectionTimeOut is the section header search timeout(in milliseconds) period.
-const sectionTimeOut = 1000
+const sectionTimeOut time.Duration = 1000
 
 // prepareScreen prepares when the screen size is changed.
 func (root *Root) prepareScreen() {
@@ -69,7 +69,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.sectionHeaderEnd = 0
 	root.Doc.sectionHeaderHeight = 0
 	if root.Doc.SectionHeader {
-		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition)
+		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition, sectionTimeOut)
 		// Set the section header height.
 		root.Doc.sectionHeaderHeight = root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
 	}
@@ -111,12 +111,12 @@ func (m *Document) shiftBody(lX int, lN int, shStart int, shEnd int) (int, int) 
 }
 
 // sectionHeader returns the start and end of the section header.
-func (root *Root) sectionHeader(ctx context.Context, topLN int) (int, int) {
+func (root *Root) sectionHeader(ctx context.Context, topLN int, timeOut time.Duration) (int, int) {
 	m := root.Doc
 
 	// SectionHeader.
 	shNum := min(m.SectionHeaderNum, root.scr.vHeight)
-	shStart, err := m.searchSectionHeader(ctx, topLN+1)
+	shStart, err := m.searchSectionHeader(ctx, topLN+1, timeOut)
 	if err != nil {
 		if errors.Is(err, ErrCancel) {
 			root.setMessageLogf("Section header search timed out")
@@ -129,12 +129,12 @@ func (root *Root) sectionHeader(ctx context.Context, topLN int) (int, int) {
 }
 
 // searchSectionHeader searches for the section header.
-func (m *Document) searchSectionHeader(ctx context.Context, lN int) (int, error) {
+func (m *Document) searchSectionHeader(ctx context.Context, lN int, timeOut time.Duration) (int, error) {
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return 0, ErrNoDelimiter
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, sectionTimeOut*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, timeOut*time.Millisecond)
 	defer cancel()
 	sLN, err := m.prevSection(ctx, lN)
 	if err != nil {

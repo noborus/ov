@@ -244,6 +244,8 @@ func TestRoot_filterLink(t *testing.T) {
 			filterDoc := root.DocList[len(root.DocList)-1]
 			for !filterDoc.BufEOF() {
 			}
+			filterDoc.LineNumMode = true
+			root.prepareStartX()
 			filterDoc.topLN = 2
 			root.previousDoc(ctx)
 			t.Log(root.Doc.topLN)

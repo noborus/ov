@@ -7,21 +7,22 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
 
-func sectionHeader1(t *testing.T) *Root {
+func sectionHeader1Helper(t *testing.T) *Root {
 	t.Helper()
-	return sectionHeaderText(t, "section-header.txt")
+	return sectionHeaderTextHelper(t, "section-header.txt")
 }
 
-func sectionHeader2(t *testing.T) *Root {
+func sectionHeader2Helper(t *testing.T) *Root {
 	t.Helper()
-	return sectionHeaderText(t, "section2.txt")
+	return sectionHeaderTextHelper(t, "section2.txt")
 }
 
-func sectionHeaderText(t *testing.T, fileName string) *Root {
+func sectionHeaderTextHelper(t *testing.T, fileName string) *Root {
 	t.Helper()
 	root := rootFileReadHelper(t, filepath.Join(testdata, fileName))
 	m := root.Doc
@@ -32,7 +33,7 @@ func sectionHeaderText(t *testing.T, fileName string) *Root {
 	return root
 }
 
-func sectionStr(t *testing.T, root *Root) string {
+func sectionStrHelper(t *testing.T, root *Root) string {
 	t.Helper()
 	lines := root.scr.lines
 	lNs := lineNumbers(lines)
@@ -245,7 +246,7 @@ func TestRoot_prepareDraw_sectionHeader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader1(t)
+			root := sectionHeader1Helper(t)
 			m := root.Doc
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
@@ -354,7 +355,7 @@ func TestRoot_prepareDraw_sectionHeader2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader2(t)
+			root := sectionHeader2Helper(t)
 			m := root.Doc
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
@@ -369,7 +370,7 @@ func TestRoot_prepareDraw_sectionHeader2(t *testing.T) {
 
 			ctx := context.Background()
 			root.prepareDraw(ctx)
-			sectionStr := sectionStr(t, root)
+			sectionStr := sectionStrHelper(t, root)
 			if sectionStr != tt.want.sectionStr {
 				t.Errorf("sectionStr got: \n%s, want: \n%s", sectionStr, tt.want.sectionStr)
 			}
@@ -427,7 +428,7 @@ func TestRoot_prepareDraw_sectionStart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader1(t)
+			root := sectionHeader1Helper(t)
 			m := root.Doc
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
@@ -493,7 +494,7 @@ func TestRoot_prepareLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader1(t)
+			root := sectionHeader1Helper(t)
 			m := root.Doc
 			m.SkipLines = tt.fields.skipLines
 			m.Header = tt.fields.header
@@ -579,7 +580,7 @@ func TestRoot_styleContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader1(t)
+			root := sectionHeader1Helper(t)
 			m := root.Doc
 			m.PlainMode = tt.fields.PlainMode
 			m.ColumnMode = tt.fields.ColumnMode
@@ -635,7 +636,7 @@ func TestRoot_searchHighlight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := sectionHeader1(t)
+			root := sectionHeader1Helper(t)
 
 			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
 			root.searcher = tt.fields.searcher
@@ -834,7 +835,7 @@ func TestRoot_sectionNum(t *testing.T) {
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
 	}()
-	root := sectionHeader1(t)
+	root := sectionHeader1Helper(t)
 	root.prepareScreen()
 	root.prepareDraw(context.Background())
 	if got := root.sectionNum(root.scr.lines); !reflect.DeepEqual(got, root.scr.lines) {
@@ -962,6 +963,108 @@ func Test_findColumnEnd(t *testing.T) {
 			lc := StrToContents(tt.args.str, 8)
 			if got := findColumnEnd(lc, tt.args.pos, tt.args.n); got != tt.want {
 				t.Errorf("findColumnEnd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_sectionHeaderTimeOut(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := sectionHeader2Helper(t)
+	root.prepareScreen()
+	ctx := context.Background()
+	root.prepareDraw(ctx)
+	root.Doc.setSectionDelimiter("^-")
+	root.Doc.SectionHeader = true
+	lx, ln := root.sectionHeader(ctx, 0, sectionTimeOut)
+	if lx != 0 || ln != 0 {
+		t.Errorf("lx: %d, ln: %d", lx, ln)
+	}
+}
+
+func TestRoot_sectionHeader(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		sectionDelimiter string
+	}
+	type args struct {
+		ctx     context.Context
+		lN      int
+		timeOut time.Duration
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		args      args
+		wants     int
+		wante     int
+		wantDelim string
+	}{
+		{
+			name: "Test searchSectionHeader1",
+			fields: fields{
+				sectionDelimiter: "^-",
+			},
+			args: args{
+				ctx:     context.Background(),
+				lN:      4,
+				timeOut: 1000,
+			},
+			wants:     1,
+			wante:     1,
+			wantDelim: "^-",
+		},
+		{
+			name: "Test searchSectionHeaderNoDelimiter",
+			fields: fields{
+				sectionDelimiter: "",
+			},
+			args: args{
+				ctx:     context.Background(),
+				lN:      4,
+				timeOut: 1000,
+			},
+			wants:     0,
+			wante:     0,
+			wantDelim: "",
+		},
+		{
+			name: "Test searchSectionHeaderTimeOut",
+			fields: fields{
+				sectionDelimiter: "^-",
+			},
+			args: args{
+				ctx:     context.Background(),
+				lN:      4,
+				timeOut: 0,
+			},
+			wants:     0,
+			wante:     0,
+			wantDelim: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := sectionHeader2Helper(t)
+			root.prepareScreen()
+			m := root.Doc
+			m.SectionHeader = true
+			m.setSectionDelimiter(tt.fields.sectionDelimiter)
+			got1, got2 := root.sectionHeader(tt.args.ctx, tt.args.lN, tt.args.timeOut)
+			if got1 != tt.wants {
+				t.Errorf("Root.sectionHeader() = %v, want %v", got1, tt.wants)
+			}
+			if got2 != tt.wante {
+				t.Errorf("Root.sectionHeader() = %v, want %v", got2, tt.wante)
+			}
+			if m.SectionDelimiter != tt.wantDelim {
+				t.Errorf("Root.sectionHeader() = %v, want %v", m.SectionDelimiter, tt.wantDelim)
 			}
 		})
 	}
