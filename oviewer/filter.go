@@ -61,15 +61,14 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	}
 
 	// Copy the header
-	if render.Header > 0 {
-		for ln := render.SkipLines; ln < render.Header; ln++ {
-			line, err := m.Line(ln)
-			if err != nil {
-				break
-			}
-			render.lineNumMap.Store(ln, ln)
-			writeLine(w, line)
+	for ln := 0; ln < render.firstLine(); ln++ {
+		line, err := m.Line(ln)
+		if err != nil {
+			log.Println(err)
+			break
 		}
+		render.lineNumMap.Store(ln, ln)
+		writeLine(w, line)
 	}
 	go m.filterWriter(ctx, searcher, m.firstLine(), filterDoc)
 	root.setMessagef(msg)
@@ -93,6 +92,7 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 		line, err := m.Line(lineNum)
 		if err != nil {
 			// deleted?
+			log.Println(err)
 			break
 		}
 		filterDoc.lineNumMap.Store(renderLN, lineNum)

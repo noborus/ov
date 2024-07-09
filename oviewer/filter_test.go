@@ -46,7 +46,7 @@ func TestRoot_Filter(t *testing.T) {
 	}
 }
 
-func TestRoot_filter(t *testing.T) {
+func TestRoot_filter2(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -118,6 +118,7 @@ func TestRoot_filterDocument(t *testing.T) {
 	}()
 	type fields struct {
 		fileNames []string
+		skipLines int
 		header    int
 	}
 	type args struct {
@@ -130,20 +131,22 @@ func TestRoot_filterDocument(t *testing.T) {
 		want   string
 	}{
 		{
-			name: "test.txt",
+			name: "test3.txtMatch",
 			fields: fields{
-				fileNames: []string{filepath.Join(testdata, "test.txt")},
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+				skipLines: 0,
 				header:    0,
 			},
 			args: args{
-				searcher: NewSearcher("test", nil, false, false),
+				searcher: NewSearcher("3", nil, false, false),
 			},
-			want: "test",
+			want: "3",
 		},
 		{
-			name: "test3.txt",
+			name: "test3.txtHeader",
 			fields: fields{
 				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+				skipLines: 0,
 				header:    1,
 			},
 			args: args{
@@ -151,10 +154,23 @@ func TestRoot_filterDocument(t *testing.T) {
 			},
 			want: "1",
 		},
+		{
+			name: "test3.txtSkipLines",
+			fields: fields{
+				fileNames: []string{filepath.Join(testdata, "test3.txt")},
+				skipLines: 1,
+				header:    1,
+			},
+			args: args{
+				searcher: NewSearcher("4", nil, false, false),
+			},
+			want: "1",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
+			root.Doc.SkipLines = tt.fields.skipLines
 			root.Doc.Header = tt.fields.header
 			root.filterDocument(context.Background(), tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
