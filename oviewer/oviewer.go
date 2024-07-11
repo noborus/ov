@@ -261,6 +261,8 @@ type Config struct {
 	IsWriteOriginal bool
 	// QuitSmall Quit if the output fits on one screen.
 	QuitSmall bool
+	// QuitSmallCount is the number of times to check if the output fits on one screen.
+	QuitSmallCount int
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
 	// SmartCaseSensitive is lowercase search ignores case, if true.
@@ -665,7 +667,7 @@ func (root *Root) Run() error {
 
 	root.ViewSync(ctx)
 	// Exit if fits on screen
-	if root.QuitSmall && root.docSmall() {
+	if root.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
 		root.IsWriteOriginal = true
 		return nil
 	}
@@ -929,9 +931,6 @@ func mergeGeneral(src general, dst general) general {
 
 // docSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) docSmall() bool {
-	if len(root.DocList) > 1 {
-		return false
-	}
 	root.prepareScreen()
 	m := root.Doc
 	if !m.BufEOF() {

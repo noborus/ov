@@ -174,6 +174,13 @@ func RunOviewer(args []string) error {
 		ov.Filter(nonMatchFilter, true)
 	}
 
+	if ov.QuitSmall && (filter != "" || nonMatchFilter != "") {
+		// UpdateInterval(50 * time.Millisecond) * 10 = 500ms.
+		// Quit if it fits on the screen within 500ms.
+		ov.QuitSmallCount = 10
+		ov.QuitSmall = false
+	}
+
 	if err := ov.Run(); err != nil {
 		return err
 	}
