@@ -311,9 +311,16 @@ func (root *Root) yRangeStyle(y int, s OVStyle, start int, end int) {
 
 // sectionLineHighlight applies the style of the section line highlight.
 func (root *Root) sectionLineHighlight(y int, line LineC) {
-	if line.section > 0 && line.sectionNm > 0 && line.sectionNm <= root.Doc.SectionHeaderNum {
-		root.yStyle(y, root.StyleSectionLine)
+	if !line.valid {
+		return
 	}
+	if line.section <= 0 {
+		return
+	}
+	if line.sectionNm <= 0 || line.sectionNm > root.Doc.SectionHeaderNum {
+		return
+	}
+	root.yStyle(y, root.StyleSectionLine)
 }
 
 // hideOtherSection hides other sections.

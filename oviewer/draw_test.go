@@ -362,3 +362,96 @@ func TestRoot_section2(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_sectionLineHighlight(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileNames        []string
+		sectionDelimiter string
+		sectionHeaderNum int
+	}
+	type args struct {
+		y int
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		args      args
+		wantStr   rune
+		wantStyle bool
+	}{
+		{
+			name: "test-sectionLineHighlight1",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^#",
+				sectionHeaderNum: 1,
+			},
+			args: args{
+				y: 2,
+			},
+			wantStr:   '#',
+			wantStyle: true,
+		},
+		{
+			name: "test-sectionLineHighlight2",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^#",
+				sectionHeaderNum: 1,
+			},
+			args: args{
+				y: 3,
+			},
+			wantStr:   '2',
+			wantStyle: false,
+		},
+		{
+			name: "test-sectionLineHighlightInvalid",
+			fields: fields{
+				fileNames:        []string{filepath.Join(testdata, "section.txt")},
+				sectionDelimiter: "^#",
+				sectionHeaderNum: 2,
+			},
+			args: args{
+				y: 20,
+			},
+			wantStr:   '~',
+			wantStyle: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileNames...)
+			root.Doc.SectionHeader = true
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.Doc.SectionHeaderNum = tt.fields.sectionHeaderNum
+			root.prepareScreen()
+			ctx := context.Background()
+			root.ViewSync(ctx)
+			root.prepareDraw(ctx)
+			root.draw(ctx)
+			line, ok := root.scr.lines[tt.args.y]
+			if !ok {
+				t.Fatalf("line is not found %d", tt.args.y)
+			}
+			root.sectionLineHighlight(tt.args.y, line)
+			p, _, style, _ := root.Screen.GetContent(0, tt.args.y)
+			if p != tt.wantStr {
+				t.Errorf("Root.sectionLineHighlight() = %v, want %v", p, tt.wantStr)
+			}
+			if tt.wantStyle {
+				if style != applyStyle(tcell.StyleDefault, root.StyleSectionLine) {
+					t.Errorf("Root.sectionLineHighlight() = %v, want %v", style, root.StyleSectionLine)
+				}
+			} else {
+				if style == applyStyle(tcell.StyleDefault, root.StyleSectionLine) {
+					t.Errorf("Root.sectionLineHighlight() = %v, want %v", style, tcell.StyleDefault)
+				}
+			}
+		})
+	}
+}
