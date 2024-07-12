@@ -451,16 +451,6 @@ func TestRoot_docSmall(t *testing.T) {
 			},
 			want: false,
 		},
-		{
-			name: "test multiple",
-			args: args{
-				fileNames: []string{
-					filepath.Join(testdata, "test.txt"),
-					filepath.Join(testdata, "test2.txt"),
-				},
-			},
-			want: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

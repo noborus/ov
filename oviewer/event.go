@@ -157,6 +157,13 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
 		root.watchControl()
 	}
+
+	if root.QuitSmallCount > 0 {
+		root.QuitSmallCount--
+		if root.Doc.documentType == DocFilter && root.docSmall() {
+			root.WriteQuit(ctx)
+		}
+	}
 }
 
 // keyEvent processes key events.
