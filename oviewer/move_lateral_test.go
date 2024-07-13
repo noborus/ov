@@ -575,7 +575,7 @@ func TestDocument_moveColumnWidthRight(t *testing.T) {
 			scr := SCR{
 				numbers: numbers,
 			}
-			m.setColumnWidths(scr)
+			m.setColumnWidths()
 			m.x = tt.fields.x
 			if err := m.moveColumnRight(tt.args.n, scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnWidthRight() error = %v, wantErr %v", err, tt.wantErr)

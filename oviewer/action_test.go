@@ -1042,7 +1042,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 			root.Doc.WrapMode = tt.fields.wrapMode
 			root.Doc.x = tt.fields.x
 			root.Doc.columnCursor = tt.fields.columnCursor
-			root.Doc.setColumnWidths(root.scr)
+			root.Doc.setColumnWidths()
 			root.prepareDraw(ctx)
 			root.toggleWrapMode(ctx)
 			if root.Doc.WrapMode != tt.want.wrapMode {
