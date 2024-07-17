@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -491,6 +492,140 @@ func Test_mergeGeneral(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := mergeGeneral(tt.args.src, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mergeGeneral() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setCaption(t *testing.T) {
+	type fields struct {
+		caption string
+		manpn   string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "testnil",
+			fields: fields{
+				caption: "",
+				manpn:   "",
+			},
+			want: "",
+		},
+		{
+			name: "test1",
+			fields: fields{
+				caption: "test",
+				manpn:   "",
+			},
+			want: "test",
+		},
+		{
+			name: "testMan",
+			fields: fields{
+				caption: "",
+				manpn:   "man",
+			},
+			want: "man",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv("MAN_PN", tt.fields.manpn)
+			root := rootHelper(t)
+			root.General.Caption = tt.fields.caption
+			root.setCaption()
+			if got := root.Doc.Caption; got != tt.want {
+				t.Errorf("Root.setCaption() = %v, want %v", got, "test")
+			}
+			os.Setenv("MAN_PN", "")
+		})
+	}
+}
+
+func TestRoot_setViewModeConfig(t *testing.T) {
+	type fields struct {
+		viewMode map[string]general
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		wantList []string
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				viewMode: map[string]general{
+					"view1": {},
+				},
+			},
+			wantList: []string{"general", "view1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Config.Mode = tt.fields.viewMode
+			root.setViewModeConfig()
+			if !reflect.DeepEqual(root.input.ModeCandidate.list, tt.wantList) {
+				t.Errorf("Root.setViewModeConfig() = %v, want %v", root.input.ModeCandidate.list, tt.wantList)
+			}
+		})
+	}
+}
+
+func TestRoot_prepareRun(t *testing.T) {
+	type fields struct {
+		QuitSmall       bool
+		QuitSmallFilter bool
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		wantQuit bool
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				QuitSmall:       false,
+				QuitSmallFilter: false,
+			},
+			wantErr:  false,
+			wantQuit: false,
+		},
+		{
+			name: "test2",
+			fields: fields{
+				QuitSmall:       true,
+				QuitSmallFilter: true,
+			},
+			wantErr:  false,
+			wantQuit: false,
+		},
+		{
+			name: "test2",
+			fields: fields{
+				QuitSmall:       true,
+				QuitSmallFilter: false,
+			},
+			wantErr:  false,
+			wantQuit: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.QuitSmall = tt.fields.QuitSmall
+			root.QuitSmallFilter = tt.fields.QuitSmallFilter
+			if err := root.prepareRun(context.Background()); (err != nil) != tt.wantErr {
+				t.Errorf("Root.prepareRun() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got := root.QuitSmall; got != tt.wantQuit {
+				t.Errorf("Root.prepareRun() = %v, want %v", got, tt.wantQuit)
 			}
 		})
 	}

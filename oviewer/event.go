@@ -158,9 +158,9 @@ func (root *Root) everyUpdate(ctx context.Context) {
 		root.watchControl()
 	}
 
-	if root.QuitSmallCount > 0 {
-		root.QuitSmallCount--
-		if root.Doc.documentType == DocFilter && root.docSmall() {
+	if root.quitSmallCountDown > 0 {
+		root.quitSmallCountDown--
+		if root.DocumentLen() == 2 && root.Doc.documentType == DocFilter && root.docSmall() {
 			root.WriteQuit(ctx)
 		}
 	}
