@@ -67,6 +67,9 @@ type Root struct {
 	// minStartX is the minimum start position of x.
 	minStartX int
 
+	// quitSmallCountDown is the countdown to quit if the output fits on one screen.
+	quitSmallCountDown int
+
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
@@ -261,8 +264,8 @@ type Config struct {
 	IsWriteOriginal bool
 	// QuitSmall Quit if the output fits on one screen.
 	QuitSmall bool
-	// QuitSmallCount is the number of times to check if the output fits on one screen.
-	QuitSmallCount int
+	// QuitSmallFilter Quit if the output fits on one screen and the filter is applied.
+	QuitSmallFilter bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
 	// SmartCaseSensitive is lowercase search ignores case, if true.
@@ -346,6 +349,10 @@ var (
 // Set the mode to MouseDragEvents when the mouse is enabled in oviewer.
 // Does not track mouse movements except when dragging.
 const MouseFlags = tcell.MouseDragEvents
+
+// QuitSmallCountDown is the countdown to quit if the output fits on one screen.
+// UpdateInterval(50 * time.Millisecond) * 10 = 500ms.
+const QuitSmallCountDown = 10
 
 // MaxWriteLog is the maximum number of lines to output to the log
 // when the debug flag is enabled.
@@ -616,8 +623,8 @@ func (root *Root) Run() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
 	defer root.Close()
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
@@ -625,48 +632,11 @@ func (root *Root) Run() error {
 	defer watcher.Close()
 	root.SetWatcher(watcher)
 
-	// Do not set the key bindings in NewOviewer
-	// because it is done after loading the config.
-	keyBind, err := root.setKeyConfig(ctx)
-	if err != nil {
+	if err := root.prepareRun(ctx); err != nil {
 		return err
 	}
-	help, err := NewHelp(keyBind)
-	if err != nil {
-		return err
-	}
-	root.helpDoc = help
 
-	if !root.Config.DisableMouse {
-		root.Screen.EnableMouse(MouseFlags)
-	}
-
-	root.optimizedMan()
-	if root.General.Caption != "" {
-		root.Doc.Caption = root.General.Caption
-	}
-
-	root.setModeConfig()
-	for n, doc := range root.DocList {
-		doc.general = root.Config.General
-		doc.regexpCompile()
-
-		if doc.FollowName {
-			doc.FollowMode = true
-		}
-		if doc.ColumnWidth {
-			doc.ColumnMode = true
-		}
-		w := ""
-		if doc.general.WatchInterval > 0 {
-			doc.watchMode()
-			w = "(watch)"
-		}
-		log.Printf("open [%d]%s%s", n, doc.FileName, w)
-	}
-
-	root.ViewSync(ctx)
-	// Exit if fits on screen
+	// Quit if fits on screen.
 	if root.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
 		root.IsWriteOriginal = true
 		return nil
@@ -674,9 +644,7 @@ func (root *Root) Run() error {
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
-
 	sigSuspend := registerSIGTSTP()
-
 	quitChan := make(chan struct{})
 
 	go func() {
@@ -699,8 +667,45 @@ func (root *Root) Run() error {
 	}
 }
 
-// optimizedMan optimizes execution with the Man command.
-func (root *Root) optimizedMan() {
+// prepareRun prepares to run the oviewer.
+func (root *Root) prepareRun(ctx context.Context) error {
+	// Do not set the key bindings in NewOviewer
+	// because it is done after loading the config.
+	keyBind, err := root.setKeyConfig(ctx)
+	if err != nil {
+		return err
+	}
+	help, err := NewHelp(keyBind)
+	if err != nil {
+		return err
+	}
+	root.helpDoc = help
+
+	if !root.Config.DisableMouse {
+		root.Screen.EnableMouse(MouseFlags)
+	}
+
+	root.setCaption()
+
+	root.setViewModeConfig()
+	root.prepareAllDocuments()
+	// Quit by filter result. This is evaluated lazily.
+	if root.QuitSmallFilter {
+		root.quitSmallCountDown = QuitSmallCountDown
+		root.QuitSmall = false
+	}
+	root.ViewSync(ctx)
+	return nil
+}
+
+// setCaption sets the caption.
+// optimizes execution with the Man command.
+func (root *Root) setCaption() {
+	if root.General.Caption != "" {
+		root.Doc.Caption = root.General.Caption
+		return
+	}
+
 	// Call from man command.
 	manPN := os.Getenv("MAN_PN")
 	if len(manPN) == 0 {
@@ -710,14 +715,35 @@ func (root *Root) optimizedMan() {
 	root.Doc.Caption = manPN
 }
 
-// setModeConfig sets mode config.
-func (root *Root) setModeConfig() {
+// setViewModeConfig sets view mode config.
+func (root *Root) setViewModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
 	list = append(list, "general")
 	for name := range root.Config.Mode {
 		list = append(list, name)
 	}
 	root.input.ModeCandidate.list = list
+}
+
+// prepareAllDocuments prepares all documents.
+func (root *Root) prepareAllDocuments() {
+	for n, doc := range root.DocList {
+		doc.general = root.Config.General
+		doc.regexpCompile()
+
+		if doc.FollowName {
+			doc.FollowMode = true
+		}
+		if doc.ColumnWidth {
+			doc.ColumnMode = true
+		}
+		w := ""
+		if doc.general.WatchInterval > 0 {
+			doc.watchMode()
+			w = "(watch)"
+		}
+		log.Printf("open [%d]%s%s", n, doc.FileName, w)
+	}
 }
 
 // Close closes the oviewer.
@@ -995,10 +1021,14 @@ func (root *Root) writeOriginal(output io.Writer) {
 
 // WriteLog write to the log terminal.
 func (root *Root) WriteLog() {
+	root.writeLog(os.Stdout)
+}
+
+func (root *Root) writeLog(w io.Writer) {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	if err := m.Export(os.Stdout, start, end); err != nil {
+	if err := m.Export(w, start, end); err != nil {
 		log.Println(err)
 	}
 }
