@@ -8,10 +8,6 @@ import (
 )
 
 func TestRoot_leftStatus(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type fields struct {
 		eventer   Eventer
 		caption   string
@@ -94,10 +90,6 @@ func TestRoot_leftStatus2(t *testing.T) {
 }
 
 func TestRoot_statusDisplay(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type fields struct {
 		FollowSection bool
 		FollowAll     bool

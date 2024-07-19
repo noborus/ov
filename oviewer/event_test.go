@@ -11,11 +11,6 @@ import (
 )
 
 func TestRoot_MoveLine(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-
 	type args struct {
 		num int
 	}
@@ -39,10 +34,6 @@ func TestRoot_MoveLine(t *testing.T) {
 }
 
 func TestRoot_SetDocument(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type args struct {
 		docNum int
 	}
@@ -87,10 +78,6 @@ func TestRoot_SetDocument(t *testing.T) {
 }
 
 func TestRoot_event(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type args struct {
 		ev tcell.Event
 	}

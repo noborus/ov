@@ -36,18 +36,25 @@ func (root *Root) hasDocChanged() bool {
 }
 
 // addDocument adds a document and displays it.
-func (root *Root) addDocument(ctx context.Context, m *Document) {
-	root.setMessageLogf("add %s", m.FileName)
-	m.general = root.Config.General
-	m.regexpCompile()
-
+func (root *Root) addDocument(ctx context.Context, addDoc *Document) {
 	root.mu.Lock()
-	defer root.mu.Unlock()
-	root.DocList = append(root.DocList, m)
-	root.CurrentDoc = len(root.DocList) - 1
-	root.showDocNum = true
+	root.DocList = append(root.DocList, addDoc)
+	root.mu.Unlock()
 
-	root.setDocument(ctx, m)
+	root.setDocumentNum(ctx, len(root.DocList)-1)
+	root.setMessageLogf("add %s%s", addDoc.FileName, addDoc.Caption)
+}
+
+// insertDocument inserts a document after the specified number and displays it.
+func (root *Root) insertDocument(ctx context.Context, num int, m *Document) {
+	root.mu.Lock()
+	num = max(0, num)
+	num = min(len(root.DocList)-1, num)
+	root.DocList = append(root.DocList[:num+1], append([]*Document{m}, root.DocList[num+1:]...)...)
+	root.mu.Unlock()
+
+	root.setDocumentNum(ctx, num+1)
+	root.setMessageLogf("insert %s%s", m.FileName, m.Caption)
 }
 
 // closeDocument closes the document.
@@ -58,37 +65,43 @@ func (root *Root) closeDocument(ctx context.Context) {
 		return
 	}
 
-	root.setMessageLogf("close [%d]%s", root.CurrentDoc, root.Doc.FileName)
+	root.setMessageLogf("close [%d]%s%s", root.CurrentDoc, root.Doc.FileName, root.Doc.Caption)
+
 	root.mu.Lock()
-	defer root.mu.Unlock()
-	root.DocList[root.CurrentDoc].requestClose()
-	root.DocList = append(root.DocList[:root.CurrentDoc], root.DocList[root.CurrentDoc+1:]...)
-	if root.CurrentDoc > 0 {
-		root.CurrentDoc--
+	num := root.CurrentDoc
+	root.DocList[num].requestClose()
+	root.DocList = append(root.DocList[:num], root.DocList[num+1:]...)
+	if num > 0 {
+		num--
 	}
-	doc := root.DocList[root.CurrentDoc]
-	root.setDocument(ctx, doc)
+	root.mu.Unlock()
+
+	root.setDocumentNum(ctx, num)
 }
 
-// closeAllDocument closes all documents of the specified type.
-func (root *Root) closeAllDocument(ctx context.Context, dType documentType) {
+// closeAllDocumentsOfType closes all documents of the specified type.
+func (root *Root) closeAllDocumentsOfType(dType documentType) (int, []string) {
 	root.mu.Lock()
-	for i := len(root.DocList) - 1; i >= 0; i-- {
+	defer root.mu.Unlock()
+
+	docLen := len(root.DocList)
+	docNum := root.CurrentDoc
+	closed := make([]string, 0, docLen)
+	for i := docLen - 1; i >= 0; i-- {
 		if len(root.DocList) <= 1 {
 			break
 		}
 		doc := root.DocList[i]
 		if doc.documentType == dType {
+			doc.requestClose()
 			root.DocList = append(root.DocList[:i], root.DocList[i+1:]...)
-			root.setMessageLogf("close %s", doc.FileName)
+			closed = append(closed, doc.FileName+doc.Caption)
+			if docNum == i {
+				docNum--
+			}
 		}
 	}
-	if root.CurrentDoc >= len(root.DocList) {
-		root.CurrentDoc = len(root.DocList) - 1
-	}
-	doc := root.DocList[root.CurrentDoc]
-	root.mu.Unlock()
-	root.setDocument(ctx, doc)
+	return docNum, closed
 }
 
 // nextDoc displays the next document.
@@ -112,6 +125,11 @@ func (root *Root) previousDoc(ctx context.Context) {
 	if fromDoc.parent != toDoc {
 		return
 	}
+	root.linkLineNum(fromDoc, toDoc)
+}
+
+// linkLineNum links the line number of the parent document.
+func (root *Root) linkLineNum(fromDoc, toDoc *Document) {
 	if fromDoc.lineNumMap == nil {
 		return
 	}
@@ -135,7 +153,6 @@ func (root *Root) setDocumentNum(ctx context.Context, docNum int) {
 
 	root.mu.Lock()
 	defer root.mu.Unlock()
-
 	root.CurrentDoc = docNum
 	m := root.DocList[root.CurrentDoc]
 	root.setDocument(ctx, m)
@@ -169,7 +186,6 @@ func (root *Root) logDisplay(ctx context.Context) {
 func (root *Root) toNormal(ctx context.Context) {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
-
 	m := root.DocList[root.CurrentDoc]
 	root.setDocument(ctx, m)
 }

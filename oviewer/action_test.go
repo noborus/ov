@@ -454,10 +454,6 @@ func TestRoot_toggleColumnMode(t *testing.T) {
 }
 
 func TestRoot_toggleMouse(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type fields struct {
 		disableMouse bool
 	}
@@ -1229,10 +1225,6 @@ func TestRoot_setWriteBA(t *testing.T) {
 }
 
 func TestRoot_modeConfig(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	type args struct {
 		modeName string
 	}
@@ -1290,10 +1282,6 @@ func TestRoot_modeConfig(t *testing.T) {
 }
 
 func TestRoot_suspend(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
 	root := rootHelper(t)
 	shell := os.Getenv("SHELL")
 	if got := root.shellSuspendResume(shell); got != nil {

@@ -306,6 +306,11 @@ func TestRoot_closeAllFilter(t *testing.T) {
 			if len(root.DocList) != tt.want {
 				t.Errorf("closeAllFilter() = %v, want %v", len(root.DocList), tt.want)
 			}
+			// twice makes no change.
+			root.closeAllFilter(ctx)
+			if len(root.DocList) != tt.want {
+				t.Errorf("closeAllFilter() = %v, want %v", len(root.DocList), tt.want)
+			}
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 )
 
 // filterDocument is a document for filtering.
@@ -48,13 +49,13 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	}
 	render.Caption = fmt.Sprintf("filter:%s", match)
 	msg := fmt.Sprintf("search:%s", match)
-	root.addDocument(ctx, render)
-	render.general = mergeGeneral(m.general, render.general)
+	root.insertDocument(ctx, root.CurrentDoc, render)
+	render.general = mergeGeneral(root.Config.General, render.general)
+	render.regexpCompile()
 
 	render.nonMatch = m.nonMatch
 	render.Header = m.Header
 	render.SkipLines = m.SkipLines
-
 	filterDoc := &filterDocument{
 		Document: render,
 		w:        w,
@@ -105,7 +106,20 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 
 // closeAllFilter closes all filter documents.
 func (root *Root) closeAllFilter(ctx context.Context) {
-	root.closeAllDocument(ctx, DocFilter)
+	if root.DocumentLen() == 1 {
+		root.setMessage("only this document")
+		return
+	}
+
+	docNum, closed := root.closeAllDocumentsOfType(DocFilter)
+	root.setDocumentNum(ctx, docNum)
+
+	if len(closed) == 0 {
+		root.setMessage("no document to close")
+		return
+	}
+	root.setMessageLogf("close %s", strings.Join(closed, ", "))
+
 }
 
 // writeLine writes a line to w.
