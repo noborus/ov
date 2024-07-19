@@ -75,8 +75,6 @@ type Root struct {
 
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
-	// Show document number
-	showDocNum bool
 }
 
 // SCR contains the screen information.
@@ -442,10 +440,6 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		return nil, err
 	}
 	root.logDoc = logDoc
-
-	if root.DocumentLen() > 1 {
-		root.showDocNum = true
-	}
 
 	return root, nil
 }

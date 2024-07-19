@@ -35,10 +35,15 @@ func (root *Root) leftStatus() (contents, int) {
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() (contents, int) {
 	var leftStatus strings.Builder
-	if root.showDocNum && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
+
+	color := tcell.ColorWhite
+	if root.DocumentLen() > 1 && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 		leftStatus.WriteString("[")
 		leftStatus.WriteString(strconv.Itoa(root.CurrentDoc))
 		leftStatus.WriteString("]")
+		if root.CurrentDoc != 0 {
+			color = tcell.Color((root.CurrentDoc + 8) % 16)
+		}
 	}
 
 	leftStatus.WriteString(root.statusDisplay())
@@ -53,10 +58,6 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	leftContents := StrToContents(leftStatus.String(), -1)
 
 	if root.Config.Prompt.Normal.InvertColor {
-		color := tcell.ColorWhite
-		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
-		}
 		for i := 0; i < len(leftContents); i++ {
 			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
 		}
