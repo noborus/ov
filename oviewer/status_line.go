@@ -114,7 +114,7 @@ func (root *Root) rightStatus() contents {
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	str := fmt.Sprintf("(%d/%d%s)", root.Doc.topLN, root.Doc.BufEndNum(), next)
+	str := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
 	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
 		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
