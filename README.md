@@ -85,24 +85,24 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
-* Supports files larger than [memory](#how-to-reduce-memory-usage) (**v0.30.0 or later**).
-* Regular files can be opened quickly even if they are large (**v0.30.0 or later**).
+* Supports files larger than [memory](#how-to-reduce-memory-usage).
+* Regular files can be opened quickly even if they are large.
 * Supports fixed [header](#header) line display (both wrap/nowrap).
 * Supports [column mode](#column-mode), which recognizes columns by delimiter.
 * Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
-* Support [columns with fixed widths](#column-width) instead of delimiters (**v0.30.0 or later**).
+* Support [columns with fixed widths](#column-width) instead of delimiters.
 * Supports section-by-section movement, splitting [sections](#section) by delimiter.
 * Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
 * Supports [alternating row](#alternate-rows) styling.
 * Shortcut keys are [customizable](#key-binding-customization).
 * The style of the effect is [customizable](#style-customization).
 * Supports [follow-mode](#follow-mode) (like `tail -f`).
-* Support follow mode by file [name](#follow-name) (like `tail -F`) (**v0.30.0 or later**).
+* Support follow mode by file [name](#follow-name) (like `tail -F`).
 * Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
 * Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
 * Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
 * Supports [watch](#watch) mode, which reads files on a regular basis.
-* Support watch in exec mode (equivalent to `watch` command) (**v0.30.0 or later**).
+* Support watch in exec mode (equivalent to `watch` command).
 * Supports incremental [search](#search) and regular expression search.
 * Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
 * Better support for Unicode and East Asian Width.
@@ -596,6 +596,22 @@ The command line option for this can be specified with `--non-match-filter`.
 
 ```console
 ov --non-match-filter info /var/log/syslog
+```
+
+If you specify both a `filter` option and the [Quit if one screen](#quit-if-one-screen) option,
+the command will display the results of the filter and then quit if the results fit on one screen.
+
+```console
+$ ps aux|ov -H1 --filter postgres --quit-if-one-screen
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+postgres    1589  0.0  0.0 221992 29952 ?        Ss   Jul24   0:02 /usr/lib/postgresql/14/bin/postgres -D /var/lib/postgresql/14/main -c config_file=/etc/postgresql/14/main/postgresql.conf
+postgres    1624  0.0  0.0 222104  9544 ?        Ss   Jul24   0:00 postgres: 14/main: checkpointer 
+postgres    1626  0.0  0.0 221992  8392 ?        Ss   Jul24   0:00 postgres: 14/main: background writer 
+postgres    1627  0.0  0.0 221992 11464 ?        Ss   Jul24   0:00 postgres: 14/main: walwriter 
+postgres    1628  0.0  0.0 222560  9928 ?        Ss   Jul24   0:01 postgres: 14/main: autovacuum launcher 
+postgres    1629  0.0  0.0  76728  7112 ?        Ss   Jul24   0:01 postgres: 14/main: stats collector 
+postgres    1631  0.0  0.0 222420  8904 ?        Ss   Jul24   0:00 postgres: 14/main: logical replication launcher 
+noborus   193766  0.0  0.0 1603756 7552 pts/0    Rl+  10:37   0:00 ov -H1 -F --filter postgres
 ```
 
 ###  3.19. <a name='caption'></a>Caption
