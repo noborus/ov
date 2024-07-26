@@ -922,7 +922,7 @@ MemoryLimit: 1000
 |       | --regexp-search                            | regular expression search                                      |
 |       | --section-delimiter regexp                 | regexp for section delimiter .e.g. "^#"                        |
 |       | --section-header                           | enable section-delimiter line as Header                        |
-|       | --section-header-num int                   | number of header lines (default 1)                             |
+|       | --section-header-num int                   | number of section header lines (default 1)                     |
 |       | --section-start int                        | section start position                                         |
 |       | --skip-extract                             | skip extracting compressed files                               |
 |       | --skip-lines int                           | skip the number of lines                                       |
@@ -994,7 +994,6 @@ It can also be changed after startup.
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
-| [alt+-]                       | * toggle hide other section                        |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
@@ -1010,7 +1009,8 @@ It can also be changed after startup.
 | [^]                           | * previous section                                 |
 | [9]                           | * last section                                     |
 | [F2]                          | * follow section mode toggle                       |
-| [F7]                          | * section header number                            |
+| [F7]                          | * number of section header lines                   |
+| [alt+-]                       | * toggle hide other section                        |
 | **Close and reload**          |                                                    |
 | [ctrl+F9], [ctrl+alt+s]       | * close file                                       |
 | [ctrl+alt+l], [F5]            | * reload file                                      |
