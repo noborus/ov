@@ -327,6 +327,7 @@ func (root *Root) setSkipLines(input string) {
 	}
 
 	root.Doc.SkipLines = num
+	root.Doc.columnWidths = nil
 	root.setMessagef("Set skip lines %d", num)
 }
 
