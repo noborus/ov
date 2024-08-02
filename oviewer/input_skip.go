@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -44,18 +43,10 @@ func (e *eventSkipLines) Confirm(str string) tcell.Event {
 
 // Up returns strings when the up key is pressed during input.
 func (*eventSkipLines) Up(str string) string {
-	n, err := strconv.Atoi(str)
-	if err != nil {
-		return "0"
-	}
-	return strconv.Itoa(n + 1)
+	return upNum(str)
 }
 
 // Down returns strings when the down key is pressed during input.
 func (*eventSkipLines) Down(str string) string {
-	n, err := strconv.Atoi(str)
-	if err != nil || n <= 0 {
-		return "0"
-	}
-	return strconv.Itoa(n - 1)
+	return downNum(str)
 }

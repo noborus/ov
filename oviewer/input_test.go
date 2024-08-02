@@ -421,3 +421,69 @@ func TestRoot_inputState(t *testing.T) {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "")
 	}
 }
+
+func Test_upNum(t *testing.T) {
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "testUpNum1",
+			args: args{
+				str: "1",
+			},
+			want: "2",
+		},
+		{
+			name: "testUpNum2",
+			args: args{
+				str: "e",
+			},
+			want: "0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := upNum(tt.args.str); got != tt.want {
+				t.Errorf("upNum() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_downNum(t *testing.T) {
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "testDownNum1",
+			args: args{
+				str: "3",
+			},
+			want: "2",
+		},
+		{
+			name: "testDownNum2",
+			args: args{
+				str: "e",
+			},
+			want: "0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := downNum(tt.args.str); got != tt.want {
+				t.Errorf("downNum() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

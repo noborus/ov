@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
@@ -357,4 +358,22 @@ func blankCandidate() *candidate {
 	return &candidate{
 		list: []string{},
 	}
+}
+
+// upNum returns the number of the previous candidate.
+func upNum(str string) string {
+	n, err := strconv.Atoi(str)
+	if err != nil {
+		return "0"
+	}
+	return strconv.Itoa(n + 1)
+}
+
+// downNum returns the number of the next candidate.
+func downNum(str string) string {
+	n, err := strconv.Atoi(str)
+	if err != nil || n <= 0 {
+		return "0"
+	}
+	return strconv.Itoa(n - 1)
 }
