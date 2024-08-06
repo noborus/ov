@@ -120,7 +120,7 @@ func (e *eventInputSearch) Prompt() string {
 
 // Confirm returns the event when the input is confirmed.
 func (e *eventInputSearch) Confirm(str string) tcell.Event {
-	e.value = str
+	e.value = stripBackSlash(str)
 	e.clist.toLast(str)
 	e.SetEventNow()
 	return e
@@ -146,4 +146,18 @@ func (input *Input) searchCandidates(n int) []string {
 	listLen := len(input.SearchCandidate.list)
 	start := max(0, listLen-n)
 	return input.SearchCandidate.list[start:listLen]
+}
+
+// stripBackSlash removes the backslash from the string
+// when the backslash is followed by an exclamation mark.
+func stripBackSlash(str string) string {
+	if len(str) < 2 {
+		return str
+	}
+	idx := strings.Index(str, "\\!")
+	if idx < 0 {
+		return str
+	}
+	str = str[:idx] + str[idx+1:]
+	return str
 }
