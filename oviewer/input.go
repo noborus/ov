@@ -83,7 +83,7 @@ func NewInput() *Input {
 func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
 	// Not confirmed or canceled.
-	evKey := root.inputKeyConfig.Capture(ev)
+	evKey := root.inputCapture(ev)
 	if ok := root.input.keyEvent(evKey); !ok {
 		root.incrementalSearch(ctx)
 		return
@@ -99,6 +99,19 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	nev := input.Event.Confirm(input.value)
 	root.postEvent(nev)
 	input.Event = normal()
+}
+
+func (root *Root) inputCapture(ev *tcell.EventKey) *tcell.EventKey {
+	if ev.Rune() == '!' {
+		if root.input.Event.Mode() != Filter {
+			return ev
+		}
+		if len(root.input.value) > 0 && root.input.value[len(root.input.value)-1] == '\\' {
+			return ev
+		}
+	}
+
+	return root.inputKeyConfig.Capture(ev)
 }
 
 // keyEvent handles the keystrokes of the input.

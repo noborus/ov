@@ -267,3 +267,50 @@ func TestRoot_setSearchMode(t *testing.T) {
 		})
 	}
 }
+
+func Test_stripBackSlash(t *testing.T) {
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "nonEsacpe",
+			args: args{
+				str: "\test",
+			},
+			want: "\test",
+		},
+		{
+			name: "nonEsacpe2",
+			args: args{
+				str: "!test",
+			},
+			want: "!test",
+		},
+		{
+			name: "backSlash1",
+			args: args{
+				str: `\!test`,
+			},
+			want: "!test",
+		},
+		{
+			name: "backSlash2",
+			args: args{
+				str: `te\!st`,
+			},
+			want: "te!st",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := stripBackSlash(tt.args.str); got != tt.want {
+				t.Errorf("stripSlash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
