@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -534,14 +533,13 @@ func TestRoot_setCaption(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("MAN_PN", tt.fields.manpn)
+			t.Setenv("MAN_PN", tt.fields.manpn)
 			root := rootHelper(t)
 			root.General.Caption = tt.fields.caption
 			root.setCaption()
 			if got := root.Doc.Caption; got != tt.want {
 				t.Errorf("Root.setCaption() = %v, want %v", got, "test")
 			}
-			os.Setenv("MAN_PN", "")
 		})
 	}
 }

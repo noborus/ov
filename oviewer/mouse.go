@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -153,7 +152,7 @@ func (root *Root) sendCopySelect() {
 func (root *Root) copyToClipboard(_ context.Context) {
 	str, err := root.rangeToString(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2)
 	if err != nil {
-		root.debugMessage(fmt.Sprintf("copyToClipboard: %s", err.Error()))
+		root.debugMessage("copyToClipboard: " + err.Error())
 		return
 	}
 

@@ -587,7 +587,7 @@ func (root *Root) sendRequest(m *Document, request request) {
 	case m.ctlCh <- controlSpecifier{request: request}:
 		root.debugMessage(fmt.Sprintf("notify send %v", request))
 	default:
-		root.debugMessage(fmt.Sprintf("notify send fail %s", request))
+		root.debugMessage(fmt.Sprintf("notify send fail %v", request))
 	}
 }
 
