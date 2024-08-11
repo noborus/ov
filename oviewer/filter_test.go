@@ -177,8 +177,8 @@ func TestRoot_filterDocument(t *testing.T) {
 			for !filterDoc.BufEOF() {
 			}
 			line := filterDoc.getLineC(0, 0)
-			if string(line.str) != tt.want {
-				t.Errorf("filterDocument() = %v, want %v", string(line.str), tt.want)
+			if line.str != tt.want {
+				t.Errorf("filterDocument() = %v, want %v", line.str, tt.want)
 			}
 		})
 	}

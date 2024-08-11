@@ -687,8 +687,7 @@ func TestDocument_optimalXWidth(t *testing.T) {
 	type args struct {
 		cursor int
 	}
-	type fields struct {
-	}
+	type fields struct{}
 	tests := []struct {
 		name    string
 		fields  fields

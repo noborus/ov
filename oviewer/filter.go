@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -47,8 +46,8 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	if m.nonMatch {
 		match = "!" + match
 	}
-	render.Caption = fmt.Sprintf("filter:%s", match)
-	msg := fmt.Sprintf("search:%s", match)
+	render.Caption = "filter:" + match
+	msg := "search:" + match
 	root.insertDocument(ctx, root.CurrentDoc, render)
 	render.general = mergeGeneral(root.Config.General, render.general)
 	render.regexpCompile()
@@ -119,7 +118,6 @@ func (root *Root) closeAllFilter(ctx context.Context) {
 		return
 	}
 	root.setMessageLogf("close %s", strings.Join(closed, ", "))
-
 }
 
 // writeLine writes a line to w.
