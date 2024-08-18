@@ -186,7 +186,7 @@ func (root *Root) prepareLines(lines map[int]LineC) map[int]LineC {
 func (root *Root) setLines(lines map[int]LineC, startLN int, endLN int) map[int]LineC {
 	m := root.Doc
 	for lN := startLN; lN < endLN; lN++ {
-		line := m.getLineC(lN, m.TabWidth)
+		line := m.getLineC(lN)
 		if line.valid {
 			RangeStyle(line.lc, 0, len(line.lc), root.StyleBody)
 			root.styleContent(line)
@@ -225,7 +225,7 @@ func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 			sp, ok := lines[lN-m.SectionStartPosition]
 			if !ok {
 				// section starts off screen.
-				sp = m.getLineC(lN-m.SectionStartPosition, m.TabWidth)
+				sp = m.getLineC(lN - m.SectionStartPosition)
 			}
 			if m.SectionDelimiterReg.MatchString(sp.str) {
 				num = 1

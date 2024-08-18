@@ -224,7 +224,7 @@ func (m *Document) moveYUp(moveY int) {
 // leftMostX returns a list of left - most x positions when wrapping.
 // Returns nil if there is no line number.
 func (m *Document) leftMostX(lN int) []int {
-	lc, err := m.contents(lN, m.TabWidth)
+	lc, err := m.contents(lN)
 	if err != nil {
 		return nil
 	}

@@ -19,7 +19,7 @@ func setupSCRHelper(t *testing.T, m *Document) SCR {
 		lines:   make(map[int]LineC, 0),
 	}
 	for i := 0; i < 10; i++ {
-		line := m.getLineC(i, m.TabWidth)
+		line := m.getLineC(i)
 		scr.lines[i] = line
 	}
 	return scr

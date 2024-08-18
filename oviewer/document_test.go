@@ -72,13 +72,16 @@ func TestOpenDocument(t *testing.T) {
 func TestDocument_lineToContents(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		lN       int
-		tabWidth int
+		lN int
+	}
+	type fields struct {
+		tabWdith int
 	}
 	tests := []struct {
 		name    string
 		str     string
 		args    args
+		fields  fields
 		want    contents
 		wantErr bool
 	}{
@@ -86,8 +89,10 @@ func TestDocument_lineToContents(t *testing.T) {
 			name: "testEmpty",
 			str:  ``,
 			args: args{
-				lN:       1,
-				tabWidth: 4,
+				lN: 1,
+			},
+			fields: fields{
+				tabWdith: 4,
 			},
 			want:    nil,
 			wantErr: true,
@@ -96,8 +101,10 @@ func TestDocument_lineToContents(t *testing.T) {
 			name: "test1",
 			str:  "test\n",
 			args: args{
-				lN:       0,
-				tabWidth: 4,
+				lN: 0,
+			},
+			fields: fields{
+				tabWdith: 4,
 			},
 			want:    StrToContents("test", 4),
 			wantErr: false,
@@ -108,8 +115,8 @@ func TestDocument_lineToContents(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docHelper(t, tt.str)
-			t.Logf("num:%d", m.BufEndNum())
-			got, err := m.contents(tt.args.lN, tt.args.tabWidth)
+			m.TabWidth = tt.fields.tabWdith
+			got, err := m.contents(tt.args.lN)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.lineToContents() error = %v, wantErr %v", err, tt.wantErr)
 				return

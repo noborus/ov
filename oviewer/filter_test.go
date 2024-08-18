@@ -176,7 +176,7 @@ func TestRoot_filterDocument(t *testing.T) {
 			filterDoc := root.DocList[len(root.DocList)-1]
 			for !filterDoc.BufEOF() {
 			}
-			line := filterDoc.getLineC(0, 0)
+			line := filterDoc.getLineC(0)
 			if line.str != tt.want {
 				t.Errorf("filterDocument() = %v, want %v", line.str, tt.want)
 			}

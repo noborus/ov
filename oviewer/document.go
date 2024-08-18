@@ -53,8 +53,8 @@ type Document struct {
 	store       *store
 	followStore *store
 
-	// converter is an interface that converts escape sequences, etc.
-	converter Converter
+	// conv is an interface that converts escape sequences, etc.
+	conv Converter
 
 	// fileName is the file name to display.
 	FileName string
@@ -210,6 +210,7 @@ func NewDocument() (*Document, error) {
 			ColumnDelimiter: "",
 			TabWidth:        8,
 			MarkStyleWidth:  1,
+			Converter:       "es",
 		},
 		ctlCh:        make(chan controlSpecifier),
 		memoryLimit:  100,
@@ -217,11 +218,11 @@ func NewDocument() (*Document, error) {
 		reopenable:   true,
 		store:        NewStore(),
 		lastSearchLN: -1,
-		converter:    newEscapeSequence(),
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
+	m.conv = m.converterType(m.general.Converter)
 	return m, nil
 }
 
@@ -234,6 +235,17 @@ func (m *Document) NewCache() error {
 	m.cache = cache
 
 	return nil
+}
+
+// converterType returns the Converter type.
+func (m *Document) converterType(name string) Converter {
+	switch name {
+	case "raw":
+		return newRawConverter()
+	case "es":
+		return newESConverter()
+	}
+	return defaultConverter
 }
 
 // OpenDocument opens a file and returns a Document.
@@ -413,18 +425,18 @@ func (m *Document) ClearCache() {
 }
 
 // contents returns contents from line number and tabWidth.
-func (m *Document) contents(lN int, tabWidth int) (contents, error) {
+func (m *Document) contents(lN int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
 	}
 
 	str, err := m.LineStr(lN)
-	return parseString(m.converter, str, tabWidth), err
+	return parseString(m.conv, str, m.TabWidth), err
 }
 
 // getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
-func (m *Document) getLineC(lN int, tabWidth int) LineC {
+func (m *Document) getLineC(lN int) LineC {
 	if line, ok := m.cache.Get(lN); ok {
 		lc := make(contents, len(line.lc))
 		copy(lc, line.lc)
@@ -433,7 +445,7 @@ func (m *Document) getLineC(lN int, tabWidth int) LineC {
 		return line
 	}
 
-	org, err := m.contents(lN, tabWidth)
+	org, err := m.contents(lN)
 	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent

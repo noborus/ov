@@ -1,9 +1,7 @@
 package oviewer
 
 import (
-	"log"
 	"strings"
-	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
@@ -21,19 +19,6 @@ type content struct {
 
 // contents represents one line of contents.
 type contents []content
-
-// The states of the ANSI escape code parser.
-const (
-	ansiText = iota
-	ansiEscape
-	ansiSubstring
-	ansiControlSequence
-	otherSequence
-	systemSequence
-	oscHyperLink
-	oscParameter
-	oscURL
-)
 
 // DefaultContent is a blank Content.
 var DefaultContent = content{
@@ -54,15 +39,13 @@ var EOFContent = content{
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
 
-// csiCache caches escape sequences.
-var csiCache sync.Map
-
 // parseState represents the affected state after parsing.
 type parseState struct {
 	lc        contents
+	mainc     rune
+	combc     []rune
 	style     tcell.Style
 	bsContent content
-	state     int
 	tabWidth  int
 	tabx      int
 	bsFlag    bool // backspace(^H) flag
@@ -70,25 +53,31 @@ type parseState struct {
 
 // Converter is an interface for converting escape sequences, etc.
 type Converter interface {
-	convert(*parseState, rune, []rune) bool
+	convert(*parseState) bool
 }
 
-type rawConverter struct{}
+var defaultConverter = newESConverter()
 
-func newRawConverter() Converter {
-	return rawConverter{}
+// StrToContents converts a single-line string into a one line of contents.
+// Parse escape sequences, etc.
+// 1 Content matches the characters displayed on the screen.
+func StrToContents(str string, tabWidth int) contents {
+	return parseString(newESConverter(), str, tabWidth)
 }
-func (rawConverter) convert(st *parseState, mainc rune, _ []rune) bool {
-	return false
+
+// RawStrToContents converts a single-line string into a one line of contents.
+// Does not interpret escape sequences.
+// 1 Content matches the characters displayed on the screen.
+func RawStrToContents(str string, tabWdith int) contents {
+	return parseString(newRawConverter(), str, tabWdith)
 }
 
 // parseString converts a string to lineContents.
-// parseString includes escape sequences and tabs.
+// parseString is converted character by character by Converter.
 // If tabwidth is set to -1, \t is displayed instead of functioning as a tab.
 func parseString(conv Converter, str string, tabWidth int) contents {
 	st := &parseState{
 		lc:        make(contents, 0, len(str)),
-		state:     ansiText,
 		style:     tcell.StyleDefault,
 		tabWidth:  tabWidth,
 		tabx:      0,
@@ -99,18 +88,19 @@ func parseString(conv Converter, str string, tabWidth int) contents {
 	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {
 		r := gr.Runes()
-		mainc := r[0]
-		combc := r[1:]
+		st.mainc = r[0]
+		st.combc = r[1:]
 
-		if conv.convert(st, mainc, combc) {
+		if conv.convert(st) {
 			continue
 		}
-		st.parseString(mainc, combc)
+		st.parseChar(st.mainc, st.combc)
 	}
 	return st.lc
 }
 
-func (st *parseState) parseString(mainc rune, combc []rune) {
+// parseChar parses a single character.
+func (st *parseState) parseChar(mainc rune, combc []rune) {
 	c := DefaultContent
 	switch runewidth.RuneWidth(mainc) {
 	case 0:
@@ -216,14 +206,7 @@ func (lc contents) last() content {
 	return lc[n-1]
 }
 
-// StrToContents converts a single-line string into a one line of contents.
-// Parse escape sequences, etc.
-// 1 Content matches the characters displayed on the screen.
-func StrToContents(str string, tabWidth int) contents {
-	es := newEscapeSequence()
-	return parseString(es, str, tabWidth)
-}
-
+// widthPos is a table that converts the position of the content to the width of the screen.
 type widthPos []int
 
 // ContentsToStr returns a converted string
@@ -253,10 +236,11 @@ func ContentsToStr(lc contents) (string, widthPos) {
 	return str, pos
 }
 
+// writeRune writes a rune to strings.Builder.
 func writeRune(w *strings.Builder, r rune) int {
 	n, err := w.WriteRune(r)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return n
 }

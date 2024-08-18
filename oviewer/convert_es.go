@@ -5,51 +5,73 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 )
 
+// The states of the ANSI escape code parser.
+const (
+	ansiText = iota
+	ansiEscape
+	ansiSubstring
+	ansiControlSequence
+	otherSequence
+	systemSequence
+	oscHyperLink
+	oscParameter
+	oscURL
+)
+
+// escape sequence states.
 type escapeSequence struct {
 	parameter strings.Builder
 	url       strings.Builder
+	state     int
 }
 
-func newEscapeSequence() *escapeSequence {
+// newESConverter returns a new escape sequence converter.
+func newESConverter() *escapeSequence {
 	return &escapeSequence{
 		parameter: strings.Builder{},
 		url:       strings.Builder{},
+		state:     ansiText,
 	}
 }
 
+// csiCache caches escape sequences.
+var csiCache sync.Map
+
 // convert parses an escape sequence and changes state.
 // Returns true if it is an escape sequence and a non-printing character.
-func (es *escapeSequence) convert(st *parseState, mainc rune, _ []rune) bool {
-	switch st.state {
+func (es *escapeSequence) convert(st *parseState) bool {
+	mainc := st.mainc
+	switch es.state {
 	case ansiEscape:
 		switch mainc {
 		case '[': // Control Sequence Introducer.
 			es.parameter.Reset()
-			st.state = ansiControlSequence
+			es.state = ansiControlSequence
 			return true
 		case 'c': // Reset.
 			st.style = tcell.StyleDefault
-			st.state = ansiText
+			es.state = ansiText
 			return true
 		case ']': // Operating System Command Sequence.
-			st.state = systemSequence
+			es.state = systemSequence
 			return true
 		case 'P', 'X', '^', '_': // Substrings and commands.
-			st.state = ansiSubstring
+			es.state = ansiSubstring
 			return true
 		case '(':
-			st.state = otherSequence
+			es.state = otherSequence
 			return true
 		default: // Ignore.
-			st.state = ansiText
+			es.state = ansiText
 		}
 	case ansiSubstring:
 		if mainc == 0x1b {
-			st.state = ansiControlSequence
+			es.state = ansiControlSequence
 		}
 		return true
 	case ansiControlSequence:
@@ -63,25 +85,25 @@ func (es *escapeSequence) convert(st *parseState, mainc rune, _ []rune) bool {
 				return true
 			}
 		}
-		st.state = ansiText
+		es.state = ansiText
 		return true
 	case otherSequence:
-		st.state = ansiEscape
+		es.state = ansiEscape
 		return true
 	case systemSequence:
 		switch mainc {
 		case '8':
-			st.state = oscHyperLink
+			es.state = oscHyperLink
 			return true
 		case '\\':
-			st.state = ansiText
+			es.state = ansiText
 			return true
 		case 0x1b:
 			// unknown but for compatibility.
-			st.state = ansiControlSequence
+			es.state = ansiControlSequence
 			return true
 		case 0x07:
-			st.state = ansiText
+			es.state = ansiText
 			return true
 		}
 		log.Printf("invalid char %c", mainc)
@@ -89,10 +111,10 @@ func (es *escapeSequence) convert(st *parseState, mainc rune, _ []rune) bool {
 	case oscHyperLink:
 		switch mainc {
 		case ';':
-			st.state = oscParameter
+			es.state = oscParameter
 			return true
 		}
-		st.state = ansiText
+		es.state = ansiText
 		return false
 	case oscParameter:
 		if mainc != ';' {
@@ -104,19 +126,19 @@ func (es *escapeSequence) convert(st *parseState, mainc rune, _ []rune) bool {
 			st.style = st.style.UrlId(urlID)
 		}
 		es.parameter.Reset()
-		st.state = oscURL
+		es.state = oscURL
 		return true
 	case oscURL:
 		switch mainc {
 		case 0x1b:
 			st.style = st.style.Url(es.url.String())
 			es.url.Reset()
-			st.state = systemSequence
+			es.state = systemSequence
 			return true
 		case 0x07:
 			st.style = st.style.Url(es.url.String())
 			es.url.Reset()
-			st.state = ansiText
+			es.state = ansiText
 			return true
 		}
 		es.url.WriteRune(mainc)
@@ -124,7 +146,7 @@ func (es *escapeSequence) convert(st *parseState, mainc rune, _ []rune) bool {
 	}
 	switch mainc {
 	case 0x1b:
-		st.state = ansiEscape
+		es.state = ansiEscape
 		return true
 	case '\n':
 		return true
