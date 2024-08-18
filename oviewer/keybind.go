@@ -82,6 +82,7 @@ const (
 	actionJumpTarget     = "jump_target"
 	actionSaveBuffer     = "save_buffer"
 	actionHideOther      = "hide_other"
+	actionConvertType    = "convert_type"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -166,6 +167,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionJumpTarget:     root.setJumpTargetMode,
 		actionSaveBuffer:     root.setSaveBuffer,
 		actionHideOther:      root.toggleHideOtherSection,
+		actionConvertType:    root.setConvertType,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -254,6 +256,7 @@ func defaultKeyBinds() KeyBind {
 		actionJumpTarget:     {"j"},
 		actionSaveBuffer:     {"S"},
 		actionHideOther:      {"alt+-"},
+		actionConvertType:    {"alt+t"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -340,6 +343,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
+	k.writeKeyBind(&b, actionConvertType, "convert type selection")
 
 	writeHeader(&b, "Section")
 	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")

@@ -428,6 +428,24 @@ func (root *Root) modeConfig(modeName string) (general, error) {
 	return c, nil
 }
 
+func (root *Root) setConverter(ctx context.Context, typeName string) {
+	m := root.Doc
+	m.general.Converter = typeName
+	m.converter = converterType(typeName)
+	root.Doc.ClearCache()
+	root.ViewSync(ctx)
+}
+
+func converterType(typeName string) Converter {
+	switch typeName {
+	case "raw":
+		return newRawConverter()
+	case "es":
+		return newEscapeSequence()
+	}
+	return newEscapeSequence()
+}
+
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
 	root.Doc.setDelimiter(input)

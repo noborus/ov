@@ -126,6 +126,8 @@ func newLineNumber(number, wrap int) LineNumber {
 // general structure contains the general of the display.
 // general contains values that determine the behavior of each document.
 type general struct {
+	// Converter is the converter.
+	Converter string
 	// Caption is an additional caption to display after the file name.
 	Caption string
 	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
@@ -731,6 +733,7 @@ func (root *Root) prepareAllDocuments() {
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
 		}
+		doc.converter = converterType(doc.general.Converter)
 		w := ""
 		if doc.general.WatchInterval > 0 {
 			doc.watchMode()

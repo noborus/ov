@@ -177,7 +177,7 @@ func RunOviewer(args []string) error {
 	if ov.QuitSmall && (filter != "" || nonMatchFilter != "") {
 		ov.QuitSmallFilter = true
 	}
-
+	// Run oviewer.
 	if err := ov.Run(); err != nil {
 		return err
 	}
@@ -359,6 +359,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
 	// Config.General
+	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw]")
+	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
+	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"es\tEscape Sequence", "raw\tRaw"}, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))
 	_ = rootCmd.RegisterFlagCompletionFunc("tab-width", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {

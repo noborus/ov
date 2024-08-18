@@ -32,6 +32,7 @@ const (
 	JumpTarget                 // JumpTarget is the position to display the search results.
 	SaveBuffer                 // SaveBuffer is the save buffer.
 	SectionNum                 // SectionNum is the section number.
+	ConvertType                // ConvertType is the convert type.
 )
 
 // Input represents the status of various inputs.
@@ -53,6 +54,7 @@ type Input struct {
 	MultiColorCandidate   *candidate
 	JumpTargetCandidate   *candidate
 	SaveBufferCandidate   *candidate
+	ConverterCandidate    *candidate
 
 	value   string
 	cursorX int
@@ -74,6 +76,7 @@ func NewInput() *Input {
 	i.MultiColorCandidate = multiColorCandidate()
 	i.JumpTargetCandidate = jumpTargetCandidate()
 	i.SaveBufferCandidate = blankCandidate()
+	i.ConverterCandidate = converterCandidate()
 
 	i.Event = &eventNormal{}
 	return &i

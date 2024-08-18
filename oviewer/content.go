@@ -73,7 +73,6 @@ type Converter interface {
 	convert(*parseState, rune, []rune) bool
 }
 
-/*
 type rawConverter struct{}
 
 func newRawConverter() Converter {
@@ -82,7 +81,6 @@ func newRawConverter() Converter {
 func (rawConverter) convert(st *parseState, mainc rune, _ []rune) bool {
 	return false
 }
-*/
 
 // parseString converts a string to lineContents.
 // parseString includes escape sequences and tabs.

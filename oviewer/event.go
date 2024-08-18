@@ -60,6 +60,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.pasteFromClipboard(ctx)
 	case *eventViewMode:
 		root.setViewMode(ctx, ev.value)
+	case *eventConverter:
+		root.setConverter(ctx, ev.value)
 	case *eventInputSearch:
 		root.firstSearch(ctx, ev.searchType)
 	case *eventSearch:
