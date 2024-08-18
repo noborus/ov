@@ -53,6 +53,9 @@ type Document struct {
 	store       *store
 	followStore *store
 
+	// converter is an interface that converts escape sequences, etc.
+	converter Converter
+
 	// fileName is the file name to display.
 	FileName string
 	// Caption is an additional caption to display after the file name.
@@ -214,6 +217,7 @@ func NewDocument() (*Document, error) {
 		reopenable:   true,
 		store:        NewStore(),
 		lastSearchLN: -1,
+		converter:    newEscapeSequence(),
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
@@ -415,7 +419,7 @@ func (m *Document) contents(lN int, tabWidth int) (contents, error) {
 	}
 
 	str, err := m.LineStr(lN)
-	return parseString(str, tabWidth), err
+	return parseString(m.converter, str, tabWidth), err
 }
 
 // getLineC returns contents from line number and tabWidth.

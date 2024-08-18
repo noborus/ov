@@ -252,7 +252,7 @@ func Test_leftMostX(t *testing.T) {
 			name: "oneLine",
 			args: args{
 				width: 10,
-				lc:    parseString("0123456789", 8),
+				lc:    StrToContents("0123456789", 8),
 			},
 			want: []int{0},
 		},
@@ -260,7 +260,7 @@ func Test_leftMostX(t *testing.T) {
 			name: "twoLine",
 			args: args{
 				width: 10,
-				lc:    parseString("000000000111111111", 8),
+				lc:    StrToContents("000000000111111111", 8),
 			},
 			want: []int{0, 10},
 		},
@@ -271,7 +271,7 @@ func Test_leftMostX(t *testing.T) {
 				// 0あいうえ
 				// おかきくけ
 				// こ
-				lc: parseString("0あいうえおかきくけこ", 8),
+				lc: StrToContents("0あいうえおかきくけこ", 8),
 			},
 			want: []int{0, 9, 19},
 		},
@@ -370,7 +370,7 @@ func Test_leftX(t *testing.T) {
 			name: "oneLine",
 			args: args{
 				width: 10,
-				lc:    parseString("0123456789", 8),
+				lc:    StrToContents("0123456789", 8),
 			},
 			want: []int{0},
 		},
@@ -378,7 +378,7 @@ func Test_leftX(t *testing.T) {
 			name: "MixedWidth",
 			args: args{
 				width: 80,
-				lc: parseString(`47382,"90718","9071800","オキナワケン","ヤエヤマグンヨナグニチョウ","イカニケイサイガナイバアイ","沖縄県","八重山郡与那国町","以下に掲載がない場合",0,0,0,0,0,0
+				lc: StrToContents(`47382,"90718","9071800","オキナワケン","ヤエヤマグンヨナグニチョウ","イカニケイサイガナイバアイ","沖縄県","八重山郡与那国町","以下に掲載がない場合",0,0,0,0,0,0
 `, 8),
 			},
 			want: []int{0, 79},
