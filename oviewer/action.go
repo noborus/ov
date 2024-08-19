@@ -405,6 +405,7 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	}
 
 	root.Doc.general = mergeGeneral(root.Doc.general, c)
+	root.Doc.conv = root.Doc.converterType(root.Doc.general.Converter)
 	root.Doc.regexpCompile()
 	root.Doc.ClearCache()
 	root.ViewSync(ctx)
@@ -426,6 +427,14 @@ func (root *Root) modeConfig(modeName string) (general, error) {
 		return general{}, fmt.Errorf("%s mode not found", modeName)
 	}
 	return c, nil
+}
+
+func (root *Root) setConverter(ctx context.Context, name string) {
+	m := root.Doc
+	m.general.Converter = name
+	m.conv = m.converterType(name)
+	root.Doc.ClearCache()
+	root.ViewSync(ctx)
 }
 
 // setDelimiter sets the delimiter string.

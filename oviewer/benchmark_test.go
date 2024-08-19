@@ -28,7 +28,7 @@ func Parse_Helper(b *testing.B, fileName string) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parseString(string(f), 8)
+		StrToContents(string(f), 8)
 	}
 }
 

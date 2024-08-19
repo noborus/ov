@@ -590,7 +590,7 @@ func TestRoot_styleContent(t *testing.T) {
 			m.setColumnWidths()
 			root.scr.lines = make(map[int]LineC)
 			root.prepareDraw(context.Background())
-			line := m.getLineC(tt.args.lineNum, m.TabWidth)
+			line := m.getLineC(tt.args.lineNum)
 			if line.lc == nil {
 				t.Fatal("line is nil")
 			}
@@ -638,7 +638,7 @@ func TestRoot_searchHighlight(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := sectionHeader1Helper(t)
 
-			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			line := root.Doc.getLineC(tt.args.lineNum)
 			root.searcher = tt.fields.searcher
 			root.StyleSearchHighlight = OVStyle{Reverse: true}
 			root.searchHighlight(line)
@@ -740,7 +740,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 			m.columnCursor = tt.fields.columnCursor
 			root.StyleColumnHighlight = OVStyle{Bold: true}
-			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			line := root.Doc.getLineC(tt.args.lineNum)
 			root.columnDelimiterHighlight(line)
 			if line.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
@@ -813,7 +813,7 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 			m.setColumnWidths()
 			t.Log(m.columnWidths)
 			m.columnCursor = tt.fields.columnCursor
-			line := root.Doc.getLineC(tt.args.lineNum, root.Doc.TabWidth)
+			line := root.Doc.getLineC(tt.args.lineNum)
 			root.columnWidthHighlight(line)
 			if line.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
