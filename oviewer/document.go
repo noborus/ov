@@ -224,7 +224,7 @@ func NewDocument() (*Document, error) {
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
-	m.alignConv = newAlignConverter()
+	m.alignConv = newAlignConverter(m.ColumnWidth)
 	m.conv = m.converterType(m.general.Converter)
 	return m, nil
 }

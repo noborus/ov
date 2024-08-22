@@ -1,19 +1,30 @@
 package oviewer
 
-import "github.com/mattn/go-runewidth"
+import (
+	"log"
+
+	"github.com/mattn/go-runewidth"
+)
 
 type align struct {
-	Columns   []int // column width
-	delimiter []rune
-	delmCount int
-	count     int
-	columnNum int
+	es         *escapeSequence
+	Columns    []int // column width
+	orgColumns []int
+	WidthF     bool
+	overF      bool
+	delimiter  []rune
+	delmCount  int
+	count      int
+	fullCount  int
+	columnNum  int
 }
 
-func newAlignConverter() *align {
+func newAlignConverter(widthF bool) *align {
 	return &align{
+		es:        newESConverter(),
 		count:     0,
 		columnNum: 0,
+		WidthF:    widthF,
 	}
 }
 
@@ -21,36 +32,78 @@ func newAlignConverter() *align {
 // Returns true if it is an escape sequence and a non-printing character.
 func (a *align) convert(st *parseState) bool {
 	if len(st.lc) == 0 {
-		a.count = 0
-		a.columnNum = 0
-		a.delmCount = 0
+		a.reset()
+	}
+	if a.es.convert(st) {
+		return true
 	}
 
+	if a.columnNum >= len(a.Columns) {
+		return false
+	}
 	a.count += 1
 	if runewidth.RuneWidth(st.mainc) > 1 {
 		a.count += 1
 	}
 
-	if len(a.Columns) <= a.columnNum {
-		return false
+	if a.WidthF {
+		return a.convertWidth(st)
 	}
-	if len(a.delimiter) > a.delmCount && st.mainc == a.delimiter[a.delmCount] {
+	return a.convertDelm(st)
+}
+
+func (a *align) reset() {
+	a.fullCount = 0
+	a.count = 0
+	a.columnNum = 0
+	a.delmCount = 0
+	a.overF = false
+}
+
+func (a *align) convertDelm(st *parseState) bool {
+	if a.delmCount < len(a.delimiter) && st.mainc == a.delimiter[a.delmCount] {
 		a.delmCount += 1
 	} else {
 		a.delmCount = 0
 		return false
 	}
-	if len(a.delimiter) < a.delmCount {
+	if a.delmCount > len(a.delimiter) {
 		return false
 	}
 	// Add space to align columns.
 	for ; a.count < a.Columns[a.columnNum]; a.count++ {
-		c := DefaultContent
-		st.lc = append(st.lc, c)
+		st.lc = append(st.lc, DefaultContent)
 	}
-	a.count = 0
 	a.columnNum++
+	a.count = 0
 	a.delmCount = 0
 
+	return false
+}
+
+func (a *align) convertWidth(st *parseState) bool {
+	if st.mainc != '\n' {
+		return false
+	}
+	s := 0
+	lc := make(contents, 0, len(st.lc))
+	for i := 0; i < len(a.orgColumns); i++ {
+		e := findColumnEnd(st.lc, a.orgColumns, i) + 1
+		e = min(e, len(st.lc))
+		width := e - s
+		if s >= e {
+			break
+		}
+		lc = append(lc, st.lc[s:e]...)
+		for ; width <= a.Columns[i]; width++ {
+			c := DefaultContent
+			c.mainc = '_'
+			lc = append(lc, c)
+		}
+		s = e
+	}
+	lc = append(lc, st.lc[s:]...)
+	log.Println("len", len(st.lc), len(lc))
+	st.lc = lc
 	return false
 }

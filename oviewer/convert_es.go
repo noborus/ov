@@ -149,7 +149,7 @@ func (es *escapeSequence) convert(st *parseState) bool {
 		es.state = ansiEscape
 		return true
 	case '\n':
-		return true
+		return false
 	}
 	return false
 }

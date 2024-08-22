@@ -96,6 +96,9 @@ func parseString(conv Converter, str string, tabWidth int) contents {
 		}
 		st.parseChar(st.mainc, st.combc)
 	}
+	st.mainc = '\n'
+	st.combc = nil
+	conv.convert(st)
 	return st.lc
 }
 

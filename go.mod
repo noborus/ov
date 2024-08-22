@@ -5,7 +5,7 @@ go 1.19
 require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4
-	github.com/creack/pty v1.1.21
+	github.com/creack/pty v1.1.23
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/hashicorp/golang-lru/v2 v2.0.7
