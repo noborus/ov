@@ -1,22 +1,18 @@
 package oviewer
 
 import (
-	"log"
-
 	"github.com/mattn/go-runewidth"
 )
 
 type align struct {
-	es         *escapeSequence
-	Columns    []int // column width
-	orgColumns []int
-	WidthF     bool
-	overF      bool
-	delimiter  []rune
-	delmCount  int
-	count      int
-	fullCount  int
-	columnNum  int
+	es        *escapeSequence
+	maxWidths []int // column max width
+	orgWidths []int
+	WidthF    bool
+	delimiter []rune
+	delmCount int
+	count     int
+	columnNum int
 }
 
 func newAlignConverter(widthF bool) *align {
@@ -38,7 +34,7 @@ func (a *align) convert(st *parseState) bool {
 		return true
 	}
 
-	if a.columnNum >= len(a.Columns) {
+	if a.columnNum >= len(a.maxWidths) {
 		return false
 	}
 	a.count += 1
@@ -53,13 +49,12 @@ func (a *align) convert(st *parseState) bool {
 }
 
 func (a *align) reset() {
-	a.fullCount = 0
 	a.count = 0
 	a.columnNum = 0
 	a.delmCount = 0
-	a.overF = false
 }
 
+// convertWidth accumulates one line and then adds spaces to align the column widths.
 func (a *align) convertDelm(st *parseState) bool {
 	if a.delmCount < len(a.delimiter) && st.mainc == a.delimiter[a.delmCount] {
 		a.delmCount += 1
@@ -71,8 +66,8 @@ func (a *align) convertDelm(st *parseState) bool {
 		return false
 	}
 	// Add space to align columns.
-	for ; a.count < a.Columns[a.columnNum]; a.count++ {
-		st.lc = append(st.lc, DefaultContent)
+	for ; a.count < a.maxWidths[a.columnNum]; a.count++ {
+		st.lc = append(st.lc, SpaceContent)
 	}
 	a.columnNum++
 	a.count = 0
@@ -81,29 +76,28 @@ func (a *align) convertDelm(st *parseState) bool {
 	return false
 }
 
+// convertDelm aligns the column widths by adding spaces when it reaches a delimiter.
 func (a *align) convertWidth(st *parseState) bool {
 	if st.mainc != '\n' {
 		return false
 	}
 	s := 0
 	lc := make(contents, 0, len(st.lc))
-	for i := 0; i < len(a.orgColumns); i++ {
-		e := findColumnEnd(st.lc, a.orgColumns, i) + 1
+	for i := 0; i < len(a.orgWidths); i++ {
+		e := findColumnEnd(st.lc, a.orgWidths, i) + 1
 		e = min(e, len(st.lc))
 		width := e - s
 		if s >= e {
 			break
 		}
 		lc = append(lc, st.lc[s:e]...)
-		for ; width <= a.Columns[i]; width++ {
-			c := DefaultContent
-			c.mainc = '_'
-			lc = append(lc, c)
+		// Add space to align columns.
+		for ; width <= a.maxWidths[i]; width++ {
+			lc = append(lc, SpaceContent)
 		}
 		s = e
 	}
 	lc = append(lc, st.lc[s:]...)
-	log.Println("len", len(st.lc), len(lc))
 	st.lc = lc
 	return false
 }

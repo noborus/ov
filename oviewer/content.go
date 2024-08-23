@@ -28,6 +28,14 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
+// SpaceContent is a space character.
+var SpaceContent = content{
+	mainc: ' ',
+	combc: nil,
+	width: 1,
+	style: tcell.StyleDefault,
+}
+
 // EOFC is the EOF character.
 const EOFC rune = '~'
 
