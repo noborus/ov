@@ -236,9 +236,16 @@ func leftX(width int, lc contents) []int {
 	if width <= 0 {
 		return []int{0}
 	}
-	listX := make([]int, 0, (len(lc)/width)+1)
+	if len(lc) == 0 {
+		return []int{0}
+	}
+	end := len(lc)
+	if lc[len(lc)-1].mainc == '\n' {
+		end--
+	}
+	listX := make([]int, 0, (end/width)+1)
 	listX = append(listX, 0)
-	for n := width; n < len(lc); n += width {
+	for n := width; n < end; n += width {
 		if lc[n-1].width == 2 {
 			n--
 		}

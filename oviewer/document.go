@@ -55,6 +55,8 @@ type Document struct {
 
 	// conv is an interface that converts escape sequences, etc.
 	conv Converter
+	// alignConv is an interface that converts alignment.
+	alignConv *align
 
 	// fileName is the file name to display.
 	FileName string
@@ -222,6 +224,7 @@ func NewDocument() (*Document, error) {
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
+	m.alignConv = newAlignConverter(m.ColumnWidth)
 	m.conv = m.converterType(m.general.Converter)
 	return m, nil
 }
@@ -244,6 +247,8 @@ func (m *Document) converterType(name string) Converter {
 		return newRawConverter()
 	case "es":
 		return newESConverter()
+	case "align":
+		return m.alignConv
 	}
 	return defaultConverter
 }

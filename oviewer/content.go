@@ -28,6 +28,14 @@ var DefaultContent = content{
 	style: tcell.StyleDefault,
 }
 
+// SpaceContent is a space character.
+var SpaceContent = content{
+	mainc: ' ',
+	combc: nil,
+	width: 1,
+	style: tcell.StyleDefault,
+}
+
 // EOFC is the EOF character.
 const EOFC rune = '~'
 
@@ -96,6 +104,9 @@ func parseString(conv Converter, str string, tabWidth int) contents {
 		}
 		st.parseChar(st.mainc, st.combc)
 	}
+	st.mainc = '\n'
+	st.combc = nil
+	conv.convert(st)
 	return st.lc
 }
 

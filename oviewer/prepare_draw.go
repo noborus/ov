@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"math"
+	"reflect"
 	"sort"
 	"strconv"
 	"time"
@@ -81,12 +82,101 @@ func (root *Root) prepareDraw(ctx context.Context) {
 		root.Doc.topLX, root.Doc.topLN = tX, tN-root.scr.headerEnd
 		root.Doc.showGotoF = false
 	}
+
 	if root.Doc.ColumnWidth && len(root.Doc.columnWidths) == 0 {
 		root.Doc.setColumnWidths()
 	}
 
+	// Sets the maximum width of a column.
+	if root.Doc.Converter == "align" {
+		root.setAlignColumnWidths()
+	}
+
 	// Prepare the lines.
 	root.scr.lines = root.prepareLines(root.scr.lines)
+}
+
+// setAlignColumnWidths sets the maximum width of the column.
+func (root *Root) setAlignColumnWidths() {
+	m := root.Doc
+	m.alignConv.WidthF = m.ColumnWidth
+	if !m.alignConv.WidthF {
+		root.Doc.alignConv.delimiter = m.ColumnDelimiter
+		root.Doc.alignConv.delimiterReg = m.ColumnDelimiterReg
+	}
+
+	maxWidths := make([]int, 0, len(m.alignConv.maxWidths))
+	for ln := root.scr.headerLN; ln < root.scr.headerEnd; ln++ {
+		maxWidths = m.maxWidths(maxWidths, ln)
+	}
+	for ln := root.scr.sectionHeaderLN; ln < root.scr.sectionHeaderEnd; ln++ {
+		maxWidths = m.maxWidths(maxWidths, ln)
+	}
+	startLN := m.topLN + m.firstLine()
+	endLN := startLN + root.scr.vHeight
+	for ln := startLN; ln < endLN; ln++ {
+		maxWidths = m.maxWidths(maxWidths, ln)
+	}
+
+	if !reflect.DeepEqual(m.alignConv.maxWidths, maxWidths) {
+		m.alignConv.orgWidths = m.columnWidths
+		m.alignConv.maxWidths = maxWidths
+		m.ClearCache()
+	}
+}
+
+// maxWidths returns the maximum width of the column.
+func (m *Document) maxWidths(columnWidth []int, lN int) []int {
+	str, err := m.LineStr(lN)
+	if err != nil {
+		return columnWidth
+	}
+	lc := StrToContents(str, m.TabWidth)
+	if m.ColumnWidth {
+		return m.maxWidthsWidth(lc, columnWidth)
+	}
+	return m.maxWidthsDelm(lc, columnWidth)
+}
+
+// maxWidthsDelm returns the maximum width of the column.
+func (m *Document) maxWidthsDelm(lc contents, columnWidth []int) []int {
+	str, pos := ContentsToStr(lc)
+	indexes := allIndex(str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+	if len(indexes) == 0 {
+		return columnWidth
+	}
+	s := 0
+	for i := 0; i < len(indexes); i++ {
+		e := pos.x(indexes[i][1])
+		width := e - s
+		if len(columnWidth) <= i {
+			columnWidth = append(columnWidth, width)
+		} else {
+			columnWidth[i] = max(width, columnWidth[i])
+		}
+		s = e
+	}
+	return columnWidth
+}
+
+// maxWidthsWidth returns the maximum width of the column.
+func (m *Document) maxWidthsWidth(lc contents, columnWidth []int) []int {
+	indexes := m.columnWidths
+	if len(indexes) == 0 {
+		return columnWidth
+	}
+	s := 0
+	for i := 0; i < len(indexes); i++ {
+		e := findColumnEnd(lc, indexes, i) + 1
+		width := e - s
+		if len(columnWidth) <= i {
+			columnWidth = append(columnWidth, width)
+		} else {
+			columnWidth[i] = max(width, columnWidth[i])
+		}
+		s = e
+	}
+	return columnWidth
 }
 
 // shiftBody shifts the section header so that it is not hidden by it.
@@ -367,7 +457,16 @@ func (root *Root) columnWidthHighlight(line LineC) {
 	start, end := -1, -1
 	for c := 0; c < len(indexes)+1; c++ {
 		start = end + 1
-		end = findColumnEnd(line.lc, indexes, c)
+		if m.Converter == "align" {
+			l := len(line.lc)
+			if c < len(m.alignConv.maxWidths) {
+				l = m.alignConv.maxWidths[c]
+			}
+			end = start + l
+			end = min(end, len(line.lc))
+		} else {
+			end = findColumnEnd(line.lc, indexes, c)
+		}
 
 		if m.ColumnRainbow {
 			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
