@@ -101,7 +101,8 @@ func (root *Root) setAlignColumnWidths() {
 	m := root.Doc
 	m.alignConv.WidthF = m.ColumnWidth
 	if !m.alignConv.WidthF {
-		root.Doc.alignConv.delimiter = []rune(root.Doc.ColumnDelimiter)
+		root.Doc.alignConv.delimiter = m.ColumnDelimiter
+		root.Doc.alignConv.delimiterReg = m.ColumnDelimiterReg
 	}
 
 	maxWidths := make([]int, 0, len(m.alignConv.maxWidths))

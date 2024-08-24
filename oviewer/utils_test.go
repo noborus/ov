@@ -520,6 +520,28 @@ func Test_allStringIndex(t *testing.T) {
 			},
 			want: nil,
 		},
+		{
+			name: "testDoubleQuote",
+			args: args{
+				s:      `a,"b,c",d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{7, 8},
+			},
+		},
+		{
+			name: "testDoubleQuote2",
+			args: args{
+				s:      `a,"060  ",d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{9, 10},
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

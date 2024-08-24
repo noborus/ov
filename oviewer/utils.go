@@ -95,6 +95,13 @@ func allStringIndex(s string, substr string) [][]int {
 		s = s[pos+width:]
 		result = append(result, []int{pos + offSet, pos + offSet + width})
 		offSet += pos + width
+
+		if len(s) > 0 && s[0] == '"' {
+			qpos := strings.Index(s[1:], `"`)
+			s = s[qpos+2:]
+			offSet += qpos + 2
+		}
+
 		pos = strings.Index(s, substr)
 	}
 	return result
