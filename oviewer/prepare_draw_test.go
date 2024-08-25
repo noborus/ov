@@ -23,6 +23,11 @@ func sectionHeader2Helper(t *testing.T) *Root {
 	return sectionHeaderTextHelper(t, "section2.txt")
 }
 
+func widthColumn1Helper(t *testing.T) *Root {
+	t.Helper()
+	return sectionHeaderTextHelper(t, "width-column.txt")
+}
+
 func sectionHeaderTextHelper(t *testing.T, fileName string) *Root {
 	t.Helper()
 	root := rootFileReadHelper(t, filepath.Join(testdata, fileName))
@@ -1071,6 +1076,34 @@ func TestRoot_sectionHeader(t *testing.T) {
 	}
 }
 
+func TestRoot_setAlignConverter(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name:   "Test setAlignConverter1",
+			fields: fields{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := widthColumn1Helper(t)
+			root.prepareScreen()
+			ctx := context.Background()
+			root.Doc.Converter = alignConv
+			root.Doc.alignConv = newAlignConverter(true)
+			root.prepareDraw(ctx)
+		})
+	}
+}
+
 func Test_maxWidthsDelm(t *testing.T) {
 	type args struct {
 		maxWidths    []int
@@ -1091,7 +1124,7 @@ func Test_maxWidthsDelm(t *testing.T) {
 				delimiter:    ",",
 				delimiterReg: regexpCompile(",", false),
 			},
-			want: []int{2, 2, 2, 2, 2, 2},
+			want: []int{0, 2, 2, 2, 2, 2},
 		},
 		{
 			name: "Test maxWidthsDelm2",

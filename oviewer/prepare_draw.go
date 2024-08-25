@@ -123,9 +123,6 @@ func (root *Root) setAlignConverter() {
 		m.alignConv.orgWidths = m.columnWidths
 		m.alignConv.maxWidths = maxWidths
 		m.ClearCache()
-		log.Println("Change in column width")
-	} else {
-		log.Println("No change in column width")
 	}
 }
 
@@ -152,16 +149,18 @@ func maxWidthsDelm(lc contents, maxWidths []int, delimiter string, delimiterReg 
 	if len(indexes) == 0 {
 		return maxWidths
 	}
-	s := 0
+	s := 1
 	for i := 0; i < len(indexes); i++ {
-		e := pos.x(indexes[i][1])
+		e := pos.x(indexes[i][0])
+		e1 := pos.x(indexes[i][1])
+		delWidth := e1 - e
 		width := e - s
 		if len(maxWidths) <= i {
 			maxWidths = append(maxWidths, width)
 		} else {
 			maxWidths[i] = max(width, maxWidths[i])
 		}
-		s = e + 1
+		s = e + delWidth
 	}
 	return maxWidths
 }
@@ -521,7 +520,7 @@ func alignColumnEnd(lc contents, widths []int, n int, start int) int {
 	if len(widths) <= n {
 		return len(lc)
 	}
-	end := start + widths[n] + 1
+	end := start + widths[n]
 	return min(end, len(lc))
 }
 
