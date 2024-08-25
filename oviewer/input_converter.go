@@ -17,8 +17,9 @@ func (root *Root) setConvertType(context.Context) {
 func converterCandidate() *candidate {
 	return &candidate{
 		list: []string{
-			"es",
-			"raw",
+			esConv,
+			rawConv,
+			alignConv,
 		},
 	}
 }

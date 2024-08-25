@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"testing"
 	"time"
 
@@ -1065,6 +1066,80 @@ func TestRoot_sectionHeader(t *testing.T) {
 			}
 			if m.SectionDelimiter != tt.wantDelim {
 				t.Errorf("Root.sectionHeader() = %v, want %v", m.SectionDelimiter, tt.wantDelim)
+			}
+		})
+	}
+}
+
+func Test_maxWidthsDelm(t *testing.T) {
+	type args struct {
+		maxWidths    []int
+		delimiter    string
+		delimiterReg *regexp.Regexp
+	}
+	tests := []struct {
+		name string
+		str  string
+		args args
+		want []int
+	}{
+		{
+			name: "Test maxWidthsDelm1",
+			str:  "a, b, c, d, e, f, g",
+			args: args{
+				maxWidths:    []int{0, 0, 0, 0, 0},
+				delimiter:    ",",
+				delimiterReg: regexpCompile(",", false),
+			},
+			want: []int{2, 2, 2, 2, 2, 2},
+		},
+		{
+			name: "Test maxWidthsDelm2",
+			str:  "no delimiter",
+			args: args{
+				maxWidths:    []int{2, 2, 2, 2, 2, 2},
+				delimiter:    ",",
+				delimiterReg: regexpCompile(",", false),
+			},
+			want: []int{2, 2, 2, 2, 2, 2},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := StrToContents(tt.str, 8)
+			if got := maxWidthsDelm(lc, tt.args.maxWidths, tt.args.delimiter, tt.args.delimiterReg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("maxWidthsDelm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_maxWidthsWidth(t *testing.T) {
+	type args struct {
+		maxWidths []int
+		widths    []int
+	}
+	tests := []struct {
+		name string
+		str  string
+		args args
+		want []int
+	}{
+		{
+			name: "Test maxWidthsWidth1",
+			str:  " 1   tsst        21",
+			args: args{
+				maxWidths: []int{0},
+				widths:    []int{2, 11},
+			},
+			want: []int{3, 9},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := StrToContents(tt.str, 8)
+			if got := maxWidthsWidth(lc, tt.args.maxWidths, tt.args.widths); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("maxWidthsWidth() = %v, want %v", got, tt.want)
 			}
 		})
 	}

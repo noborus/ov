@@ -358,6 +358,12 @@ const QuitSmallCountDown = 10
 // when the debug flag is enabled.
 const MaxWriteLog int = 10
 
+const (
+	esConv    = "es"
+	rawConv   = "raw"
+	alignConv = "align"
+)
+
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")

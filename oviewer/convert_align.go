@@ -30,6 +30,9 @@ func newAlignConverter(widthF bool) *align {
 // Returns true if it is an escape sequence and a non-printing character.
 func (a *align) convert(st *parseState) bool {
 	if len(st.lc) == 0 {
+		if a.delimiter == "\t" {
+			st.tabWidth = 1
+		}
 		a.reset()
 	}
 	if a.es.convert(st) {
@@ -73,7 +76,7 @@ func (a *align) convertDelm(st *parseState) bool {
 		lc = append(lc, st.lc[s:e]...)
 		width := e - s
 		// Add space to align columns.
-		for ; width < a.maxWidths[c]; width++ {
+		for ; width < a.maxWidths[c]+1; width++ {
 			lc = append(lc, SpaceContent)
 		}
 		s = e
@@ -97,7 +100,7 @@ func (a *align) convertWidth(st *parseState) bool {
 		}
 		lc = append(lc, st.lc[s:e]...)
 		// Add space to align columns.
-		for ; width <= a.maxWidths[i]; width++ {
+		for ; width <= a.maxWidths[i]+1; width++ {
 			lc = append(lc, SpaceContent)
 		}
 		s = e
