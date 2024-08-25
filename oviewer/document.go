@@ -212,7 +212,7 @@ func NewDocument() (*Document, error) {
 			ColumnDelimiter: "",
 			TabWidth:        8,
 			MarkStyleWidth:  1,
-			Converter:       "es",
+			Converter:       esConv,
 		},
 		ctlCh:        make(chan controlSpecifier),
 		memoryLimit:  100,
@@ -243,11 +243,11 @@ func (m *Document) NewCache() error {
 // converterType returns the Converter type.
 func (m *Document) converterType(name string) Converter {
 	switch name {
-	case "raw":
+	case rawConv:
 		return newRawConverter()
-	case "es":
+	case esConv:
 		return newESConverter()
-	case "align":
+	case alignConv:
 		return m.alignConv
 	}
 	return defaultConverter
@@ -318,7 +318,7 @@ func (m *Document) Line(n int) ([]byte, error) {
 	}
 
 	s := m.store
-	if n >= m.BufEndNum() {
+	if n < 0 || n >= m.BufEndNum() {
 		return nil, fmt.Errorf("%w %d>%d", ErrOutOfRange, n, m.BufEndNum())
 	}
 

@@ -362,7 +362,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw]")
 	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"es\tEscape Sequence", "raw\tRaw"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")

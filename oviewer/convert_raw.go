@@ -1,14 +1,14 @@
 package oviewer
 
-type raw struct{}
+type rawConverter struct{}
 
-func newRawConverter() *raw {
-	return &raw{}
+func newRawConverter() *rawConverter {
+	return &rawConverter{}
 }
 
 // convert converts only escape sequence codes to display characters and returns them as is.
 // Returns true if it is an escape sequence and a non-printing character.
-func (raw) convert(st *parseState) bool {
+func (rawConverter) convert(st *parseState) bool {
 	if st.mainc != 0x1b {
 		return false
 	}
