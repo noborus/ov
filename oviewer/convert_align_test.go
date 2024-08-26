@@ -36,9 +36,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:       StrToContents("a,b,c\n", 8),
-					tabWidth: 8,
-					mainc:    '\n',
+					lc:    StrToContents("a,b,c\n", 8),
+					mainc: '\n',
 				},
 			},
 			want:    false,
@@ -55,9 +54,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:       StrToContents("a  b  c\n", 8),
-					tabWidth: 8,
-					mainc:    '\n',
+					lc:    StrToContents("a  b  c\n", 8),
+					mainc: '\n',
 				},
 			},
 			want:    false,

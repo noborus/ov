@@ -23,11 +23,6 @@ func sectionHeader2Helper(t *testing.T) *Root {
 	return sectionHeaderTextHelper(t, "section2.txt")
 }
 
-func widthColumn1Helper(t *testing.T) *Root {
-	t.Helper()
-	return sectionHeaderTextHelper(t, "width-column.txt")
-}
-
 func sectionHeaderTextHelper(t *testing.T, fileName string) *Root {
 	t.Helper()
 	root := rootFileReadHelper(t, filepath.Join(testdata, fileName))
@@ -1082,24 +1077,79 @@ func TestRoot_setAlignConverter(t *testing.T) {
 		tcellNewScreen = tcell.NewScreen
 	}()
 	type fields struct {
+		fileName        string
+		header          int
+		columnWidth     bool
+		columnDelimiter string
 	}
 	tests := []struct {
 		name   string
 		fields fields
+		want   []int
 	}{
 		{
-			name:   "Test setAlignConverter1",
-			fields: fields{},
+			name: "Test setAlignConverter1",
+			fields: fields{
+				fileName:    "width-column.txt",
+				header:      1,
+				columnWidth: true,
+			},
+			want: []int{4, 9},
+		},
+		{
+			name: "Test setAlignConverterDelimiter",
+			fields: fields{
+				fileName:        "column.txt",
+				header:          1,
+				columnWidth:     false,
+				columnDelimiter: "|",
+			},
+			want: []int{-1, 7, 7, 7},
+		},
+		{
+			name: "Test setAlignConverterDelimiter2",
+			fields: fields{
+				fileName:        "test.csv",
+				header:          1,
+				columnWidth:     false,
+				columnDelimiter: ",",
+			},
+			want: []int{0, 5, 1},
+		},
+		{
+			name: "Test setAlignNoColumn",
+			fields: fields{
+				fileName:    "test.txt",
+				header:      1,
+				columnWidth: true,
+			},
+			want: []int{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := widthColumn1Helper(t)
+			root := rootFileReadHelper(t, filepath.Join(testdata, tt.fields.fileName))
+			m := root.Doc
+			m.width = 80
+			root.scr.vHeight = 24
+			m.topLX = 0
+			m.Header = tt.fields.header
+			m.ColumnMode = true
+			m.ColumnWidth = tt.fields.columnWidth
+			m.ColumnDelimiter = tt.fields.columnDelimiter
+			if m.ColumnDelimiter != "" {
+				m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
+			}
+			root.scr.lines = make(map[int]LineC)
 			root.prepareScreen()
 			ctx := context.Background()
+			root.Doc.ColumnRainbow = true
 			root.Doc.Converter = alignConv
 			root.Doc.alignConv = newAlignConverter(true)
 			root.prepareDraw(ctx)
+			if got := root.Doc.alignConv.maxWidths; !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Root.setAlignConverter() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

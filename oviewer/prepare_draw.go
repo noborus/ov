@@ -459,9 +459,9 @@ func (root *Root) columnWidthHighlight(line LineC) {
 
 	numC := len(root.StyleColumnRainbow)
 
-	start, end := -1, -1
+	start := 0
 	for c := 0; c < len(indexes)+1; c++ {
-		start = end + 1
+		end := 0
 		if m.Converter == alignConv {
 			end = alignColumnEnd(line.lc, m.alignConv.maxWidths, c, start)
 		} else {
@@ -474,6 +474,7 @@ func (root *Root) columnWidthHighlight(line LineC) {
 		if c == m.columnCursor {
 			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 		}
+		start = end + 1
 	}
 }
 
