@@ -100,7 +100,7 @@ func (a *align) convertWidth(st *parseState) bool {
 		}
 		lc = append(lc, st.lc[s:e]...)
 		// Add space to align columns.
-		for ; width <= a.maxWidths[i]+1; width++ {
+		for ; width <= a.maxWidths[i]; width++ {
 			lc = append(lc, SpaceContent)
 		}
 		s = e
