@@ -76,8 +76,8 @@ func StrToContents(str string, tabWidth int) contents {
 // RawStrToContents converts a single-line string into a one line of contents.
 // Does not interpret escape sequences.
 // 1 Content matches the characters displayed on the screen.
-func RawStrToContents(str string, tabWdith int) contents {
-	return parseString(newRawConverter(), str, tabWdith)
+func RawStrToContents(str string, tabWidth int) contents {
+	return parseString(newRawConverter(), str, tabWidth)
 }
 
 // parseString converts a string to lineContents.

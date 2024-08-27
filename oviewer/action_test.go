@@ -1505,3 +1505,51 @@ func TestRoot_tailSection(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_setConverter(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want Converter
+	}{
+		{
+			name: "testSetConverterEscape",
+			args: args{
+				name: "es",
+			},
+			want: newESConverter(),
+		},
+		{
+			name: "testSetConverterRaw",
+			args: args{
+				name: "raw",
+			},
+			want: newRawConverter(),
+		},
+		{
+			name: "testSetConverterAlign",
+			args: args{
+				name: "align",
+			},
+			want: newAlignConverter(false),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			ctx := context.Background()
+			root.setConverter(ctx, tt.args.name)
+			got := root.Doc.conv
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("setConverter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

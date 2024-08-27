@@ -30,7 +30,7 @@ func newAlignConverter(widthF bool) *align {
 // Returns true if it is an escape sequence and a non-printing character.
 func (a *align) convert(st *parseState) bool {
 	if len(st.lc) == 0 {
-		if a.delimiter == "\t" {
+		if !a.WidthF && a.delimiter == "\t" {
 			st.tabWidth = 1
 		}
 		a.reset()

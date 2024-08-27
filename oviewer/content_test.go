@@ -810,3 +810,47 @@ func Test_widthPos_n(t *testing.T) {
 		})
 	}
 }
+
+func TestRawStrToContents(t *testing.T) {
+	type args struct {
+		str      string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want contents
+	}{
+		{
+			name: "red",
+			args: args{
+				str: "\x1B[31mred\x1B[m", tabWidth: 8,
+			},
+			want: contents{
+				{width: 0, style: tcell.StyleDefault, mainc: rune('^'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('3'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('m'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('r'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('d'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: rune('^'), combc: nil},
+				{width: 0, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
+				{width: 1, style: tcell.StyleDefault, mainc: rune('m'), combc: nil},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RawStrToContents(tt.args.str, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
+				str, _ := ContentsToStr(got)
+				str2, _ := ContentsToStr(tt.want)
+				t.Logf("got: %#v %#v", str, str2)
+				t.Errorf("RawStrToContents() = \n%v, want \n%v", got, tt.want)
+			}
+		})
+	}
+}
