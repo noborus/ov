@@ -44,6 +44,79 @@ func Test_align_convert(t *testing.T) {
 			wantStr: "a ,b ,c\n",
 		},
 		{
+			name: "convertAlignDelmTab",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2},
+				WidthF:    false,
+				delimiter: "\t",
+				count:     0,
+			},
+			args: args{
+				st: &parseState{
+					lc:    StrToContents("", 8),
+					mainc: '\n',
+				},
+			},
+			want:    false,
+			wantStr: "",
+		},
+		{
+			name: "convertAlignDelmES",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2},
+				WidthF:    false,
+				delimiter: "\t",
+				count:     0,
+			},
+			args: args{
+				st: &parseState{
+					lc:    StrToContents("", 8),
+					mainc: '\x1b',
+				},
+			},
+			want:    true,
+			wantStr: "",
+		},
+		{
+			name: "convertAlignNoDelm",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{},
+				WidthF:    false,
+				delimiter: "\t",
+				count:     0,
+			},
+			args: args{
+				st: &parseState{
+					lc:    StrToContents("", 8),
+					mainc: 'a',
+				},
+			},
+			want:    false,
+			wantStr: "",
+		},
+		{
+			name: "convertAlignDelm2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				st: &parseState{
+					lc:    StrToContents("a,b,", 8),
+					mainc: 'あ',
+				},
+			},
+			want:    false,
+			wantStr: "a,b,",
+		},
+
+		{
 			name: "convertAlignWidth",
 			fields: fields{
 				es:        newESConverter(),

@@ -431,6 +431,9 @@ func (root *Root) modeConfig(modeName string) (general, error) {
 
 func (root *Root) setConverter(ctx context.Context, name string) {
 	m := root.Doc
+	if m.general.Converter == name {
+		return
+	}
 	m.general.Converter = name
 	m.conv = m.converterType(name)
 	root.Doc.ClearCache()
