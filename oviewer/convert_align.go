@@ -73,13 +73,20 @@ func (a *align) convertDelm(st *parseState) bool {
 	lc := make(contents, 0, len(st.lc))
 	for c := 0; c < len(indexes); c++ {
 		e := pos.x(indexes[c][0])
-		lc = append(lc, st.lc[s:e]...)
 		width := e - s
+		if width <= 0 {
+			break
+		}
+		lc = append(lc, st.lc[s:e]...)
+		s = e
+
+		if c >= len(a.maxWidths) {
+			continue
+		}
 		// Add space to align columns.
 		for ; width < a.maxWidths[c]+1; width++ {
 			lc = append(lc, SpaceContent)
 		}
-		s = e
 	}
 	lc = append(lc, st.lc[s:]...)
 	st.lc = lc
@@ -91,19 +98,23 @@ func (a *align) convertDelm(st *parseState) bool {
 func (a *align) convertWidth(st *parseState) bool {
 	s := 0
 	lc := make(contents, 0, len(st.lc))
-	for i := 0; i < len(a.orgWidths); i++ {
-		e := findColumnEnd(st.lc, a.orgWidths, i) + 1
+	for c := 0; c < len(a.orgWidths); c++ {
+		e := findColumnEnd(st.lc, a.orgWidths, c) + 1
 		e = min(e, len(st.lc))
 		width := e - s
-		if s >= e {
+		if width <= 0 {
 			break
 		}
 		lc = append(lc, st.lc[s:e]...)
+		s = e
+
+		if c >= len(a.maxWidths) {
+			continue
+		}
 		// Add space to align columns.
-		for ; width <= a.maxWidths[i]; width++ {
+		for ; width <= a.maxWidths[c]; width++ {
 			lc = append(lc, SpaceContent)
 		}
-		s = e
 	}
 	lc = append(lc, st.lc[s:]...)
 	st.lc = lc
