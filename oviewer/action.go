@@ -734,3 +734,13 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 	}
 	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }
+
+func (root *Root) shrinkColumn(ctx context.Context) {
+	m := root.Doc
+	if m.columnCursor >= len(m.alignConv.shrink) {
+		return
+	}
+	m.alignConv.shrink[m.columnCursor] = !m.alignConv.shrink[m.columnCursor]
+	root.Doc.ClearCache()
+	root.ViewSync(ctx)
+}

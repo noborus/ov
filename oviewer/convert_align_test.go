@@ -161,23 +161,24 @@ func Test_align_convertDelm(t *testing.T) {
 		es           *escapeSequence
 		maxWidths    []int
 		orgWidths    []int
+		shrink       []bool
+		rightAlign   []bool
 		WidthF       bool
 		delimiter    string
 		delimiterReg *regexp.Regexp
 		count        int
 	}
 	type args struct {
-		st *parseState
+		src contents
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    bool
-		wantStr string
+		name   string
+		fields fields
+		args   args
+		want   string
 	}{
 		{
-			name: "convertAlignDelm",
+			name: "convertAlignDelm1",
 			fields: fields{
 				es:        newESConverter(),
 				maxWidths: []int{1, 2},
@@ -186,13 +187,83 @@ func Test_align_convertDelm(t *testing.T) {
 				count:     0,
 			},
 			args: args{
-				st: &parseState{
-					lc:    StrToContents("a,b,c,d,e,f", 8),
-					mainc: '\n',
-				},
+				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want:    false,
-			wantStr: "a ,b ,c,d,e,f",
+			want: "a ,b ,c,d,e,f",
+		},
+		{
+			name: "convertAlignDelm2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a,b,c,d,e,f", 8),
+			},
+			want: "a ,b ,c ,d ,e ,f",
+		},
+		{
+			name: "convertAlignDelmShrink1",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				shrink:    []bool{false, true, false, false, false},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a,b,c,d,e,f", 8),
+			},
+			want: "a ,…,c ,d ,e ,f",
+		},
+		{
+			name: "convertAlignDelmShrink2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				shrink:    []bool{true, false, false, false, false},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a,b,c,d,e,f", 8),
+			},
+			want: "…,b ,c ,d ,e ,f",
+		},
+		{
+			name: "convertAlignDelmShrink3",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				shrink:    []bool{false, false, false, false, false, true},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a,b,c,d,e,f", 8),
+			},
+			want: "a ,b ,c ,d ,e ,…",
+		},
+		{
+			name: "convertAlignDelmRight",
+			fields: fields{
+				es:         newESConverter(),
+				maxWidths:  []int{1, 2, 2, 2, 2, 2},
+				shrink:     []bool{false, false, false, false, false, true},
+				rightAlign: []bool{true, false, false, false, false, false},
+				WidthF:     false,
+				delimiter:  ",",
+			},
+			args: args{
+				src: StrToContents("a,b,c,d,e,f", 8),
+			},
+			want: " a,b ,c ,d ,e ,…",
 		},
 	}
 	for _, tt := range tests {
@@ -201,17 +272,17 @@ func Test_align_convertDelm(t *testing.T) {
 				es:           tt.fields.es,
 				maxWidths:    tt.fields.maxWidths,
 				orgWidths:    tt.fields.orgWidths,
+				shrink:       tt.fields.shrink,
+				rightAlign:   tt.fields.rightAlign,
 				WidthF:       tt.fields.WidthF,
 				delimiter:    tt.fields.delimiter,
 				delimiterReg: tt.fields.delimiterReg,
 				count:        tt.fields.count,
 			}
-			if got := a.convertDelm(tt.args.st); got != tt.want {
-				t.Errorf("align.convertDelm() = %v, want %v", got, tt.want)
-			}
-			goStr, _ := ContentsToStr(tt.args.st.lc)
-			if goStr != tt.wantStr {
-				t.Errorf("align.convertDelm() = %v, want %v", goStr, tt.wantStr)
+			got := a.convertDelm(tt.args.src)
+			gotStr, _ := ContentsToStr(got)
+			if gotStr != tt.want {
+				t.Errorf("align.convertDelm() = %v, want %v", gotStr, tt.want)
 			}
 		})
 	}
@@ -222,38 +293,95 @@ func Test_align_convertWidth(t *testing.T) {
 		es           *escapeSequence
 		maxWidths    []int
 		orgWidths    []int
+		shrink       []bool
+		rightAlign   []bool
 		WidthF       bool
 		delimiter    string
 		delimiterReg *regexp.Regexp
 		count        int
 	}
 	type args struct {
-		st *parseState
+		src contents
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    bool
-		wantStr string
+		name   string
+		fields fields
+		args   args
+		want   string
 	}{
 		{
-			name: "convertAlignWidth",
+			name: "convertAlignWidth1",
 			fields: fields{
 				es:        newESConverter(),
 				maxWidths: []int{3, 3},
-				orgWidths: []int{2, 5, 8, 11, 14, 17},
+				orgWidths: []int{2, 5, 8, 11, 14},
 				WidthF:    true,
 				count:     0,
 			},
 			args: args{
-				st: &parseState{
-					lc:    StrToContents("a  b  c  d  e  f", 8),
-					mainc: '\n',
-				},
+				src: StrToContents("a  b  c  d  e  f", 8),
 			},
-			want:    false,
-			wantStr: "a   b   c  d  e  f",
+			want: "a   b   c d e f",
+		},
+		{
+			name: "convertAlignWidth2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b  c  d  e  f", 8),
+			},
+			want: "a   b   c   d   e   f",
+		},
+		{
+			name: "convertAlignWidthShrink1",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				shrink:    []bool{false, true, false, false, false},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b  c  d  e  f", 8),
+			},
+			want: "a   … c   d   e   f",
+		},
+		{
+			name: "convertAlignWidthShrink2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				shrink:    []bool{false, false, false, false, false, true},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b  c  d  e  f", 8),
+			},
+			want: "a   b   c   d   e   …",
+		},
+		{
+			name: "convertAlignWidthRight",
+			fields: fields{
+				es:         newESConverter(),
+				maxWidths:  []int{3, 3, 3, 3, 3, 3},
+				orgWidths:  []int{2, 5, 8, 11, 14, 17},
+				shrink:     []bool{false, false, false, false, false, true},
+				rightAlign: []bool{true, false, false, false, false, false},
+				WidthF:     true,
+				count:      0,
+			},
+			args: args{
+				src: StrToContents("a  b  c  d  e  f", 8),
+			},
+			want: "  a b   c   d   e   … ",
 		},
 	}
 	for _, tt := range tests {
@@ -262,17 +390,17 @@ func Test_align_convertWidth(t *testing.T) {
 				es:           tt.fields.es,
 				maxWidths:    tt.fields.maxWidths,
 				orgWidths:    tt.fields.orgWidths,
+				shrink:       tt.fields.shrink,
+				rightAlign:   tt.fields.rightAlign,
 				WidthF:       tt.fields.WidthF,
 				delimiter:    tt.fields.delimiter,
 				delimiterReg: tt.fields.delimiterReg,
 				count:        tt.fields.count,
 			}
-			if got := a.convertWidth(tt.args.st); got != tt.want {
-				t.Errorf("align.convertWidth() = %v, want %v", got, tt.want)
-			}
-			goStr, _ := ContentsToStr(tt.args.st.lc)
-			if goStr != tt.wantStr {
-				t.Errorf("align.convertWidth() = %v, want %v", goStr, tt.wantStr)
+			got := a.convertWidth(tt.args.src)
+			gotStr, _ := ContentsToStr(got)
+			if gotStr != tt.want {
+				t.Errorf("align.convertWidth() = %v, want %v", gotStr, tt.want)
 			}
 		})
 	}

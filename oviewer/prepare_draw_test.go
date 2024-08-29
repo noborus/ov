@@ -1094,7 +1094,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				header:      1,
 				columnWidth: true,
 			},
-			want: []int{4, 9},
+			want: []int{3, 5},
 		},
 		{
 			name: "Test setAlignConverterDelimiter",
@@ -1201,12 +1201,14 @@ func Test_maxWidthsWidth(t *testing.T) {
 	type args struct {
 		maxWidths []int
 		widths    []int
+		addRight  []int
 	}
 	tests := []struct {
-		name string
-		str  string
-		args args
-		want []int
+		name  string
+		str   string
+		args  args
+		want  []int
+		want2 []int
 	}{
 		{
 			name: "Test maxWidthsWidth1",
@@ -1214,15 +1216,69 @@ func Test_maxWidthsWidth(t *testing.T) {
 			args: args{
 				maxWidths: []int{0},
 				widths:    []int{2, 11},
+				addRight:  []int{0, 0},
 			},
-			want: []int{3, 9},
+			want:  []int{1, 4},
+			want2: []int{0, 0},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lc := StrToContents(tt.str, 8)
-			if got := maxWidthsWidth(lc, tt.args.maxWidths, tt.args.widths); !reflect.DeepEqual(got, tt.want) {
+			got, got2 := maxWidthsWidth(lc, tt.args.maxWidths, tt.args.widths, tt.args.addRight)
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("maxWidthsWidth() = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got2, tt.want2) {
+				t.Errorf("maxWidthsWidth() addRight = %v, want %v", got2, tt.want2)
+			}
+		})
+	}
+}
+
+func Test_trimWidth(t *testing.T) {
+	type args struct {
+		lc contents
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      int
+		wantRight int
+	}{
+		{
+			name: "Test trimLC1",
+			args: args{
+				lc: StrToContents("test", 8),
+			},
+			want:      4,
+			wantRight: 0,
+		},
+		{
+			name: "Test trimLC2",
+			args: args{
+				lc: StrToContents("    test   ", 8),
+			},
+			want:      4,
+			wantRight: 1,
+		},
+		{
+			name: "Test trimLC3",
+			args: args{
+				lc: StrToContents("    123.0 ", 8),
+			},
+			want:      5,
+			wantRight: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotLeft := trimWidth(tt.args.lc)
+			if got != tt.want {
+				t.Errorf("trimLC() got = %v, want %v", got, tt.want)
+			}
+			if gotLeft != tt.wantRight {
+				t.Errorf("trimLC() gotLeft = %v, want %v", gotLeft, tt.wantRight)
 			}
 		})
 	}
