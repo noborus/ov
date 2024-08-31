@@ -535,6 +535,9 @@ func (root *Root) sendSearchMove(lineNum int) {
 
 // incrementalSearch performs incremental search by setting and input mode.
 func (root *Root) incrementalSearch(ctx context.Context) {
+	if root.Screen.HasPendingEvent() {
+		return
+	}
 	if !root.Config.Incsearch {
 		return
 	}
