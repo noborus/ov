@@ -83,6 +83,7 @@ const (
 	actionSaveBuffer     = "save_buffer"
 	actionHideOther      = "hide_other"
 	actionConvertType    = "convert_type"
+	actionShrinkColumn   = "shrink_column"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -168,6 +169,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionSaveBuffer:     root.setSaveBuffer,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionConvertType:    root.setConvertType,
+		actionShrinkColumn:   root.shrinkColumn,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -257,6 +259,7 @@ func defaultKeyBinds() KeyBind {
 		actionSaveBuffer:     {"S"},
 		actionHideOther:      {"alt+-"},
 		actionConvertType:    {"alt+t"},
+		actionShrinkColumn:   {"s"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -331,6 +334,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
+	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")

@@ -108,38 +108,49 @@ func (root *Root) setAlignConverter() {
 	}
 
 	maxWidths := make([]int, 0, len(m.alignConv.maxWidths))
+	addRight := make([]int, 0, len(m.alignConv.maxWidths))
 	for ln := root.scr.headerLN; ln < root.scr.headerEnd; ln++ {
-		maxWidths = m.maxColumnWidths(maxWidths, ln)
+		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 	for ln := root.scr.sectionHeaderLN; ln < root.scr.sectionHeaderEnd; ln++ {
-		maxWidths = m.maxColumnWidths(maxWidths, ln)
+		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 	startLN := m.topLN + m.firstLine()
 	for ln := startLN; ln < startLN+root.scr.vHeight; ln++ {
-		maxWidths = m.maxColumnWidths(maxWidths, ln)
+		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 
 	if !reflect.DeepEqual(m.alignConv.maxWidths, maxWidths) {
 		m.alignConv.orgWidths = m.columnWidths
 		m.alignConv.maxWidths = maxWidths
+		m.alignConv.rightAlign = make([]bool, len(maxWidths)+1)
+		for n := len(m.alignConv.shrink); n < len(maxWidths)+1; n++ {
+			m.alignConv.shrink = append(m.alignConv.shrink, false)
+		}
+		for n := len(m.alignConv.shrink); n < len(maxWidths)+1; n++ {
+			m.alignConv.rightAlign = append(m.alignConv.rightAlign, false)
+		}
+		for i := 0; i < len(addRight); i++ {
+			m.alignConv.rightAlign[i] = addRight[i] > 1
+		}
 		m.ClearCache()
 	}
 }
 
 // maxColumnWidths returns the maximum width of the column.
-func (m *Document) maxColumnWidths(maxWidths []int, lN int) []int {
+func (m *Document) maxColumnWidths(maxWidths []int, rightCount []int, lN int) ([]int, []int) {
 	if lN < 0 {
-		return maxWidths
+		return maxWidths, rightCount
 	}
 	str, err := m.LineStr(lN)
 	if err != nil {
-		return maxWidths
+		return maxWidths, rightCount
 	}
 	lc := StrToContents(str, m.TabWidth)
 	if m.ColumnWidth {
-		return maxWidthsWidth(lc, maxWidths, m.columnWidths)
+		return maxWidthsWidth(lc, maxWidths, m.columnWidths, rightCount)
 	}
-	return maxWidthsDelm(lc, maxWidths, m.ColumnDelimiter, m.ColumnDelimiterReg)
+	return maxWidthsDelm(lc, maxWidths, m.ColumnDelimiter, m.ColumnDelimiterReg), rightCount
 }
 
 // maxWidthsDelm returns the maximum width of the column.
@@ -166,22 +177,60 @@ func maxWidthsDelm(lc contents, maxWidths []int, delimiter string, delimiterReg 
 }
 
 // maxWidthsWidth returns the maximum width of the column.
-func maxWidthsWidth(lc contents, maxWidths []int, widths []int) []int {
+func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int) ([]int, []int) {
 	if len(widths) == 0 {
-		return maxWidths
+		return maxWidths, rightCount
 	}
 	s := 0
 	for i := 0; i < len(widths); i++ {
 		e := findColumnEnd(lc, widths, i) + 1
-		width := e - s
+		width, addRight := trimWidth(lc[s:e])
 		if len(maxWidths) <= i {
 			maxWidths = append(maxWidths, width)
 		} else {
 			maxWidths[i] = max(width, maxWidths[i])
 		}
+		if len(rightCount) <= i {
+			rightCount = append(rightCount, addRight)
+		} else {
+			rightCount[i] += addRight
+		}
 		s = e
 	}
-	return maxWidths
+	return maxWidths, rightCount
+}
+
+func trimWidth(lc contents) (int, int) {
+	l := trimLeft(lc)
+	r := trimRight(lc)
+
+	addRight := 0
+	if l > len(lc)-r {
+		addRight = 1
+	}
+	return r - l, addRight
+}
+
+func trimLeft(lc contents) int {
+	ts := 0
+	for i := 0; i < len(lc); i++ {
+		if lc[i].mainc != ' ' {
+			ts = i
+			break
+		}
+	}
+	return ts
+}
+func trimRight(lc contents) int {
+	te := len(lc)
+	for i := len(lc) - 1; i >= 0; i-- {
+		if lc[i].mainc != ' ' {
+			te = i + 1
+			break
+		}
+	}
+	return te
+
 }
 
 // shiftBody shifts the section header so that it is not hidden by it.

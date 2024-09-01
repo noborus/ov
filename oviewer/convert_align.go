@@ -12,6 +12,8 @@ type align struct {
 	es           *escapeSequence
 	maxWidths    []int // column max width
 	orgWidths    []int
+	shrink       []bool
+	rightAlign   []bool
 	WidthF       bool
 	delimiter    string
 	delimiterReg *regexp.Regexp
@@ -52,9 +54,11 @@ func (a *align) convert(st *parseState) bool {
 	}
 
 	if a.WidthF {
-		return a.convertWidth(st)
+		st.lc = a.convertWidth(st.lc)
+	} else {
+		st.lc = a.convertDelm(st.lc)
 	}
-	return a.convertDelm(st)
+	return false
 }
 
 func (a *align) reset() {
@@ -63,60 +67,139 @@ func (a *align) reset() {
 
 // convertDelm aligns the column widths by adding spaces when it reaches a delimiter.
 // convertDelm works line by line.
-func (a *align) convertDelm(st *parseState) bool {
-	str, pos := ContentsToStr(st.lc)
+func (a *align) convertDelm(src contents) contents {
+	str, pos := ContentsToStr(src)
 	indexes := allIndex(str, a.delimiter, a.delimiterReg)
 	if len(indexes) == 0 {
-		return false
+		return src
 	}
+	delmWidth := runewidth.StringWidth(a.delimiter)
+	dst := make(contents, 0, len(src))
+
 	s := 0
-	lc := make(contents, 0, len(st.lc))
 	for c := 0; c < len(indexes); c++ {
 		e := pos.x(indexes[c][0])
 		width := e - s
 		if width <= 0 {
 			break
 		}
-		lc = append(lc, st.lc[s:e]...)
-		s = e
 
-		if c >= len(a.maxWidths) {
+		// shrink column.
+		if a.isShrink(c) {
+			if s == 0 {
+				dst = appendShrink(dst, nil)
+			} else {
+				dst = appendShrink(dst, src[s:s+delmWidth])
+			}
+			s = e
 			continue
 		}
-		// Add space to align columns.
-		for ; width < a.maxWidths[c]+1; width++ {
-			lc = append(lc, SpaceContent)
+
+		addSpace := 0
+		if c < len(a.maxWidths) {
+			addSpace = ((a.maxWidths[c] + 1) - width)
 		}
+
+		if a.isRightAlign(c) {
+			dst = appendSpaces(dst, addSpace)
+			dst = append(dst, src[s:e]...)
+		} else {
+			dst = append(dst, src[s:e]...)
+			dst = appendSpaces(dst, addSpace)
+		}
+		s = e
 	}
-	lc = append(lc, st.lc[s:]...)
-	st.lc = lc
-	return false
+	if !a.isShrink(len(indexes)) {
+		dst = append(dst, src[s:]...)
+		return dst
+	}
+	dst = appendShrink(dst, src[s:s+delmWidth])
+	return dst
 }
 
 // convertWidth accumulates one line and then adds spaces to align the column widths.
 // convertWidth works line by line.
-func (a *align) convertWidth(st *parseState) bool {
-	s := 0
-	lc := make(contents, 0, len(st.lc))
-	for c := 0; c < len(a.orgWidths); c++ {
-		e := findColumnEnd(st.lc, a.orgWidths, c) + 1
-		e = min(e, len(st.lc))
-		width := e - s
-		if width <= 0 {
-			break
-		}
-		lc = append(lc, st.lc[s:e]...)
-		s = e
+func (a *align) convertWidth(src contents) contents {
+	dst := make(contents, 0, len(src))
 
-		if c >= len(a.maxWidths) {
+	s := 0
+	for c := 0; c < len(a.orgWidths); c++ {
+		e := findColumnEnd(src, a.orgWidths, c) + 1
+		e = min(e, len(src))
+
+		if a.isShrink(c) {
+			dst = appendShrink(dst, nil)
+			dst = append(dst, SpaceContent)
+			a.maxWidths[c] = runewidth.RuneWidth(Shrink)
+			s = e
 			continue
 		}
-		// Add space to align columns.
-		for ; width <= a.maxWidths[c]; width++ {
-			lc = append(lc, SpaceContent)
+
+		ss := countLeftSpaces(src, s)
+		ee := countRightSpaces(src, e)
+		addSpace := 0
+		if c < len(a.maxWidths) {
+			addSpace = (a.maxWidths[c] - (ee - ss))
 		}
+		s = e
+
+		if a.isRightAlign(c) {
+			// Add left space to align columns.
+			dst = appendSpaces(dst, addSpace)
+			// Add content.
+			dst = append(dst, src[ss:ee]...)
+		} else {
+			// Add content.
+			dst = append(dst, src[ss:ee]...)
+			// Add right space to align columns.
+			dst = appendSpaces(dst, addSpace)
+		}
+		dst = append(dst, SpaceContent)
+
 	}
-	lc = append(lc, st.lc[s:]...)
-	st.lc = lc
-	return false
+	if !a.isShrink(len(a.orgWidths)) {
+		dst = append(dst, src[s:]...)
+		return dst
+	}
+	dst = appendShrink(dst, nil)
+	return dst
+}
+
+func appendShrink(lc contents, delm contents) contents {
+	lc = append(lc, delm...)
+	lc = append(lc, ShrinkContent)
+	return lc
+}
+
+func appendSpaces(lc contents, num int) contents {
+	for i := 0; i < num; i++ {
+		lc = append(lc, SpaceContent)
+	}
+	return lc
+}
+
+func (a *align) isShrink(col int) bool {
+	if len(a.shrink) <= col {
+		return false
+	}
+	return a.shrink[col]
+}
+
+func (a *align) isRightAlign(col int) bool {
+	if len(a.rightAlign) <= col {
+		return false
+	}
+	return a.rightAlign[col]
+}
+
+func countLeftSpaces(lc contents, s int) int {
+	for ; s < len(lc) && lc[s].mainc == ' '; s++ {
+	}
+	return s
+}
+
+func countRightSpaces(lc contents, e int) int {
+	for ; e > 0 && lc[e-1].mainc == ' '; e-- {
+	}
+	return e
 }
