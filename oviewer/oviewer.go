@@ -275,6 +275,8 @@ type Config struct {
 	// Incsearch is incremental search if true.
 	Incsearch bool
 
+	// ShrinkChar is the character to display when the column is shrunk.
+	ShrinkChar string
 	// DisableColumnCycle is disable column cycle.
 	DisableColumnCycle bool
 	// Debug represents whether to enable the debug output.
@@ -363,6 +365,8 @@ const (
 	rawConv   = "raw"
 	alignConv = "align"
 )
+
+var Shrink rune = '…'
 
 var (
 	// ErrOutOfRange indicates that value is out of range.
@@ -686,6 +690,11 @@ func (root *Root) prepareRun(ctx context.Context) error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
 	}
+
+	if root.Config.ShrinkChar != "" {
+		Shrink = []rune(root.Config.ShrinkChar)[0]
+	}
+	SetShrinkContent(Shrink)
 
 	root.setCaption()
 

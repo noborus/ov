@@ -168,6 +168,9 @@ func (a *align) convertWidth(src contents) contents {
 func appendShrink(lc contents, delm contents) contents {
 	lc = append(lc, delm...)
 	lc = append(lc, ShrinkContent)
+	if ShrinkContent.width > 1 {
+		lc = append(lc, SpaceContent)
+	}
 	return lc
 }
 
