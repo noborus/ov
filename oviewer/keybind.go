@@ -83,6 +83,8 @@ const (
 	actionSaveBuffer     = "save_buffer"
 	actionHideOther      = "hide_other"
 	actionConvertType    = "convert_type"
+	actionAlignFormat    = "align_format"
+	actionRawFormat      = "raw_format"
 	actionShrinkColumn   = "shrink_column"
 
 	inputCaseSensitive      = "input_casesensitive"
@@ -169,7 +171,9 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionSaveBuffer:     root.setSaveBuffer,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionConvertType:    root.setConvertType,
-		actionShrinkColumn:   root.shrinkColumn,
+		actionAlignFormat:    root.alignFormat,
+		actionRawFormat:      root.rawFormat,
+		actionShrinkColumn:   root.shrinkColumnToggle,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -259,6 +263,8 @@ func defaultKeyBinds() KeyBind {
 		actionSaveBuffer:     {"S"},
 		actionHideOther:      {"alt+-"},
 		actionConvertType:    {"alt+t"},
+		actionAlignFormat:    {"alt+F"},
+		actionRawFormat:      {"alt+R"},
 		actionShrinkColumn:   {"s"},
 
 		inputCaseSensitive:      {"alt+c"},
@@ -347,6 +353,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
+	k.writeKeyBind(&b, actionAlignFormat, "align format")
+	k.writeKeyBind(&b, actionRawFormat, "raw format")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
 
 	writeHeader(&b, "Section")
