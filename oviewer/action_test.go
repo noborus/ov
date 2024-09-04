@@ -1553,3 +1553,70 @@ func TestRoot_setConverter(t *testing.T) {
 		})
 	}
 }
+
+func TestRoot_ShrinkColumn(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName  string
+		converter string
+	}
+	type args struct {
+		cursor int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "testShrinkColumn",
+			fields: fields{
+				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
+				converter: alignConv,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want: true,
+		},
+		{
+			name: "testShrinkColumnFalse",
+			fields: fields{
+				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
+				converter: esConv,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want: false,
+		},
+		{
+			name: "testShrinkColumnOver",
+			fields: fields{
+				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
+				converter: alignConv,
+			},
+			args: args{
+				cursor: 20,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			ctx := context.Background()
+			root.prepareScreen()
+			root.Doc.Converter = tt.fields.converter
+			root.Doc.ColumnDelimiter = ","
+			root.prepareDraw(ctx)
+			if got := root.ShrinkColumn(ctx, tt.args.cursor); got != tt.want {
+				t.Errorf("Root.ShrinkColumn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

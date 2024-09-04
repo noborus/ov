@@ -429,6 +429,7 @@ func (root *Root) modeConfig(modeName string) (general, error) {
 	return c, nil
 }
 
+// setConverter sets the converter type.
 func (root *Root) setConverter(ctx context.Context, name string) {
 	m := root.Doc
 	if m.general.Converter == name {
@@ -438,6 +439,32 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 	m.conv = m.converterType(name)
 	root.Doc.ClearCache()
 	root.ViewSync(ctx)
+}
+
+// alignFormat sets converter type to align.
+func (root *Root) alignFormat(ctx context.Context) {
+	if root.Doc.Converter == "align" {
+		root.esFormat(ctx)
+		return
+	}
+	root.setConverter(ctx, alignConv)
+	root.setMessage("Set align mode")
+}
+
+// rawFormat sets converter type to raw.
+func (root *Root) rawFormat(ctx context.Context) {
+	if root.Doc.Converter == "raw" {
+		root.esFormat(ctx)
+		return
+	}
+	root.setConverter(ctx, rawConv)
+	root.setMessage("Set raw mode")
+}
+
+// esFormat sets converter type to es.
+func (root *Root) esFormat(ctx context.Context) {
+	root.setConverter(ctx, esConv)
+	root.setMessage("Set es mode")
 }
 
 // setDelimiter sets the delimiter string.
@@ -735,12 +762,24 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }
 
-func (root *Root) shrinkColumn(ctx context.Context) {
+// shrinkColumnToggle shrinks or expands the current cursor column.
+func (root *Root) shrinkColumnToggle(ctx context.Context) {
+	root.ShrinkColumn(ctx, root.Doc.columnCursor)
+}
+
+// ShrinkColumn shrinks or expands the specified column.
+func (root *Root) ShrinkColumn(ctx context.Context, cursor int) bool {
 	m := root.Doc
-	if m.columnCursor >= len(m.alignConv.shrink) {
-		return
+	if root.Doc.Converter != "align" {
+		root.setMessage("Not align mode")
+		return false
 	}
-	m.alignConv.shrink[m.columnCursor] = !m.alignConv.shrink[m.columnCursor]
-	root.Doc.ClearCache()
+	if cursor >= len(m.alignConv.shrink) {
+		root.setMessage("No column selected")
+		return false
+	}
+	m.alignConv.shrink[cursor] = !m.alignConv.shrink[cursor]
+	m.ClearCache()
 	root.ViewSync(ctx)
+	return true
 }
