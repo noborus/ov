@@ -37,7 +37,12 @@ var SpaceContent = content{
 }
 
 // ShrinkContent is a content that represents a shrinked column.
-var ShrinkContent content
+var ShrinkContent = content{
+	mainc: Shrink,
+	combc: nil,
+	width: 1,
+	style: tcell.StyleDefault,
+}
 
 // SetShrinkContent sets the shrink character.
 func SetShrinkContent(shrink rune) {
