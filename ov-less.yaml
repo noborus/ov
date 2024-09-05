@@ -28,6 +28,8 @@ Prompt:
 #    InvertColor: true # Invert the color of the prompt.
 #    ProcessOfCount: true # Show the process of count.
 
+# ShrinkChar: '…' # Characters displayed when the column is shrinking.
+
 General:
   TabWidth: 4
   Header: 0

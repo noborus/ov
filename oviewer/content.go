@@ -36,15 +36,22 @@ var SpaceContent = content{
 	style: tcell.StyleDefault,
 }
 
-// Shrink is a rune that represents a shrinked column.
-var Shrink rune = '…'
-
 // ShrinkContent is a content that represents a shrinked column.
 var ShrinkContent = content{
 	mainc: Shrink,
 	combc: nil,
-	width: runewidth.RuneWidth(Shrink),
+	width: 1,
 	style: tcell.StyleDefault,
+}
+
+// SetShrinkContent sets the shrink character.
+func SetShrinkContent(shrink rune) {
+	ShrinkContent = content{
+		mainc: shrink,
+		combc: nil,
+		width: runewidth.RuneWidth(shrink),
+		style: tcell.StyleDefault,
+	}
 }
 
 // EOFC is the EOF character.
