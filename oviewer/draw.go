@@ -50,6 +50,8 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
+	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
+
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line, ok := root.scr.lines[lN]
@@ -69,6 +71,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 				root.hideOtherSection(y, line)
 			}
 		}
+		root.markStyle(lN, y, markStyleWidth)
 
 		wrapNum++
 		if nextLX == 0 {
@@ -269,8 +272,6 @@ func (root *Root) clearY(y int) {
 // coordinatesStyle applies the style of the coordinates.
 func (root *Root) coordinatesStyle(lN int, y int) {
 	root.alternateRowsStyle(lN, y)
-	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
-	root.markStyle(lN, y, markStyleWidth)
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
 		root.yStyle(y, root.StyleJumpTargetLine)
 	}
