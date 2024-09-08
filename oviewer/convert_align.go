@@ -10,10 +10,10 @@ import (
 // It is used to align columns when the delimiter is reached or to align columns by adding spaces to the end of the line.
 type align struct {
 	es           *escapeSequence
-	maxWidths    []int // column max width
+	maxWidths    []int // Maximum width of each column.
 	orgWidths    []int
-	shrink       []bool
-	rightAlign   []bool
+	shrink       []bool // Shrink column.
+	rightAlign   []bool // Right align column.
 	WidthF       bool
 	delimiter    string
 	delimiterReg *regexp.Regexp
@@ -22,9 +22,12 @@ type align struct {
 
 func newAlignConverter(widthF bool) *align {
 	return &align{
-		es:     newESConverter(),
-		count:  0,
-		WidthF: widthF,
+		es:         newESConverter(),
+		maxWidths:  []int{},
+		shrink:     []bool{},
+		rightAlign: []bool{},
+		count:      0,
+		WidthF:     widthF,
 	}
 }
 

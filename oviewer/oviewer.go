@@ -360,10 +360,15 @@ const QuitSmallCountDown = 10
 // when the debug flag is enabled.
 const MaxWriteLog int = 10
 
+// The name of the converter that can be specified.
 const (
-	esConv    = "es"
-	rawConv   = "raw"
-	alignConv = "align"
+	esConv    string = "es"    // esConv processes escape sequence(default).
+	rawConv   string = "raw"   // rawConv is displayed without processing escape sequences as they are.
+	alignConv string = "align" // alignConv is aligned in each column.
+)
+
+const (
+	generalName string = "general"
 )
 
 var Shrink rune = '…'
@@ -729,7 +734,7 @@ func (root *Root) setCaption() {
 // setViewModeConfig sets view mode config.
 func (root *Root) setViewModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
-	list = append(list, "general")
+	list = append(list, generalName)
 	for name := range root.Config.Mode {
 		list = append(list, name)
 	}
