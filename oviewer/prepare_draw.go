@@ -125,6 +125,7 @@ func (root *Root) setAlignConverter() {
 	}
 	m.alignConv.orgWidths = m.columnWidths
 	m.alignConv.maxWidths = maxWidths
+	// column attributes are inherited, so only the required columns are added.
 	for n := len(m.alignConv.columnAttrs); n < len(maxWidths)+1; n++ {
 		m.alignConv.columnAttrs = append(m.alignConv.columnAttrs, columnAttribute{})
 	}

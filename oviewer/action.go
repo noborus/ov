@@ -782,7 +782,7 @@ func (root *Root) ExpandColumn(ctx context.Context, cursor int) error {
 // toggleColumnShrink shrinks or expands the current cursor column.
 func (root *Root) toggleColumnShrink(ctx context.Context) {
 	cursor := root.Doc.columnCursor
-	shrink, err := root.Doc.isColumnShink(cursor)
+	shrink, err := root.Doc.isColumnShrink(cursor)
 	if err != nil {
 		root.setMessage(err.Error())
 	}
@@ -791,8 +791,8 @@ func (root *Root) toggleColumnShrink(ctx context.Context) {
 	}
 }
 
-// isColumnShink returns whether the specified column is shrink.
-func (m *Document) isColumnShink(cursor int) (bool, error) {
+// isColumnShrink returns whether the specified column is shrink.
+func (m *Document) isColumnShrink(cursor int) (bool, error) {
 	if m.Converter != convAlign {
 		return false, ErrNotAlignMode
 	}

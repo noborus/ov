@@ -423,7 +423,7 @@ var (
 	// ErrEvictedMemory indicates that it has been evicted from memory.
 	ErrEvictedMemory = errors.New("evicted memory")
 	// ErrNotAlignMode indicates that it is not an align mode.
-	ErrNotAlignMode = errors.New("not align mode")
+	ErrNotAlignMode = errors.New("not an align mode")
 	// ErrNoColumnSelected indicates that no column is selected.
 	ErrNoColumnSelected = errors.New("no column selected")
 )
