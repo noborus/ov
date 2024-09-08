@@ -274,15 +274,16 @@ func (root *Root) markPrev(context.Context) {
 
 // addMark marks the current line number.
 func (root *Root) addMark(context.Context) {
-	lN := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
+	lN := root.firstBodyLine()
 	root.Doc.marked = remove(root.Doc.marked, lN)
 	root.Doc.marked = append(root.Doc.marked, lN)
+	root.Doc.markedPoint++
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
 }
 
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark(context.Context) {
-	lN := root.Doc.topLN + root.Doc.firstLine()
+	lN := root.firstBodyLine()
 	marked := remove(root.Doc.marked, lN)
 	if len(root.Doc.marked) == len(marked) {
 		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
@@ -290,6 +291,12 @@ func (root *Root) removeMark(context.Context) {
 	}
 	root.Doc.marked = marked
 	root.setMessagef("Remove the mark at line %d", lN-root.Doc.firstLine()+1)
+}
+
+// firstBodyLine returns the first line number of the body.
+func (root *Root) firstBodyLine() int {
+	ln := root.scr.lineNumber(root.Doc.headerHeight + root.Doc.sectionHeaderHeight)
+	return ln.number
 }
 
 // removeAllMark removes all marks.

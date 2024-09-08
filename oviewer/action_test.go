@@ -1061,24 +1061,29 @@ func TestRoot_Mark(t *testing.T) {
 	}()
 	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	t.Run("TestMark", func(t *testing.T) {
+		root.prepareScreen()
 		ctx := context.Background()
 		root.Doc.topLN = 1
+		root.draw(ctx)
 		root.addMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, []int{1}) {
 			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1})
 		}
 		root.Doc.topLN = 10
+		root.draw(ctx)
 		root.addMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, []int{1, 10}) {
 			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1, 10})
 		}
 		root.Doc.topLN = 1
+		root.draw(ctx)
 		root.removeMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, []int{10}) {
 			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int{10})
 		}
 		root.removeMark(ctx)
 		root.Doc.topLN = 2
+		root.draw(ctx)
 		root.addMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, []int{10, 2}) {
 			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{10, 2})
