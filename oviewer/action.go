@@ -771,24 +771,39 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 
 // ShrinkColumn shrinks the specified column.
 func (root *Root) ShrinkColumn(ctx context.Context, cursor int) error {
-	return root.Doc.shrinkColumn(ctx, cursor, true)
+	return root.Doc.shrinkColumn(cursor, true)
 }
 
 // ExpandColumn expands the specified column.
 func (root *Root) ExpandColumn(ctx context.Context, cursor int) error {
-	return root.Doc.shrinkColumn(ctx, cursor, false)
+	return root.Doc.shrinkColumn(cursor, false)
 }
 
 // toggleColumnShrink shrinks or expands the current cursor column.
 func (root *Root) toggleColumnShrink(ctx context.Context) {
 	cursor := root.Doc.columnCursor
-	if err := root.Doc.shrinkColumn(ctx, cursor, !root.Doc.alignConv.columnAttrs[cursor].shrink); err != nil {
+	shrink, err := root.Doc.isColumnShink(cursor)
+	if err != nil {
+		root.setMessage(err.Error())
+	}
+	if err := root.Doc.shrinkColumn(cursor, !shrink); err != nil {
 		root.setMessage(err.Error())
 	}
 }
 
+// isColumnShink returns whether the specified column is shrink.
+func (m *Document) isColumnShink(cursor int) (bool, error) {
+	if m.Converter != convAlign {
+		return false, ErrNotAlignMode
+	}
+	if cursor >= len(m.alignConv.columnAttrs) {
+		return false, ErrNoColumnSelected
+	}
+	return m.alignConv.columnAttrs[cursor].shrink, nil
+}
+
 // shinkColumn shrinks or expands the specified column.
-func (m *Document) shrinkColumn(ctx context.Context, cursor int, shrink bool) error {
+func (m *Document) shrinkColumn(cursor int, shrink bool) error {
 	if m.Converter != convAlign {
 		return ErrNotAlignMode
 	}

@@ -1623,7 +1623,7 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 			root.Doc.Converter = tt.fields.converter
 			root.Doc.ColumnDelimiter = ","
 			root.prepareDraw(ctx)
-			if err := root.Doc.shrinkColumn(ctx, tt.args.cursor, tt.args.shrink); (err != nil) != tt.wantErr {
+			if err := root.Doc.shrinkColumn(tt.args.cursor, tt.args.shrink); (err != nil) != tt.wantErr {
 				t.Errorf("Root.ShrinkColumn() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
