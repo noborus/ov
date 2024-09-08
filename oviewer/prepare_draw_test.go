@@ -1148,7 +1148,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 			root.Doc.alignConv = newAlignConverter(true)
 			root.prepareDraw(ctx)
 			if got := root.Doc.alignConv.maxWidths; !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Root.setAlignConverter() = %v, want %v", got, tt.want)
+				t.Errorf("Root.setAlignConverter() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

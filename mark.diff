@@ -1,0 +1,144 @@
+diff --git a/oviewer/action.go b/oviewer/action.go
+index 3f66350..4eeaed3 100644
+--- a/oviewer/action.go
++++ b/oviewer/action.go
+@@ -244,8 +244,8 @@ func (root *Root) goLineNumber(lN int) {
+ 	root.setMessagef("Moved to line %d", lN+1)
+ }
+ 
+-// markNext moves to the next mark.
+-func (root *Root) markNext(context.Context) {
++// nextMark moves to the next mark.
++func (root *Root) nextMark(context.Context) {
+ 	if len(root.Doc.marked) == 0 {
+ 		return
+ 	}
+@@ -258,8 +258,8 @@ func (root *Root) markNext(context.Context) {
+ 	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
+ }
+ 
+-// markPrev moves to the previous mark.
+-func (root *Root) markPrev(context.Context) {
++// prevMark moves to the previous mark.
++func (root *Root) prevMark(context.Context) {
+ 	if len(root.Doc.marked) == 0 {
+ 		return
+ 	}
+@@ -274,15 +274,16 @@ func (root *Root) markPrev(context.Context) {
+ 
+ // addMark marks the current line number.
+ func (root *Root) addMark(context.Context) {
+-	lN := min(root.Doc.topLN+root.Doc.firstLine(), root.Doc.BufEndNum())
++	lN := root.firstBodyLine()
+ 	root.Doc.marked = remove(root.Doc.marked, lN)
+ 	root.Doc.marked = append(root.Doc.marked, lN)
++	root.Doc.markedPoint++
+ 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
+ }
+ 
+ // removeMark removes the current line number from the mark.
+ func (root *Root) removeMark(context.Context) {
+-	lN := root.Doc.topLN + root.Doc.firstLine()
++	lN := root.firstBodyLine()
+ 	marked := remove(root.Doc.marked, lN)
+ 	if len(root.Doc.marked) == len(marked) {
+ 		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
+@@ -292,6 +293,12 @@ func (root *Root) removeMark(context.Context) {
+ 	root.setMessagef("Remove the mark at line %d", lN-root.Doc.firstLine()+1)
+ }
+ 
++// firstBodyLine returns the first line number of the body.
++func (root *Root) firstBodyLine() int {
++	ln := root.scr.lineNumber(root.Doc.headerHeight + root.Doc.sectionHeaderHeight)
++	return ln.number
++}
++
+ // removeAllMark removes all marks.
+ func (root *Root) removeAllMark(context.Context) {
+ 	root.Doc.marked = nil
+diff --git a/oviewer/action_test.go b/oviewer/action_test.go
+index f98e128..652e176 100644
+--- a/oviewer/action_test.go
++++ b/oviewer/action_test.go
+@@ -1090,7 +1090,7 @@ func TestRoot_Mark(t *testing.T) {
+ 	})
+ }
+ 
+-func TestRoot_markNext(t *testing.T) {
++func TestRoot_nextMark(t *testing.T) {
+ 	tcellNewScreen = fakeScreen
+ 	defer func() {
+ 		tcellNewScreen = tcell.NewScreen
+@@ -1121,10 +1121,10 @@ func TestRoot_markNext(t *testing.T) {
+ 
+ 	for _, tt := range tests {
+ 		t.Run(tt.name, func(t *testing.T) {
+-			root.markNext(context.Background()) // no marked
++			root.nextMark(context.Background()) // no marked
+ 			root.Doc.marked = []int{1, 3, 5}
+ 			root.Doc.markedPoint = tt.markedPoint
+-			root.markNext(context.Background())
++			root.nextMark(context.Background())
+ 			if root.Doc.topLN != tt.wantLine {
+ 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
+ 			}
+@@ -1132,7 +1132,7 @@ func TestRoot_markNext(t *testing.T) {
+ 	}
+ }
+ 
+-func TestRoot_markPrev(t *testing.T) {
++func TestRoot_prevMark(t *testing.T) {
+ 	tcellNewScreen = fakeScreen
+ 	defer func() {
+ 		tcellNewScreen = tcell.NewScreen
+@@ -1163,10 +1163,10 @@ func TestRoot_markPrev(t *testing.T) {
+ 
+ 	for _, tt := range tests {
+ 		t.Run(tt.name, func(t *testing.T) {
+-			root.markPrev(context.Background()) // no marked
++			root.prevMark(context.Background()) // no marked
+ 			root.Doc.marked = []int{1, 3, 5}
+ 			root.Doc.markedPoint = tt.markedPoint
+-			root.markPrev(context.Background())
++			root.prevMark(context.Background())
+ 			if root.Doc.topLN != tt.wantLine {
+ 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
+ 			}
+diff --git a/oviewer/draw.go b/oviewer/draw.go
+index f608a5e..14f7bb9 100644
+--- a/oviewer/draw.go
++++ b/oviewer/draw.go
+@@ -60,15 +60,15 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
+ 		root.drawLineNumber(lN, y, line.valid)
+ 
+ 		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+-		if line.valid {
+-			root.coordinatesStyle(lN, y)
+-		}
+ 		if root.Doc.SectionHeader {
+ 			root.sectionLineHighlight(y, line)
+ 			if root.Doc.HideOtherSection {
+ 				root.hideOtherSection(y, line)
+ 			}
+ 		}
++		if line.valid {
++			root.coordinatesStyle(lN, y)
++		}
+ 
+ 		wrapNum++
+ 		if nextLX == 0 {
+diff --git a/oviewer/keybind.go b/oviewer/keybind.go
+index b664889..002e0e6 100644
+--- a/oviewer/keybind.go
++++ b/oviewer/keybind.go
+@@ -139,8 +139,8 @@ func (root *Root) handlers() map[string]func(context.Context) {
+ 		actionNextSection:    root.nextSection,
+ 		actionPrevSection:    root.prevSection,
+ 		actionLastSection:    root.lastSection,
+-		actionMoveMark:       root.markNext,
+-		actionMovePrevMark:   root.markPrev,
++		actionMoveMark:       root.nextMark,
++		actionMovePrevMark:   root.prevMark,
+ 		actionViewMode:       root.setViewInputMode,
+ 		actionWrap:           root.toggleWrapMode,
+ 		actionColumnMode:     root.toggleColumnMode,

@@ -1,0 +1,46 @@
+Presentation with ov
+❏
+An extremely simple presentation tool is born
+❏
+An extremely simple presentation tool is born
+Actually just a terminal pager
+ov https://github.com/noborus/ov
+❏
+ov(https://github.com/noborus/ov)
+is a terminal pager, but
+❏
+ov is a terminal pager, but
+it can be treated as sections using delimiter sentences.
+❏
+it can be treated as sections using delimiter sentences.
+[48;5;12m# Delimiter Sentence[0m
+Section 1
+[48;5;12m# Delimiter Sentence[0m
+Section 2
+❏
+And it can hide other sections.
+[48;5;12m# Delimiter Sentence[0m
+Section 1
+[48;5;12m# Delimiter Sentence[0m
+Section 2
+❏
+And it can hide other sections.
+[48;5;12m# Delimiter Sentence[0m
+Section 1
+❏
+Then slide-like display is possible.
+[48;5;12m# Delimiter Sentence[0m
+Section 1
+❏
+As it is a pager,
+only fixed-size characters can be displayed.
+❏
+It does not have the features of presentation software, but
+❏
+Escape sequences can be used.
+❏
+[38;5;196mE[0m[38;5;208ms[0m[38;5;226mc[0m[38;5;118ma[0m[38;5;46mp[0m[38;5;48ms[0m[38;5;51mi[0m[38;5;33mo[0m[38;5;21mn[0m[38;5;93mS[0m can be used.
+❏
+[38;5;208mE[0m[38;5;226ms[0m[38;5;118mc[0m[38;5;46ma[0m[38;5;48mp[0m[38;5;51ms[0m[38;5;33mi[0m[38;5;21mo[0m[38;5;93mn[0m[38;5;201mS[0m can be used.
+❏
+So even code highlighting is possible.
