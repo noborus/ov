@@ -244,8 +244,8 @@ func (root *Root) goLineNumber(lN int) {
 	root.setMessagef("Moved to line %d", lN+1)
 }
 
-// markNext moves to the next mark.
-func (root *Root) markNext(context.Context) {
+// nextMark moves to the next mark.
+func (root *Root) nextMark(context.Context) {
 	if len(root.Doc.marked) == 0 {
 		return
 	}
@@ -258,8 +258,8 @@ func (root *Root) markNext(context.Context) {
 	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
 }
 
-// markPrev moves to the previous mark.
-func (root *Root) markPrev(context.Context) {
+// prevMark moves to the previous mark.
+func (root *Root) prevMark(context.Context) {
 	if len(root.Doc.marked) == 0 {
 		return
 	}
@@ -410,22 +410,22 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 		root.setMessage(err.Error())
 		return
 	}
-
-	root.Doc.general = mergeGeneral(root.Doc.general, c)
-	root.Doc.conv = root.Doc.converterType(root.Doc.general.Converter)
-	root.Doc.regexpCompile()
-	root.Doc.ClearCache()
+	m := root.Doc
+	m.general = mergeGeneral(m.general, c)
+	m.conv = m.converterType(m.general.Converter)
+	m.regexpCompile()
+	m.ClearCache()
 	root.ViewSync(ctx)
 	// Set caption.
-	if root.Doc.general.Caption != "" {
-		root.Doc.Caption = root.Doc.general.Caption
+	if m.general.Caption != "" {
+		m.Caption = m.general.Caption
 	}
 	root.setMessagef("Set mode %s", modeName)
 }
 
 // modeConfig returns the configuration of the specified mode.
 func (root *Root) modeConfig(modeName string) (general, error) {
-	if modeName == "general" {
+	if modeName == generalName {
 		return root.General, nil
 	}
 
@@ -444,13 +444,13 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 	}
 	m.general.Converter = name
 	m.conv = m.converterType(name)
-	root.Doc.ClearCache()
+	m.ClearCache()
 	root.ViewSync(ctx)
 }
 
 // alignFormat sets converter type to align.
 func (root *Root) alignFormat(ctx context.Context) {
-	if root.Doc.Converter == "align" {
+	if root.Doc.Converter == alignConv {
 		root.esFormat(ctx)
 		return
 	}
@@ -460,7 +460,7 @@ func (root *Root) alignFormat(ctx context.Context) {
 
 // rawFormat sets converter type to raw.
 func (root *Root) rawFormat(ctx context.Context) {
-	if root.Doc.Converter == "raw" {
+	if root.Doc.Converter == rawConv {
 		root.esFormat(ctx)
 		return
 	}
@@ -777,7 +777,7 @@ func (root *Root) shrinkColumnToggle(ctx context.Context) {
 // ShrinkColumn shrinks or expands the specified column.
 func (root *Root) ShrinkColumn(ctx context.Context, cursor int) bool {
 	m := root.Doc
-	if root.Doc.Converter != "align" {
+	if root.Doc.Converter != alignConv {
 		root.setMessage("Not align mode")
 		return false
 	}

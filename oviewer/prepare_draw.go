@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log"
 	"math"
-	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -120,18 +120,19 @@ func (root *Root) setAlignConverter() {
 		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 
-	if !reflect.DeepEqual(m.alignConv.maxWidths, maxWidths) {
+	if !slices.Equal(m.alignConv.maxWidths, maxWidths) {
 		m.alignConv.orgWidths = m.columnWidths
 		m.alignConv.maxWidths = maxWidths
-		m.alignConv.rightAlign = make([]bool, len(maxWidths)+1)
 		for n := len(m.alignConv.shrink); n < len(maxWidths)+1; n++ {
 			m.alignConv.shrink = append(m.alignConv.shrink, false)
 		}
-		for n := len(m.alignConv.shrink); n < len(maxWidths)+1; n++ {
+		for n := len(m.alignConv.rightAlign); n < len(maxWidths)+1; n++ {
 			m.alignConv.rightAlign = append(m.alignConv.rightAlign, false)
 		}
 		for i := 0; i < len(addRight); i++ {
-			m.alignConv.rightAlign[i] = addRight[i] > 1
+			if !m.alignConv.rightAlign[i] {
+				m.alignConv.rightAlign[i] = addRight[i] > 1
+			}
 		}
 		m.ClearCache()
 	}
@@ -200,10 +201,9 @@ func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int
 	return maxWidths, rightCount
 }
 
+// trimWidth returns the column width and 1 if the column is right-aligned.
 func trimWidth(lc contents) (int, int) {
-	l := trimLeft(lc)
-	r := trimRight(lc)
-
+	l, r := trimmedIndices(lc)
 	addRight := 0
 	if l > len(lc)-r {
 		addRight = 1
@@ -211,7 +211,8 @@ func trimWidth(lc contents) (int, int) {
 	return r - l, addRight
 }
 
-func trimLeft(lc contents) int {
+// trimmedIndices returns the number of left spaces.
+func trimmedIndices(lc contents) (int, int) {
 	ts := 0
 	for i := 0; i < len(lc); i++ {
 		if lc[i].mainc != ' ' {
@@ -219,9 +220,6 @@ func trimLeft(lc contents) int {
 			break
 		}
 	}
-	return ts
-}
-func trimRight(lc contents) int {
 	te := len(lc)
 	for i := len(lc) - 1; i >= 0; i-- {
 		if lc[i].mainc != ' ' {
@@ -229,8 +227,7 @@ func trimRight(lc contents) int {
 			break
 		}
 	}
-	return te
-
+	return ts, te
 }
 
 // shiftBody shifts the section header so that it is not hidden by it.

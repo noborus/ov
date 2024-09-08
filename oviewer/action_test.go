@@ -1095,7 +1095,7 @@ func TestRoot_Mark(t *testing.T) {
 	})
 }
 
-func TestRoot_markNext(t *testing.T) {
+func TestRoot_nextMark(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -1126,10 +1126,10 @@ func TestRoot_markNext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root.markNext(context.Background()) // no marked
+			root.nextMark(context.Background()) // no marked
 			root.Doc.marked = []int{1, 3, 5}
 			root.Doc.markedPoint = tt.markedPoint
-			root.markNext(context.Background())
+			root.nextMark(context.Background())
 			if root.Doc.topLN != tt.wantLine {
 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
 			}
@@ -1137,7 +1137,7 @@ func TestRoot_markNext(t *testing.T) {
 	}
 }
 
-func TestRoot_markPrev(t *testing.T) {
+func TestRoot_prevMark(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -1168,10 +1168,10 @@ func TestRoot_markPrev(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root.markPrev(context.Background()) // no marked
+			root.prevMark(context.Background()) // no marked
 			root.Doc.marked = []int{1, 3, 5}
 			root.Doc.markedPoint = tt.markedPoint
-			root.markPrev(context.Background())
+			root.prevMark(context.Background())
 			if root.Doc.topLN != tt.wantLine {
 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
 			}
@@ -1250,7 +1250,7 @@ func TestRoot_modeConfig(t *testing.T) {
 		{
 			name: "testModeConfig general",
 			args: args{
-				modeName: "general",
+				modeName: generalName,
 			},
 			want:    general{},
 			wantErr: false,
@@ -1527,21 +1527,21 @@ func TestRoot_setConverter(t *testing.T) {
 		{
 			name: "testSetConverterEscape",
 			args: args{
-				name: "es",
+				name: esConv,
 			},
 			want: newESConverter(),
 		},
 		{
 			name: "testSetConverterRaw",
 			args: args{
-				name: "raw",
+				name: rawConv,
 			},
 			want: newRawConverter(),
 		},
 		{
 			name: "testSetConverterAlign",
 			args: args{
-				name: "align",
+				name: alignConv,
 			},
 			want: newAlignConverter(false),
 		},
