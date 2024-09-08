@@ -425,7 +425,7 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 
 // modeConfig returns the configuration of the specified mode.
 func (root *Root) modeConfig(modeName string) (general, error) {
-	if modeName == generalName {
+	if modeName == nameGeneral {
 		return root.General, nil
 	}
 
@@ -450,27 +450,27 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 
 // alignFormat sets converter type to align.
 func (root *Root) alignFormat(ctx context.Context) {
-	if root.Doc.Converter == alignConv {
+	if root.Doc.Converter == convAlign {
 		root.esFormat(ctx)
 		return
 	}
-	root.setConverter(ctx, alignConv)
+	root.setConverter(ctx, convAlign)
 	root.setMessage("Set align mode")
 }
 
 // rawFormat sets converter type to raw.
 func (root *Root) rawFormat(ctx context.Context) {
-	if root.Doc.Converter == rawConv {
+	if root.Doc.Converter == convRaw {
 		root.esFormat(ctx)
 		return
 	}
-	root.setConverter(ctx, rawConv)
+	root.setConverter(ctx, convRaw)
 	root.setMessage("Set raw mode")
 }
 
 // esFormat sets converter type to es.
 func (root *Root) esFormat(ctx context.Context) {
-	root.setConverter(ctx, esConv)
+	root.setConverter(ctx, convEscaped)
 	root.setMessage("Set es mode")
 }
 
@@ -769,24 +769,33 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }
 
-// shrinkColumnToggle shrinks or expands the current cursor column.
-func (root *Root) shrinkColumnToggle(ctx context.Context) {
-	root.ShrinkColumn(ctx, root.Doc.columnCursor)
+// ShrinkColumn shrinks the specified column.
+func (root *Root) ShrinkColumn(ctx context.Context, cursor int) error {
+	return root.Doc.shrinkColumn(ctx, cursor, true)
 }
 
-// ShrinkColumn shrinks or expands the specified column.
-func (root *Root) ShrinkColumn(ctx context.Context, cursor int) bool {
-	m := root.Doc
-	if root.Doc.Converter != alignConv {
-		root.setMessage("Not align mode")
-		return false
+// ExpandColumn expands the specified column.
+func (root *Root) ExpandColumn(ctx context.Context, cursor int) error {
+	return root.Doc.shrinkColumn(ctx, cursor, false)
+}
+
+// toggleColumnShrink shrinks or expands the current cursor column.
+func (root *Root) toggleColumnShrink(ctx context.Context) {
+	cursor := root.Doc.columnCursor
+	if err := root.Doc.shrinkColumn(ctx, cursor, !root.Doc.alignConv.columnAttrs[cursor].shrink); err != nil {
+		root.setMessage(err.Error())
 	}
-	if cursor >= len(m.alignConv.shrink) {
-		root.setMessage("No column selected")
-		return false
+}
+
+// shinkColumn shrinks or expands the specified column.
+func (m *Document) shrinkColumn(ctx context.Context, cursor int, shrink bool) error {
+	if m.Converter != convAlign {
+		return ErrNotAlignMode
 	}
-	m.alignConv.shrink[cursor] = !m.alignConv.shrink[cursor]
+	if cursor >= len(m.alignConv.columnAttrs) {
+		return ErrNoColumnSelected
+	}
+	m.alignConv.columnAttrs[cursor].shrink = shrink
 	m.ClearCache()
-	root.ViewSync(ctx)
-	return true
+	return nil
 }

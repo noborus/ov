@@ -17,7 +17,7 @@ func (root *Root) setViewInputMode(context.Context) {
 func viewModeCandidate() *candidate {
 	return &candidate{
 		list: []string{
-			generalName,
+			nameGeneral,
 		},
 	}
 }

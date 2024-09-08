@@ -10,24 +10,28 @@ import (
 // It is used to align columns when the delimiter is reached or to align columns by adding spaces to the end of the line.
 type align struct {
 	es           *escapeSequence
+	orgWidths    []int // Original width of each column. This is the width determined by Guesswidth.
 	maxWidths    []int // Maximum width of each column.
-	orgWidths    []int
-	shrink       []bool // Shrink column.
-	rightAlign   []bool // Right align column.
+	columnAttrs  []columnAttribute
 	WidthF       bool
 	delimiter    string
 	delimiterReg *regexp.Regexp
 	count        int
 }
 
+// columnAttribute is a structure that holds the attributes of a column.
+type columnAttribute struct {
+	shrink     bool // Shrink column.
+	rightAlign bool // Right align column.
+}
+
 func newAlignConverter(widthF bool) *align {
 	return &align{
-		es:         newESConverter(),
-		maxWidths:  []int{},
-		shrink:     []bool{},
-		rightAlign: []bool{},
-		count:      0,
-		WidthF:     widthF,
+		es:          newESConverter(),
+		maxWidths:   []int{},
+		columnAttrs: []columnAttribute{},
+		count:       0,
+		WidthF:      widthF,
 	}
 }
 
@@ -185,17 +189,17 @@ func appendSpaces(lc contents, num int) contents {
 }
 
 func (a *align) isShrink(col int) bool {
-	if len(a.shrink) <= col {
+	if len(a.columnAttrs) <= col {
 		return false
 	}
-	return a.shrink[col]
+	return a.columnAttrs[col].shrink
 }
 
 func (a *align) isRightAlign(col int) bool {
-	if len(a.rightAlign) <= col {
+	if len(a.columnAttrs) <= col {
 		return false
 	}
-	return a.rightAlign[col]
+	return a.columnAttrs[col].rightAlign
 }
 
 func countLeftSpaces(lc contents, s int) int {

@@ -1250,7 +1250,7 @@ func TestRoot_modeConfig(t *testing.T) {
 		{
 			name: "testModeConfig general",
 			args: args{
-				modeName: generalName,
+				modeName: nameGeneral,
 			},
 			want:    general{},
 			wantErr: false,
@@ -1527,21 +1527,21 @@ func TestRoot_setConverter(t *testing.T) {
 		{
 			name: "testSetConverterEscape",
 			args: args{
-				name: esConv,
+				name: convEscaped,
 			},
 			want: newESConverter(),
 		},
 		{
 			name: "testSetConverterRaw",
 			args: args{
-				name: rawConv,
+				name: convRaw,
 			},
 			want: newRawConverter(),
 		},
 		{
 			name: "testSetConverterAlign",
 			args: args{
-				name: alignConv,
+				name: convAlign,
 			},
 			want: newAlignConverter(false),
 		},
@@ -1570,45 +1570,49 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 	}
 	type args struct {
 		cursor int
+		shrink bool
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "testShrinkColumn",
 			fields: fields{
 				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
-				converter: alignConv,
+				converter: convAlign,
 			},
 			args: args{
 				cursor: 0,
+				shrink: true,
 			},
-			want: true,
+			wantErr: false,
 		},
 		{
 			name: "testShrinkColumnFalse",
 			fields: fields{
 				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
-				converter: esConv,
+				converter: convEscaped,
 			},
 			args: args{
 				cursor: 0,
+				shrink: true,
 			},
-			want: false,
+			wantErr: true,
 		},
 		{
 			name: "testShrinkColumnOver",
 			fields: fields{
 				fileName:  filepath.Join(testdata, "MOCK_DATA.csv"),
-				converter: alignConv,
+				converter: convAlign,
 			},
 			args: args{
 				cursor: 20,
+				shrink: true,
 			},
-			want: false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -1619,8 +1623,8 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 			root.Doc.Converter = tt.fields.converter
 			root.Doc.ColumnDelimiter = ","
 			root.prepareDraw(ctx)
-			if got := root.ShrinkColumn(ctx, tt.args.cursor); got != tt.want {
-				t.Errorf("Root.ShrinkColumn() = %v, want %v", got, tt.want)
+			if err := root.Doc.shrinkColumn(ctx, tt.args.cursor, tt.args.shrink); (err != nil) != tt.wantErr {
+				t.Errorf("Root.ShrinkColumn() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

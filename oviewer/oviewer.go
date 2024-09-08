@@ -362,13 +362,13 @@ const MaxWriteLog int = 10
 
 // The name of the converter that can be specified.
 const (
-	esConv    string = "es"    // esConv processes escape sequence(default).
-	rawConv   string = "raw"   // rawConv is displayed without processing escape sequences as they are.
-	alignConv string = "align" // alignConv is aligned in each column.
+	convEscaped string = "es"    // convEscaped processes escape sequence(default).
+	convRaw     string = "raw"   // convRaw is displayed without processing escape sequences as they are.
+	convAlign   string = "align" // convAlign is aligned in each column.
 )
 
 const (
-	generalName string = "general"
+	nameGeneral string = "general"
 )
 
 var Shrink rune = '…'
@@ -422,6 +422,10 @@ var (
 	ErrAlreadyLoaded = errors.New("chunk already loaded")
 	// ErrEvictedMemory indicates that it has been evicted from memory.
 	ErrEvictedMemory = errors.New("evicted memory")
+	// ErrNotAlignMode indicates that it is not an align mode.
+	ErrNotAlignMode = errors.New("not align mode")
+	// ErrNoColumnSelected indicates that no column is selected.
+	ErrNoColumnSelected = errors.New("no column selected")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
@@ -734,7 +738,7 @@ func (root *Root) setCaption() {
 // setViewModeConfig sets view mode config.
 func (root *Root) setViewModeConfig() {
 	list := make([]string, 0, len(root.Config.Mode)+1)
-	list = append(list, generalName)
+	list = append(list, nameGeneral)
 	for name := range root.Config.Mode {
 		list = append(list, name)
 	}
