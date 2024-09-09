@@ -189,17 +189,17 @@ func appendSpaces(lc contents, num int) contents {
 }
 
 func (a *align) isShrink(col int) bool {
-	if len(a.columnAttrs) <= col {
-		return false
+	if col >= 0 && col < len(a.columnAttrs) {
+		return a.columnAttrs[col].shrink
 	}
-	return a.columnAttrs[col].shrink
+	return false
 }
 
 func (a *align) isRightAlign(col int) bool {
-	if len(a.columnAttrs) <= col {
-		return false
+	if col >= 0 && col < len(a.columnAttrs) {
+		return a.columnAttrs[col].rightAlign
 	}
-	return a.columnAttrs[col].rightAlign
+	return false
 }
 
 func countLeftSpaces(lc contents, s int) int {

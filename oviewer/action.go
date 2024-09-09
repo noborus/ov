@@ -807,7 +807,7 @@ func (m *Document) shrinkColumn(cursor int, shrink bool) error {
 	if m.Converter != convAlign {
 		return ErrNotAlignMode
 	}
-	if cursor >= len(m.alignConv.columnAttrs) {
+	if cursor < 0 || cursor >= len(m.alignConv.columnAttrs) {
 		return ErrNoColumnSelected
 	}
 	m.alignConv.columnAttrs[cursor].shrink = shrink

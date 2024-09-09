@@ -445,3 +445,91 @@ func Test_align_convertWidth(t *testing.T) {
 		})
 	}
 }
+
+func Test_align_isRightAlign(t *testing.T) {
+	type fields struct {
+		es           *escapeSequence
+		orgWidths    []int
+		maxWidths    []int
+		columnAttrs  []columnAttribute
+		WidthF       bool
+		delimiter    string
+		delimiterReg *regexp.Regexp
+		count        int
+	}
+	type args struct {
+		col int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "isRightAlign1",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 0,
+			},
+			want: true,
+		},
+		{
+			name: "isRightAlign2",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 1,
+			},
+			want: true,
+		},
+		{
+			name: "isRightAlign4",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 4,
+			},
+			want: false,
+		},
+		{
+			name: "isRightAlign-1",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: -1,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &align{
+				es:           tt.fields.es,
+				orgWidths:    tt.fields.orgWidths,
+				maxWidths:    tt.fields.maxWidths,
+				columnAttrs:  tt.fields.columnAttrs,
+				WidthF:       tt.fields.WidthF,
+				delimiter:    tt.fields.delimiter,
+				delimiterReg: tt.fields.delimiterReg,
+				count:        tt.fields.count,
+			}
+			if got := a.isRightAlign(tt.args.col); got != tt.want {
+				t.Errorf("align.isRightAlign() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
