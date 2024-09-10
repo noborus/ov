@@ -212,7 +212,7 @@ func NewDocument() (*Document, error) {
 			ColumnDelimiter: "",
 			TabWidth:        8,
 			MarkStyleWidth:  1,
-			Converter:       esConv,
+			Converter:       convEscaped,
 		},
 		ctlCh:        make(chan controlSpecifier),
 		memoryLimit:  100,
@@ -243,11 +243,11 @@ func (m *Document) NewCache() error {
 // converterType returns the Converter type.
 func (m *Document) converterType(name string) Converter {
 	switch name {
-	case rawConv:
+	case convRaw:
 		return newRawConverter()
-	case esConv:
+	case convEscaped:
 		return newESConverter()
-	case alignConv:
+	case convAlign:
 		return m.alignConv
 	}
 	return defaultConverter

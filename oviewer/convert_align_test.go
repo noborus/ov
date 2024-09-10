@@ -161,8 +161,7 @@ func Test_align_convertDelm(t *testing.T) {
 		es           *escapeSequence
 		maxWidths    []int
 		orgWidths    []int
-		shrink       []bool
-		rightAlign   []bool
+		columns      []columnAttribute
 		WidthF       bool
 		delimiter    string
 		delimiterReg *regexp.Regexp
@@ -210,7 +209,13 @@ func Test_align_convertDelm(t *testing.T) {
 			fields: fields{
 				es:        newESConverter(),
 				maxWidths: []int{1, 2, 2, 2, 2, 2},
-				shrink:    []bool{false, true, false, false, false},
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+				},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -225,7 +230,13 @@ func Test_align_convertDelm(t *testing.T) {
 			fields: fields{
 				es:        newESConverter(),
 				maxWidths: []int{1, 2, 2, 2, 2, 2},
-				shrink:    []bool{true, false, false, false, false},
+				columns: []columnAttribute{
+					{shrink: true, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+				},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -240,7 +251,14 @@ func Test_align_convertDelm(t *testing.T) {
 			fields: fields{
 				es:        newESConverter(),
 				maxWidths: []int{1, 2, 2, 2, 2, 2},
-				shrink:    []bool{false, false, false, false, false, true},
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+				},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -253,12 +271,18 @@ func Test_align_convertDelm(t *testing.T) {
 		{
 			name: "convertAlignDelmRight",
 			fields: fields{
-				es:         newESConverter(),
-				maxWidths:  []int{1, 2, 2, 2, 2, 2},
-				shrink:     []bool{false, false, false, false, false, true},
-				rightAlign: []bool{true, false, false, false, false, false},
-				WidthF:     false,
-				delimiter:  ",",
+				es:        newESConverter(),
+				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: true},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+				},
+				WidthF:    false,
+				delimiter: ",",
 			},
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
@@ -272,8 +296,7 @@ func Test_align_convertDelm(t *testing.T) {
 				es:           tt.fields.es,
 				maxWidths:    tt.fields.maxWidths,
 				orgWidths:    tt.fields.orgWidths,
-				shrink:       tt.fields.shrink,
-				rightAlign:   tt.fields.rightAlign,
+				columnAttrs:  tt.fields.columns,
 				WidthF:       tt.fields.WidthF,
 				delimiter:    tt.fields.delimiter,
 				delimiterReg: tt.fields.delimiterReg,
@@ -293,8 +316,7 @@ func Test_align_convertWidth(t *testing.T) {
 		es           *escapeSequence
 		maxWidths    []int
 		orgWidths    []int
-		shrink       []bool
-		rightAlign   []bool
+		columns      []columnAttribute
 		WidthF       bool
 		delimiter    string
 		delimiterReg *regexp.Regexp
@@ -343,9 +365,15 @@ func Test_align_convertWidth(t *testing.T) {
 				es:        newESConverter(),
 				maxWidths: []int{3, 3, 3, 3, 3},
 				orgWidths: []int{2, 5, 8, 11, 14},
-				shrink:    []bool{false, true, false, false, false},
-				WidthF:    true,
-				count:     0,
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+				},
+				WidthF: true,
+				count:  0,
 			},
 			args: args{
 				src: StrToContents("a  b  c  d  e  f", 8),
@@ -358,9 +386,16 @@ func Test_align_convertWidth(t *testing.T) {
 				es:        newESConverter(),
 				maxWidths: []int{3, 3, 3, 3, 3},
 				orgWidths: []int{2, 5, 8, 11, 14},
-				shrink:    []bool{false, false, false, false, false, true},
-				WidthF:    true,
-				count:     0,
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+				},
+				WidthF: true,
+				count:  0,
 			},
 			args: args{
 				src: StrToContents("a  b  c  d  e  f", 8),
@@ -370,13 +405,19 @@ func Test_align_convertWidth(t *testing.T) {
 		{
 			name: "convertAlignWidthRight",
 			fields: fields{
-				es:         newESConverter(),
-				maxWidths:  []int{3, 3, 3, 3, 3, 3},
-				orgWidths:  []int{2, 5, 8, 11, 14, 17},
-				shrink:     []bool{false, false, false, false, false, true},
-				rightAlign: []bool{true, false, false, false, false, false},
-				WidthF:     true,
-				count:      0,
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14, 17},
+				columns: []columnAttribute{
+					{shrink: false, rightAlign: true},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: false, rightAlign: false},
+					{shrink: true, rightAlign: false},
+				},
+				WidthF: true,
+				count:  0,
 			},
 			args: args{
 				src: StrToContents("a  b  c  d  e  f", 8),
@@ -390,8 +431,7 @@ func Test_align_convertWidth(t *testing.T) {
 				es:           tt.fields.es,
 				maxWidths:    tt.fields.maxWidths,
 				orgWidths:    tt.fields.orgWidths,
-				shrink:       tt.fields.shrink,
-				rightAlign:   tt.fields.rightAlign,
+				columnAttrs:  tt.fields.columns,
 				WidthF:       tt.fields.WidthF,
 				delimiter:    tt.fields.delimiter,
 				delimiterReg: tt.fields.delimiterReg,
@@ -401,6 +441,94 @@ func Test_align_convertWidth(t *testing.T) {
 			gotStr, _ := ContentsToStr(got)
 			if gotStr != tt.want {
 				t.Errorf("align.convertWidth() = %v, want %v", gotStr, tt.want)
+			}
+		})
+	}
+}
+
+func Test_align_isRightAlign(t *testing.T) {
+	type fields struct {
+		es           *escapeSequence
+		orgWidths    []int
+		maxWidths    []int
+		columnAttrs  []columnAttribute
+		WidthF       bool
+		delimiter    string
+		delimiterReg *regexp.Regexp
+		count        int
+	}
+	type args struct {
+		col int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "isRightAlign1",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 0,
+			},
+			want: true,
+		},
+		{
+			name: "isRightAlign2",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 1,
+			},
+			want: true,
+		},
+		{
+			name: "isRightAlign4",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: 4,
+			},
+			want: false,
+		},
+		{
+			name: "isRightAlign-1",
+			fields: fields{
+				es:          newESConverter(),
+				maxWidths:   []int{1, 2, 3},
+				columnAttrs: []columnAttribute{{rightAlign: true}, {rightAlign: true}, {rightAlign: true}},
+			},
+			args: args{
+				col: -1,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &align{
+				es:           tt.fields.es,
+				orgWidths:    tt.fields.orgWidths,
+				maxWidths:    tt.fields.maxWidths,
+				columnAttrs:  tt.fields.columnAttrs,
+				WidthF:       tt.fields.WidthF,
+				delimiter:    tt.fields.delimiter,
+				delimiterReg: tt.fields.delimiterReg,
+				count:        tt.fields.count,
+			}
+			if got := a.isRightAlign(tt.args.col); got != tt.want {
+				t.Errorf("align.isRightAlign() = %v, want %v", got, tt.want)
 			}
 		})
 	}

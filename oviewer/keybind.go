@@ -173,7 +173,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionConvertType:    root.setConvertType,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
-		actionShrinkColumn:   root.shrinkColumnToggle,
+		actionShrinkColumn:   root.toggleColumnShrink,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,

@@ -89,7 +89,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	}
 
 	// Sets alignConv if the converter is align.
-	if root.Doc.Converter == alignConv {
+	if root.Doc.Converter == convAlign {
 		root.setAlignConverter()
 	}
 
@@ -120,22 +120,21 @@ func (root *Root) setAlignConverter() {
 		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 
-	if !slices.Equal(m.alignConv.maxWidths, maxWidths) {
-		m.alignConv.orgWidths = m.columnWidths
-		m.alignConv.maxWidths = maxWidths
-		for n := len(m.alignConv.shrink); n < len(maxWidths)+1; n++ {
-			m.alignConv.shrink = append(m.alignConv.shrink, false)
-		}
-		for n := len(m.alignConv.rightAlign); n < len(maxWidths)+1; n++ {
-			m.alignConv.rightAlign = append(m.alignConv.rightAlign, false)
-		}
-		for i := 0; i < len(addRight); i++ {
-			if !m.alignConv.rightAlign[i] {
-				m.alignConv.rightAlign[i] = addRight[i] > 1
-			}
-		}
-		m.ClearCache()
+	if slices.Equal(m.alignConv.maxWidths, maxWidths) {
+		return
 	}
+	m.alignConv.orgWidths = m.columnWidths
+	m.alignConv.maxWidths = maxWidths
+	// column attributes are inherited, so only the required columns are added.
+	for n := len(m.alignConv.columnAttrs); n < len(maxWidths)+1; n++ {
+		m.alignConv.columnAttrs = append(m.alignConv.columnAttrs, columnAttribute{})
+	}
+	for i := 0; i < len(addRight); i++ {
+		if !m.alignConv.columnAttrs[i].rightAlign {
+			m.alignConv.columnAttrs[i].rightAlign = addRight[i] > 1
+		}
+	}
+	m.ClearCache()
 }
 
 // maxColumnWidths returns the maximum width of the column.
@@ -508,7 +507,7 @@ func (root *Root) columnWidthHighlight(line LineC) {
 	start := 0
 	for c := 0; c < len(indexes)+1; c++ {
 		end := 0
-		if m.Converter == alignConv {
+		if m.Converter == convAlign {
 			end = alignColumnEnd(line.lc, m.alignConv.maxWidths, c, start)
 		} else {
 			end = findColumnEnd(line.lc, indexes, c)

@@ -1144,7 +1144,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 			root.prepareScreen()
 			ctx := context.Background()
 			root.Doc.ColumnRainbow = true
-			root.Doc.Converter = alignConv
+			root.Doc.Converter = convAlign
 			root.Doc.alignConv = newAlignConverter(true)
 			root.prepareDraw(ctx)
 			if got := root.Doc.alignConv.maxWidths; !reflect.DeepEqual(got, tt.want) {

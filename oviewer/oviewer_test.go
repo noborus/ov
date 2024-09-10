@@ -560,7 +560,7 @@ func TestRoot_setViewModeConfig(t *testing.T) {
 					"view1": {},
 				},
 			},
-			wantList: []string{generalName, "view1"},
+			wantList: []string{nameGeneral, "view1"},
 		},
 	}
 	for _, tt := range tests {
