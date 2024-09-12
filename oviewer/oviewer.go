@@ -373,6 +373,12 @@ const (
 
 var Shrink rune = '…'
 
+// RawF is specifies converter shortcut for raw.
+var RawF bool
+
+// AlignF is specifies converter shortcut for align.
+var AlignF bool
+
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
@@ -698,6 +704,13 @@ func (root *Root) prepareRun(ctx context.Context) error {
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
+	}
+
+	if RawF {
+		root.General.Converter = convRaw
+	}
+	if AlignF {
+		root.General.Converter = convAlign
 	}
 
 	if root.Config.ShrinkChar != "" {

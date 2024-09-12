@@ -358,8 +358,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.AlignF, "align", "", false, "align column")
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.RawF, "raw", "", false, "raw output of escape sequences")
+
 	// Config.General
-	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw]")
+	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align]")
 	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths"}, cobra.ShellCompDirectiveNoFileComp
