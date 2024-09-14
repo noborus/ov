@@ -45,6 +45,11 @@ var (
 	completion string
 	// execCommand targets the output of executing the command.
 	execCommand bool
+
+	// alignF is align column.
+	alignF bool
+	// rawF is raw output of escape sequences.
+	rawF bool
 )
 
 var (
@@ -97,6 +102,13 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		// SectionHeader is enabled if SectionHeaderNum is greater than 0.
 		if config.General.SectionHeaderNum > 0 {
 			config.General.SectionHeader = true
+		}
+
+		// Set a converter by specifying flag.
+		if alignF {
+			config.General.Converter = "align"
+		} else if rawF {
+			config.General.Converter = "raw"
 		}
 
 		// Set a global variable to convert to a style before opening the file.
@@ -358,8 +370,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
-	rootCmd.PersistentFlags().BoolVarP(&oviewer.AlignF, "align", "", false, "align column")
-	rootCmd.PersistentFlags().BoolVarP(&oviewer.RawF, "raw", "", false, "raw output of escape sequences")
+	rootCmd.PersistentFlags().BoolVarP(&alignF, "align", "l", false, "align column")
+	rootCmd.PersistentFlags().BoolVarP(&rawF, "raw", "r", false, "raw output of escape sequences")
 
 	// Config.General
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align]")
