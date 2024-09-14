@@ -144,6 +144,10 @@ func (a *align) convertWidth(src contents) contents {
 
 		ss := countLeftSpaces(src, s)
 		ee := countRightSpaces(src, e)
+		if ss >= ee {
+			s = e
+			continue
+		}
 		addSpace := 0
 		if c < len(a.maxWidths) {
 			addSpace = (a.maxWidths[c] - (ee - ss))
