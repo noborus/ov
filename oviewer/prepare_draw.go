@@ -183,7 +183,7 @@ func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int
 	}
 	s := 0
 	for i := 0; i < len(widths); i++ {
-		e := findColumnEnd(lc, widths, i) + 1
+		e := findColumnEnd(lc, widths, i, s) + 1
 		width, addRight := trimWidth(lc[s:e])
 		if len(maxWidths) <= i {
 			maxWidths = append(maxWidths, width)
@@ -470,10 +470,7 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 		switch {
 		case c == 0 && lStart == 0:
 			iStart = lStart
-			iEnd = indexes[0][1] - len(m.ColumnDelimiter)
-			if iEnd < 0 {
-				iEnd = 0
-			}
+			iEnd = max(indexes[0][1]-len(m.ColumnDelimiter), 0)
 		case c < len(indexes):
 			iStart = iEnd + 1
 			iEnd = indexes[c][0]
@@ -504,13 +501,12 @@ func (root *Root) columnWidthHighlight(line LineC) {
 
 	numC := len(root.StyleColumnRainbow)
 
-	start := 0
+	start, end := 0, 0
 	for c := 0; c < len(indexes)+1; c++ {
-		end := 0
 		if m.Converter == convAlign {
 			end = alignColumnEnd(line.lc, m.alignConv.maxWidths, c, start)
 		} else {
-			end = findColumnEnd(line.lc, indexes, c)
+			end = findColumnEnd(line.lc, indexes, c, start)
 		}
 
 		if m.ColumnRainbow {
@@ -524,41 +520,71 @@ func (root *Root) columnWidthHighlight(line LineC) {
 }
 
 // findColumnEnd returns the position of the end of a column.
-func findColumnEnd(lc contents, indexes []int, n int) int {
+func findColumnEnd(lc contents, indexes []int, n int, start int) int {
+	// If the column index is out of bounds, return the length of the contents.
 	if len(indexes) <= n {
 		return len(lc)
 	}
-	width := indexes[n]
-	if width >= len(lc) {
+
+	columnEnd := indexes[n]
+	// The end of the right end returns the length of the contents.
+	if columnEnd >= len(lc) {
 		return len(lc)
 	}
 
-	if lc[width].mainc == ' ' {
-		return width
+	// If the character at the end of the column is a space, return the end of the column.
+	if lc[columnEnd].mainc == ' ' {
+		return columnEnd
 	}
 
-	f := width
-	for ; f < len(lc) && lc[f].mainc != ' '; f++ {
-	}
-	b := width
-	for ; b > 0 && lc[b].mainc != ' '; b-- {
+	// Column overflow.
+	lCount, lPos := countToNextSpaceLeft(lc, columnEnd)
+	rCount, rPos := countToNextSpaceRight(lc, columnEnd)
+
+	// Is the column omitted?
+	if lPos == columnEnd {
+		return rPos
 	}
 
-	if b == indexes[n] {
-		return f
-	}
+	// Check the position of the next column.
 	if n < len(indexes)-1 {
-		if f == indexes[n+1] {
-			return b
+		// If the next column is reached, return the position shifted to the left.
+		if rPos == indexes[n+1] {
+			return lPos
 		}
-		if b == indexes[n] {
-			return f
-		}
-		if b > indexes[n] && b < indexes[n+1] {
-			return b
+		// If the position is between the end of the column and the start of the next column,
+		// return the position shifted to the left.
+		if lPos > columnEnd && lPos < indexes[n+1] {
+			return lPos
 		}
 	}
-	return f
+	// It overflows on the left side.
+	if lPos > start && rCount > lCount {
+		return lPos
+	}
+
+	// It overflows on the right side.
+	return rPos
+}
+
+// countToNextSpaceLeft counts the number of positions to the next space character to the left.
+func countToNextSpaceLeft(lc contents, start int) (int, int) {
+	count := 0
+	i := start
+	for ; i >= 0 && lc[i].mainc != ' '; i-- {
+		count++
+	}
+	return count, i
+}
+
+// countToNextSpaceRight counts the number of positions to the next space character to the right.
+func countToNextSpaceRight(lc contents, start int) (int, int) {
+	count := 0
+	i := start
+	for ; i < len(lc) && lc[i].mainc != ' '; i++ {
+		count++
+	}
+	return count, i
 }
 
 // alignColumnEnd returns the position of the end of a column.

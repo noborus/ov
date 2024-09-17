@@ -129,47 +129,50 @@ func (a *align) convertDelm(src contents) contents {
 func (a *align) convertWidth(src contents) contents {
 	dst := make(contents, 0, len(src))
 
-	s := 0
+	start := 0
 	for c := 0; c < len(a.orgWidths); c++ {
-		e := findColumnEnd(src, a.orgWidths, c) + 1
-		e = min(e, len(src))
+		end := findColumnEnd(src, a.orgWidths, c, start) + 1
+		end = min(end, len(src))
 
 		if a.isShrink(c) {
 			dst = appendShrink(dst, nil)
 			dst = append(dst, SpaceContent)
 			a.maxWidths[c] = runewidth.RuneWidth(Shrink)
-			s = e
+			start = end
 			continue
 		}
 
-		ss := countLeftSpaces(src, s)
-		ee := countRightSpaces(src, e)
-		if ss >= ee {
-			s = e
+		tStart := findStartWithTrim(src, start)
+		tEnd := findEndWidthTrim(src, end)
+		// If the column width is 0, skip.
+		if tStart >= tEnd {
+			start = end
 			continue
 		}
-		addSpace := 0
+
+		padding := 0
 		if c < len(a.maxWidths) {
-			addSpace = (a.maxWidths[c] - (ee - ss))
+			padding = (a.maxWidths[c] - (tEnd - tStart))
 		}
-		s = e
+		start = end
 
 		if a.isRightAlign(c) {
 			// Add left space to align columns.
-			dst = appendSpaces(dst, addSpace)
+			dst = appendSpaces(dst, padding)
 			// Add content.
-			dst = append(dst, src[ss:ee]...)
+			dst = append(dst, src[tStart:tEnd]...)
 		} else {
 			// Add content.
-			dst = append(dst, src[ss:ee]...)
+			dst = append(dst, src[tStart:tEnd]...)
 			// Add right space to align columns.
-			dst = appendSpaces(dst, addSpace)
+			dst = appendSpaces(dst, padding)
 		}
 		dst = append(dst, SpaceContent)
-
 	}
+
+	// Add the remaining content.
 	if !a.isShrink(len(a.orgWidths)) {
-		dst = append(dst, src[s:]...)
+		dst = append(dst, src[start:]...)
 		return dst
 	}
 	dst = appendShrink(dst, nil)
@@ -206,13 +209,13 @@ func (a *align) isRightAlign(col int) bool {
 	return false
 }
 
-func countLeftSpaces(lc contents, s int) int {
+func findStartWithTrim(lc contents, s int) int {
 	for ; s < len(lc) && lc[s].mainc == ' '; s++ {
 	}
 	return s
 }
 
-func countRightSpaces(lc contents, e int) int {
+func findEndWidthTrim(lc contents, e int) int {
 	for ; e > 0 && lc[e-1].mainc == ' '; e-- {
 	}
 	return e
