@@ -210,7 +210,7 @@ func trimWidth(lc contents) (int, int) {
 	return r - l, addRight
 }
 
-// trimmedIndices returns the number of left spaces.
+// trimmedIndices returns the start and end of the trimmed contents.
 func trimmedIndices(lc contents) (int, int) {
 	ts := 0
 	for i := 0; i < len(lc); i++ {
