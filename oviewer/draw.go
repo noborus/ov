@@ -71,7 +71,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 				root.hideOtherSection(y, line)
 			}
 		}
-		root.markStyle(lN, y, markStyleWidth)
+		root.applyMarkStyle(lN, y, markStyleWidth)
 
 		wrapNum++
 		if nextLX == 0 {
@@ -102,7 +102,7 @@ func (root *Root) drawHeader() {
 
 		lX, lN = root.drawLine(y, lX, lN, line.lc)
 		// header style.
-		root.yStyle(y, root.StyleHeader)
+		root.applyStyleToLine(y, root.StyleHeader)
 
 		wrapNum++
 		if lX == 0 {
@@ -129,13 +129,13 @@ func (root *Root) drawSectionHeader() {
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
 		// section header style.
-		root.yStyle(y, root.StyleSectionLine)
+		root.applyStyleToLine(y, root.StyleSectionLine)
 		// markstyle is displayed above the section header.
 		markStyleWidth := min(root.scr.vWidth, m.general.MarkStyleWidth)
-		root.markStyle(lN, y, markStyleWidth)
+		root.applyMarkStyle(lN, y, markStyleWidth)
 		// Underline search lines when they overlap in section headers.
 		if lN == m.lastSearchLN {
-			root.yStyle(y, OVStyle{Underline: true})
+			root.applyStyleToLine(y, OVStyle{Underline: true})
 		}
 
 		wrapNum++
@@ -271,39 +271,40 @@ func (root *Root) clearY(y int) {
 
 // coordinatesStyle applies the style of the coordinates.
 func (root *Root) coordinatesStyle(lN int, y int) {
-	root.alternateRowsStyle(lN, y)
+	root.applyStyleToAlternate(lN, y)
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
-		root.yStyle(y, root.StyleJumpTargetLine)
+		root.applyStyleToLine(y, root.StyleJumpTargetLine)
 	}
 }
 
-// alternateRowsStyle applies from beginning to end of line.
-func (root *Root) alternateRowsStyle(lN int, y int) {
+// applyStyleToAlternate applies from beginning to end of line.
+func (root *Root) applyStyleToAlternate(lN int, y int) {
 	if !root.Doc.AlternateRows {
 		return
 	}
 	if (lN)%2 == 0 {
 		return
 	}
-	root.yStyle(y, root.StyleAlternate)
+	root.applyStyleToLine(y, root.StyleAlternate)
 }
 
-// yStyle applies the style from the left edge to the right edge of the physical line.
+// applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
-func (root *Root) yStyle(y int, s OVStyle) {
-	root.yRangeStyle(y, s, 0, root.scr.vWidth)
+func (root *Root) applyStyleToLine(y int, s OVStyle) {
+	root.applyStyleToRange(y, s, 0, root.scr.vWidth)
 }
 
-// markStyle applies the style from the left edge to the specified width.
-func (root *Root) markStyle(lN int, y int, width int) {
+// applyMarkStyle applies the style from the left edge to the specified width.
+func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	m := root.Doc
 	if !contains(m.marked, lN) {
 		return
 	}
-	root.yRangeStyle(y, root.StyleMarkLine, 0, width)
+	root.applyStyleToRange(y, root.StyleMarkLine, 0, width)
 }
 
-func (root *Root) yRangeStyle(y int, s OVStyle, start int, end int) {
+// applyStyleToRange applies the style from the start to the end of the physical line.
+func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
 		r, c, ts, _ := root.GetContent(x, y)
 		root.Screen.SetContent(x, y, r, c, applyStyle(ts, s))
@@ -321,7 +322,7 @@ func (root *Root) sectionLineHighlight(y int, line LineC) {
 	if line.sectionNm <= 0 || line.sectionNm > root.Doc.SectionHeaderNum {
 		return
 	}
-	root.yStyle(y, root.StyleSectionLine)
+	root.applyStyleToLine(y, root.StyleSectionLine)
 }
 
 // hideOtherSection hides other sections.
@@ -329,7 +330,6 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 	if line.section <= 1 { // 1 is the first section.
 		return
 	}
-
 	root.clearY(y)
 }
 
