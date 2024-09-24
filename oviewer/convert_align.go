@@ -84,6 +84,14 @@ func (a *align) convertDelm(src contents) contents {
 	dst := make(contents, 0, len(src))
 
 	s := 0
+	if indexes[0][0] == 0 {
+		if len(indexes) == 1 {
+			return src
+		}
+		dst = append(dst, src[0:indexes[0][1]]...)
+		s = indexes[0][1]
+		indexes = indexes[1:]
+	}
 	for c := 0; c < len(indexes); c++ {
 		e := pos.x(indexes[c][0])
 		width := e - s
@@ -93,7 +101,7 @@ func (a *align) convertDelm(src contents) contents {
 
 		// shrink column.
 		if a.isShrink(c) {
-			if s == 0 {
+			if c == 0 {
 				dst = appendShrink(dst, nil)
 			} else {
 				dst = appendShrink(dst, src[s:s+delmWidth])
