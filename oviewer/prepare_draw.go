@@ -60,6 +60,14 @@ func (root *Root) ViewSync(context.Context) {
 
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
+	// Set the columncursor at the first run.
+	if len(root.scr.lines) == 0 {
+		defer func() {
+			root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
+			root.Doc.columnCursor = max(root.Doc.columnStart, root.Doc.columnCursor)
+		}()
+	}
+
 	// Header.
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
@@ -160,18 +168,18 @@ func maxWidthsDelm(lc contents, maxWidths []int, delimiter string, delimiterReg 
 	if len(indexes) == 0 {
 		return maxWidths
 	}
-	s := 1
+
+	start := pos.x(0)
 	for i := 0; i < len(indexes); i++ {
-		e := pos.x(indexes[i][0])
-		e1 := pos.x(indexes[i][1])
-		delWidth := e1 - e
-		width := e - s
+		end := pos.x(indexes[i][0])
+		delmEnd := pos.x(indexes[i][1])
+		width := end - start
 		if len(maxWidths) <= i {
 			maxWidths = append(maxWidths, width)
 		} else {
 			maxWidths[i] = max(width, maxWidths[i])
 		}
-		s = e + delWidth
+		start = delmEnd
 	}
 	return maxWidths
 }
@@ -455,39 +463,26 @@ func (root *Root) columnDelimiterHighlight(line LineC) {
 	}
 
 	numC := len(root.StyleColumnRainbow)
-
-	lStart := 0
-	if indexes[0][0] == 0 {
-		if len(indexes) == 1 {
-			return
-		}
-		lStart = indexes[0][1]
-		indexes = indexes[1:]
-	}
-
-	var iStart, iEnd int
-	for c := 0; c < len(indexes)+1; c++ {
-		switch {
-		case c == 0 && lStart == 0:
-			iStart = lStart
-			iEnd = max(indexes[0][1]-len(m.ColumnDelimiter), 0)
-		case c < len(indexes):
-			iStart = iEnd + 1
-			iEnd = indexes[c][0]
-		case c == len(indexes):
-			iStart = iEnd + 1
-			iEnd = len(line.str)
-		}
-		if iStart < 0 || iEnd < 0 {
-			return
-		}
-		start, end := line.pos.x(iStart), line.pos.x(iEnd)
+	start := line.pos.x(0)
+	for columnNum := 0; columnNum < len(indexes); columnNum++ {
+		end := line.pos.x(indexes[columnNum][0])
+		delmEnd := line.pos.x(indexes[columnNum][1])
 		if m.ColumnRainbow {
-			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
+			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[columnNum%numC])
 		}
-		if c == m.columnCursor {
+		if columnNum == m.columnCursor {
 			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 		}
+		start = delmEnd
+	}
+	// The last column.
+	columnNum := len(indexes)
+	end := line.pos.x(len(line.str))
+	if m.ColumnRainbow {
+		RangeStyle(line.lc, start, end, root.StyleColumnRainbow[columnNum%numC])
+	}
+	if columnNum == m.columnCursor {
+		RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
 	}
 }
 

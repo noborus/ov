@@ -305,7 +305,7 @@ func Test_splitDelimiter(t *testing.T) {
 				delimiter:    ",",
 				delimiterReg: nil,
 			},
-			want: []int{0, 3, 5},
+			want: []int{1, 3, 5},
 		},
 		{
 			name: "abc2",
@@ -314,7 +314,7 @@ func Test_splitDelimiter(t *testing.T) {
 				delimiter:    "|",
 				delimiterReg: nil,
 			},
-			want: []int{2, 5, 8}, // 23 | 56 | 89
+			want: []int{0, 3, 6, 9},
 		},
 	}
 	for _, tt := range tests {
@@ -365,7 +365,7 @@ func TestDocument_optimalCursor(t *testing.T) {
 			args: args{
 				cursor: 4,
 			},
-			want: 2,
+			want: 1,
 		},
 		{
 			name: "CSVLeft",

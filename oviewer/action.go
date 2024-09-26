@@ -477,6 +477,8 @@ func (root *Root) esFormat(ctx context.Context) {
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
 	root.Doc.setDelimiter(input)
+	root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
+	root.Doc.columnCursor = max(root.Doc.columnStart, root.Doc.columnCursor)
 	root.setMessagef("Set delimiter %s", input)
 }
 
@@ -796,7 +798,7 @@ func (m *Document) isColumnShrink(cursor int) (bool, error) {
 	if m.Converter != convAlign {
 		return false, ErrNotAlignMode
 	}
-	if cursor >= len(m.alignConv.columnAttrs) {
+	if cursor < 0 || cursor >= len(m.alignConv.columnAttrs) {
 		return false, ErrNoColumnSelected
 	}
 	return m.alignConv.columnAttrs[cursor].shrink, nil

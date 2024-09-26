@@ -938,7 +938,7 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 				wrapMode:     false,
 			},
 			want: want{
-				x:            2,
+				x:            10,
 				columnCursor: 1,
 				wrapMode:     true,
 			},

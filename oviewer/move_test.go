@@ -362,11 +362,11 @@ func TestRoot_moveColumn(t *testing.T) {
 			fields: fields{
 				fileName:     filepath.Join(testdata, "column.txt"),
 				delimiter:    "|",
-				columnCursor: 3,
+				columnCursor: 4,
 			},
 			want: want{
-				leftOne:  2,
-				rightOne: 0,
+				leftOne:  3,
+				rightOne: 1,
 			},
 		},
 	}
