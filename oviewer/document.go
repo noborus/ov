@@ -112,6 +112,9 @@ type Document struct {
 	// columnCursor is the number of columns.
 	columnCursor int
 
+	// columnStart is the starting position of the column 0 or 1.
+	columnStart int
+
 	// lastSearchLN is the last search line number.
 	lastSearchLN int
 	// showGotoF displays the specified line if it is true.

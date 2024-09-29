@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"reflect"
 	"regexp"
 	"testing"
 )
@@ -29,7 +30,7 @@ func Test_align_convert(t *testing.T) {
 			name: "convertAlignDelm",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2},
+				maxWidths: []int{2, 2},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -180,7 +181,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelm1",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2},
+				maxWidths: []int{2, 2},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -194,7 +195,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelm2",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				maxWidths: []int{2, 2, 2, 2, 2, 2},
 				WidthF:    false,
 				delimiter: ",",
 				count:     0,
@@ -208,7 +209,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelmShrink1",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				maxWidths: []int{2, 2, 2, 2, 2, 2},
 				columns: []columnAttribute{
 					{shrink: false, rightAlign: false},
 					{shrink: true, rightAlign: false},
@@ -229,7 +230,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelmShrink2",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				maxWidths: []int{2, 2, 2, 2, 2, 2},
 				columns: []columnAttribute{
 					{shrink: true, rightAlign: false},
 					{shrink: false, rightAlign: false},
@@ -250,7 +251,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelmShrink3",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				maxWidths: []int{2, 2, 2, 2, 2, 2},
 				columns: []columnAttribute{
 					{shrink: false, rightAlign: false},
 					{shrink: false, rightAlign: false},
@@ -272,7 +273,7 @@ func Test_align_convertDelm(t *testing.T) {
 			name: "convertAlignDelmRight",
 			fields: fields{
 				es:        newESConverter(),
-				maxWidths: []int{1, 2, 2, 2, 2, 2},
+				maxWidths: []int{2, 2, 2, 2, 2, 2},
 				columns: []columnAttribute{
 					{shrink: false, rightAlign: true},
 					{shrink: false, rightAlign: false},
@@ -529,6 +530,53 @@ func Test_align_isRightAlign(t *testing.T) {
 			}
 			if got := a.isRightAlign(tt.args.col); got != tt.want {
 				t.Errorf("align.isRightAlign() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_appendShrink(t *testing.T) {
+	type args struct {
+		lc contents
+	}
+	type fields struct {
+		shrink rune
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   contents
+	}{
+		{
+			name: "appendShrink1",
+			fields: fields{
+				shrink: '.',
+			},
+			args: args{
+				lc: StrToContents("abc", 8),
+			},
+			want: StrToContents("abc.", 8),
+		},
+		{
+			name: "appendShrink2",
+			fields: fields{
+				shrink: '略',
+			},
+			args: args{
+				lc: StrToContents("abc", 8),
+			},
+			want: StrToContents("abc略", 8),
+		},
+	}
+	for _, tt := range tests {
+		SetShrinkContent(tt.fields.shrink)
+		t.Cleanup(func() {
+			SetShrinkContent(Shrink)
+		})
+		t.Run(tt.name, func(t *testing.T) {
+			if got := appendShrink(tt.args.lc); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("appendShrink() = %v, want %v", got, tt.want)
 			}
 		})
 	}

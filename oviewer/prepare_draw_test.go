@@ -680,7 +680,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			name: "Test columnDelimiterHighlight1",
 			fields: fields{
 				columnDelimiter: "|",
-				columnCursor:    0,
+				columnCursor:    1,
 			},
 			args: args{
 				lineNum: 2,
@@ -694,7 +694,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			name: "Test columnDelimiterHighlight2",
 			fields: fields{
 				columnDelimiter: "|",
-				columnCursor:    1,
+				columnCursor:    2,
 			},
 			args: args{
 				lineNum: 2,
@@ -708,7 +708,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			name: "Test columnDelimiterHighlight3",
 			fields: fields{
 				columnDelimiter: "|",
-				columnCursor:    2,
+				columnCursor:    3,
 			},
 			args: args{
 				lineNum: 2,
@@ -722,7 +722,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			name: "Test columnDelimiterHighlight4",
 			fields: fields{
 				columnDelimiter: "|",
-				columnCursor:    3,
+				columnCursor:    4,
 			},
 			args: args{
 				lineNum: 0,
@@ -1116,7 +1116,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				columnWidth:     false,
 				columnDelimiter: "|",
 			},
-			want: []int{-1, 7, 7, 7},
+			want: []int{0, 7, 7, 7},
 		},
 		{
 			name: "Test setAlignConverterDelimiter2",
@@ -1126,7 +1126,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				columnWidth:     false,
 				columnDelimiter: ",",
 			},
-			want: []int{0, 5, 1},
+			want: []int{1, 5, 1},
 		},
 		{
 			name: "Test setAlignNoColumn",
@@ -1186,7 +1186,7 @@ func Test_maxWidthsDelm(t *testing.T) {
 				delimiter:    ",",
 				delimiterReg: regexpCompile(",", false),
 			},
-			want: []int{0, 2, 2, 2, 2, 2},
+			want: []int{1, 2, 2, 2, 2, 2},
 		},
 		{
 			name: "Test maxWidthsDelm2",
