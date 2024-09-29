@@ -12,3 +12,8 @@ func registerSIGTSTP() chan os.Signal {
 	sigSuspend := make(chan os.Signal, 1)
 	return sigSuspend
 }
+
+// suspendProcess is a dummy function.
+func suspendProcess() error {
+	return nil
+}

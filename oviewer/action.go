@@ -368,22 +368,38 @@ func specifyOnScreen(input string, max int) (int, error) {
 // It will return when you exit the shell.
 func (root *Root) suspend(context.Context) {
 	log.Println("Suspend")
-	shell := os.Getenv("SHELL")
-	if err := root.shellSuspendResume(shell); err != nil {
-		root.setMessageLog(err.Error())
-	}
-	log.Println("Resume")
-}
-
-func (root *Root) shellSuspendResume(shell string) error {
 	if err := root.Screen.Suspend(); err != nil {
-		return err
+		root.setMessageLog(err.Error())
+		return
 	}
 	defer func() error {
+		log.Println("Resume")
 		return root.Screen.Resume()
 	}()
 
-	fmt.Println("suspended ov")
+	subshell := os.Getenv("OV_SUBSHELL")
+	// If the OS is something other than Windows
+	// or if the environment variable Subshell is not set,
+	// suspend with sigstop.
+	if runtime.GOOS != "windows" && subshell != "1" {
+		fmt.Println("suspended ov (use 'fg' to resume)")
+		if err := suspendProcess(); err != nil {
+			root.setMessageLog(err.Error())
+		}
+		return
+	}
+
+	// If the OS is Windows,
+	// or if the environment variable Subshell is set,
+	// start the subshell.
+	fmt.Println("suspended ov (use 'exit' to resume)")
+	shell := os.Getenv("SHELL")
+	if err := root.subShell(shell); err != nil {
+		root.setMessageLog(err.Error())
+	}
+}
+
+func (root *Root) subShell(shell string) error {
 	if shell == "" {
 		if runtime.GOOS == "windows" {
 			shell = "CMD.EXE"
