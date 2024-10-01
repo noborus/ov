@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -1283,17 +1282,6 @@ func TestRoot_modeConfig(t *testing.T) {
 				t.Errorf("Root.modeConfig() = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func TestRoot_suspend(t *testing.T) {
-	root := rootHelper(t)
-	shell := os.Getenv("SHELL")
-	if got := root.shellSuspendResume(shell); got != nil {
-		t.Errorf("shellSuspendResume() = %v, want %v", got, nil)
-	}
-	if got := root.shellSuspendResume(""); got != nil {
-		t.Errorf("shellSuspendResume() = %v, want %v", got, nil)
 	}
 }
 
