@@ -365,7 +365,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionLastSection, "last section")
 	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
 	k.writeKeyBind(&b, actionSectionNum, "number of section header lines")
-	k.writeKeyBind(&b, actionHideOther, "hide other section toggle")
+	k.writeKeyBind(&b, actionHideOther, `hide "other" section toggle`)
 
 	writeHeader(&b, "Close and reload")
 	k.writeKeyBind(&b, actionCloseFile, "close file")

@@ -278,14 +278,14 @@ func Test_stripBackSlash(t *testing.T) {
 		want string
 	}{
 		{
-			name: "nonEsacape",
+			name: "nonEscaape",
 			args: args{
 				str: "\test",
 			},
 			want: "\test",
 		},
 		{
-			name: "nonEsacape2",
+			name: "nonEscape2",
 			args: args{
 				str: "!test",
 			},
