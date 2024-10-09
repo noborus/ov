@@ -254,7 +254,7 @@ func Test_parseCSI(t *testing.T) {
 			},
 		},
 		{
-			name: "test-atributesNone",
+			name: "test-attributesNone",
 			args: args{
 				params: "28",
 			},

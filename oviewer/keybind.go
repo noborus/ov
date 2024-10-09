@@ -353,8 +353,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
-	k.writeKeyBind(&b, actionAlignFormat, "align format")
-	k.writeKeyBind(&b, actionRawFormat, "raw format")
+	k.writeKeyBind(&b, actionAlignFormat, "align columns")
+	k.writeKeyBind(&b, actionRawFormat, "raw output")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
 
 	writeHeader(&b, "Section")
@@ -365,7 +365,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionLastSection, "last section")
 	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
 	k.writeKeyBind(&b, actionSectionNum, "number of section header lines")
-	k.writeKeyBind(&b, actionHideOther, "toggle hide other section")
+	k.writeKeyBind(&b, actionHideOther, `hide "other" section toggle`)
 
 	writeHeader(&b, "Close and reload")
 	k.writeKeyBind(&b, actionCloseFile, "close file")

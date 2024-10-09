@@ -36,7 +36,7 @@ var SpaceContent = content{
 	style: tcell.StyleDefault,
 }
 
-// ShrinkContent is a content that represents a shrinked column.
+// ShrinkContent is a content that represents a shrunk column.
 var ShrinkContent = content{
 	mainc: Shrink,
 	combc: nil,

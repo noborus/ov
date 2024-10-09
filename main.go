@@ -370,8 +370,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
-	rootCmd.PersistentFlags().BoolVarP(&alignF, "align", "l", false, "align column")
-	rootCmd.PersistentFlags().BoolVarP(&rawF, "raw", "r", false, "raw output of escape sequences")
+	rootCmd.PersistentFlags().BoolVarP(&alignF, "align", "l", false, "align the output columns for better readability")
+	rootCmd.PersistentFlags().BoolVarP(&rawF, "raw", "r", false, "raw escape sequences without processing")
 
 	// Config.General
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align]")

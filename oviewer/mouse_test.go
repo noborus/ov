@@ -76,7 +76,7 @@ func TestRoot_mouseEvent(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "testShifWheelUp",
+			name: "testShiftWheelUp",
 			fields: fields{
 				ev: tcell.NewEventMouse(0, 0, tcell.WheelUp, tcell.ModShift),
 			},
