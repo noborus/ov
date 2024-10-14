@@ -55,7 +55,7 @@ archives:
 nfpms:
   -
     id: ov-nfpms
-    file_name_template: "{{ .ProjectName }}_{{ .Version }}-1_{{ .Arch }}"
+    file_name_template: "{{ .ConventionalFileName }}"
     builds:
     - ov-linux
     homepage: https://github.com/noborus/ov
