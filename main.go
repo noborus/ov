@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +47,9 @@ var (
 	// execCommand targets the output of executing the command.
 	execCommand bool
 
+	// forceScreen is display screen even when redirecting output.
+	forceScreen bool
+
 	// alignF is align column.
 	alignF bool
 	// rawF is raw output of escape sequences.
@@ -57,6 +61,8 @@ var (
 	ErrCompletion = errors.New("requires one of the arguments bash/zsh/fish/powershell")
 	// ErrNoArgument indicating that there are no arguments to execute.
 	ErrNoArgument = errors.New("no arguments to execute")
+	// ErrMissingFile indicates that the file is missing.
+	ErrMissingFile = errors.New("missing file")
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -117,6 +123,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		oviewer.MemoryLimit = config.MemoryLimit
 		oviewer.MemoryLimitFile = config.MemoryLimitFile
 		SetRedirect()
+		// Do not display the screen if redirected (unless forceScreen is specified).
+		if oviewer.STDOUTPIPE != nil && !forceScreen {
+			return copyOutput(args)
+		}
 
 		if execCommand {
 			return ExecCommand(args)
@@ -335,6 +345,35 @@ func flagUsage(f *pflag.FlagSet) string {
 	return buf.String()
 }
 
+func openFile(fileName string) (*os.File, error) {
+	if fileName == "" {
+		fd := os.Stdin.Fd()
+		if term.IsTerminal(int(fd)) {
+			return nil, ErrMissingFile
+		}
+		return os.Stdin, nil
+	}
+	return os.Open(fileName)
+}
+
+// copyOutput just outputs the input (standard input if there is no first file).
+func copyOutput(args []string) error {
+	files := argsToFiles(args)
+	fileName := ""
+	if len(files) > 0 {
+		fileName = files[0]
+	}
+	file, err := openFile(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	r := io.Reader(file)
+	_, err = io.Copy(oviewer.STDOUTPIPE, r)
+	return err
+}
+
 // UsageFunc returns a function that returns the usage.
 // This is for overwriting cobra usage.
 func UsageFunc() (cmd func(*cobra.Command) error) {
@@ -359,6 +398,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "command execution result instead of file")
+
+	rootCmd.PersistentFlags().BoolVarP(&forceScreen, "force-screen", "", false, "display screen even when redirecting output")
 
 	rootCmd.PersistentFlags().StringVarP(&completion, "completion", "", "", "generate completion script [bash|zsh|fish|powershell]")
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
