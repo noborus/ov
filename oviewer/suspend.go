@@ -16,11 +16,8 @@ func registerSIGTSTP() chan os.Signal {
 	return sigSuspend
 }
 
-// suspendProcess sends SIGSTOP signal to itself.
+// suspendProcess sends SIGSTOP signal to the process group.
 func suspendProcess() error {
-	pid := syscall.Getpid()
-	if err := syscall.Kill(pid, syscall.SIGSTOP); err != nil {
-		return err
-	}
-	return nil
+	pid := syscall.Getpgrp()
+	return syscall.Kill(-pid, syscall.SIGSTOP)
 }
