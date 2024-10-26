@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/term"
 )
 
 // toggleWrapMode toggles wrapMode each time it is called.
@@ -401,14 +403,22 @@ func (root *Root) suspend(context.Context) {
 
 func (root *Root) subShell(shell string) error {
 	if shell == "" {
-		if runtime.GOOS == "windows" {
-			shell = "CMD.EXE"
-		} else {
-			shell = "/bin/sh"
-		}
+		shell = getShell()
 	}
+
+	stdin := os.Stdin
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		// Use TTY as stdin when the current stdin is not a terminal.
+		tty, err := getTty()
+		if err != nil {
+			return fmt.Errorf("failed to open tty: %w", err)
+		}
+		defer tty.Close()
+		stdin = tty
+	}
+
 	c := exec.Command(shell, "-l")
-	c.Stdin = os.Stdin
+	c.Stdin = stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
@@ -416,6 +426,20 @@ func (root *Root) subShell(shell string) error {
 	}
 	fmt.Println("resume ov")
 	return nil
+}
+
+func getShell() string {
+	if runtime.GOOS == "windows" {
+		return "CMD.EXE"
+	}
+	return "/bin/sh"
+}
+
+func getTty() (*os.File, error) {
+	if runtime.GOOS == "windows" {
+		return os.Open("CONIN$")
+	}
+	return os.Open("/dev/tty")
 }
 
 // setViewMode switches to the preset display mode.
