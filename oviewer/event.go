@@ -71,7 +71,7 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventNextBackSearch:
 		root.backSearch(ctx, ev.str, -1)
 	case *eventSearchMove:
-		root.searchGo(ctx, ev.value)
+		root.searchGo(ctx, ev.ln, ev.searcher)
 	case *eventGoto:
 		root.goLine(ev.value)
 	case *eventHeader:

@@ -802,7 +802,7 @@ func TestRoot_searchGo(t *testing.T) {
 			root.Doc.jumpTargetSection = tt.fields.jumpTargetSection
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.Doc.SectionHeader = true
-			root.searchGo(ctx, tt.args.lN)
+			root.searchGo(ctx, tt.args.lN, root.searcher)
 			if root.Doc.topLN != tt.want {
 				t.Errorf("searchGo() = %v, want %v", root.Doc.topLN, tt.want)
 			}
