@@ -115,8 +115,14 @@ func (root *Root) nextDoc(ctx context.Context) {
 func (root *Root) previousDoc(ctx context.Context) {
 	fromNum := root.CurrentDoc
 	fromDoc := root.getDocument(fromNum)
+	if fromDoc == nil {
+		return
+	}
 	toNum := root.CurrentDoc - 1
 	toDoc := root.getDocument(toNum)
+	if toDoc == nil {
+		return
+	}
 
 	root.setDocumentNum(ctx, toNum)
 	root.input.Event = normal()
@@ -135,7 +141,7 @@ func (root *Root) linkLineNum(fromDoc, toDoc *Document) {
 	}
 	if n, ok := fromDoc.lineNumMap.LoadForward(fromDoc.topLN + fromDoc.firstLine()); ok {
 		root.debugMessage("Move parent line number")
-		toDoc.moveLine(n)
+		toDoc.moveLine(n - toDoc.firstLine())
 	}
 }
 
