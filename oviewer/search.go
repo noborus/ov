@@ -216,9 +216,9 @@ func (root *Root) searchPosition(str string) [][]int {
 }
 
 // searchXPos returns the x position of the first match.
-func (root *Root) searchXPos(lineNum int) int {
+func (root *Root) searchXPos(lineNum int, searcher Searcher) int {
 	line := root.Doc.getLineC(lineNum)
-	indexes := root.searcher.FindAll(line.str)
+	indexes := searcher.FindAll(line.str)
 	if len(indexes) == 0 {
 		return 0
 	}
@@ -278,7 +278,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, sea
 		if err != nil {
 			return fmt.Errorf("search:%w:%v", err, word)
 		}
-		root.sendSearchMove(n)
+		root.sendSearchMove(n, searcher)
 		return nil
 	})
 
@@ -523,13 +523,15 @@ func (root *Root) sendSearchQuit() {
 // eventSearchMove represents the move input mode.
 type eventSearchMove struct {
 	tcell.EventTime
-	value int
+	ln       int
+	searcher Searcher
 }
 
-func (root *Root) sendSearchMove(lineNum int) {
+func (root *Root) sendSearchMove(lineNum int, searcher Searcher) {
 	ev := &eventSearchMove{}
 	ev.SetEventNow()
-	ev.value = lineNum
+	ev.ln = lineNum
+	ev.searcher = searcher
 	root.postEvent(ev)
 }
 
@@ -566,7 +568,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool, lineNum int) {
 			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
-		root.sendSearchMove(n)
+		root.sendSearchMove(n, searcher)
 	}()
 }
 
