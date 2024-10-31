@@ -1378,7 +1378,7 @@ func TestRoot_followAll(t *testing.T) {
 			ctx := context.Background()
 			root.prepareScreen()
 			root.everyUpdate(ctx)
-			root.follow(ctx)
+			root.followAll(ctx)
 			if root.Doc.topLN != tt.want {
 				t.Errorf("follow() topLN = %v, want %v", root.Doc.topLN, tt.want)
 			}

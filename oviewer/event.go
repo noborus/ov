@@ -146,9 +146,13 @@ func (root *Root) everyUpdate(ctx context.Context) {
 
 	root.Doc.width = root.scr.vWidth - root.scr.startX
 	root.Doc.height = root.Doc.statusPos - root.Doc.headerHeight
-
-	if root.General.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
+	switch {
+	case root.General.FollowAll:
+		root.followAll(ctx)
+	case root.Doc.FollowMode:
 		root.follow(ctx)
+	case root.Doc.FollowSection:
+		root.followSection(ctx)
 	}
 
 	if !root.skipDraw && root.Doc.height > 0 {
