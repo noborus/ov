@@ -744,22 +744,23 @@ func (root *Root) updateEndNum() {
 	root.Screen.Sync()
 }
 
-// follow updates the document in follow mode.
-func (root *Root) follow(ctx context.Context) {
-	if root.General.FollowAll {
-		root.followAll(ctx)
-	}
+// updateLatestNum updates the last line number in follow mode.
+func (root *Root) updateLatestNum() bool {
 	num := root.Doc.BufEndNum()
 	if root.Doc.latestNum == num {
-		return
+		return false
 	}
 	root.skipDraw = false
-	if root.Doc.FollowSection {
-		root.tailSection(ctx)
-	} else {
+	root.Doc.latestNum = num
+	return true
+}
+
+// follow monitors and switches the document update
+// in follow mode.
+func (root *Root) follow(ctx context.Context) {
+	if root.updateLatestNum() {
 		root.TailSync(ctx)
 	}
-	root.Doc.latestNum = num
 }
 
 // followAll monitors and switches all document updates
@@ -772,6 +773,8 @@ func (root *Root) followAll(ctx context.Context) {
 	current := root.CurrentDoc
 	root.mu.RLock()
 	for n, doc := range root.DocList {
+		doc.width = root.scr.vWidth - root.scr.startX
+		doc.height = doc.statusPos - doc.headerHeight
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
@@ -780,6 +783,17 @@ func (root *Root) followAll(ctx context.Context) {
 
 	if root.CurrentDoc != current {
 		root.switchDocument(ctx, current)
+	}
+	if root.updateLatestNum() {
+		root.TailSync(ctx)
+	}
+}
+
+// followSection monitors and switches the document update
+// in follow section mode.
+func (root *Root) followSection(ctx context.Context) {
+	if root.updateLatestNum() {
+		root.tailSection(ctx)
 	}
 }
 
