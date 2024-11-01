@@ -33,6 +33,7 @@ ov is a terminal pager.
     * 2.12.4. [powershell](#powershell)
 * 3. [Usage](#usage)
   * 3.1. [Basic usage](#basic-usage)
+    * 3.1.1. [Redirect Output](#redirect-output)
   * 3.2. [Config](#config)
   * 3.3. [Header](#header)
     * 3.3.1. [Skip](#skip)
@@ -59,11 +60,14 @@ ov is a terminal pager.
   * 3.22. [Mouse support](#mouse-support)
   * 3.23. [Multi color highlight](#multi-color-highlight)
   * 3.24. [Plain](#plain)
-  * 3.25. [Jump target](#jump-target)
-  * 3.26. [View mode](#view-mode)
-  * 3.27. [Output on exit](#output-on-exit)
-  * 3.28. [Quit if one screen](#quit-if-one-screen)
-  * 3.29. [Save](#save)
+  * 3.25. [Converter](#converter)
+  * 3.26. [Align](#align)
+  * 3.27. [Jump target](#jump-target)
+  * 3.28. [View mode](#view-mode)
+  * 3.29. [Output on exit](#output-on-exit)
+  * 3.30. [Quit if one screen](#quit-if-one-screen)
+  * 3.31. [suspend](#suspend)
+  * 3.32. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
   * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -232,8 +236,6 @@ sudo install ov /usr/local/bin
 
 You can generate completion scripts for bash, zsh, fish, and powershell.
 
-Example:
-
 ####  2.12.1. <a name='bash'></a>bash
 
 ```console
@@ -287,6 +289,17 @@ export PAGER=ov
 ```
 
 See the [ov site](https://noborus.github.io/ov/) for more use cases.
+
+####  3.1.1. <a name='redirect-output'></a>Redirect Output
+
+Starting from v0.37.0, when redirecting the output of ov, the screen will not be displayed.
+To force the screen to display, use the `--force-screen` option.
+
+```console
+ov --force-screen filename > output.txt
+```
+
+*Added in v0.37.0*
 
 ###  3.2. <a name='config'></a>Config
 
@@ -714,7 +727,54 @@ StyleMultiColorHighlight:
 Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  3.25. <a name='jump-target'></a>Jump target
+###  3.25. <a name='converter'></a>Converter
+
+Converter selects the engine to convert and display the text.
+Usually, the escape sequence is interpreted and displayed by `es` (default).
+`raw` displays as it is without interpreting the escape sequence.
+
+You can specify the `--converter` option with `[es|raw|align]`,
+and you can also specify the `--raw`, `--align`([Align](#326-align)) option as a shortcut option.
+
+> [!NOTE]
+> `raw` also displays the character string of the escape sequence,
+> but be aware that [Plain](#324-plainplain) hides the decoration after interpreting the escape sequence.
+
+*Added in v0.37.0*
+
+###  3.26. <a name='align'></a>Align
+
+`align` displays the width when making Column is recognized.
+
+Example:
+
+```csv
+c1,c2,c3
+a,b,c
+aaaaaaaaaaaaaaaaaaaa,bb,cc
+aa,bbbbbbbbbbbbbb,cc
+aa,bb,cccccccccccccccccccccc
+```
+
+```console
+ov --column-mode --align test.csv
+```
+
+![ov-align](docs/ov-align.png)
+
+Align can also shrink column.
+
+*Added in v0.37.0*
+
+#### Shrink
+
+Align allows columns to be shrunk and stretched by toggling with the (default key `s`).
+
+![ov-column-shrink](docs/ov-column-shrink.gif)
+
+*Added in v0.37.0*
+
+###  3.27. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -734,7 +794,7 @@ ov --section-delimiter "^#" --jump-target section README.md
 
 [Related styling](#style-customization): `StyleJumpTarget`.
 
-###  3.26. <a name='view-mode'></a>View mode
+###  3.28. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -773,7 +833,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-###  3.27. <a name='output-on-exit'></a>Output on exit
+###  3.29. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -794,7 +854,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  3.28. <a name='quit-if-one-screen'></a>Quit if one screen
+###  3.30. <a name='quit-if-one-screen'></a>Quit if one screen
 
 The `--quit-if-one-screen`, `-F` option allows the program to exit immediately if the content fits within one screen.
 This can be useful when you only want to view small files or when you want to quickly check the content without scrolling.
@@ -805,7 +865,28 @@ If you want to enable this option by default, set `QuitSmall` to `true` in the c
 QuitSmall: true
 ```
 
-###  3.29. <a name='save'></a>Save
+###  3.31. <a name='suspend'></a>suspend
+
+You can suspend ov with `ctrl+z`.
+Normally, you can resume from suspend by typing `fg`.
+
+```console
+suspended ov (use 'fg' to resume)
+```
+
+On Windows or if the environment variable `OV_SUBSHELL` is set, `exit` instead of `fg`.
+The process actually starts a subshell without suspending.
+
+```console
+suspended ov (use 'exit' to resume)
+```
+
+*Added in v0.37.0*
+
+> [!NOTE]
+> Until v0.36.0, it was a Subshell method.
+
+###  3.32. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
@@ -883,6 +964,7 @@ MemoryLimit: 1000
 
 | Short |                    Long                    |                            Purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
+| -l,   | --align                                    | align the output columns for better readability                |
 | -C,   | --alternate-rows                           | alternately change the line color                              |
 |       | --caption string                           | custom caption                                                 |
 | -i,   | --case-sensitive                           | case-sensitive in search                                       |
@@ -892,6 +974,7 @@ MemoryLimit: 1000
 |       | --column-width                             | column mode for width                                          |
 |       | --completion string                        | generate completion script [bash\|zsh\|fish\|powershell]       |
 |       | --config file                              | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)       |
+|       | --converter string                         | converter [es\|raw\|align] (default "es")                      |
 |       | --debug                                    | debug mode                                                     |
 |       | --disable-column-cycle                     | disable column cycling                                         |
 |       | --disable-mouse                            | disable mouse support                                          |
@@ -904,6 +987,7 @@ MemoryLimit: 1000
 | -f,   | --follow-mode                              | monitor file and display new content as it is written          |
 |       | --follow-name                              | follow mode to monitor by file name                            |
 |       | --follow-section                           | section-by-section follow mode                                 |
+|       | --force-screen                             | display screen even when redirecting output                    |
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
 | -h,   | --help                                     | help for ov                                                    |
 |       | --help-key                                 | display key bind information                                   |
@@ -919,6 +1003,7 @@ MemoryLimit: 1000
 |       | --pattern string                           | search pattern                                                 |
 | -p,   | --plain                                    | disable original decoration                                    |
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
+| -r,   | --raw                                      | raw escape sequences without processing                        |
 |       | --regexp-search                            | regular expression search                                      |
 |       | --section-delimiter regexp                 | regexp for section delimiter .e.g. "^#"                        |
 |       | --section-header                           | enable section-delimiter line as Header                        |
@@ -991,6 +1076,7 @@ It can also be changed after startup.
 | [c]                           | * column mode toggle                               |
 | [alt+o]                       | * column width toggle                              |
 | [ctrl+r]                      | * column rainbow toggle                            |
+| [s]                           | * shrink column toggle                             |
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
@@ -1002,6 +1088,9 @@ It can also be changed after startup.
 | [t]                           | * TAB width                                        |
 | [.]                           | * multi color highlight                            |
 | [j]                           | * jump target(`.n` or `n%` or `section` allowed)   |
+| [alt+F]                       | * align columns                                    |
+| [alt+R]                       | * raw output                                       |
+| [alt+t]                       | * convert type selection                           |
 | **Section**                   |                                                    |
 | [alt+d]                       | * section delimiter regular expression             |
 | [ctrl+F3], [alt+s]            | * section start position                           |
@@ -1010,7 +1099,7 @@ It can also be changed after startup.
 | [9]                           | * last section                                     |
 | [F2]                          | * follow section mode toggle                       |
 | [F7]                          | * number of section header lines                   |
-| [alt+-]                       | * toggle hide other section                        |
+| [alt+-]                       | * hide "other" section toggle                      |
 | **Close and reload**          |                                                    |
 | [ctrl+F9], [ctrl+alt+s]       | * close file                                       |
 | [ctrl+alt+l], [F5]            | * reload file                                      |
