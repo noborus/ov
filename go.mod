@@ -5,8 +5,8 @@ go 1.19
 require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4
-	github.com/creack/pty v1.1.23
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/creack/pty v1.1.24
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
@@ -21,7 +21,7 @@ require (
 	github.com/ulikunitz/xz v0.5.12
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
 	golang.org/x/sync v0.8.0
-	golang.org/x/term v0.23.0
+	golang.org/x/term v0.25.0
 )
 
 require (
@@ -40,7 +40,7 @@ require (
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
