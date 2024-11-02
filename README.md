@@ -62,11 +62,12 @@ ov is a terminal pager.
   * 3.24. [Plain](#plain)
   * 3.25. [Converter](#converter)
   * 3.26. [Align](#align)
+    * 3.26.1. [Shrink](#shrink)
   * 3.27. [Jump target](#jump-target)
   * 3.28. [View mode](#view-mode)
   * 3.29. [Output on exit](#output-on-exit)
   * 3.30. [Quit if one screen](#quit-if-one-screen)
-  * 3.31. [suspend](#suspend)
+  * 3.31. [Suspend](#suspend)
   * 3.32. [Save](#save)
 * 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 4.1. [Regular file (seekable)](#regular-file-(seekable))
@@ -499,6 +500,9 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
+> [!NOTE]
+> Due to issue[issue #643](https://github.com/noborus/ov/issues/643), follow-mode does not work for files in the /tmp folder on macOS.
+
 ###  3.12. <a name='follow-name'></a>Follow name
 
 You can specify the file name to follow with `--follow-name`(like `tail -F`).
@@ -766,11 +770,17 @@ Align can also shrink column.
 
 *Added in v0.37.0*
 
-#### Shrink
+####  3.26.1. <a name='shrink'></a>Shrink
 
 Align allows columns to be shrunk and stretched by toggling with the (default key `s`).
 
 ![ov-column-shrink](docs/ov-column-shrink.gif)
+
+To change the character displayed when columns are shrunk, set ShrinkChar in the configuration file:
+
+```yaml
+ShrinkChar: '.'
+```
 
 *Added in v0.37.0*
 
@@ -865,9 +875,9 @@ If you want to enable this option by default, set `QuitSmall` to `true` in the c
 QuitSmall: true
 ```
 
-###  3.31. <a name='suspend'></a>suspend
+###  3.31. <a name='suspend'></a>Suspend
 
-You can suspend ov with `ctrl+z`.
+You can suspend ov with `ctrl+z`(default key).
 Normally, you can resume from suspend by typing `fg`.
 
 ```console
