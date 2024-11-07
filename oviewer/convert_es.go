@@ -79,8 +79,10 @@ func (es *escapeSequence) convert(st *parseState) bool {
 		case mainc == 'm':
 			st.style = csToStyle(st.style, es.parameter.String())
 		case mainc == 'K':
-			if es.parameter.String() != "1" {
-				// Clear line.
+			// CSI 0 K or CSI K maintains the style after the newline
+			// (can change the background color of the line).
+			params := es.parameter.String()
+			if params == "" || params == "0" {
 				st.eolStyle = st.style
 			}
 		case mainc >= 'A' && mainc <= 'T':
