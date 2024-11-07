@@ -71,6 +71,7 @@ type parseState struct {
 	mainc     rune
 	combc     []rune
 	style     tcell.Style
+	eolStyle  tcell.Style
 	bsContent content
 	tabWidth  int
 	tabx      int
@@ -98,13 +99,20 @@ func RawStrToContents(str string, tabWidth int) contents {
 	return parseString(newRawConverter(), str, tabWidth)
 }
 
-// parseString converts a string to lineContents.
-// parseString is converted character by character by Converter.
-// If tabwidth is set to -1, \t is displayed instead of functioning as a tab.
+// parseString converts a string to contents.
+// This function wraps parseLine and is used when line styles are not needed.
 func parseString(conv Converter, str string, tabWidth int) contents {
+	lc, _ := parseLine(conv, str, tabWidth)
+	return lc
+}
+
+// parseLine converts a string to lineContents and eolStyle, and returns them.
+// If tabWidth is set to -1, \t is displayed instead of functioning as a tab.
+func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style) {
 	st := &parseState{
 		lc:        make(contents, 0, len(str)),
 		style:     tcell.StyleDefault,
+		eolStyle:  tcell.StyleDefault,
 		tabWidth:  tabWidth,
 		tabx:      0,
 		bsFlag:    false,
@@ -125,7 +133,7 @@ func parseString(conv Converter, str string, tabWidth int) contents {
 	st.mainc = '\n'
 	st.combc = nil
 	conv.convert(st)
-	return st.lc
+	return st.lc, st.eolStyle
 }
 
 // parseChar parses a single character.

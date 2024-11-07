@@ -75,15 +75,19 @@ func (es *escapeSequence) convert(st *parseState) bool {
 		}
 		return true
 	case ansiControlSequence:
-		if mainc == 'm' {
+		switch {
+		case mainc == 'm':
 			st.style = csToStyle(st.style, es.parameter.String())
-		} else if mainc >= 'A' && mainc <= 'T' {
-			// Ignore.
-		} else {
-			if mainc >= 0x30 && mainc <= 0x3f {
-				es.parameter.WriteRune(mainc)
-				return true
+		case mainc == 'K':
+			if es.parameter.String() != "1" {
+				// Clear line.
+				st.eolStyle = st.style
 			}
+		case mainc >= 'A' && mainc <= 'T':
+			// Ignore.
+		case mainc >= '0' && mainc <= 'f':
+			es.parameter.WriteRune(mainc)
+			return true
 		}
 		es.state = ansiText
 		return true
