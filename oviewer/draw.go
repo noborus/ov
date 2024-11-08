@@ -61,7 +61,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, line.valid)
 
-		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+		nextLX, nextLN := root.drawLine(y, lX, lN, line)
 		if line.valid {
 			root.coordinatesStyle(lN, y)
 		}
@@ -93,14 +93,14 @@ func (root *Root) drawHeader() {
 	lX := 0
 	lN := root.scr.headerLN
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
-		line, ok := root.scr.lines[lN]
+		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.blankLineNumber(y)
 
-		lX, lN = root.drawLine(y, lX, lN, line.lc)
+		lX, lN = root.drawLine(y, lX, lN, lineC)
 		// header style.
 		root.applyStyleToLine(y, root.StyleHeader)
 
@@ -120,14 +120,14 @@ func (root *Root) drawSectionHeader() {
 	lX := 0
 	lN := root.scr.sectionHeaderLN
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
-		line, ok := root.scr.lines[lN]
+		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			panic(fmt.Sprintf("line is not found %d", lN))
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-		root.drawLineNumber(lN, y, line.valid)
+		root.drawLineNumber(lN, y, lineC.valid)
 
-		nextLX, nextLN := root.drawLine(y, lX, lN, line.lc)
+		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		// section header style.
 		root.applyStyleToLine(y, root.StyleSectionLine)
 		// markstyle is displayed above the section header.
@@ -149,33 +149,33 @@ func (root *Root) drawSectionHeader() {
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawLine(y int, lX int, lN int, lc contents) (int, int) {
+func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	if root.Doc.WrapMode {
-		return root.drawWrapLine(y, lX, lN, lc)
+		return root.drawWrapLine(y, lX, lN, lineC)
 	}
 
-	return root.drawNoWrapLine(y, root.Doc.x, lN, lc)
+	return root.drawNoWrapLine(y, root.Doc.x, lN, lineC)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
-func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
+func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	if lX < 0 {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
 	}
 
 	for x := 0; ; x++ {
-		if lX+x >= len(lc) {
+		if lX+x >= len(lineC.lc) {
 			// EOL
-			root.clearEOL(root.scr.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y, lineC.eolStyle)
 			lX = 0
 			lN++
 			break
 		}
-		content := lc[lX+x]
+		content := lineC.lc[lX+x]
 		if x+root.scr.startX+content.width > root.scr.vWidth {
 			// Right edge.
-			root.clearEOL(root.scr.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y, tcell.StyleDefault)
 			lX += x
 			break
 		}
@@ -186,17 +186,17 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lc contents) (int, int) {
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, startX int, lN int, lc contents) (int, int) {
+func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, int) {
 	startX = max(startX, root.minStartX)
 	for x := 0; root.scr.startX+x < root.scr.vWidth; x++ {
-		if startX+x >= len(lc) {
+		if startX+x >= len(lineC.lc) {
 			// EOL
-			root.clearEOL(root.scr.startX+x, y)
+			root.clearEOL(root.scr.startX+x, y, lineC.eolStyle)
 			break
 		}
 		content := DefaultContent
 		if startX+x >= 0 {
-			content = lc[startX+x]
+			content = lineC.lc[startX+x]
 		}
 		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
 	}
@@ -258,15 +258,15 @@ func (root *Root) setContentString(vx int, vy int, lc contents) {
 }
 
 // clearEOL clears from the specified position to the right end.
-func (root *Root) clearEOL(x int, y int) {
+func (root *Root) clearEOL(x int, y int, style tcell.Style) {
 	for ; x < root.scr.vWidth; x++ {
-		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
+		root.Screen.SetContent(x, y, ' ', nil, style)
 	}
 }
 
 // clearY clear the specified line.
 func (root *Root) clearY(y int) {
-	root.clearEOL(0, y)
+	root.clearEOL(0, y, tcell.StyleDefault)
 }
 
 // coordinatesStyle applies the style of the coordinates.

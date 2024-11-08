@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gdamore/tcell/v2"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
@@ -204,6 +205,8 @@ type LineC struct {
 	section int
 	// Line number within a section.
 	sectionNm int
+	// eolStyle is the style of the end of the line.
+	eolStyle tcell.Style
 }
 
 // NewDocument returns Document.
@@ -442,6 +445,16 @@ func (m *Document) contents(lN int) (contents, error) {
 	return parseString(m.conv, str, m.TabWidth), err
 }
 
+func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
+	if lN < 0 || lN >= m.BufEndNum() {
+		return nil, tcell.StyleDefault, ErrOutOfRange
+	}
+
+	str, err := m.LineStr(lN)
+	lc, style := parseLine(m.conv, str, m.TabWidth)
+	return lc, style, err
+}
+
 // getLineC returns contents from line number and tabWidth.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int) LineC {
@@ -453,7 +466,7 @@ func (m *Document) getLineC(lN int) LineC {
 		return line
 	}
 
-	org, err := m.contents(lN)
+	org, style, err := m.contentsLine(lN)
 	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
@@ -466,9 +479,10 @@ func (m *Document) getLineC(lN int) LineC {
 	}
 	str, pos := ContentsToStr(org)
 	line := LineC{
-		lc:  org,
-		str: str,
-		pos: pos,
+		lc:       org,
+		str:      str,
+		pos:      pos,
+		eolStyle: style,
 	}
 	if err == nil {
 		m.cache.Add(lN, line)
