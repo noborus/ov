@@ -854,3 +854,71 @@ func TestRawStrToContents(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseLine(t *testing.T) {
+	type args struct {
+		str      string
+		tabWidth int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  contents
+		want1 tcell.Style
+	}{
+		{
+			name: "testEscapeSequence",
+			args: args{
+				str: "\x1b[31mred\x1b[m",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'r'},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'e'},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'd'},
+			},
+			want1: tcell.StyleDefault,
+		},
+		{
+			name: "testClearLine0",
+			args: args{
+				str: "\x1b[42mt\x1b[0K",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
+			},
+			want1: tcell.StyleDefault.Background(tcell.ColorGreen),
+		},
+		{
+			name: "testClearLineBlank",
+			args: args{
+				str: "\x1b[42mt\x1b[K",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
+			},
+			want1: tcell.StyleDefault.Background(tcell.ColorGreen),
+		},
+		{
+			name: "testClearLine1",
+			args: args{
+				str: "\x1b[42mt\x1b[1K", // Not supported
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
+			},
+			want1: tcell.StyleDefault,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			conv := newESConverter()
+			got, got1 := parseLine(conv, tt.args.str, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseLine() got = \n%#v, want \n%#v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("parseLine() got1 = %#v, want %#v", got1, tt.want1)
+			}
+		})
+	}
+}
