@@ -248,15 +248,6 @@ func Test_StrToContentsStyle1(t *testing.T) {
 			},
 		},
 		{
-			name: "216 color",
-			args: args{
-				line: "\x1B[38;5;31mc\x1B[m", tabWidth: 8,
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(0, 102, 153)), mainc: 'c', combc: nil},
-			},
-		},
-		{
 			name: "256",
 			args: args{
 				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,

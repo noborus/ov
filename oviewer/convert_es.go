@@ -165,6 +165,7 @@ func csToStyle(style tcell.Style, params string) tcell.Style {
 	if params == "0" || params == "" || params == ";" {
 		return tcell.StyleDefault.Normal()
 	}
+
 	if s, ok := csiCache.Load(params); ok {
 		style = applyStyle(style, s.(OVStyle))
 		return style
@@ -180,8 +181,7 @@ func csToStyle(style tcell.Style, params string) tcell.Style {
 func parseCSI(params string) OVStyle {
 	s := OVStyle{}
 	fields := strings.Split(params, ";")
-	fl := len(fields)
-	for index := 0; index < fl; index++ {
+	for index := 0; index < len(fields); index++ {
 		field := fields[index]
 		switch field {
 		case "1", "01":
@@ -218,12 +218,20 @@ func parseCSI(params string) OVStyle {
 			s.UnStrikeThrough = true
 		case "30", "31", "32", "33", "34", "35", "36", "37":
 			colorNumber, _ := strconv.Atoi(field)
-			s.Foreground = colorName(int(tcell.Color(colorNumber - 30)))
+			s.Foreground = colorName(colorNumber - 30)
+		case "38":
+			i, color := csColor(fields[index:])
+			index += i
+			s.Foreground = color
 		case "39":
 			s.Foreground = "default"
 		case "40", "41", "42", "43", "44", "45", "46", "47":
 			colorNumber, _ := strconv.Atoi(field)
-			s.Background = colorName(int(tcell.Color(colorNumber - 40)))
+			s.Background = colorName(colorNumber - 40)
+		case "48":
+			i, color := csColor(fields[index:])
+			index += i
+			s.Background = color
 		case "49":
 			s.Background = "default"
 		case "53":
@@ -232,89 +240,55 @@ func parseCSI(params string) OVStyle {
 			s.UnOverLine = true
 		case "90", "91", "92", "93", "94", "95", "96", "97":
 			colorNumber, _ := strconv.Atoi(field)
-			s.Foreground = colorName(int(tcell.Color(colorNumber - 82)))
+			s.Foreground = colorName(colorNumber - 82)
 		case "100", "101", "102", "103", "104", "105", "106", "107":
 			colorNumber, _ := strconv.Atoi(field)
-			s.Background = colorName(int(tcell.Color(colorNumber - 92)))
-		case "38", "48":
-			var i int
-			i, s = csColor(s, fields[index:])
-			index += i
+			s.Background = colorName(colorNumber - 92)
 		}
 	}
 	return s
 }
 
 // csColor parses 8-bit color and 24-bit color.
-func csColor(s OVStyle, fields []string) (int, OVStyle) {
+func csColor(fields []string) (int, string) {
 	if len(fields) < 2 {
-		return 1, s
+		return 1, ""
 	}
 
-	var color string
-	index := 0
-	fg := fields[index]
-	index++
-	if fields[index] == "5" && len(fields) > index+1 { // 8-bit colors.
-		index++
-		c, _ := strconv.Atoi(fields[index])
-		color = colorName(c)
-	} else if fields[index] == "2" && len(fields) > index+3 { // 24-bit colors.
-		red, _ := strconv.Atoi(fields[index+1])
-		green, _ := strconv.Atoi(fields[index+2])
-		blue, _ := strconv.Atoi(fields[index+3])
+	index := 1
+	color := "default"
+	switch fields[1] {
+	case "5": // 8-bit colors.
+		if len(fields) > index+1 {
+			eColor := fields[2]
+			if eColor == "" {
+				return index, color
+			}
+			c, err := strconv.Atoi(eColor)
+			if err != nil {
+				return index, color
+			}
+			index++
+			color = colorName(c)
+		}
+	case "2": // 24-bit colors.
+		if len(fields) <= index+3 {
+			index += len(fields) // Skip the Invalid fields.
+			return index, color
+		}
+		red, _ := strconv.Atoi(fields[2])
+		green, _ := strconv.Atoi(fields[3])
+		blue, _ := strconv.Atoi(fields[4])
 		index += 3
 		color = fmt.Sprintf("#%02x%02x%02x", red, green, blue)
 	}
-	if len(color) > 0 {
-		if fg == "38" {
-			s.Foreground = color
-		} else {
-			s.Background = color
-		}
-	}
-	return index, s
+	return index, color
 }
 
 // colorName returns a string that can be used to specify the color of tcell.
 func colorName(colorNumber int) string {
-	if colorNumber <= 7 {
-		return lookupColor(colorNumber)
-	} else if colorNumber <= 15 {
-		return lookupColor(colorNumber)
-	} else if colorNumber <= 231 {
-		red := (colorNumber - 16) / 36
-		green := ((colorNumber - 16) / 6) % 6
-		blue := (colorNumber - 16) % 6
-		return fmt.Sprintf("#%02x%02x%02x", 255*red/5, 255*green/5, 255*blue/5)
-	} else if colorNumber <= 255 {
-		grey := 255 * (colorNumber - 232) / 23
-		return fmt.Sprintf("#%02x%02x%02x", grey, grey, grey)
+	if colorNumber < 0 || colorNumber > 255 {
+		return ""
 	}
-	return ""
-}
-
-// lookupColor returns the color name from the color number.
-func lookupColor(colorNumber int) string {
-	if colorNumber < 0 || colorNumber > 15 {
-		return "black"
-	}
-	return [...]string{
-		"black",
-		"maroon",
-		"green",
-		"olive",
-		"navy",
-		"purple",
-		"teal",
-		"silver",
-		"gray",
-		"red",
-		"lime",
-		"yellow",
-		"blue",
-		"fuchsia",
-		"aqua",
-		"white",
-	}[colorNumber]
+	return tcell.PaletteColor(colorNumber).String()
 }
