@@ -344,6 +344,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
+	k.writeKeyBind(&b, actionAlignFormat, "align columns")
+	k.writeKeyBind(&b, actionRawFormat, "raw output")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
@@ -353,8 +355,6 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionTabWidth, "TAB width")
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
-	k.writeKeyBind(&b, actionAlignFormat, "align columns")
-	k.writeKeyBind(&b, actionRawFormat, "raw output")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
 
 	writeHeader(&b, "Section")
