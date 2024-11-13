@@ -282,6 +282,24 @@ func Test_parseCSI(t *testing.T) {
 				StrikeThrough: false,
 			},
 		},
+		{
+			name: "test-forground2",
+			args: args{
+				params: "38;5;2",
+			},
+			want: OVStyle{
+				Foreground: "green",
+			},
+		},
+		{
+			name: "test-forground216",
+			args: args{
+				params: "38;5;216",
+			},
+			want: OVStyle{
+				Foreground: "#FFAF87",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -313,7 +331,7 @@ func Test_colorName(t *testing.T) {
 			args: args{
 				colorNumber: 249,
 			},
-			want: "#bcbcbc",
+			want: "#B2B2B2",
 		},
 		{
 			name: "test-ColorNameNotImplemented",
@@ -327,7 +345,7 @@ func Test_colorName(t *testing.T) {
 			args: args{
 				colorNumber: -1,
 			},
-			want: "black",
+			want: "",
 		},
 	}
 	for _, tt := range tests {
