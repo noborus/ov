@@ -1090,6 +1090,8 @@ It can also be changed after startup.
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
+| [alt+F]                       | * align columns                                    |
+| [alt+R]                       | * raw output                                       |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
@@ -1098,8 +1100,6 @@ It can also be changed after startup.
 | [t]                           | * TAB width                                        |
 | [.]                           | * multi color highlight                            |
 | [j]                           | * jump target(`.n` or `n%` or `section` allowed)   |
-| [alt+F]                       | * align columns                                    |
-| [alt+R]                       | * raw output                                       |
 | [alt+t]                       | * convert type selection                           |
 | **Section**                   |                                                    |
 | [alt+d]                       | * section delimiter regular expression             |
