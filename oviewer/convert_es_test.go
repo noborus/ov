@@ -173,9 +173,10 @@ func Test_csToStyle(t *testing.T) {
 		csiParameter string
 	}
 	tests := []struct {
-		name string
-		args args
-		want tcell.Style
+		name    string
+		args    args
+		want    tcell.Style
+		wantErr bool
 	}{
 		{
 			name: "color8bit",
@@ -183,7 +184,8 @@ func Test_csToStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "38;5;1",
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+			want:    tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+			wantErr: false,
 		},
 		{
 			name: "color8bit2",
@@ -191,7 +193,34 @@ func Test_csToStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "38;5;21",
 			},
-			want: tcell.StyleDefault.Foreground(tcell.GetColor("#0000ff")),
+			want:    tcell.StyleDefault.Foreground(tcell.GetColor("#0000ff")),
+			wantErr: false,
+		},
+		{
+			name: "colorTrueColor",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "38;2;255;0;0",
+			},
+			want:    tcell.StyleDefault.Foreground(tcell.GetColor("#FF0000")),
+			wantErr: false,
+		},
+		{
+			name: "colorTrueColorInvalid",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "38;2;255;",
+			},
+			want: tcell.StyleDefault,
+		},
+		{
+			name: "colorTrueColorInvalid2",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "38;2;a;b;c",
+			},
+			want:    tcell.StyleDefault,
+			wantErr: false,
 		},
 		{
 			name: "attributes",
@@ -199,14 +228,19 @@ func Test_csToStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "2;3;4;5;6;7;8;9",
 			},
-			want: tcell.StyleDefault.Dim(true).Italic(true).Underline(true).Blink(true).Reverse(true).StrikeThrough(true),
+			want:    tcell.StyleDefault.Dim(true).Italic(true).Underline(true).Blink(true).Reverse(true).StrikeThrough(true),
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := csToStyle(tt.args.style, tt.args.csiParameter); !reflect.DeepEqual(got, tt.want) {
+			got, err := csToStyle(tt.args.style, tt.args.csiParameter)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("csToStyle() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("csToStyle() = %v, want %v", got, tt.want)
 				gfg, gbg, gattr := got.Decompose()
 				wfg, wbg, wattr := tt.want.Decompose()
@@ -221,9 +255,10 @@ func Test_parseCSI(t *testing.T) {
 		params string
 	}
 	tests := []struct {
-		name string
-		args args
-		want OVStyle
+		name    string
+		args    args
+		want    OVStyle
+		wantErr bool
 	}{
 		{
 			name: "test-attributes",
@@ -238,6 +273,7 @@ func Test_parseCSI(t *testing.T) {
 				Reverse:       true,
 				StrikeThrough: true,
 			},
+			wantErr: false,
 		},
 		{
 			name: "test-attributesErr",
@@ -252,6 +288,7 @@ func Test_parseCSI(t *testing.T) {
 				Reverse:       false,
 				StrikeThrough: false,
 			},
+			wantErr: false,
 		},
 		{
 			name: "test-attributesNone",
@@ -266,6 +303,7 @@ func Test_parseCSI(t *testing.T) {
 				Reverse:       false,
 				StrikeThrough: false,
 			},
+			wantErr: false,
 		},
 		{
 			name: "test-Default",
@@ -281,6 +319,7 @@ func Test_parseCSI(t *testing.T) {
 				Reverse:       false,
 				StrikeThrough: false,
 			},
+			wantErr: false,
 		},
 		{
 			name: "test-forground2",
@@ -299,11 +338,16 @@ func Test_parseCSI(t *testing.T) {
 			want: OVStyle{
 				Foreground: "#FFAF87",
 			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := parseCSI(tt.args.params); !reflect.DeepEqual(got, tt.want) {
+			got, err := parseCSI(tt.args.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseCSI() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseCSI() = %v, want %v", got, tt.want)
 			}
 		})
