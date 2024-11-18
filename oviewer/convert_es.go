@@ -11,6 +11,12 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// convert_es converts an ANSI escape sequence to an ov representation.
+// In ov, it is mainly to convert CSI (Control Sequence Introducer).
+// Furthermore, it is to convert SGR (Set Graphics Rendition) in it to ov's style.
+// (Some hyperlinks are also interpreted).
+// Other than that, it hides them so that they do not interfere.
+
 // The states of the ANSI escape code parser.
 const (
 	ansiText = iota
@@ -24,7 +30,7 @@ const (
 	oscURL
 )
 
-// Finalbyte is a character outside the escape sequence.
+// FinalByte is a character outside the escape sequence.
 // If FinalByte is included, the interpretation of the escape sequence is terminated
 // and it is considered an error as it did not terminate correctly.
 const FinalByte = 0x40
@@ -36,7 +42,7 @@ const (
 	ColorsRGB = 2
 )
 
-// escape sequence states.
+// escapeSequence is a structure that holds the escape sequence.
 type escapeSequence struct {
 	parameter strings.Builder
 	url       strings.Builder
@@ -69,7 +75,7 @@ func (es *escapeSequence) convert(st *parseState) bool {
 	switch es.state {
 	case ansiEscape:
 		switch mainc {
-		case '[': // Control Sequence Introducer.
+		case '[': // CSI(Control Sequence Introducer).
 			es.parameter.Reset()
 			es.state = ansiControlSequence
 			return true
@@ -96,7 +102,7 @@ func (es *escapeSequence) convert(st *parseState) bool {
 		return true
 	case ansiControlSequence:
 		switch {
-		case mainc == 'm':
+		case mainc == 'm': // SGR(Set Graphics Rendition).
 			st.style = sgrStyle(st.style, es.parameter.String())
 		case mainc == 'K':
 			// CSI 0 K or CSI K maintains the style after the newline
@@ -183,7 +189,8 @@ func (es *escapeSequence) convert(st *parseState) bool {
 
 // sgrStyle returns tcell.Style from the SGR control sequence.
 func sgrStyle(style tcell.Style, paramStr string) tcell.Style {
-	if paramStr == "0" || paramStr == "" || paramStr == ";" {
+	switch paramStr {
+	case "0", "", ";":
 		return tcell.StyleDefault.Normal()
 	}
 
@@ -197,7 +204,7 @@ func sgrStyle(style tcell.Style, paramStr string) tcell.Style {
 	return applyStyle(style, s)
 }
 
-// parseSGR actually parses the style and returns ovStyle.
+// parseSGR actually parses the style and returns OVStyle.
 func parseSGR(paramStr string) OVStyle {
 	s := OVStyle{}
 	paramList := strings.Split(paramStr, ";")
@@ -319,7 +326,7 @@ func parseSGR(paramStr string) OVStyle {
 }
 
 // toSGRCode converts the SGR parameter to a code.
-// Supports both separators (:) and (;).
+// If there is no (:) separator, use the slice of paramList.
 func toSGRCode(paramList []string, index int) (sgrParams, error) {
 	str := paramList[index]
 	sgr := sgrParams{}
@@ -403,7 +410,7 @@ func convertSGRColor(sgr sgrParams) (string, int, error) {
 		return "", inc, err
 	}
 	switch ex {
-	case Colors256:
+	case Colors256: // 38:5:n
 		if len(sgr.params) < 2 {
 			return "", inc, nil
 		}
@@ -413,7 +420,7 @@ func convertSGRColor(sgr sgrParams) (string, int, error) {
 		}
 		inc++
 		return color, inc, nil
-	case ColorsRGB:
+	case ColorsRGB: // 38:2:r:g:b
 		if len(sgr.params) < 4 {
 			return "", len(sgr.params), nil
 		}
@@ -422,7 +429,7 @@ func convertSGRColor(sgr sgrParams) (string, int, error) {
 		if sgr.colonF && sgr.params[1] == "" && len(sgr.params) > 4 {
 			rgb = sgr.params[2:5] // 38:2::r:g:b
 		}
-		color, err := parseRGBColor(rgb)
+		color, err := parseRGBColor(rgb[0], rgb[1], rgb[2])
 		if err != nil {
 			return color, inc, err
 		}
@@ -454,15 +461,15 @@ func colorName(colorNumber int) string {
 }
 
 // parseRGBColor parses the RGB color.
-func parseRGBColor(params []string) (string, error) {
-	if params[0] == "" || params[1] == "" || params[2] == "" {
+func parseRGBColor(red string, green string, blue string) (string, error) {
+	if red == "" || green == "" || blue == "" {
 		return "", nil
 	}
-	r, err1 := sgrNumber(params[0])
-	g, err2 := sgrNumber(params[1])
-	b, err3 := sgrNumber(params[2])
+	r, err1 := sgrNumber(red)
+	g, err2 := sgrNumber(green)
+	b, err3 := sgrNumber(blue)
 	if err1 != nil || err2 != nil || err3 != nil {
-		return "", fmt.Errorf("invalid RGB color values: %v, %v, %v", params[0], params[1], params[2])
+		return "", fmt.Errorf("invalid RGB color values: %v, %v, %v", red, green, blue)
 	}
 	if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 {
 		return "", nil
