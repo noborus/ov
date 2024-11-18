@@ -166,7 +166,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 	}
 }
 
-func Test_csToStyle(t *testing.T) {
+func Test_sgrStyle(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		style        tcell.Style
@@ -236,10 +236,7 @@ func Test_csToStyle(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := csToStyle(tt.args.style, tt.args.csiParameter)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("csToStyle() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got := sgrStyle(tt.args.style, tt.args.csiParameter)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("csToStyle() = %v, want %v", got, tt.want)
 				gfg, gbg, gattr := got.Decompose()
@@ -250,7 +247,7 @@ func Test_csToStyle(t *testing.T) {
 	}
 }
 
-func Test_parseCSI(t *testing.T) {
+func Test_parseSGR(t *testing.T) {
 	type args struct {
 		params string
 	}
@@ -343,12 +340,120 @@ func Test_parseCSI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseCSI(tt.args.params)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseCSI() error = %v, wantErr %v", err, tt.wantErr)
+			if got := parseSGR(tt.args.params); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseSGI() = %v, want %v", got, tt.want)
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseCSI() = %v, want %v", got, tt.want)
+		})
+	}
+}
+
+func Test_parseSGR2(t *testing.T) {
+	type args struct {
+		params string
+	}
+	tests := []struct {
+		name string
+		args args
+		want OVStyle
+	}{
+		{
+			name: "test-Colon1",
+			args: args{
+				params: "38:5:1",
+			},
+			want: OVStyle{
+				Foreground: "maroon",
+			},
+		},
+		{
+			name: "test-Colon2",
+			args: args{
+				params: "48:2:255:0:0",
+			},
+			want: OVStyle{
+				Background: "#ff0000",
+			},
+		},
+		{
+			name: "test-Colon3",
+			args: args{
+				params: "48:2::255:0:0",
+			},
+			want: OVStyle{
+				Background: "#ff0000",
+			},
+		},
+		{
+			name: "test-Underline-colon",
+			args: args{
+				params: "4:0",
+			},
+			want: OVStyle{
+				Underline:   false,
+				UnUnderline: true,
+			},
+		},
+		{
+			name: "test-invalid1",
+			args: args{
+				params: "38:5:-",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-invalid2",
+			args: args{
+				params: "38:5:999",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-invalid3",
+			args: args{
+				params: "38:5",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-valid",
+			args: args{
+				params: "38:5:0",
+			},
+			want: OVStyle{
+				Foreground: "black",
+			},
+		},
+		{
+			name: "test-rgb-valid",
+			args: args{
+				params: "4;38:2:255:0:0",
+			},
+			want: OVStyle{
+				Underline:  true,
+				Foreground: "#ff0000",
+			},
+		},
+		{
+			name: "test-rgb-invalid",
+			args: args{
+				params: "4;38:2:255:0:-",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-rgb-over",
+			args: args{
+				params: "4;38:2:255:0:999",
+			},
+			want: OVStyle{
+				Underline: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseSGR(tt.args.params); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseSGR() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

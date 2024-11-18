@@ -426,8 +426,8 @@ var (
 	ErrNotAlignMode = errors.New("not an align mode")
 	// ErrNoColumnSelected indicates that no column is selected.
 	ErrNoColumnSelected = errors.New("no column selected")
-	// ErrInvalidCSI indicates that the CSI is invalid.
-	ErrInvalidCSI = errors.New("invalid CSI")
+	// ErrInvalidSGR indicates that the SGR is invalid.
+	ErrInvalidSGR = errors.New("invalid SGR")
 	// ErrNotSuuport indicates that it is not supported.
 	ErrNotSuuport = errors.New("not support")
 )
