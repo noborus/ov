@@ -126,6 +126,32 @@ func Test_escapeSequence_convert(t *testing.T) {
 			wantState: ansiText,
 		},
 		{
+			name: "test-ControlSequenceEnd",
+			fields: fields{
+				state: ansiControlSequence,
+			},
+			args: args{
+				st: &parseState{
+					mainc: '?',
+				},
+			},
+			want:      true,
+			wantState: ansiControlSequence,
+		},
+		{
+			name: "test-ControlSequenceOver",
+			fields: fields{
+				state: ansiControlSequence,
+			},
+			args: args{
+				st: &parseState{
+					mainc: '@',
+				},
+			},
+			want:      true,
+			wantState: ansiText,
+		},
+		{
 			name: "test-SysSequence",
 			fields: fields{
 				state: systemSequence,
@@ -321,7 +347,7 @@ func Test_parseSGR(t *testing.T) {
 		{
 			name: "test-forground2",
 			args: args{
-				params: "38;5;2",
+				params: "038;05;02",
 			},
 			want: OVStyle{
 				Foreground: "green",
@@ -336,6 +362,25 @@ func Test_parseSGR(t *testing.T) {
 				Foreground: "#FFAF87",
 			},
 			wantErr: false,
+		},
+		{
+			name: "test-forground216_Underline",
+			args: args{
+				params: "38;5;216;4",
+			},
+			want: OVStyle{
+				Foreground: "#FFAF87",
+				Underline:  true,
+			},
+		},
+		{
+			name: "test-reset_Underline",
+			args: args{
+				params: "38;5;216;0;4",
+			},
+			want: OVStyle{
+				Underline: true,
+			},
 		},
 	}
 	for _, tt := range tests {

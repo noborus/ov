@@ -30,10 +30,13 @@ const (
 	oscURL
 )
 
-// FinalByte is a character outside the escape sequence.
-// If FinalByte is included, the interpretation of the escape sequence is terminated
-// and it is considered an error as it did not terminate correctly.
-const FinalByte = 0x40
+// csiParamStart and csiParamEnd define the range of parameters in the CSI.
+// Parameters outside this range will result in an error and will not be considered as CSI.
+// Errors within this range will not affect the CSI.
+const (
+	csiParamStart = 0x20
+	csiParamEnd   = 0x3F
+)
 
 const (
 	// Colors256 is the index of the 256 color. 8-bit colors. 0-255.
@@ -71,6 +74,12 @@ type sgrParams struct {
 // convert parses an escape sequence and changes state.
 // Returns true if it is an escape sequence and a non-printing character.
 func (es *escapeSequence) convert(st *parseState) bool {
+	return es.paraseEscapeSequence(st)
+}
+
+// parseEscapeSequence parses the escape sequence.
+// convert parses an escape sequence and changes state.
+func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 	mainc := st.mainc
 	switch es.state {
 	case ansiEscape:
@@ -101,24 +110,7 @@ func (es *escapeSequence) convert(st *parseState) bool {
 		}
 		return true
 	case ansiControlSequence:
-		switch {
-		case mainc == 'm': // SGR(Set Graphics Rendition).
-			st.style = sgrStyle(st.style, es.parameter.String())
-		case mainc == 'K':
-			// CSI 0 K or CSI K maintains the style after the newline
-			// (can change the background color of the line).
-			params := es.parameter.String()
-			if params == "" || params == "0" {
-				st.eolStyle = st.style
-			}
-		case mainc >= 'A' && mainc <= 'T':
-			// Ignore.
-		case mainc < FinalByte:
-			es.parameter.WriteRune(mainc)
-			return true
-		}
-		// End of escape sequence.
-		es.state = ansiText
+		es.parseCSI(st, mainc)
 		return true
 	case otherSequence:
 		es.state = ansiEscape
@@ -187,6 +179,29 @@ func (es *escapeSequence) convert(st *parseState) bool {
 	return false
 }
 
+// parseCSI parses the CSI(Control Sequence Introducer) escape sequence.
+func (es *escapeSequence) parseCSI(st *parseState, mainc rune) {
+	switch {
+	case mainc == 'm': // SGR(Set Graphics Rendition).
+		st.style = sgrStyle(st.style, es.parameter.String())
+	case mainc == 'K': // Erase in Line.
+		// CSI 0 K or CSI K maintains the style after the newline
+		params := es.parameter.String()
+		if params == "" || params == "0" {
+			// can change the background color of the line.
+			_, bg, _ := st.style.Decompose()
+			st.eolStyle = st.eolStyle.Background(bg)
+		}
+	case mainc >= 'A' && mainc <= 'T': // Cursor Movement.
+		// Ignore.
+	case mainc >= csiParamStart && mainc <= csiParamEnd: // Parameters.
+		es.parameter.WriteRune(mainc)
+		return
+	}
+	// End of escape sequence.
+	es.state = ansiText
+}
+
 // sgrStyle returns tcell.Style from the SGR control sequence.
 func sgrStyle(style tcell.Style, paramStr string) tcell.Style {
 	switch paramStr {
@@ -227,21 +242,12 @@ func parseSGR(paramStr string) OVStyle {
 			s.Italic = true
 			s.UnItalic = false
 		case 4: // Underline On
-			s.UnUnderline = false
+			if len(sgr.params) > 0 && sgr.params[0] != "" {
+				s = underLineStyle(s, sgr.params[0])
+				break
+			}
 			s.Underline = true
-			if len(sgr.params) == 0 {
-				continue
-			}
-			// The parameter is specified(4:).
-			n, err := sgrNumber(sgr.params[0])
-			if err != nil {
-				return OVStyle{}
-			}
-			// Support only Underline Off (4:0).
-			if n == 0 {
-				s.Underline = false
-				s.UnUnderline = true
-			}
+			s.UnUnderline = false
 		case 5: // Blink On
 			s.Blink = true
 			s.UnBlink = false
@@ -378,6 +384,25 @@ func containsNonDigit(str string) bool {
 		}
 	}
 	return false
+}
+
+// underLineStyle sets the underline style.
+func underLineStyle(s OVStyle, param string) OVStyle {
+	n, err := sgrNumber(param)
+	if err != nil {
+		return s
+	}
+
+	// Support only Underline Off (4:0).
+	if n == 0 {
+		s.Underline = false
+		s.UnUnderline = true
+		return s
+	}
+	// Other than that, it is treated as Underline On.
+	s.Underline = true
+	s.UnUnderline = false
+	return s
 }
 
 // parseSGRColor parses 256 color or RGB color.
