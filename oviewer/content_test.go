@@ -387,7 +387,7 @@ func Test_StrToContentsStyle2(t *testing.T) {
 	}
 }
 
-func Test_parseStringUnStyle(t *testing.T) {
+func Test_StrToContentUnStyle(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		line     string
