@@ -74,13 +74,6 @@ type sgrParams struct {
 // convert parses an escape sequence and changes state.
 // Returns true if it is an escape sequence and a non-printing character.
 func (es *escapeSequence) convert(st *parseState) bool {
-	switch st.mainc {
-	case 0x1b:
-		es.state = ansiEscape
-		return true
-	case '\n':
-		return false
-	}
 	return es.paraseEscapeSequence(st)
 }
 
@@ -175,6 +168,13 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 		}
 		es.url.WriteRune(mainc)
 		return true
+	}
+	switch mainc {
+	case 0x1b:
+		es.state = ansiEscape
+		return true
+	case '\n':
+		return false
 	}
 	return false
 }
