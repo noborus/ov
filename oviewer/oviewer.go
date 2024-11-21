@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"regexp"
 	"sync"
 	"syscall"
+
+	"errors"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
@@ -386,6 +387,8 @@ var (
 	ErrIsDirectory = errors.New("is a directory")
 	// ErrNotFound indicates not found.
 	ErrNotFound = errors.New("not found")
+	// ErrNotTerminal indicates that it is not a terminal.
+	ErrNotTerminal = errors.New("not a terminal")
 	// ErrCancel indicates cancel.
 	ErrCancel = errors.New("cancel")
 	// ErrInvalidNumber indicates an invalid number.
@@ -490,7 +493,11 @@ func NewRoot(r io.Reader) (*Root, error) {
 func Open(fileNames ...string) (*Root, error) {
 	switch len(fileNames) {
 	case 0:
-		return openSTDIN()
+		root, err := openSTDIN()
+		if err != nil {
+			return nil, ErrMissingFile
+		}
+		return root, nil
 	case 1:
 		return openFile(fileNames[0])
 	default:
@@ -520,28 +527,37 @@ func openFile(fileName string) (*Root, error) {
 // openFiles opens multiple files and creates root.
 // It will continue even if there are files that fail to open.
 func openFiles(fileNames []string) (*Root, error) {
-	errors := make([]string, 0)
+	var openErrs []error
 	docList := make([]*Document, 0)
 	for _, fileName := range fileNames {
 		m, err := OpenDocument(fileName)
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("open error: %s", err))
+			openErrs = append(openErrs, err)
 			continue
 		}
 		docList = append(docList, m)
 	}
 
-	if len(docList) == 0 {
-		return nil, fmt.Errorf("%w: %s", ErrMissingFile, fileNames[0])
+	if len(openErrs) > 1 {
+		openErrs = append([]error{ErrMissingFile}, openErrs...)
 	}
+	errs := errors.Join(openErrs...)
+	// If none of the documents are present, the program exits with an error.
+	if len(docList) == 0 {
+		return nil, errs
+	}
+
 	root, err := NewOviewer(docList...)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, e := range errors {
-		log.Println(e)
+	// Errors that could not be OpenDocument are output to the log.
+	if errs, ok := errs.(interface{ Unwrap() []error }); ok {
+		for _, err := range errs.Unwrap() {
+			log.Println(err)
+		}
 	}
+
 	return root, err
 }
 

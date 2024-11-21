@@ -166,7 +166,12 @@ func argsToFiles(args []string) []string {
 		if err != nil {
 			continue
 		}
-		files = append(files, argFiles...)
+		if len(argFiles) > 0 {
+			files = append(files, argFiles...)
+			continue
+		}
+		// fallback to the original argument.
+		files = append(files, arg)
 	}
 	// If filePath.Glob does not match,
 	// return argument to return correct error
