@@ -309,19 +309,21 @@ func parseSGR(paramStr string) OVStyle {
 			s.Background = "default"
 		case 53: // Overline On
 			s.OverLine = true
+			s.UnOverLine = false
 		case 55: // Overline Off
+			s.OverLine = false
 			s.UnOverLine = true
 		case 58: // UnderlineColor
-			// (not implemented). Increase index only.
-			_, i, err := parseSGRColor(sgr)
+			color, i, err := parseSGRColor(sgr)
 			if err != nil {
 				return s
 			}
 			index += i
+			s.UnderlineColor = color
 		case 59: // UnderlineColorDefault
-			// (not implemented).
+			s.UnderlineColor = "default"
 		case 73, 74, 75: // VerticalAlignment
-			// (not implemented).
+			s.VerticalAlignType = sgr.code - 73
 		case 90, 91, 92, 93, 94, 95, 96, 97: // Bright Foreground color
 			s.Foreground = colorName(sgr.code - 82)
 		case 100, 101, 102, 103, 104, 105, 106, 107: // Bright Background color
