@@ -261,12 +261,15 @@ func (m *Document) converterType(name string) Converter {
 
 // OpenDocument opens a file and returns a Document.
 func OpenDocument(fileName string) (*Document, error) {
+	if fileName == "-" {
+		return STDINDocument()
+	}
 	fi, err := os.Stat(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", fileName, ErrNotFound)
+		return nil, fmt.Errorf("'%s' %w", fileName, ErrNotFound)
 	}
 	if fi.IsDir() {
-		return nil, fmt.Errorf("%s %w", fileName, ErrIsDirectory)
+		return nil, fmt.Errorf("'%s' %w", fileName, ErrIsDirectory)
 	}
 
 	m, err := NewDocument()
@@ -309,10 +312,10 @@ func STDINDocument() (*Document, error) {
 	m.FileName = "(STDIN)"
 	f, err := open("")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open stdin: %w", err)
 	}
 	if err := m.ControlFile(f); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read from stdin: %w", err)
 	}
 	return m, nil
 }

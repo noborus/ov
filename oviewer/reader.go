@@ -323,7 +323,7 @@ func open(fileName string) (*os.File, error) {
 	if fileName == "" {
 		fd := os.Stdin.Fd()
 		if term.IsTerminal(int(fd)) {
-			return nil, ErrMissingFile
+			return nil, ErrNotTerminal
 		}
 		return os.Stdin, nil
 	}
