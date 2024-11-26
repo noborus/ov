@@ -71,7 +71,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 		writeLine(w, line)
 	}
 	go m.filterWriter(ctx, searcher, m.firstLine(), filterDoc)
-	root.setMessagef(msg)
+	root.setMessage(msg)
 }
 
 // filterWriter searches and writes to filterDoc.

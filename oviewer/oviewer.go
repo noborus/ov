@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,8 +12,6 @@ import (
 	"regexp"
 	"sync"
 	"syscall"
-
-	"errors"
 
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
