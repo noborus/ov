@@ -374,9 +374,11 @@ func (root *Root) suspend(context.Context) {
 		root.setMessageLog(err.Error())
 		return
 	}
-	defer func() error {
+	defer func() {
 		log.Println("Resume")
-		return root.Screen.Resume()
+		if err := root.Screen.Resume(); err != nil {
+			log.Println(err)
+		}
 	}()
 
 	subshell := os.Getenv("OV_SUBSHELL")

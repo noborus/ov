@@ -72,17 +72,17 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Background(tcell.GetColor(s.Background))
 	}
 	// tcell does not support underline color.
-	//if s.UnderlineColor != "" {
+	// if s.UnderlineColor != "" {
 	//	style = style.UnderlineColor(tcell.GetColor(s.UnderlineColor))
-	//}
+	// }
 	// tcell does not support underline type.
-	//if s.UnderlineType != 0 {
+	// if s.UnderlineType != 0 {
 	//	Double,Curly,Dotted,Dashed
-	//}
+	// }
 	// tcell does not support vertical align type.
-	//if s.VerticalAlignType != 0 {
+	// if s.VerticalAlignType != 0 {
 	//	Top,Middle,Bottom
-	//}
+	// }
 
 	if s.Blink {
 		style = style.Blink(true)
@@ -106,9 +106,9 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.StrikeThrough(true)
 	}
 	// tcell does not support overline.
-	//if s.OverLine {
+	// if s.OverLine {
 	//	style = style.Overline(true)
-	//}
+	// }
 
 	if s.UnBlink {
 		style = style.Blink(false)
@@ -132,9 +132,9 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.StrikeThrough(false)
 	}
 	// tcell does not support overline.
-	//if s.UnOverLine {
+	// if s.UnOverLine {
 	//	style = style.Overline(false)
-	//}
+	// }
 
 	return style
 }
