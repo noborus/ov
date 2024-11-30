@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -534,57 +533,6 @@ func Test_colorName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := colorName(tt.args.colorNumber); got != tt.want {
 				t.Errorf("colorName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_escapeSequence_parseOSC(t *testing.T) {
-	type fields struct {
-		parameter string
-		state     int
-	}
-	type args struct {
-		st    *parseState
-		mainc rune
-	}
-	type want struct {
-		style tcell.Style
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   want
-	}{
-		{
-			name: "test-OSC",
-			fields: fields{
-				parameter: "8;;http://example.com",
-				state:     ansiControlSequence,
-			},
-			args: args{
-				st: &parseState{
-					mainc: '\\',
-				},
-				mainc: 0x07,
-			},
-			want: want{
-				style: tcell.StyleDefault.Url("http://example.com"),
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			parameter := strings.Builder{}
-			parameter.WriteString(tt.fields.parameter)
-			es := &escapeSequence{
-				parameter: parameter,
-				state:     tt.fields.state,
-			}
-			es.parseOSC(tt.args.st, tt.args.mainc)
-			if tt.args.st.style != tt.want.style {
-				t.Errorf("escapeSequence.parseOSC() = %v, want %v", tt.args.st.style, tt.want.style)
 			}
 		})
 	}

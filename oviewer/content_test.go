@@ -536,7 +536,7 @@ func Test_StrToContentsHyperlink(t *testing.T) {
 		},
 		{
 			name: "testHyperLinkfile",
-			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\a", tabWidth: 8},
+			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\x1b\\", tabWidth: 8},
 			want: contents{
 				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('f'), combc: nil},
 				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('i'), combc: nil},

@@ -113,6 +113,16 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 	case systemSequence:
 		es.parseOSC(st, mainc)
 		return true
+	case oscControlSequence:
+		parameter := es.parameter.String()
+		es.parameter.Reset()
+		if mainc == '\\' { // ST(String Terminator).
+			st.style = oscStyle(st, parameter)
+			es.state = ansiText
+			return true
+		}
+		es.state = ansiText
+		return true
 	}
 	switch mainc {
 	case 0x1b:
@@ -121,7 +131,6 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 	case '\n':
 		return false
 	}
-	//log.Printf("mainc: %c, %#v", mainc, st.style)
 	return false
 }
 
@@ -454,18 +463,49 @@ func parseRGBColor(red string, green string, blue string) (string, error) {
 // parseOSC parses the OSC(Operating System Command Sequence) escape sequence.
 func (es *escapeSequence) parseOSC(st *parseState, mainc rune) {
 	switch mainc {
-	case '\x1b': // ESC.
-		return
-	case '\\', '\a': // ST(String Terminator) (or BEL).
-		st.style = oscStyle(st, es.parameter.String())
+	case '\a': // BEL is also interpreted as ST.
+		parameter := es.parameter.String()
 		es.parameter.Reset()
+		if isOSC(parameter) {
+			st.style = oscStyle(st, parameter)
+		}
 		es.state = ansiText
 		return
+	case 0x1b: // ESC.
+		if isOSC(es.parameter.String()) {
+			es.state = oscControlSequence
+			return
+		}
+		es.parameter.Reset()
+		es.state = ansiControlSequence
+		return
 	}
+
 	es.parameter.WriteRune(mainc)
 }
 
+// isOSC returns true if the parameter is an OSC escape sequence.
+func isOSC(parameter string) bool {
+	if parameter == "" {
+		return false
+	}
+	params := strings.Split(parameter, ";")
+	if len(params) < 2 {
+		return false
+	}
+	code, err := esNumber(params[0])
+	if err != nil {
+		return false
+	}
+	switch code { // OSC code.
+	case 8: // Hyperlink.
+		return true
+	}
+	return false
+}
+
 // oscStyle returns tcell.Style from the OSC control sequence.
+// oscStyle only supports hyperlinks.
 func oscStyle(st *parseState, paramStr string) tcell.Style {
 	params := strings.Split(paramStr, ";")
 	if len(params) < 2 {
