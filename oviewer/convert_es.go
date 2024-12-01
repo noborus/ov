@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,9 +24,7 @@ const (
 	ansiControlSequence
 	otherSequence
 	systemSequence
-	oscHyperLink
-	oscParameter
-	oscURL
+	oscControlSequence
 )
 
 // csiParamStart and csiParamEnd define the range of parameters in the CSI.
@@ -48,7 +45,6 @@ const (
 // escapeSequence is a structure that holds the escape sequence.
 type escapeSequence struct {
 	parameter strings.Builder
-	url       strings.Builder
 	state     int
 }
 
@@ -56,7 +52,6 @@ type escapeSequence struct {
 func newESConverter() *escapeSequence {
 	return &escapeSequence{
 		parameter: strings.Builder{},
-		url:       strings.Builder{},
 		state:     ansiText,
 	}
 }
@@ -92,7 +87,7 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 			st.style = tcell.StyleDefault
 			es.state = ansiText
 			return true
-		case ']': // Operating System Command Sequence.
+		case ']': // OSC(Operating System Command Sequence).
 			es.state = systemSequence
 			return true
 		case 'P', 'X', '^', '_': // Substrings and commands.
@@ -116,57 +111,17 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 		es.state = ansiEscape
 		return true
 	case systemSequence:
-		switch mainc {
-		case '8':
-			es.state = oscHyperLink
-			return true
-		case '\\':
-			es.state = ansiText
-			return true
-		case 0x1b:
-			// unknown but for compatibility.
-			es.state = ansiControlSequence
-			return true
-		case 0x07:
-			es.state = ansiText
-			return true
-		}
-		log.Printf("invalid char %c", mainc)
+		es.parseOSC(st, mainc)
 		return true
-	case oscHyperLink:
-		switch mainc {
-		case ';':
-			es.state = oscParameter
+	case oscControlSequence:
+		parameter := es.parameter.String()
+		es.parameter.Reset()
+		if mainc == '\\' { // ST(String Terminator).
+			st.style = oscStyle(st, parameter)
+			es.state = ansiText
 			return true
 		}
 		es.state = ansiText
-		return false
-	case oscParameter:
-		if mainc != ';' {
-			es.parameter.WriteRune(mainc)
-			return true
-		}
-		urlID := es.parameter.String()
-		if urlID != "" {
-			st.style = st.style.UrlId(urlID)
-		}
-		es.parameter.Reset()
-		es.state = oscURL
-		return true
-	case oscURL:
-		switch mainc {
-		case 0x1b:
-			st.style = st.style.Url(es.url.String())
-			es.url.Reset()
-			es.state = systemSequence
-			return true
-		case 0x07:
-			st.style = st.style.Url(es.url.String())
-			es.url.Reset()
-			es.state = ansiText
-			return true
-		}
-		es.url.WriteRune(mainc)
 		return true
 	}
 	switch mainc {
@@ -339,7 +294,7 @@ func toSGRCode(paramList []string, index int) (sgrParams, error) {
 	str := paramList[index]
 	sgr := sgrParams{}
 	colonLists := strings.Split(str, ":")
-	code, err := sgrNumber(colonLists[0])
+	code, err := esNumber(colonLists[0])
 	if err != nil {
 		return sgrParams{}, ErrNotSuuport
 	}
@@ -361,10 +316,10 @@ func toSGRCode(paramList []string, index int) (sgrParams, error) {
 	return sgr, nil
 }
 
-// sgrNumber converts a string to a number.
+// esNumber converts a string to a number.
 // If the string is empty, it returns 0.
 // If the string contains a non-numeric character, it returns an error.
-func sgrNumber(str string) (int, error) {
+func esNumber(str string) (int, error) {
 	if str == "" {
 		return 0, nil
 	}
@@ -390,7 +345,7 @@ func containsNonDigit(str string) bool {
 
 // underLineStyle sets the underline style.
 func underLineStyle(s OVStyle, param string) OVStyle {
-	n, err := sgrNumber(param)
+	n, err := esNumber(param)
 	if err != nil {
 		return s
 	}
@@ -432,7 +387,7 @@ func convertSGRColor(sgr sgrParams) (string, int, error) {
 		return "", 0, nil
 	}
 	inc := 1
-	ex, err := sgrNumber(sgr.params[0])
+	ex, err := esNumber(sgr.params[0])
 	if err != nil {
 		return "", inc, err
 	}
@@ -471,7 +426,7 @@ func parse256Color(param string) (string, error) {
 	if param == "" {
 		return "", nil
 	}
-	c, err := sgrNumber(param)
+	c, err := esNumber(param)
 	if err != nil {
 		return "", err
 	}
@@ -492,9 +447,9 @@ func parseRGBColor(red string, green string, blue string) (string, error) {
 	if red == "" || green == "" || blue == "" {
 		return "", nil
 	}
-	r, err1 := sgrNumber(red)
-	g, err2 := sgrNumber(green)
-	b, err3 := sgrNumber(blue)
+	r, err1 := esNumber(red)
+	g, err2 := esNumber(green)
+	b, err3 := esNumber(blue)
 	if err1 != nil || err2 != nil || err3 != nil {
 		return "", fmt.Errorf("invalid RGB color values: %v, %v, %v", red, green, blue)
 	}
@@ -503,4 +458,75 @@ func parseRGBColor(red string, green string, blue string) (string, error) {
 	}
 	color := fmt.Sprintf("#%02x%02x%02x", r, g, b)
 	return color, nil
+}
+
+// parseOSC parses the OSC(Operating System Command Sequence) escape sequence.
+func (es *escapeSequence) parseOSC(st *parseState, mainc rune) {
+	switch mainc {
+	case '\a': // BEL is also interpreted as ST.
+		parameter := es.parameter.String()
+		es.parameter.Reset()
+		if isOSC(parameter) {
+			st.style = oscStyle(st, parameter)
+		}
+		es.state = ansiText
+		return
+	case 0x1b: // ESC.
+		if isOSC(es.parameter.String()) {
+			es.state = oscControlSequence
+			return
+		}
+		es.parameter.Reset()
+		es.state = ansiControlSequence
+		return
+	}
+
+	es.parameter.WriteRune(mainc)
+}
+
+// isOSC returns true if the parameter is an OSC escape sequence.
+func isOSC(parameter string) bool {
+	if parameter == "" {
+		return false
+	}
+	params := strings.Split(parameter, ";")
+	if len(params) < 2 {
+		return false
+	}
+	code, err := esNumber(params[0])
+	if err != nil {
+		return false
+	}
+	switch code { // OSC code.
+	case 8: // Hyperlink.
+		return true
+	}
+	return false
+}
+
+// oscStyle returns tcell.Style from the OSC control sequence.
+// oscStyle only supports hyperlinks.
+func oscStyle(st *parseState, paramStr string) tcell.Style {
+	params := strings.Split(paramStr, ";")
+	if len(params) < 2 {
+		return st.style
+	}
+	code, err := esNumber(params[0])
+	if err != nil {
+		return st.style
+	}
+	switch code { // OSC code.
+	case 8: // Hyperlink.
+		if len(params) < 3 {
+			return st.style
+		}
+		urlID := params[1]
+		url := params[2]
+		if urlID != "" {
+			st.style = st.style.UrlId(urlID)
+		}
+		st.style = st.style.Url(url)
+		return st.style
+	}
+	return st.style
 }

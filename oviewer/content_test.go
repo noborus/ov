@@ -536,7 +536,7 @@ func Test_StrToContentsHyperlink(t *testing.T) {
 		},
 		{
 			name: "testHyperLinkfile",
-			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\a", tabWidth: 8},
+			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\x1b\\", tabWidth: 8},
 			want: contents{
 				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('f'), combc: nil},
 				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('i'), combc: nil},
@@ -857,6 +857,55 @@ func Test_parseLine(t *testing.T) {
 				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
 			},
 			want1: tcell.StyleDefault,
+		},
+		{
+			name: "testHyperLinkError",
+			args: args{
+				str: "\x1b]+8;;http://example.com\x1b\\link\x1b]8;;\x1b\\",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault, mainc: 'l'},
+				{width: 1, style: tcell.StyleDefault, mainc: 'i'},
+				{width: 1, style: tcell.StyleDefault, mainc: 'n'},
+				{width: 1, style: tcell.StyleDefault, mainc: 'k'},
+			},
+		},
+		{
+			name: "testHyperLink",
+			args: args{
+				str: "\x1b]8;;http://example.com\x1b\\link\x1b]8;;\x1b\\",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'l'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'i'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'n'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'k'},
+			},
+			want1: tcell.StyleDefault,
+		},
+		{
+			name: "testHyperLinkID",
+			args: args{
+				str: "\x1b]8;1;http://example.com\x1b\\link\x1b]8;;\x1b\\",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'l'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'i'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'n'},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'k'},
+			},
+		},
+		{
+			name: "testHyperLinkFile",
+			args: args{
+				str: "\x1b]8;;file:///file\afile\x1b]8;;\a",
+			},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'f'},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'i'},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'l'},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'e'},
+			},
 		},
 	}
 	for _, tt := range tests {

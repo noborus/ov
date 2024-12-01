@@ -164,19 +164,6 @@ func Test_escapeSequence_convert(t *testing.T) {
 			want:      true,
 			wantState: ansiText,
 		},
-		{
-			name: "test-OscHyperLink",
-			fields: fields{
-				state: oscHyperLink,
-			},
-			args: args{
-				st: &parseState{
-					mainc: 'a',
-				},
-			},
-			want:      false,
-			wantState: ansiText,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
