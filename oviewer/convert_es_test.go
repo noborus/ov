@@ -83,7 +83,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 					mainc: '@',
 				},
 			},
-			want:      false,
+			want:      true,
 			wantState: ansiText,
 		},
 		{

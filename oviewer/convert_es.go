@@ -24,7 +24,6 @@ const (
 	ansiControlSequence
 	otherSequence
 	systemSequence
-	oscControlSequence
 )
 
 // csiParamStart and csiParamEnd define the range of parameters in the CSI.
@@ -83,12 +82,13 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 			es.parameter.Reset()
 			es.state = ansiControlSequence
 			return true
+		case ']': // OSC(Operating System Command Sequence).
+			es.parameter.Reset()
+			es.state = systemSequence
+			return true
 		case 'c': // Reset.
 			st.style = tcell.StyleDefault
 			es.state = ansiText
-			return true
-		case ']': // OSC(Operating System Command Sequence).
-			es.state = systemSequence
 			return true
 		case 'P', 'X', '^', '_': // Substrings and commands.
 			es.state = ansiSubstring
@@ -96,8 +96,15 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 		case '(':
 			es.state = otherSequence
 			return true
+		case '\\':
+			parameter := es.parameter.String()
+			es.parameter.Reset()
+			st.style = oscStyle(st.style, parameter)
+			es.state = ansiText
+			return true
 		default: // Ignore.
 			es.state = ansiText
+			return true
 		}
 	case ansiSubstring:
 		if mainc == 0x1b {
@@ -112,16 +119,6 @@ func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
 		return true
 	case systemSequence:
 		es.parseOSC(st, mainc)
-		return true
-	case oscControlSequence:
-		parameter := es.parameter.String()
-		es.parameter.Reset()
-		if mainc == '\\' { // ST(String Terminator).
-			st.style = oscStyle(st, parameter)
-			es.state = ansiText
-			return true
-		}
-		es.state = ansiText
 		return true
 	}
 	switch mainc {
@@ -466,67 +463,40 @@ func (es *escapeSequence) parseOSC(st *parseState, mainc rune) {
 	case '\a': // BEL is also interpreted as ST.
 		parameter := es.parameter.String()
 		es.parameter.Reset()
-		if isOSC(parameter) {
-			st.style = oscStyle(st, parameter)
-		}
+		st.style = oscStyle(st.style, parameter)
 		es.state = ansiText
 		return
 	case 0x1b: // ESC.
-		if isOSC(es.parameter.String()) {
-			es.state = oscControlSequence
-			return
-		}
-		es.parameter.Reset()
-		es.state = ansiControlSequence
+		es.state = ansiEscape
 		return
 	}
 
 	es.parameter.WriteRune(mainc)
 }
 
-// isOSC returns true if the parameter is an OSC escape sequence.
-func isOSC(parameter string) bool {
-	if parameter == "" {
-		return false
-	}
-	params := strings.Split(parameter, ";")
-	if len(params) < 2 {
-		return false
-	}
-	code, err := esNumber(params[0])
-	if err != nil {
-		return false
-	}
-	switch code { // OSC code.
-	case 8: // Hyperlink.
-		return true
-	}
-	return false
-}
-
-// oscStyle returns tcell.Style from the OSC control sequence.
-// oscStyle only supports hyperlinks.
-func oscStyle(st *parseState, paramStr string) tcell.Style {
+// oscStyle returns tcell.Style from the OSC escape sequence.
+// The OSC escape sequence is used to set the hyperlink.
+func oscStyle(style tcell.Style, paramStr string) tcell.Style {
 	params := strings.Split(paramStr, ";")
 	if len(params) < 2 {
-		return st.style
+		return style
 	}
 	code, err := esNumber(params[0])
 	if err != nil {
-		return st.style
+		return style
 	}
+
 	switch code { // OSC code.
 	case 8: // Hyperlink.
 		if len(params) < 3 {
-			return st.style
+			return style
 		}
 		urlID := params[1]
 		url := params[2]
 		if urlID != "" {
-			st.style = st.style.UrlId(urlID)
+			style = style.UrlId(urlID)
 		}
-		st.style = st.style.Url(url)
-		return st.style
+		style = style.Url(url)
 	}
-	return st.style
+	return style
 }
