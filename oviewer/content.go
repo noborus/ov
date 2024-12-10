@@ -216,18 +216,18 @@ func (st *parseState) parseChar(mainc rune, combc []rune) {
 }
 
 // overstrike set style for overstrike.
-func (es *parseState) overstrike(m content, style tcell.Style) tcell.Style {
-	if !es.bsFlag {
+func (st *parseState) overstrike(m content, style tcell.Style) tcell.Style {
+	if !st.bsFlag {
 		return style
 	}
 
-	if es.bsContent.mainc == m.mainc {
+	if st.bsContent.mainc == m.mainc {
 		style = OverStrikeStyle
-	} else if es.bsContent.mainc == '_' {
+	} else if st.bsContent.mainc == '_' {
 		style = OverLineStyle
 	}
-	es.bsFlag = false
-	es.bsContent = DefaultContent
+	st.bsFlag = false
+	st.bsContent = DefaultContent
 	return style
 }
 
