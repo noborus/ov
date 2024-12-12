@@ -80,7 +80,7 @@ type parseState struct {
 
 // Converter is an interface for converting escape sequences, etc.
 type Converter interface {
-	convert(*parseState) bool
+	convert(st *parseState) bool
 }
 
 var defaultConverter = newESConverter()
@@ -107,7 +107,6 @@ func parseString(conv Converter, str string, tabWidth int) contents {
 }
 
 // parseLine converts a string to lineContents and eolStyle, and returns them.
-// If tabWidth is set to -1, \t is displayed instead of functioning as a tab.
 func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style) {
 	st := &parseState{
 		lc:        make(contents, 0, len(str)),
@@ -138,89 +137,34 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 
 // parseChar parses a single character.
 func (st *parseState) parseChar(mainc rune, combc []rune) {
+	width := runewidth.RuneWidth(mainc)
+	if width == 0 {
+		st.zeroWidthHandle(mainc)
+		return
+	}
+
 	c := DefaultContent
-	switch runewidth.RuneWidth(mainc) {
-	case 0:
-		switch {
-		case mainc == '\t': // TAB
-			switch {
-			case st.tabWidth > 0:
-				tabStop := st.tabWidth - (st.tabx % st.tabWidth)
-				c.width = 1
-				c.style = st.style
-				c.mainc = rune('\t')
-				st.lc = append(st.lc, c)
-				st.tabx++
-				c.mainc = 0
-				for i := 0; i < tabStop-1; i++ {
-					st.lc = append(st.lc, c)
-					st.tabx++
-				}
-			case st.tabWidth < 0:
-				c.width = 1
-				c.style = st.style.Reverse(true)
-				c.mainc = rune('\\')
-				st.lc = append(st.lc, c)
-				c.mainc = rune('t')
-				st.lc = append(st.lc, c)
-				st.tabx += 2
-			default:
-			}
-			return
-		case mainc == '\b': // BackSpace
-			if len(st.lc) == 0 {
-				return
-			}
-			st.bsFlag = true
-			st.bsContent = st.lc.last()
-			if st.bsContent.width > 1 {
-				st.lc = st.lc[:len(st.lc)-2]
-			} else {
-				st.lc = st.lc[:len(st.lc)-1]
-			}
-			return
-		case mainc < 0x20: // control character
-			if mainc == '\r' { // CR
-				return
-			}
-			c.mainc = mainc
-			c.width = 0
-			st.lc = append(st.lc, c)
-			return
-		}
-		lastC := st.lc.last()
-		lastC.combc = append(lastC.combc, mainc)
-		n := len(st.lc) - lastC.width
-		if n >= 0 && len(st.lc) > n {
-			st.lc[n] = lastC
-		}
-	case 1:
-		c.mainc = mainc
-		if len(combc) > 0 {
-			c.combc = combc
-		}
-		c.width = 1
+	c.mainc = mainc
+	if len(combc) > 0 {
+		c.combc = combc
+	}
+	c.width = width
+	st.tabx += width
+
+	c.style = st.style
+	if st.bsFlag {
 		c.style = st.overstrike(c, st.style)
-		st.lc = append(st.lc, c)
-		st.tabx++
-	case 2:
-		c.mainc = mainc
-		if len(combc) > 0 {
-			c.combc = combc
-		}
-		c.width = 2
-		c.style = st.overstrike(c, st.style)
-		st.lc = append(st.lc, c, DefaultContent)
-		st.tabx += 2
+	}
+
+	st.lc = append(st.lc, c)
+	// multi-width character.
+	if width > 1 {
+		st.lc = append(st.lc, DefaultContent)
 	}
 }
 
 // overstrike set style for overstrike.
 func (st *parseState) overstrike(m content, style tcell.Style) tcell.Style {
-	if !st.bsFlag {
-		return style
-	}
-
 	if st.bsContent.mainc == m.mainc {
 		style = OverStrikeStyle
 	} else if st.bsContent.mainc == '_' {
@@ -229,6 +173,84 @@ func (st *parseState) overstrike(m content, style tcell.Style) tcell.Style {
 	st.bsFlag = false
 	st.bsContent = DefaultContent
 	return style
+}
+
+// zeroWidthHandle handles zero-width characters.
+func (st *parseState) zeroWidthHandle(mainc rune) {
+	switch {
+	case mainc == '\t': // TAB
+		st.tabHandle()
+		return
+	case mainc == '\b': // BackSpace
+		st.backspaceHandle()
+		return
+	case mainc == '\r': // CR
+		return
+	case mainc < 0x20: // control character
+		st.controlCharHandle(mainc)
+		return
+	}
+	lastC := st.lc.last()
+	lastC.combc = append(lastC.combc, mainc)
+	n := len(st.lc) - lastC.width
+	if n >= 0 && len(st.lc) > n {
+		st.lc[n] = lastC
+	}
+}
+
+// tabHandle handles the tab character.
+// If tabWidth is set to -1, \t is displayed instead of functioning as a tab.
+func (st *parseState) tabHandle() {
+	if st.tabWidth == 0 {
+		return
+	}
+
+	c := DefaultContent
+	if st.tabWidth < 0 { // display \t
+		c.width = 1
+		c.style = st.style.Reverse(true)
+		c.mainc = rune('\\')
+		st.lc = append(st.lc, c)
+		c.mainc = rune('t')
+		st.lc = append(st.lc, c)
+		st.tabx += 2
+		return
+	}
+
+	tabStop := st.tabWidth - (st.tabx % st.tabWidth)
+	c.width = 1
+	c.style = st.style
+	c.mainc = rune('\t')
+	st.lc = append(st.lc, c)
+	st.tabx++
+	c.mainc = 0
+	for i := 0; i < tabStop-1; i++ {
+		st.lc = append(st.lc, c)
+		st.tabx++
+	}
+}
+
+// backspaceHandle handles the backspace character.
+func (st *parseState) backspaceHandle() {
+	if len(st.lc) == 0 {
+		return
+	}
+	st.bsFlag = true
+	st.bsContent = st.lc.last()
+
+	if st.bsContent.width == 1 {
+		st.lc = st.lc[:len(st.lc)-1]
+		return
+	}
+	st.lc = st.lc[:len(st.lc)-2]
+}
+
+// controlCharHandle handles control characters.
+func (st *parseState) controlCharHandle(mainc rune) {
+	c := DefaultContent
+	c.mainc = mainc
+	c.width = 0
+	st.lc = append(st.lc, c)
 }
 
 // last returns the last character of Contents.
