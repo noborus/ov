@@ -36,7 +36,6 @@ func TestDocument_ReadFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m, err := NewDocument()
@@ -83,7 +82,6 @@ func TestDocument_ReadAll(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m, err := NewDocument()
@@ -116,7 +114,6 @@ func TestDocument_reset(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, tt.fields.FileName)
@@ -160,7 +157,6 @@ func TestDocument_reload(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m, err := NewDocument()

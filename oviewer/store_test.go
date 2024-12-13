@@ -68,7 +68,6 @@ func Test_store_chunkRange(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := &store{
@@ -163,7 +162,6 @@ func Test_store_swapChunksFile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.capacity)
@@ -211,7 +209,6 @@ func Test_store_isContinueRead(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := testNewStore(t, 10, tt.args.limit)
@@ -281,7 +278,6 @@ func Test_store_loadChunksMem(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
@@ -366,7 +362,6 @@ func Test_store_evictChunksMem(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := testNewStore(t, tt.fields.maxChunks, tt.limit)
@@ -462,7 +457,6 @@ func Test_store_appendLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s, chunk := testChunkStore(t)
@@ -527,7 +521,6 @@ func Test_store_chunkForAdd(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := NewStore()
@@ -605,7 +598,6 @@ func Test_store_isLoadedChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			s := testNewStore(t, tt.fields.chunks, tt.limit)

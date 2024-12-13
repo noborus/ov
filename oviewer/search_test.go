@@ -208,7 +208,6 @@ func Test_sensitiveWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			substr := sensitiveWord{
@@ -267,7 +266,6 @@ func Test_regexpWord_Match(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			substr := regexpWord{
@@ -340,7 +338,6 @@ func Test_getSearchMatch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			searcher := NewSearcher(tt.args.searchWord, tt.args.searchReg, tt.args.caseSensitive, tt.args.regexpSearch)
@@ -372,7 +369,6 @@ func Test_regexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := regexpCompile(tt.args.r, tt.args.caseSensitive); !reflect.DeepEqual(got, tt.want) {
@@ -469,7 +465,6 @@ func Test_searchPositionReg(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := searchPositionReg(tt.args.s, tt.args.re); !reflect.DeepEqual(got, tt.want) {
@@ -537,7 +532,6 @@ func TestRoot_setSearch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			root := &Root{
@@ -583,7 +577,6 @@ func Test_multiRegexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := multiRegexpCompile(tt.args.words); !reflect.DeepEqual(got, tt.want) {
@@ -654,7 +647,6 @@ func Test_condRegexpCompile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := condRegexpCompile(tt.args.in); !reflect.DeepEqual(got, tt.want) {
@@ -729,7 +721,6 @@ func TestDocument_searchChunk(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, tt.fileName)

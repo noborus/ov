@@ -108,7 +108,6 @@ func Test_StrToContentsNormal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -186,7 +185,6 @@ func Test_StrToContentsOverlapping(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -335,7 +333,6 @@ func Test_StrToContentsStyle1(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -431,7 +428,6 @@ func Test_StrToContentUnStyle(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -492,7 +488,6 @@ func Test_StrToContentsCombining(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -546,7 +541,6 @@ func Test_StrToContentsHyperlink(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
@@ -602,7 +596,6 @@ func Test_lastContent(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tt.args.lc.last(); !reflect.DeepEqual(got, tt.want) {
@@ -658,7 +651,6 @@ func Test_ContentsToStr(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			lc := StrToContents(tt.str, 8)
@@ -704,7 +696,6 @@ func Test_widthPos_x(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tt.pos.x(tt.args.x); got != tt.want {
@@ -751,7 +742,6 @@ func Test_widthPos_n(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tt.pos.n(tt.args.w); got != tt.want {

@@ -57,7 +57,6 @@ func TestOpenDocument(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			_, err := OpenDocument(tt.args.fileName)
@@ -111,7 +110,6 @@ func TestDocument_lineToContents(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docHelper(t, tt.str)
@@ -160,7 +158,6 @@ func TestDocument_Export(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docHelper(t, tt.str)
@@ -223,7 +220,6 @@ func TestDocument_searchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, tt.fields.FileName)
@@ -284,7 +280,6 @@ func TestDocument_backSearchLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, tt.fields.FileName)
