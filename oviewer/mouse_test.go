@@ -98,7 +98,6 @@ func TestRoot_mouseEvent(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
 			root.prepareScreen()
@@ -224,7 +223,6 @@ func TestSCR_lineRangeToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
@@ -275,7 +273,6 @@ func TestSCR_rectangleToString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, filepath.Join(testdata, "normal.txt"))
@@ -362,7 +359,6 @@ func TestSCR_selectLine(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			scr := SCR{
