@@ -194,11 +194,11 @@ func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, i
 			root.clearEOL(root.scr.startX+x, y, lineC.eolStyle)
 			break
 		}
-		content := DefaultContent
+		c := DefaultContent
 		if startX+x >= 0 {
-			content = lineC.lc[startX+x]
+			c = lineC.lc[startX+x]
 		}
-		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
+		root.Screen.SetContent(root.scr.startX+x, y, c.mainc, c.combc, c.style)
 	}
 	lN++
 
