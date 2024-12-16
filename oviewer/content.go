@@ -36,6 +36,9 @@ var SpaceContent = content{
 	style: tcell.StyleDefault,
 }
 
+// Shrink is a character that represents a shrunk column.
+var Shrink rune = '…'
+
 // ShrinkContent is a content that represents a shrunk column.
 var ShrinkContent = content{
 	mainc: Shrink,

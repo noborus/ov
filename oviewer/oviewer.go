@@ -331,8 +331,6 @@ const (
 	nameGeneral string = "general"
 )
 
-var Shrink rune = '…'
-
 var (
 	// ErrOutOfRange indicates that value is out of range.
 	ErrOutOfRange = errors.New("out of range")
