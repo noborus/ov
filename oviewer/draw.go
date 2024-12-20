@@ -164,45 +164,51 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return 0, 0
 	}
 
-	for x := 0; ; x++ {
-		if lX+x >= len(lineC.lc) {
+	screen := root.Screen
+	for n := 0; ; n++ {
+		x := root.scr.startX + n
+		if lX+n >= len(lineC.lc) {
 			// EOL
-			root.clearEOL(root.scr.startX+x, y, lineC.eolStyle)
+			root.clearEOL(x, y, lineC.eolStyle)
 			lX = 0
 			lN++
 			break
 		}
-		content := lineC.lc[lX+x]
-		if x+root.scr.startX+content.width > root.scr.vWidth {
+		c := lineC.lc[lX+n]
+		if x+c.width > root.scr.vWidth {
 			// Right edge.
-			root.clearEOL(root.scr.startX+x, y, tcell.StyleDefault)
-			lX += x
+			root.clearEOL(x, y, tcell.StyleDefault)
+			lX += n
 			break
 		}
-		root.Screen.SetContent(root.scr.startX+x, y, content.mainc, content.combc, content.style)
+		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
 
 	return lX, lN
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, int) {
-	startX = max(startX, root.minStartX)
-	for x := 0; root.scr.startX+x < root.scr.vWidth; x++ {
-		if startX+x >= len(lineC.lc) {
+func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
+	lX = max(lX, root.minStartX)
+	screen := root.Screen
+	for n := 0; root.scr.startX+n < root.scr.vWidth; n++ {
+		x := root.scr.startX + n
+		if lX+n >= len(lineC.lc) {
 			// EOL
-			root.clearEOL(root.scr.startX+x, y, lineC.eolStyle)
+			root.clearEOL(x, y, lineC.eolStyle)
 			break
 		}
-		c := DefaultContent
-		if startX+x >= 0 {
-			c = lineC.lc[startX+x]
+		if lX+n < 0 {
+			c := DefaultContent
+			screen.SetContent(x, y, c.mainc, c.combc, c.style)
+			continue
 		}
-		root.Screen.SetContent(root.scr.startX+x, y, c.mainc, c.combc, c.style)
+		c := lineC.lc[lX+n]
+		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
 	lN++
 
-	return startX, lN
+	return lX, lN
 }
 
 // blankLineNumber should be blank for the line number.
