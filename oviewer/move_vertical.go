@@ -36,7 +36,11 @@ func (m *Document) moveBottom() {
 		m.requestBottom()
 	}
 
-	m.topLX, m.topLN = m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
+	lN := m.BufEndNum() - 1
+	height := m.height - lastLineMargin
+	chunkNum, _ := chunkLineNum(lN - height)
+	m.requestLoadSync(chunkNum)
+	m.topLX, m.topLN = m.bottomLineNum(lN, height)
 }
 
 // Move to the nth wrapping line of the specified line.
@@ -101,9 +105,9 @@ func (m *Document) limitMoveDown(lX int, lN int) {
 	}
 }
 
-// numOfWrap returns the number of wrap from lX and lY.
-func (m *Document) numOfWrap(lX int, lY int) int {
-	listX := m.leftMostX(lY)
+// numOfWrap returns the number of wrap from lX and lN.
+func (m *Document) numOfWrap(lX int, lN int) int {
+	listX := m.leftMostX(lN)
 	if len(listX) == 0 {
 		return 0
 	}
