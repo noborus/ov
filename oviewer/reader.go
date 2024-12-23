@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -403,73 +402,4 @@ func (m *Document) close() error {
 	atomic.StoreInt32(&m.closed, 1)
 	atomic.StoreInt32(&m.store.changed, 1)
 	return nil
-}
-
-// ReadFile reads file.
-// If the file name is empty, read from standard input.
-//
-// Deprecated: Use ControlFile instead.
-func (m *Document) ReadFile(fileName string) error {
-	r, err := m.openFileReader(fileName)
-	if err != nil {
-		return err
-	}
-	return m.ReadAll(r)
-}
-
-// ContinueReadAll continues to read even if it reaches EOF.
-//
-// Deprecated: Use ControlFile instead.
-func (m *Document) ContinueReadAll(_ context.Context, r io.Reader) error {
-	return m.ReadAll(r)
-}
-
-// ReadReader reads reader.
-// A wrapper for ReadAll.
-//
-// Deprecated: Use ControlReader instead.
-func (m *Document) ReadReader(r io.Reader) error {
-	return m.ReadAll(r)
-}
-
-// ReadAll reads all from the reader.
-// And store it in the lines of the Document.
-// ReadAll needs to be notified on eofCh.
-//
-// Deprecated: Use ControlReader instead.
-func (m *Document) ReadAll(r io.Reader) error {
-	reader := bufio.NewReader(r)
-	go func() {
-		if m.checkClose() {
-			return
-		}
-
-		if err := m.readAll(reader); err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, os.ErrClosed) {
-				m.store.offset = m.store.size
-				atomic.StoreInt32(&m.store.eof, 1)
-				return
-			}
-			log.Printf("error: %v\n", err)
-			return
-		}
-	}()
-	return nil
-}
-
-// readAll reads to the end.
-// The read lines are stored in the lines of the Document.
-func (m *Document) readAll(reader *bufio.Reader) error {
-	chunk := m.store.chunkForAdd(m.seekable, m.store.size)
-	start := len(chunk.lines)
-	for {
-		if err := m.store.readLines(chunk, reader, start, ChunkSize, true); err != nil {
-			return err
-		}
-		chunk = NewChunk(m.store.size)
-		m.store.mu.Lock()
-		m.store.chunks = append(m.store.chunks, chunk)
-		m.store.mu.Unlock()
-		start = 0
-	}
 }

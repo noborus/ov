@@ -237,6 +237,17 @@ func (m *Document) requestLoad(chunkNum int) {
 	}()
 }
 
+// requestLoadSync sends instructions to load chunks into memory.
+func (m *Document) requestLoadSync(chunkNum int) bool {
+	sc := controlSpecifier{
+		request:  requestLoad,
+		chunkNum: chunkNum,
+		done:     make(chan bool),
+	}
+	m.ctlCh <- sc
+	return <-sc.done
+}
+
 // requestSearch sends instructions to load chunks into memory.
 func (m *Document) requestSearch(chunkNum int, searcher Searcher) bool {
 	sc := controlSpecifier{

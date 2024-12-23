@@ -141,7 +141,9 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	// This process is executed when temporary read is switched to normal read.
 	if n := atomic.SwapInt32(&root.Doc.tmpLN, 0); n > 0 {
 		tmpN := int(n) - root.Doc.topLN
-		root.Doc.topLN = root.Doc.BufEndNum() - tmpN
+		if tmpN > 0 {
+			root.Doc.topLN = root.Doc.BufEndNum() - tmpN
+		}
 	}
 
 	root.Doc.width = root.scr.vWidth - root.scr.startX

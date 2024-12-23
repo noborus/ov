@@ -35,7 +35,7 @@ func ExampleNewOviewer() {
 		panic(err)
 	}
 	s := "Hello, World!"
-	if err := doc.ReadAll(bytes.NewBufferString(s)); err != nil {
+	if err := doc.ControlReader(bytes.NewBufferString(s), nil); err != nil {
 		panic(err)
 	}
 
@@ -65,7 +65,7 @@ func ExampleSearch() {
 		panic(err)
 	}
 	s := "Hello, World!"
-	if err := doc.ReadAll(bytes.NewBufferString(s)); err != nil {
+	if err := doc.ControlReader(bytes.NewBufferString(s), nil); err != nil {
 		panic(err)
 	}
 
