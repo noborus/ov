@@ -3,97 +3,10 @@ package oviewer
 import (
 	"bufio"
 	"bytes"
-	"io"
 	"path/filepath"
-	"strings"
 	"sync/atomic"
 	"testing"
 )
-
-func TestDocument_ReadFile(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		args string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "testNoFile",
-			args: args{
-				"noFile",
-			},
-			wantErr: true,
-		},
-		{
-			name: "testSTDIN",
-			args: args{
-				"",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := m.ReadFile(tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("Document.ReadFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestDocument_ReadAll(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		r io.Reader
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "test1",
-			args: args{
-				r: bytes.NewBufferString("foo\nbar\n"),
-			},
-			wantErr: false,
-		},
-		{
-			name: "testOverChunkSize",
-			args: args{
-				r: bytes.NewBufferString(strings.Repeat("a\n", ChunkSize+1)),
-			},
-			wantErr: false,
-		},
-		{
-			name: "testLongLine",
-			args: args{
-				r: bytes.NewBufferString(strings.Repeat("a", 4097)),
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			m, err := NewDocument()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := m.ReadAll(tt.args.r); (err != nil) != tt.wantErr {
-				t.Errorf("Document.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
 func TestDocument_reset(t *testing.T) {
 	t.Parallel()

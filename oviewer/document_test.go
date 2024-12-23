@@ -14,7 +14,7 @@ func docHelper(t *testing.T, str string) *Document {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := m.ReadAll(bytes.NewBufferString(str)); err != nil {
+	if err := m.ControlReader(bytes.NewBufferString(str), nil); err != nil {
 		t.Fatal(err)
 	}
 	for !m.BufEOF() {
