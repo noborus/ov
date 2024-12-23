@@ -312,8 +312,8 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 // applyStyleToRange applies the style from the start to the end of the physical line.
 func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
-		r, c, ts, _ := root.GetContent(x, y)
-		root.Screen.SetContent(x, y, r, c, applyStyle(ts, s))
+		mainc, combc, style, _ := root.GetContent(x, y)
+		root.Screen.SetContent(x, y, mainc, combc, applyStyle(style, s))
 	}
 }
 
