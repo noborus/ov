@@ -241,11 +241,11 @@ func (st *parseState) backspaceHandle() {
 	st.bsFlag = true
 	st.bsContent = st.lc.last()
 
-	if st.bsContent.width == 1 {
-		st.lc = st.lc[:len(st.lc)-1]
+	if st.bsContent.width == 2 && len(st.lc) > 1 {
+		st.lc = st.lc[:len(st.lc)-2]
 		return
 	}
-	st.lc = st.lc[:len(st.lc)-2]
+	st.lc = st.lc[:len(st.lc)-1]
 }
 
 // controlCharHandle handles control characters.
