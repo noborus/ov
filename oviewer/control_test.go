@@ -161,9 +161,7 @@ func TestDocument_requestLoad(t *testing.T) {
 			if err := m.ControlFile(f); err != nil {
 				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
 			}
-			for !m.BufEOF() {
-			}
-
+			m.WaitEOF()
 			m.requestLoad(tt.fields.chunkNum)
 
 			sc := controlSpecifier{
@@ -235,8 +233,7 @@ func TestDocument_requestSearch(t *testing.T) {
 			if err := m.ControlFile(f); (err != nil) != tt.wantErr {
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			for !m.BufEOF() {
-			}
+			m.WaitEOF()
 			if got := m.requestSearch(tt.fields.chunkNum, searcher); got != tt.want {
 				t.Errorf("Document.requestSearch() = %v, want %v", got, tt.want)
 			}
@@ -304,10 +301,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			if err := m.ControlFile(f); err != nil {
 				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
 			}
-
-			for !m.BufEOF() {
-			}
-
+			m.WaitEOF()
 			af, err := os.OpenFile(fname, os.O_APPEND|os.O_RDWR, 0o600)
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
@@ -371,8 +365,7 @@ func TestDocument_requestClose(t *testing.T) {
 			if err := m.ControlFile(f); (err != nil) != tt.wantErr {
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			for !m.BufEOF() {
-			}
+			m.WaitEOF()
 			if got := m.requestClose(); got != tt.want {
 				t.Errorf("Document.requestSearch() = %v, want %v", got, tt.want)
 			}

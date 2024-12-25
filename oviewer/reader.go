@@ -268,6 +268,9 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 		atomic.StoreInt32(&m.tmpLN, atomic.LoadInt32(&m.followStore.endNum))
 		m.cache.Purge()
 	}
+	m.cond.L.Lock()
+	m.cond.Broadcast()
+	m.cond.L.Unlock()
 	if !m.seekable { // for NamedPipe.
 		return bufio.NewReader(m.file)
 	}

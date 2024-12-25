@@ -59,6 +59,8 @@ type Document struct {
 	// alignConv is an interface that converts alignment.
 	alignConv *align
 
+	cond *sync.Cond
+
 	// fileName is the file name to display.
 	FileName string
 	// Caption is an additional caption to display after the file name.
@@ -232,6 +234,8 @@ func NewDocument() (*Document, error) {
 	}
 	m.alignConv = newAlignConverter(m.ColumnWidth)
 	m.conv = m.converterType(m.general.Converter)
+
+	m.cond = sync.NewCond(&sync.Mutex{})
 	return m, nil
 }
 
@@ -426,6 +430,15 @@ func (m *Document) BufEndNum() int {
 // BufEndNum return last line number.
 func (m *Document) storeEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
+}
+
+// WaitEOF waits for EOF.
+func (m *Document) WaitEOF() {
+	m.cond.L.Lock()
+	defer m.cond.L.Unlock()
+	if atomic.LoadInt32(&m.store.eof) == 0 {
+		m.cond.Wait()
+	}
 }
 
 // BufEOF return true if EOF is reached.
