@@ -436,9 +436,10 @@ func (m *Document) storeEndNum() int {
 func (m *Document) WaitEOF() {
 	m.cond.L.Lock()
 	defer m.cond.L.Unlock()
-	if atomic.LoadInt32(&m.store.eof) == 0 {
-		m.cond.Wait()
+	if m.BufEOF() {
+		return
 	}
+	m.cond.Wait()
 }
 
 // BufEOF return true if EOF is reached.
