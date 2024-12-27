@@ -43,8 +43,7 @@ func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
 	}
 	root.mu.RLock()
 	for _, doc := range root.DocList {
-		for !doc.BufEOF() {
-		}
+		doc.WaitEOF()
 	}
 	root.mu.RUnlock()
 	return root

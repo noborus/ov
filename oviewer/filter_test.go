@@ -174,8 +174,9 @@ func TestRoot_filterDocument(t *testing.T) {
 			root.Doc.Header = tt.fields.header
 			root.filterDocument(context.Background(), tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
-			for !filterDoc.BufEOF() {
-			}
+			filterDoc.cond.L.Lock()
+			filterDoc.cond.Wait()
+			filterDoc.cond.L.Unlock()
 			line := filterDoc.getLineC(0)
 			if line.str != tt.want {
 				t.Errorf("filterDocument() = %v, want %v", line.str, tt.want)
@@ -242,8 +243,7 @@ func TestRoot_filterLink(t *testing.T) {
 			ctx := context.Background()
 			root.filterDocument(ctx, tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
-			for !filterDoc.BufEOF() {
-			}
+			filterDoc.WaitEOF()
 			filterDoc.LineNumMode = true
 			root.prepareStartX()
 			filterDoc.topLN = 2
@@ -299,8 +299,7 @@ func TestRoot_closeAllFilter(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.filterDocument(context.Background(), tt.args.searcher)
 			filterDoc := root.DocList[len(root.DocList)-1]
-			for !filterDoc.BufEOF() {
-			}
+			filterDoc.WaitEOF()
 			ctx := context.Background()
 			root.closeAllFilter(ctx)
 			if len(root.DocList) != tt.want {

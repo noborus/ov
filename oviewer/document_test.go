@@ -17,8 +17,7 @@ func docHelper(t *testing.T, str string) *Document {
 	if err := m.ControlReader(bytes.NewBufferString(str), nil); err != nil {
 		t.Fatal(err)
 	}
-	for !m.BufEOF() {
-	}
+	m.WaitEOF()
 	return m
 }
 
@@ -28,9 +27,7 @@ func docFileReadHelper(t *testing.T, fileName string) *Document {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for !m.BufEOF() {
-	}
-
+	m.WaitEOF()
 	return m
 }
 
@@ -162,8 +159,6 @@ func TestDocument_Export(t *testing.T) {
 			t.Parallel()
 			m := docHelper(t, tt.str)
 			w := &bytes.Buffer{}
-			for !m.BufEOF() {
-			}
 			m.bottomLN = m.BufEndNum()
 			if err := m.Export(w, tt.args.start, tt.args.end); err != nil {
 				t.Fatal(err)
