@@ -38,8 +38,11 @@ func (m *Document) moveBottom() {
 
 	lN := m.BufEndNum() - 1
 	height := m.height - lastLineMargin
-	chunkNum, _ := chunkLineNum(lN - height)
-	m.requestLoadSync(chunkNum)
+	if m.BufEOF() {
+		if chunkNum, _ := chunkLineNum(lN - height); chunkNum > 0 {
+			m.requestLoadSync(chunkNum)
+		}
+	}
 	m.topLX, m.topLN = m.bottomLineNum(lN, height)
 }
 
