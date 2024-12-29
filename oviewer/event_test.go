@@ -1,10 +1,7 @@
 package oviewer
 
 import (
-	"bytes"
 	"context"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -38,40 +35,37 @@ func TestRoot_SetDocument(t *testing.T) {
 		docNum int
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
-			name: "set document",
+			name: "valid document number",
 			args: args{
-				docNum: 1,
+				docNum: 0,
 			},
-			want: "",
+			wantErr: false,
 		},
 		{
-			name: "set document",
+			name: "invalid document number - negative",
 			args: args{
 				docNum: -1,
 			},
-			want: "",
+			wantErr: true,
+		},
+		{
+			name: "invalid document number - out of range",
+			args: args{
+				docNum: 100,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
-			var buf bytes.Buffer
-			log.SetOutput(&buf)
-			defaultFlags := log.Flags()
-			log.SetFlags(0)
-			defer func() {
-				log.SetOutput(os.Stderr)
-				log.SetFlags(defaultFlags)
-			}()
-			root.SetDocument(tt.args.docNum)
-			got := buf.String()
-			if got != tt.want {
-				t.Errorf("Root.SetDocument() = %v, want %v", got, tt.want)
+			if err := root.SetDocument(tt.args.docNum); (err != nil) != tt.wantErr {
+				t.Errorf("Root.SetDocument() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
