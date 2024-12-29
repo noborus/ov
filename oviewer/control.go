@@ -238,6 +238,8 @@ func (m *Document) requestLoad(chunkNum int) {
 }
 
 // requestLoadSync sends instructions to load chunks into memory.
+// requestLoadSync is a synchronous version of requestLoad.
+// Note: Calling requestLoadSync when not at EOF may result in delayed response.
 func (m *Document) requestLoadSync(chunkNum int) bool {
 	sc := controlSpecifier{
 		request:  requestLoad,

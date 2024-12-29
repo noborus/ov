@@ -22,7 +22,7 @@ func (root *Root) getDocument(docNum int) *Document {
 	return root.DocList[docNum]
 }
 
-// hasDocChanged() returns if doc has changed.
+// hasDocChanged checks if any document in the list has changed.
 func (root *Root) hasDocChanged() bool {
 	root.mu.RLock()
 	defer root.mu.RUnlock()

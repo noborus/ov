@@ -361,7 +361,7 @@ func openFile(fileName string) (*os.File, error) {
 	return os.Open(fileName)
 }
 
-// copyOutput just outputs the input (standard input if there is no first file).
+// copyOutput outputs the content of the specified file or standard input.
 func copyOutput(args []string) error {
 	files := argsToFiles(args)
 	fileName := ""

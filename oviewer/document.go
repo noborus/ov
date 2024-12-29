@@ -29,21 +29,25 @@ const (
 
 type documentType int
 
-// The Document structure contains the values
-// for the logical screen.
+// Document represents a document with various properties and methods for handling
+// file operations, caching, synchronization, and display settings.
 type Document struct {
 	// documentType is the type of document.
 	documentType documentType
 	// File is the os.File.
 	file *os.File
 
+	// cache is an LRU cache for storing lines.
 	cache *lru.Cache[int, LineC]
 
 	// parent is the parent document.
-	parent     *Document
+	parent *Document
+	// lineNumMap maps line numbers.
 	lineNumMap *biomap.Map[int, int]
 
-	ticker     *time.Ticker
+	// ticker is used for periodic updates.
+	ticker *time.Ticker
+	// tickerDone is a channel to signal ticker termination.
 	tickerDone chan struct{}
 	// ctlCh is the channel for controlling the reader goroutine.
 	ctlCh chan controlSpecifier
@@ -51,7 +55,8 @@ type Document struct {
 	// multiColorRegexps holds multicolor regular expressions in slices.
 	multiColorRegexps []*regexp.Regexp
 	// store represents store management.
-	store       *store
+	store *store
+	// followStore represents follow store management.
 	followStore *store
 
 	// conv is an interface that converts escape sequences, etc.
@@ -59,9 +64,10 @@ type Document struct {
 	// alignConv is an interface that converts alignment.
 	alignConv *align
 
+	// cond is a condition variable for synchronization.
 	cond *sync.Cond
 
-	// fileName is the file name to display.
+	// FileName is the file name to display.
 	FileName string
 	// Caption is an additional caption to display after the file name.
 	Caption string
@@ -97,7 +103,7 @@ type Document struct {
 	// markedPoint is the position of the marked line.
 	markedPoint int
 
-	// Last moved Section position.
+	// lastSectionPosNum is the last moved section position.
 	lastSectionPosNum int
 	// latestNum is the endNum read at the end of the screen update.
 	latestNum int
@@ -131,25 +137,27 @@ type Document struct {
 	// CFormat is a compressed format.
 	CFormat Compressed
 
+	// watchRestart indicates the number of times the watch has restarted.
 	watchRestart int32
-	tickerState  int32
-	// 1 if there is a closed.
+	// tickerState indicates the state of the ticker.
+	tickerState int32
+	// closed indicates if the document is closed (1 if closed).
 	closed int32
 
-	// 1 if there is a tmpFollow mode.
+	// tmpFollow indicates if there is a temporary follow mode (1 if true).
 	tmpFollow int32
 	// tmpLN is a temporary line number when the number of lines is undetermined.
 	tmpLN int32
 
-	// WatchMode is watch mode.
+	// WatchMode indicates if watch mode is enabled.
 	WatchMode bool
 	// preventReload is true to prevent reload.
 	preventReload bool
-	// Is it possible to seek.
+	// seekable indicates if seeking is possible.
 	seekable bool
-	// Is it possible to reopen.
+	// reopenable indicates if reopening is possible.
 	reopenable bool
-	// If nonMatch is true, non-matching lines are searched.
+	// nonMatch indicates if non-matching lines are searched.
 	nonMatch bool
 }
 
@@ -211,7 +219,8 @@ type LineC struct {
 	eolStyle tcell.Style
 }
 
-// NewDocument returns Document.
+// NewDocument creates and initializes a new Document with default settings.
+// It returns a pointer to the Document and an error if the cache initialization fails.
 func NewDocument() (*Document, error) {
 	m := &Document{
 		documentType: DocNormal,
@@ -239,7 +248,8 @@ func NewDocument() (*Document, error) {
 	return m, nil
 }
 
-// NewCache creates a new cache.
+// NewCache initializes a new LRU cache for the Document.
+// It returns an error if the cache cannot be created.
 func (m *Document) NewCache() error {
 	cache, err := lru.New[int, LineC](1024)
 	if err != nil {
@@ -250,6 +260,11 @@ func (m *Document) NewCache() error {
 	return nil
 }
 
+// converterType returns the appropriate Converter based on the provided name.
+// Parameters:
+// - name: a string representing the name of the converter type.
+// Returns:
+// - A Converter interface corresponding to the specified name.
 // converterType returns the Converter type.
 func (m *Document) converterType(name string) Converter {
 	switch name {
@@ -263,7 +278,9 @@ func (m *Document) converterType(name string) Converter {
 	return defaultConverter
 }
 
-// OpenDocument opens a file and returns a Document.
+// OpenDocument opens a file specified by fileName and returns a Document.
+// If the fileName is "-", it reads from stdin. It returns an error if the file
+// cannot be opened, is a directory, or if there are issues initializing the Document.
 func OpenDocument(fileName string) (*Document, error) {
 	if fileName == "-" {
 		return STDINDocument()
@@ -304,7 +321,8 @@ func OpenDocument(fileName string) (*Document, error) {
 	return m, nil
 }
 
-// STDINDocument returns a Document that reads stdin.
+// STDINDocument creates and returns a Document that reads from stdin.
+// It returns a pointer to the Document and an error if the Document initialization fails.
 func STDINDocument() (*Document, error) {
 	m, err := NewDocument()
 	if err != nil {
@@ -348,7 +366,13 @@ func (m *Document) Line(n int) ([]byte, error) {
 	return s.GetChunkLine(chunkNum, cn)
 }
 
-// GetChunkLine returns one line from buffer.
+// GetChunkLine returns a specific line from a specified chunk.
+// Parameters:
+// - chunkNum: the chunk number to retrieve the line from.
+// - cn: the line number within the chunk.
+// Returns:
+// - A byte slice containing the line data.
+// - An error if the chunk or line number is out of range.
 func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -361,22 +385,6 @@ func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
 		return nil, fmt.Errorf("over line (%d:%d) %w", chunkNum, cn, ErrOutOfRange)
 	}
 	return bytes.TrimSuffix(chunk.lines[cn], []byte("\n")), nil
-}
-
-// GetLine returns one line from buffer.
-// Deprecated: Use LineString instead.
-func (m *Document) GetLine(n int) string {
-	s, err := m.Line(n)
-	if err != nil {
-		return ""
-	}
-	return string(s)
-}
-
-// LineString returns one line from buffer.
-func (m *Document) LineString(n int) string {
-	str, _ := m.LineStr(n)
-	return str
 }
 
 // LineStr returns one line from buffer.
@@ -414,7 +422,7 @@ func (m *Document) Export(w io.Writer, start int, end int) error {
 	return nil
 }
 
-// BufStartNum return start line number.
+// BufStartNum returns the starting line number of the buffer.
 func (m *Document) BufStartNum() int {
 	return int(atomic.LoadInt32(&m.store.startNum))
 }
@@ -442,17 +450,25 @@ func (m *Document) WaitEOF() {
 	m.cond.Wait()
 }
 
-// BufEOF return true if EOF is reached.
+// BufEOF checks if the end of the file (EOF) has been reached in the document buffer.
+// Returns:
+// - A boolean value: true if EOF is reached, false otherwise.
 func (m *Document) BufEOF() bool {
 	return atomic.LoadInt32(&m.store.eof) == 1
 }
 
-// ClearCache clears the cache.
+// ClearCache clears the LRU cache of the document.
+// It does not take any parameters and does not return any values.
 func (m *Document) ClearCache() {
 	m.cache.Purge()
 }
 
-// contents returns contents from line number and tabWidth.
+// contents returns the contents of a specific line number in the document buffer.
+// Parameters:
+// - lN: the line number to retrieve the contents for.
+// Returns:
+// - A contents type representing the line's contents.
+// - An error if the line number is out of range or if there is an issue retrieving the line.
 func (m *Document) contents(lN int) (contents, error) {
 	if lN < 0 || lN >= m.BufEndNum() {
 		return nil, ErrOutOfRange
@@ -472,7 +488,7 @@ func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
 	return lc, style, err
 }
 
-// getLineC returns contents from line number and tabWidth.
+// getLineC returns the content of the specified line number.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int) LineC {
 	if line, ok := m.cache.Get(lN); ok {
@@ -517,7 +533,7 @@ func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
-// watchMode sets the document to watch mode.
+// watchMode sets the document to watch mode and configures section settings.
 func (m *Document) watchMode() {
 	m.WatchMode = true
 	if m.SectionDelimiter == "" {
@@ -581,4 +597,21 @@ func (m *Document) setColumnWidths() {
 		return
 	}
 	m.columnWidths = guesswidth.Positions(buf, header, 2)
+}
+
+// GetLine returns one line from buffer.
+// Deprecated: Use LineString instead.
+func (m *Document) GetLine(n int) string {
+	s, err := m.Line(n)
+	if err != nil {
+		return ""
+	}
+	return string(s)
+}
+
+// LineString returns one line from buffer.
+// Deprecated: Use LineStr instead.
+func (m *Document) LineString(n int) string {
+	str, _ := m.LineStr(n)
+	return str
 }
