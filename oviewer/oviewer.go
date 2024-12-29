@@ -390,6 +390,8 @@ var (
 	ErrInvalidSGR = errors.New("invalid SGR")
 	// ErrNotSuuport indicates that it is not supported.
 	ErrNotSuuport = errors.New("not support")
+	// ErrInvalidDocumentNum indicates that the document number is invalid.
+	ErrInvalidDocumentNum = errors.New("invalid document number")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.
