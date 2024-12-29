@@ -600,7 +600,7 @@ func (m *Document) setColumnWidths() {
 }
 
 // GetLine returns one line from buffer.
-// Deprecated: Use LineString instead.
+// Deprecated: Use [Document.LineString] instead.
 func (m *Document) GetLine(n int) string {
 	s, err := m.Line(n)
 	if err != nil {
@@ -610,7 +610,7 @@ func (m *Document) GetLine(n int) string {
 }
 
 // LineString returns one line from buffer.
-// Deprecated: Use LineStr instead.
+// Deprecated: Use [Document.LineStr] instead.
 func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)
 	return str
