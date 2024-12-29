@@ -259,11 +259,12 @@ type eventDocument struct {
 }
 
 // SetDocument fires the eventDocument event.
-func (root *Root) SetDocument(docNum int) {
-	if docNum < 0 || docNum < root.DocumentLen() {
-		return
+func (root *Root) SetDocument(docNum int) error {
+	if docNum < 0 || docNum >= root.DocumentLen() {
+		return ErrInvalidDocumentNum
 	}
 	root.sendDocument(docNum)
+	return nil
 }
 
 func (root *Root) sendDocument(docNum int) {
