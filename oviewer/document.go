@@ -219,7 +219,7 @@ type LineC struct {
 	eolStyle tcell.Style
 }
 
-// NewDocument creates and initializes a new Document with default settings.
+// NewDocument creates and initializes a new [Document] with default settings.
 // It returns a pointer to the Document and an error if the cache initialization fails.
 func NewDocument() (*Document, error) {
 	m := &Document{
