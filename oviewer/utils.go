@@ -3,25 +3,7 @@ package oviewer
 import (
 	"regexp"
 	"strings"
-
-	"golang.org/x/exp/constraints"
 )
-
-// max returns the larger value of the argument.
-func max[T constraints.Ordered](a, b T) T {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-// min returns the smaller value of the argument.
-func min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 // remove removes the value of the specified string from slice.
 func remove[T comparable](list []T, s T) []T {
