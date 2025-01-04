@@ -9,6 +9,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// defaultStyle is used when the style is not specified.
 var defaultStyle = tcell.StyleDefault
 
 // draw is the main routine that draws the screen.
@@ -177,7 +178,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		c := lineC.lc[lX+n]
 		if x+c.width > root.scr.vWidth {
 			// Right edge.
-			root.clearEOL(x, y, tcell.StyleDefault)
+			root.clearEOL(x, y, defaultStyle)
 			lX += n
 			break
 		}
@@ -272,7 +273,7 @@ func (root *Root) clearEOL(x int, y int, style tcell.Style) {
 
 // clearY clear the specified line.
 func (root *Root) clearY(y int) {
-	root.clearEOL(0, y, tcell.StyleDefault)
+	root.clearEOL(0, y, defaultStyle)
 }
 
 // coordinatesStyle applies the style of the coordinates.
@@ -312,8 +313,14 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 // applyStyleToRange applies the style from the start to the end of the physical line.
 func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
-		mainc, combc, style, _ := root.GetContent(x, y)
-		root.Screen.SetContent(x, y, mainc, combc, applyStyle(style, s))
+		mainc, combc, style, width := root.GetContent(x, y)
+		newStyle := applyStyle(style, s)
+		if style != newStyle {
+			root.Screen.SetContent(x, y, mainc, combc, newStyle)
+		}
+		if width == 2 {
+			x++
+		}
 	}
 }
 
@@ -351,25 +358,25 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
-		root.reverseLine(y1, x1, x2+1, sel)
+		root.reverseRange(y1, x1, x2+1, sel)
 		return
 	}
 	if root.scr.mouseRectangle {
 		for y := y1; y <= y2; y++ {
-			root.reverseLine(y, x1, x2+1, sel)
+			root.reverseRange(y, x1, x2+1, sel)
 		}
 		return
 	}
 
-	root.reverseLine(y1, x1, root.scr.vWidth, sel)
+	root.reverseRange(y1, x1, root.scr.vWidth, sel)
 	for y := y1 + 1; y < y2; y++ {
-		root.reverseLine(y, 0, root.scr.vWidth, sel)
+		root.reverseRange(y, 0, root.scr.vWidth, sel)
 	}
-	root.reverseLine(y2, 0, x2+1, sel)
+	root.reverseRange(y2, 0, x2+1, sel)
 }
 
-// reverseLine reverses one line.
-func (root *Root) reverseLine(y int, start int, end int, sel bool) {
+// reverseRange reverses the specified range.
+func (root *Root) reverseRange(y int, start int, end int, sel bool) {
 	if start >= end {
 		return
 	}

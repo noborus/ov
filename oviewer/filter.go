@@ -33,6 +33,8 @@ func (root *Root) filter(ctx context.Context, str string) {
 	root.filterDocument(ctx, searcher)
 }
 
+// filterDocument filters the document by the searcher.
+// It creates a new document and writes the filtered lines to it.
 func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	m := root.Doc
 	r, w := io.Pipe()
