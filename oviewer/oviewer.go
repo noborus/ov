@@ -100,6 +100,11 @@ type SCR struct {
 	// sectionHeaderEnd is the end of the section header.
 	sectionHeaderEnd int
 
+	// numWidth is the width of the number.
+	numberWidth int
+	// verticalHeader is the vertical header.
+	verticalHeader int
+
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.
 	x1 int
 	y1 int
@@ -147,6 +152,8 @@ type general struct {
 	TabWidth int
 	// Header is number of header lines to be fixed.
 	Header int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader int
 	// SkipLines is the rows to skip.
 	SkipLines int
 	// WatchInterval is the watch interval (seconds).

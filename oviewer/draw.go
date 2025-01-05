@@ -20,11 +20,12 @@ func (root *Root) draw(ctx context.Context) {
 	root.prepareDraw(ctx)
 
 	// Body.
-	lX := m.topLX
+	lX := root.scr.verticalHeader
 	lN := m.topLN + root.scr.headerEnd
-	// If WrapMode is off, lX is always 0.
-	if !m.WrapMode {
-		lX = 0
+
+	// If WrapMode is enabled, the drawing position is adjusted.
+	if m.WrapMode {
+		lX += m.topLX
 	}
 	lX, lN = root.drawBody(lX, lN)
 	m.bottomLX = lX
@@ -54,6 +55,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
+	log.Println("wrapNum:", lN, wrapNum, m.width)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line, ok := root.scr.lines[lN]
 		if !ok {
@@ -77,6 +79,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		wrapNum++
 		if nextLX == 0 {
 			wrapNum = 0
+			nextLX = root.scr.verticalHeader
 		}
 
 		lX = nextLX
@@ -91,7 +94,7 @@ func (root *Root) drawHeader() {
 
 	// wrapNum is the number of wrapped lines.
 	wrapNum := 0
-	lX := 0
+	lX := root.scr.verticalHeader
 	lN := root.scr.headerLN
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
@@ -118,7 +121,7 @@ func (root *Root) drawSectionHeader() {
 	m := root.Doc
 
 	wrapNum := 0
-	lX := 0
+	lX := root.scr.verticalHeader
 	lN := root.scr.sectionHeaderLN
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
@@ -142,6 +145,7 @@ func (root *Root) drawSectionHeader() {
 		wrapNum++
 		if nextLX == 0 {
 			wrapNum = 0
+			nextLX = root.scr.verticalHeader
 		}
 
 		lX = nextLX
@@ -151,11 +155,40 @@ func (root *Root) drawSectionHeader() {
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
 func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
+	if root.scr.verticalHeader > 0 {
+		root.drawVerticalHeader(y, lX, lineC)
+	}
 	if root.Doc.WrapMode {
 		return root.drawWrapLine(y, lX, lN, lineC)
 	}
 
-	return root.drawNoWrapLine(y, root.Doc.x, lN, lineC)
+	return root.drawNoWrapLine(y, root.scr.verticalHeader+root.Doc.x, lN, lineC)
+}
+
+// drawVerticalHeader draws the vertical header.
+func (root *Root) drawVerticalHeader(y int, lX int, lineC LineC) {
+	numberWidth := root.scr.numberWidth
+	if numberWidth > 0 {
+		numberWidth += 1
+	}
+	screen := root.Screen
+	for n := 0; n < root.scr.verticalHeader; n++ {
+		x := numberWidth + n
+		if lX > root.scr.verticalHeader || n >= len(lineC.lc) {
+			// EOL
+			style := lineC.eolStyle
+			if lineC.valid {
+				style = style.Reverse(true)
+			}
+			root.clearEOL(x, y, style)
+			break
+		}
+		c := lineC.lc[n]
+		if lineC.valid {
+			c.style = c.style.Reverse(true)
+		}
+		screen.SetContent(x, y, c.mainc, c.combc, c.style)
+	}
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -171,7 +204,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
-			lX = 0
+			lX = root.scr.verticalHeader
 			lN++
 			break
 		}
@@ -208,8 +241,7 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
 	lN++
-
-	return lX, lN
+	return 0, lN
 }
 
 // blankLineNumber should be blank for the line number.
@@ -220,7 +252,7 @@ func (root *Root) blankLineNumber(y int) {
 	if root.scr.startX <= 0 {
 		return
 	}
-	numC := StrToContents(strings.Repeat(" ", root.scr.startX-1), root.Doc.TabWidth)
+	numC := StrToContents(strings.Repeat(" ", root.scr.numberWidth), root.Doc.TabWidth)
 	root.setContentString(0, y, numC)
 }
 
@@ -248,7 +280,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	number = number - m.firstLine() + 1
 
 	// Line numbers start at 1 except for skip and header lines.
-	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, number), m.TabWidth)
+	numC := StrToContents(fmt.Sprintf("%*d", root.scr.numberWidth, number), m.TabWidth)
 	for i := 0; i < len(numC); i++ {
 		numC[i].style = applyStyle(defaultStyle, root.StyleLineNumber)
 	}

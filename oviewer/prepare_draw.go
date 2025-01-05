@@ -37,7 +37,9 @@ func (root *Root) prepareScreen() {
 
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
-	root.scr.startX = 0
+	root.scr.verticalHeader = root.General.VerticalHeader
+	root.scr.numberWidth = 0
+	root.scr.startX = root.scr.verticalHeader
 	m := root.Doc
 	if !m.LineNumMode {
 		return
@@ -46,7 +48,8 @@ func (root *Root) prepareStartX() {
 	if m.parent != nil {
 		m = m.parent
 	}
-	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+	root.scr.numberWidth = len(strconv.Itoa(m.BufEndNum()))
+	root.scr.startX = root.scr.verticalHeader + root.scr.numberWidth + 1
 }
 
 // ViewSync redraws the whole thing.
@@ -73,7 +76,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Set the header height.
 	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
-
+	log.Println("headerHeight:", root.Doc.headerHeight, root.Doc.width)
 	// Section header.
 	root.scr.sectionHeaderLN = -1
 	root.scr.sectionHeaderEnd = 0
@@ -306,6 +309,7 @@ func (m *Document) getHeight(startLN int, endLN int) int {
 	for lN := startLN; lN < endLN; lN++ {
 		height += len(m.leftMostX(lN))
 	}
+	log.Println("height:", startLN, endLN, height)
 	return height
 }
 
