@@ -100,6 +100,9 @@ type Document struct {
 	width int
 	// height is the height of the screen.
 	height int
+	// endExclude is the number of lines to exclude from the end.
+	endExclude int
+
 	// markedPoint is the position of the marked line.
 	markedPoint int
 

@@ -41,6 +41,7 @@ func (root *Root) prepareStartX() {
 	root.scr.numberWidth = 0
 	root.scr.startX = root.scr.verticalHeader
 	m := root.Doc
+	m.endExclude = root.scr.verticalHeader
 	if !m.LineNumMode {
 		return
 	}
@@ -76,7 +77,6 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Set the header height.
 	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
-	log.Println("headerHeight:", root.Doc.headerHeight, root.Doc.width)
 	// Section header.
 	root.scr.sectionHeaderLN = -1
 	root.scr.sectionHeaderEnd = 0
@@ -309,7 +309,6 @@ func (m *Document) getHeight(startLN int, endLN int) int {
 	for lN := startLN; lN < endLN; lN++ {
 		height += len(m.leftMostX(lN))
 	}
-	log.Println("height:", startLN, endLN, height)
 	return height
 }
 

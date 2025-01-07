@@ -235,7 +235,16 @@ func (m *Document) leftMostX(lN int) []int {
 	if err != nil {
 		return nil
 	}
+	lc = excludeRange(lc, m.endExclude)
 	return leftX(m.width, lc)
+}
+
+// excludeRange returns a new slice with the elements from start to end excluded.
+func excludeRange(lc contents, end int) []content {
+	if end > len(lc) {
+		return []content{}
+	}
+	return lc[end:]
 }
 
 // leftX returns a list of left - most x positions when wrapping.

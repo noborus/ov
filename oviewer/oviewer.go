@@ -102,7 +102,7 @@ type SCR struct {
 
 	// numWidth is the width of the number.
 	numberWidth int
-	// verticalHeader is the vertical header.
+	// verticalHeader is the width of the vertical header.
 	verticalHeader int
 
 	// x1, y1, x2, y2 are the coordinates selected by the mouse.

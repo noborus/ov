@@ -55,7 +55,6 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
-	log.Println("wrapNum:", lN, wrapNum, m.width)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		line, ok := root.scr.lines[lN]
 		if !ok {
@@ -169,7 +168,7 @@ func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 func (root *Root) drawVerticalHeader(y int, lX int, lineC LineC) {
 	numberWidth := root.scr.numberWidth
 	if numberWidth > 0 {
-		numberWidth += 1
+		numberWidth++
 	}
 	screen := root.Screen
 	for n := 0; n < root.scr.verticalHeader; n++ {
