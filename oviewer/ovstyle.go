@@ -1,6 +1,10 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"strconv"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 // OVStyle represents a style in addition to the original style.
 type OVStyle struct {
@@ -11,7 +15,7 @@ type OVStyle struct {
 	// UnderlineColor is a underline color name string.
 	UnderlineColor string
 	// UnderlineType is a underline type.
-	UnderlineType int
+	UnderlineType string
 	// VerticalAlignType is a vertical align type.
 	VerticalAlignType int
 	// If true, add blink.
@@ -71,14 +75,6 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	if s.Background != "" {
 		style = style.Background(tcell.GetColor(s.Background))
 	}
-	// tcell does not support underline color.
-	// if s.UnderlineColor != "" {
-	//	style = style.UnderlineColor(tcell.GetColor(s.UnderlineColor))
-	// }
-	// tcell does not support underline type.
-	// if s.UnderlineType != 0 {
-	//	Double,Curly,Dotted,Dashed
-	// }
 	// tcell does not support vertical align type.
 	// if s.VerticalAlignType != 0 {
 	//	Top,Middle,Bottom
@@ -101,6 +97,12 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	}
 	if s.Underline {
 		style = style.Underline(true)
+	}
+	if s.UnderlineType != "" {
+		style = style.Underline(underLineStyle(s.UnderlineType))
+	}
+	if s.UnderlineColor != "" {
+		style = style.Underline(tcell.GetColor(s.UnderlineColor))
 	}
 	if s.StrikeThrough {
 		style = style.StrikeThrough(true)
@@ -137,4 +139,19 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	// }
 
 	return style
+}
+
+// underLineStyle sets the underline style.
+// only support 0-5.
+// 0: None, 1: Single, 2: Double, 3: Curly, 4: Dotted, 5: Dashed
+func underLineStyle(ustyle string) tcell.UnderlineStyle {
+	n, err := strconv.Atoi(ustyle)
+	if err != nil {
+		return 0
+	}
+	if tcell.UnderlineStyle(n) > tcell.UnderlineStyleDashed {
+		return 0
+	}
+
+	return tcell.UnderlineStyle(n)
 }

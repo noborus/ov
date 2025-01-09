@@ -194,12 +194,11 @@ func parseSGR(paramStr string) OVStyle {
 			s.Italic = true
 			s.UnItalic = false
 		case 4: // Underline On
-			if len(sgr.params) > 0 && sgr.params[0] != "" {
-				s = underLineStyle(s, sgr.params[0])
-				break
-			}
 			s.Underline = true
 			s.UnUnderline = false
+			if len(sgr.params) > 0 && sgr.params[0] != "" {
+				s.UnderlineType = sgr.params[0]
+			}
 		case 5: // Blink On
 			s.Blink = true
 			s.UnBlink = false
@@ -338,25 +337,6 @@ func containsNonDigit(str string) bool {
 		}
 	}
 	return false
-}
-
-// underLineStyle sets the underline style.
-func underLineStyle(s OVStyle, param string) OVStyle {
-	n, err := esNumber(param)
-	if err != nil {
-		return s
-	}
-
-	// Support only Underline Off (4:0).
-	if n == 0 {
-		s.Underline = false
-		s.UnUnderline = true
-		return s
-	}
-	// Other than that, it is treated as Underline On.
-	s.Underline = true
-	s.UnUnderline = false
-	return s
 }
 
 // parseSGRColor parses 256 color or RGB color.
