@@ -253,6 +253,9 @@ type Config struct {
 	StyleOverStrike OVStyle
 	// StyleOverLine is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
+	// StyleVerticalHeader is a style that applies to the vertical header.
+	StyleVerticalHeader OVStyle
+
 	// General represents the general behavior.
 	General general
 	// BeforeWriteOriginal specifies the number of lines before the current position.

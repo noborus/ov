@@ -184,7 +184,7 @@ func (root *Root) drawVerticalHeader(y int, lX int, lineC LineC) {
 		}
 		c := lineC.lc[n]
 		if lineC.valid {
-			c.style = c.style.Reverse(true)
+			c.style = applyStyle(defaultStyle, root.StyleVerticalHeader)
 		}
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}

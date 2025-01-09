@@ -32,6 +32,9 @@ func NewConfig() Config {
 		StyleSectionLine: OVStyle{
 			Background: "slateblue",
 		},
+		StyleVerticalHeader: OVStyle{
+			Reverse: true,
+		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
 			{Foreground: "aqua"},
