@@ -155,9 +155,11 @@ func underLineStyle(ustyle string) tcell.UnderlineStyle {
 	if err != nil {
 		return tcell.UnderlineStyleNone
 	}
-	if tcell.UnderlineStyle(n) > tcell.UnderlineStyleDashed {
+
+	us := tcell.UnderlineStyle(n)
+	if us < tcell.UnderlineStyleNone || us > tcell.UnderlineStyleDashed {
 		return tcell.UnderlineStyleNone
 	}
 
-	return tcell.UnderlineStyle(n)
+	return us
 }
