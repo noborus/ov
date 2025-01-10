@@ -63,6 +63,12 @@ func ToTcellStyle(s OVStyle) tcell.Style {
 	style = style.Italic(s.Italic)
 	style = style.Reverse(s.Reverse)
 	style = style.Underline(s.Underline)
+	if s.UnderlineType != "" {
+		style = style.Underline(underLineStyle(s.UnderlineType))
+	}
+	if s.UnderlineColor != "" {
+		style = style.Underline(tcell.GetColor(s.UnderlineColor))
+	}
 	style = style.StrikeThrough(s.StrikeThrough)
 	return style
 }

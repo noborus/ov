@@ -214,8 +214,9 @@ func parseSGR(paramStr string) OVStyle {
 			s.StrikeThrough = true
 			s.UnStrikeThrough = false
 		case 21: // Double Underline On
-			s.Underline = true // Double Underline is the same as Underline.
+			s.Underline = true
 			s.UnUnderline = false
+			s.UnderlineType = "2"
 		case 22: // Bold Off
 			s.Bold = false
 			s.UnBold = true
