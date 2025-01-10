@@ -147,10 +147,10 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 func underLineStyle(ustyle string) tcell.UnderlineStyle {
 	n, err := strconv.Atoi(ustyle)
 	if err != nil {
-		return 0
+		return tcell.UnderlineStyleNone
 	}
 	if tcell.UnderlineStyle(n) > tcell.UnderlineStyleDashed {
-		return 0
+		return tcell.UnderlineStyleNone
 	}
 
 	return tcell.UnderlineStyle(n)
