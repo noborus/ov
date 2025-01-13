@@ -1146,7 +1146,7 @@ You can customize the following items.
 * StyleJumpTargetLine
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
-Specify bool values for Reverse, Bold, Blink, Dim, Italic, and Underline.
+Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderLineStyle, and UnderlineColor.
 
 [Example]
 
@@ -1167,6 +1167,8 @@ StyleAlternate:
 | Dim | true/false | false |
 | Italic | true/false | false |
 | Underline | true/false | false |
+| UnderLineStyle | 0-5 | 2 |
+| UnderlineColor | "color name" or "rgb" | "red" |
 
 Specify `StyleMultiColorHighlight` and `StyleColumnRainbow` in an array.
 

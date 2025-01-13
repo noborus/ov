@@ -197,7 +197,7 @@ func parseSGR(paramStr string) OVStyle {
 			s.Underline = true
 			s.UnUnderline = false
 			if len(sgr.params) > 0 && sgr.params[0] != "" {
-				s.UnderlineType = sgr.params[0]
+				s.UnderlineStyle = sgr.params[0]
 			}
 		case 5: // Blink On
 			s.Blink = true
@@ -216,7 +216,7 @@ func parseSGR(paramStr string) OVStyle {
 		case 21: // Double Underline On
 			s.Underline = true
 			s.UnUnderline = false
-			s.UnderlineType = "2"
+			s.UnderlineStyle = "2"
 		case 22: // Bold Off
 			s.Bold = false
 			s.UnBold = true

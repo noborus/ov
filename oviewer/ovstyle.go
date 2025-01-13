@@ -14,8 +14,8 @@ type OVStyle struct {
 	Foreground string
 	// UnderlineColor is a underline color name string.
 	UnderlineColor string
-	// UnderlineType is a underline type.
-	UnderlineType string
+	// UnderlineStyle is a underline style.
+	UnderlineStyle string
 	// VerticalAlignType is a vertical align type.
 	VerticalAlignType int
 	// If true, add blink.
@@ -63,8 +63,8 @@ func ToTcellStyle(s OVStyle) tcell.Style {
 	style = style.Italic(s.Italic)
 	style = style.Reverse(s.Reverse)
 	style = style.Underline(s.Underline)
-	if s.UnderlineType != "" {
-		style = style.Underline(underLineStyle(s.UnderlineType))
+	if s.UnderlineStyle != "" {
+		style = style.Underline(underLineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
 		style = style.Underline(tcell.GetColor(s.UnderlineColor))
@@ -104,8 +104,8 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	if s.Underline {
 		style = style.Underline(true)
 	}
-	if s.UnderlineType != "" {
-		style = style.Underline(underLineStyle(s.UnderlineType))
+	if s.UnderlineStyle != "" {
+		style = style.Underline(underLineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
 		style = style.Underline(tcell.GetColor(s.UnderlineColor))
@@ -147,7 +147,7 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	return style
 }
 
-// underLineStyle sets the underline style.
+// underLineStyle sets the tcell.UnderlineStyle from the string.
 // only support 0-5.
 // 0: None, 1: Single, 2: Double, 3: Curly, 4: Dotted, 5: Dashed
 func underLineStyle(ustyle string) tcell.UnderlineStyle {
@@ -158,6 +158,8 @@ func underLineStyle(ustyle string) tcell.UnderlineStyle {
 
 	us := tcell.UnderlineStyle(n)
 	if us < tcell.UnderlineStyleNone || us > tcell.UnderlineStyleDashed {
+		// Note: It is not appropriate to turn off the underline style for out-of-range values.
+		// It is out of specification.
 		return tcell.UnderlineStyleNone
 	}
 
