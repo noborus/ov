@@ -420,8 +420,8 @@ func Test_parseSGR2(t *testing.T) {
 				params: "4:0",
 			},
 			want: OVStyle{
-				Underline:   false,
-				UnUnderline: true,
+				Underline:      true,
+				UnderlineStyle: "0",
 			},
 		},
 		{

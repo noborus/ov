@@ -12,10 +12,12 @@ func NewConfig() Config {
 			Background: "gray",
 		},
 		StyleOverStrike: OVStyle{
-			Bold: true,
+			Bold:           true,
+			UnderlineStyle: "3",
 		},
 		StyleOverLine: OVStyle{
-			Underline: true,
+			Underline:      true,
+			UnderlineStyle: "2",
 		},
 		StyleLineNumber: OVStyle{
 			Bold: true,

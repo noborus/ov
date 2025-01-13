@@ -41,8 +41,9 @@ General:
 #  SectionDelimiter: "^#"
 
 # Style
-# String of the color name: Foreground, Background
+# String of the color name: Foreground, Background, UnderlineColor
 # Boolean: Bold, Blink, Dim, Italic, Underline
+# Number: UnderlineStyle
 StyleAlternate:
   Background: "gray"
 StyleHeader:
