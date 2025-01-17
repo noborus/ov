@@ -98,6 +98,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.saveBuffer(ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
+	case *eventReachEOF:
+		root.notifyEOFReached(ev.m)
 
 	// tcell events
 	case *tcell.EventResize:
@@ -359,5 +361,38 @@ func (root *Root) postEvent(ev tcell.Event) {
 	if err := root.Screen.PostEvent(ev); err != nil {
 		log.Printf("postEvent %s", err)
 		root.releaseEventBuffer()
+	}
+}
+
+// eventReachEOF represents an EOF event.
+type eventReachEOF struct {
+	m *Document
+	tcell.EventTime
+}
+
+// sendReachEOF fires the eventReachEOF event.
+func (root *Root) sendReachEOF(m *Document) {
+	ev := &eventReachEOF{}
+	ev.m = m
+	ev.SetEventNow()
+	root.postEvent(ev)
+}
+
+// monitorEOF monitors the EOF of the document.
+func (root *Root) monitorEOF() {
+	if root.Config.NotifyEOF == 0 {
+		return
+	}
+	log.Println("monitorEOF")
+	for _, m := range root.DocList {
+		go func() {
+			if !m.BufEOF() {
+				m.cond.L.Lock()
+				m.cond.Wait()
+				m.cond.L.Unlock()
+			}
+			root.sendReachEOF(m)
+			log.Println("EOF reached", m.FileName)
+		}()
 	}
 }

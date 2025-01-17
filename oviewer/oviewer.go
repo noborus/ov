@@ -274,6 +274,8 @@ type Config struct {
 	RegexpSearch bool
 	// Incsearch is incremental search if true.
 	Incsearch bool
+	// NotifyEOF specifies the number of times to notify EOF.
+	NotifyEOF int
 
 	// ShrinkChar is the character to display when the column is shrunk.
 	ShrinkChar string
@@ -640,6 +642,8 @@ func (root *Root) Run() error {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	sigSuspend := registerSIGTSTP()
 	quitChan := make(chan struct{})
+
+	root.monitorEOF()
 
 	go func() {
 		// Undo screen when goroutine panic.

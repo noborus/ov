@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -388,4 +389,30 @@ func (root *Root) reverseRange(y int, start int, end int, sel bool) {
 			x++
 		}
 	}
+}
+
+// notifyEOFReached notifies that EOF has been reached.
+func (root *Root) notifyEOFReached(m *Document) {
+	root.setMessagef("EOF reached %s", m.FileName)
+	root.notify(root.Config.NotifyEOF)
+}
+
+// notify notifies by beeping and flashing the screen the specified number of times.
+func (root *Root) notify(count int) {
+	for i := 0; i < count; i++ {
+		root.Screen.Beep()
+		root.flash()
+	}
+}
+
+// flash flashes the screen.
+func (root *Root) flash() {
+	root.Screen.Fill(' ', tcell.StyleDefault.Background(tcell.ColorWhite))
+	root.Screen.Sync()
+	time.Sleep(50 * time.Millisecond)
+	root.Screen.Fill(' ', tcell.StyleDefault.Background(tcell.ColorBlack))
+	root.Screen.Sync()
+	time.Sleep(50 * time.Millisecond)
+	root.draw(context.Background())
+	time.Sleep(100 * time.Millisecond)
 }
