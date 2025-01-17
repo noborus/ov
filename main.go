@@ -513,6 +513,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
+	rootCmd.PersistentFlags().IntP("notify-eof", "", 0, "notify at the end of the file")
+	_ = viper.BindPFlag("NotifyEOF", rootCmd.PersistentFlags().Lookup("notify-eof"))
+	rootCmd.PersistentFlags().Lookup("notify-eof").NoOptDefVal = "1"
+
 	// Config
 	rootCmd.PersistentFlags().BoolP("quit-if-one-screen", "F", false, "quit if the output fits on one screen")
 	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
