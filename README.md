@@ -552,6 +552,13 @@ Therefore, the command is likely to be printed in color.
 ov --exec -- eza -l
 ```
 
+It is useful to use the `--notify-eof` option together with exec mode to get notified when the command finishes,
+especially for long-running commands like make.
+
+```console
+ov --notify-eof --exec -- make
+```
+
 ###  3.16. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(default).
@@ -871,6 +878,8 @@ This can be useful when you only want to view small files or when you want to qu
 
 If you want to enable this option by default, set `QuitSmall` to `true` in the configuration file.
 
+**Note:** The original text will be displayed without any styling applied by `ov`.
+
 ```yaml
 QuitSmall: true
 ```
@@ -1010,6 +1019,7 @@ MemoryLimit: 1000
 |       | --memory-limit-file int                    | number of chunks to limit in memory for the file (default 100) |
 | -M,   | --multi-color strings                      | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
 |       | --non-match-filter string                  | filter non match search pattern                                |
+|       | --notify-eof int                           | notify at the end of the file                                  |
 |       | --pattern string                           | search pattern                                                 |
 | -p,   | --plain                                    | disable original decoration                                    |
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
@@ -1188,7 +1198,21 @@ StyleColumnRainbow:
     Background: "black"
     Underline: true
   - Background: "lightsalmon"
+    UnderlineStyle: 2
 ```
+
+#### UnderlineStyle
+
+UnderlineStyle is specified by a number from 0 to 5. This corresponds to the escape sequence values.
+
+| value | description |
+|:------|:------------|
+| 0     | No underline|
+| 1     | Single underline|
+| 2     | Double underline|
+| 3     | Curly underline|
+| 4     | Dotted underline|
+| 5     | Dashed underline|
 
 ###  7.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
