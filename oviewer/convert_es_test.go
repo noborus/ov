@@ -331,7 +331,7 @@ func Test_parseSGR(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "test-forground2",
+			name: "test-foreground2",
 			args: args{
 				params: "038;05;02",
 			},
@@ -340,7 +340,7 @@ func Test_parseSGR(t *testing.T) {
 			},
 		},
 		{
-			name: "test-forground216",
+			name: "test-foreground216",
 			args: args{
 				params: "38;5;216",
 			},
@@ -350,7 +350,7 @@ func Test_parseSGR(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "test-forground216_Underline",
+			name: "test-foreground216_Underline",
 			args: args{
 				params: "38;5;216;4",
 			},

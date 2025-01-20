@@ -68,12 +68,12 @@ type sgrParams struct {
 // convert parses an escape sequence and changes state.
 // Returns true if it is an escape sequence and a non-printing character.
 func (es *escapeSequence) convert(st *parseState) bool {
-	return es.paraseEscapeSequence(st)
+	return es.parseEscapeSequence(st)
 }
 
 // parseEscapeSequence parses the escape sequence.
 // convert parses an escape sequence and changes state.
-func (es *escapeSequence) paraseEscapeSequence(st *parseState) bool {
+func (es *escapeSequence) parseEscapeSequence(st *parseState) bool {
 	mainc := st.mainc
 	switch es.state {
 	case ansiEscape:
@@ -293,7 +293,7 @@ func toSGRCode(paramList []string, index int) (sgrParams, error) {
 	colonLists := strings.Split(str, ":")
 	code, err := esNumber(colonLists[0])
 	if err != nil {
-		return sgrParams{}, ErrNotSuuport
+		return sgrParams{}, ErrNotSupport
 	}
 	sgr.code = code
 
@@ -321,7 +321,7 @@ func esNumber(str string) (int, error) {
 		return 0, nil
 	}
 	if containsNonDigit(str) {
-		return 0, ErrNotSuuport
+		return 0, ErrNotSupport
 	}
 	num, err := strconv.Atoi(str)
 	if err != nil {
@@ -343,11 +343,11 @@ func containsNonDigit(str string) bool {
 // parseSGRColor parses 256 color or RGB color.
 // Returns the color name and increase in the index (the colon does not increase).
 func parseSGRColor(sgr sgrParams) (string, int, error) {
-	color, inc, error := convertSGRColor(sgr)
+	color, inc, err := convertSGRColor(sgr)
 	if sgr.colonF { // In the case of colon, index does not increase.
 		inc = 0
 	}
-	return color, inc, error
+	return color, inc, err
 }
 
 // convertSGRColor converts the SGR color to a string that can be used to specify the color of tcell.
