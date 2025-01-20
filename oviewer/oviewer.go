@@ -390,8 +390,8 @@ var (
 	ErrNoColumnSelected = errors.New("no column selected")
 	// ErrInvalidSGR indicates that the SGR is invalid.
 	ErrInvalidSGR = errors.New("invalid SGR")
-	// ErrNotSuuport indicates that it is not supported.
-	ErrNotSuuport = errors.New("not support")
+	// ErrNotSupport indicates that it is not supported.
+	ErrNotSupport = errors.New("not support")
 	// ErrInvalidDocumentNum indicates that the document number is invalid.
 	ErrInvalidDocumentNum = errors.New("invalid document number")
 )
