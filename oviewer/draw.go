@@ -165,7 +165,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
 	}
-
+	currentLX := lX
 	screen := root.Screen
 	for n := 0; ; n++ {
 		x := root.scr.startX + n
@@ -185,7 +185,9 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		}
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
-
+	if currentLX == 0 {
+		root.drawVerticalHeader(y, lineC)
+	}
 	return lX, lN
 }
 
@@ -209,8 +211,32 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
 	lN++
-
+	root.drawVerticalHeader(y, lineC)
 	return lX, lN
+}
+
+func (root *Root) drawVerticalHeader(y int, lineC LineC) int {
+	vheader := 0
+	if root.General.VerticalHeaderColumn > 0 && len(lineC.columnRanges) > root.General.VerticalHeaderColumn {
+		vheader = lineC.columnRanges[root.General.VerticalHeaderColumn-1].end + 1
+	}
+	if root.General.VerticalHeader > 0 {
+		vheader = root.General.VerticalHeader
+	}
+	if vheader == 0 {
+		return 0
+	}
+	screen := root.Screen
+	for n := 0; n < vheader; n++ {
+		x := root.scr.startX + n
+		c := DefaultContent
+		if n < len(lineC.lc) {
+			c = lineC.lc[n]
+		}
+		style := applyStyle(c.style, root.StyleVerticalHeader)
+		screen.SetContent(x, y, c.mainc, c.combc, style)
+	}
+	return vheader
 }
 
 // blankLineNumber should be blank for the line number.

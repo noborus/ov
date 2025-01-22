@@ -147,6 +147,10 @@ type general struct {
 	TabWidth int
 	// Header is number of header lines to be fixed.
 	Header int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader int
+	// VerticalHeaderColumn is the number of vertical header columns.
+	VerticalHeaderColumn int
 	// SkipLines is the rows to skip.
 	SkipLines int
 	// WatchInterval is the watch interval (seconds).
