@@ -742,7 +742,8 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			m.columnCursor = tt.fields.columnCursor
 			root.StyleColumnHighlight = OVStyle{Bold: true}
 			line := root.Doc.getLineC(tt.args.lineNum)
-			root.columnDelimiterHighlight(line)
+			line.columnRanges = root.columnDelimiterRange(line)
+			root.columnHighlight(line)
 			if line.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
 			}
@@ -815,7 +816,8 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 			t.Log(m.columnWidths)
 			m.columnCursor = tt.fields.columnCursor
 			line := root.Doc.getLineC(tt.args.lineNum)
-			root.columnWidthHighlight(line)
+			line.columnRanges = root.columnWidthRanges(line)
+			root.columnHighlight(line)
 			if line.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
 			}

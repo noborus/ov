@@ -209,6 +209,8 @@ type LineC struct {
 	str string
 	// for converting the width of str and lc.
 	pos widthPos
+	// columnRanges is the range of columnRanges.
+	columnRanges []columnRange
 	// valid is true if the line is valid.
 	valid bool
 	// The number of the section in the screen.
@@ -217,6 +219,12 @@ type LineC struct {
 	sectionNm int
 	// eolStyle is the style of the end of the line.
 	eolStyle tcell.Style
+}
+
+// columnRange represents the start and end positions of a columnRange.
+type columnRange struct {
+	start int
+	end   int
 }
 
 // NewDocument creates and initializes a new [Document] with default settings.

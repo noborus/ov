@@ -336,6 +336,9 @@ func (root *Root) setLines(lines map[int]LineC, startLN int, endLN int) map[int]
 	for lN := startLN; lN < endLN; lN++ {
 		line := m.getLineC(lN)
 		if line.valid {
+			if root.Doc.ColumnMode {
+				line = root.columnRanges(line)
+			}
 			RangeStyle(line.lc, 0, len(line.lc), root.StyleBody)
 			root.styleContent(line)
 		}
@@ -422,11 +425,7 @@ func (*Root) plainStyle(lc contents) {
 
 // columnHighlight applies the style of the column highlight.
 func (root *Root) columnHighlight(line LineC) {
-	if root.Doc.ColumnWidth {
-		root.columnWidthHighlight(line)
-		return
-	}
-	root.columnDelimiterHighlight(line)
+	root.applyColumnStyles(line)
 }
 
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
@@ -454,48 +453,47 @@ func (root *Root) searchHighlight(line LineC) {
 	}
 }
 
-// columnHighlight applies the style of the column highlight.
-func (root *Root) columnDelimiterHighlight(line LineC) {
+// columnRanges sets the column ranges.
+func (root *Root) columnRanges(line LineC) LineC {
+	if root.Doc.ColumnWidth {
+		line.columnRanges = root.columnWidthRanges(line)
+	} else {
+		line.columnRanges = root.columnDelimiterRange(line)
+	}
+	return line
+}
+
+// columnDelimiterRange returns the ranges of the columns.
+func (root *Root) columnDelimiterRange(line LineC) []columnRange {
 	m := root.Doc
 	indexes := allIndex(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 	if len(indexes) == 0 {
-		return
+		return nil
 	}
 
-	numC := len(root.StyleColumnRainbow)
+	var columnRanges []columnRange
 	start := line.pos.x(0)
 	for columnNum := 0; columnNum < len(indexes); columnNum++ {
 		end := line.pos.x(indexes[columnNum][0])
 		delmEnd := line.pos.x(indexes[columnNum][1])
-		if m.ColumnRainbow {
-			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[columnNum%numC])
-		}
-		if columnNum == m.columnCursor {
-			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
-		}
+		columnRanges = append(columnRanges, columnRange{start: start, end: end})
 		start = delmEnd
 	}
 	// The last column.
-	columnNum := len(indexes)
 	end := line.pos.x(len(line.str))
-	if m.ColumnRainbow {
-		RangeStyle(line.lc, start, end, root.StyleColumnRainbow[columnNum%numC])
-	}
-	if columnNum == m.columnCursor {
-		RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
-	}
+	columnRanges = append(columnRanges, columnRange{start: start, end: end})
+	return columnRanges
 }
 
-// columnWidthHighlight applies the style of the column width highlight.
-func (root *Root) columnWidthHighlight(line LineC) {
+// columnWidthRanges returns the ranges of the columns.
+func (root *Root) columnWidthRanges(line LineC) []columnRange {
 	m := root.Doc
 	indexes := m.columnWidths
 	if len(indexes) == 0 {
-		return
+		return nil
 	}
 
-	numC := len(root.StyleColumnRainbow)
-
+	var columnRanges []columnRange
 	start, end := 0, 0
 	for c := 0; c < len(indexes)+1; c++ {
 		if m.Converter == convAlign {
@@ -503,14 +501,24 @@ func (root *Root) columnWidthHighlight(line LineC) {
 		} else {
 			end = findColumnEnd(line.lc, indexes, c, start)
 		}
+		columnRanges = append(columnRanges, columnRange{start: start, end: end})
+		start = end + 1
+	}
+	return columnRanges
+}
 
+// applyColumnStyles applies the styles to the columns based on the calculated ranges.
+func (root *Root) applyColumnStyles(line LineC) {
+	m := root.Doc
+	numC := len(root.StyleColumnRainbow)
+
+	for c, colRange := range line.columnRanges {
 		if m.ColumnRainbow {
-			RangeStyle(line.lc, start, end, root.StyleColumnRainbow[c%numC])
+			RangeStyle(line.lc, colRange.start, colRange.end, root.StyleColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
-			RangeStyle(line.lc, start, end, root.StyleColumnHighlight)
+			RangeStyle(line.lc, colRange.start, colRange.end, root.StyleColumnHighlight)
 		}
-		start = end + 1
 	}
 }
 
