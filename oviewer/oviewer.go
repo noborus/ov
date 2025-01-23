@@ -791,6 +791,12 @@ func mergeGeneral(src general, dst general) general {
 	if dst.Converter != "" {
 		src.Converter = dst.Converter
 	}
+	if dst.VerticalHeader != 0 {
+		src.VerticalHeader = dst.VerticalHeader
+	}
+	if dst.VerticalHeaderColumn != 0 {
+		src.VerticalHeaderColumn = dst.VerticalHeaderColumn
+	}
 	return src
 }
 

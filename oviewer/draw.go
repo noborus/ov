@@ -238,11 +238,11 @@ func (root *Root) drawVerticalHeader(y int, lineC LineC) {
 // If VerticalHeader is specified, it returns that as the width.
 // If VerticalHeaderColumn is specified, it returns the width based on that.
 func (root *Root) calculateVerticalHeader(lineC LineC) int {
-	if root.General.VerticalHeader > 0 {
-		return root.General.VerticalHeader
+	if root.Doc.VerticalHeader > 0 {
+		return root.Doc.VerticalHeader
 	}
 
-	vhc := root.General.VerticalHeaderColumn
+	vhc := root.Doc.VerticalHeaderColumn
 	if vhc > 0 && len(lineC.columnRanges) >= vhc {
 		return lineC.columnRanges[vhc-1].end + 1
 	}
