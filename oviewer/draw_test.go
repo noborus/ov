@@ -535,9 +535,9 @@ func TestRoot_drawVerticalHeader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := rootFileReadHelper(t, filepath.Join(testdata, "vheader.txt"))
-			root.General.VerticalHeader = tt.fields.verticalHeader
-			root.General.VerticalHeaderColumn = tt.fields.verticalHeaderColumn
+			root := rootHelper(t)
+			root.Doc.VerticalHeader = tt.fields.verticalHeader
+			root.Doc.VerticalHeaderColumn = tt.fields.verticalHeaderColumn
 			root.prepareScreen()
 			root.drawVerticalHeader(tt.args.y, tt.args.lineC)
 			got := getContents(t, root, tt.args.y, len(tt.want))
@@ -604,8 +604,8 @@ func TestRoot_calculateVerticalHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
-			root.General.VerticalHeader = tt.fields.verticalHeader
-			root.General.VerticalHeaderColumn = tt.fields.verticalHeaderColumn
+			root.Doc.VerticalHeader = tt.fields.verticalHeader
+			root.Doc.VerticalHeaderColumn = tt.fields.verticalHeaderColumn
 			if got := root.calculateVerticalHeader(tt.args.lineC); got != tt.want {
 				t.Errorf("Root.calculateVerticalHeader() = %v, want %v", got, tt.want)
 			}
