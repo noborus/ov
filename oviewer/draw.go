@@ -56,21 +56,21 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
-		line, ok := root.scr.lines[lN]
+		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-		root.drawLineNumber(lN, y, line.valid)
+		root.drawLineNumber(lN, y, lineC.valid)
 
-		nextLX, nextLN := root.drawLine(y, lX, lN, line)
-		if line.valid {
+		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
+		if lineC.valid {
 			root.coordinatesStyle(lN, y)
 		}
 		if root.Doc.SectionHeader {
-			root.sectionLineHighlight(y, line)
+			root.sectionLineHighlight(y, lineC)
 			if root.Doc.HideOtherSection {
-				root.hideOtherSection(y, line)
+				root.hideOtherSection(y, lineC)
 			}
 		}
 		root.applyMarkStyle(lN, y, markStyleWidth)
@@ -97,7 +97,7 @@ func (root *Root) drawHeader() {
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.blankLineNumber(y)
@@ -124,7 +124,7 @@ func (root *Root) drawSectionHeader() {
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
@@ -215,17 +215,13 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 	return lX, lN
 }
 
-func (root *Root) drawVerticalHeader(y int, lineC LineC) int {
-	vheader := 0
-	if root.General.VerticalHeaderColumn > 0 && len(lineC.columnRanges) > root.General.VerticalHeaderColumn {
-		vheader = lineC.columnRanges[root.General.VerticalHeaderColumn-1].end + 1
-	}
-	if root.General.VerticalHeader > 0 {
-		vheader = root.General.VerticalHeader
-	}
+// drawVerticalHeader draws the vertical header.
+func (root *Root) drawVerticalHeader(y int, lineC LineC) {
+	vheader := root.calculateVerticalHeader(lineC)
 	if vheader == 0 {
-		return 0
+		return
 	}
+
 	screen := root.Screen
 	for n := 0; n < vheader; n++ {
 		x := root.scr.startX + n
@@ -236,7 +232,21 @@ func (root *Root) drawVerticalHeader(y int, lineC LineC) int {
 		style := applyStyle(c.style, root.StyleVerticalHeader)
 		screen.SetContent(x, y, c.mainc, c.combc, style)
 	}
-	return vheader
+}
+
+// calculateVerticalHeader calculates the vertical header value.
+// If VerticalHeader is specified, it returns that as the width.
+// If VerticalHeaderColumn is specified, it returns the width based on that.
+func (root *Root) calculateVerticalHeader(lineC LineC) int {
+	if root.General.VerticalHeader > 0 {
+		return root.General.VerticalHeader
+	}
+
+	vhc := root.General.VerticalHeaderColumn
+	if vhc > 0 && len(lineC.columnRanges) >= vhc {
+		return lineC.columnRanges[vhc-1].end + 1
+	}
+	return 0
 }
 
 // blankLineNumber should be blank for the line number.
