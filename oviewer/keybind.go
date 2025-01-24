@@ -85,10 +85,10 @@ const (
 	actionConvertType    = "convert_type"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
-	actionShrinkColumn   = "shrink_column"
 	actionVeritcalHeader = "set_vertical_header"
 	actionHeaderColumn   = "set_header_column"
 	actionFixedColumn    = "fixed_column"
+	actionShrinkColumn   = "shrink_column"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -176,10 +176,10 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionConvertType:    root.setConvertType,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
-		actionShrinkColumn:   root.toggleColumnShrink,
 		actionVeritcalHeader: root.setVerticalHeaderMode,
 		actionHeaderColumn:   root.setHeaderColumnMode,
 		actionFixedColumn:    root.toggleFixedColumn,
+		actionShrinkColumn:   root.toggleShrinkColumn,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -271,10 +271,10 @@ func defaultKeyBinds() KeyBind {
 		actionConvertType:    {"alt+t"},
 		actionAlignFormat:    {"alt+F"},
 		actionRawFormat:      {"alt+R"},
-		actionShrinkColumn:   {"s"},
 		actionVeritcalHeader: {"y"},
 		actionHeaderColumn:   {"Y"},
 		actionFixedColumn:    {"F"},
+		actionShrinkColumn:   {"s"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -349,8 +349,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
-	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle")
 	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
+	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")

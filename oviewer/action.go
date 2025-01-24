@@ -859,6 +859,17 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }
 
+// toggleFixedColumn toggles the fixed column.
+func (root *Root) toggleFixedColumn(ctx context.Context) {
+	cursor := root.Doc.columnCursor + 1
+	if root.Doc.HeaderColumn == cursor {
+		cursor = 0
+	}
+	root.Doc.HeaderColumn = cursor
+	root.Doc.VerticalHeader = 0
+	root.setMessagef("Set Header Column %d", cursor)
+}
+
 // ShrinkColumn shrinks the specified column.
 func (root *Root) ShrinkColumn(ctx context.Context, cursor int) error {
 	return root.Doc.shrinkColumn(cursor, true)
@@ -869,8 +880,8 @@ func (root *Root) ExpandColumn(ctx context.Context, cursor int) error {
 	return root.Doc.shrinkColumn(cursor, false)
 }
 
-// toggleColumnShrink shrinks or expands the current cursor column.
-func (root *Root) toggleColumnShrink(ctx context.Context) {
+// toggleShrinkColumn shrinks or expands the current cursor column.
+func (root *Root) toggleShrinkColumn(ctx context.Context) {
 	cursor := root.Doc.columnCursor
 	shrink, err := root.Doc.isColumnShrink(cursor)
 	if err != nil {
@@ -879,17 +890,6 @@ func (root *Root) toggleColumnShrink(ctx context.Context) {
 	if err := root.Doc.shrinkColumn(cursor, !shrink); err != nil {
 		root.setMessage(err.Error())
 	}
-}
-
-// toggleFixedColumn toggles the fixed column.
-func (root *Root) toggleFixedColumn(ctx context.Context) {
-	cursor := root.Doc.columnCursor + 1
-	if root.Doc.HeaderColumn == cursor {
-		cursor = 0
-	}
-	root.Doc.HeaderColumn = cursor
-	root.Doc.VerticalHeader = 0
-	root.setMessagef("Set Header Column %d", cursor)
 }
 
 // isColumnShrink returns whether the specified column is shrink.
