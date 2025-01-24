@@ -56,23 +56,26 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
-		line, ok := root.scr.lines[lN]
+		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
-		root.drawLineNumber(lN, y, line.valid)
+		root.drawLineNumber(lN, y, lineC.valid)
 
-		nextLX, nextLN := root.drawLine(y, lX, lN, line)
-		if line.valid {
+		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
+		if lineC.valid {
 			root.coordinatesStyle(lN, y)
 		}
 		if root.Doc.SectionHeader {
-			root.sectionLineHighlight(y, line)
+			root.sectionLineHighlight(y, lineC)
 			if root.Doc.HideOtherSection {
-				root.hideOtherSection(y, line)
+				root.hideOtherSection(y, lineC)
 			}
 		}
+
+		root.drawVerticalHeader(y, wrapNum, lineC)
+
 		root.applyMarkStyle(lN, y, markStyleWidth)
 
 		wrapNum++
@@ -97,7 +100,7 @@ func (root *Root) drawHeader() {
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.blankLineNumber(y)
@@ -105,6 +108,8 @@ func (root *Root) drawHeader() {
 		lX, lN = root.drawLine(y, lX, lN, lineC)
 		// header style.
 		root.applyStyleToLine(y, root.StyleHeader)
+
+		root.drawVerticalHeader(y, wrapNum, lineC)
 
 		wrapNum++
 		if lX == 0 {
@@ -124,7 +129,7 @@ func (root *Root) drawSectionHeader() {
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			panic(fmt.Sprintf("line is not found %d", lN))
+			log.Fatalf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
@@ -132,6 +137,8 @@ func (root *Root) drawSectionHeader() {
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		// section header style.
 		root.applyStyleToLine(y, root.StyleSectionLine)
+
+		root.drawVerticalHeader(y, wrapNum, lineC)
 		// markstyle is displayed above the section header.
 		markStyleWidth := min(root.scr.vWidth, m.general.MarkStyleWidth)
 		root.applyMarkStyle(lN, y, markStyleWidth)
@@ -165,7 +172,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX:%d", lX)
 		return 0, 0
 	}
-
 	screen := root.Screen
 	for n := 0; ; n++ {
 		x := root.scr.startX + n
@@ -185,7 +191,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		}
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
-
 	return lX, lN
 }
 
@@ -209,8 +214,46 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
 	}
 	lN++
-
 	return lX, lN
+}
+
+// drawVerticalHeader draws the vertical header.
+func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
+	if root.Doc.WrapMode && wrapNum > 0 {
+		return
+	}
+	if !lineC.valid {
+		return
+	}
+	vheader := root.calculateVerticalHeader(lineC)
+	if vheader == 0 {
+		return
+	}
+	screen := root.Screen
+	for n := 0; n < vheader; n++ {
+		x := root.scr.startX + n
+		c := DefaultContent
+		if n < len(lineC.lc) {
+			c = lineC.lc[n]
+		}
+		style := applyStyle(c.style, root.StyleVerticalHeader)
+		screen.SetContent(x, y, c.mainc, c.combc, style)
+	}
+}
+
+// calculateVerticalHeader calculates the vertical header value.
+// If VerticalHeader is specified, it returns that as the width.
+// If HeaderColumn is specified, it returns the width of the specified column.
+func (root *Root) calculateVerticalHeader(lineC LineC) int {
+	if root.Doc.VerticalHeader > 0 {
+		return root.Doc.VerticalHeader
+	}
+
+	vhc := root.Doc.HeaderColumn
+	if vhc > 0 && len(lineC.columnRanges) >= vhc {
+		return lineC.columnRanges[vhc-1].end + 1
+	}
+	return 0
 }
 
 // blankLineNumber should be blank for the line number.

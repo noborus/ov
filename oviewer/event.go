@@ -98,6 +98,10 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.saveBuffer(ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
+	case *eventVerticalHeader:
+		root.setVerticalHeader(ev.value)
+	case *eventHeaderColumn:
+		root.setHeaderColumn(ev.value)
 	case *eventReachEOF:
 		root.notifyEOFReached(ev.m)
 

@@ -33,6 +33,8 @@ const (
 	SaveBuffer                 // SaveBuffer is the save buffer.
 	SectionNum                 // SectionNum is the section number.
 	ConvertType                // ConvertType is the convert type.
+	VerticalHeader             // VerticalHeader is the number of vertical headers input mode.
+	HeaderColumn               // HeaderColumn is the number of vertical header columns input mode.
 )
 
 // Input represents the status of various inputs.

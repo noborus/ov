@@ -147,6 +147,10 @@ type general struct {
 	TabWidth int
 	// Header is number of header lines to be fixed.
 	Header int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader int
+	// HeaderColumn is the number of vertical header columns.
+	HeaderColumn int
 	// SkipLines is the rows to skip.
 	SkipLines int
 	// WatchInterval is the watch interval (seconds).
@@ -786,6 +790,12 @@ func mergeGeneral(src general, dst general) general {
 	}
 	if dst.Converter != "" {
 		src.Converter = dst.Converter
+	}
+	if dst.VerticalHeader != 0 {
+		src.VerticalHeader = dst.VerticalHeader
+	}
+	if dst.HeaderColumn != 0 {
+		src.HeaderColumn = dst.HeaderColumn
 	}
 	return src
 }

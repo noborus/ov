@@ -33,6 +33,8 @@ type Config struct {
 	StyleMarkLine OVStyle
 	// StyleSectionLine is a style that section delimiter line.
 	StyleSectionLine OVStyle
+	// StyleVerticalHeader is a style that applies to the vertical header.
+	StyleVerticalHeader OVStyle
 	// StyleJumpTargetLine is the line that displays the search results.
 	StyleJumpTargetLine OVStyle
 	// StyleAlternate is a style that applies line by line.
@@ -108,12 +110,10 @@ func NewConfig() Config {
 			Background: "gray",
 		},
 		StyleOverStrike: OVStyle{
-			Bold:           true,
-			UnderlineStyle: "3",
+			Bold: true,
 		},
 		StyleOverLine: OVStyle{
-			Underline:      true,
-			UnderlineStyle: "2",
+			Underline: true,
 		},
 		StyleLineNumber: OVStyle{
 			Bold: true,
@@ -129,6 +129,9 @@ func NewConfig() Config {
 		},
 		StyleSectionLine: OVStyle{
 			Background: "slateblue",
+		},
+		StyleVerticalHeader: OVStyle{
+			Reverse: true,
 		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},

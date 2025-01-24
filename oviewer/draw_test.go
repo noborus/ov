@@ -455,3 +455,164 @@ func TestRoot_sectionLineHighlight(t *testing.T) {
 		})
 	}
 }
+func TestRoot_drawVerticalHeader(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		verticalHeader int
+		headerColumn   int
+	}
+	type args struct {
+		y     int
+		lineC LineC
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			name: "testDrawVerticalHeader",
+			fields: fields{
+				verticalHeader: 3,
+				headerColumn:   0,
+			},
+			args: args{
+				y: 0,
+				lineC: LineC{
+					lc: []content{
+						{mainc: 'A', style: tcell.StyleDefault},
+						{mainc: 'B', style: tcell.StyleDefault},
+						{mainc: 'C', style: tcell.StyleDefault},
+					},
+					valid: true,
+				},
+			},
+			want: "ABC",
+		},
+		{
+			name: "testDrawHeaderColumn",
+			fields: fields{
+				verticalHeader: 0,
+				headerColumn:   2,
+			},
+			args: args{
+				y: 0,
+				lineC: LineC{
+					lc: []content{
+						{mainc: 'A', style: tcell.StyleDefault},
+						{mainc: 'B', style: tcell.StyleDefault},
+						{mainc: 'C', style: tcell.StyleDefault},
+					},
+					columnRanges: []columnRange{
+						{start: 0, end: 1},
+						{start: 2, end: 2},
+					},
+					valid: true,
+				},
+			},
+			want: "AB",
+		},
+		{
+			name: "testDrawVerticalHeaderNone",
+			fields: fields{
+				verticalHeader: 0,
+				headerColumn:   0,
+			},
+			args: args{
+				y: 0,
+				lineC: LineC{
+					lc: []content{
+						{mainc: 'A', style: tcell.StyleDefault},
+						{mainc: 'B', style: tcell.StyleDefault},
+						{mainc: 'C', style: tcell.StyleDefault},
+					},
+					valid: true,
+				},
+			},
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Doc.WrapMode = false
+			root.Doc.VerticalHeader = tt.fields.verticalHeader
+			root.Doc.HeaderColumn = tt.fields.headerColumn
+			root.prepareScreen()
+			root.drawVerticalHeader(tt.args.y, 0, tt.args.lineC)
+			got := getContents(t, root, tt.args.y, len(tt.want))
+			if got != tt.want {
+				t.Errorf("Root.drawVerticalHeader() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_calculateVerticalHeader(t *testing.T) {
+	type fields struct {
+		verticalHeader int
+		headerColumn   int
+	}
+	type args struct {
+		lineC LineC
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "testCalculateVerticalHeader",
+			fields: fields{
+				verticalHeader: 3,
+				headerColumn:   0,
+			},
+			args: args{
+				lineC: LineC{},
+			},
+			want: 3,
+		},
+		{
+			name: "testCalculateHeaderColumn",
+			fields: fields{
+				verticalHeader: 0,
+				headerColumn:   2,
+			},
+			args: args{
+				lineC: LineC{
+					columnRanges: []columnRange{
+						{start: 0, end: 1},
+						{start: 2, end: 2},
+					},
+				},
+			},
+			want: 3,
+		},
+		{
+			name: "testCalculateVerticalHeaderNone",
+			fields: fields{
+				verticalHeader: 0,
+				headerColumn:   0,
+			},
+			args: args{
+				lineC: LineC{},
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Doc.VerticalHeader = tt.fields.verticalHeader
+			root.Doc.HeaderColumn = tt.fields.headerColumn
+			if got := root.calculateVerticalHeader(tt.args.lineC); got != tt.want {
+				t.Errorf("Root.calculateVerticalHeader() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

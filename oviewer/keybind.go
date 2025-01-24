@@ -86,6 +86,9 @@ const (
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionShrinkColumn   = "shrink_column"
+	actionVeritcalHeader = "set_vertical_header"
+	actionHeaderColumn   = "set_header_column"
+	actionFixedColumn    = "fixed_column"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -174,6 +177,9 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionShrinkColumn:   root.toggleColumnShrink,
+		actionVeritcalHeader: root.setVerticalHeaderMode,
+		actionHeaderColumn:   root.setHeaderColumnMode,
+		actionFixedColumn:    root.toggleFixedColumn,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -266,6 +272,9 @@ func defaultKeyBinds() KeyBind {
 		actionAlignFormat:    {"alt+F"},
 		actionRawFormat:      {"alt+R"},
 		actionShrinkColumn:   {"s"},
+		actionVeritcalHeader: {"y"},
+		actionHeaderColumn:   {"Y"},
+		actionFixedColumn:    {"F"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
@@ -341,6 +350,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
 	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle")
+	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
@@ -356,6 +366,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
+	k.writeKeyBind(&b, actionVeritcalHeader, "vertical header toggle")
+	k.writeKeyBind(&b, actionHeaderColumn, "header column toggle")
 
 	writeHeader(&b, "Section")
 	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")

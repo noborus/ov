@@ -438,6 +438,18 @@ func init() {
 		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	rootCmd.PersistentFlags().IntP("vertical-header", "y", 0, "number of characters to display as a vertical header")
+	_ = viper.BindPFlag("general.VerticalHeader", rootCmd.PersistentFlags().Lookup("vertical-header"))
+	_ = rootCmd.RegisterFlagCompletionFunc("vertical-header", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
+	})
+	rootCmd.PersistentFlags().IntP("header-column", "Y", 0, "number of columns to display as a vertical header")
+	_ = viper.BindPFlag("general.HeaderColumn", rootCmd.PersistentFlags().Lookup("header-column"))
+	_ = rootCmd.RegisterFlagCompletionFunc("header-column", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
+	})
+	rootCmd.MarkFlagsMutuallyExclusive("vertical-header", "header-column")
+
 	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "skip the number of lines")
 	_ = viper.BindPFlag("general.SkipLines", rootCmd.PersistentFlags().Lookup("skip-lines"))
 	_ = rootCmd.RegisterFlagCompletionFunc("skip-lines", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
