@@ -149,8 +149,8 @@ type general struct {
 	Header int
 	// VerticalHeader is the number of vertical header lines.
 	VerticalHeader int
-	// VerticalHeaderColumn is the number of vertical header columns.
-	VerticalHeaderColumn int
+	// HeaderColumn is the number of vertical header columns.
+	HeaderColumn int
 	// SkipLines is the rows to skip.
 	SkipLines int
 	// WatchInterval is the watch interval (seconds).
@@ -794,8 +794,8 @@ func mergeGeneral(src general, dst general) general {
 	if dst.VerticalHeader != 0 {
 		src.VerticalHeader = dst.VerticalHeader
 	}
-	if dst.VerticalHeaderColumn != 0 {
-		src.VerticalHeaderColumn = dst.VerticalHeaderColumn
+	if dst.HeaderColumn != 0 {
+		src.HeaderColumn = dst.HeaderColumn
 	}
 	return src
 }

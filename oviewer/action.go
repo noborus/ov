@@ -662,6 +662,38 @@ func (root *Root) setJumpTarget(input string) {
 	root.setMessagef("Set JumpTarget %d", num)
 }
 
+// setVerticalHeader sets the vertical header position.
+func (root *Root) setVerticalHeader(input string) {
+	num, err := specifyOnScreen(input, root.scr.vWidth-1)
+	if err != nil {
+		root.setMessagef("Set vertical header: %s", err.Error())
+		return
+	}
+	root.Doc.HeaderColumn = 0
+	if root.Doc.VerticalHeader == num {
+		return
+	}
+
+	root.Doc.VerticalHeader = num
+	root.setMessagef("Set vertical header %d", num)
+}
+
+// setHeaderColumn sets the vertical header column position.
+func (root *Root) setHeaderColumn(input string) {
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessagef("Set vertical header column: %s", ErrInvalidNumber)
+		return
+	}
+	root.Doc.VerticalHeader = 0
+	if root.Doc.HeaderColumn == num {
+		return
+	}
+
+	root.Doc.HeaderColumn = num
+	root.setMessagef("Set vertical header column %d", num)
+}
+
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize(ctx context.Context) {
 	root.ViewSync(ctx)
@@ -847,6 +879,17 @@ func (root *Root) toggleColumnShrink(ctx context.Context) {
 	if err := root.Doc.shrinkColumn(cursor, !shrink); err != nil {
 		root.setMessage(err.Error())
 	}
+}
+
+// toggleFixedColumn toggles the fixed column.
+func (root *Root) toggleFixedColumn(ctx context.Context) {
+	cursor := root.Doc.columnCursor + 1
+	if root.Doc.HeaderColumn == cursor {
+		cursor = 0
+	}
+	root.Doc.HeaderColumn = cursor
+	root.Doc.VerticalHeader = 0
+	root.setMessagef("Set Header Column %d", cursor)
 }
 
 // isColumnShrink returns whether the specified column is shrink.
