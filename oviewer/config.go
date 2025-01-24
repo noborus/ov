@@ -131,7 +131,7 @@ func NewConfig() Config {
 			Background: "slateblue",
 		},
 		StyleVerticalHeader: OVStyle{
-			Reverse: true,
+			Background: "darkgray",
 		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},
