@@ -189,10 +189,13 @@ func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int
 	if len(widths) == 0 {
 		return maxWidths, rightCount
 	}
-	s := 0
+	start := 0
 	for i := 0; i < len(widths); i++ {
-		e := findColumnEnd(lc, widths, i, s) + 1
-		width, addRight := trimWidth(lc[s:e])
+		end := findColumnEnd(lc, widths, i, start) + 1
+		if start > end {
+			break
+		}
+		width, addRight := trimWidth(lc[start:end])
 		if len(maxWidths) <= i {
 			maxWidths = append(maxWidths, width)
 		} else {
@@ -203,7 +206,7 @@ func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int
 		} else {
 			rightCount[i] += addRight
 		}
-		s = e
+		start = end
 	}
 	return maxWidths, rightCount
 }
@@ -500,6 +503,9 @@ func (root *Root) columnWidthRanges(line LineC) []columnRange {
 			end = alignColumnEnd(line.lc, m.alignConv.maxWidths, c, start)
 		} else {
 			end = findColumnEnd(line.lc, indexes, c, start)
+		}
+		if start > end {
+			break
 		}
 		columnRanges = append(columnRanges, columnRange{start: start, end: end})
 		start = end + 1
