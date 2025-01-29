@@ -37,11 +37,11 @@ func (m *Document) optimalCursorWidth(scr SCR, cursor int) int {
 	if m.WrapMode {
 		return cursor
 	}
-	line, ok := scr.lines[m.topLN+m.firstLine()]
-	if !ok || !line.valid {
+	lineC, ok := scr.lines[m.topLN+m.firstLine()]
+	if !ok || !lineC.valid {
 		return cursor
 	}
-	return optimalCursor(line, m.columnWidths, cursor, m.x, m.x+m.width)
+	return optimalCursor(lineC, m.columnWidths, cursor, m.x, m.x+m.width)
 }
 
 // optimalCursorDelimiter returns the optimal cursor position when in columnDelimiter mode.
@@ -51,16 +51,16 @@ func (m *Document) optimalCursorDelimiter(scr SCR, cursor int) int {
 	}
 
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, ok := scr.lines[m.topLN+m.firstLine()+i]
-		if !ok || !line.valid {
+		lineC, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !lineC.valid {
 			continue
 		}
-		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		widths := splitByDelimiter(lineC.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		m.setColumnStart(widths)
 		if len(widths) <= cursor {
 			continue
 		}
-		return optimalCursor(line, widths, cursor, m.x, m.x+m.width)
+		return optimalCursor(lineC, widths, cursor, m.x, m.x+m.width)
 	}
 	return cursor
 }
@@ -70,13 +70,13 @@ func (m *Document) optimalCursorDelimiter(scr SCR, cursor int) int {
 // if the cursor position is contained within the currently displayed screen.
 // Returns the cursor position moved into the screen
 // if the cursor position is not contained within the currently displayed screen.
-func optimalCursor(line LineC, widths []int, cursor int, start int, end int) int {
+func optimalCursor(lineC LineC, widths []int, cursor int, start int, end int) int {
 	cursor = max(0, cursor)
 	if len(widths)-1 < cursor {
 		return len(widths) - 1
 	}
 
-	curPos := line.pos.x(widths[cursor])
+	curPos := lineC.pos.x(widths[cursor])
 	if curPos > start && curPos < end {
 		return cursor
 	}
@@ -124,14 +124,14 @@ func (m *Document) optimalXWidth(cursor int) (int, error) {
 // optimalXDelimiter returns the best x position of the column at the specified cursor position.
 func (m *Document) optimalXDelimiter(scr SCR, cursor int) (int, error) {
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, ok := scr.lines[m.topLN+m.firstLine()+i]
-		if !ok || !line.valid {
+		lineC, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !lineC.valid {
 			continue
 		}
-		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		widths := splitByDelimiter(lineC.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		m.setColumnStart(widths)
 		if cursor > 0 && cursor < len(widths) {
-			return line.pos.x(widths[cursor]) - columnMargin, nil
+			return lineC.pos.x(widths[cursor]) - columnMargin, nil
 		}
 	}
 	return 0, ErrNoColumn
@@ -177,25 +177,25 @@ func (m *Document) moveToDelimiter(scr SCR, moveTo int) (int, int, error) {
 	}
 	cursor := max(0, m.columnCursor+moveTo)
 	for i := 0; i < m.firstLine()+TargetLineDelimiter; i++ {
-		line, ok := scr.lines[m.topLN+m.firstLine()+i]
-		if !ok || !line.valid {
+		lineC, ok := scr.lines[m.topLN+m.firstLine()+i]
+		if !ok || !lineC.valid {
 			continue
 		}
-		widths := splitByDelimiter(line.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
+		widths := splitByDelimiter(lineC.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 		if len(widths) > 0 {
 			m.setColumnStart(widths)
-			return m.adjuextXDelimiter(cursor, widths, line, screenWidth)
+			return m.adjuextXDelimiter(cursor, widths, lineC, screenWidth)
 		}
 	}
 	return 0, m.columnCursor, ErrNoDelimiter
 }
 
 // adjuextXDelimiter returns x and cursor when moving left and right.
-func (m *Document) adjuextXDelimiter(cursor int, widths []int, line LineC, screenWidth int) (int, int, error) {
+func (m *Document) adjuextXDelimiter(cursor int, widths []int, lineC LineC, screenWidth int) (int, int, error) {
 	cl, cr := 0, 0
 	if cursor > 0 && cursor < len(widths) {
-		cl = line.pos.x(widths[cursor-1])
-		cr = line.pos.x(widths[cursor] - 1)
+		cl = lineC.pos.x(widths[cursor-1])
+		cr = lineC.pos.x(widths[cursor] - 1)
 	}
 	return screenAdjustX(m.x, m.x+screenWidth, cl, cr, widths, cursor)
 }

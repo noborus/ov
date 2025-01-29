@@ -610,7 +610,7 @@ func TestRoot_calculateVerticalHeader(t *testing.T) {
 			root := rootHelper(t)
 			root.Doc.VerticalHeader = tt.fields.verticalHeader
 			root.Doc.HeaderColumn = tt.fields.headerColumn
-			if got := root.calculateVerticalHeader(tt.args.lineC); got != tt.want {
+			if got := root.Doc.widthVerticalHeader(tt.args.lineC); got != tt.want {
 				t.Errorf("Root.calculateVerticalHeader() = %v, want %v", got, tt.want)
 			}
 		})

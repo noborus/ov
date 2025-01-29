@@ -225,31 +225,35 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 	if !lineC.valid {
 		return
 	}
-	vheader := root.calculateVerticalHeader(lineC)
-	if vheader == 0 {
+	widthVH := root.Doc.widthVerticalHeader(lineC)
+	if widthVH == 0 {
 		return
 	}
+
 	screen := root.Screen
-	for n := 0; n < vheader; n++ {
-		x := root.scr.startX + n
+	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
 		}
+		if n == widthVH-1 && c.width == 2 {
+			// If the width is 2, it is the last character.
+			return
+		}
 		style := applyStyle(c.style, root.StyleVerticalHeader)
-		screen.SetContent(x, y, c.mainc, c.combc, style)
+		screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
 	}
 }
 
-// calculateVerticalHeader calculates the vertical header value.
+// widthVerticalHeader calculates the vertical header value.
 // If VerticalHeader is specified, it returns that as the width.
 // If HeaderColumn is specified, it returns the width of the specified column.
-func (root *Root) calculateVerticalHeader(lineC LineC) int {
-	if root.Doc.VerticalHeader > 0 {
-		return root.Doc.VerticalHeader
+func (m *Document) widthVerticalHeader(lineC LineC) int {
+	if m.VerticalHeader > 0 {
+		return m.VerticalHeader
 	}
 
-	vhc := root.Doc.HeaderColumn
+	vhc := m.HeaderColumn
 	if vhc > 0 && len(lineC.columnRanges) >= vhc {
 		return lineC.columnRanges[vhc-1].end + 1
 	}
