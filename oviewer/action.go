@@ -27,10 +27,7 @@ func (root *Root) toggleWrapMode(context.Context) {
 		root.setMessageLog(err.Error())
 		return
 	}
-	// Move if off screen
-	if x < m.x || x > m.x+(root.scr.vWidth-root.scr.startX) {
-		m.x = x
-	}
+	m.x = x
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
 }
 
