@@ -578,7 +578,7 @@ func TestDocument_limitMoveDown(t *testing.T) {
 				lN: 2000,
 			},
 			wantLX: 0,
-			wantLN: 979,
+			wantLN: 1000,
 		},
 		{
 			name: "boundary",
