@@ -95,7 +95,12 @@ func (m *Document) limitMoveDown(lX int, lN int) {
 		return
 	}
 
-	tX, tN := m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
+	tX := 0
+	tN := m.BufEndNum() - (1 + m.firstLine())
+	if m.WrapMode {
+		tX, tN = m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
+	}
+
 	if lN < tN || (lN == tN && lX < tX) {
 		m.topLX = lX
 		m.topLN = lN
