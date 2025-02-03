@@ -106,10 +106,9 @@ func (root *Root) drawHeader() {
 		root.blankLineNumber(y)
 
 		lX, lN = root.drawLine(y, lX, lN, lineC)
+		root.drawVerticalHeader(y, wrapNum, lineC)
 		// header style.
 		root.applyStyleToLine(y, root.StyleHeader)
-
-		root.drawVerticalHeader(y, wrapNum, lineC)
 
 		wrapNum++
 		if lX == 0 {

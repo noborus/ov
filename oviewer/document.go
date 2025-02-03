@@ -623,3 +623,14 @@ func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)
 	return str
 }
+
+// vHeaderWidth returns the width of the header.
+func (m *Document) vHeaderWidth(lineC LineC) int {
+	if m.VerticalHeader > 0 {
+		return m.VerticalHeader
+	}
+	if m.HeaderColumn > 0 && m.HeaderColumn < len(lineC.columnRanges) {
+		return lineC.columnRanges[m.HeaderColumn-1].end
+	}
+	return 0
+}

@@ -1009,7 +1009,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 				wrapMode:     false,
 			},
 			want: want{
-				x:            9,
+				x:            10,
 				columnCursor: 1,
 				wrapMode:     true,
 			},
