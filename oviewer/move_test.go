@@ -247,6 +247,7 @@ func TestRoot_moveLateral(t *testing.T) {
 			root.Doc.ColumnMode = false
 			root.Doc.WrapMode = false
 			root.Doc.x = tt.fields.x
+			root.prepareDraw(ctx)
 			root.moveLeftOne(ctx)
 			if root.Doc.x != tt.want.leftOne {
 				t.Errorf("leftOne got %d, want %d", root.Doc.x, tt.want.leftOne)
@@ -381,6 +382,7 @@ func TestRoot_moveColumn(t *testing.T) {
 			root.Doc.setDelimiter(tt.fields.delimiter)
 
 			root.Doc.columnCursor = tt.fields.columnCursor
+			root.prepareDraw(ctx)
 			root.moveLeftOne(ctx)
 			if root.Doc.columnCursor != tt.want.leftOne {
 				t.Errorf("leftOne got %d, want %d", root.Doc.columnCursor, tt.want.leftOne)

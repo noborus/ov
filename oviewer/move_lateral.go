@@ -44,7 +44,7 @@ func (m *Document) targetLine(scr SCR) (LineC, error) {
 func (m *Document) optimalCursor(scr SCR, cursor int) int {
 	lineC, err := m.targetLine(scr)
 	if err != nil {
-		return 0
+		return cursor
 	}
 
 	left := m.x
@@ -129,6 +129,9 @@ func (m *Document) moveTo(scr SCR, moveTo int) (int, int, error) {
 	}
 	columns := lineC.columnRanges
 	m.setColumnStart(columns)
+	if cursor >= len(columns) {
+		return m.x, cursor, ErrOverScreen
+	}
 	cl, cr := 0, 0
 	if cursor > 0 && cursor < len(columns) {
 		cl = columns[cursor].start
