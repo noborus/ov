@@ -3,81 +3,10 @@ package oviewer
 import (
 	"context"
 	"path/filepath"
-	"reflect"
-	"regexp"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
-
-func TestDocument_moveBeginLeft(t *testing.T) {
-	tests := []struct {
-		name  string
-		wantX int
-	}{
-		{
-			name:  "test1",
-			wantX: 0,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := docHelper(t, "test")
-			m.moveBeginLeft()
-			if m.x != tt.wantX {
-				t.Errorf("screenAdjustX() gotX = %v, wantX %v", m.x, tt.wantX)
-			}
-		})
-	}
-}
-
-func Test_splitDelimiter(t *testing.T) {
-	type args struct {
-		str          string
-		delimiter    string
-		delimiterReg *regexp.Regexp
-	}
-	tests := []struct {
-		name string
-		args args
-		want []int
-	}{
-		{
-			name: "blank",
-			args: args{
-				str:          "",
-				delimiter:    ",",
-				delimiterReg: nil,
-			},
-			want: nil,
-		},
-		{
-			name: "abc",
-			args: args{
-				str:          "a,b,c",
-				delimiter:    ",",
-				delimiterReg: nil,
-			},
-			want: []int{1, 3, 5},
-		},
-		{
-			name: "abc2",
-			args: args{
-				str:          "|aa|bb|cc|",
-				delimiter:    "|",
-				delimiterReg: nil,
-			},
-			want: []int{0, 3, 6, 9},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := splitByDelimiter(tt.args.str, tt.args.delimiter, tt.args.delimiterReg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("splitDelimiter() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestDocument_optimalCursor(t *testing.T) {
 	tcellNewScreen = fakeScreen
@@ -221,7 +150,7 @@ func TestRoot_moveColumnWithLeft(t *testing.T) {
 				n:     1,
 				cycle: false,
 			},
-			wantErr:    false,
+			wantErr:    true,
 			wantCursor: 0,
 		},
 	}
@@ -400,7 +329,7 @@ func TestDocument_moveColumnDelimiterLeft(t *testing.T) {
 				n:     1,
 				cycle: false,
 			},
-			wantErr:    false,
+			wantErr:    true,
 			wantCursor: 0,
 		},
 	}

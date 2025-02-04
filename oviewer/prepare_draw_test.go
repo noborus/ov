@@ -504,6 +504,8 @@ func TestRoot_prepareLines(t *testing.T) {
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
 			m.SectionHeaderNum = tt.fields.sectionHeaderNum
 			root.scr.lines = make(map[int]LineC)
+			root.scr.bodyLN = root.Doc.topLN + root.Doc.firstLine()
+			root.scr.bodyEnd = root.scr.bodyLN + root.scr.vHeight
 			root.prepareLines(root.scr.lines)
 			if len(root.scr.lines) != tt.want.num {
 				t.Errorf("screen lines len got: %d, want: %d", len(root.scr.lines), tt.want.num)
@@ -741,14 +743,14 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 			m.columnCursor = tt.fields.columnCursor
 			root.StyleColumnHighlight = OVStyle{Bold: true}
-			line := root.Doc.getLineC(tt.args.lineNum)
-			line.columnRanges = root.columnDelimiterRange(line)
-			root.columnHighlight(line)
-			if line.str != tt.want.str {
-				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
+			lineC := root.Doc.getLineC(tt.args.lineNum)
+			lineC.columnRanges = root.Doc.columnDelimiterRange(lineC)
+			root.columnHighlight(lineC)
+			if lineC.str != tt.want.str {
+				t.Errorf("\nline: %v\nwant: %v\n", lineC.str, tt.want.str)
 			}
-			if line.lc[tt.want.start].style != columnHighlight {
-				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnHighlight)
+			if lineC.lc[tt.want.start].style != columnHighlight {
+				t.Errorf("style got: %v want: %v", lineC.lc[tt.want.start].style, columnHighlight)
 			}
 		})
 	}
@@ -815,19 +817,19 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 			m.setColumnWidths()
 			t.Log(m.columnWidths)
 			m.columnCursor = tt.fields.columnCursor
-			line := root.Doc.getLineC(tt.args.lineNum)
-			line.columnRanges = root.columnWidthRanges(line)
-			root.columnHighlight(line)
-			if line.str != tt.want.str {
-				t.Errorf("\nline: %v\nwant: %v\n", line.str, tt.want.str)
+			lineC := root.Doc.getLineC(tt.args.lineNum)
+			lineC.columnRanges = root.Doc.columnWidthRanges(lineC)
+			root.columnHighlight(lineC)
+			if lineC.str != tt.want.str {
+				t.Errorf("\nline: %v\nwant: %v\n", lineC.str, tt.want.str)
 			}
-			if line.lc[tt.want.start].style != columnHighlight {
+			if lineC.lc[tt.want.start].style != columnHighlight {
 				v := bytes.Buffer{}
-				for i, l := range line.lc {
+				for i, l := range lineC.lc {
 					v.WriteString(fmt.Sprintf("%d:%v", i, l.style))
 				}
 				t.Logf("style: %v", v.String())
-				t.Errorf("style got: %v want: %v", line.lc[tt.want.start].style, columnHighlight)
+				t.Errorf("style got: %v want: %v", lineC.lc[tt.want.start].style, columnHighlight)
 			}
 		})
 	}

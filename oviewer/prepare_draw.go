@@ -60,11 +60,10 @@ func (root *Root) ViewSync(context.Context) {
 
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
-	// Set the columncursor at the first run.
+	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {
 		defer func() {
-			root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
-			root.Doc.columnCursor = max(root.Doc.columnStart, root.Doc.columnCursor)
+			root.Doc.columnCursor = root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
 		}()
 	}
 
@@ -72,7 +71,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Set the header height.
-	root.Doc.headerHeight = root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)
+	root.Doc.headerHeight = min(root.scr.vHeight, root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd))
 
 	// Section header.
 	root.scr.sectionHeaderLN = -1
@@ -81,7 +80,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	if root.Doc.SectionHeader {
 		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition, sectionTimeOut)
 		// Set the section header height.
-		root.Doc.sectionHeaderHeight = root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
+		root.Doc.sectionHeaderHeight = min(root.scr.vHeight, root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd))
 	}
 
 	// Shift the initial position of the body to the displayed position.
@@ -100,6 +99,8 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	if root.Doc.Converter == convAlign {
 		root.setAlignConverter()
 	}
+	root.scr.bodyLN = root.Doc.topLN + root.Doc.firstLine()
+	root.scr.bodyEnd = root.scr.bodyLN + root.scr.vHeight // vHeight is the max line of logical lines.
 
 	// Prepare the lines.
 	root.scr.lines = root.prepareLines(root.scr.lines)
@@ -323,9 +324,7 @@ func (root *Root) prepareLines(lines map[int]LineC) map[int]LineC {
 	// Section header.
 	lines = root.setLines(lines, root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd)
 	// Body.
-	startLN := root.Doc.topLN + root.Doc.firstLine()
-	endLN := startLN + root.scr.vHeight // vHeight is the max line of logical lines.
-	lines = root.setLines(lines, startLN, endLN)
+	lines = root.setLines(lines, root.scr.bodyLN, root.scr.bodyEnd)
 
 	if root.Doc.SectionHeader {
 		lines = root.sectionNum(lines)
@@ -335,19 +334,25 @@ func (root *Root) prepareLines(lines map[int]LineC) map[int]LineC {
 
 // setLines sets the lines of the specified range.
 func (root *Root) setLines(lines map[int]LineC, startLN int, endLN int) map[int]LineC {
-	m := root.Doc
 	for lN := startLN; lN < endLN; lN++ {
-		lineC := m.getLineC(lN)
-		if lineC.valid {
-			if root.Doc.ColumnMode {
-				lineC = root.columnRanges(lineC)
-			}
-			RangeStyle(lineC.lc, 0, len(lineC.lc), root.StyleBody)
-			root.styleContent(lineC)
-		}
-		lines[lN] = lineC
+		lines[lN] = root.lineContent(lN)
 	}
 	return lines
+}
+
+// lineContent returns the contents of the specified line.
+func (root *Root) lineContent(lN int) LineC {
+	m := root.Doc
+	lineC := m.getLineC(lN)
+	if !lineC.valid {
+		return lineC
+	}
+	if m.ColumnMode {
+		lineC = m.columnRanges(lineC)
+	}
+	RangeStyle(lineC.lc, 0, len(lineC.lc), root.StyleBody)
+	root.styleContent(lineC)
+	return lineC
 }
 
 // sectionNum sets the section number.
@@ -457,18 +462,17 @@ func (root *Root) searchHighlight(lineC LineC) {
 }
 
 // columnRanges sets the column ranges.
-func (root *Root) columnRanges(lineC LineC) LineC {
-	if root.Doc.ColumnWidth {
-		lineC.columnRanges = root.columnWidthRanges(lineC)
+func (m Document) columnRanges(lineC LineC) LineC {
+	if m.ColumnWidth {
+		lineC.columnRanges = m.columnWidthRanges(lineC)
 	} else {
-		lineC.columnRanges = root.columnDelimiterRange(lineC)
+		lineC.columnRanges = m.columnDelimiterRange(lineC)
 	}
 	return lineC
 }
 
 // columnDelimiterRange returns the ranges of the columns.
-func (root *Root) columnDelimiterRange(lineC LineC) []columnRange {
-	m := root.Doc
+func (m Document) columnDelimiterRange(lineC LineC) []columnRange {
 	indexes := allIndex(lineC.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 	if len(indexes) == 0 {
 		return nil
@@ -484,13 +488,14 @@ func (root *Root) columnDelimiterRange(lineC LineC) []columnRange {
 	}
 	// The last column.
 	end := lineC.pos.x(len(lineC.str))
-	columnRanges = append(columnRanges, columnRange{start: start, end: end})
+	if start < end {
+		columnRanges = append(columnRanges, columnRange{start: start, end: end})
+	}
 	return columnRanges
 }
 
 // columnWidthRanges returns the ranges of the columns.
-func (root *Root) columnWidthRanges(lineC LineC) []columnRange {
-	m := root.Doc
+func (m Document) columnWidthRanges(lineC LineC) []columnRange {
 	indexes := m.columnWidths
 	if len(indexes) == 0 {
 		return nil
