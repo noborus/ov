@@ -121,13 +121,13 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 		return m.x, ErrOverScreen
 	}
 
+	vh := m.vHeaderWidth(lineC)
 	// Move if on screen.
-	if columns[cursor].end < m.x+(scr.vWidth-scr.startX) {
+	if columns[cursor].start > m.x+vh && columns[cursor].end < m.x+(scr.vWidth-scr.startX) {
 		return m.x, nil
 	}
 
 	// Move if off screen.
-	vh := m.vHeaderWidth(lineC)
 	x := (columns[cursor].start - vh) - columnMargin
 	rightEdge := len(lineC.lc)
 	if rightEdge-x < scr.vWidth {
