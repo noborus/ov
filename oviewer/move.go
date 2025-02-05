@@ -186,7 +186,7 @@ func (root *Root) moveHfRight(context.Context) {
 
 // moveBeginLeft moves to the beginning of the line.
 func (root *Root) moveBeginLeft(context.Context) {
-	root.Doc.moveBeginLeft()
+	root.Doc.moveBeginLeft(root.scr)
 }
 
 // moveEndRight moves to the end of the line.

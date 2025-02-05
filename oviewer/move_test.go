@@ -343,7 +343,19 @@ func TestRoot_moveColumn(t *testing.T) {
 			},
 			want: want{
 				leftOne:  7,
-				rightOne: 2,
+				rightOne: 1,
+			},
+		},
+		{
+			name: "Test MOCK_DATA3",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				delimiter:    ",",
+				columnCursor: 2,
+			},
+			want: want{
+				leftOne:  1,
+				rightOne: 3,
 			},
 		},
 		{
@@ -354,7 +366,7 @@ func TestRoot_moveColumn(t *testing.T) {
 				columnCursor: 1,
 			},
 			want: want{
-				leftOne:  0,
+				leftOne:  4,
 				rightOne: 2,
 			},
 		},

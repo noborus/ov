@@ -36,6 +36,7 @@ func (root *Root) toggleColumnMode(context.Context) {
 	root.Doc.ColumnMode = !root.Doc.ColumnMode
 
 	if root.Doc.ColumnMode {
+		root.prepareLines(root.scr.lines)
 		root.Doc.columnCursor = root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
 	}
 	root.setMessagef("Set ColumnMode %t", root.Doc.ColumnMode)
@@ -516,8 +517,8 @@ func (root *Root) esFormat(ctx context.Context) {
 // setDelimiter sets the delimiter string.
 func (root *Root) setDelimiter(input string) {
 	root.Doc.setDelimiter(input)
-	root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
-	root.Doc.columnCursor = max(root.Doc.columnStart, root.Doc.columnCursor)
+	root.prepareLines(root.scr.lines)
+	root.Doc.columnCursor = root.Doc.optimalCursor(root.scr, root.Doc.columnCursor)
 	root.setMessagef("Set delimiter %s", input)
 }
 
