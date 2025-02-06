@@ -42,7 +42,7 @@ func (m *Document) moveBeginLeft(scr SCR) {
 // moveEndRight moves to the right edge of the screen.
 func (m *Document) moveEndRight(scr SCR) {
 	x, cursor := maxLineSize(scr.lines)
-	m.x = x - validWidth(scr)
+	m.x = max(0, x-validWidth(scr))
 	m.columnCursor = cursor
 }
 
