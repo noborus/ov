@@ -234,7 +234,7 @@ func TestRoot_moveLateral(t *testing.T) {
 				widthLeft:  9,
 				widthRight: 11,
 				bgLeft:     0,
-				endRight:   20,
+				endRight:   22,
 			},
 		},
 	}
