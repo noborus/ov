@@ -144,7 +144,7 @@ func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 		return 0, 0
 	}
 	if !m.WrapMode {
-		return 0, (lN + 1) - (height + m.firstLine())
+		return 0, (lN - m.SkipLines + 1) - height
 	}
 
 	// WrapMode
@@ -153,7 +153,7 @@ func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 	if len(listX) > 0 {
 		lX = listX[len(listX)-1]
 	}
-	topLX, topLN := m.numUp(lX, lN, height-1)
+	topLX, topLN := m.numUp(lX, lN, height-(m.headerHeight+1))
 	return topLX, topLN - m.firstLine()
 }
 
