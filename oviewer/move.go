@@ -209,6 +209,7 @@ func (root *Root) moveNormalRight(n int) {
 // moveColumnLeft moves the cursor to the left by n amount.
 func (root *Root) moveColumnLeft(n int) {
 	if err := root.Doc.moveColumnLeft(n, root.scr, !root.Config.DisableColumnCycle); err != nil {
+		root.setMessagef("Cannot move column: %s", err)
 		root.debugMessage(err.Error())
 	}
 }
@@ -216,6 +217,7 @@ func (root *Root) moveColumnLeft(n int) {
 // moveColumnRight moves the cursor to the right by n amount.
 func (root *Root) moveColumnRight(n int) {
 	if err := root.Doc.moveColumnRight(n, root.scr, !root.Config.DisableColumnCycle); err != nil {
+		root.setMessagef("Cannot move column: %s", err)
 		root.debugMessage(err.Error())
 	}
 }
