@@ -152,8 +152,6 @@ func (root *Root) everyUpdate(ctx context.Context) {
 		}
 	}
 
-	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.Doc.statusPos - root.Doc.headerHeight
 	switch {
 	case root.General.FollowAll:
 		root.followAll(ctx)

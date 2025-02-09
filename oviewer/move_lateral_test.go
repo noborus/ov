@@ -46,7 +46,7 @@ func TestDocument_optimalCursor(t *testing.T) {
 				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
 				columnDelimiter: ",",
 				x:               10,
-				width:           10,
+				width:           40,
 			},
 			args: args{
 				cursor: 4,

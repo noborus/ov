@@ -805,8 +805,6 @@ func (root *Root) followAll(ctx context.Context) {
 	current := root.CurrentDoc
 	root.mu.RLock()
 	for n, doc := range root.DocList {
-		doc.width = root.scr.vWidth - root.scr.startX
-		doc.height = root.scr.vHeight - (statusLine + doc.headerHeight)
 		if doc.latestNum != doc.BufEndNum() {
 			current = n
 		}
