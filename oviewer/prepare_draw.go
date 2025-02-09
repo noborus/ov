@@ -22,6 +22,8 @@ func (root *Root) prepareScreen() {
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
 	root.Doc.statusPos = root.scr.vHeight - statusLine
+	root.Doc.width = root.scr.vWidth - root.scr.startX
+	root.Doc.height = root.Doc.statusPos
 
 	num := int(math.Round(calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)))
 	root.Doc.HScrollWidthNum = max(num, 1)

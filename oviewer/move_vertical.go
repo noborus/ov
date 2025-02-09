@@ -36,7 +36,7 @@ func (m *Document) moveBottom() {
 		m.requestBottom()
 	}
 
-	lN := m.BufEndNum() - 1
+	lN := m.BufEndNum()
 	height := m.height - lastLineMargin
 	if m.BufEOF() {
 		if chunkNum, _ := chunkLineNum(lN - height); chunkNum > 0 {
@@ -98,7 +98,7 @@ func (m *Document) limitMoveDown(lX int, lN int) {
 	tX := 0
 	tN := m.BufEndNum() - (1 + m.firstLine())
 	if m.WrapMode {
-		tX, tN = m.bottomLineNum(m.BufEndNum()-1, m.height-lastLineMargin)
+		tX, tN = m.bottomLineNum(m.BufEndNum(), m.height-lastLineMargin)
 	}
 
 	if lN < tN || (lN == tN && lX < tX) {
@@ -143,17 +143,14 @@ func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 	if lN < m.headerHeight {
 		return 0, 0
 	}
-	if !m.WrapMode {
-		return 0, (lN + 1) - (height + m.firstLine())
-	}
 
-	// WrapMode
-	listX := m.leftMostX(lN)
-	lX := 1
-	if len(listX) > 0 {
-		lX = listX[len(listX)-1]
+	bodyHeight := (height - (m.headerHeight))
+
+	if !m.WrapMode {
+		return 0, lN - bodyHeight - m.firstLine()
 	}
-	topLX, topLN := m.numUp(lX, lN, height-1)
+	// WrapMode
+	topLX, topLN := m.numUp(0, lN, bodyHeight)
 	return topLX, topLN - m.firstLine()
 }
 

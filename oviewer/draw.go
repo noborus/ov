@@ -58,7 +58,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			log.Fatalf("line is not found %d", lN)
+			log.Panicf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
@@ -100,7 +100,7 @@ func (root *Root) drawHeader() {
 	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			log.Fatalf("line is not found %d", lN)
+			log.Panicf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.blankLineNumber(y)
@@ -128,7 +128,7 @@ func (root *Root) drawSectionHeader() {
 	for y := m.headerHeight; y < m.headerHeight+m.sectionHeaderHeight && lN < root.scr.sectionHeaderEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
-			log.Fatalf("line is not found %d", lN)
+			log.Panicf("line is not found %d", lN)
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
@@ -253,10 +253,15 @@ func (m *Document) widthVerticalHeader(lineC LineC) int {
 	}
 
 	vhc := m.HeaderColumn
-	if vhc > 0 && len(lineC.columnRanges) >= vhc {
-		return lineC.columnRanges[vhc-1].end + 1
+	if vhc <= 0 {
+		return 0
 	}
-	return 0
+	columns := lineC.columnRanges
+	if len(columns) == 0 {
+		return 0
+	}
+	vhc = min(vhc, len(columns))
+	return columns[vhc-1].end + 1
 }
 
 // blankLineNumber should be blank for the line number.
