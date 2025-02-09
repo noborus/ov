@@ -253,10 +253,15 @@ func (m *Document) widthVerticalHeader(lineC LineC) int {
 	}
 
 	vhc := m.HeaderColumn
-	if vhc > 0 && len(lineC.columnRanges) >= vhc {
-		return lineC.columnRanges[vhc-1].end + 1
+	if vhc <= 0 {
+		return 0
 	}
-	return 0
+	columns := lineC.columnRanges
+	if len(columns) == 0 {
+		return 0
+	}
+	vhc = min(vhc, len(columns))
+	return columns[vhc-1].end + 1
 }
 
 // blankLineNumber should be blank for the line number.

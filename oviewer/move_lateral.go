@@ -279,17 +279,18 @@ func isValidCursor(lineC LineC, cursor int) bool {
 // This function checks all lines to ensure that a CSV file starting with a comma
 // is correctly interpreted as having an empty first value.
 func determineColumnStart(lines map[int]LineC) int {
+	start := 0
 	for _, lineC := range lines {
 		if !lineC.valid {
 			continue
 		}
 		columns := lineC.columnRanges
-		if len(columns) == 0 {
-			continue
-		}
-		if columns[0].end > 0 {
-			return 0
+		if len(columns) > 0 {
+			if columns[0].end > 0 {
+				return 0
+			}
+			start = 1
 		}
 	}
-	return 1
+	return start
 }

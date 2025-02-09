@@ -173,7 +173,7 @@ func TestRoot_draw2(t *testing.T) {
 				ctx: context.Background(),
 			},
 			want: want{
-				bottomLN:            22,
+				bottomLN:            20,
 				bottomLX:            0,
 				sectionHeaderHeight: 1,
 			},
@@ -193,7 +193,7 @@ func TestRoot_draw2(t *testing.T) {
 				ctx: context.Background(),
 			},
 			want: want{
-				bottomLN:            34,
+				bottomLN:            32,
 				bottomLX:            0,
 				sectionHeaderHeight: 1,
 			},
