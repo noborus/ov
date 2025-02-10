@@ -104,7 +104,7 @@ func (a *align) convertDelm(src contents) contents {
 		dst = appendShrink(dst)
 		return dst
 	}
-	dst = append(dst, src[start:]...)
+	dst = a.appendColumn(dst, len(indexes), src[start:])
 	return dst
 }
 
@@ -145,7 +145,7 @@ func (a *align) convertWidth(src contents) contents {
 		dst = appendShrink(dst)
 		return dst
 	}
-	dst = append(dst, src[start:]...)
+	dst = a.appendColumn(dst, len(a.orgWidths), src[start:])
 	return dst
 }
 
