@@ -1110,7 +1110,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				header:      1,
 				columnWidth: true,
 			},
-			want: []int{3, 5},
+			want: []int{3, 5, 3},
 		},
 		{
 			name: "Test setAlignConverterDelimiter",
@@ -1120,7 +1120,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				columnWidth:     false,
 				columnDelimiter: "|",
 			},
-			want: []int{0, 7, 7, 7},
+			want: []int{0, 7, 7, 7, 1},
 		},
 		{
 			name: "Test setAlignConverterDelimiter2",
@@ -1130,7 +1130,7 @@ func TestRoot_setAlignConverter(t *testing.T) {
 				columnWidth:     false,
 				columnDelimiter: ",",
 			},
-			want: []int{1, 5, 1},
+			want: []int{1, 5, 1, 1},
 		},
 		{
 			name: "Test setAlignNoColumn",
@@ -1173,41 +1173,51 @@ func TestRoot_setAlignConverter(t *testing.T) {
 func Test_maxWidthsDelm(t *testing.T) {
 	type args struct {
 		maxWidths    []int
+		rightCount   []int
 		delimiter    string
 		delimiterReg *regexp.Regexp
 	}
 	tests := []struct {
-		name string
-		str  string
-		args args
-		want []int
+		name  string
+		str   string
+		args  args
+		want1 []int
+		want2 []int
 	}{
 		{
 			name: "Test maxWidthsDelm1",
 			str:  "a, b, c, d, e, f, g",
 			args: args{
 				maxWidths:    []int{0, 0, 0, 0, 0},
+				rightCount:   []int{0, 0, 0, 0, 0},
 				delimiter:    ",",
 				delimiterReg: regexpCompile(",", false),
 			},
-			want: []int{1, 2, 2, 2, 2, 2},
+			want1: []int{1, 2, 2, 2, 2, 2, 2},
+			want2: []int{0, 0, 0, 0, 0, 0, 0},
 		},
 		{
 			name: "Test maxWidthsDelm2",
 			str:  "no delimiter",
 			args: args{
 				maxWidths:    []int{2, 2, 2, 2, 2, 2},
+				rightCount:   []int{0, 0, 0, 0, 0, 0},
 				delimiter:    ",",
 				delimiterReg: regexpCompile(",", false),
 			},
-			want: []int{2, 2, 2, 2, 2, 2},
+			want1: []int{2, 2, 2, 2, 2, 2},
+			want2: []int{0, 0, 0, 0, 0, 0},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lc := StrToContents(tt.str, 8)
-			if got := maxWidthsDelm(lc, tt.args.maxWidths, tt.args.delimiter, tt.args.delimiterReg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("maxWidthsDelm() = %v, want %v", got, tt.want)
+			got1, got2 := maxWidthsDelm(lc, tt.args.maxWidths, tt.args.rightCount, tt.args.delimiter, tt.args.delimiterReg)
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("maxWidthsDelm() = %v, want %v", got1, tt.want1)
+			}
+			if !reflect.DeepEqual(got2, tt.want2) {
+				t.Errorf("maxWidthsDelm() = %v, want %v", got2, tt.want2)
 			}
 		})
 	}
@@ -1234,14 +1244,14 @@ func Test_maxWidthsWidth(t *testing.T) {
 				widths:    []int{2, 11},
 				addRight:  []int{0, 0},
 			},
-			want:  []int{1, 4},
-			want2: []int{0, 0},
+			want:  []int{1, 4, 2},
+			want2: []int{0, 0, 1},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lc := StrToContents(tt.str, 8)
-			got, got2 := maxWidthsWidth(lc, tt.args.maxWidths, tt.args.widths, tt.args.addRight)
+			got, got2 := maxWidthsWidth(lc, tt.args.maxWidths, tt.args.addRight, tt.args.widths)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("maxWidthsWidth() = %v, want %v", got, tt.want)
 			}

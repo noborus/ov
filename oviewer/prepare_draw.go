@@ -159,17 +159,17 @@ func (m *Document) maxColumnWidths(maxWidths []int, rightCount []int, lN int) ([
 	}
 	lc := StrToContents(str, m.TabWidth)
 	if m.ColumnWidth {
-		return maxWidthsWidth(lc, maxWidths, m.columnWidths, rightCount)
+		return maxWidthsWidth(lc, maxWidths, rightCount, m.columnWidths)
 	}
-	return maxWidthsDelm(lc, maxWidths, m.ColumnDelimiter, m.ColumnDelimiterReg), rightCount
+	return maxWidthsDelm(lc, maxWidths, rightCount, m.ColumnDelimiter, m.ColumnDelimiterReg)
 }
 
 // maxWidthsDelm returns the maximum width of the column.
-func maxWidthsDelm(lc contents, maxWidths []int, delimiter string, delimiterReg *regexp.Regexp) []int {
+func maxWidthsDelm(lc contents, maxWidths []int, rightCount []int, delimiter string, delimiterReg *regexp.Regexp) ([]int, []int) {
 	str, pos := ContentsToStr(lc)
 	indexes := allIndex(str, delimiter, delimiterReg)
 	if len(indexes) == 0 {
-		return maxWidths
+		return maxWidths, rightCount
 	}
 
 	start := pos.x(0)
@@ -177,18 +177,19 @@ func maxWidthsDelm(lc contents, maxWidths []int, delimiter string, delimiterReg 
 		end := pos.x(indexes[i][0])
 		delmEnd := pos.x(indexes[i][1])
 		width := end - start
-		if len(maxWidths) <= i {
-			maxWidths = append(maxWidths, width)
-		} else {
-			maxWidths[i] = max(width, maxWidths[i])
-		}
+		maxWidths, rightCount = updateMaxWidths(maxWidths, rightCount, i, width, 0)
 		start = delmEnd
 	}
-	return maxWidths
+	// The last column.
+	if start < len(lc) {
+		width := len(lc) - start
+		maxWidths, rightCount = updateMaxWidths(maxWidths, rightCount, len(indexes), width, 0)
+	}
+	return maxWidths, rightCount
 }
 
 // maxWidthsWidth returns the maximum width of the column.
-func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int) ([]int, []int) {
+func maxWidthsWidth(lc contents, maxWidths []int, rightCount []int, widths []int) ([]int, []int) {
 	if len(widths) == 0 {
 		return maxWidths, rightCount
 	}
@@ -199,17 +200,28 @@ func maxWidthsWidth(lc contents, maxWidths []int, widths []int, rightCount []int
 			break
 		}
 		width, addRight := trimWidth(lc[start:end])
-		if len(maxWidths) <= i {
-			maxWidths = append(maxWidths, width)
-		} else {
-			maxWidths[i] = max(width, maxWidths[i])
-		}
-		if len(rightCount) <= i {
-			rightCount = append(rightCount, addRight)
-		} else {
-			rightCount[i] += addRight
-		}
+		maxWidths, rightCount = updateMaxWidths(maxWidths, rightCount, i, width, addRight)
 		start = end
+	}
+	// The last column.
+	if start < len(lc) {
+		width, addRight := trimWidth(lc[start:])
+		maxWidths, rightCount = updateMaxWidths(maxWidths, rightCount, len(widths), width, addRight)
+	}
+	return maxWidths, rightCount
+}
+
+// updateMaxWidths updates the maximum width and right count.
+func updateMaxWidths(maxWidths []int, rightCount []int, idx int, width int, addRight int) ([]int, []int) {
+	if len(maxWidths) <= idx {
+		maxWidths = append(maxWidths, width)
+	} else {
+		maxWidths[idx] = max(width, maxWidths[idx])
+	}
+	if len(rightCount) <= idx {
+		rightCount = append(rightCount, addRight)
+	} else {
+		rightCount[idx] += addRight
 	}
 	return maxWidths, rightCount
 }
