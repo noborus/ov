@@ -34,9 +34,9 @@ func (m *Document) moveNormalRight(n int) {
 
 // moveBeginLeft moves the document view to the left edge of the screen.
 // It sets the horizontal position to 0 and determines the starting column.
-func (m *Document) moveBeginLeft(scr SCR) {
+func (m *Document) moveBeginLeft(_ SCR) {
 	m.x = 0
-	m.columnCursor = determineColumnStart(scr.lines)
+	m.columnCursor = m.columnStart
 }
 
 // moveEndRight moves to the right edge of the screen.
@@ -55,7 +55,7 @@ func (m *Document) optimalCursor(scr SCR, cursor int) int {
 		return cursor
 	}
 
-	cursor = max(cursor, determineColumnStart(scr.lines))
+	cursor = max(cursor, m.columnStart)
 	columns := lineC.columnRanges
 	if len(columns)-1 < cursor {
 		// If the cursor is out of range, set it to the last column.
@@ -97,7 +97,7 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 	if cursor == 0 {
 		return 0, nil
 	}
-	if cursor < m.HeaderColumn {
+	if cursor < m.HeaderColumn+m.columnStart {
 		return 0, nil
 	}
 
@@ -152,9 +152,8 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	}
 
 	// Check if the cursor is at the beginning of the column.
-	columnStart := determineColumnStart(scr.lines)
 	cursor := m.columnCursor - n
-	if cursor < columnStart {
+	if cursor < m.columnStart {
 		if cycle {
 			m.moveEndRight(scr)
 			return nil
@@ -164,7 +163,7 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 
 	// Move to the previous column.
 	m.columnCursor = cursor
-	if cursor < m.HeaderColumn {
+	if cursor < m.HeaderColumn+m.columnStart {
 		m.x = 0
 		return nil
 	}
@@ -272,25 +271,4 @@ func targetLineWithColumns(scr SCR) (LineC, error) {
 // It returns true if the cursor is within the range, otherwise false.
 func isValidCursor(lineC LineC, cursor int) bool {
 	return cursor >= 0 && cursor < len(lineC.columnRanges)
-}
-
-// determineColumnStart determines the start index of the column.
-// If the column starts with a delimiter, it returns 1. Otherwise, it returns 0.
-// This function checks all lines to ensure that a CSV file starting with a comma
-// is correctly interpreted as having an empty first value.
-func determineColumnStart(lines map[int]LineC) int {
-	start := 0
-	for _, lineC := range lines {
-		if !lineC.valid {
-			continue
-		}
-		columns := lineC.columnRanges
-		if len(columns) > 0 {
-			if columns[0].end > 0 {
-				return 0
-			}
-			start = 1
-		}
-	}
-	return start
 }

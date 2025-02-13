@@ -106,6 +106,29 @@ func (root *Root) prepareDraw(ctx context.Context) {
 
 	// Prepare the lines.
 	root.scr.lines = root.prepareLines(root.scr.lines)
+
+	root.Doc.columnStart = determineColumnStart(root.scr.lines)
+}
+
+// determineColumnStart determines the start index of the column.
+// If the column starts with a delimiter, it returns 1. Otherwise, it returns 0.
+// This function checks all lines to ensure that a CSV file starting with a comma
+// is correctly interpreted as having an empty first value.
+func determineColumnStart(lines map[int]LineC) int {
+	start := 0
+	for _, lineC := range lines {
+		if !lineC.valid {
+			continue
+		}
+		columns := lineC.columnRanges
+		if len(columns) > 0 {
+			if columns[0].end > 0 {
+				return 0
+			}
+			start = 1
+		}
+	}
+	return start
 }
 
 // setAlignConverter sets the maximum width of the column.

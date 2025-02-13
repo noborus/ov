@@ -857,7 +857,7 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 
 // toggleFixedColumn toggles the fixed column.
 func (root *Root) toggleFixedColumn(ctx context.Context) {
-	cursor := root.Doc.columnCursor + 1
+	cursor := root.Doc.columnCursor - root.Doc.columnStart + 1
 	if root.Doc.HeaderColumn == cursor {
 		cursor = 0
 	}

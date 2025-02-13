@@ -260,7 +260,7 @@ func (m *Document) widthVerticalHeader(lineC LineC) int {
 	if len(columns) == 0 {
 		return 0
 	}
-	vhc = min(vhc, len(columns))
+	vhc = min(vhc+m.columnStart, len(columns))
 	return columns[vhc-1].end + 1
 }
 
