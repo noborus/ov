@@ -10,7 +10,7 @@ import (
 func (root *Root) setVerticalHeaderMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newVHeaderEvent()
+	input.Event = newVerticalHeaderEvent()
 }
 
 // eventVerticalHeader represents the vertical header input mode.
@@ -19,8 +19,8 @@ type eventVerticalHeader struct {
 	value string
 }
 
-// newVHeaderEvent returns a new vertical header event.
-func newVHeaderEvent() *eventVerticalHeader {
+// newVerticalHeaderEvent returns a new vertical header event.
+func newVerticalHeaderEvent() *eventVerticalHeader {
 	return &eventVerticalHeader{}
 }
 
