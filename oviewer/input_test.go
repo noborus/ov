@@ -295,7 +295,7 @@ func TestInput_next(t *testing.T) {
 	}
 }
 
-func TestRoot_inputMode(t *testing.T) {
+func TestRoot_inputPrompt(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
 	root.setDelimiterMode(ctx)
@@ -317,6 +317,10 @@ func TestRoot_inputMode(t *testing.T) {
 	root.setMultiColorMode(ctx)
 	if root.inputPrompt() != "Multi color:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Multi color:")
+	}
+	root.input.Event = normal()
+	if root.inputPrompt() != "" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "")
 	}
 	root.setForwardSearchMode(ctx)
 	if root.inputPrompt() != "/" {
@@ -370,6 +374,18 @@ func TestRoot_inputMode(t *testing.T) {
 	if root.inputPrompt() != "Section start:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section start:")
 	}
+	root.setConvertType(ctx)
+	if root.inputPrompt() != "Convert:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Convert:")
+	}
+	root.setVerticalHeaderMode(ctx)
+	if root.inputPrompt() != "Vertical Header length:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical Header length:")
+	}
+	root.setHeaderColumnMode(ctx)
+	if root.inputPrompt() != "Vertical Header Column length:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical Header Column length:")
+	}
 }
 
 func TestRoot_inputState(t *testing.T) {
@@ -421,67 +437,375 @@ func TestRoot_inputState(t *testing.T) {
 	}
 }
 
-func Test_upNum(t *testing.T) {
+func TestRoot_inputUp(t *testing.T) {
 	type args struct {
 		str string
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name  string
+		args  args
+		Event Eventer
+		want  string
 	}{
 		{
-			name: "testUpNum1",
-			args: args{
-				str: "1",
-			},
+			name: "testConvertType",
+			args: args{str: "raw"},
+			Event: newConvertTypeEvent(
+				&candidate{
+					list: []string{convEscaped, convRaw, convAlign},
+					p:    2,
+				},
+			),
+			want: "raw",
+		},
+		{
+			name: "testDelimiter",
+			args: args{str: ","},
+			Event: newDelimiterEvent(
+				&candidate{
+					list: []string{",", "|", "\t"},
+					p:    2,
+				},
+			),
+			want: "|",
+		},
+		{
+			name: "testGoto",
+			args: args{str: "1000"},
+			Event: newGotoEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    2,
+				},
+			),
+			want: "10",
+		},
+		{
+			name:  "testHeader",
+			args:  args{str: "1"},
+			Event: newHeaderEvent(),
+			want:  "2",
+		},
+		{
+			name:  "testHeaderColumn",
+			args:  args{str: "1"},
+			Event: newHeaderColumnEvent(),
+			want:  "2",
+		},
+		{
+			name: "testJumpTarget",
+			args: args{str: "1000"},
+			Event: newJumpTargetEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    2,
+				},
+			),
+			want: "10",
+		},
+		{
+			name: "testMultiColor",
+			args: args{str: "1"},
+			Event: newMultiColorEvent(
+				&candidate{
+					list: []string{"1", "2", "3"},
+					p:    2,
+				},
+			),
 			want: "2",
 		},
 		{
-			name: "testUpNum2",
-			args: args{
-				str: "e",
-			},
-			want: "0",
+			name:  "testNormal",
+			args:  args{str: "test"},
+			Event: normal(),
+			want:  "",
+		},
+		{
+			name: "testSaveBuffer",
+			args: args{str: "test"},
+			Event: newSaveBufferEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    2,
+				},
+			),
+			want: "test2",
+		},
+		{
+			name: "testSectionDelimiter",
+			Event: newSectionDelimiterEvent(
+				&candidate{
+					list: []string{",", "|", "\t"},
+					p:    2,
+				},
+			),
+			want: "|",
+		},
+		{
+			name:  "testSectionNum",
+			args:  args{str: "1"},
+			Event: newSectionNumEvent(),
+			want:  "2",
+		},
+		{
+			name: "testSectionStart",
+			Event: newSectionStartEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    2,
+				},
+			),
+			want: "10",
+		},
+		{
+			name:  "testSkipLines",
+			args:  args{str: "1"},
+			Event: newSkipLinesEvent(),
+			want:  "2",
+		},
+		{
+			name: "testTabWidth",
+			Event: newTabWidthEvent(
+				&candidate{
+					list: []string{"4", "8", "3"},
+					p:    2,
+				},
+			),
+			want: "8",
+		},
+		{
+			name:  "testVerticalHeader",
+			args:  args{str: "1"},
+			Event: newVerticalHeaderEvent(),
+			want:  "2",
+		},
+		{
+			name: "testViewMode",
+			args: args{str: "test"},
+			Event: newViewModeEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    2,
+				},
+			),
+			want: "test2",
+		},
+		{
+			name: "testWatchInterval",
+			args: args{str: "1"},
+			Event: newWatchIntervalEvent(
+				&candidate{
+					list: []string{"1", "2", "3"},
+					p:    2,
+				},
+			),
+			want: "2",
+		},
+		{
+			name: "testWriteBAMode",
+			args: args{str: "test"},
+			Event: newWriteBAEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    2,
+				},
+			),
+			want: "test2",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := upNum(tt.args.str); got != tt.want {
-				t.Errorf("upNum() = %v, want %v", got, tt.want)
+			inputEvent := tt.Event
+			got := inputEvent.Up(tt.args.str)
+			if got != tt.want {
+				t.Errorf("Root.inputUp() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_downNum(t *testing.T) {
+func TestRoot_inputDown(t *testing.T) {
 	type args struct {
 		str string
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name  string
+		args  args
+		Event Eventer
+		want  string
 	}{
 		{
-			name: "testDownNum1",
-			args: args{
-				str: "3",
-			},
+			name: "testConvertType",
+			args: args{str: "raw"},
+			Event: newConvertTypeEvent(
+				&candidate{
+					list: []string{convEscaped, convRaw, convAlign},
+					p:    0,
+				},
+			),
+			want: "raw",
+		},
+		{
+			name: "testDelimiter",
+			args: args{str: ","},
+			Event: newDelimiterEvent(
+				&candidate{
+					list: []string{",", "|", "\t"},
+					p:    0,
+				},
+			),
+			want: "|",
+		},
+		{
+			name: "testGoto",
+			args: args{str: "1000"},
+			Event: newGotoEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    0,
+				},
+			),
+			want: "10",
+		},
+		{
+			name:  "testHeaderColumn",
+			args:  args{str: "1"},
+			Event: newHeaderColumnEvent(),
+			want:  "0",
+		},
+		{
+			name:  "testHeader",
+			args:  args{str: "3"},
+			Event: newHeaderEvent(),
+			want:  "2",
+		},
+		{
+			name: "testJumpTarget",
+			args: args{str: "1000"},
+			Event: newJumpTargetEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    0,
+				},
+			),
+			want: "10",
+		},
+		{
+			name: "testMultiColor",
+			args: args{str: "1"},
+			Event: newMultiColorEvent(
+				&candidate{
+					list: []string{"1", "2", "3"},
+					p:    0,
+				},
+			),
 			want: "2",
 		},
 		{
-			name: "testDownNum2",
-			args: args{
-				str: "e",
-			},
-			want: "0",
+			name:  "testNormal",
+			args:  args{str: "test"},
+			Event: normal(),
+			want:  "",
+		},
+		{
+			name: "testSaveBuffer",
+			args: args{str: "test"},
+			Event: newSaveBufferEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    0,
+				},
+			),
+			want: "test2",
+		},
+		{
+			name: "testSectionDelimiter",
+			Event: newSectionDelimiterEvent(
+				&candidate{
+					list: []string{",", "|", "\t"},
+					p:    0,
+				},
+			),
+			want: "|",
+		},
+		{
+			name:  "testSectionNum",
+			args:  args{str: "1"},
+			Event: newSectionNumEvent(),
+			want:  "0",
+		},
+		{
+			name: "testSectionStart",
+			Event: newSectionStartEvent(
+				&candidate{
+					list: []string{"1", "10", "100"},
+					p:    0,
+				},
+			),
+			want: "10",
+		},
+		{
+			name:  "testSkipLines",
+			args:  args{str: "1"},
+			Event: newSkipLinesEvent(),
+			want:  "0",
+		},
+		{
+			name: "testTabWidth",
+			args: args{str: "4"},
+			Event: newTabWidthEvent(
+				&candidate{
+					list: []string{"4", "8", "3"},
+					p:    2,
+				},
+			),
+			want: "4",
+		},
+		{
+			name:  "testVerticalHeader",
+			args:  args{str: "4"},
+			Event: newVerticalHeaderEvent(),
+			want:  "3",
+		},
+		{
+			name: "testViewMode",
+			args: args{str: "test"},
+			Event: newViewModeEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    0,
+				},
+			),
+			want: "test2",
+		},
+		{
+			name: "testWatchInterval",
+			args: args{str: "1"},
+			Event: newWatchIntervalEvent(
+				&candidate{
+					list: []string{"1", "2", "3"},
+					p:    0,
+				},
+			),
+			want: "2",
+		},
+		{
+			name: "testWriteBAMode",
+			args: args{str: "test"},
+			Event: newWriteBAEvent(
+				&candidate{
+					list: []string{"test", "test2", "test3"},
+					p:    0,
+				},
+			),
+			want: "test2",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := downNum(tt.args.str); got != tt.want {
-				t.Errorf("downNum() = %v, want %v", got, tt.want)
+			got := tt.Event.Down(tt.args.str)
+			if got != tt.want {
+				t.Errorf("Root.inputDown() = %v, want %v", got, tt.want)
 			}
 		})
 	}
