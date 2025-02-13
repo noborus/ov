@@ -120,6 +120,8 @@ type Document struct {
 	x int
 	// columnCursor is the number of columns.
 	columnCursor int
+	// columnStart is the starting position of the column.
+	columnStart int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int
@@ -627,7 +629,7 @@ func (m *Document) vHeaderWidth(lineC LineC) int {
 		return m.VerticalHeader
 	}
 	if m.HeaderColumn > 0 && m.HeaderColumn < len(lineC.columnRanges) {
-		return lineC.columnRanges[m.HeaderColumn-1].end
+		return lineC.columnRanges[(m.HeaderColumn+m.columnStart)-1].end
 	}
 	return 0
 }
