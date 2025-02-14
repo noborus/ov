@@ -43,6 +43,9 @@ type Config struct {
 	StyleOverStrike OVStyle
 	// StyleOverLine is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
+	// StyleRuler is a style that applies to the ruler.
+	StyleRuler OVStyle
+
 	// General represents the general behavior.
 	General general
 	// BeforeWriteOriginal specifies the number of lines before the current position.
@@ -153,6 +156,11 @@ func NewConfig() Config {
 		},
 		StyleJumpTargetLine: OVStyle{
 			Underline: true,
+		},
+		StyleRuler: OVStyle{
+			Background: "#333333",
+			Foreground: "#CCCCCC",
+			Bold:       true,
 		},
 		General: general{
 			TabWidth:       8,

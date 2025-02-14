@@ -14,6 +14,7 @@ import (
 
 // sectionTimeOut is the section header search timeout(in milliseconds) period.
 const sectionTimeOut time.Duration = 1000
+const rulerHeight = 2
 
 // prepareScreen prepares when the screen size is changed.
 func (root *Root) prepareScreen() {
@@ -24,6 +25,12 @@ func (root *Root) prepareScreen() {
 	root.Doc.statusPos = root.scr.vHeight - statusLine
 	root.Doc.width = root.scr.vWidth - root.scr.startX
 	root.Doc.height = root.Doc.statusPos
+
+	root.scr.rulerHeight = 0
+	if root.Doc.RulerType != RulerNone {
+		root.scr.rulerHeight = rulerHeight
+	}
+	root.scr.startY = root.scr.rulerHeight
 
 	num := int(math.Round(calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)))
 	root.Doc.HScrollWidthNum = max(num, 1)
@@ -73,7 +80,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.headerLN = root.Doc.SkipLines
 	root.scr.headerEnd = root.Doc.firstLine()
 	// Set the header height.
-	root.Doc.headerHeight = min(root.scr.vHeight, root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd))
+	root.Doc.headerHeight = min(root.scr.vHeight, root.Doc.getHeight(root.scr.headerLN, root.scr.headerEnd)+root.scr.rulerHeight)
 
 	// Section header.
 	root.scr.sectionHeaderLN = -1

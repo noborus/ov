@@ -119,6 +119,19 @@ func (root *Root) toggleMouse(context.Context) {
 	}
 }
 
+func (root *Root) toggleRuler(ctx context.Context) {
+	switch root.Doc.general.RulerType {
+	case RulerNone:
+		root.Doc.general.RulerType = RulerRelative
+	case RulerRelative:
+		root.Doc.general.RulerType = RulerAbsolute
+	case RulerAbsolute:
+		root.Doc.general.RulerType = RulerNone
+	}
+	root.setMessagef("Set Ruler %s", root.Doc.RulerType.String())
+	root.ViewSync(ctx)
+}
+
 // closeFile requests the file to be closed.
 func (root *Root) closeFile(context.Context) {
 	if err := root.Doc.closeFile(); err != nil {

@@ -525,6 +525,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
+	rootCmd.PersistentFlags().IntP("ruler", "", 0, "ruler type [1/2]")
+	_ = viper.BindPFlag("general.RulerType", rootCmd.PersistentFlags().Lookup("ruler"))
+	rootCmd.PersistentFlags().Lookup("ruler").NoOptDefVal = "1"
+
 	rootCmd.PersistentFlags().IntP("notify-eof", "", 0, "notify at the end of the file")
 	_ = viper.BindPFlag("NotifyEOF", rootCmd.PersistentFlags().Lookup("notify-eof"))
 	rootCmd.PersistentFlags().Lookup("notify-eof").NoOptDefVal = "1"
