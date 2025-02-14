@@ -90,7 +90,10 @@ type SCR struct {
 	vHeight int
 	// startX is the start position of x.
 	startX int
-
+	// startY is the start position of y.
+	startY int
+	// rulerHeight is the height of the ruler.
+	rulerHeight int
 	// HeaderLN is the number of header lines.
 	headerLN int
 	// headerEnd is the end of the header.
@@ -125,6 +128,25 @@ type LineNumber struct {
 
 func newLineNumber(number, wrap int) LineNumber {
 	return LineNumber{number: number, wrap: wrap}
+}
+
+type RulerType int
+
+const (
+	RulerNone RulerType = iota
+	RulerRelative
+	RulerAbsolute
+)
+
+func (r RulerType) String() string {
+	switch r {
+	case RulerRelative:
+		return "relative"
+	case RulerAbsolute:
+		return "absolute"
+	default:
+		return "none"
+	}
 }
 
 // general structure contains the general of the display.
@@ -169,6 +191,8 @@ type general struct {
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
 	HScrollWidthNum int
+	// RulerType is
+	RulerType RulerType
 	// AlternateRows alternately style rows.
 	AlternateRows bool
 	// ColumnMode is column mode.
