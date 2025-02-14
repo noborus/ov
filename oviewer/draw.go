@@ -470,23 +470,22 @@ func (root *Root) flash() {
 }
 
 func (root *Root) drawRuler() {
-	m := root.Doc
-	rulerType := m.RulerType
-	startX := 0
-	switch rulerType {
-	case RulerRelative:
-		startX = root.scr.startX - m.x
-	case RulerAbsolute:
-		startX = 0
-	default:
+	rulerType := root.Doc.RulerType
+	if rulerType == RulerNone {
 		return
 	}
 
 	style := applyStyle(defaultStyle, root.StyleRuler)
+	// Clear the ruler area.
 	for y := 0; y < root.scr.rulerHeight; y++ {
 		for x := 0; x < root.scr.vWidth; x++ {
 			root.Screen.SetContent(x, y, ' ', nil, style)
 		}
+	}
+
+	startX := 0
+	if !root.Doc.WrapMode && rulerType == RulerRelative {
+		startX = root.scr.startX - root.Doc.x
 	}
 	for x := 0; x < root.scr.vWidth; x++ {
 		n := x - startX + 1
