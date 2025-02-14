@@ -20,6 +20,7 @@ func (root *Root) draw(ctx context.Context) {
 	// Prepare the screen for drawing.
 	root.prepareDraw(ctx)
 
+	root.drawRuler()
 	// Body.
 	lX := m.topLX
 	lN := m.topLN + root.scr.headerEnd
@@ -97,7 +98,7 @@ func (root *Root) drawHeader() {
 	wrapNum := 0
 	lX := 0
 	lN := root.scr.headerLN
-	for y := 0; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
+	for y := root.scr.startY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			log.Panicf("line is not found %d", lN)
@@ -466,4 +467,37 @@ func (root *Root) flash() {
 	time.Sleep(50 * time.Millisecond)
 	root.draw(context.Background())
 	time.Sleep(100 * time.Millisecond)
+}
+
+func (root *Root) drawRuler() {
+	m := root.Doc
+	rulerType := m.RulerType
+	startX := 0
+	switch rulerType {
+	case RulerRelative:
+		startX = root.scr.startX - m.x
+	case RulerAbsolute:
+		startX = 0
+	default:
+		return
+	}
+
+	style := applyStyle(defaultStyle, root.StyleRuler)
+	for y := 0; y < root.scr.rulerHeight; y++ {
+		for x := 0; x < root.scr.vWidth; x++ {
+			root.Screen.SetContent(x, y, ' ', nil, style)
+		}
+	}
+	for x := 0; x < root.scr.vWidth; x++ {
+		n := x - startX + 1
+		if n < 0 {
+			continue
+		}
+		numStr := []rune(fmt.Sprintf("%3d", n))
+		if numStr[2] == '0' {
+			root.Screen.SetContent(x-1, 0, numStr[0], nil, style)
+			root.Screen.SetContent(x, 0, numStr[1], nil, style)
+		}
+		root.Screen.SetContent(x, 1, numStr[2], nil, style)
+	}
 }

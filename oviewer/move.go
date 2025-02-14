@@ -152,7 +152,9 @@ func (root *Root) moveLeft(n int) {
 		root.moveColumnLeft(1)
 		return
 	}
-	root.moveNormalLeft(n)
+	if !root.Doc.WrapMode {
+		root.moveNormalLeft(n)
+	}
 }
 
 // Move right by n amount.
@@ -164,7 +166,9 @@ func (root *Root) moveRight(n int) {
 		root.moveColumnRight(1)
 		return
 	}
-	root.moveNormalRight(n)
+	if !root.Doc.WrapMode {
+		root.moveNormalRight(n)
+	}
 }
 
 // Move to the left by half a screen.

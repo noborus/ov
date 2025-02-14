@@ -89,6 +89,7 @@ const (
 	actionHeaderColumn   = "set_header_column"
 	actionFixedColumn    = "fixed_column"
 	actionShrinkColumn   = "shrink_column"
+	actionRuler          = "toggle_ruler"
 
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
@@ -180,6 +181,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionHeaderColumn:   root.setHeaderColumnMode,
 		actionFixedColumn:    root.toggleFixedColumn,
 		actionShrinkColumn:   root.toggleShrinkColumn,
+		actionRuler:          root.toggleRuler,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
 		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
@@ -275,6 +277,7 @@ func defaultKeyBinds() KeyBind {
 		actionHeaderColumn:   {"Y"},
 		actionFixedColumn:    {"F"},
 		actionShrinkColumn:   {"s"},
+		actionRuler:          {"alt+shift+F9"},
 
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
