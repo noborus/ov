@@ -359,6 +359,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
 	k.writeKeyBind(&b, actionAlignFormat, "align columns")
 	k.writeKeyBind(&b, actionRawFormat, "raw output")
+	k.writeKeyBind(&b, actionRuler, "ruler toggle")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
