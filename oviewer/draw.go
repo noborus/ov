@@ -64,9 +64,6 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		root.drawLineNumber(lN, y, lineC.valid)
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
-		if lineC.valid {
-			root.coordinatesStyle(lN, y)
-		}
 		if root.Doc.SectionHeader {
 			root.sectionLineHighlight(y, lineC)
 			if root.Doc.HideOtherSection {
@@ -75,6 +72,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		}
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
+		if lineC.valid {
+			root.coordinatesStyle(lN, y)
+		}
 
 		root.applyMarkStyle(lN, y, markStyleWidth)
 
@@ -342,7 +342,9 @@ func (root *Root) clearY(y int) {
 
 // coordinatesStyle applies the style of the coordinates.
 func (root *Root) coordinatesStyle(lN int, y int) {
-	root.applyStyleToAlternate(lN, y)
+	if root.Doc.AlternateRows {
+		root.applyStyleToAlternate(lN, y)
+	}
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
 		root.applyStyleToLine(y, root.StyleJumpTargetLine)
 	}
@@ -350,9 +352,6 @@ func (root *Root) coordinatesStyle(lN int, y int) {
 
 // applyStyleToAlternate applies from beginning to end of line.
 func (root *Root) applyStyleToAlternate(lN int, y int) {
-	if !root.Doc.AlternateRows {
-		return
-	}
 	if (lN)%2 == 0 {
 		return
 	}
