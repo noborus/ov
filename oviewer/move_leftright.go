@@ -15,7 +15,7 @@ func (m *Document) moveHfLeft() {
 
 // moveHfRight moves to the right half screen.
 func (m *Document) moveHfRight() {
-	if m.x <= 0 {
+	if m.x < 0 {
 		m.x = 0
 		return
 	}
