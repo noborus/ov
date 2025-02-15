@@ -45,6 +45,12 @@ type Config struct {
 	StyleOverLine OVStyle
 	// StyleRuler is a style that applies to the ruler.
 	StyleRuler OVStyle
+	// StyleHeaderBorder is the style that applies to the boundary line of the header.
+	StyleHeaderBorder OVStyle
+	// StyleSectionHeaderBorder is the style that applies to the boundary line of the section header.
+	StyleSectionHeaderBorder OVStyle
+	// StyleVerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
+	StyleVerticalHeaderBorder OVStyle
 
 	// General represents the general behavior.
 	General general
