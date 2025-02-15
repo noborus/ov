@@ -498,12 +498,12 @@ func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
 // getLineC returns the content of the specified line number.
 // If the line number does not exist, EOF content is returned.
 func (m *Document) getLineC(lN int) LineC {
-	if line, ok := m.cache.Get(lN); ok {
-		lc := make(contents, len(line.lc))
-		copy(lc, line.lc)
-		line.lc = lc
-		line.valid = true
-		return line
+	if lineC, ok := m.cache.Get(lN); ok {
+		lc := make(contents, len(lineC.lc))
+		copy(lc, lineC.lc)
+		lineC.lc = lc
+		lineC.valid = true
+		return lineC
 	}
 
 	org, style, err := m.contentsLine(lN)
@@ -518,21 +518,21 @@ func (m *Document) getLineC(lN int) LineC {
 		}
 	}
 	str, pos := ContentsToStr(org)
-	line := LineC{
+	lineC := LineC{
 		lc:       org,
 		str:      str,
 		pos:      pos,
 		eolStyle: style,
 	}
 	if err == nil {
-		m.cache.Add(lN, line)
+		m.cache.Add(lN, lineC)
 	}
 
 	lc := make(contents, len(org))
 	copy(lc, org)
-	line.lc = lc
-	line.valid = true
-	return line
+	lineC.lc = lc
+	lineC.valid = true
+	return lineC
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.

@@ -27,11 +27,11 @@ func setupSCRHelper(t *testing.T, m *Document) SCR {
 
 func NewLineC(t *testing.T, str string, tabWidth int) LineC {
 	t.Helper()
-	line := LineC{}
+	lineC := LineC{}
 	lc := StrToContents(str, tabWidth)
-	line.lc = lc
-	line.str, line.pos = ContentsToStr(lc)
-	return line
+	lineC.lc = lc
+	lineC.str, lineC.pos = ContentsToStr(lc)
+	return lineC
 }
 
 func TestRoot_mouseEvent(t *testing.T) {

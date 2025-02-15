@@ -149,7 +149,7 @@ func Test_align_convert(t *testing.T) {
 			if got := a.convert(tt.args.st); got != tt.want {
 				t.Errorf("align.convert() = %v, want %v", got, tt.want)
 			}
-			goStr, _ := ContentsToStr(tt.args.st.lc)
+			goStr := tt.args.st.lc.String()
 			if goStr != tt.wantStr {
 				t.Errorf("align.convert() = %v, want %v", goStr, tt.wantStr)
 			}
@@ -304,7 +304,7 @@ func Test_align_convertDelm(t *testing.T) {
 				count:        tt.fields.count,
 			}
 			got := a.convertDelm(tt.args.src)
-			gotStr, _ := ContentsToStr(got)
+			gotStr := got.String()
 			if gotStr != tt.want {
 				t.Errorf("align.convertDelm() = %v, want %v", gotStr, tt.want)
 			}
@@ -439,7 +439,7 @@ func Test_align_convertWidth(t *testing.T) {
 				count:        tt.fields.count,
 			}
 			got := a.convertWidth(tt.args.src)
-			gotStr, _ := ContentsToStr(got)
+			gotStr := got.String()
 			if gotStr != tt.want {
 				t.Errorf("align.convertWidth() = %v, want %v", gotStr, tt.want)
 			}

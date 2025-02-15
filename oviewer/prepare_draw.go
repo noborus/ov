@@ -270,14 +270,14 @@ func trimWidth(lc contents) (int, int) {
 func trimmedIndices(lc contents) (int, int) {
 	ts := 0
 	for i := 0; i < len(lc); i++ {
-		if lc[i].mainc != ' ' {
+		if !lc.IsSpace(i) {
 			ts = i
 			break
 		}
 	}
 	te := len(lc)
 	for i := len(lc) - 1; i >= 0; i-- {
-		if lc[i].mainc != ' ' {
+		if !lc.IsSpace(i) {
 			te = i + 1
 			break
 		}
@@ -591,7 +591,7 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 	}
 
 	// If the character at the end of the column is a space, return the end of the column.
-	if lc[columnEnd].mainc == ' ' {
+	if lc.IsSpace(columnEnd) {
 		return columnEnd
 	}
 
@@ -629,7 +629,7 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 func countToNextSpaceLeft(lc contents, start int) (int, int) {
 	count := 0
 	i := start
-	for ; i >= 0 && lc[i].mainc != ' '; i-- {
+	for ; i >= 0 && !lc.IsSpace(i); i-- {
 		count++
 	}
 	return count, i
@@ -639,7 +639,7 @@ func countToNextSpaceLeft(lc contents, start int) (int, int) {
 func countToNextSpaceRight(lc contents, start int) (int, int) {
 	count := 0
 	i := start
-	for ; i < len(lc) && lc[i].mainc != ' '; i++ {
+	for ; i < len(lc) && !lc.IsSpace(i); i++ {
 		count++
 	}
 	return count, i
