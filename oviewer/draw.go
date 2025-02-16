@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -65,9 +64,6 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		root.drawLineNumber(lN, y, lineC.valid)
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
-		if lineC.valid {
-			root.coordinatesStyle(lN, y)
-		}
 		if root.Doc.SectionHeader {
 			root.sectionLineHighlight(y, lineC)
 			if root.Doc.HideOtherSection {
@@ -76,6 +72,9 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		}
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
+		if lineC.valid {
+			root.coordinatesStyle(lN, y)
+		}
 
 		root.applyMarkStyle(lN, y, markStyleWidth)
 
@@ -116,6 +115,7 @@ func (root *Root) drawHeader() {
 			wrapNum = 0
 		}
 	}
+	root.applyStyleToLine(m.headerHeight-1, root.StyleHeaderBorder)
 }
 
 // drawSectionHeader draws section header.
@@ -155,6 +155,7 @@ func (root *Root) drawSectionHeader() {
 		lX = nextLX
 		lN = nextLN
 	}
+	root.applyStyleToLine(m.headerHeight+m.sectionHeaderHeight-1, root.StyleSectionHeaderBorder)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -229,6 +230,9 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 	if widthVH == 0 {
 		return
 	}
+	if lineC.lc.IsFullWidth(widthVH - 1) {
+		widthVH--
+	}
 
 	screen := root.Screen
 	for n := 0; n < widthVH; n++ {
@@ -236,11 +240,16 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
 		}
-		if n == widthVH-1 && c.width == 2 {
-			// If the width is 2, it is the last character.
+		style := applyStyle(c.style, root.StyleVerticalHeader)
+		if n == widthVH-2 && c.width == 2 {
+			style = applyStyle(defaultStyle, root.StyleVerticalHeaderBorder)
+			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
+			return
+		} else if n == widthVH-1 {
+			style = applyStyle(defaultStyle, root.StyleVerticalHeaderBorder)
+			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
 			return
 		}
-		style := applyStyle(c.style, root.StyleVerticalHeader)
 		screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
 	}
 }
@@ -273,8 +282,9 @@ func (root *Root) blankLineNumber(y int) {
 	if root.scr.startX <= 0 {
 		return
 	}
-	numC := StrToContents(strings.Repeat(" ", root.scr.startX-1), root.Doc.TabWidth)
-	root.setContentString(0, y, numC)
+	for x := 0; x < root.scr.startX-1; x++ {
+		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
+	}
 }
 
 // drawLineNumber draws the line number.
@@ -298,14 +308,15 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 			number = n
 		}
 	}
+	// Line numbers start at 1 except for skip and header lines.
 	number = number - m.firstLine() + 1
 
-	// Line numbers start at 1 except for skip and header lines.
-	numC := StrToContents(fmt.Sprintf("%*d", root.scr.startX-1, number), m.TabWidth)
+	style := applyStyle(defaultStyle, root.StyleLineNumber)
+	numC := []rune(fmt.Sprintf("%*d", root.scr.startX-1, number))
 	for i := 0; i < len(numC); i++ {
-		numC[i].style = applyStyle(defaultStyle, root.StyleLineNumber)
+		root.Screen.SetContent(i, y, numC[i], nil, style)
 	}
-	root.setContentString(0, y, numC)
+	root.Screen.SetContent(len(numC), y, ' ', nil, defaultStyle)
 }
 
 // setContentString is a helper function that draws a string with setContent.
@@ -331,7 +342,9 @@ func (root *Root) clearY(y int) {
 
 // coordinatesStyle applies the style of the coordinates.
 func (root *Root) coordinatesStyle(lN int, y int) {
-	root.applyStyleToAlternate(lN, y)
+	if root.Doc.AlternateRows {
+		root.applyStyleToAlternate(lN, y)
+	}
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
 		root.applyStyleToLine(y, root.StyleJumpTargetLine)
 	}
@@ -339,9 +352,6 @@ func (root *Root) coordinatesStyle(lN int, y int) {
 
 // applyStyleToAlternate applies from beginning to end of line.
 func (root *Root) applyStyleToAlternate(lN int, y int) {
-	if !root.Doc.AlternateRows {
-		return
-	}
 	if (lN)%2 == 0 {
 		return
 	}
@@ -475,18 +485,12 @@ func (root *Root) drawRuler() {
 		return
 	}
 
-	style := applyStyle(defaultStyle, root.StyleRuler)
-	// Clear the ruler area.
-	for y := 0; y < root.scr.rulerHeight; y++ {
-		for x := 0; x < root.scr.vWidth; x++ {
-			root.Screen.SetContent(x, y, ' ', nil, style)
-		}
-	}
-
 	startX := 0
 	if !root.Doc.WrapMode && rulerType == RulerRelative {
 		startX = root.scr.startX - root.Doc.x
 	}
+
+	style := applyStyle(defaultStyle, root.StyleRuler)
 	for x := 0; x < root.scr.vWidth; x++ {
 		n := x - startX + 1
 		if n < 0 {
@@ -496,6 +500,8 @@ func (root *Root) drawRuler() {
 		if numStr[2] == '0' {
 			root.Screen.SetContent(x-1, 0, numStr[0], nil, style)
 			root.Screen.SetContent(x, 0, numStr[1], nil, style)
+		} else {
+			root.Screen.SetContent(x, 0, ' ', nil, style)
 		}
 		root.Screen.SetContent(x, 1, numStr[2], nil, style)
 	}

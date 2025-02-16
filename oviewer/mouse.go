@@ -291,12 +291,12 @@ func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error
 	var buff strings.Builder
 	for y := y1; y <= y2; y++ {
 		ln := scr.lineNumber(y)
-		line, ok := scr.lines[ln.number]
-		if !ok || !line.valid {
+		lineC, ok := scr.lines[ln.number]
+		if !ok || !lineC.valid {
 			break
 		}
-		wx := scr.branchWidth(line.lc, ln.wrap)
-		str := scr.selectLine(line, m.x+x1+wx, m.x+x2+wx+1)
+		wx := scr.branchWidth(lineC.lc, ln.wrap)
+		str := scr.selectLine(lineC, m.x+x1+wx, m.x+x2+wx+1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}
@@ -326,8 +326,8 @@ func (scr SCR) branchWidth(lc contents, branch int) int {
 
 // selectLine returns a string in the specified range on one line.
 // The arguments must be x1 <= x2.
-func (scr SCR) selectLine(line LineC, x1 int, x2 int) string {
-	maxX := len(line.lc)
+func (scr SCR) selectLine(lineC LineC, x1 int, x2 int) string {
+	maxX := len(lineC.lc)
 	// -1 is a special max value.
 	if x2 == -1 {
 		x2 = maxX
@@ -338,12 +338,12 @@ func (scr SCR) selectLine(line LineC, x1 int, x2 int) string {
 	x2 = max(0, x2)
 	x1 = min(x1, maxX)
 	x2 = min(x2, maxX)
-	start := line.pos.n(x1)
-	end := line.pos.n(x2)
+	start := lineC.pos.n(x1)
+	end := lineC.pos.n(x2)
 
-	if start > len(line.str) || end > len(line.str) || start > end {
-		log.Printf("selectLine:len(%d):start(%d):end(%d)", len(line.str), start, end)
+	if start > len(lineC.str) || end > len(lineC.str) || start > end {
+		log.Printf("selectLine:len(%d):start(%d):end(%d)", len(lineC.str), start, end)
 		return ""
 	}
-	return line.str[start:end]
+	return lineC.str[start:end]
 }

@@ -298,6 +298,28 @@ func ContentsToStr(lc contents) (string, widthPos) {
 	return str, pos
 }
 
+// String returns a string representation of the contents.
+func (lc contents) String() string {
+	str, _ := ContentsToStr(lc)
+	return str
+}
+
+// IsSpace returns true if the specified position is a space character.
+func (lc contents) IsSpace(n int) bool {
+	if n >= len(lc) {
+		return false
+	}
+	return lc[n].mainc == ' '
+}
+
+// IsFullWidth returns true if the specified position is a full-width character.
+func (lc contents) IsFullWidth(n int) bool {
+	if n >= len(lc) {
+		return false
+	}
+	return lc[n].width == 2
+}
+
 // writeRune writes a rune to strings.Builder.
 func writeRune(w *strings.Builder, r rune) int {
 	n, err := w.WriteRune(r)

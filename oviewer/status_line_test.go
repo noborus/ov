@@ -43,7 +43,7 @@ func TestRoot_leftStatus(t *testing.T) {
 			root.Doc.Caption = tt.fields.caption
 			root.input.Event = tt.fields.eventer
 			got, _ := root.leftStatus()
-			gotStr, _ := ContentsToStr(got)
+			gotStr := got.String()
 			if gotStr != tt.want {
 				t.Errorf("Root.leftStatus() got = %v, want %v", gotStr, tt.want)
 			}
@@ -81,7 +81,7 @@ func TestRoot_leftStatus2(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.input.Event = tt.fields.eventer
 			got, _ := root.leftStatus()
-			gotStr, _ := ContentsToStr(got)
+			gotStr := got.String()
 			if gotStr != tt.want {
 				t.Errorf("Root.leftStatus() got = %v, want %v", gotStr, tt.want)
 			}

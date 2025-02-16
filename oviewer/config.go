@@ -45,6 +45,15 @@ type Config struct {
 	StyleOverLine OVStyle
 	// StyleRuler is a style that applies to the ruler.
 	StyleRuler OVStyle
+	// StyleHeaderBorder is the style that applies to the boundary line of the header.
+	// The boundary line of the header refers to the visual separator between the header and the rest of the content.
+	StyleHeaderBorder OVStyle
+	// StyleSectionHeaderBorder is the style that applies to the boundary line of the section header.
+	// The boundary line of the section header is the line that separates different sections in the header.
+	StyleSectionHeaderBorder OVStyle
+	// StyleVerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
+	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
+	StyleVerticalHeaderBorder OVStyle
 
 	// General represents the general behavior.
 	General general
@@ -133,8 +142,9 @@ func NewConfig() Config {
 		StyleSectionLine: OVStyle{
 			Background: "slateblue",
 		},
-		StyleVerticalHeader: OVStyle{
-			Background: "darkgray",
+		StyleVerticalHeader: OVStyle{},
+		StyleVerticalHeaderBorder: OVStyle{
+			Background: "#c0c0c0",
 		},
 		StyleMultiColorHighlight: []OVStyle{
 			{Foreground: "red"},

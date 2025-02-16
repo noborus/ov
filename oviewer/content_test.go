@@ -786,9 +786,8 @@ func TestRawStrToContents(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := RawStrToContents(tt.args.str, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
-				str, _ := ContentsToStr(got)
-				str2, _ := ContentsToStr(tt.want)
-				t.Logf("got: %#v %#v", str, str2)
+				str := got.String()
+				t.Logf("got: %#v %#v", str, tt.want.String())
 				t.Errorf("RawStrToContents() = \n%v, want \n%v", got, tt.want)
 			}
 		})
