@@ -115,7 +115,7 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 	vh := m.vHeaderWidth(lineC) + 1
 	leftLimit := m.x + vh
 	rightLimit := m.x + width
-	cl := columns[cursor].start
+	cl := columns[cursor].start + 1
 	cr := columns[cursor].end
 
 	// No need to move if on screen.
@@ -124,11 +124,12 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 	}
 
 	// Move if off screen.
-	x := max(0, (cl-vh)-columnMargin)
+	x := (cl - vh) - columnMargin
 	lineWidth := len(lineC.lc)
 	if lineWidth-x < width {
 		x = lineWidth - width
 	}
+	x = max(0, x)
 	return x, nil
 }
 
