@@ -18,15 +18,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// Root structure contains information about the drawing.
+// Root is the root structure of the oviewer.
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
-	// Doc contains the model of ov
+	// Doc is the current document.
 	Doc *Document
-	// help
+	// helpDoc is the help document.
 	helpDoc *Document
-	// log
+	// logDoc is the log document.
 	logDoc *LogDocument
 
 	// input contains the input mode.
@@ -34,7 +34,7 @@ type Root struct {
 	// cancelFunc saves the cancel function, which is a time-consuming process.
 	cancelFunc context.CancelFunc
 
-	// searcher is the searcher.
+	// searcher is the search structure.
 	searcher Searcher
 
 	// keyConfig contains the binding settings for the key.
@@ -130,6 +130,7 @@ func newLineNumber(number, wrap int) LineNumber {
 	return LineNumber{number: number, wrap: wrap}
 }
 
+// RulerType is the type of ruler.
 type RulerType int
 
 const (
@@ -138,6 +139,7 @@ const (
 	RulerAbsolute
 )
 
+// String returns the string representation of the ruler type.
 func (r RulerType) String() string {
 	switch r {
 	case RulerRelative:
@@ -191,7 +193,7 @@ type general struct {
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
 	HScrollWidthNum int
-	// RulerType is
+	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
 	RulerType RulerType
 	// AlternateRows alternately style rows.
 	AlternateRows bool
@@ -744,14 +746,56 @@ func (root *Root) debugMessage(msg string) {
 
 // mergeGeneral overwrites a general structure with a struct.
 func mergeGeneral(src general, dst general) general {
+	if dst.Converter != "" {
+		src.Converter = dst.Converter
+	}
+	if dst.ColumnDelimiter != "" {
+		src.ColumnDelimiter = dst.ColumnDelimiter
+	}
+	if dst.SectionDelimiter != "" {
+		src.SectionDelimiter = dst.SectionDelimiter
+	}
+	if dst.JumpTarget != "" {
+		src.JumpTarget = dst.JumpTarget
+	}
+	if len(dst.MultiColorWords) > 0 {
+		src.MultiColorWords = dst.MultiColorWords
+	}
 	if dst.TabWidth != 0 {
 		src.TabWidth = dst.TabWidth
 	}
 	if dst.Header != 0 {
 		src.Header = dst.Header
 	}
+	if dst.VerticalHeader != 0 {
+		src.VerticalHeader = dst.VerticalHeader
+	}
+	if dst.HeaderColumn != 0 {
+		src.HeaderColumn = dst.HeaderColumn
+	}
 	if dst.SkipLines != 0 {
 		src.SkipLines = dst.SkipLines
+	}
+	if dst.WatchInterval != 0 {
+		src.WatchInterval = dst.WatchInterval
+	}
+	if dst.MarkStyleWidth != 0 {
+		src.MarkStyleWidth = dst.MarkStyleWidth
+	}
+	if dst.SectionStartPosition != 0 {
+		src.SectionStartPosition = dst.SectionStartPosition
+	}
+	if dst.SectionHeaderNum != 0 {
+		src.SectionHeaderNum = dst.SectionHeaderNum
+	}
+	if dst.HScrollWidth != "" {
+		src.HScrollWidth = dst.HScrollWidth
+	}
+	if dst.HScrollWidthNum != 0 {
+		src.HScrollWidthNum = dst.HScrollWidthNum
+	}
+	if dst.RulerType != RulerNone {
+		src.RulerType = dst.RulerType
 	}
 	if dst.AlternateRows {
 		src.AlternateRows = dst.AlternateRows
@@ -783,47 +827,14 @@ func mergeGeneral(src general, dst general) general {
 	if dst.FollowName {
 		src.FollowName = dst.FollowName
 	}
-	if dst.ColumnDelimiter != "" {
-		src.ColumnDelimiter = dst.ColumnDelimiter
-	}
-	if dst.WatchInterval != 0 {
-		src.WatchInterval = dst.WatchInterval
-	}
-	if dst.MarkStyleWidth != 0 {
-		src.MarkStyleWidth = dst.MarkStyleWidth
-	}
-	if dst.SectionDelimiter != "" {
-		src.SectionDelimiter = dst.SectionDelimiter
-	}
-	if dst.SectionStartPosition != 0 {
-		src.SectionStartPosition = dst.SectionStartPosition
-	}
-	if dst.JumpTarget != "" {
-		src.JumpTarget = dst.JumpTarget
-	}
-	if dst.HScrollWidth != "" {
-		src.HScrollWidth = dst.HScrollWidth
-	}
-	if len(dst.MultiColorWords) > 0 {
-		src.MultiColorWords = dst.MultiColorWords
-	}
-	if dst.SectionHeaderNum != 0 {
-		src.SectionHeaderNum = dst.SectionHeaderNum
-	}
-	if dst.Caption != "" {
-		src.Caption = dst.Caption
+	if dst.SectionHeader {
+		src.SectionHeader = dst.SectionHeader
 	}
 	if dst.HideOtherSection {
 		src.HideOtherSection = dst.HideOtherSection
 	}
-	if dst.Converter != "" {
-		src.Converter = dst.Converter
-	}
-	if dst.VerticalHeader != 0 {
-		src.VerticalHeader = dst.VerticalHeader
-	}
-	if dst.HeaderColumn != 0 {
-		src.HeaderColumn = dst.HeaderColumn
+	if dst.PlainMode {
+		src.PlainMode = dst.PlainMode
 	}
 	return src
 }
