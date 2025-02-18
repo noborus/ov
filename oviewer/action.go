@@ -198,13 +198,13 @@ func (root *Root) watchControl() {
 func (root *Root) searchGo(ctx context.Context, lN int, searcher Searcher) {
 	root.resetSelect()
 	root.Doc.lastSearchLN = lN
-	x := root.searchXPos(lN, searcher)
+	start, end := root.searchXPos(lN, searcher)
 	if root.Doc.jumpTargetSection {
-		root.Doc.searchGoSection(ctx, lN, x)
+		root.Doc.searchGoSection(ctx, lN, start, end)
 		return
 	}
 	root.debugMessage(fmt.Sprintf("searchGo:%d->%d", root.Doc.topLN, lN))
-	root.Doc.searchGoTo(lN, x)
+	root.Doc.searchGoTo(lN, start, end)
 }
 
 // goLine will move to the specified line.

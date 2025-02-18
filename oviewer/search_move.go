@@ -7,8 +7,8 @@ import (
 // searchGoTo moves to the specified line and position after searching.
 // Go to the specified line +root.Doc.JumpTarget Go to.
 // If the search term is off screen, move until the search term is visible.
-func (m *Document) searchGoTo(lN int, x int) {
-	m.searchGoX(x)
+func (m *Document) searchGoTo(lN int, start int, end int) {
+	m.searchGoX(start, end)
 	m.showGotoF = true
 	m.topLN = lN - m.firstLine()
 	m.moveYUp(m.jumpTargetHeight)
@@ -21,8 +21,8 @@ func (m *Document) bottomJumpTarget() int {
 
 // searchGoSection will go to the section with the matching term after searching.
 // Move the JumpTarget so that it can be seen from the beginning of the section.
-func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
-	m.searchGoX(x)
+func (m *Document) searchGoSection(ctx context.Context, lN int, start int, end int) {
+	m.searchGoX(start, end)
 
 	sN, err := m.prevSection(ctx, lN)
 	if err != nil {
@@ -56,18 +56,21 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, x int) {
 }
 
 // searchGoX moves to the specified x position.
-func (m *Document) searchGoX(x int) {
+func (m *Document) searchGoX(start int, end int) {
 	if m.width == 0 {
 		return
 	}
 	m.topLX = 0
 	// If the search term is outside the height of the screen when in WrapMode.
-	if nTh := x / m.width; nTh > m.height {
+	if nTh := start / m.width; nTh > m.height {
 		m.topLX = nTh * m.width
 	}
 
 	// If the search term is outside the width of the screen when in NoWrapMode.
-	if x < m.x || x > m.x+m.width-1 {
-		m.x = x
+	if start < m.x {
+		m.x = 0
+	}
+	if end > m.x+m.width-1 {
+		m.x = max(end-(m.width-columnMargin), 0)
 	}
 }

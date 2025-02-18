@@ -216,13 +216,13 @@ func (root *Root) searchPosition(str string) [][]int {
 }
 
 // searchXPos returns the x position of the first match.
-func (root *Root) searchXPos(lineNum int, searcher Searcher) int {
+func (root *Root) searchXPos(lineNum int, searcher Searcher) (int, int) {
 	line := root.Doc.getLineC(lineNum)
 	indexes := searcher.FindAll(line.str)
 	if len(indexes) == 0 {
-		return 0
+		return 0, 0
 	}
-	return line.pos.x(indexes[0][0])
+	return line.pos.x(indexes[0][0]), line.pos.x(indexes[0][1])
 }
 
 // searchPositionReg returns an array of the beginning and end of the string
