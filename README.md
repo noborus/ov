@@ -100,7 +100,7 @@ ov is a terminal pager.
 * Watch mode to monitor file changes periodically.
 * Advanced search: incremental, regex, and filter functions.
 * Multi-color highlighting for multiple words.
-* Full Unicode and East Asian Width support.
+* Supports Unicode and East Asian Width characters.
 * Handles compressed files (gzip, bzip2, zstd, lz4, xz).
 
 ###  1.1. <a name='not-supported'></a>Not supported
@@ -273,11 +273,12 @@ Used by other commands by setting the environment variable **PAGER**.
 export PAGER=ov
 ```
 
-See the [ov site](https://noborus.github.io/ov/) for more use cases.
-
 ##  4. <a name='usage'></a>Usage
 
-(default key `key`) indicates the key that can be specified even after starting the same function as the command line option.
+See the [ov site](https://noborus.github.io/ov/) for more use cases and examples.
+
+> [!NOTE]
+> (default key `key`) indicates the key that can be specified even after starting the same function as the command line option.
 
 ###  4.1. <a name='config'></a>Config
 
@@ -358,13 +359,13 @@ ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 
 *Added in v0.39.0 (upcoming release)*
 
-The `--header-column` (`-Y`) option fixedly displays the specified number of columns when `column-mode` is enabled.
+The `--header-column` (`-Y`) (default key is `Y`) option fixedly displays the specified number of columns when `column-mode` is enabled.
 
 ```console
 ov --column-mode --column-delimiter="," --header-column=2 test.csv
 ```
 
-When in column-mode, pressing F will switch to fixed display for the selected columns up to that point.
+When in column-mode, pressing `F` will switch to fixed display for the selected columns up to that point.
 
 [Related styling](#style-customization): `StyleVerticalHeader` and `StyleVerticalHeaderBorder`.
 
