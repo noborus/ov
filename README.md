@@ -933,8 +933,13 @@ overwrite? (O)overwrite, (A)append, (N)cancel
 
 The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
 
+* `--ruler` or `--ruler=1`: Displays a relative ruler that moves with horizontal scrolling.
+* `--ruler=2`: Displays an absolute ruler that does not move with horizontal scrolling.
+* `--ruler=0`: Disables the ruler (default).
+
 ```console
 ov --ruler README.md
+ov --ruler=2 README.md
 ```
 
 ![ov-ruler.png](docs/ov-ruler.png)
