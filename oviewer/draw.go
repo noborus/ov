@@ -115,7 +115,9 @@ func (root *Root) drawHeader() {
 			wrapNum = 0
 		}
 	}
-	root.applyStyleToLine(m.headerHeight-1, root.StyleHeaderBorder)
+	if root.scr.headerEnd > 0 {
+		root.applyStyleToLine(m.headerHeight-1, root.StyleHeaderBorder)
+	}
 }
 
 // drawSectionHeader draws section header.
