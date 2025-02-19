@@ -6,9 +6,6 @@
 
 ov is a terminal pager.
 
-* `ov` can be used instead of `less`, `more`, `tail -f/-F` and `watch`.
-* `ov` also has an effective function for tabular text.
-
 ![ov-image.png](./docs/ov-image.png)
 
 <!-- vscode-markdown-toc -->
@@ -31,56 +28,60 @@ ov is a terminal pager.
     * 2.12.2. [zsh](#zsh)
     * 2.12.3. [fish](#fish)
     * 2.12.4. [powershell](#powershell)
-* 3. [Usage](#usage)
-  * 3.1. [Basic usage](#basic-usage)
-    * 3.1.1. [Redirect Output](#redirect-output)
-  * 3.2. [Config](#config)
-  * 3.3. [Header](#header)
-    * 3.3.1. [Skip](#skip)
-  * 3.4. [Column mode](#column-mode)
-  * 3.5. [Column rainbow mode](#column-rainbow-mode)
-  * 3.6. [Column-width](#column-width)
-  * 3.7. [Wrap/NoWrap](#wrap/nowrap)
-  * 3.8. [Alternate-Rows](#alternate-rows)
-  * 3.9. [Section](#section)
-    * 3.9.1. [section example](#section-example)
-    * 3.9.2. [hide other sections](#hide-other-sections)
-  * 3.10. [Multiple files](#multiple-files)
-  * 3.11. [Follow mode](#follow-mode)
-  * 3.12. [Follow name](#follow-name)
-  * 3.13. [Follow all mode](#follow-all-mode)
-  * 3.14. [Follow section mode](#follow-section-mode)
-  * 3.15. [Exec mode](#exec-mode)
-  * 3.16. [Search](#search)
-  * 3.17. [Pattern](#pattern)
-  * 3.18. [Filter](#filter)
-  * 3.19. [Caption](#caption)
-  * 3.20. [Mark](#mark)
-  * 3.21. [Watch](#watch)
-  * 3.22. [Mouse support](#mouse-support)
-  * 3.23. [Multi color highlight](#multi-color-highlight)
-  * 3.24. [Plain](#plain)
-  * 3.25. [Converter](#converter)
-  * 3.26. [Align](#align)
-    * 3.26.1. [Shrink](#shrink)
-  * 3.27. [Jump target](#jump-target)
-  * 3.28. [View mode](#view-mode)
-  * 3.29. [Output on exit](#output-on-exit)
-  * 3.30. [Quit if one screen](#quit-if-one-screen)
-  * 3.31. [Suspend](#suspend)
-  * 3.32. [Save](#save)
-* 4. [How to reduce memory usage](#how-to-reduce-memory-usage)
-  * 4.1. [Regular file (seekable)](#regular-file-(seekable))
-  * 4.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
-* 5. [Command option](#command-option)
-* 6. [Key bindings](#key-bindings)
-* 7. [Customize](#customize)
-  * 7.1. [Style customization](#style-customization)
-  * 7.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
-  * 7.3. [Key binding customization](#key-binding-customization)
-* 8. [VS](#vs)
-* 9. [Work together](#work-together)
-* 10. [Contributing](#contributing)
+* 3. [Basic usage](#basic-usage)
+* 4. [Usage](#usage)
+  * 4.1. [Config](#config)
+  * 4.2. [Header](#header)
+    * 4.2.1. [Skip](#skip)
+  * 4.3. [Vertical Header](#vertical-header)
+  * 4.4. [Column mode](#column-mode)
+  * 4.5. [Header Column](#header-column)
+  * 4.6. [Column rainbow mode](#column-rainbow-mode)
+  * 4.7. [Column-width](#column-width)
+  * 4.8. [Wrap/NoWrap](#wrap/nowrap)
+  * 4.9. [Alternate-Rows](#alternate-rows)
+  * 4.10. [Section](#section)
+    * 4.10.1. [section example](#section-example)
+    * 4.10.2. [hide other sections](#hide-other-sections)
+  * 4.11. [Multiple files](#multiple-files)
+  * 4.12. [Follow mode](#follow-mode)
+    * 4.12.1. [Follow name](#follow-name)
+    * 4.12.2. [Follow all mode](#follow-all-mode)
+    * 4.12.3. [Follow section mode](#follow-section-mode)
+  * 4.13. [Exec mode](#exec-mode)
+  * 4.14. [Search](#search)
+    * 4.14.1. [Pattern](#pattern)
+    * 4.14.2. [Filter](#filter)
+  * 4.15. [Caption](#caption)
+  * 4.16. [Mark](#mark)
+  * 4.17. [Watch](#watch)
+  * 4.18. [Mouse support](#mouse-support)
+  * 4.19. [Multi color highlight](#multi-color-highlight)
+  * 4.20. [Plain](#plain)
+  * 4.21. [Converter](#converter)
+  * 4.22. [Align](#align)
+    * 4.22.1. [Shrink](#shrink)
+  * 4.23. [Jump target](#jump-target)
+  * 4.24. [View mode](#view-mode)
+  * 4.25. [Output on exit](#output-on-exit)
+  * 4.26. [Quit if one screen](#quit-if-one-screen)
+  * 4.27. [Suspend](#suspend)
+  * 4.28. [Save](#save)
+  * 4.29. [Ruler](#ruler)
+  * 4.30. [Redirect Output](#redirect-output)
+* 5. [How to reduce memory usage](#how-to-reduce-memory-usage)
+  * 5.1. [Regular file (seekable)](#regular-file-(seekable))
+  * 5.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
+* 6. [Command option](#command-option)
+* 7. [Key bindings](#key-bindings)
+* 8. [Customize](#customize)
+  * 8.1. [Style customization](#style-customization)
+    * 8.1.1. [UnderlineStyle](#underlinestyle)
+  * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
+  * 8.3. [Key binding customization](#key-binding-customization)
+* 9. [VS](#vs)
+* 10. [Work together](#work-together)
+* 11. [Contributing](#contributing)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -90,30 +91,17 @@ ov is a terminal pager.
 
 ##  1. <a name='feature'></a>Feature
 
-* Supports files larger than [memory](#how-to-reduce-memory-usage).
-* Regular files can be opened quickly even if they are large.
-* Supports fixed [header](#header) line display (both wrap/nowrap).
-* Supports [column mode](#column-mode), which recognizes columns by delimiter.
-* Also, in column mode, there is a [column-rainbow](#column-rainbow-mode) mode that colors each column.
-* Support [columns with fixed widths](#column-width) instead of delimiters.
-* Supports section-by-section movement, splitting [sections](#section) by delimiter.
-* Dynamic [wrap/nowrap](#wrap/nowrap) switchable.
-* Supports [alternating row](#alternate-rows) styling.
-* Shortcut keys are [customizable](#key-binding-customization).
-* The style of the effect is [customizable](#style-customization).
-* Supports [follow-mode](#follow-mode) (like `tail -f`).
-* Support follow mode by file [name](#follow-name) (like `tail -F`).
-* Supports [follow-section](#follow-section-mode), which is displayed when the section is updated.
-* Supports following multiple files and switching when updated([follow-all](#follow-all-mode)).
-* Supports the [execution](#exec-mode) of commands that toggle both stdout and stderr for display.
-* Supports [watch](#watch) mode, which reads files on a regular basis.
-* Support watch in exec mode (equivalent to `watch` command).
-* Supports incremental [search](#search) and regular expression search.
-* Supports [multi-color](#multi-color-highlight) to highlight multiple words individually.
-* Better support for Unicode and East Asian Width.
-* Supports compressed files (gzip, bzip2, zstd, lz4, xz).
-* Suitable for tabular text. [psql](https://noborus.github.io/ov/psql), [mysql](https://noborus.github.io/ov/mysql/), [csv](https://noborus.github.io/ov/csv/), [etc...](https://noborus.github.io/ov/)
-* Support [filter](#filter) function (`&pattern` equivalent of `less`) (**v0.34.0 or later**).
+* Quickly opens files larger than memory.
+* Supports fixed header lines and columns.
+* Optimized for tabular text with column mode and customizable column colors.
+* Fully customizable shortcut keys and styles.
+* Follow mode for real-time updates (like `tail -f` / `tail -F`).
+* Exec mode to display command output dynamically.
+* Watch mode to monitor file changes periodically.
+* Advanced search: incremental, regex, and filter functions.
+* Multi-color highlighting for multiple words.
+* Full Unicode and East Asian Width support.
+* Handles compressed files (gzip, bzip2, zstd, lz4, xz).
 
 ###  1.1. <a name='not-supported'></a>Not supported
 
@@ -267,11 +255,7 @@ ov --completion fish > ~/.config/fish/completions/ov.fish
 ov --completion powershell completion powershell | Out-String | Invoke-Expression
 ```
 
-##  3. <a name='usage'></a>Usage
-
-(default key `key`) indicates the key that can be specified even after starting the same function as the command line option.
-
-###  3.1. <a name='basic-usage'></a>Basic usage
+##  3. <a name='basic-usage'></a>Basic usage
 
 ov supports open file name or standard input.
 
@@ -291,18 +275,11 @@ export PAGER=ov
 
 See the [ov site](https://noborus.github.io/ov/) for more use cases.
 
-####  3.1.1. <a name='redirect-output'></a>Redirect Output
+##  4. <a name='usage'></a>Usage
 
-Starting from v0.37.0, when redirecting the output of ov, the screen will not be displayed.
-To force the screen to display, use the `--force-screen` option.
+(default key `key`) indicates the key that can be specified even after starting the same function as the command line option.
 
-```console
-ov --force-screen filename > output.txt
-```
-
-*Added in v0.37.0*
-
-###  3.2. <a name='config'></a>Config
+###  4.1. <a name='config'></a>Config
 
 You can set style and key bindings in the configuration file.
 
@@ -328,7 +305,7 @@ Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/o
 > [!NOTE]
 > If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
 
-###  3.3. <a name='header'></a>Header
+###  4.2. <a name='header'></a>Header
 
 The `--header` (`-H`) (default key `H`) option fixedly displays the specified number of lines.
 
@@ -336,9 +313,9 @@ The `--header` (`-H`) (default key `H`) option fixedly displays the specified nu
 ov --header 1 README.md
 ```
 
-[Related styling](#style-customization): `StyleHeader`.
+[Related styling](#style-customization): `StyleHeader` and `StyleHeaderBorder`.
 
-####  3.3.1. <a name='skip'></a>Skip
+####  4.2.1. <a name='skip'></a>Skip
 
 When used with the `--skip-lines` (default key `ctrl+s`) option, it hides the number of lines specified by skip and then displays the header.
 
@@ -346,7 +323,21 @@ When used with the `--skip-lines` (default key `ctrl+s`) option, it hides the nu
 ov --skip-lines 1 --header 1 README.md
 ```
 
-###  3.4. <a name='column-mode'></a>Column mode
+###  4.3. <a name='vertical-header'></a>Vertical Header
+
+*Added in v0.39.0 (upcoming release)*
+
+The `--vertical-header` (`-y`) (defakult key `y`) option fixedly displays the specified number of chars.
+
+```console
+ov --vertial-header=4 README.md
+```
+
+If you want to specify by column instead of character, see [Header Column](#header-column).
+
+[Related styling](#style-customization): `StyleVerticalHeader` and `StyleVerticalHeaderBorder`.
+
+###  4.4. <a name='column-mode'></a>Column mode
 
 Specify the delimiter with `--column-delimiter`(default key is `d`) and set it to `--column-mode`(default key is `c`) to highlight the column.
 
@@ -363,7 +354,21 @@ ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 
 [Related styling](#style-customization): `StyleColumnHighlight`,`StyleColumnRainbow`.
 
-###  3.5. <a name='column-rainbow-mode'></a>Column rainbow mode
+###  4.5. <a name='header-column'></a>Header Column
+
+*Added in v0.39.0 (upcoming release)*
+
+The `--header-column` (`-Y`) option fixedly displays the specified number of columns when `column-mode` is enabled.
+
+```console
+ov --column-mode --column-delimiter="," --header-column=2 test.csv
+```
+
+When in column-mode, pressing F will switch to fixed display for the selected columns up to that point.
+
+[Related styling](#style-customization): `StyleVerticalHeader` and `StyleVerticalHeaderBorder`.
+
+###  4.6. <a name='column-rainbow-mode'></a>Column rainbow mode
 
 You can also color each column individually in column mode.
 Specify `--column-rainbow`(default key is `ctrl+r`) in addition to the `--column-mode` option.
@@ -402,11 +407,10 @@ StyleColumnRainbow:
 
 [Related styling](#style-customization): `StyleColumnRainbow`.
 
-###  3.6. <a name='column-width'></a>Column-width
+###  4.7. <a name='column-width'></a>Column-width
 
-For output like `ps`, using `--column-width` is a better way to separate columns than using spaces as delimiters.
-
-You can specify the column width with `--column-width` (default key `alt+o`).
+The `--column-width` option is designed for **command output with irregular spaces**, such as `ps aux`, `df`, etc.  (default key `alt+o`).
+It automatically **detects and separates columns** without needing a specific delimiter.
 
 ```console
 ps aux|ov -H1 --column-width --column-rainbow
@@ -416,13 +420,13 @@ ps aux|ov -H1 --column-width --column-rainbow
 
 This column-width feature is implemented using [guesswidth](https://github.com/noborus/guesswidth).
 
-###  3.7. <a name='wrap/nowrap'></a>Wrap/NoWrap
+###  4.8. <a name='wrap/nowrap'></a>Wrap/NoWrap
 
 Supports switching between wrapping and not wrapping lines.
 
 The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
 
-###  3.8. <a name='alternate-rows'></a>Alternate-Rows
+###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) (default key `C`) option
 The style can be set with [Style customization](#style-customization).
@@ -433,7 +437,7 @@ ov --alternate-rows test.csv
 
 [Related styling](#style-customization): `StyleAlternate`.
 
-###  3.9. <a name='section'></a>Section
+###  4.10. <a name='section'></a>Section
 
 You can specify a section delimiter using `--section-delimiter` (default key `alt+d`).
 
@@ -454,7 +458,7 @@ you can move the diff for each file.
 The number of lines in section-header can be changed.
 You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
 
-####  3.9.1. <a name='section-example'></a>section example
+####  4.10.1. <a name='section-example'></a>section example
 
 This is an example of using the `git` pager.
 
@@ -466,7 +470,7 @@ This is an example of using the `git` pager.
 
 [Related styling](#style-customization): `StyleSectionLine`.
 
-####  3.9.2. <a name='hide-other-sections'></a>hide other sections
+####  4.10.2. <a name='hide-other-sections'></a>hide other sections
 
 If you specify `--hide-other-section`(default key `alt+-`), only the current section is displayed.
 
@@ -476,7 +480,7 @@ ov --section-delimiter "^#" --hide-other-section README.md
 
 This is just hidden, so it will be displayed when you move to the next section.
 
-###  3.10. <a name='multiple-files'></a>Multiple files
+###  4.11. <a name='multiple-files'></a>Multiple files
 
 `ov` can also open multiple files.
 
@@ -488,7 +492,7 @@ Multiple files are each opened as a document and can be navigated using the Next
 
 Related Styling: [Customizing the bottom status line](#customizing-the-bottom-status-line).
 
-###  3.11. <a name='follow-mode'></a>Follow mode
+###  4.12. <a name='follow-mode'></a>Follow mode
 
 `--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
@@ -503,7 +507,7 @@ ov --follow-mode /var/log/syslog
 > [!NOTE]
 > Due to issue[issue #643](https://github.com/noborus/ov/issues/643), follow-mode does not work for files in the /tmp folder on macOS.
 
-###  3.12. <a name='follow-name'></a>Follow name
+####  4.12.1. <a name='follow-name'></a>Follow name
 
 You can specify the file name to follow with `--follow-name`(like `tail -F`).
 Monitor file names instead of file descriptors.
@@ -512,7 +516,7 @@ Monitor file names instead of file descriptors.
 ov --follow-name /var/log/nginx/access.log
 ```
 
-###  3.13. <a name='follow-all-mode'></a>Follow all mode
+####  4.12.2. <a name='follow-all-mode'></a>Follow all mode
 
 `--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
@@ -520,7 +524,7 @@ ov --follow-name /var/log/nginx/access.log
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-###  3.14. <a name='follow-section-mode'></a>Follow section mode
+####  4.12.3. <a name='follow-section-mode'></a>Follow section mode
 
 Use the `--follow-section`(default key `F2`) option to follow by section.
 Follow mode is line-by-line, while follow section mode is section-by-section.
@@ -534,10 +538,17 @@ ov --section-delimiter "^#" --follow-section README.md
 > [!NOTE]
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
-###  3.15. <a name='exec-mode'></a>Exec mode
+###  4.13. <a name='exec-mode'></a>Exec mode
+
+Exec mode captures the output of a command and displays it in `ov`.
+It works similarly to `watch`, but with advanced paging features.
 
 Use the `--exec` (`-e`) option to run the command and display stdout/stderr separately.
 Arguments after (`--`) are interpreted as command arguments.
+
+```console
+ov --exec -- ls -l
+```
 
 Shows the stderr screen as soon as an error occurs, when used with `--follow-all`.
 
@@ -559,7 +570,7 @@ especially for long-running commands like make.
 ov --notify-eof --exec -- make
 ```
 
-###  3.16. <a name='search'></a>Search
+###  4.14. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(default).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -583,7 +594,7 @@ SmartCaseSensitive: true
 
 [Related styling](#style-customization): `StyleSearchHighlight`
 
-###  3.17. <a name='pattern'></a>Pattern
+####  4.14.1. <a name='pattern'></a>Pattern
 
 The pattern option allows you to specify a search at startup.
 
@@ -591,7 +602,7 @@ The pattern option allows you to specify a search at startup.
 ov --pattern install README.md
 ```
 
-###  3.18. <a name='filter'></a>Filter
+####  4.14.2. <a name='filter'></a>Filter
 
 Filter input is possible using the `&` key(default).
 The filter input creates a new document only for the lines that match the filter.
@@ -638,7 +649,7 @@ postgres    1631  0.0  0.0 222420  8904 ?        Ss   Jul24   0:00 postgres: 14/
 noborus   193766  0.0  0.0 1603756 7552 pts/0    Rl+  10:37   0:00 ov -H1 -F --filter postgres
 ```
 
-###  3.19. <a name='caption'></a>Caption
+###  4.15. <a name='caption'></a>Caption
 
 You can specify a caption instead of the file name in status line to display it.
 
@@ -653,7 +664,7 @@ export OV_CAPTION="ls -alF"
 ls -alF|ov
 ```
 
-###  3.20. <a name='mark'></a>Mark
+###  4.16. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
@@ -665,7 +676,7 @@ Use the `>`next and `<`previous (default) key to move to the marked position.
 
 [Related styling](#style-customization): `StyleMarkLine`.
 
-###  3.21. <a name='watch'></a>Watch
+###  4.17. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -679,7 +690,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  3.22. <a name='mouse-support'></a>Mouse support
+###  4.18. <a name='mouse-support'></a>Mouse support
 
 The ov makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
@@ -696,7 +707,7 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
 
-###  3.23. <a name='multi-color-highlight'></a>Multi color highlight
+###  4.19. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(default) enters multi-word input mode.
@@ -733,31 +744,33 @@ StyleMultiColorHighlight:
 
 [Related styling](#style-customization): `StyleMultiColorHighlight`.
 
-###  3.24. <a name='plain'></a>Plain
+###  4.20. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  3.25. <a name='converter'></a>Converter
+###  4.21. <a name='converter'></a>Converter
 
 Converter selects the engine to convert and display the text.
 Usually, the escape sequence is interpreted and displayed by `es` (default).
 `raw` displays as it is without interpreting the escape sequence.
 
 You can specify the `--converter` option with `[es|raw|align]`,
-and you can also specify the `--raw`, `--align`([Align](#326-align)) option as a shortcut option.
+and you can also specify the `--raw`, `--align`([Align](#align)) option as a shortcut option.
 
 > [!NOTE]
 > `raw` also displays the character string of the escape sequence,
-> but be aware that [Plain](#324-plainplain) hides the decoration after interpreting the escape sequence.
+> but be aware that [Plain](#plain) hides the decoration after interpreting the escape sequence.
 
-*Added in v0.37.0*
+###  4.22. <a name='align'></a>Align
 
-###  3.26. <a name='align'></a>Align
-
-`align` displays the width when making Column is recognized.
+The `--align` option adjusts column widths to improve readability for **irregularly formatted tabular data**, such as CSV files with misaligned columns.
 
 Example:
+
+```console
+ov --column-mode --align test.csv
+```
 
 ```csv
 c1,c2,c3
@@ -767,17 +780,13 @@ aa,bbbbbbbbbbbbbb,cc
 aa,bb,cccccccccccccccccccccc
 ```
 
-```console
-ov --column-mode --align test.csv
-```
+After applying --align:
 
 ![ov-align](docs/ov-align.png)
 
 Align can also shrink column.
 
-*Added in v0.37.0*
-
-####  3.26.1. <a name='shrink'></a>Shrink
+####  4.22.1. <a name='shrink'></a>Shrink
 
 Align allows columns to be shrunk and stretched by toggling with the (default key `s`).
 
@@ -789,9 +798,7 @@ To change the character displayed when columns are shrunk, set ShrinkChar in the
 ShrinkChar: '.'
 ```
 
-*Added in v0.37.0*
-
-###  3.27. <a name='jump-target'></a>Jump target
+###  4.23. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -811,7 +818,7 @@ ov --section-delimiter "^#" --jump-target section README.md
 
 [Related styling](#style-customization): `StyleJumpTarget`.
 
-###  3.28. <a name='view-mode'></a>View mode
+###  4.24. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -850,7 +857,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-###  3.29. <a name='output-on-exit'></a>Output on exit
+###  4.25. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -871,7 +878,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  3.30. <a name='quit-if-one-screen'></a>Quit if one screen
+###  4.26. <a name='quit-if-one-screen'></a>Quit if one screen
 
 The `--quit-if-one-screen`, `-F` option allows the program to exit immediately if the content fits within one screen.
 This can be useful when you only want to view small files or when you want to quickly check the content without scrolling.
@@ -884,7 +891,7 @@ If you want to enable this option by default, set `QuitSmall` to `true` in the c
 QuitSmall: true
 ```
 
-###  3.31. <a name='suspend'></a>Suspend
+###  4.27. <a name='suspend'></a>Suspend
 
 You can suspend ov with `ctrl+z`(default key).
 Normally, you can resume from suspend by typing `fg`.
@@ -900,12 +907,10 @@ The process actually starts a subshell without suspending.
 suspended ov (use 'exit' to resume)
 ```
 
-*Added in v0.37.0*
-
 > [!NOTE]
 > Until v0.36.0, it was a Subshell method.
 
-###  3.32. <a name='save'></a>Save
+###  4.28. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
@@ -922,7 +927,35 @@ If the file name already exists, select `Overwrite`, `Append`, or `Cancel`.
 overwrite? (O)overwrite, (A)append, (N)cancel
 ```
 
-##  4. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
+###  4.29. <a name='ruler'></a>Ruler
+
+*Added in v0.39.0 (upcoming release)*
+
+The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
+
+* `--ruler` or `--ruler=1`: Displays a relative ruler that moves with horizontal scrolling.
+* `--ruler=2`: Displays an absolute ruler that does not move with horizontal scrolling.
+* `--ruler=0`: Disables the ruler (default).
+
+```console
+ov --ruler README.md
+ov --ruler=2 README.md
+```
+
+![ov-ruler.png](docs/ov-ruler.png)
+
+[Related styling](#style-customization): `StyleRuler` .
+
+###  4.30. <a name='redirect-output'></a>Redirect Output
+
+By default, `ov` does not show the screen when output is redirected.
+To force display, use the `--force-screen` option:
+
+```console
+ov --force-screen filename > output.txt
+```
+
+##  5. <a name='how-to-reduce-memory-usage'></a>How to reduce memory usage
 
 Since **v0.30.0** it no longer loads everything into memory.
 The first chunk from the beginning to the 10,000th line is loaded into memory
@@ -939,7 +972,7 @@ Also consider setting the environment variable `GOMEMLIMIT`.
 export GOMEMLIMIT=100MiB
 ```
 
-###  4.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
+###  5.1. <a name='regular-file-(seekable)'></a>Regular file (seekable)
 
 ![regular file memory](docs/ov-file-mem.png)
 
@@ -958,7 +991,7 @@ MemoryLimitFile: 3
 
 You can also use the `--memory-limit-file` option and the `MemoryLimitFile` setting for those who think regular files are good memory saving.
 
-###  4.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
+###  5.2. <a name='other-files,-pipes(non-seekable)'></a>Other files, pipes(Non-seekable)
 
 ![non-regular file memory](docs/ov-mem-mem.png)
 
@@ -979,7 +1012,7 @@ It is recommended to put a limit in the config file as you may receive output la
 MemoryLimit: 1000
 ```
 
-##  5. <a name='command-option'></a>Command option
+##  6. <a name='command-option'></a>Command option
 
 | Short |                    Long                    |                            Purpose                             |
 |-------|--------------------------------------------|----------------------------------------------------------------|
@@ -1008,6 +1041,7 @@ MemoryLimit: 1000
 |       | --follow-section                           | section-by-section follow mode                                 |
 |       | --force-screen                             | display screen even when redirecting output                    |
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
+| -Y,   | --header-column int                        | number of columns to display as a vertical header              |
 | -h,   | --help                                     | help for ov                                                    |
 |       | --help-key                                 | display key bind information                                   |
 |       | --hide-other-section                       | hide other section                                             |
@@ -1025,6 +1059,7 @@ MemoryLimit: 1000
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
 | -r,   | --raw                                      | raw escape sequences without processing                        |
 |       | --regexp-search                            | regular expression search                                      |
+|       | --ruler int                                | ruler type [1/2]                                               |
 |       | --section-delimiter regexp                 | regexp for section delimiter .e.g. "^#"                        |
 |       | --section-header                           | enable section-delimiter line as Header                        |
 |       | --section-header-num int                   | number of section header lines (default 1)                     |
@@ -1034,13 +1069,14 @@ MemoryLimit: 1000
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
 | -v,   | --version                                  | display version information                                    |
+| -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 |       | --view-mode string                         | apply predefined settings for a specific mode                  |
 | -T,   | --watch seconds                            | watch mode interval(seconds)                                   |
 | -w,   | --wrap[=true\|false]                       | wrap mode (default true)                                       |
 
 It can also be changed after startup.
 
-##  6. <a name='key-bindings'></a>Key bindings
+##  7. <a name='key-bindings'></a>Key bindings
 
 |              Key              |                       Action                       |
 |-------------------------------|----------------------------------------------------|
@@ -1096,12 +1132,14 @@ It can also be changed after startup.
 | [c]                           | * column mode toggle                               |
 | [alt+o]                       | * column width toggle                              |
 | [ctrl+r]                      | * column rainbow toggle                            |
+| [F]                           | * header column fixed toggle                       |
 | [s]                           | * shrink column toggle                             |
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
 | [alt+F]                       | * align columns                                    |
 | [alt+R]                       | * raw output                                       |
+| [alt+shift+F9]                | * ruler toggle                                     |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
@@ -1111,6 +1149,8 @@ It can also be changed after startup.
 | [.]                           | * multi color highlight                            |
 | [j]                           | * jump target(`.n` or `n%` or `section` allowed)   |
 | [alt+t]                       | * convert type selection                           |
+| [y]                           | * vertical header toggle                           |
+| [Y]                           | * header column toggle                             |
 | **Section**                   |                                                    |
 | [alt+d]                       | * section delimiter regular expression             |
 | [ctrl+F3], [alt+s]            | * section start position                           |
@@ -1136,14 +1176,15 @@ It can also be changed after startup.
 | [ctrl+c]                      | * copy to clipboard.                               |
 | [ctrl+v]                      | * paste from clipboard                             |
 
-##  7. <a name='customize'></a>Customize
+##  8. <a name='customize'></a>Customize
 
-###  7.1. <a name='style-customization'></a>Style customization
+###  8.1. <a name='style-customization'></a>Style customization
 
 You can customize the following items.
 
 * StyleAlternate
 * StyleHeader
+* StyleHeaderBorder
 * StyleOverStrike
 * StyleOverLine
 * StyleLineNumber
@@ -1151,9 +1192,22 @@ You can customize the following items.
 * StyleColumnHighlight
 * StyleMarkLine
 * StyleSectionLine
+* StyleSectionBorder
 * StyleMultiColorHighlight
 * StyleColumnRainbow
 * StyleJumpTargetLine
+* StyleVerticalHeader
+* StyleVerticalHeaderBorder
+* StyleRuler
+  
+> [!NOTE]
+> The following styles are added in v0.39.0 (upcoming release):
+> 
+> * StyleHeaderBorder
+> * StyleSectionBorder
+> * StyleVerticalHeader
+> * StyleVerticalHeaderBorder
+> * StyleRuler
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
 Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderLineStyle, and UnderlineColor.
@@ -1201,7 +1255,7 @@ StyleColumnRainbow:
     UnderlineStyle: 2
 ```
 
-#### UnderlineStyle
+####  8.1.1. <a name='underlinestyle'></a>UnderlineStyle
 
 UnderlineStyle is specified by a number from 0 to 5. This corresponds to the escape sequence values.
 
@@ -1214,7 +1268,7 @@ UnderlineStyle is specified by a number from 0 to 5. This corresponds to the esc
 | 4     | Dotted underline|
 | 5     | Dashed underline|
 
-###  7.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
+###  8.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
 You can customize the bottom status line.
 
@@ -1234,7 +1288,7 @@ Prompt
 | InvertColor| Display file name inverted and changed color| true |
 | ProcessOfCount| Update the progress while counting the number of lines | true |
 
-###  7.3. <a name='key-binding-customization'></a>Key binding customization
+###  8.3. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
 
@@ -1252,7 +1306,7 @@ You can customize key bindings.
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
 
-##  8. <a name='vs'></a>VS
+##  9. <a name='vs'></a>VS
 
 The following software can be used instead. If you are not satisfied with `ov`, you should try it.
 
@@ -1271,7 +1325,7 @@ The following software can be used instead. If you are not satisfied with `ov`, 
 * [peep](https://github.com/ryochack/peep)
   * `peep` is a pager that can work in a small pane.
 
-##  9. <a name='work-together'></a>Work together
+##  10. <a name='work-together'></a>Work together
 
 The following are not actually pagers and do not conflict. can work together.
 
@@ -1282,7 +1336,7 @@ The following are not actually pagers and do not conflict. can work together.
 
 Please look at the [documentation portal](https://noborus.github.io/ov/index.html) to configure them.
 
-##  10. <a name='contributing'></a>Contributing
+##  11. <a name='contributing'></a>Contributing
 
 We welcome contributions to this project! Here are some ways you can contribute:
 
