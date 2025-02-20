@@ -1150,8 +1150,8 @@ It can also be changed after startup.
 | [.]                           | * multi color highlight                            |
 | [j]                           | * jump target(`.n` or `n%` or `section` allowed)   |
 | [alt+t]                       | * convert type selection                           |
-| [y]                           | * vertical header toggle                           |
-| [Y]                           | * header column toggle                             |
+| [y]                           | * number of vertical header                        |
+| [Y]                           | * number of header column                          |
 | **Section**                   |                                                    |
 | [alt+d]                       | * section delimiter regular expression             |
 | [ctrl+F3], [alt+s]            | * section start position                           |
@@ -1174,7 +1174,7 @@ It can also be changed after startup.
 | [!]                           | * non-match toggle                                 |
 | [Up]                          | * previous candidate                               |
 | [Down]                        | * next candidate                                   |
-| [ctrl+c]                      | * copy to clipboard.                               |
+| [ctrl+c]                      | * copy to clipboard                                |
 | [ctrl+v]                      | * paste from clipboard                             |
 
 ##  8. <a name='customize'></a>Customize
