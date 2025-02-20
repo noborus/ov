@@ -85,8 +85,8 @@ const (
 	actionConvertType    = "convert_type"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
-	actionVeritcalHeader = "set_vertical_header"
-	actionHeaderColumn   = "set_header_column"
+	actionVeritcalHeader = "vertical_header"
+	actionHeaderColumn   = "header_column"
 	actionFixedColumn    = "fixed_column"
 	actionShrinkColumn   = "shrink_column"
 	actionRuler          = "toggle_ruler"
@@ -370,8 +370,8 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
-	k.writeKeyBind(&b, actionVeritcalHeader, "vertical header toggle")
-	k.writeKeyBind(&b, actionHeaderColumn, "header column toggle")
+	k.writeKeyBind(&b, actionVeritcalHeader, "number of vertical header")
+	k.writeKeyBind(&b, actionHeaderColumn, "number of header column")
 
 	writeHeader(&b, "Section")
 	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")
@@ -397,7 +397,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, inputNonMatch, "non-match toggle")
 	k.writeKeyBind(&b, inputPrevious, "previous candidate")
 	k.writeKeyBind(&b, inputNext, "next candidate")
-	k.writeKeyBind(&b, inputCopy, "copy to clipboard.")
+	k.writeKeyBind(&b, inputCopy, "copy to clipboard")
 	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
 	return b.String()
 }
