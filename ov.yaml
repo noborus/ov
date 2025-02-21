@@ -48,6 +48,8 @@ StyleAlternate:
   Background: "gray"
 StyleHeader:
   Bold: true
+StyleBody:
+  # Add appropriate styles here
 StyleOverStrike:
   Bold: true
 StyleOverLine:
@@ -62,6 +64,21 @@ StyleMarkLine:
   Background: "darkgoldenrod"
 StyleSectionLine:
   Background: "slateblue"
+StyleVerticalHeader:
+  # Add appropriate styles here
+StyleRuler:
+  Background: "#333333"
+  Foreground: "#CCCCCC"
+  Bold: true
+StyleHeaderBorder:
+  # Add appropriate styles here
+  # UnderlineStyle: 2
+StyleSectionHeaderBorder:
+  # Add appropriate styles here
+  # Underline: true
+  # UnderlineColor: "red"
+StyleVerticalHeaderBorder:
+  Background: "#c0c0c0"
 StyleMultiColorHighlight:
   - Foreground: "red"
   - Foreground: "aqua"
@@ -70,6 +87,14 @@ StyleMultiColorHighlight:
   - Foreground: "lime"
   - Foreground: "blue"
   - Foreground: "grey"
+StyleColumnRainbow:
+  - Foreground: "white"
+  - Foreground: "crimson"
+  - Foreground: "aqua"
+  - Foreground: "lightsalmon"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "yellowgreen"
 StyleJumpTargetLine:
   Underline: true
 
@@ -110,7 +135,7 @@ KeyBind:
     follow_all:
         - "ctrl+a"
     follow_section:
-        -  "F2"
+        - "F2"
     help:
         - "h"
         - "ctrl+alt+c"
@@ -213,6 +238,64 @@ KeyBind:
         - "."
     jump_target:
         - "j"
+    plain_mode:
+        - "ctrl+e"
+    rainbow_mode:
+        - "ctrl+r"
+    close_file:
+        - "ctrl+F9"
+        - "ctrl+alt+s"
+    width_left:
+        - "ctrl+shift+left"
+    width_right:
+        - "ctrl+shift+right"
+    begin_left:
+        - "shift+Home"
+    end_right:
+        - "shift+End"
+    column_width:
+        - "alt+o"
+    filter:
+        - "&"
+    close_doc:
+        - "ctrl+k"
+    close_all_filter:
+        - "K"
+    convert_type:
+        - "alt+t"
+    align_format:
+        - "alt+F"
+    raw_format:
+        - "alt+R"
+    vertical_header:
+        - "y"
+    header_column:
+        - "Y"
+    fixed_column:
+        - "F"
+    shrink_column:
+        - "s"
+    toggle_ruler:
+        - "alt+shift+F9"
+
+    input_casesensitive:
+        - "alt+c"
+    input_smart_casesensitive:
+        - "alt+s"
+    input_incsearch:
+        - "alt+i"
+    input_regexp_search:
+        - "alt+r"
+    input_non_match:
+        - "!"
+    input_previous:
+        - "Up"
+    input_next:
+        - "Down"
+    input_copy:
+        - "ctrl+c"
+    input_paste:
+        - "ctrl+v"
 
 Mode:
   markdown:

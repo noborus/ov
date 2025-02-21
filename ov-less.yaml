@@ -40,6 +40,7 @@ General:
   ColumnDelimiter: ","
   MarkStyleWidth: 1
 
+# Style
 # String of the color name: Foreground, Background, UnderlineColor
 # Boolean: Bold, Blink, Dim, Italic, Underline
 # Number: UnderlineStyle
@@ -47,10 +48,14 @@ StyleAlternate:
   Background: "gray"
 StyleHeader:
   Bold: true
+StyleBody:
+  # Add appropriate styles here
 StyleOverStrike:
   Bold: true
 StyleOverLine:
   Underline: true
+StyleLineNumber:
+  Bold: true
 StyleSearchHighlight:
   Reverse: true
 StyleColumnHighlight:
@@ -58,7 +63,22 @@ StyleColumnHighlight:
 StyleMarkLine:
   Background: "darkgoldenrod"
 StyleSectionLine:
-  Background: "green"
+  Background: "slateblue"
+StyleVerticalHeader:
+  # Add appropriate styles here
+StyleRuler:
+  Background: "#333333"
+  Foreground: "#CCCCCC"
+  Bold: true
+StyleHeaderBorder:
+  # Add appropriate styles here
+  # UnderlineStyle: 2
+StyleSectionHeaderBorder:
+  # Add appropriate styles here
+  # Underline: true
+  # UnderlineColor: "red"
+StyleVerticalHeaderBorder:
+  Background: "#c0c0c0"
 StyleMultiColorHighlight:
   - Foreground: "red"
   - Foreground: "aqua"
@@ -67,8 +87,16 @@ StyleMultiColorHighlight:
   - Foreground: "lime"
   - Foreground: "blue"
   - Foreground: "grey"
+StyleColumnRainbow:
+  - Foreground: "white"
+  - Foreground: "crimson"
+  - Foreground: "aqua"
+  - Foreground: "lightsalmon"
+  - Foreground: "lime"
+  - Foreground: "blue"
+  - Foreground: "yellowgreen"
 StyleJumpTargetLine:
-  Underline: false
+  Underline: true
 
 # Keybind
 # Special key
@@ -204,7 +232,7 @@ KeyBind:
     backsearch:
         - "?"
     delimiter:
-        - "d"
+        - "F8"
     header:
         - "H"
     skip_lines:
@@ -227,6 +255,66 @@ KeyBind:
         - "."
     jump_target:
         - "alt+j"
+    save_buffer:
+        - "s"
+    convert_type:
+        - "ctrl+alt+t"
+    align_format:
+        - "ctrl+alt+f"
+    raw_format:
+        - "ctrl+alt+g"
+    vertical_header:
+        - "ctrl+alt+b"
+    header_column:
+        - "ctrl+alt+d"
+    fixed_column:
+        - "alt+f"
+    shrink_column:
+        - "alt+x"
+    toggle_ruler:
+        - "alt+shift+F9"
+    plain_mode:
+        - "ctrl+F7"
+    rainbow_mode:
+        - "ctrl+F4"
+    close_file:
+        - "ctrl+F9"
+        - "ctrl+alt+s"
+    width_left:
+        - "ctrl+shift+left"
+    width_right:
+        - "ctrl+shift+right"
+    begin_left:
+        - "shift+Home"
+    end_right:
+        - "shift+End"
+    column_width:
+        - "alt+o"
+    filter:
+        - "&"
+    close_doc:
+        - "alt+k"
+    close_all_filter:
+        - "ctrl+alt+k"
+
+    input_casesensitive:
+        - "alt+c"
+    input_smart_casesensitive:
+        - "alt+s"
+    input_incsearch:
+        - "alt+i"
+    input_regexp_search:
+        - "alt+r"
+    input_non_match:
+        - "!"
+    input_previous:
+        - "Up"
+    input_next:
+        - "Down"
+    input_copy:
+        - "ctrl+c"
+    input_paste:
+        - "ctrl+v"
 
 Mode:
   markdown:
