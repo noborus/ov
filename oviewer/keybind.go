@@ -89,6 +89,7 @@ const (
 	actionHeaderColumn   = "header_column"
 	actionFixedColumn    = "fixed_column"
 	actionShrinkColumn   = "shrink_column"
+	actionRightAlign     = "right_align"
 	actionRuler          = "toggle_ruler"
 
 	inputCaseSensitive      = "input_casesensitive"
@@ -181,6 +182,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionHeaderColumn:   root.setHeaderColumnMode,
 		actionFixedColumn:    root.toggleFixedColumn,
 		actionShrinkColumn:   root.toggleShrinkColumn,
+		actionRightAlign:     root.toggleRightAlign,
 		actionRuler:          root.toggleRuler,
 
 		inputCaseSensitive:      root.inputCaseSensitive,
@@ -277,6 +279,7 @@ func defaultKeyBinds() KeyBind {
 		actionHeaderColumn:   {"Y"},
 		actionFixedColumn:    {"F"},
 		actionShrinkColumn:   {"s"},
+		actionRightAlign:     {"alt+a"},
 		actionRuler:          {"alt+shift+F9"},
 
 		inputCaseSensitive:      {"alt+c"},
@@ -352,14 +355,17 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
 	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
 	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
-	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
-	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle")
 	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
 	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
 	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
 	k.writeKeyBind(&b, actionAlignFormat, "align columns")
 	k.writeKeyBind(&b, actionRawFormat, "raw output")
 	k.writeKeyBind(&b, actionRuler, "ruler toggle")
+
+	writeHeader(&b, "Column operation")
+	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
+	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle(align mode only)")
+	k.writeKeyBind(&b, actionRightAlign, "right align column toggle(align mode only)")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")

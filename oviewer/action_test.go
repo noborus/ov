@@ -1615,3 +1615,103 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 		})
 	}
 }
+func TestDocument_specifiedAlign(t *testing.T) {
+	type fields struct {
+		fileName    string
+		columnAttrs []columnAttribute
+		converter   string
+	}
+	type args struct {
+		cursor int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    specifiedAlign
+		wantErr bool
+	}{
+		{
+			name: "testValidColumn",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    RightAlign,
+			wantErr: false,
+		},
+		{
+			name: "testInvalidColumn",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 11,
+			},
+			want:    Unspecified,
+			wantErr: true,
+		},
+		{
+			name: "testNotAlignMode",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convEscaped,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    Unspecified,
+			wantErr: true,
+		},
+		{
+			name: "testCycleAlign",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    RightAlign,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			m.Converter = tt.fields.converter
+			m.alignConv.columnAttrs = tt.fields.columnAttrs
+			got, err := m.specifiedAlign(tt.args.cursor)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.specifiedAlign() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.specifiedAlign() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

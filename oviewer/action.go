@@ -901,26 +901,55 @@ func (root *Root) toggleShrinkColumn(ctx context.Context) {
 	}
 }
 
+// shinkColumn shrinks or expands the specified column.
+func (m *Document) shrinkColumn(cursor int, shrink bool) error {
+	if err := m.isValidColumn(cursor); err != nil {
+		return err
+	}
+	m.alignConv.columnAttrs[cursor].shrink = shrink
+	m.ClearCache()
+	return nil
+}
+
 // isColumnShrink returns whether the specified column is shrink.
 func (m *Document) isColumnShrink(cursor int) (bool, error) {
-	if m.Converter != convAlign {
-		return false, ErrNotAlignMode
-	}
-	if cursor < 0 || cursor >= len(m.alignConv.columnAttrs) {
-		return false, ErrNoColumnSelected
+	if err := m.isValidColumn(cursor); err != nil {
+		return false, err
 	}
 	return m.alignConv.columnAttrs[cursor].shrink, nil
 }
 
-// shinkColumn shrinks or expands the specified column.
-func (m *Document) shrinkColumn(cursor int, shrink bool) error {
+// toggleRightAlign toggles the right align of the current cursor column.
+func (root *Root) toggleRightAlign(ctx context.Context) {
+	m := root.Doc
+	align, err := m.specifiedAlign(m.columnCursor)
+	if err != nil {
+		root.setMessage(err.Error())
+		return
+	}
+	root.setMessagef("Set %s", align)
+}
+
+// specifiedAlign sets the specified column alignment.
+func (m *Document) specifiedAlign(cursor int) (specifiedAlign, error) {
+	if err := m.isValidColumn(cursor); err != nil {
+		return Unspecified, err
+	}
+	align := m.alignConv.columnAttrs[cursor].specifiedAlign + 1
+	if align > LeftAlign {
+		align = RightAlign
+	}
+	m.alignConv.columnAttrs[cursor].specifiedAlign = align
+	m.ClearCache()
+	return align, nil
+}
+
+func (m *Document) isValidColumn(cursor int) error {
 	if m.Converter != convAlign {
 		return ErrNotAlignMode
 	}
 	if cursor < 0 || cursor >= len(m.alignConv.columnAttrs) {
 		return ErrNoColumnSelected
 	}
-	m.alignConv.columnAttrs[cursor].shrink = shrink
-	m.ClearCache()
 	return nil
 }
