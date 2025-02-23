@@ -19,10 +19,33 @@ type align struct {
 	count        int
 }
 
+// specifiedAlign represents the alignment specification for a column.
+type specifiedAlign int
+
+const (
+	Unspecified specifiedAlign = iota
+	RightAlign
+	LeftAlign
+)
+
+// String returns the string representation of the specifiedAlign.
+func (s specifiedAlign) String() string {
+	switch s {
+	case Unspecified:
+		return "Unspecified"
+	case RightAlign:
+		return "RightAlign"
+	case LeftAlign:
+		return "LeftAlign"
+	}
+	return "Unknown"
+}
+
 // columnAttribute is a structure that holds the attributes of a column.
 type columnAttribute struct {
-	shrink     bool // Shrink column.
-	rightAlign bool // Right align column.
+	shrink         bool           // Shrink column.
+	specifiedAlign specifiedAlign // Alignment specification for the column.
+	rightAlign     bool           // Right align column.
 }
 
 func newAlignConverter(widthF bool) *align {
@@ -187,18 +210,26 @@ func appendPaddings(lc contents, num int) contents {
 	return lc
 }
 
+// isShrink returns true if the column is a shrink column.
 func (a *align) isShrink(col int) bool {
-	if col >= 0 && col < len(a.columnAttrs) {
-		return a.columnAttrs[col].shrink
+	if col < 0 || col >= len(a.columnAttrs) {
+		return false
 	}
-	return false
+
+	return a.columnAttrs[col].shrink
 }
 
+// isRightAlign returns true if the column is right-aligned.
 func (a *align) isRightAlign(col int) bool {
-	if col >= 0 && col < len(a.columnAttrs) {
-		return a.columnAttrs[col].rightAlign
+	if col < 0 || col >= len(a.columnAttrs) {
+		return false
 	}
-	return false
+
+	if a.columnAttrs[col].specifiedAlign != Unspecified {
+		return a.columnAttrs[col].specifiedAlign == RightAlign
+	}
+
+	return a.columnAttrs[col].rightAlign
 }
 
 func findStartWithTrim(lc contents, s int) int {
