@@ -1704,7 +1704,7 @@ func TestDocument_specifiedAlign(t *testing.T) {
 			}
 			m.Converter = tt.fields.converter
 			m.alignConv.columnAttrs = tt.fields.columnAttrs
-			got, err := m.specifiedAlign(tt.args.cursor)
+			got, err := m.toggleRightAlign(tt.args.cursor)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.specifiedAlign() error = %v, wantErr %v", err, tt.wantErr)
 				return
