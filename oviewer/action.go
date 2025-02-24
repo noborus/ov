@@ -922,7 +922,7 @@ func (m *Document) isColumnShrink(cursor int) (bool, error) {
 // toggleRightAlign toggles the right align of the current cursor column.
 func (root *Root) toggleRightAlign(ctx context.Context) {
 	m := root.Doc
-	align, err := m.specifiedAlign(m.columnCursor)
+	align, err := m.toggleRightAlign(m.columnCursor)
 	if err != nil {
 		root.setMessage(err.Error())
 		return
@@ -930,8 +930,8 @@ func (root *Root) toggleRightAlign(ctx context.Context) {
 	root.setMessagef("Set %s", align)
 }
 
-// specifiedAlign sets the specified column alignment.
-func (m *Document) specifiedAlign(cursor int) (specifiedAlign, error) {
+// toggleRightAlign toggles the right align of the specified column.
+func (m *Document) toggleRightAlign(cursor int) (specifiedAlign, error) {
 	if err := m.isValidColumn(cursor); err != nil {
 		return Unspecified, err
 	}
@@ -944,6 +944,7 @@ func (m *Document) specifiedAlign(cursor int) (specifiedAlign, error) {
 	return align, nil
 }
 
+// isValidColumn checks if the specified column is valid.
 func (m *Document) isValidColumn(cursor int) error {
 	if m.Converter != convAlign {
 		return ErrNotAlignMode

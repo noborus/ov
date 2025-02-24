@@ -85,7 +85,7 @@ const (
 	actionConvertType    = "convert_type"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
-	actionVeritcalHeader = "vertical_header"
+	actionVerticalHeader = "vertical_header"
 	actionHeaderColumn   = "header_column"
 	actionFixedColumn    = "fixed_column"
 	actionShrinkColumn   = "shrink_column"
@@ -178,7 +178,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionConvertType:    root.setConvertType,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
-		actionVeritcalHeader: root.setVerticalHeaderMode,
+		actionVerticalHeader: root.setVerticalHeaderMode,
 		actionHeaderColumn:   root.setHeaderColumnMode,
 		actionFixedColumn:    root.toggleFixedColumn,
 		actionShrinkColumn:   root.toggleShrinkColumn,
@@ -275,7 +275,7 @@ func defaultKeyBinds() KeyBind {
 		actionConvertType:    {"alt+t"},
 		actionAlignFormat:    {"alt+F"},
 		actionRawFormat:      {"alt+R"},
-		actionVeritcalHeader: {"y"},
+		actionVerticalHeader: {"y"},
 		actionHeaderColumn:   {"Y"},
 		actionFixedColumn:    {"F"},
 		actionShrinkColumn:   {"s"},
@@ -376,7 +376,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
 	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
 	k.writeKeyBind(&b, actionConvertType, "convert type selection")
-	k.writeKeyBind(&b, actionVeritcalHeader, "number of vertical header")
+	k.writeKeyBind(&b, actionVerticalHeader, "number of vertical header")
 	k.writeKeyBind(&b, actionHeaderColumn, "number of header column")
 
 	writeHeader(&b, "Section")

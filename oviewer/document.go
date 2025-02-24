@@ -606,6 +606,17 @@ func (m *Document) setColumnWidths() {
 	m.columnWidths = guesswidth.Positions(buf, header, 2)
 }
 
+// vHeaderWidth returns the width of the header.
+func (m *Document) vHeaderWidth(lineC LineC) int {
+	if m.VerticalHeader > 0 {
+		return m.VerticalHeader
+	}
+	if m.HeaderColumn > 0 && m.HeaderColumn < len(lineC.columnRanges) {
+		return lineC.columnRanges[(m.HeaderColumn+m.columnStart)-1].end
+	}
+	return 0
+}
+
 // GetLine returns one line from buffer.
 // Deprecated: Use [Document.LineString] instead.
 func (m *Document) GetLine(n int) string {
@@ -621,15 +632,4 @@ func (m *Document) GetLine(n int) string {
 func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)
 	return str
-}
-
-// vHeaderWidth returns the width of the header.
-func (m *Document) vHeaderWidth(lineC LineC) int {
-	if m.VerticalHeader > 0 {
-		return m.VerticalHeader
-	}
-	if m.HeaderColumn > 0 && m.HeaderColumn < len(lineC.columnRanges) {
-		return lineC.columnRanges[(m.HeaderColumn+m.columnStart)-1].end
-	}
-	return 0
 }

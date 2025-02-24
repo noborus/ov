@@ -192,6 +192,9 @@ func (root *Root) logDisplay(ctx context.Context) {
 func (root *Root) toNormal(ctx context.Context) {
 	root.mu.RLock()
 	defer root.mu.RUnlock()
+	if root.CurrentDoc < 0 || root.CurrentDoc >= len(root.DocList) {
+		return
+	}
 	m := root.DocList[root.CurrentDoc]
 	root.setDocument(ctx, m)
 }

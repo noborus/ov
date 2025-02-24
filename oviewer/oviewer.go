@@ -130,6 +130,8 @@ func newLineNumber(number, wrap int) LineNumber {
 	return LineNumber{number: number, wrap: wrap}
 }
 
+const MinStartX = -10
+
 // RulerType is the type of ruler.
 type RulerType int
 
@@ -177,7 +179,8 @@ type general struct {
 	Header int
 	// VerticalHeader is the number of vertical header lines.
 	VerticalHeader int
-	// HeaderColumn is the number of vertical header columns.
+	// HeaderColumn is the number of columns from the left to be fixed.
+	// If 0 is specified, no columns are fixed.
 	HeaderColumn int
 	// SkipLines is the rows to skip.
 	SkipLines int
@@ -344,7 +347,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		return nil, ErrNotFound
 	}
 	root := &Root{
-		minStartX: -10,
+		minStartX: MinStartX,
 	}
 	root.Config = NewConfig()
 	root.keyConfig = cbind.NewConfiguration()

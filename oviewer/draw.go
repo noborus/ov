@@ -160,6 +160,35 @@ func (root *Root) drawSectionHeader() {
 	root.applyStyleToLine(m.headerHeight+m.sectionHeaderHeight-1, root.StyleSectionHeaderBorder)
 }
 
+// drawRuler draws the ruler.
+func (root *Root) drawRuler() {
+	rulerType := root.Doc.RulerType
+	if rulerType == RulerNone {
+		return
+	}
+
+	startX := 0
+	if !root.Doc.WrapMode && rulerType == RulerRelative {
+		startX = root.scr.startX - root.Doc.x
+	}
+
+	style := applyStyle(defaultStyle, root.StyleRuler)
+	for x := 0; x < root.scr.vWidth; x++ {
+		n := x - startX + 1
+		if n < 0 {
+			continue
+		}
+		numStr := []rune(fmt.Sprintf("%3d", n))
+		if numStr[2] == '0' {
+			root.Screen.SetContent(x-1, 0, numStr[0], nil, style)
+			root.Screen.SetContent(x, 0, numStr[1], nil, style)
+		} else {
+			root.Screen.SetContent(x, 0, ' ', nil, style)
+		}
+		root.Screen.SetContent(x, 1, numStr[2], nil, style)
+	}
+}
+
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
 func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	if root.Doc.WrapMode {
@@ -264,10 +293,10 @@ func (m *Document) widthVerticalHeader(lineC LineC) int {
 		return m.VerticalHeader
 	}
 
-	vhc := m.HeaderColumn
-	if vhc <= 0 {
+	if m.HeaderColumn <= 0 {
 		return 0
 	}
+	vhc := m.HeaderColumn
 	columns := lineC.columnRanges
 	if len(columns) == 0 {
 		return 0
@@ -479,32 +508,4 @@ func (root *Root) flash() {
 	time.Sleep(50 * time.Millisecond)
 	root.draw(context.Background())
 	time.Sleep(100 * time.Millisecond)
-}
-
-func (root *Root) drawRuler() {
-	rulerType := root.Doc.RulerType
-	if rulerType == RulerNone {
-		return
-	}
-
-	startX := 0
-	if !root.Doc.WrapMode && rulerType == RulerRelative {
-		startX = root.scr.startX - root.Doc.x
-	}
-
-	style := applyStyle(defaultStyle, root.StyleRuler)
-	for x := 0; x < root.scr.vWidth; x++ {
-		n := x - startX + 1
-		if n < 0 {
-			continue
-		}
-		numStr := []rune(fmt.Sprintf("%3d", n))
-		if numStr[2] == '0' {
-			root.Screen.SetContent(x-1, 0, numStr[0], nil, style)
-			root.Screen.SetContent(x, 0, numStr[1], nil, style)
-		} else {
-			root.Screen.SetContent(x, 0, ' ', nil, style)
-		}
-		root.Screen.SetContent(x, 1, numStr[2], nil, style)
-	}
 }
