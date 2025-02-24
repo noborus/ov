@@ -20,6 +20,8 @@ func NewHelp(k KeyBind) (*Document, error) {
 	helpStr := bytes.NewBufferString("\t\t\t" + gchalk.WithUnderline().Bold("ov help"))
 	helpStr.WriteString("\n")
 	helpStr.WriteString(KeyBindString(k))
+	// Duplicate key bindings.
+	helpStr.WriteString(DuplicateKeyBind(k))
 
 	m.Caption = "Help"
 	m.store.eof = 1
@@ -48,4 +50,18 @@ func KeyBindString(k KeyBind) string {
 		fmt.Fprintln(&buf, line)
 	}
 	return buf.String()
+}
+
+func DuplicateKeyBind(k KeyBind) string {
+	w := &strings.Builder{}
+	dupkey := findDuplicateKeyBind(k)
+	if len(dupkey) == 0 {
+		return ""
+	}
+	fmt.Fprintf(w, "\n\tDuplicate key bindings:\n")
+	for _, v := range dupkey {
+		v.key = strings.TrimPrefix(v.key, "input_")
+		fmt.Fprintf(w, "%s [%s] for %s\n", gchalk.Red("Duplicate key"), v.key, strings.Join(v.action, ", "))
+	}
+	return w.String()
 }
