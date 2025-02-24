@@ -1078,6 +1078,7 @@ MemoryLimit: 1000
 It can also be changed after startup.
 
 ##  7. <a name='key-bindings'></a>Key bindings
+
 |              Key              |                       Action                       |
 |-------------------------------|----------------------------------------------------|
 | [Escape], [q]                 | * quit                                             |
