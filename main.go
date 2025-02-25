@@ -140,6 +140,7 @@ func HelpKey(cmd *cobra.Command, _ []string) {
 	fmt.Println(cmd.Short)
 	keyBind := oviewer.GetKeyBinds(config)
 	fmt.Println(oviewer.KeyBindString(keyBind))
+	fmt.Print(oviewer.DuplicateKeyBind(keyBind))
 }
 
 // Completion is shell completion.

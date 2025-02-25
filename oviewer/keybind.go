@@ -362,11 +362,6 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionRawFormat, "raw output")
 	k.writeKeyBind(&b, actionRuler, "ruler toggle")
 
-	writeHeader(&b, "Column operation")
-	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
-	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle(align mode only)")
-	k.writeKeyBind(&b, actionRightAlign, "right align column toggle(align mode only)")
-
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")
 	k.writeKeyBind(&b, actionDelimiter, "column delimiter string")
@@ -379,7 +374,12 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionVerticalHeader, "number of vertical header")
 	k.writeKeyBind(&b, actionHeaderColumn, "number of header column")
 
-	writeHeader(&b, "Section")
+	writeHeader(&b, "Column operation")
+	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
+	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle(align mode only)")
+	k.writeKeyBind(&b, actionRightAlign, "right align column toggle(align mode only)")
+
+	writeHeader(&b, "Section operation")
 	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")
 	k.writeKeyBind(&b, actionSectionStart, "section start position")
 	k.writeKeyBind(&b, actionNextSection, "next section")
@@ -420,7 +420,17 @@ func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
 	fmt.Fprintf(w, " %-30s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
 
-// GetKeyBinds returns the current key mapping.
+// GetKeyBinds returns the current key mapping based on the provided configuration.
+// If the default key bindings are not disabled in the configuration, it initializes
+// the key bindings with the default values and then overwrites them with any custom
+// key bindings specified in the configuration file.
+//
+// Parameters:
+//   - config: The configuration object that contains the key binding settings.
+//
+// Returns:
+//   - KeyBind: A map where the keys are action names and the values are slices of
+//     strings representing the keys assigned to those actions.
 func GetKeyBinds(config Config) KeyBind {
 	keyBind := make(map[string][]string)
 
@@ -501,4 +511,32 @@ func wrapEventHandler(ctx context.Context, f func(context.Context)) func(_ *tcel
 func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	root.keyConfig.Capture(ev)
 	return true
+}
+
+type duplicate struct {
+	key    string
+	action []string
+}
+
+func findDuplicateKeyBind(keyBind KeyBind) []duplicate {
+	keyActions := make(map[string]duplicate)
+	for k, v := range keyBind {
+		for _, key := range v {
+			if strings.HasPrefix(k, "input_") {
+				key = "input_" + key
+			}
+			if _, ok := keyActions[key]; ok {
+				keyActions[key] = duplicate{key: key, action: append(keyActions[key].action, k)}
+			} else {
+				keyActions[key] = duplicate{key: key, action: []string{k}}
+			}
+		}
+	}
+	q := make([]duplicate, 0, len(keyActions))
+	for _, v := range keyActions {
+		if len(v.action) > 1 {
+			q = append(q, v)
+		}
+	}
+	return q
 }

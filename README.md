@@ -37,7 +37,7 @@ ov is a terminal pager.
   * 4.4. [Column mode](#column-mode)
   * 4.5. [Header Column](#header-column)
   * 4.6. [Column rainbow mode](#column-rainbow-mode)
-  * 4.7. [Column-width](#column-width)
+  * 4.7. [Column width](#column-width)
   * 4.8. [Wrap/NoWrap](#wrap/nowrap)
   * 4.9. [Alternate-Rows](#alternate-rows)
   * 4.10. [Section](#section)
@@ -408,7 +408,7 @@ StyleColumnRainbow:
 
 [Related styling](#style-customization): `StyleColumnRainbow`.
 
-###  4.7. <a name='column-width'></a>Column-width
+###  4.7. <a name='column-width'></a>Column width
 
 The `--column-width` option is designed for **command output with irregular spaces**, such as `ps aux`, `df`, etc.  (default key `alt+o`).
 It automatically **detects and separates columns** without needing a specific delimiter.
@@ -1133,8 +1133,6 @@ It can also be changed after startup.
 | [c]                           | * column mode toggle                               |
 | [alt+o]                       | * column width toggle                              |
 | [ctrl+r]                      | * column rainbow toggle                            |
-| [F]                           | * header column fixed toggle                       |
-| [s]                           | * shrink column toggle                             |
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
@@ -1152,7 +1150,11 @@ It can also be changed after startup.
 | [alt+t]                       | * convert type selection                           |
 | [y]                           | * number of vertical header                        |
 | [Y]                           | * number of header column                          |
-| **Section**                   |                                                    |
+| **Column operation**          |                                                    |
+| [F]                           | * header column fixed toggle                       |
+| [s]                           | * shrink column toggle(align mode only)            |
+| [alt+a]                       | * right align column toggle(align mode only)       |
+| **Section operation**         |                                                    |
 | [alt+d]                       | * section delimiter regular expression             |
 | [ctrl+F3], [alt+s]            | * section start position                           |
 | [space]                       | * next section                                     |
