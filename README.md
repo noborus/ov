@@ -326,7 +326,7 @@ ov --skip-lines 1 --header 1 README.md
 
 ###  4.3. <a name='vertical-header'></a>Vertical Header
 
-*Added in v0.39.0 (upcoming release)*
+*Added in v0.39.0*
 
 The `--vertical-header` (`-y`) (defakult key `y`) option fixedly displays the specified number of chars.
 
@@ -357,7 +357,7 @@ ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 
 ###  4.5. <a name='header-column'></a>Header Column
 
-*Added in v0.39.0 (upcoming release)*
+*Added in v0.39.0*
 
 The `--header-column` (`-Y`) (default key is `Y`) option fixedly displays the specified number of columns when `column-mode` is enabled.
 
@@ -930,7 +930,7 @@ overwrite? (O)overwrite, (A)append, (N)cancel
 
 ###  4.29. <a name='ruler'></a>Ruler
 
-*Added in v0.39.0 (upcoming release)*
+*Added in v0.39.0*
 
 The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
 
@@ -1204,7 +1204,7 @@ You can customize the following items.
 * StyleRuler
   
 > [!NOTE]
-> The following styles are added in v0.39.0 (upcoming release):
+> The following styles are added in v0.39.0:
 > 
 > * StyleHeaderBorder
 > * StyleSectionBorder
