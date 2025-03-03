@@ -62,6 +62,83 @@ func TestToTcellStyle(t *testing.T) {
 		})
 	}
 }
+
+func TestApplyStyle(t *testing.T) {
+	tests := []struct {
+		name string
+		s    OVStyle
+		want tcell.Style
+	}{
+		{
+			name: "default style",
+			s:    OVStyle{},
+			want: tcell.StyleDefault,
+		},
+		{
+			name: "foreground and background",
+			s: OVStyle{
+				Foreground: "red",
+				Background: "blue",
+			},
+			want: tcell.StyleDefault.Foreground(tcell.ColorRed).Background(tcell.ColorBlue),
+		},
+		{
+			name: "all styles",
+			s: OVStyle{
+				Foreground:     "red",
+				Background:     "blue",
+				Blink:          true,
+				Bold:           true,
+				Dim:            true,
+				Italic:         true,
+				Reverse:        true,
+				Underline:      true,
+				UnderlineStyle: "1",
+				UnderlineColor: "green",
+				StrikeThrough:  true,
+			},
+			want: tcell.StyleDefault.Foreground(tcell.ColorRed).
+				Background(tcell.ColorBlue).
+				Blink(true).
+				Bold(true).
+				Dim(true).
+				Italic(true).
+				Reverse(true).
+				Underline(true).
+				Underline(tcell.UnderlineStyleSolid).
+				Underline(tcell.ColorGreen).
+				StrikeThrough(true),
+		},
+		{
+			name: "unset styles",
+			s: OVStyle{
+				UnBlink:         true,
+				UnBold:          true,
+				UnDim:           true,
+				UnItalic:        true,
+				UnReverse:       true,
+				UnUnderline:     true,
+				UnStrikeThrough: true,
+			},
+			want: tcell.StyleDefault.Blink(false).
+				Bold(false).
+				Dim(false).
+				Italic(false).
+				Reverse(false).
+				Underline(false).
+				StrikeThrough(false),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := applyStyle(tcell.StyleDefault, tt.s); got != tt.want {
+				t.Errorf("applyStyle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestUnderLineStyle(t *testing.T) {
 	tests := []struct {
 		name   string

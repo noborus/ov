@@ -220,31 +220,19 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num := calculatePosition(input, root.Doc.BufEndNum())
-	str := strconv.FormatFloat(num, 'f', 1, 64)
-	if strings.HasSuffix(str, ".0") {
-		// Line number only.
-		lN, err := strconv.Atoi(str[:len(str)-2])
-		if err != nil {
-			root.setMessage(ErrInvalidNumber.Error())
-			return
-		}
-		lN = root.Doc.moveLine(lN - 1)
-		root.Doc.showGotoF = true
-		root.setMessagef("Moved to line %d", lN+1)
+	num, err := calculatePosition(input, root.Doc.BufEndNum())
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
 
-	// Line number and number of wrapping lines.
-	inputs := strings.Split(str, ".")
-	lN, err := strconv.Atoi(inputs[0])
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
-	}
-	nTh, err := strconv.Atoi(inputs[1])
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
+	integerPart, fractionalPart := math.Modf(num)
+	lN := int(integerPart)
+	nTh := int(fractionalPart * 10)
+	if nTh != 0 {
+		lN = root.Doc.moveLine(lN - 1)
+		root.Doc.showGotoF = true
+		root.setMessagef("Moved to line %d", lN+1)
 		return
 	}
 	lN, nTh = root.Doc.moveLineNth(lN-1, nTh)
@@ -719,8 +707,11 @@ func jumpPosition(str string, height int) (int, bool) {
 	if s[0] == 's' {
 		return 0, true
 	}
-
-	num := int(math.Round(calculatePosition(s, height)))
+	n, err := calculatePosition(s, height)
+	if err != nil {
+		return 0, false
+	}
+	num := int(math.Round(n))
 	if num < 0 {
 		return (height - 1) + num, false
 	}
@@ -730,9 +721,9 @@ func jumpPosition(str string, height int) (int, bool) {
 // CalculatePosition returns the number from the length for positive
 // numbers (1), returns dot.number for percentages (.5) = 50%,
 // and returns the % after the number for percentages (50%). return.
-func calculatePosition(str string, length int) float64 {
+func calculatePosition(str string, length int) (float64, error) {
 	if len(str) == 0 || str == "0" {
-		return 0
+		return 0, nil
 	}
 
 	var p float64 = 0
@@ -740,7 +731,7 @@ func calculatePosition(str string, length int) float64 {
 		str = strings.TrimLeft(str, ".")
 		i, err := strconv.ParseFloat(str, 64)
 		if err != nil {
-			return 0
+			return 0, err
 		}
 		p = i / 10
 	}
@@ -748,20 +739,20 @@ func calculatePosition(str string, length int) float64 {
 		str = strings.TrimRight(str, "%")
 		i, err := strconv.ParseFloat(str, 64)
 		if err != nil {
-			return 0
+			return 0, err
 		}
 		p = i / 100
 	}
 
 	if p > 0 {
-		return float64(length) * p
+		return float64(length) * p, nil
 	}
 
 	num, err := strconv.ParseFloat(str, 64)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return num
+	return num, nil
 }
 
 // TailSync move to tail and sync.

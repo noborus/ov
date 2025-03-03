@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -71,6 +72,39 @@ func TestRoot_toggle(t *testing.T) {
 	root.toggleHideOtherSection(ctx)
 	if v == root.Doc.HideOtherSection {
 		t.Errorf("toggleHideOtherSection() = %v, want %v", root.Doc.HideOtherSection, !v)
+	}
+	v = root.Doc.WatchMode
+	root.toggleWatch(ctx)
+	if v == root.Doc.WatchMode {
+		t.Errorf("toggleWatch() = %v, want %v", root.Doc.WatchMode, !v)
+	}
+	root.toggleWatch(ctx)
+	if v != root.Doc.WatchMode {
+		t.Errorf("toggleWatch() = %v, want %v", root.Doc.WatchMode, v)
+	}
+}
+
+func TestToggleRuler(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+	root.Doc.general.RulerType = RulerNone
+
+	// Test toggling from RulerNone to RulerRelative
+	root.toggleRuler(ctx)
+	if root.Doc.general.RulerType != RulerRelative {
+		t.Errorf("expected RulerType to be RulerRelative, got %v", root.Doc.general.RulerType)
+	}
+
+	// Test toggling from RulerRelative to RulerAbsolute
+	root.toggleRuler(ctx)
+	if root.Doc.general.RulerType != RulerAbsolute {
+		t.Errorf("expected RulerType to be RulerAbsolute, got %v", root.Doc.general.RulerType)
+	}
+
+	// Test toggling from RulerAbsolute to RulerNone
+	root.toggleRuler(ctx)
+	if root.Doc.general.RulerType != RulerNone {
+		t.Errorf("expected RulerType to be RulerNone, got %v", root.Doc.general.RulerType)
 	}
 }
 
@@ -205,8 +239,12 @@ func Test_position(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := calculatePosition(tt.args.str, tt.args.height); got != tt.want {
+			got, err := calculatePosition(tt.args.str, tt.args.height)
+			if got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
+			}
+			if err != nil {
+				t.Errorf("position() = %v, want nil", err)
 			}
 		})
 	}
@@ -495,11 +533,23 @@ func TestRoot_goLine(t *testing.T) {
 		input string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   int
+		name        string
+		fields      fields
+		args        args
+		want        int
+		wantMessage string
 	}{
+		{
+			name: "testGoLineBlank",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+			},
+			args: args{
+				input: "",
+			},
+			want:        0,
+			wantMessage: "",
+		},
 		{
 			name: "testGoLine10",
 			fields: fields{
@@ -508,7 +558,8 @@ func TestRoot_goLine(t *testing.T) {
 			args: args{
 				input: "10",
 			},
-			want: 9,
+			want:        9,
+			wantMessage: "Moved to line",
 		},
 		{
 			name: "testGoLine.5",
@@ -518,7 +569,8 @@ func TestRoot_goLine(t *testing.T) {
 			args: args{
 				input: ".5",
 			},
-			want: 499,
+			want:        499,
+			wantMessage: "Moved to line",
 		},
 		{
 			name: "testGoLine20%",
@@ -528,7 +580,19 @@ func TestRoot_goLine(t *testing.T) {
 			args: args{
 				input: "20%",
 			},
-			want: 199,
+			want:        199,
+			wantMessage: "Moved to line",
+		},
+		{
+			name: "testGoLineInvalid",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+			},
+			args: args{
+				input: "invalid",
+			},
+			want:        0,
+			wantMessage: "invalid number",
 		},
 	}
 	for _, tt := range tests {
@@ -537,6 +601,9 @@ func TestRoot_goLine(t *testing.T) {
 			root.goLine(tt.args.input)
 			if root.Doc.topLN != tt.want {
 				t.Errorf("goLine() = %v, want %v", root.Doc.topLN, tt.want)
+			}
+			if !strings.Contains(root.message, tt.wantMessage) {
+				t.Errorf("goLine() = %v, want %v", root.message, tt.wantMessage)
 			}
 		})
 	}
@@ -1615,6 +1682,7 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 		})
 	}
 }
+
 func TestDocument_specifiedAlign(t *testing.T) {
 	type fields struct {
 		fileName    string
@@ -1711,6 +1779,495 @@ func TestDocument_specifiedAlign(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("Document.specifiedAlign() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_closeFile(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		seekable bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+		message string
+	}{
+		{
+			name: "testCloseFileSuccess",
+			fields: fields{
+				seekable: false,
+			},
+			wantErr: false,
+			message: "close file",
+		},
+		{
+			name: "testCloseFileError",
+			fields: fields{
+				seekable: true,
+			},
+			wantErr: true,
+			message: "cannot close",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			ctx := context.Background()
+			root.Doc.seekable = tt.fields.seekable
+			err := root.Doc.closeFile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("closeFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			root.closeFile(ctx)
+			if tt.wantErr && root.message == "" {
+				t.Errorf("expected error message log, got empty")
+			}
+			if !strings.Contains(root.message, tt.message) {
+				t.Errorf("expected message %v, got %v", tt.message, root.message)
+			}
+		})
+	}
+}
+
+func TestRoot_reload(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName      string
+		preventReload bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+		message string
+	}{
+		{
+			name: "testReloadSuccess",
+			fields: fields{
+				fileName:      filepath.Join(testdata, "test3.txt"),
+				preventReload: false,
+			},
+			wantErr: false,
+			message: "reload file ",
+		},
+		{
+			name: "testReloadError",
+			fields: fields{
+				fileName:      filepath.Join(testdata, "test3.txt"),
+				preventReload: true,
+			},
+			wantErr: true,
+			message: "cannot reload: ",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			root.Doc.FileName = tt.fields.fileName
+			root.Doc.preventReload = tt.fields.preventReload
+			root.reload(root.Doc)
+			if tt.wantErr && !strings.Contains(root.message, tt.message) {
+				t.Errorf("expected error message log, got %v", root.message)
+			}
+			if !tt.wantErr && !strings.Contains(root.message, tt.message) {
+				t.Errorf("expected success message log, got %v", root.message)
+			}
+		})
+	}
+}
+
+func TestRoot_format(t *testing.T) {
+	root := rootHelper(t)
+	tests := []struct {
+		name        string
+		converter   string
+		formatFunc  func(ctx context.Context)
+		wantMessage string
+	}{
+		{
+			name:        "testAlignFormat",
+			converter:   convRaw,
+			formatFunc:  func(ctx context.Context) { root.alignFormat(ctx) },
+			wantMessage: "Set align mode",
+		},
+		{
+			name:        "testAlignFormatAlreadySet",
+			converter:   convAlign,
+			formatFunc:  func(ctx context.Context) { root.alignFormat(ctx) },
+			wantMessage: "Set es mode",
+		},
+		{
+			name:        "testRawFormat",
+			converter:   convAlign,
+			formatFunc:  func(ctx context.Context) { root.rawFormat(ctx) },
+			wantMessage: "Set raw mode",
+		},
+		{
+			name:        "testRawFormatAlreadySet",
+			converter:   convRaw,
+			formatFunc:  func(ctx context.Context) { root.rawFormat(ctx) },
+			wantMessage: "Set es mode",
+		},
+		{
+			name:        "testEsFormat",
+			converter:   "",
+			formatFunc:  func(ctx context.Context) { root.esFormat(ctx) },
+			wantMessage: "Set es mode",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			root.Doc.Converter = tt.converter
+			tt.formatFunc(ctx)
+			if !strings.Contains(root.message, tt.wantMessage) {
+				t.Errorf("format() = %v, want %v", root.message, tt.wantMessage)
+			}
+		})
+	}
+}
+
+func TestRoot_setVerticalHeader(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetVerticalHeaderNil",
+			args: args{
+				input: "",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetVerticalHeaderMinus",
+			args: args{
+				input: "-1",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetVerticalHeader1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetVerticalHeaderNoChange",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetVerticalHeaderOutOfRange",
+			args: args{
+				input: "100",
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setVerticalHeader(tt.args.input)
+			if root.Doc.VerticalHeader != tt.want {
+				t.Errorf("setVerticalHeader() = %v, want %v", root.Doc.VerticalHeader, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_setHeaderColumn(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "testSetHeaderColumnNil",
+			args: args{
+				input: "",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetHeaderColumnInvalid",
+			args: args{
+				input: "invalid",
+			},
+			want: 0,
+		},
+		{
+			name: "testSetHeaderColumn1",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetHeaderColumnNoChange",
+			args: args{
+				input: "1",
+			},
+			want: 1,
+		},
+		{
+			name: "testSetHeaderColumnChange",
+			args: args{
+				input: "2",
+			},
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.setHeaderColumn(tt.args.input)
+			if root.Doc.HeaderColumn != tt.want {
+				t.Errorf("setHeaderColumn() = %v, want %v", root.Doc.HeaderColumn, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_toggleFixedColumn(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	ctx := context.Background()
+	type fields struct {
+		columnCursor int
+		columnStart  int
+		headerColumn int
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		wantHeader   int
+		wantVertical int
+	}{
+		{
+			name: "testToggleFixedColumnSet",
+			fields: fields{
+				columnCursor: 5,
+				columnStart:  3,
+				headerColumn: 0,
+			},
+			wantHeader:   3,
+			wantVertical: 0,
+		},
+		{
+			name: "testToggleFixedColumnUnset",
+			fields: fields{
+				columnCursor: 5,
+				columnStart:  3,
+				headerColumn: 3,
+			},
+			wantHeader:   0,
+			wantVertical: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.columnCursor = tt.fields.columnCursor
+			root.Doc.columnStart = tt.fields.columnStart
+			root.Doc.HeaderColumn = tt.fields.headerColumn
+			root.toggleFixedColumn(ctx)
+			if root.Doc.HeaderColumn != tt.wantHeader {
+				t.Errorf("toggleFixedColumn() HeaderColumn = %v, want %v", root.Doc.HeaderColumn, tt.wantHeader)
+			}
+			if root.Doc.VerticalHeader != tt.wantVertical {
+				t.Errorf("toggleFixedColumn() VerticalHeader = %v, want %v", root.Doc.VerticalHeader, tt.wantVertical)
+			}
+		})
+	}
+}
+
+func TestRoot_toggleShrinkColumn(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName     string
+		columnCursor int
+		converter    string
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		wantShrink bool
+		wantErr    bool
+	}{
+		{
+			name: "testToggleShrinkColumn",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnCursor: 1,
+				converter:    convAlign,
+			},
+			wantShrink: true,
+			wantErr:    false,
+		},
+		{
+			name: "testToggleShrinkColumnInvalidConverter",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnCursor: 0,
+				converter:    convEscaped,
+			},
+			wantShrink: false,
+			wantErr:    true,
+		},
+		{
+			name: "testToggleShrinkColumnInvalidCursor",
+			fields: fields{
+				fileName:     filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnCursor: 20,
+				converter:    convAlign,
+			},
+			wantShrink: false,
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			ctx := context.Background()
+			root.prepareScreen()
+			root.Doc.ColumnDelimiter = ","
+			root.Doc.Converter = tt.fields.converter
+			root.setConverter(ctx, tt.fields.converter)
+			root.Doc.columnCursor = tt.fields.columnCursor
+			root.prepareDraw(ctx)
+			root.toggleShrinkColumn(ctx)
+			shrink, err := root.Doc.isColumnShrink(tt.fields.columnCursor)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("toggleShrinkColumn() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if shrink != tt.wantShrink {
+				t.Errorf("toggleShrinkColumn() shrink = %v, want %v", shrink, tt.wantShrink)
+			}
+		})
+	}
+}
+
+func TestDocument_toggleRightAlign(t *testing.T) {
+	type fields struct {
+		fileName    string
+		columnAttrs []columnAttribute
+		converter   string
+	}
+	type args struct {
+		cursor int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    specifiedAlign
+		wantErr bool
+	}{
+		{
+			name: "testValidColumn",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    RightAlign,
+			wantErr: false,
+		},
+		{
+			name: "testInvalidColumn",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 11,
+			},
+			want:    Unspecified,
+			wantErr: true,
+		},
+		{
+			name: "testNotAlignMode",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convEscaped,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    Unspecified,
+			wantErr: true,
+		},
+		{
+			name: "testCycleAlign",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    RightAlign,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := OpenDocument(tt.fields.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			m.Converter = tt.fields.converter
+			m.alignConv.columnAttrs = tt.fields.columnAttrs
+			got, err := m.toggleRightAlign(tt.args.cursor)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.toggleRightAlign() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.toggleRightAlign() = %v, want %v", got, tt.want)
 			}
 		})
 	}

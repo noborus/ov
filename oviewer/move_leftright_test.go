@@ -291,6 +291,7 @@ func TestDocument_optimalX(t *testing.T) {
 		})
 	}
 }
+
 func TestDocument_moveColumnLeft(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -445,6 +446,7 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 		})
 	}
 }
+
 func TestDocument_moveColumnRight(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {

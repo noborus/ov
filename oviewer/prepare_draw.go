@@ -12,9 +12,12 @@ import (
 	"time"
 )
 
-// sectionTimeOut is the section header search timeout(in milliseconds) period.
-const sectionTimeOut time.Duration = 1000
-const rulerHeight = 2
+const (
+	// sectionTimeOut is the section header search timeout(in milliseconds) period.
+	sectionTimeOut time.Duration = 1000
+	// rulerHeight is the height of the ruler.
+	rulerHeight = 2
+)
 
 // prepareScreen prepares when the screen size is changed.
 func (root *Root) prepareScreen() {
@@ -32,7 +35,12 @@ func (root *Root) prepareScreen() {
 	}
 	root.scr.startY = root.scr.rulerHeight
 
-	num := int(math.Round(calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)))
+	n, err := calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)
+	if err != nil {
+		root.setMessageLogf("Invalid HScrollWidth: %s", root.Doc.HScrollWidth)
+		n = 0
+	}
+	num := int(math.Round(n))
 	root.Doc.HScrollWidthNum = max(num, 1)
 
 	if len(root.scr.numbers) < root.scr.vHeight+1 {
@@ -596,8 +604,8 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 	}
 
 	// Column overflow.
-	lCount, lPos := countToNextSpaceLeft(lc, columnEnd)
-	rCount, rPos := countToNextSpaceRight(lc, columnEnd)
+	lPos := findPrevSpace(lc, columnEnd)
+	rPos := findNextSpace(lc, columnEnd)
 
 	// Is the column omitted?
 	if lPos == columnEnd {
@@ -616,7 +624,10 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 			return lPos
 		}
 	}
+
 	// It overflows on the left side.
+	lCount := columnEnd - lPos
+	rCount := rPos - columnEnd
 	if lPos > start && rCount > lCount {
 		return lPos
 	}
@@ -625,24 +636,34 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 	return rPos
 }
 
-// countToNextSpaceLeft counts the number of positions to the next space character to the left.
-func countToNextSpaceLeft(lc contents, start int) (int, int) {
-	count := 0
-	i := start
-	for ; i >= 0 && !lc.IsSpace(i); i-- {
-		count++
+// findPrevSpace returns the position of the previous space.
+func findPrevSpace(lc contents, start int) int {
+	p := start
+	for {
+		if p <= 0 {
+			break
+		}
+		if lc.IsSpace(p) {
+			break
+		}
+		p--
 	}
-	return count, i
+	return p
 }
 
-// countToNextSpaceRight counts the number of positions to the next space character to the right.
-func countToNextSpaceRight(lc contents, start int) (int, int) {
-	count := 0
-	i := start
-	for ; i < len(lc) && !lc.IsSpace(i); i++ {
-		count++
+// findNextSpace returns the position of the next space.
+func findNextSpace(lc contents, start int) int {
+	p := start
+	for {
+		if p >= len(lc) {
+			break
+		}
+		if lc.IsSpace(p) {
+			break
+		}
+		p++
 	}
-	return count, i
+	return p
 }
 
 // alignColumnEnd returns the position of the end of a column.
