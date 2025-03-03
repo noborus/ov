@@ -455,6 +455,7 @@ func TestRoot_sectionLineHighlight(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_drawVerticalHeader(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {

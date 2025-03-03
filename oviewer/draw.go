@@ -493,7 +493,7 @@ func (root *Root) notifyEOFReached(m *Document) {
 // notify notifies by beeping and flashing the screen the specified number of times.
 func (root *Root) notify(count int) {
 	for i := 0; i < count; i++ {
-		root.Screen.Beep()
+		_ = root.Screen.Beep()
 		root.flash()
 	}
 }
