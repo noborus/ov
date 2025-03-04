@@ -229,7 +229,7 @@ func (root *Root) goLine(input string) {
 	integerPart, fractionalPart := math.Modf(num)
 	lN := int(integerPart)
 	nTh := int(fractionalPart * 10)
-	if nTh != 0 {
+	if nTh == 0 {
 		lN = root.Doc.moveLine(lN - 1)
 		root.Doc.showGotoF = true
 		root.setMessagef("Moved to line %d", lN+1)
