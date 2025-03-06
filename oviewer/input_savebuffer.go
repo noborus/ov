@@ -19,7 +19,7 @@ func (root *Root) setSaveBuffer(ctx context.Context) {
 func (root *Root) setSaveBufferMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newSaveBufferEvent(input.SaveBufferCandidate)
+	input.Event = newSaveBufferEvent(input.Candidate[SaveBuffer])
 }
 
 // eventSaveBuffer represents the mode input mode.

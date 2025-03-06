@@ -31,7 +31,7 @@ func (*eventVerticalHeader) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventVerticalHeader) Prompt() string {
-	return "Vertical Header length:"
+	return "Vertical header length:"
 }
 
 // Confirm returns the event when the input is confirmed.

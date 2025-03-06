@@ -10,7 +10,7 @@ import (
 func (root *Root) setViewInputMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newViewModeEvent(input.ModeCandidate)
+	input.Event = newViewModeEvent(input.Candidate[ViewMode])
 }
 
 // viewModeCandidate returns the candidate to set to default.

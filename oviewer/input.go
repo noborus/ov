@@ -44,19 +44,7 @@ type Input struct {
 
 	// Candidate is prepared when the history is used as an input candidate.
 	// Header and SkipLines use numbers up and down instead of candidate.
-	DelimiterCandidate    *candidate
-	ModeCandidate         *candidate
-	SearchCandidate       *candidate
-	GoCandidate           *candidate
-	TabWidthCandidate     *candidate
-	WatchCandidate        *candidate
-	WriteBACandidate      *candidate
-	SectionDelmCandidate  *candidate
-	SectionStartCandidate *candidate
-	MultiColorCandidate   *candidate
-	JumpTargetCandidate   *candidate
-	SaveBufferCandidate   *candidate
-	ConverterCandidate    *candidate
+	Candidate map[InputMode]*candidate
 
 	value   string
 	cursorX int
@@ -66,19 +54,21 @@ type Input struct {
 func NewInput() *Input {
 	i := Input{}
 
-	i.ModeCandidate = viewModeCandidate()
-	i.SearchCandidate = blankCandidate()
-	i.GoCandidate = blankCandidate()
-	i.DelimiterCandidate = delimiterCandidate()
-	i.TabWidthCandidate = tabWidthCandidate()
-	i.WatchCandidate = watchCandidate()
-	i.WriteBACandidate = blankCandidate()
-	i.SectionDelmCandidate = sectionDelimiterCandidate()
-	i.SectionStartCandidate = sectionStartCandidate()
-	i.MultiColorCandidate = multiColorCandidate()
-	i.JumpTargetCandidate = jumpTargetCandidate()
-	i.SaveBufferCandidate = blankCandidate()
-	i.ConverterCandidate = converterCandidate()
+	// Initialize the candidate list.
+	i.Candidate = make(map[InputMode]*candidate)
+	i.Candidate[ViewMode] = viewModeCandidate()
+	i.Candidate[Search] = blankCandidate()
+	i.Candidate[Goline] = blankCandidate()
+	i.Candidate[Delimiter] = delimiterCandidate()
+	i.Candidate[TabWidth] = tabWidthCandidate()
+	i.Candidate[Watch] = watchCandidate()
+	i.Candidate[WriteBA] = blankCandidate()
+	i.Candidate[SectionDelimiter] = sectionDelimiterCandidate()
+	i.Candidate[SectionStart] = sectionStartCandidate()
+	i.Candidate[MultiColor] = multiColorCandidate()
+	i.Candidate[JumpTarget] = jumpTargetCandidate()
+	i.Candidate[SaveBuffer] = blankCandidate()
+	i.Candidate[ConvertType] = converterCandidate()
 
 	i.Event = &eventNormal{}
 	return &i
@@ -106,17 +96,26 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	input.Event = normal()
 }
 
+// inputCapture processes the given key event and returns the captured event.
 func (root *Root) inputCapture(ev *tcell.EventKey) *tcell.EventKey {
+	if root.shouldCaptureExclamationMark(ev) {
+		return ev
+	}
+	return root.inputKeyConfig.Capture(ev)
+}
+
+// shouldCaptureExclamationMark checks if the current input mode is Filter and the key event is '!'.
+// It returns true if the '!' key should be captured and not input, otherwise false.
+func (root *Root) shouldCaptureExclamationMark(ev *tcell.EventKey) bool {
 	if ev.Rune() == '!' {
 		if root.input.Event.Mode() != Filter {
-			return ev
+			return true
 		}
 		if len(root.input.value) > 0 && root.input.value[len(root.input.value)-1] == '\\' {
-			return ev
+			return true
 		}
 	}
-
-	return root.inputKeyConfig.Capture(ev)
+	return false
 }
 
 // keyEvent handles the keystrokes of the input.
@@ -360,6 +359,7 @@ func (c *candidate) down() string {
 	defer c.mux.Unlock()
 	if len(c.list) == 0 {
 		return ""
+
 	}
 
 	if len(c.list) > c.p+1 {

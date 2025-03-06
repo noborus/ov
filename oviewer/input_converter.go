@@ -10,7 +10,7 @@ import (
 func (root *Root) setConvertType(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newConvertTypeEvent(input.ConverterCandidate)
+	input.Event = newConvertTypeEvent(input.Candidate[ConvertType])
 }
 
 // converterCandidate returns the candidate to set to default.

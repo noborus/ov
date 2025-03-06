@@ -36,10 +36,10 @@ func (root *Root) setSearchFilterMode(context.Context) {
 func (root *Root) setSearchMode(searchType searchType) {
 	input := root.input
 	input.reset()
-	input.Event = newSearchEvent(input.SearchCandidate, searchType)
+	input.Event = newSearchEvent(input.Candidate[Search], searchType)
 
 	if root.searcher != nil {
-		input.SearchCandidate.toLast(root.searcher.String())
+		input.Candidate[Search].toLast(root.searcher.String())
 	}
 
 	root.Doc.nonMatch = false // Reset nonMatch.
@@ -140,12 +140,12 @@ func (e *eventInputSearch) Down(str string) string {
 
 // searchCandidates returns the list of search candidates.
 func (input *Input) searchCandidates(n int) []string {
-	input.SearchCandidate.mux.Lock()
-	defer input.SearchCandidate.mux.Unlock()
+	input.Candidate[Search].mux.Lock()
+	defer input.Candidate[Search].mux.Unlock()
 
-	listLen := len(input.SearchCandidate.list)
+	listLen := len(input.Candidate[Search].list)
 	start := max(0, listLen-n)
-	return input.SearchCandidate.list[start:listLen]
+	return input.Candidate[Search].list[start:listLen]
 }
 
 // stripBackSlash removes the backslash from the string

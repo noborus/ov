@@ -335,8 +335,8 @@ func TestRoot_inputPrompt(t *testing.T) {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "&")
 	}
 	root.setJumpTargetMode(ctx)
-	if root.inputPrompt() != "Jump Target line:" {
-		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Jump Target line:")
+	if root.inputPrompt() != "Jump target line:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Jump target line:")
 	}
 	root.setSaveBufferMode(ctx)
 	if root.inputPrompt() != "(Save)file:" {
@@ -379,12 +379,12 @@ func TestRoot_inputPrompt(t *testing.T) {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Convert:")
 	}
 	root.setVerticalHeaderMode(ctx)
-	if root.inputPrompt() != "Vertical Header length:" {
-		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical Header length:")
+	if root.inputPrompt() != "Vertical header length:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical header length:")
 	}
 	root.setHeaderColumnMode(ctx)
-	if root.inputPrompt() != "Vertical Header Column length:" {
-		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical Header Column length:")
+	if root.inputPrompt() != "Header column:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Header column:")
 	}
 }
 

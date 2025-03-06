@@ -11,9 +11,8 @@ func (root *Root) setJumpTargetMode(context.Context) {
 	input := root.input
 	input.reset()
 
-	input.JumpTargetCandidate.toLast(root.Doc.JumpTarget)
-
-	input.Event = newJumpTargetEvent(input.JumpTargetCandidate)
+	input.Candidate[JumpTarget].toLast(root.Doc.JumpTarget)
+	input.Event = newJumpTargetEvent(input.Candidate[JumpTarget])
 }
 
 // jumpTargetCandidate returns the candidate to set to default.
@@ -44,7 +43,7 @@ func (*eventJumpTarget) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventJumpTarget) Prompt() string {
-	return "Jump Target line:"
+	return "Jump target line:"
 }
 
 // Confirm returns the event when the input is confirmed.

@@ -666,7 +666,7 @@ func (root *Root) setViewModeConfig() {
 	for name := range root.Config.Mode {
 		list = append(list, name)
 	}
-	root.input.ModeCandidate.list = list
+	root.input.Candidate[ViewMode].list = list
 }
 
 // prepareAllDocuments prepares all documents.
