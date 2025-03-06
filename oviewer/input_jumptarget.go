@@ -43,7 +43,7 @@ func (*eventJumpTarget) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventJumpTarget) Prompt() string {
-	return "Jump Target line:"
+	return "Jump target line:"
 }
 
 // Confirm returns the event when the input is confirmed.
