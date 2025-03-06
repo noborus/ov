@@ -10,8 +10,8 @@ import (
 func (root *Root) setSectionDelimiterMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.SectionDelmCandidate.toLast(root.Doc.SectionDelimiter)
-	input.Event = newSectionDelimiterEvent(input.SectionDelmCandidate)
+	input.Candidate[SectionDelimiter].toLast(root.Doc.SectionDelimiter)
+	input.Event = newSectionDelimiterEvent(input.Candidate[SectionDelimiter])
 }
 
 // sectionDelimiterCandidate returns the candidate to set to default.

@@ -818,8 +818,8 @@ func TestRoot_setViewModeConfig(t *testing.T) {
 			root := rootHelper(t)
 			root.Config.Mode = tt.fields.viewMode
 			root.setViewModeConfig()
-			if !reflect.DeepEqual(root.input.ModeCandidate.list, tt.wantList) {
-				t.Errorf("Root.setViewModeConfig() = %v, want %v", root.input.ModeCandidate.list, tt.wantList)
+			if !reflect.DeepEqual(root.input.Candidate[ViewMode].list, tt.wantList) {
+				t.Errorf("Root.setViewModeConfig() = %v, want %v", root.input.Candidate[ViewMode].list, tt.wantList)
 			}
 		})
 	}

@@ -16,10 +16,10 @@ func (root *Root) setMultiColorMode(context.Context) {
 	input.reset()
 
 	searches := root.input.searchCandidates(searchCandidateListLen)
-	input.MultiColorCandidate.toLast(strings.Join(searches, " "))
+	input.Candidate[MultiColor].toLast(strings.Join(searches, " "))
 	old := root.Doc.MultiColorWords
-	input.MultiColorCandidate.toLast(strings.Join(old, " "))
-	input.Event = newMultiColorEvent(input.MultiColorCandidate)
+	input.Candidate[MultiColor].toLast(strings.Join(old, " "))
+	input.Event = newMultiColorEvent(input.Candidate[MultiColor])
 }
 
 // multiColorCandidate returns the candidate to set to default.

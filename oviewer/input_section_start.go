@@ -10,7 +10,7 @@ import (
 func (root *Root) setSectionStartMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newSectionStartEvent(input.SectionStartCandidate)
+	input.Event = newSectionStartEvent(input.Candidate[SectionStart])
 }
 
 // sectionStartCandidate returns the candidate to set to default.

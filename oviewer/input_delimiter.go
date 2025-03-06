@@ -10,8 +10,8 @@ import (
 func (root *Root) setDelimiterMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.DelimiterCandidate.toLast(root.Doc.ColumnDelimiter)
-	input.Event = newDelimiterEvent(input.DelimiterCandidate)
+	input.Candidate[Delimiter].toLast(root.Doc.ColumnDelimiter)
+	input.Event = newDelimiterEvent(input.Candidate[Delimiter])
 }
 
 // delimiterCandidate returns the candidate to set to default.

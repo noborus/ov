@@ -11,9 +11,8 @@ func (root *Root) setJumpTargetMode(context.Context) {
 	input := root.input
 	input.reset()
 
-	input.JumpTargetCandidate.toLast(root.Doc.JumpTarget)
-
-	input.Event = newJumpTargetEvent(input.JumpTargetCandidate)
+	input.Candidate[JumpTarget].toLast(root.Doc.JumpTarget)
+	input.Event = newJumpTargetEvent(input.Candidate[JumpTarget])
 }
 
 // jumpTargetCandidate returns the candidate to set to default.

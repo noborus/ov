@@ -10,7 +10,7 @@ import (
 func (root *Root) setWatchIntervalMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newWatchIntervalEvent(input.WatchCandidate)
+	input.Event = newWatchIntervalEvent(input.Candidate[Watch])
 }
 
 // watchCandidate returns the candidate to set to default.

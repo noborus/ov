@@ -20,7 +20,7 @@ func Test_eventInputSearch_Prompt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			input := NewInput()
-			e := newSearchEvent(input.SearchCandidate, forward)
+			e := newSearchEvent(input.Candidate[Search], forward)
 			if got := e.Prompt(); got != tt.want {
 				t.Errorf("eventInputSearch.Prompt() = %v, want %v", got, tt.want)
 			}
@@ -98,9 +98,9 @@ func Test_eventInputSearch_Up(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			input := NewInput()
 			for _, v := range tt.fields.list {
-				input.SearchCandidate.toAddLast(v)
+				input.Candidate[Search].toAddLast(v)
 			}
-			e := newSearchEvent(input.SearchCandidate, forward)
+			e := newSearchEvent(input.Candidate[Search], forward)
 			if got := e.Up(tt.args.str); got != tt.want {
 				t.Errorf("eventInputSearch.Up() = %v, want %v", got, tt.want)
 			}
@@ -136,9 +136,9 @@ func Test_eventInputSearch_Down(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			input := NewInput()
 			for _, v := range tt.fields.list {
-				input.SearchCandidate.toAddLast(v)
+				input.Candidate[Search].toAddLast(v)
 			}
-			e := newSearchEvent(input.SearchCandidate, forward)
+			e := newSearchEvent(input.Candidate[Search], forward)
 			if got := e.Down(tt.args.str); got != tt.want {
 				t.Logf("%v\n", e.clist.list)
 				t.Errorf("eventInputSearch.Down() = %v, want %v", got, tt.want)
@@ -176,7 +176,7 @@ func TestInput_searchCandidates(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			input := NewInput()
 			for _, v := range tt.fields.list {
-				input.SearchCandidate.toAddLast(v)
+				input.Candidate[Search].toAddLast(v)
 			}
 			if got := input.searchCandidates(tt.args.n); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Input.searchCandidates() = %v, want %v", got, tt.want)

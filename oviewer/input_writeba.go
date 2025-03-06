@@ -10,7 +10,7 @@ import (
 func (root *Root) setWriteBAMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newWriteBAEvent(input.WriteBACandidate)
+	input.Event = newWriteBAEvent(input.Candidate[WriteBA])
 }
 
 // eventWriteBA represents the writeBA input mode.

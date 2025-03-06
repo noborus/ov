@@ -11,8 +11,8 @@ import (
 func (root *Root) setTabWidthMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.TabWidthCandidate.toLast(strconv.Itoa(root.Doc.TabWidth))
-	input.Event = newTabWidthEvent(input.TabWidthCandidate)
+	input.Candidate[TabWidth].toLast(strconv.Itoa(root.Doc.TabWidth))
+	input.Event = newTabWidthEvent(input.Candidate[TabWidth])
 }
 
 // tabWidthCandidate returns the candidate to set to default.

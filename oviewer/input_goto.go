@@ -10,7 +10,7 @@ import (
 func (root *Root) setGoLineMode(context.Context) {
 	input := root.input
 	input.reset()
-	input.Event = newGotoEvent(input.GoCandidate)
+	input.Event = newGotoEvent(input.Candidate[Goline])
 }
 
 // eventGoto represents the goto input mode.
