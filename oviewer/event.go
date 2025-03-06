@@ -58,12 +58,6 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.copyToClipboard(ctx)
 	case *eventPaste:
 		root.pasteFromClipboard(ctx)
-	case *eventViewMode:
-		root.setViewMode(ctx, ev.value)
-	case *eventConverter:
-		root.setConverter(ctx, ev.value)
-	case *eventInputSearch:
-		root.firstSearch(ctx, ev.searchType)
 	case *eventSearch:
 		root.forwardSearch(ctx, ev.str, 0)
 	case *eventNextSearch:
@@ -72,40 +66,48 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.backSearch(ctx, ev.str, -1)
 	case *eventSearchMove:
 		root.searchGo(ctx, ev.ln, ev.searcher)
-	case *eventGoto:
-		root.goLine(ev.value)
-	case *eventHeader:
-		root.setHeader(ev.value)
-	case *eventSkipLines:
-		root.setSkipLines(ev.value)
+	case *eventReachEOF:
+		root.notifyEOFReached(ev.m)
+
+	// Input confirmation action event.
+	case *eventConverter:
+		root.setConverter(ctx, ev.value)
 	case *eventDelimiter:
 		root.setDelimiter(ev.value)
+	case *eventGoto:
+		root.goLine(ev.value)
+	case *eventHeaderColumn:
+		root.setHeaderColumn(ev.value)
+	case *eventHeader:
+		root.setHeader(ev.value)
+	case *eventJumpTarget:
+		root.setJumpTarget(ev.value)
+	case *eventMultiColor:
+		root.setMultiColor(ev.value)
+	case *eventSaveBuffer:
+		root.saveBuffer(ev.value)
+	case *eventInputSearch:
+		root.firstSearch(ctx, ev.searchType)
+	case *eventSkipLines:
+		root.setSkipLines(ev.value)
 	case *eventTabWidth:
 		root.setTabWidth(ev.value)
-	case *eventWatchInterval:
-		root.setWatchInterval(ev.value)
-	case *eventWriteBA:
-		root.setWriteBA(ctx, ev.value)
 	case *eventSectionDelimiter:
 		root.setSectionDelimiter(ev.value)
 	case *eventSectionStart:
 		root.setSectionStart(ev.value)
-	case *eventMultiColor:
-		root.setMultiColor(ev.value)
-	case *eventJumpTarget:
-		root.setJumpTarget(ev.value)
-	case *eventSaveBuffer:
-		root.saveBuffer(ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
 	case *eventVerticalHeader:
 		root.setVerticalHeader(ev.value)
-	case *eventHeaderColumn:
-		root.setHeaderColumn(ev.value)
-	case *eventReachEOF:
-		root.notifyEOFReached(ev.m)
+	case *eventViewMode:
+		root.setViewMode(ctx, ev.value)
+	case *eventWatchInterval:
+		root.setWatchInterval(ev.value)
+	case *eventWriteBA:
+		root.setWriteBA(ctx, ev.value)
 
-	// tcell events
+	// tcell events.
 	case *tcell.EventResize:
 		root.resize(ctx)
 	case *tcell.EventMouse:

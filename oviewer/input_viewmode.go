@@ -7,7 +7,7 @@ import (
 )
 
 // setViewModeMode sets the inputMode to ViewMode.
-func (root *Root) setViewInputMode(context.Context) {
+func (root *Root) inputViewMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newViewModeEvent(input.Candidate[ViewMode])

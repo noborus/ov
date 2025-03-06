@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setWriteBAMode sets the inputMode to WriteBA.
-func (root *Root) setWriteBAMode(context.Context) {
+// inputWriteBA sets the inputMode to WriteBA.
+func (root *Root) inputWriteBA(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newWriteBAEvent(input.Candidate[WriteBA])

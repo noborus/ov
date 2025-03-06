@@ -215,8 +215,8 @@ func (input *Input) next() {
 	input.cursorX = stringWidth(string(runes))
 }
 
-// inputCaseSensitive toggles case sensitivity.
-func (root *Root) inputCaseSensitive(context.Context) {
+// toggleCaseSensitive toggles case sensitivity.
+func (root *Root) toggleCaseSensitive(context.Context) {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
 	if root.Config.CaseSensitive {
 		root.Config.SmartCaseSensitive = false
@@ -224,8 +224,8 @@ func (root *Root) inputCaseSensitive(context.Context) {
 	root.setPromptOpt()
 }
 
-// inputSmartCaseSensitive toggles case sensitivity.
-func (root *Root) inputSmartCaseSensitive(context.Context) {
+// toggleSmartCaseSensitive toggles case sensitivity.
+func (root *Root) toggleSmartCaseSensitive(context.Context) {
 	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
 	if root.Config.SmartCaseSensitive {
 		root.Config.CaseSensitive = false
@@ -233,30 +233,30 @@ func (root *Root) inputSmartCaseSensitive(context.Context) {
 	root.setPromptOpt()
 }
 
-// inputIncSearch toggles incremental search.
-func (root *Root) inputIncSearch(context.Context) {
+// toggleIncSearch toggles incremental search.
+func (root *Root) toggleIncSearch(context.Context) {
 	root.Config.Incsearch = !root.Config.Incsearch
 	root.setPromptOpt()
 }
 
-// inputRegexpSearch toggles regexp search.
-func (root *Root) inputRegexpSearch(context.Context) {
+// toggleRegexpSearch toggles regexp search.
+func (root *Root) toggleRegexpSearch(context.Context) {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 	root.setPromptOpt()
 }
 
-func (root *Root) inputNonMatch(context.Context) {
+func (root *Root) toggleNonMatch(context.Context) {
 	root.Doc.nonMatch = !root.Doc.nonMatch
 	root.setPromptOpt()
 }
 
-// inputPrevious searches the previous history.
-func (root *Root) inputPrevious(context.Context) {
+// candidatePrevious searches the previous history.
+func (root *Root) candidatePrevious(context.Context) {
 	root.input.previous()
 }
 
-// inputNext searches the next history.
-func (root *Root) inputNext(context.Context) {
+// candidateNext searches the next history.
+func (root *Root) candidateNext(context.Context) {
 	root.input.next()
 }
 
@@ -359,7 +359,6 @@ func (c *candidate) down() string {
 	defer c.mux.Unlock()
 	if len(c.list) == 0 {
 		return ""
-
 	}
 
 	if len(c.list) > c.p+1 {

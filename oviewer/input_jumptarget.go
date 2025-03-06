@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setJumpTargetMode sets the inputMode to JumpTarget.
-func (root *Root) setJumpTargetMode(context.Context) {
+// inputJumpTarget sets the inputMode to JumpTarget.
+func (root *Root) inputJumpTarget(context.Context) {
 	input := root.input
 	input.reset()
 

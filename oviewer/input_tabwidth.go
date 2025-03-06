@@ -7,8 +7,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setTabWidthMode sets the inputMode to TabWidth.
-func (root *Root) setTabWidthMode(context.Context) {
+// inputTabWidth sets the inputMode to TabWidth.
+func (root *Root) inputTabWidth(context.Context) {
 	input := root.input
 	input.reset()
 	input.Candidate[TabWidth].toLast(strconv.Itoa(root.Doc.TabWidth))

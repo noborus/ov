@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setGoLineMode sets the inputMode to Goline.
-func (root *Root) setGoLineMode(context.Context) {
+// inputGoLine sets the inputMode to Goline.
+func (root *Root) inputGoLine(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newGotoEvent(input.Candidate[Goline])

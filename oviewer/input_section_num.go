@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSectionNumMode sets the inputMode to SectionNum.
-func (root *Root) setSectionNumMode(context.Context) {
+// inputSectionNum sets the inputMode to SectionNum.
+func (root *Root) inputSectionNum(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSectionNumEvent()

@@ -17,18 +17,18 @@ const (
 	filter
 )
 
-// setForwardSearchMode sets the inputMode to Forwardsearch.
-func (root *Root) setForwardSearchMode(context.Context) {
+// inputForwardSearch sets the inputMode to Forwardsearch.
+func (root *Root) inputForwardSearch(context.Context) {
 	root.setSearchMode(forward)
 }
 
-// setBackSearchMode sets the inputMode to Backsearch.
-func (root *Root) setBackSearchMode(context.Context) {
+// inputBackSearch sets the inputMode to Backsearch.
+func (root *Root) inputBackSearch(context.Context) {
 	root.setSearchMode(backward)
 }
 
-// setSearchFilterMode sets the inputMode to Filter.
-func (root *Root) setSearchFilterMode(context.Context) {
+// inputSearchFilter sets the inputMode to Filter.
+func (root *Root) inputSearchFilter(context.Context) {
 	root.setSearchMode(filter)
 }
 

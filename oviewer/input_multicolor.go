@@ -10,8 +10,8 @@ import (
 // searchCandidateListLen is the number of search candidates for multicolor.
 const searchCandidateListLen = 10
 
-// setMultiColorMode sets the inputMode to MultiColor.
-func (root *Root) setMultiColorMode(context.Context) {
+// inputMultiColor sets the inputMode to MultiColor.
+func (root *Root) inputMultiColor(context.Context) {
 	input := root.input
 	input.reset()
 
