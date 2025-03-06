@@ -31,7 +31,7 @@ func (*eventHeaderColumn) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventHeaderColumn) Prompt() string {
-	return "Header Column:"
+	return "Header column:"
 }
 
 // Confirm returns the event when the input is confirmed.
