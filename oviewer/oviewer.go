@@ -130,14 +130,18 @@ func newLineNumber(number, wrap int) LineNumber {
 	return LineNumber{number: number, wrap: wrap}
 }
 
+// MinStartX is the minimum start position of x.
 const MinStartX = -10
 
 // RulerType is the type of ruler.
 type RulerType int
 
 const (
+	// RulerNone is no ruler.
 	RulerNone RulerType = iota
+	// RulerRelative is a relative ruler.
 	RulerRelative
+	// RulerAbsolute is an absolute ruler.
 	RulerAbsolute
 )
 

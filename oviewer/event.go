@@ -318,6 +318,7 @@ type eventCloseAllFilter struct {
 	tcell.EventTime
 }
 
+// CloseAllFilter fires the eventCloseAllFilter event.
 func (root *Root) CloseAllFilter() {
 	root.sendCloseAllFilter()
 }

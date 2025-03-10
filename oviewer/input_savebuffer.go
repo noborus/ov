@@ -7,7 +7,7 @@ import (
 )
 
 // setSaveBuffer is a wrapper to move to setSaveBufferMode.
-func (root *Root) inputSaveBuffer(ctx context.Context) {
+func (root *Root) inputSaveBuffer(_ context.Context) {
 	if root.Doc.seekable {
 		root.setMessage("Does not support saving regular files")
 		return

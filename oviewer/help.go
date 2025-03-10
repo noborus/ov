@@ -52,6 +52,7 @@ func KeyBindString(k KeyBind) string {
 	return buf.String()
 }
 
+// DuplicateKeyBind returns a string representing duplicate key bindings.
 func DuplicateKeyBind(k KeyBind) string {
 	w := &strings.Builder{}
 	dupkey := findDuplicateKeyBind(k)

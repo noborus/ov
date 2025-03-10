@@ -23,8 +23,11 @@ type align struct {
 type specifiedAlign int
 
 const (
+	// Unspecified is the default alignment.
 	Unspecified specifiedAlign = iota
+	// RightAlign is the right alignment.
 	RightAlign
+	// LeftAlign is the left alignment.
 	LeftAlign
 )
 

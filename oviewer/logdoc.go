@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 )
 
+// LogDocument is a document for log.
 type LogDocument struct {
 	*Document
 	channel chan []byte
