@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setWatchIntervalMode sets the inputMode to Watch.
-func (root *Root) setWatchIntervalMode(context.Context) {
+// inputWatchInterval sets the inputMode to Watch.
+func (root *Root) inputWatchInterval(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newWatchIntervalEvent(input.Candidate[Watch])

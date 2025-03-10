@@ -74,7 +74,8 @@ func (root *Root) togglePlain(context.Context) {
 	root.setMessagef("Set PlainMode %t", root.Doc.PlainMode)
 }
 
-// togglePlain toggles column rainbow mode.
+// toggleRainbow toggles the column rainbow mode.
+// When enabled, each column will be displayed in a different color for better visual distinction.
 func (root *Root) toggleRainbow(context.Context) {
 	root.Doc.ColumnRainbow = !root.Doc.ColumnRainbow
 	root.setMessagef("Set Column Rainbow Mode %t", root.Doc.ColumnRainbow)
@@ -119,6 +120,7 @@ func (root *Root) toggleMouse(context.Context) {
 	}
 }
 
+// toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
 	switch root.Doc.general.RulerType {
 	case RulerNone:
@@ -354,12 +356,13 @@ func (root *Root) setSectionNum(input string) {
 	root.setMessagef("Set section header num %d", num)
 }
 
-func specifyOnScreen(input string, max int) (int, error) {
+// specifyOnScreen checks if the input is a valid number.
+func specifyOnScreen(input string, height int) (int, error) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
 		return 0, ErrInvalidNumber
 	}
-	if num < 0 || num > max {
+	if num < 0 || num > height {
 		return 0, ErrOutOfRange
 	}
 	return num, nil
@@ -860,7 +863,7 @@ func (root *Root) bottomSectionLN(ctx context.Context) int {
 }
 
 // toggleFixedColumn toggles the fixed column.
-func (root *Root) toggleFixedColumn(ctx context.Context) {
+func (root *Root) toggleFixedColumn(context.Context) {
 	cursor := root.Doc.columnCursor - root.Doc.columnStart + 1
 	if root.Doc.HeaderColumn == cursor {
 		cursor = 0
@@ -871,17 +874,17 @@ func (root *Root) toggleFixedColumn(ctx context.Context) {
 }
 
 // ShrinkColumn shrinks the specified column.
-func (root *Root) ShrinkColumn(ctx context.Context, cursor int) error {
+func (root *Root) ShrinkColumn(_ context.Context, cursor int) error {
 	return root.Doc.shrinkColumn(cursor, true)
 }
 
 // ExpandColumn expands the specified column.
-func (root *Root) ExpandColumn(ctx context.Context, cursor int) error {
+func (root *Root) ExpandColumn(_ context.Context, cursor int) error {
 	return root.Doc.shrinkColumn(cursor, false)
 }
 
 // toggleShrinkColumn shrinks or expands the current cursor column.
-func (root *Root) toggleShrinkColumn(ctx context.Context) {
+func (root *Root) toggleShrinkColumn(_ context.Context) {
 	cursor := root.Doc.columnCursor
 	shrink, err := root.Doc.isColumnShrink(cursor)
 	if err != nil {
@@ -911,7 +914,7 @@ func (m *Document) isColumnShrink(cursor int) (bool, error) {
 }
 
 // toggleRightAlign toggles the right align of the current cursor column.
-func (root *Root) toggleRightAlign(ctx context.Context) {
+func (root *Root) toggleRightAlign(_ context.Context) {
 	m := root.Doc
 	align, err := m.toggleRightAlign(m.columnCursor)
 	if err != nil {

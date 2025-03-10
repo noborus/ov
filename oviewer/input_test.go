@@ -298,23 +298,23 @@ func TestInput_next(t *testing.T) {
 func TestRoot_inputPrompt(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
-	root.setDelimiterMode(ctx)
+	root.inputDelimiter(ctx)
 	if root.inputPrompt() != "Delimiter:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Delimiter:")
 	}
-	root.setHeaderMode(ctx)
+	root.inputHeader(ctx)
 	if root.inputPrompt() != "Header length:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Header length:")
 	}
-	root.setSkipLinesMode(ctx)
+	root.inputSkipLines(ctx)
 	if root.inputPrompt() != "Skip lines:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Skip lines:")
 	}
-	root.setGoLineMode(ctx)
+	root.inputGoLine(ctx)
 	if root.inputPrompt() != "Goto line:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Goto line:")
 	}
-	root.setMultiColorMode(ctx)
+	root.inputMultiColor(ctx)
 	if root.inputPrompt() != "Multi color:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Multi color:")
 	}
@@ -322,67 +322,67 @@ func TestRoot_inputPrompt(t *testing.T) {
 	if root.inputPrompt() != "" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "")
 	}
-	root.setForwardSearchMode(ctx)
+	root.inputForwardSearch(ctx)
 	if root.inputPrompt() != "/" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "/")
 	}
-	root.setBackSearchMode(ctx)
+	root.inputBackSearch(ctx)
 	if root.inputPrompt() != "?" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "?")
 	}
-	root.setSearchFilterMode(ctx)
+	root.inputSearchFilter(ctx)
 	if root.inputPrompt() != "&" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "&")
 	}
-	root.setJumpTargetMode(ctx)
+	root.inputJumpTarget(ctx)
 	if root.inputPrompt() != "Jump target line:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Jump target line:")
 	}
-	root.setSaveBufferMode(ctx)
+	root.inputSaveBuffer(ctx)
 	if root.inputPrompt() != "(Save)file:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "(Save)file:")
 	}
-	root.setViewInputMode(ctx)
+	root.inputViewMode(ctx)
 	if root.inputPrompt() != "Mode:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Mode:")
 	}
-	root.setWatchIntervalMode(ctx)
+	root.inputWatchInterval(ctx)
 	if root.inputPrompt() != "Watch interval:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Watch interval:")
 	}
-	root.setWriteBAMode(ctx)
+	root.inputWriteBA(ctx)
 	if root.inputPrompt() != "WriteAndQuit Before:After:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "WriteAndQuit Before:After:")
 	}
-	root.setTabWidthMode(ctx)
+	root.inputTabWidth(ctx)
 	if root.inputPrompt() != "TAB width:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "TAB width:")
 	}
-	root.setSectionDelimiterMode(ctx)
+	root.inputSectionDelimiter(ctx)
 	if root.inputPrompt() != "Section delimiter:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section delimiter:")
 	}
-	root.setSectionStartMode(ctx)
+	root.inputSectionStart(ctx)
 	if root.inputPrompt() != "Section start:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section start:")
 	}
-	root.setSectionNumMode(ctx)
+	root.inputSectionNum(ctx)
 	if root.inputPrompt() != "Section Num:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section Num:")
 	}
-	root.setSectionStartMode(ctx)
+	root.inputSectionStart(ctx)
 	if root.inputPrompt() != "Section start:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section start:")
 	}
-	root.setConvertType(ctx)
+	root.inputConvert(ctx)
 	if root.inputPrompt() != "Convert:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Convert:")
 	}
-	root.setVerticalHeaderMode(ctx)
+	root.inputVerticalHeader(ctx)
 	if root.inputPrompt() != "Vertical header length:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Vertical header length:")
 	}
-	root.setHeaderColumnMode(ctx)
+	root.inputHeaderColumn(ctx)
 	if root.inputPrompt() != "Header column:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Header column:")
 	}
@@ -391,46 +391,46 @@ func TestRoot_inputPrompt(t *testing.T) {
 func TestRoot_inputState(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
-	root.setForwardSearchMode(ctx)
+	root.inputForwardSearch(ctx)
 	root.setSearcher("test", false)
-	root.inputCaseSensitive(ctx)
+	root.toggleCaseSensitive(ctx)
 	if root.searchOpt != "(Aa)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(Aa)")
 	}
-	root.inputSmartCaseSensitive(ctx)
+	root.toggleSmartCaseSensitive(ctx)
 	if root.searchOpt != "(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(S)")
 	}
-	root.inputIncSearch(ctx)
+	root.toggleIncSearch(ctx)
 	if root.searchOpt != "(I)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(I)(S)")
 	}
-	root.inputRegexpSearch(ctx)
+	root.toggleRegexpSearch(ctx)
 	if root.searchOpt != "(R)(I)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(R)(I)(S)")
 	}
 	if root.searchOpt != "(R)(I)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(R)(I)(S)")
 	}
-	root.inputNonMatch(ctx)
-	root.setBackSearchMode(ctx)
+	root.toggleNonMatch(ctx)
+	root.inputBackSearch(ctx)
 	if root.searchOpt != "(R)(I)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "(R)(I)(S)")
 	}
-	root.setSearchFilterMode(ctx)
-	root.inputNonMatch(ctx)
+	root.inputSearchFilter(ctx)
+	root.toggleNonMatch(ctx)
 	if root.searchOpt != "Non-match(R)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "Non-match(R)(S)")
 	}
-	root.inputPrevious(ctx)
+	root.candidatePrevious(ctx)
 	if root.searchOpt != "Non-match(R)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "Non-match(R)(S)")
 	}
-	root.inputNext(ctx)
+	root.candidateNext(ctx)
 	if root.searchOpt != "Non-match(R)(S)" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "Non-match(R)(S)")
 	}
-	root.setHeaderMode(ctx)
+	root.inputHeader(ctx)
 	root.setPromptOpt()
 	if root.searchOpt != "" {
 		t.Errorf("Root.inputState() = %v, want %v", root.searchOpt, "")

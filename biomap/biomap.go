@@ -2,12 +2,14 @@ package biomap
 
 import "sync"
 
+// Map is a bidirectional map.
 type Map[k comparable, v comparable] struct {
 	s        sync.RWMutex
 	Forward  map[k]v
 	Backward map[v]k
 }
 
+// NewMap returns a new Map.
 func NewMap[k comparable, v comparable]() *Map[k, v] {
 	return &Map[k, v]{
 		Forward:  make(map[k]v),
@@ -15,6 +17,7 @@ func NewMap[k comparable, v comparable]() *Map[k, v] {
 	}
 }
 
+// Store stores a key-value pair.
 func (m *Map[k, v]) Store(key k, value v) {
 	m.s.Lock()
 	defer m.s.Unlock()
@@ -22,6 +25,7 @@ func (m *Map[k, v]) Store(key k, value v) {
 	m.Backward[value] = key
 }
 
+// LoadForward loads a value from a key.
 func (m *Map[k, v]) LoadForward(key k) (value v, ok bool) {
 	m.s.RLock()
 	defer m.s.RUnlock()
@@ -29,6 +33,7 @@ func (m *Map[k, v]) LoadForward(key k) (value v, ok bool) {
 	return
 }
 
+// LoadBackward loads a key from a value.
 func (m *Map[k, v]) LoadBackward(value v) (key k, ok bool) {
 	m.s.RLock()
 	defer m.s.RUnlock()
@@ -36,6 +41,7 @@ func (m *Map[k, v]) LoadBackward(value v) (key k, ok bool) {
 	return
 }
 
+// DeleteForward deletes a key-value pair.
 func (m *Map[k, v]) DeleteForward(key k) {
 	m.s.Lock()
 	defer m.s.Unlock()
@@ -47,6 +53,7 @@ func (m *Map[k, v]) DeleteForward(key k) {
 	delete(m.Backward, value)
 }
 
+// DeleteBackward deletes a key-value pair.
 func (m *Map[k, v]) DeleteBackward(value v) {
 	m.s.Lock()
 	defer m.s.Unlock()

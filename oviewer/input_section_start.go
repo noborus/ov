@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSectionStartMode sets the inputMode to SectionStart.
-func (root *Root) setSectionStartMode(context.Context) {
+// inputSectionStart sets the inputMode to SectionStart.
+func (root *Root) inputSectionStart(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSectionStartEvent(input.Candidate[SectionStart])

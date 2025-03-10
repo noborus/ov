@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSectionDelimiterMode sets the inputMode to SectionDelimiter.
-func (root *Root) setSectionDelimiterMode(context.Context) {
+// inputSectionDelimiter sets the inputMode to SectionDelimiter.
+func (root *Root) inputSectionDelimiter(context.Context) {
 	input := root.input
 	input.reset()
 	input.Candidate[SectionDelimiter].toLast(root.Doc.SectionDelimiter)

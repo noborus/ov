@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setSkipLinesMode sets the inputMode to SkipLines.
-func (root *Root) setSkipLinesMode(context.Context) {
+// inputSkipLines sets the inputMode to SkipLines.
+func (root *Root) inputSkipLines(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSkipLinesEvent()

@@ -14,7 +14,6 @@ import (
 // The string is displayed in help.
 const (
 	actionExit           = "exit"
-	actionWriteBA        = "set_write_exit"
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSuspend        = "suspend"
@@ -27,9 +26,32 @@ const (
 	actionCloseFile      = "close_file"
 	actionReload         = "reload"
 	actionWatch          = "watch"
-	actionWatchInterval  = "watch_interval"
 	actionHelp           = "help"
 	actionLogDoc         = "logdoc"
+	actionMark           = "mark"
+	actionRemoveMark     = "remove_mark"
+	actionRemoveAllMark  = "remove_all_mark"
+	actionAlternate      = "alter_rows_mode"
+	actionLineNumMode    = "line_number_mode"
+	actionWrap           = "wrap_mode"
+	actionColumnMode     = "column_mode"
+	actionColumnWidth    = "column_width"
+	actionNextSearch     = "next_search"
+	actionNextBackSearch = "next_backsearch"
+	actionNextDoc        = "next_doc"
+	actionPreviousDoc    = "previous_doc"
+	actionCloseDoc       = "close_doc"
+	actionCloseAllFilter = "close_all_filter"
+	actionToggleMouse    = "toggle_mouse"
+	actionHideOther      = "hide_other"
+	actionAlignFormat    = "align_format"
+	actionRawFormat      = "raw_format"
+	actionFixedColumn    = "fixed_column"
+	actionShrinkColumn   = "shrink_column"
+	actionRightAlign     = "right_align"
+	actionRuler          = "toggle_ruler"
+
+	// Move actions.
 	actionMoveDown       = "down"
 	actionMoveUp         = "up"
 	actionMoveTop        = "top"
@@ -46,52 +68,35 @@ const (
 	actionMovePgDn       = "page_down"
 	actionMoveHfUp       = "page_half_up"
 	actionMoveHfDn       = "page_half_down"
-	actionSection        = "section_delimiter"
-	actionSectionStart   = "section_start"
 	actionNextSection    = "next_section"
 	actionLastSection    = "last_section"
 	actionPrevSection    = "previous_section"
-	actionMark           = "mark"
-	actionRemoveMark     = "remove_mark"
-	actionRemoveAllMark  = "remove_all_mark"
 	actionMoveMark       = "next_mark"
 	actionMovePrevMark   = "previous_mark"
-	actionViewMode       = "set_view_mode"
-	actionAlternate      = "alter_rows_mode"
-	actionLineNumMode    = "line_number_mode"
-	actionSearch         = "search"
-	actionFilter         = "filter"
-	actionWrap           = "wrap_mode"
-	actionColumnMode     = "column_mode"
-	actionColumnWidth    = "column_width"
-	actionBackSearch     = "backsearch"
+
+	// Actions that enter input mode.
+	actionConvertType    = "convert_type"
 	actionDelimiter      = "delimiter"
+	actionGoLine         = "goto"
+	actionHeaderColumn   = "header_column"
 	actionHeader         = "header"
+	actionJumpTarget     = "jump_target"
+	actionMultiColor     = "multi_color"
+	actionSaveBuffer     = "save_buffer"
+	actionSearch         = "search"
+	actionBackSearch     = "backsearch"
+	actionFilter         = "filter"
+	actionSection        = "section_delimiter"
+	actionSectionNum     = "section_header_num"
+	actionSectionStart   = "section_start"
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
-	actionGoLine         = "goto"
-	actionSectionNum     = "section_header_num"
-	actionNextSearch     = "next_search"
-	actionNextBackSearch = "next_backsearch"
-	actionNextDoc        = "next_doc"
-	actionPreviousDoc    = "previous_doc"
-	actionCloseDoc       = "close_doc"
-	actionCloseAllFilter = "close_all_filter"
-	actionToggleMouse    = "toggle_mouse"
-	actionMultiColor     = "multi_color"
-	actionJumpTarget     = "jump_target"
-	actionSaveBuffer     = "save_buffer"
-	actionHideOther      = "hide_other"
-	actionConvertType    = "convert_type"
-	actionAlignFormat    = "align_format"
-	actionRawFormat      = "raw_format"
 	actionVerticalHeader = "vertical_header"
-	actionHeaderColumn   = "header_column"
-	actionFixedColumn    = "fixed_column"
-	actionShrinkColumn   = "shrink_column"
-	actionRightAlign     = "right_align"
-	actionRuler          = "toggle_ruler"
+	actionViewMode       = "set_view_mode"
+	actionWatchInterval  = "watch_interval"
+	actionWriteBA        = "set_write_exit"
 
+	// input actions.
 	inputCaseSensitive      = "input_casesensitive"
 	inputSmartCaseSensitive = "input_smart_casesensitive"
 	inputIncSearch          = "input_incsearch"
@@ -107,7 +112,6 @@ const (
 func (root *Root) handlers() map[string]func(context.Context) {
 	return map[string]func(context.Context){
 		actionExit:           root.Quit,
-		actionWriteBA:        root.setWriteBAMode,
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSuspend:        root.suspend,
@@ -117,20 +121,38 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionFollowSection:  root.toggleFollowSection,
 		actionPlain:          root.togglePlain,
 		actionRainbow:        root.toggleRainbow,
+		actionCloseFile:      root.closeFile,
 		actionReload:         root.Reload,
 		actionWatch:          root.toggleWatch,
-		actionWatchInterval:  root.setWatchIntervalMode,
-		actionCloseFile:      root.closeFile,
 		actionHelp:           root.helpDisplay,
 		actionLogDoc:         root.logDisplay,
+		actionMark:           root.addMark,
+		actionRemoveMark:     root.removeMark,
+		actionRemoveAllMark:  root.removeAllMark,
+		actionAlternate:      root.toggleAlternateRows,
+		actionLineNumMode:    root.toggleLineNumMode,
+		actionWrap:           root.toggleWrapMode,
+		actionColumnMode:     root.toggleColumnMode,
+		actionColumnWidth:    root.toggleColumnWidth,
+		actionNextSearch:     root.sendNextSearch,
+		actionNextBackSearch: root.sendNextBackSearch,
+		actionNextDoc:        root.nextDoc,
+		actionPreviousDoc:    root.previousDoc,
+		actionCloseDoc:       root.closeDocument,
+		actionCloseAllFilter: root.closeAllFilter,
+		actionToggleMouse:    root.toggleMouse,
+		actionHideOther:      root.toggleHideOtherSection,
+		actionAlignFormat:    root.alignFormat,
+		actionRawFormat:      root.rawFormat,
+		actionFixedColumn:    root.toggleFixedColumn,
+		actionShrinkColumn:   root.toggleShrinkColumn,
+		actionRightAlign:     root.toggleRightAlign,
+		actionRuler:          root.toggleRuler,
+
+		// Move actions.
 		actionMoveDown:       root.moveDownOne,
 		actionMoveUp:         root.moveUpOne,
 		actionMoveTop:        root.moveTop,
-		actionMoveBottom:     root.moveBottom,
-		actionMovePgUp:       root.movePgUp,
-		actionMovePgDn:       root.movePgDn,
-		actionMoveHfUp:       root.moveHfUp,
-		actionMoveHfDn:       root.moveHfDn,
 		actionMoveWidthLeft:  root.moveWidthLeft,
 		actionMoveWidthRight: root.moveWidthRight,
 		actionMoveLeft:       root.moveLeftOne,
@@ -139,59 +161,47 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionMoveHfRight:    root.moveHfRight,
 		actionMoveBeginLeft:  root.moveBeginLeft,
 		actionMoveEndRight:   root.moveEndRight,
-		actionSection:        root.setSectionDelimiterMode,
-		actionSectionStart:   root.setSectionStartMode,
+		actionMoveBottom:     root.moveBottom,
+		actionMovePgUp:       root.movePgUp,
+		actionMovePgDn:       root.movePgDn,
+		actionMoveHfUp:       root.moveHfUp,
+		actionMoveHfDn:       root.moveHfDn,
 		actionNextSection:    root.nextSection,
-		actionPrevSection:    root.prevSection,
 		actionLastSection:    root.lastSection,
+		actionPrevSection:    root.prevSection,
 		actionMoveMark:       root.nextMark,
 		actionMovePrevMark:   root.prevMark,
-		actionViewMode:       root.setViewInputMode,
-		actionWrap:           root.toggleWrapMode,
-		actionColumnMode:     root.toggleColumnMode,
-		actionColumnWidth:    root.toggleColumnWidth,
-		actionAlternate:      root.toggleAlternateRows,
-		actionLineNumMode:    root.toggleLineNumMode,
-		actionMark:           root.addMark,
-		actionRemoveMark:     root.removeMark,
-		actionRemoveAllMark:  root.removeAllMark,
-		actionSearch:         root.setForwardSearchMode,
-		actionBackSearch:     root.setBackSearchMode,
-		actionFilter:         root.setSearchFilterMode,
-		actionDelimiter:      root.setDelimiterMode,
-		actionHeader:         root.setHeaderMode,
-		actionSkipLines:      root.setSkipLinesMode,
-		actionTabWidth:       root.setTabWidthMode,
-		actionGoLine:         root.setGoLineMode,
-		actionSectionNum:     root.setSectionNumMode,
-		actionNextSearch:     root.sendNextSearch,
-		actionNextBackSearch: root.sendNextBackSearch,
-		actionNextDoc:        root.nextDoc,
-		actionPreviousDoc:    root.previousDoc,
-		actionCloseDoc:       root.closeDocument,
-		actionCloseAllFilter: root.closeAllFilter,
-		actionToggleMouse:    root.toggleMouse,
-		actionMultiColor:     root.setMultiColorMode,
-		actionJumpTarget:     root.setJumpTargetMode,
-		actionSaveBuffer:     root.setSaveBuffer,
-		actionHideOther:      root.toggleHideOtherSection,
-		actionConvertType:    root.setConvertType,
-		actionAlignFormat:    root.alignFormat,
-		actionRawFormat:      root.rawFormat,
-		actionVerticalHeader: root.setVerticalHeaderMode,
-		actionHeaderColumn:   root.setHeaderColumnMode,
-		actionFixedColumn:    root.toggleFixedColumn,
-		actionShrinkColumn:   root.toggleShrinkColumn,
-		actionRightAlign:     root.toggleRightAlign,
-		actionRuler:          root.toggleRuler,
 
-		inputCaseSensitive:      root.inputCaseSensitive,
-		inputSmartCaseSensitive: root.inputSmartCaseSensitive,
-		inputIncSearch:          root.inputIncSearch,
-		inputRegexpSearch:       root.inputRegexpSearch,
-		inputNonMatch:           root.inputNonMatch,
-		inputPrevious:           root.inputPrevious,
-		inputNext:               root.inputNext,
+		// Actions that enter input mode.
+		actionConvertType:    root.inputConvert,
+		actionDelimiter:      root.inputDelimiter,
+		actionGoLine:         root.inputGoLine,
+		actionHeaderColumn:   root.inputHeaderColumn,
+		actionHeader:         root.inputHeader,
+		actionJumpTarget:     root.inputJumpTarget,
+		actionMultiColor:     root.inputMultiColor,
+		actionSaveBuffer:     root.inputSaveBuffer,
+		actionSearch:         root.inputForwardSearch,
+		actionBackSearch:     root.inputBackSearch,
+		actionFilter:         root.inputSearchFilter,
+		actionSection:        root.inputSectionDelimiter,
+		actionSectionNum:     root.inputSectionNum,
+		actionSectionStart:   root.inputSectionStart,
+		actionSkipLines:      root.inputSkipLines,
+		actionTabWidth:       root.inputTabWidth,
+		actionVerticalHeader: root.inputVerticalHeader,
+		actionViewMode:       root.inputViewMode,
+		actionWatchInterval:  root.inputWatchInterval,
+		actionWriteBA:        root.inputWriteBA,
+
+		// input actions.
+		inputCaseSensitive:      root.toggleCaseSensitive,
+		inputSmartCaseSensitive: root.toggleSmartCaseSensitive,
+		inputIncSearch:          root.toggleIncSearch,
+		inputRegexpSearch:       root.toggleRegexpSearch,
+		inputNonMatch:           root.toggleNonMatch,
+		inputPrevious:           root.candidatePrevious,
+		inputNext:               root.candidateNext,
 		inputCopy:               root.CopySelect,
 		inputPaste:              root.Paste,
 	}
@@ -204,9 +214,9 @@ type KeyBind map[string][]string
 func defaultKeyBinds() KeyBind {
 	return map[string][]string{
 		actionExit:           {"Escape", "q"},
-		actionWriteBA:        {"ctrl+q"},
 		actionCancel:         {"ctrl+c"},
 		actionWriteExit:      {"Q"},
+		actionSuspend:        {"ctrl+z"},
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
 		actionFollowAll:      {"ctrl+a"},
@@ -216,17 +226,35 @@ func defaultKeyBinds() KeyBind {
 		actionCloseFile:      {"ctrl+F9", "ctrl+alt+s"},
 		actionReload:         {"F5", "ctrl+alt+l"},
 		actionWatch:          {"F4", "ctrl+alt+w"},
-		actionWatchInterval:  {"ctrl+w"},
 		actionHelp:           {"h", "ctrl+F1", "ctrl+alt+c"},
 		actionLogDoc:         {"ctrl+F2", "ctrl+alt+e"},
+		actionMark:           {"m"},
+		actionRemoveMark:     {"M"},
+		actionRemoveAllMark:  {"ctrl+delete"},
+		actionAlternate:      {"C"},
+		actionLineNumMode:    {"G"},
+		actionWrap:           {"w", "W"},
+		actionColumnMode:     {"c"},
+		actionColumnWidth:    {"alt+o"},
+		actionNextSearch:     {"n"},
+		actionNextBackSearch: {"N"},
+		actionNextDoc:        {"]"},
+		actionPreviousDoc:    {"["},
+		actionCloseDoc:       {"ctrl+k"},
+		actionCloseAllFilter: {"K"},
+		actionToggleMouse:    {"ctrl+alt+r"},
+		actionHideOther:      {"alt+-"},
+		actionAlignFormat:    {"alt+F"},
+		actionRawFormat:      {"alt+R"},
+		actionFixedColumn:    {"F"},
+		actionShrinkColumn:   {"s"},
+		actionRightAlign:     {"alt+a"},
+		actionRuler:          {"alt+shift+F9"},
+
+		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
-		actionMoveBottom:     {"End"},
-		actionMovePgUp:       {"PageUp", "ctrl+b"},
-		actionMovePgDn:       {"PageDown", "ctrl+v"},
-		actionMoveHfUp:       {"ctrl+u"},
-		actionMoveHfDn:       {"ctrl+d"},
 		actionMoveWidthLeft:  {"ctrl+shift+left"},
 		actionMoveWidthRight: {"ctrl+shift+right"},
 		actionMoveLeft:       {"left"},
@@ -235,53 +263,40 @@ func defaultKeyBinds() KeyBind {
 		actionMoveHfRight:    {"ctrl+right"},
 		actionMoveBeginLeft:  {"shift+Home"},
 		actionMoveEndRight:   {"shift+End"},
-		actionSection:        {"alt+d"},
-		actionSectionStart:   {"ctrl+F3", "alt+s"},
+		actionMoveBottom:     {"End"},
+		actionMovePgUp:       {"PageUp", "ctrl+b"},
+		actionMovePgDn:       {"PageDown", "ctrl+v"},
+		actionMoveHfUp:       {"ctrl+u"},
+		actionMoveHfDn:       {"ctrl+d"},
 		actionNextSection:    {"space"},
-		actionPrevSection:    {"^"},
 		actionLastSection:    {"9"},
+		actionPrevSection:    {"^"},
 		actionMoveMark:       {">"},
 		actionMovePrevMark:   {"<"},
-		actionViewMode:       {"p", "P"},
-		actionWrap:           {"w", "W"},
-		actionColumnMode:     {"c"},
-		actionColumnWidth:    {"alt+o"},
-		actionAlternate:      {"C"},
-		actionLineNumMode:    {"G"},
-		actionMark:           {"m"},
-		actionRemoveAllMark:  {"ctrl+delete"},
-		actionRemoveMark:     {"M"},
+
+		// Actions that enter input mode.
+		actionConvertType:    {"alt+t"},
+		actionDelimiter:      {"d"},
+		actionGoLine:         {"g"},
+		actionHeaderColumn:   {"Y"},
+		actionHeader:         {"H"},
+		actionJumpTarget:     {"j"},
+		actionMultiColor:     {"."},
+		actionSaveBuffer:     {"S"},
 		actionSearch:         {"/"},
 		actionBackSearch:     {"?"},
 		actionFilter:         {"&"},
-		actionDelimiter:      {"d"},
-		actionHeader:         {"H"},
+		actionSection:        {"alt+d"},
+		actionSectionNum:     {"F7"},
+		actionSectionStart:   {"ctrl+F3", "alt+s"},
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
-		actionGoLine:         {"g"},
-		actionSectionNum:     {"F7"},
-		actionNextSearch:     {"n"},
-		actionNextBackSearch: {"N"},
-		actionNextDoc:        {"]"},
-		actionPreviousDoc:    {"["},
-		actionCloseDoc:       {"ctrl+k"},
-		actionCloseAllFilter: {"K"},
-		actionToggleMouse:    {"ctrl+alt+r"},
-		actionSuspend:        {"ctrl+z"},
-		actionMultiColor:     {"."},
-		actionJumpTarget:     {"j"},
-		actionSaveBuffer:     {"S"},
-		actionHideOther:      {"alt+-"},
-		actionConvertType:    {"alt+t"},
-		actionAlignFormat:    {"alt+F"},
-		actionRawFormat:      {"alt+R"},
 		actionVerticalHeader: {"y"},
-		actionHeaderColumn:   {"Y"},
-		actionFixedColumn:    {"F"},
-		actionShrinkColumn:   {"s"},
-		actionRightAlign:     {"alt+a"},
-		actionRuler:          {"alt+shift+F9"},
+		actionViewMode:       {"p", "P"},
+		actionWatchInterval:  {"ctrl+w"},
+		actionWriteBA:        {"ctrl+q"},
 
+		// input actions.
 		inputCaseSensitive:      {"alt+c"},
 		inputSmartCaseSensitive: {"alt+s"},
 		inputIncSearch:          {"alt+i"},

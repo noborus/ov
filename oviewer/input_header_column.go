@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setHeaderColumnMode sets the inputMode to Vertical Header Column.
-func (root *Root) setHeaderColumnMode(context.Context) {
+// inputHeaderColumn sets the inputMode to Vertical Header Column.
+func (root *Root) inputHeaderColumn(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newHeaderColumnEvent()

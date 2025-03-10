@@ -7,16 +7,11 @@ import (
 )
 
 // setSaveBuffer is a wrapper to move to setSaveBufferMode.
-func (root *Root) setSaveBuffer(ctx context.Context) {
+func (root *Root) inputSaveBuffer(_ context.Context) {
 	if root.Doc.seekable {
 		root.setMessage("Does not support saving regular files")
 		return
 	}
-	root.setSaveBufferMode(ctx)
-}
-
-// setSaveBufferMode sets the inputMode to SaveBuffer.
-func (root *Root) setSaveBufferMode(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newSaveBufferEvent(input.Candidate[SaveBuffer])

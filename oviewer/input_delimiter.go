@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setDelimiterMode sets the inputMode to Delimiter.
-func (root *Root) setDelimiterMode(context.Context) {
+// inputDelimiter sets the inputMode to Delimiter.
+func (root *Root) inputDelimiter(context.Context) {
 	input := root.input
 	input.reset()
 	input.Candidate[Delimiter].toLast(root.Doc.ColumnDelimiter)

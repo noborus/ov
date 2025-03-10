@@ -13,28 +13,48 @@ import (
 type InputMode int
 
 const (
-	// Normal is normal mode.
-	Normal           InputMode = iota
-	ViewMode                   // ViewMode is a view selection input mode.
-	Search                     // Search is a search input mode.
-	Backsearch                 // Backsearch is a backward search input mode.
-	Filter                     // Filter is a filter input mode.
-	Goline                     // Goline is a move input mode.
-	Header                     // Header is the number of headers input mode.
-	Delimiter                  // Delimiter is a delimiter input mode.
-	TabWidth                   // TabWidth is the tab number input mode.
-	Watch                      // Watch is the watch interval input mode.
-	SkipLines                  // SkipLines is the number of lines to skip.
-	WriteBA                    // WriteBA is the number of ranges to write at quit.
-	SectionDelimiter           // SectionDelimiter is a section delimiter input mode.
-	SectionStart               // SectionStart is a section start position input mode.
-	MultiColor                 // MultiColor is multi-word coloring.
-	JumpTarget                 // JumpTarget is the position to display the search results.
-	SaveBuffer                 // SaveBuffer is the save buffer.
-	SectionNum                 // SectionNum is the section number.
-	ConvertType                // ConvertType is the convert type.
-	VerticalHeader             // VerticalHeader is the number of vertical headers input mode.
-	HeaderColumn               // HeaderColumn is the number of vertical header columns input mode.
+	// Normal is the default mode where no special input handling is active.
+	Normal InputMode = iota
+	// ViewMode is for view selection.
+	ViewMode
+	// Search is for searching.
+	Search
+	// Backsearch is for backward searching.
+	Backsearch
+	// Filter is for filtering.
+	Filter
+	// Goline is for moving to a specific line.
+	Goline
+	// Header is for setting the number of headers.
+	Header
+	// Delimiter is for setting the delimiter.
+	Delimiter
+	// TabWidth is for setting the tab width.
+	TabWidth
+	// Watch is for setting the watch interval.
+	Watch
+	// SkipLines is for setting the number of lines to skip.
+	SkipLines
+	// WriteBA is for setting the number of ranges to write at quit.
+	WriteBA
+	// SectionDelimiter is for setting the section delimiter.
+	SectionDelimiter
+	// SectionStart is for setting the section start position.
+	SectionStart
+	// MultiColor is for multi-word coloring.
+	MultiColor
+	// JumpTarget is for setting the position to display the search results.
+	JumpTarget
+	// SaveBuffer is for saving the buffer.
+	SaveBuffer
+	// SectionNum is for setting the section number.
+	SectionNum
+	// ConvertType is for setting the convert type.
+	ConvertType
+	// VerticalHeader is for setting the number of vertical headers.
+	VerticalHeader
+	// HeaderColumn is for setting the number of vertical header columns.
+	HeaderColumn
 )
 
 // Input represents the status of various inputs.
@@ -215,8 +235,8 @@ func (input *Input) next() {
 	input.cursorX = stringWidth(string(runes))
 }
 
-// inputCaseSensitive toggles case sensitivity.
-func (root *Root) inputCaseSensitive(context.Context) {
+// toggleCaseSensitive toggles case sensitivity.
+func (root *Root) toggleCaseSensitive(context.Context) {
 	root.Config.CaseSensitive = !root.Config.CaseSensitive
 	if root.Config.CaseSensitive {
 		root.Config.SmartCaseSensitive = false
@@ -224,8 +244,8 @@ func (root *Root) inputCaseSensitive(context.Context) {
 	root.setPromptOpt()
 }
 
-// inputSmartCaseSensitive toggles case sensitivity.
-func (root *Root) inputSmartCaseSensitive(context.Context) {
+// toggleSmartCaseSensitive toggles case sensitivity.
+func (root *Root) toggleSmartCaseSensitive(context.Context) {
 	root.Config.SmartCaseSensitive = !root.Config.SmartCaseSensitive
 	if root.Config.SmartCaseSensitive {
 		root.Config.CaseSensitive = false
@@ -233,30 +253,30 @@ func (root *Root) inputSmartCaseSensitive(context.Context) {
 	root.setPromptOpt()
 }
 
-// inputIncSearch toggles incremental search.
-func (root *Root) inputIncSearch(context.Context) {
+// toggleIncSearch toggles incremental search.
+func (root *Root) toggleIncSearch(context.Context) {
 	root.Config.Incsearch = !root.Config.Incsearch
 	root.setPromptOpt()
 }
 
-// inputRegexpSearch toggles regexp search.
-func (root *Root) inputRegexpSearch(context.Context) {
+// toggleRegexpSearch toggles regexp search.
+func (root *Root) toggleRegexpSearch(context.Context) {
 	root.Config.RegexpSearch = !root.Config.RegexpSearch
 	root.setPromptOpt()
 }
 
-func (root *Root) inputNonMatch(context.Context) {
+func (root *Root) toggleNonMatch(context.Context) {
 	root.Doc.nonMatch = !root.Doc.nonMatch
 	root.setPromptOpt()
 }
 
-// inputPrevious searches the previous history.
-func (root *Root) inputPrevious(context.Context) {
+// candidatePrevious searches the previous history.
+func (root *Root) candidatePrevious(context.Context) {
 	root.input.previous()
 }
 
-// inputNext searches the next history.
-func (root *Root) inputNext(context.Context) {
+// candidateNext searches the next history.
+func (root *Root) candidateNext(context.Context) {
 	root.input.next()
 }
 
@@ -359,7 +379,6 @@ func (c *candidate) down() string {
 	defer c.mux.Unlock()
 	if len(c.list) == 0 {
 		return ""
-
 	}
 
 	if len(c.list) > c.p+1 {

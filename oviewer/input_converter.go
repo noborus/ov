@@ -6,8 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// setConvertType sets the convert type input mode.
-func (root *Root) setConvertType(context.Context) {
+// inputConvert sets the convert type input mode.
+func (root *Root) inputConvert(context.Context) {
 	input := root.input
 	input.reset()
 	input.Event = newConvertTypeEvent(input.Candidate[ConvertType])
