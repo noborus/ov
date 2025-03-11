@@ -5,7 +5,7 @@ LDFLAGS := "-X main.Version=$(shell git describe --tags --abbrev=0 --always) -X 
 
 all: build
 
-test: $(SRCS)
+test: deps $(SRCS)
 	go test ./...
 
 deps:
