@@ -69,6 +69,9 @@ type Config struct {
 	MemoryLimitFile int
 	// DisableMouse indicates whether mouse support is disabled.
 	DisableMouse bool
+
+	// IsWriteOnExit indicates whether to write the current screen on exit.
+	IsWriteOnExit bool
 	// IsWriteOriginal indicates whether the current screen should be written on quit.
 	IsWriteOriginal bool
 	// QuitSmall indicates whether to quit if the output fits on one screen.

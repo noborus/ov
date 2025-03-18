@@ -574,7 +574,7 @@ func (root *Root) setWriteBA(ctx context.Context, input string) {
 	root.BeforeWriteOriginal = before
 	root.AfterWriteOriginal = after
 	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
-	root.IsWriteOriginal = true
+	root.IsWriteOnExit = true
 	root.Quit(ctx)
 }
 
@@ -840,13 +840,21 @@ func (root *Root) Cancel(context.Context) {
 	root.Doc.FollowMode = false
 }
 
+// toggleWriteOriginal toggles the write flag.
+func (root *Root) toggleWriteOriginal(context.Context) {
+	root.IsWriteOriginal = !root.IsWriteOriginal
+	root.setMessagef("Set WriteOriginal %t", root.IsWriteOriginal)
+}
+
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit(ctx context.Context) {
-	root.IsWriteOriginal = true
+	root.IsWriteOnExit = true
 	if root.Doc.HideOtherSection && root.AfterWriteOriginal == 0 {
 		// hide other section.
 		root.AfterWriteOriginal = root.bottomSectionLN(ctx)
 	}
+	root.OnExit = root.ScreenContent()
+
 	root.Quit(ctx)
 }
 

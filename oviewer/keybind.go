@@ -50,6 +50,7 @@ const (
 	actionShrinkColumn   = "shrink_column"
 	actionRightAlign     = "right_align"
 	actionRuler          = "toggle_ruler"
+	actionWriteOriginal  = "write_original"
 
 	// Move actions.
 	actionMoveDown       = "down"
@@ -148,6 +149,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionShrinkColumn:   root.toggleShrinkColumn,
 		actionRightAlign:     root.toggleRightAlign,
 		actionRuler:          root.toggleRuler,
+		actionWriteOriginal:  root.toggleWriteOriginal,
 
 		// Move actions.
 		actionMoveDown:       root.moveDownOne,
@@ -250,6 +252,7 @@ func defaultKeyBinds() KeyBind {
 		actionShrinkColumn:   {"s"},
 		actionRightAlign:     {"alt+a"},
 		actionRuler:          {"alt+shift+F9"},
+		actionWriteOriginal:  {"alt+shift+F8"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -317,6 +320,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionCancel, "cancel")
 	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
 	k.writeKeyBind(&b, actionWriteBA, "set output screen and quit")
+	k.writeKeyBind(&b, actionWriteOriginal, "set output original screen and quit")
 	k.writeKeyBind(&b, actionSuspend, "suspend")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
