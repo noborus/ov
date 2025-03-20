@@ -1286,8 +1286,8 @@ func TestRoot_setWriteBA(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			ctx := context.Background()
 			root.setWriteBA(ctx, tt.args.input)
-			if root.IsWriteOriginal != tt.want {
-				t.Errorf("setWriteBA() = %v, want %v", root.IsWriteOriginal, tt.want)
+			if root.IsWriteOnExit != tt.want {
+				t.Errorf("setWriteBA() = %v, want %v", root.IsWriteOnExit, tt.want)
 			}
 		})
 	}

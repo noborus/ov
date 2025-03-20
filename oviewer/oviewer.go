@@ -16,6 +16,7 @@ import (
 	"code.rocketnine.space/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
+	"github.com/noborus/tcellansi"
 )
 
 // Root is the root structure of the oviewer.
@@ -41,6 +42,11 @@ type Root struct {
 	keyConfig *cbind.Configuration
 	// inputKeyConfig contains the binding settings for the key.
 	inputKeyConfig *cbind.Configuration
+
+	// Pattern is the search pattern.
+	Pattern string
+	// OnExit is output on exit.
+	OnExit []string
 
 	// Original string.
 	OriginStr string
@@ -579,7 +585,7 @@ func (root *Root) Run() error {
 
 	// Quit if fits on screen.
 	if root.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
-		root.IsWriteOriginal = true
+		root.IsWriteOnExit = true
 		return nil
 	}
 
@@ -868,10 +874,86 @@ func (root *Root) docSmall() bool {
 	return true
 }
 
+// OutputOnExit outputs to the terminal when exiting.
+func (root *Root) OutputOnExit() {
+	if root.IsWriteOnExit {
+		if root.IsWriteOriginal {
+			root.WriteOriginal()
+		} else {
+			root.WriteCurrentScreen()
+		}
+	}
+	if root.Debug {
+		root.WriteLog()
+	}
+}
+
 // WriteOriginal writes to the original terminal.
 func (root *Root) WriteOriginal() {
 	output := os.Stdout
 	root.writeOriginal(output)
+}
+
+// WriteCurrentScreen writes to the current screen.
+func (root *Root) WriteCurrentScreen() {
+	output := os.Stdout
+	strs := root.OnExit
+	if strs == nil {
+		height, err := root.dummyScreen()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-1)
+	}
+	for _, str := range strs {
+		output.Write([]byte(str))
+	}
+}
+
+// dummyScreen creates a dummy screen.
+func (root *Root) dummyScreen() (int, error) {
+	root.Screen = tcell.NewSimulationScreen("")
+	if err := root.Screen.Init(); err != nil {
+		return 0, err
+	}
+	height := root.scr.vHeight
+	if root.BeforeWriteOriginal != 0 || root.AfterWriteOriginal != 0 {
+		root.Doc.topLN = max(root.Doc.topLN+root.Doc.firstLine()-root.BeforeWriteOriginal, 0)
+		end := root.Doc.bottomLN
+		if root.AfterWriteOriginal != 0 {
+			end = root.Doc.topLN + root.AfterWriteOriginal
+		}
+		height = end - root.Doc.topLN
+	}
+	root.Screen.SetSize(root.scr.vWidth, height)
+	if root.Pattern != "" {
+		root.setSearcher(root.Pattern, root.Config.CaseSensitive)
+	}
+	ctx := context.Background()
+	root.prepareScreen()
+	root.prepareDraw(ctx)
+	root.draw(ctx)
+	height = realHeight(root.scr) + 1
+	return height, nil
+}
+
+func realHeight(scr SCR) int {
+	height := 0
+	for ; height < scr.vHeight-1; height++ {
+		if !scr.lines[scr.numbers[height].number].valid {
+			break
+		}
+	}
+	return height
+}
+
+// WriteScreenContent writes to the screen terminal.
+func (root *Root) ScreenContent() []string {
+	root.Screen.Sync()
+	m := root.Doc
+	height := realHeight(root.scr)
+	return tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
 }
 
 func (root *Root) writeOriginal(output io.Writer) {

@@ -687,6 +687,7 @@ func (root *Root) sendNextBackSearch(context.Context) {
 // This is for calling Search from the outside.
 // Normally, the event is executed from Confirm.
 func (root *Root) Search(str string) {
+	root.Pattern = str
 	root.sendSearch(str)
 }
 
