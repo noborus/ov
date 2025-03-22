@@ -565,7 +565,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
 
-	rootCmd.PersistentFlags().StringP("view-mode", "", "", "apply predefined settings for a specific mode")
+	rootCmd.PersistentFlags().StringP("view-mode", "m", "", "apply predefined settings for a specific mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
