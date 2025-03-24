@@ -42,6 +42,8 @@ var (
 	ver bool
 	// helpKey is key bind information.
 	helpKey bool
+	// listViewMode is list view mode.
+	listViewMode bool
 	// completion is the generation of shell completion.
 	completion string
 	// execCommand targets the output of executing the command.
@@ -89,6 +91,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 		if helpKey {
 			HelpKey(cmd, args)
+			return nil
+		}
+		if listViewMode {
+			ListViewMode()
 			return nil
 		}
 
@@ -141,6 +147,13 @@ func HelpKey(cmd *cobra.Command, _ []string) {
 	keyBind := oviewer.GetKeyBinds(config)
 	fmt.Println(oviewer.KeyBindString(keyBind))
 	fmt.Print(oviewer.DuplicateKeyBind(keyBind))
+}
+
+func ListViewMode() {
+	listView := oviewer.ListViewMode(config)
+	for _, v := range listView {
+		fmt.Println(v)
+	}
 }
 
 // Completion is shell completion.
@@ -394,6 +407,8 @@ func init() {
 	})
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes")
+
 	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "command execution result instead of file")
 
 	rootCmd.PersistentFlags().BoolVarP(&forceScreen, "force-screen", "", false, "display screen even when redirecting output")

@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"sync"
 	"syscall"
 
@@ -671,11 +672,7 @@ func (root *Root) setCaption() {
 
 // setViewModeConfig sets view mode config.
 func (root *Root) setViewModeConfig() {
-	list := make([]string, 0, len(root.Config.Mode)+1)
-	list = append(list, nameGeneral)
-	for name := range root.Config.Mode {
-		list = append(list, name)
-	}
+	list := ListViewMode(root.Config)
 	root.input.Candidate[ViewMode].list = list
 }
 
@@ -1040,4 +1037,14 @@ func (root *Root) debugNumOfChunk() {
 		}
 		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 	}
+}
+
+func ListViewMode(config Config) []string {
+	list := make([]string, 0, len(config.Mode)+1)
+	list = append(list, nameGeneral)
+	for name := range config.Mode {
+		list = append(list, name)
+	}
+	sort.Strings(list)
+	return list
 }
