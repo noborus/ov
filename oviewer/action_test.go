@@ -1294,6 +1294,12 @@ func TestRoot_setWriteBA(t *testing.T) {
 }
 
 func TestRoot_modeConfig(t *testing.T) {
+	modeConfig := map[string]modeConfig{
+		"a": {},
+		"b": {
+			TabWidth: intPtr(4),
+		},
+	}
 	type args struct {
 		modeName string
 	}
@@ -1316,7 +1322,11 @@ func TestRoot_modeConfig(t *testing.T) {
 			args: args{
 				modeName: nameGeneral,
 			},
-			want:    general{},
+			want: general{
+				Converter:      "es",
+				TabWidth:       8,
+				MarkStyleWidth: 1,
+			},
 			wantErr: false,
 		},
 		{
@@ -1324,27 +1334,39 @@ func TestRoot_modeConfig(t *testing.T) {
 			args: args{
 				modeName: "a",
 			},
-			want:    general{},
+			want: general{
+				Converter:      "es",
+				TabWidth:       8,
+				MarkStyleWidth: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "testModeConfig b",
+			args: args{
+				modeName: "b",
+			},
+			want: general{
+				Converter:      "es",
+				TabWidth:       4,
+				MarkStyleWidth: 1,
+			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
-			root.Config = Config{
-				General: general{},
-				Mode: map[string]modeConfig{
-					"a": {},
-					"b": {},
-				},
-			}
+			config := NewConfig()
+			config.Mode = modeConfig
+			root.SetConfig(config)
 			got, err := root.setModeConfig(tt.args.modeName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Root.modeConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Root.modeConfig() = %v, want %v", got, tt.want)
+				t.Errorf("Root.modeConfig() = \n%#v, want\n%#v", got, tt.want)
 			}
 		})
 	}

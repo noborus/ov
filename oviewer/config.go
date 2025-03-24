@@ -176,6 +176,7 @@ func NewConfig() Config {
 			Bold:       true,
 		},
 		General: general{
+			Converter:      "es",
 			TabWidth:       8,
 			MarkStyleWidth: 1,
 		},

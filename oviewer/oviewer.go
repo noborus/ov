@@ -593,12 +593,12 @@ func setModeConfig(src general, dst modeConfig) general {
 
 // generateMode generates a view mode configuration from a general structure.
 func generateMode(general general) modeConfig {
-	configGeneral := modeConfig{}
+	mode := modeConfig{}
 
 	srcVal := reflect.ValueOf(&general).Elem()
 	srcType := srcVal.Type()
 
-	dstVal := reflect.ValueOf(&configGeneral).Elem()
+	dstVal := reflect.ValueOf(&mode).Elem()
 
 	for i := 0; i < srcVal.NumField(); i++ {
 		srcField := srcVal.Field(i)
@@ -612,7 +612,7 @@ func generateMode(general general) modeConfig {
 			dstField.Set(srcField)
 		}
 	}
-	return configGeneral
+	return mode
 }
 
 // SetWatcher sets file monitoring.
