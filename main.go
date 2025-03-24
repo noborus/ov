@@ -95,21 +95,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if completion != "" {
 			return Completion(cmd, completion)
 		}
-		// Set the caption from the environment variable.
-		if config.General.Caption == "" {
-			config.General.Caption = viper.GetString("CAPTION")
-		}
-
-		// Actually tabs when "\t" is specified as an option.
-		if config.General.ColumnDelimiter == "\\t" {
-			config.General.ColumnDelimiter = "\t"
-		}
-
-		// SectionHeader is enabled if SectionHeaderNum is greater than 0.
-		if config.General.SectionHeaderNum > 0 {
-			config.General.SectionHeader = true
-		}
-
 		// Set a converter by specifying flag.
 		if alignF {
 			config.General.Converter = "align"

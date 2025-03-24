@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sync"
 	"syscall"
@@ -17,6 +18,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
 	"github.com/noborus/tcellansi"
+	"github.com/spf13/viper"
 )
 
 // Root is the root structure of the oviewer.
@@ -234,6 +236,74 @@ type general struct {
 	SectionHeader bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection bool
+}
+
+// modeConfig is the configuration of the view mode.
+type modeConfig struct {
+	// Converter is the converter name.
+	Converter *string
+	// Caption is an additional caption to display after the file name.
+	Caption *string
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter *string
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter *string
+	// Specified string for jumpTarget.
+	JumpTarget *string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
+
+	// TabWidth is tab stop num.
+	TabWidth *int
+	// Header is number of header lines to be fixed.
+	Header *int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader *int
+	// HeaderColumn is the number of columns from the left to be fixed.
+	// If 0 is specified, no columns are fixed.
+	HeaderColumn *int
+	// SkipLines is the rows to skip.
+	SkipLines *int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval *int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth *int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition *int
+	// SectionHeaderNum is the number of lines in the section header.
+	SectionHeaderNum *int
+	// HScrollWidth is the horizontal scroll width.
+	HScrollWidth *string
+	// HScrollWidthNum is the horizontal scroll width.
+	HScrollWidthNum *int
+	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
+	RulerType *RulerType
+	// AlternateRows alternately style rows.
+	AlternateRows *bool
+	// ColumnMode is column mode.
+	ColumnMode *bool
+	// ColumnWidth is column width mode.
+	ColumnWidth *bool
+	// ColumnRainbow is column rainbow.
+	ColumnRainbow *bool
+	// LineNumMode displays line numbers.
+	LineNumMode *bool
+	// Wrap is Wrap mode.
+	WrapMode *bool
+	// FollowMode is the follow mode.
+	FollowMode *bool
+	// FollowAll is a follow mode for all documents.
+	FollowAll *bool
+	// FollowSection is a follow mode that uses section instead of line.
+	FollowSection *bool
+	// FollowName is the mode to follow files by name.
+	FollowName *bool
+	// PlainMode is whether to enable the original character decoration.
+	PlainMode *bool
+	// SectionHeader is whether to display the section header.
+	SectionHeader *bool
+	// HideOtherSection is whether to hide other sections.
+	HideOtherSection *bool
 }
 
 var (
@@ -475,11 +545,74 @@ func openFiles(fileNames []string) (*Root, error) {
 
 // SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
+	// Add default "general" mode settings.
+	if _, exists := config.Mode[nameGeneral]; !exists {
+		config.Mode[nameGeneral] = generateMode(config.General)
+	}
+
 	viewMode, overwrite := config.Mode[config.ViewMode]
 	if overwrite {
-		config.General = mergeGeneral(config.General, viewMode)
+		config.General = setModeConfig(config.General, viewMode)
 	}
+	config.General = finalizeGeneral(config.General)
 	root.Config = config
+}
+
+// finalizeGeneral finalizes the general configuration.
+func finalizeGeneral(general general) general {
+	// Set the caption from the environment variable.
+	if general.Caption == "" {
+		general.Caption = viper.GetString("CAPTION")
+	}
+	// Actually tabs when "\t" is specified as an option.
+	if general.ColumnDelimiter == "\\t" {
+		general.ColumnDelimiter = "\t"
+	}
+	// SectionHeader is enabled if SectionHeaderNum is greater than 0.
+	if general.SectionHeaderNum > 0 {
+		general.SectionHeader = true
+	}
+	return general
+}
+
+// setModeConfig sets the mode configuration.
+func setModeConfig(src general, dst modeConfig) general {
+	srcVal := reflect.ValueOf(&src).Elem()
+	dstVal := reflect.ValueOf(&dst).Elem()
+	srcType := srcVal.Type()
+
+	for i := 0; i < srcVal.NumField(); i++ {
+		srcField := srcVal.Field(i)
+		dstField := dstVal.FieldByName(srcType.Field(i).Name)
+		if dstField.IsValid() && dstField.Kind() == reflect.Ptr && !dstField.IsNil() {
+			srcField.Set(dstField.Elem())
+		}
+	}
+	return src
+}
+
+// generateMode generates a view mode configuration from a general structure.
+func generateMode(general general) modeConfig {
+	configGeneral := modeConfig{}
+
+	srcVal := reflect.ValueOf(&general).Elem()
+	srcType := srcVal.Type()
+
+	dstVal := reflect.ValueOf(&configGeneral).Elem()
+
+	for i := 0; i < srcVal.NumField(); i++ {
+		srcField := srcVal.Field(i)
+		fieldName := srcType.Field(i).Name
+		dstField := dstVal.FieldByName(fieldName)
+		if dstField.IsValid() && dstField.CanSet() && dstField.Kind() == reflect.Ptr {
+			ptr := reflect.New(srcField.Type())
+			ptr.Elem().Set(srcField)
+			dstField.Set(ptr)
+		} else if dstField.IsValid() && dstField.CanSet() && dstField.Kind() == srcField.Kind() {
+			dstField.Set(srcField)
+		}
+	}
+	return configGeneral
 }
 
 // SetWatcher sets file monitoring.

@@ -5,7 +5,7 @@ type Config struct {
 	// KeyBinding
 	Keybind map[string][]string
 	// Mode represents the operation of the customized mode.
-	Mode map[string]general
+	Mode map[string]modeConfig
 	// ViewMode represents the view mode.
 	// ViewMode sets several settings together and can be easily switched.
 	ViewMode string

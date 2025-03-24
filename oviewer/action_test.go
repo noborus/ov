@@ -1333,12 +1333,12 @@ func TestRoot_modeConfig(t *testing.T) {
 			root := rootHelper(t)
 			root.Config = Config{
 				General: general{},
-				Mode: map[string]general{
+				Mode: map[string]modeConfig{
 					"a": {},
 					"b": {},
 				},
 			}
-			got, err := root.modeConfig(tt.args.modeName)
+			got, err := root.setModeConfig(tt.args.modeName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Root.modeConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

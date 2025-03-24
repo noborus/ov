@@ -796,7 +796,7 @@ func TestRoot_setCaption(t *testing.T) {
 
 func TestRoot_setViewModeConfig(t *testing.T) {
 	type fields struct {
-		viewMode map[string]general
+		viewMode map[string]modeConfig
 	}
 	tests := []struct {
 		name     string
@@ -806,7 +806,7 @@ func TestRoot_setViewModeConfig(t *testing.T) {
 		{
 			name: "test1",
 			fields: fields{
-				viewMode: map[string]general{
+				viewMode: map[string]modeConfig{
 					"view1": {},
 				},
 			},
@@ -878,3 +878,32 @@ func TestRoot_prepareRun(t *testing.T) {
 		})
 	}
 }
+func TestSetConfigGeneral(t *testing.T) {
+	src := general{
+		TabWidth:      8,
+		Header:        2,
+		AlternateRows: false,
+	}
+
+	dst := modeConfig{
+		TabWidth:      intPtr(4),
+		Header:        nil, // nil の場合は src の値を保持
+		AlternateRows: boolPtr(true),
+	}
+
+	result := setModeConfig(src, dst)
+
+	if result.TabWidth != 4 {
+		t.Errorf("Expected TabWidth to be 4, got %d", result.TabWidth)
+	}
+	if result.Header != 2 {
+		t.Errorf("Expected Header to remain 2, got %d", result.Header)
+	}
+	if result.AlternateRows != true {
+		t.Errorf("Expected AlternateRows to be true, got %v", result.AlternateRows)
+	}
+}
+
+func intPtr(i int) *int       { return &i }
+func boolPtr(b bool) *bool    { return &b }
+func strPtr(s string) *string { return &s }

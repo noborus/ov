@@ -449,13 +449,13 @@ func getTty() (*os.File, error) {
 // setViewMode switches to the preset display mode.
 // Set header lines and columnMode together.
 func (root *Root) setViewMode(ctx context.Context, modeName string) {
-	c, err := root.modeConfig(modeName)
+	general, err := root.setModeConfig(modeName)
 	if err != nil {
 		root.setMessage(err.Error())
 		return
 	}
 	m := root.Doc
-	m.general = mergeGeneral(m.general, c)
+	m.general = finalizeGeneral(general)
 	m.conv = m.converterType(m.general.Converter)
 	m.regexpCompile()
 	m.ClearCache()
@@ -467,17 +467,14 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	root.setMessagef("Set mode %s", modeName)
 }
 
-// modeConfig returns the configuration of the specified mode.
-func (root *Root) modeConfig(modeName string) (general, error) {
-	if modeName == nameGeneral {
-		return root.General, nil
-	}
-
-	c, ok := root.Config.Mode[modeName]
+// setModeConfig returns the configuration of the specified mode.
+func (root *Root) setModeConfig(modeName string) (general, error) {
+	modeConfig, ok := root.Config.Mode[modeName]
 	if !ok {
 		return general{}, fmt.Errorf("%s mode not found", modeName)
 	}
-	return c, nil
+	config := setModeConfig(root.Doc.general, modeConfig)
+	return config, nil
 }
 
 // setConverter sets the converter type.
