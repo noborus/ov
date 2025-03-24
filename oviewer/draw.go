@@ -313,7 +313,7 @@ func (root *Root) blankLineNumber(y int) {
 	if root.scr.startX <= 0 {
 		return
 	}
-	for x := 0; x < root.scr.startX-1; x++ {
+	for x := 0; x < root.scr.startX; x++ {
 		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
 	}
 }
