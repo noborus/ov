@@ -52,7 +52,7 @@ func (root *Root) draw(ctx context.Context) {
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	markStyleWidth := min(root.scr.vWidth, root.Doc.general.MarkStyleWidth)
+	markStyleWidth := min(root.scr.vWidth, root.Doc.RunTimeSettings.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
@@ -142,7 +142,7 @@ func (root *Root) drawSectionHeader() {
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
 		// markstyle is displayed above the section header.
-		markStyleWidth := min(root.scr.vWidth, m.general.MarkStyleWidth)
+		markStyleWidth := min(root.scr.vWidth, m.RunTimeSettings.MarkStyleWidth)
 		root.applyMarkStyle(lN, y, markStyleWidth)
 		// Underline search lines when they overlap in section headers.
 		if lN == m.lastSearchLN {

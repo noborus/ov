@@ -88,7 +88,7 @@ func (root *Root) toggleFollowMode(context.Context) {
 
 // toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll(context.Context) {
-	root.General.FollowAll = !root.General.FollowAll
+	root.FollowAll = !root.FollowAll
 	root.mu.Lock()
 	for _, doc := range root.DocList {
 		doc.latestNum = doc.BufEndNum()
@@ -122,13 +122,13 @@ func (root *Root) toggleMouse(context.Context) {
 
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
-	switch root.Doc.general.RulerType {
+	switch root.Doc.RulerType {
 	case RulerNone:
-		root.Doc.general.RulerType = RulerRelative
+		root.Doc.RulerType = RulerRelative
 	case RulerRelative:
-		root.Doc.general.RulerType = RulerAbsolute
+		root.Doc.RulerType = RulerAbsolute
 	case RulerAbsolute:
-		root.Doc.general.RulerType = RulerNone
+		root.Doc.RulerType = RulerNone
 	}
 	root.setMessagef("Set Ruler %s", root.Doc.RulerType.String())
 	root.ViewSync(ctx)
@@ -449,44 +449,45 @@ func getTty() (*os.File, error) {
 // setViewMode switches to the preset display mode.
 // Set header lines and columnMode together.
 func (root *Root) setViewMode(ctx context.Context, modeName string) {
-	c, err := root.modeConfig(modeName)
+	settings, err := root.modeConfig(modeName)
 	if err != nil {
 		root.setMessage(err.Error())
 		return
 	}
 	m := root.Doc
-	m.general = mergeGeneral(m.general, c)
-	m.conv = m.converterType(m.general.Converter)
+	m.RunTimeSettings = settings
+	m.conv = m.converterType(m.RunTimeSettings.Converter)
 	m.regexpCompile()
 	m.ClearCache()
 	root.ViewSync(ctx)
 	// Set caption.
-	if m.general.Caption != "" {
-		m.Caption = m.general.Caption
+	if m.RunTimeSettings.Caption != "" {
+		m.Caption = m.RunTimeSettings.Caption
 	}
 	root.setMessagef("Set mode %s", modeName)
 }
 
 // modeConfig returns the configuration of the specified mode.
-func (root *Root) modeConfig(modeName string) (general, error) {
+func (root *Root) modeConfig(modeName string) (RunTimeSettings, error) {
 	if modeName == nameGeneral {
-		return root.General, nil
+		return root.settings, nil
 	}
 
 	c, ok := root.Config.Mode[modeName]
 	if !ok {
-		return general{}, fmt.Errorf("%s mode not found", modeName)
+		return RunTimeSettings{}, fmt.Errorf("%s mode not found", modeName)
 	}
-	return c, nil
+	settings := updateRunTimeSettings(root.Doc.RunTimeSettings, c)
+	return settings, nil
 }
 
 // setConverter sets the converter type.
 func (root *Root) setConverter(ctx context.Context, name string) {
 	m := root.Doc
-	if m.general.Converter == name {
+	if m.RunTimeSettings.Converter == name {
 		return
 	}
-	m.general.Converter = name
+	m.RunTimeSettings.Converter = name
 	m.conv = m.converterType(name)
 	m.ClearCache()
 	root.ViewSync(ctx)
@@ -836,7 +837,7 @@ func (root *Root) followSection(ctx context.Context) {
 
 // Cancel follow mode and follow all mode.
 func (root *Root) Cancel(context.Context) {
-	root.General.FollowAll = false
+	root.FollowAll = false
 	root.Doc.FollowMode = false
 }
 

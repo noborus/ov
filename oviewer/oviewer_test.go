@@ -49,6 +49,15 @@ func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
 	return root
 }
 
+func intPtr(i int) *int {
+	return &i
+}
+func strPtr(s string) *string {
+	return &s
+}
+func boolPtr(b bool) *bool {
+	return &b
+}
 func TestNewOviewer(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -179,13 +188,13 @@ func TestRoot_Run(t *testing.T) {
 	}()
 	tests := []struct {
 		name    string
-		general general
+		general RunTimeSettings
 		ovArgs  []string
 		wantErr bool
 	}{
 		{
 			name: "testEmpty",
-			general: general{
+			general: RunTimeSettings{
 				TabWidth:       8,
 				MarkStyleWidth: 1,
 			},
@@ -194,7 +203,7 @@ func TestRoot_Run(t *testing.T) {
 		},
 		{
 			name: "test1",
-			general: general{
+			general: RunTimeSettings{
 				TabWidth:       8,
 				MarkStyleWidth: 1,
 			},
@@ -203,7 +212,7 @@ func TestRoot_Run(t *testing.T) {
 		},
 		{
 			name: "testHeader",
-			general: general{
+			general: RunTimeSettings{
 				TabWidth:       8,
 				MarkStyleWidth: 1,
 				Header:         1,
@@ -459,27 +468,26 @@ func TestRoot_docSmall(t *testing.T) {
 		})
 	}
 }
-
-func Test_mergeGeneral(t *testing.T) {
+func Test_updateRuntimeSettings(t *testing.T) {
 	type args struct {
-		src general
-		dst general
+		runtime       RunTimeSettings
+		configGeneral General
 	}
 	tests := []struct {
 		name string
 		args args
-		want general
+		want RunTimeSettings
 	}{
 		{
 			name: "test1",
 			args: args{
-				src: general{},
-				dst: general{
+				runtime: RunTimeSettings{
 					TabWidth: 4,
 					Header:   1,
 				},
+				configGeneral: General{},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth: 4,
 				Header:   1,
 			},
@@ -487,32 +495,32 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test2",
 			args: args{
-				src: general{
-					TabWidth: 8,
-					Header:   2,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					TabWidth: 4,
 					Header:   1,
 				},
+				configGeneral: General{
+					TabWidth: intPtr(8),
+					Header:   intPtr(2),
+				},
 			},
-			want: general{
-				TabWidth: 4,
-				Header:   1,
+			want: RunTimeSettings{
+				TabWidth: 8,
+				Header:   2,
 			},
 		},
 		{
 			name: "test3",
 			args: args{
-				src: general{
-					TabWidth: 8,
-					Header:   2,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					SkipLines: 3,
 				},
+				configGeneral: General{
+					TabWidth: intPtr(8),
+					Header:   intPtr(2),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:  8,
 				Header:    2,
 				SkipLines: 3,
@@ -521,38 +529,38 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test4",
 			args: args{
-				src: general{
-					TabWidth:  8,
-					Header:    2,
-					SkipLines: 3,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					SkipLines:  5,
 					ColumnMode: true,
 				},
+				configGeneral: General{
+					TabWidth:  intPtr(8),
+					Header:    intPtr(2),
+					SkipLines: intPtr(3),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:   8,
 				Header:     2,
-				SkipLines:  5,
+				SkipLines:  3,
 				ColumnMode: true,
 			},
 		},
 		{
 			name: "test5",
 			args: args{
-				src: general{
-					TabWidth:   8,
-					Header:     2,
-					SkipLines:  3,
-					ColumnMode: true,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					ColumnWidth: true,
 					LineNumMode: true,
 				},
+				configGeneral: General{
+					TabWidth:   intPtr(8),
+					Header:     intPtr(2),
+					SkipLines:  intPtr(3),
+					ColumnMode: boolPtr(true),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:    8,
 				Header:      2,
 				SkipLines:   3,
@@ -564,20 +572,20 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test6",
 			args: args{
-				src: general{
-					TabWidth:    8,
-					Header:      2,
-					SkipLines:   3,
-					ColumnMode:  true,
-					ColumnWidth: true,
-					LineNumMode: true,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					WrapMode:   false,
 					FollowMode: true,
 				},
+				configGeneral: General{
+					TabWidth:    intPtr(8),
+					Header:      intPtr(2),
+					SkipLines:   intPtr(3),
+					ColumnMode:  boolPtr(true),
+					ColumnWidth: boolPtr(true),
+					LineNumMode: boolPtr(true),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:    8,
 				Header:      2,
 				SkipLines:   3,
@@ -591,22 +599,22 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test7",
 			args: args{
-				src: general{
-					TabWidth:    8,
-					Header:      2,
-					SkipLines:   3,
-					ColumnMode:  true,
-					ColumnWidth: true,
-					LineNumMode: true,
-					WrapMode:    false,
-					FollowMode:  true,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					FollowAll:     true,
 					FollowSection: true,
 				},
+				configGeneral: General{
+					TabWidth:    intPtr(8),
+					Header:      intPtr(2),
+					SkipLines:   intPtr(3),
+					ColumnMode:  boolPtr(true),
+					ColumnWidth: boolPtr(true),
+					LineNumMode: boolPtr(true),
+					WrapMode:    boolPtr(false),
+					FollowMode:  boolPtr(true),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:      8,
 				Header:        2,
 				SkipLines:     3,
@@ -622,24 +630,24 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test8",
 			args: args{
-				src: general{
-					TabWidth:      8,
-					Header:        2,
-					SkipLines:     3,
-					ColumnMode:    true,
-					ColumnWidth:   true,
-					LineNumMode:   true,
-					WrapMode:      false,
-					FollowMode:    true,
-					FollowAll:     true,
-					FollowSection: true,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					FollowName:      true,
 					ColumnDelimiter: ",",
 				},
+				configGeneral: General{
+					TabWidth:      intPtr(8),
+					Header:        intPtr(2),
+					SkipLines:     intPtr(3),
+					ColumnMode:    boolPtr(true),
+					ColumnWidth:   boolPtr(true),
+					LineNumMode:   boolPtr(true),
+					WrapMode:      boolPtr(false),
+					FollowMode:    boolPtr(true),
+					FollowAll:     boolPtr(true),
+					FollowSection: boolPtr(true),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:        8,
 				Header:          2,
 				SkipLines:       3,
@@ -657,26 +665,26 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test9",
 			args: args{
-				src: general{
-					TabWidth:        8,
-					Header:          2,
-					SkipLines:       3,
-					ColumnMode:      true,
-					ColumnWidth:     true,
-					LineNumMode:     true,
-					WrapMode:        false,
-					FollowMode:      true,
-					FollowAll:       true,
-					FollowSection:   true,
-					FollowName:      true,
-					ColumnDelimiter: ",",
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					WatchInterval:  10,
 					MarkStyleWidth: 2,
 				},
+				configGeneral: General{
+					TabWidth:        intPtr(8),
+					Header:          intPtr(2),
+					SkipLines:       intPtr(3),
+					ColumnMode:      boolPtr(true),
+					ColumnWidth:     boolPtr(true),
+					LineNumMode:     boolPtr(true),
+					WrapMode:        boolPtr(false),
+					FollowMode:      boolPtr(true),
+					FollowAll:       boolPtr(true),
+					FollowSection:   boolPtr(true),
+					FollowName:      boolPtr(true),
+					ColumnDelimiter: strPtr(","),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:        8,
 				Header:          2,
 				SkipLines:       3,
@@ -696,28 +704,28 @@ func Test_mergeGeneral(t *testing.T) {
 		{
 			name: "test10",
 			args: args{
-				src: general{
-					TabWidth:        8,
-					Header:          2,
-					SkipLines:       3,
-					ColumnMode:      true,
-					ColumnWidth:     true,
-					LineNumMode:     true,
-					WrapMode:        false,
-					FollowMode:      true,
-					FollowAll:       true,
-					FollowSection:   true,
-					FollowName:      true,
-					ColumnDelimiter: ",",
-					WatchInterval:   10,
-					MarkStyleWidth:  2,
-				},
-				dst: general{
+				runtime: RunTimeSettings{
 					SectionDelimiter:     "##",
 					SectionStartPosition: 5,
 				},
+				configGeneral: General{
+					TabWidth:        intPtr(8),
+					Header:          intPtr(2),
+					SkipLines:       intPtr(3),
+					ColumnMode:      boolPtr(true),
+					ColumnWidth:     boolPtr(true),
+					LineNumMode:     boolPtr(true),
+					WrapMode:        boolPtr(false),
+					FollowMode:      boolPtr(true),
+					FollowAll:       boolPtr(true),
+					FollowSection:   boolPtr(true),
+					FollowName:      boolPtr(true),
+					ColumnDelimiter: strPtr(","),
+					WatchInterval:   intPtr(10),
+					MarkStyleWidth:  intPtr(2),
+				},
 			},
-			want: general{
+			want: RunTimeSettings{
 				TabWidth:             8,
 				Header:               2,
 				SkipLines:            3,
@@ -739,8 +747,8 @@ func Test_mergeGeneral(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mergeGeneral(tt.args.src, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("mergeGeneral() = %v, want %v", got, tt.want)
+			if got := updateRunTimeSettings(tt.args.runtime, tt.args.configGeneral); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("updateRuntimeSettings() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -785,7 +793,7 @@ func TestRoot_setCaption(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("MAN_PN", tt.fields.manpn)
 			root := rootHelper(t)
-			root.General.Caption = tt.fields.caption
+			root.Caption = tt.fields.caption
 			root.setCaption()
 			if got := root.Doc.Caption; got != tt.want {
 				t.Errorf("Root.setCaption() = %v, want %v", got, "test")
@@ -796,7 +804,7 @@ func TestRoot_setCaption(t *testing.T) {
 
 func TestRoot_setViewModeConfig(t *testing.T) {
 	type fields struct {
-		viewMode map[string]general
+		viewMode map[string]General
 	}
 	tests := []struct {
 		name     string
@@ -806,7 +814,7 @@ func TestRoot_setViewModeConfig(t *testing.T) {
 		{
 			name: "test1",
 			fields: fields{
-				viewMode: map[string]general{
+				viewMode: map[string]General{
 					"view1": {},
 				},
 			},
@@ -874,6 +882,238 @@ func TestRoot_prepareRun(t *testing.T) {
 			}
 			if got := root.QuitSmall; got != tt.wantQuit {
 				t.Errorf("Root.prepareRun() = %v, want %v", got, tt.wantQuit)
+			}
+		})
+	}
+}
+
+func Test_updateRuntimeSettings_AllFields(t *testing.T) {
+	type args struct {
+		runtime       RunTimeSettings
+		configGeneral General
+	}
+	tests := []struct {
+		name string
+		args args
+		want RunTimeSettings
+	}{
+		{
+			name: "testEmpty",
+			args: args{
+				runtime:       RunTimeSettings{},
+				configGeneral: General{},
+			},
+			want: RunTimeSettings{},
+		},
+		{
+			name: "testNoChange",
+			args: args{
+				runtime: RunTimeSettings{
+					TabWidth:             4,
+					Header:               1,
+					VerticalHeader:       2,
+					HeaderColumn:         3,
+					SkipLines:            5,
+					WatchInterval:        10,
+					MarkStyleWidth:       2,
+					SectionStartPosition: 6,
+					SectionHeaderNum:     1,
+					HScrollWidth:         "10%",
+					HScrollWidthNum:      10,
+					RulerType:            RulerRelative,
+					AlternateRows:        true,
+					ColumnMode:           true,
+					ColumnWidth:          true,
+					ColumnRainbow:        true,
+					LineNumMode:          true,
+					WrapMode:             true,
+					FollowMode:           true,
+					FollowAll:            true,
+					FollowSection:        true,
+					FollowName:           true,
+					PlainMode:            true,
+					SectionHeader:        true,
+					HideOtherSection:     true,
+					ColumnDelimiter:      ",",
+					SectionDelimiter:     "##",
+					JumpTarget:           "target",
+					MultiColorWords:      []string{"word1", "word2"},
+					Caption:              "test caption",
+					Converter:            convAlign,
+				},
+				configGeneral: General{},
+			},
+			want: RunTimeSettings{
+				TabWidth:             4,
+				Header:               1,
+				VerticalHeader:       2,
+				HeaderColumn:         3,
+				SkipLines:            5,
+				WatchInterval:        10,
+				MarkStyleWidth:       2,
+				SectionStartPosition: 6,
+				SectionHeaderNum:     1,
+				HScrollWidth:         "10%",
+				HScrollWidthNum:      10,
+				RulerType:            RulerRelative,
+				AlternateRows:        true,
+				ColumnMode:           true,
+				ColumnWidth:          true,
+				ColumnRainbow:        true,
+				LineNumMode:          true,
+				WrapMode:             true,
+				FollowMode:           true,
+				FollowAll:            true,
+				FollowSection:        true,
+				FollowName:           true,
+				PlainMode:            true,
+				SectionHeader:        true,
+				HideOtherSection:     true,
+				ColumnDelimiter:      ",",
+				SectionDelimiter:     "##",
+				JumpTarget:           "target",
+				MultiColorWords:      []string{"word1", "word2"},
+				Caption:              "test caption",
+				Converter:            convAlign,
+			},
+		},
+		{
+			name: "testAllFields",
+			args: args{
+				runtime: RunTimeSettings{
+					TabWidth:             4,
+					Header:               1,
+					VerticalHeader:       2,
+					HeaderColumn:         3,
+					SkipLines:            5,
+					WatchInterval:        10,
+					MarkStyleWidth:       2,
+					SectionStartPosition: 6,
+					SectionHeaderNum:     1,
+					HScrollWidth:         "10%",
+					HScrollWidthNum:      10,
+					RulerType:            RulerRelative,
+					AlternateRows:        true,
+					ColumnMode:           true,
+					ColumnWidth:          true,
+					ColumnRainbow:        true,
+					LineNumMode:          true,
+					WrapMode:             true,
+					FollowMode:           true,
+					FollowAll:            true,
+					FollowSection:        true,
+					FollowName:           true,
+					PlainMode:            true,
+					SectionHeader:        true,
+					HideOtherSection:     true,
+					ColumnDelimiter:      ",",
+					SectionDelimiter:     "##",
+					JumpTarget:           "target",
+					MultiColorWords:      []string{"word1", "word2"},
+					Caption:              "test caption",
+					Converter:            convAlign,
+				},
+				configGeneral: General{
+					TabWidth:             intPtr(8),
+					Header:               intPtr(2),
+					VerticalHeader:       intPtr(3),
+					HeaderColumn:         intPtr(4),
+					SkipLines:            intPtr(6),
+					WatchInterval:        intPtr(15),
+					MarkStyleWidth:       intPtr(3),
+					SectionStartPosition: intPtr(7),
+					SectionHeaderNum:     intPtr(2),
+					HScrollWidth:         strPtr("20%"),
+					HScrollWidthNum:      intPtr(20),
+					RulerType:            (*RulerType)(intPtr(int(RulerAbsolute))),
+					AlternateRows:        boolPtr(false),
+					ColumnMode:           boolPtr(false),
+					ColumnWidth:          boolPtr(false),
+					ColumnRainbow:        boolPtr(false),
+					LineNumMode:          boolPtr(false),
+					WrapMode:             boolPtr(false),
+					FollowMode:           boolPtr(false),
+					FollowAll:            boolPtr(false),
+					FollowSection:        boolPtr(false),
+					FollowName:           boolPtr(false),
+					PlainMode:            boolPtr(false),
+					SectionHeader:        boolPtr(false),
+					HideOtherSection:     boolPtr(false),
+					ColumnDelimiter:      strPtr("\t"),
+					SectionDelimiter:     strPtr("###"),
+					JumpTarget:           strPtr("newTarget"),
+					MultiColorWords:      &[]string{"newWord1", "newWord2"},
+					Caption:              strPtr("new caption"),
+					Converter:            strPtr(convRaw),
+				},
+			},
+			want: RunTimeSettings{
+				TabWidth:             8,
+				Header:               2,
+				VerticalHeader:       3,
+				HeaderColumn:         4,
+				SkipLines:            6,
+				WatchInterval:        15,
+				MarkStyleWidth:       3,
+				SectionStartPosition: 7,
+				SectionHeaderNum:     2,
+				HScrollWidth:         "20%",
+				HScrollWidthNum:      20,
+				RulerType:            RulerAbsolute,
+				AlternateRows:        false,
+				ColumnMode:           false,
+				ColumnWidth:          false,
+				ColumnRainbow:        false,
+				LineNumMode:          false,
+				WrapMode:             false,
+				FollowMode:           false,
+				FollowAll:            false,
+				FollowSection:        false,
+				FollowName:           false,
+				PlainMode:            false,
+				SectionHeader:        false,
+				HideOtherSection:     false,
+				ColumnDelimiter:      "\t",
+				SectionDelimiter:     "###",
+				JumpTarget:           "newTarget",
+				MultiColorWords:      []string{"newWord1", "newWord2"},
+				Caption:              "new caption",
+				Converter:            convRaw,
+			},
+		},
+		{
+			name: "testAlign",
+			args: args{
+				runtime: RunTimeSettings{
+					Converter: convEscaped,
+				},
+				configGeneral: General{
+					Align: boolPtr(true),
+				},
+			},
+			want: RunTimeSettings{
+				Converter: convAlign,
+			},
+		},
+		{
+			name: "testRaw",
+			args: args{
+				runtime: RunTimeSettings{
+					Converter: convEscaped,
+				},
+				configGeneral: General{
+					Raw: boolPtr(true),
+				},
+			},
+			want: RunTimeSettings{
+				Converter: convRaw,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := updateRunTimeSettings(tt.args.runtime, tt.args.configGeneral); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("updateRuntimeSettings() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

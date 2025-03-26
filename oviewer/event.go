@@ -155,7 +155,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	}
 
 	switch {
-	case root.General.FollowAll:
+	case root.FollowAll:
 		root.followAll(ctx)
 	case root.Doc.FollowMode:
 		root.follow(ctx)

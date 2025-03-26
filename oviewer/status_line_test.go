@@ -144,7 +144,7 @@ func TestRoot_statusDisplay(t *testing.T) {
 			root := rootHelper(t)
 			root.Doc.WatchMode = tt.fields.WatchMode
 			root.Doc.FollowSection = tt.fields.FollowSection
-			root.General.FollowAll = tt.fields.FollowAll
+			root.FollowAll = tt.fields.FollowAll
 			root.Doc.FollowName = tt.fields.FollowName
 			root.Doc.FollowMode = tt.fields.FollowMode
 			if got := root.statusDisplay(); got != tt.want {

@@ -75,7 +75,7 @@ func (root *Root) statusDisplay() string {
 	if root.Doc.FollowSection {
 		return "(Follow Section)"
 	}
-	if root.General.FollowAll {
+	if root.FollowAll {
 		return "(Follow All)"
 	}
 	if root.Doc.FollowMode && root.Doc.FollowName {

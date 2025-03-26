@@ -58,10 +58,10 @@ func TestRoot_toggle(t *testing.T) {
 	if v == root.Doc.FollowMode {
 		t.Errorf("toggleFollow() = %v, want %v", root.Doc.FollowMode, !v)
 	}
-	v = root.General.FollowAll
+	v = root.FollowAll
 	root.toggleFollowAll(ctx)
-	if v == root.General.FollowAll {
-		t.Errorf("toggleFollowAll() = %v, want %v", root.General.FollowAll, !v)
+	if v == root.FollowAll {
+		t.Errorf("toggleFollowAll() = %v, want %v", root.FollowAll, !v)
 	}
 	v = root.Doc.FollowSection
 	root.toggleFollowSection(ctx)
@@ -87,24 +87,24 @@ func TestRoot_toggle(t *testing.T) {
 func TestToggleRuler(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
-	root.Doc.general.RulerType = RulerNone
+	root.Doc.RunTimeSettings.RulerType = RulerNone
 
 	// Test toggling from RulerNone to RulerRelative
 	root.toggleRuler(ctx)
-	if root.Doc.general.RulerType != RulerRelative {
-		t.Errorf("expected RulerType to be RulerRelative, got %v", root.Doc.general.RulerType)
+	if root.Doc.RunTimeSettings.RulerType != RulerRelative {
+		t.Errorf("expected RulerType to be RulerRelative, got %v", root.Doc.RunTimeSettings.RulerType)
 	}
 
 	// Test toggling from RulerRelative to RulerAbsolute
 	root.toggleRuler(ctx)
-	if root.Doc.general.RulerType != RulerAbsolute {
-		t.Errorf("expected RulerType to be RulerAbsolute, got %v", root.Doc.general.RulerType)
+	if root.Doc.RunTimeSettings.RulerType != RulerAbsolute {
+		t.Errorf("expected RulerType to be RulerAbsolute, got %v", root.Doc.RunTimeSettings.RulerType)
 	}
 
 	// Test toggling from RulerAbsolute to RulerNone
 	root.toggleRuler(ctx)
-	if root.Doc.general.RulerType != RulerNone {
-		t.Errorf("expected RulerType to be RulerNone, got %v", root.Doc.general.RulerType)
+	if root.Doc.RunTimeSettings.RulerType != RulerNone {
+		t.Errorf("expected RulerType to be RulerNone, got %v", root.Doc.RunTimeSettings.RulerType)
 	}
 }
 
@@ -1300,7 +1300,7 @@ func TestRoot_modeConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    general
+		want    RunTimeSettings
 		wantErr bool
 	}{
 		{
@@ -1308,7 +1308,7 @@ func TestRoot_modeConfig(t *testing.T) {
 			args: args{
 				modeName: "test",
 			},
-			want:    general{},
+			want:    RunTimeSettings{},
 			wantErr: true,
 		},
 		{
@@ -1316,7 +1316,7 @@ func TestRoot_modeConfig(t *testing.T) {
 			args: args{
 				modeName: nameGeneral,
 			},
-			want:    general{},
+			want:    NewRunTimeSettings(),
 			wantErr: false,
 		},
 		{
@@ -1324,7 +1324,7 @@ func TestRoot_modeConfig(t *testing.T) {
 			args: args{
 				modeName: "a",
 			},
-			want:    general{},
+			want:    NewRunTimeSettings(),
 			wantErr: false,
 		},
 	}
@@ -1332,8 +1332,7 @@ func TestRoot_modeConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
 			root.Config = Config{
-				General: general{},
-				Mode: map[string]general{
+				Mode: map[string]General{
 					"a": {},
 					"b": {},
 				},
@@ -1438,7 +1437,7 @@ func TestRoot_followAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.args.fileNames...)
-			root.General.FollowAll = true
+			root.FollowAll = true
 			root.Doc.WrapMode = tt.fields.wrapMode
 			ctx := context.Background()
 			root.prepareScreen()

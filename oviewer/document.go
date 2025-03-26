@@ -79,8 +79,8 @@ type Document struct {
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
-	// status is the display status of the document.
-	general
+	// RunTimeSettings contains RunTimeSettings settings.
+	RunTimeSettings
 
 	// memoryLimit is the maximum chunk size.
 	memoryLimit int
@@ -230,26 +230,21 @@ type columnRange struct {
 // It returns a pointer to the Document and an error if the cache initialization fails.
 func NewDocument() (*Document, error) {
 	m := &Document{
-		documentType: DocNormal,
-		tickerDone:   make(chan struct{}),
-		general: general{
-			ColumnDelimiter: "",
-			TabWidth:        8,
-			MarkStyleWidth:  1,
-			Converter:       convEscaped,
-		},
-		ctlCh:        make(chan controlSpecifier),
-		memoryLimit:  100,
-		seekable:     true,
-		reopenable:   true,
-		store:        NewStore(),
-		lastSearchLN: -1,
+		documentType:    DocNormal,
+		tickerDone:      make(chan struct{}),
+		RunTimeSettings: NewRunTimeSettings(),
+		ctlCh:           make(chan controlSpecifier),
+		memoryLimit:     100,
+		seekable:        true,
+		reopenable:      true,
+		store:           NewStore(),
+		lastSearchLN:    -1,
 	}
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
 	m.alignConv = newAlignConverter(m.ColumnWidth)
-	m.conv = m.converterType(m.general.Converter)
+	m.conv = m.converterType(m.RunTimeSettings.Converter)
 
 	m.cond = sync.NewCond(&sync.Mutex{})
 	return m, nil
