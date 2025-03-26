@@ -368,15 +368,15 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		return nil, ErrNotFound
 	}
 	root := &Root{
-		minStartX: MinStartX,
-		settings:  NewRunTimeSettings(),
+		minStartX:      MinStartX,
+		settings:       NewRunTimeSettings(),
+		Config:         NewConfig(),
+		keyConfig:      cbind.NewConfiguration(),
+		inputKeyConfig: cbind.NewConfiguration(),
+		input:          NewInput(),
 	}
-	root.Config = NewConfig()
-	root.keyConfig = cbind.NewConfiguration()
-	root.inputKeyConfig = cbind.NewConfiguration()
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
-	root.input = NewInput()
 
 	screen, err := tcellNewScreen()
 	if err != nil {
@@ -505,7 +505,8 @@ func (root *Root) SetConfig(config Config) {
 
 	// Set the follow mode for all documents.
 	root.FollowAll = root.settings.FollowAll
-
+	// Set the minimum start position of x.
+	root.minStartX = config.MinStartX
 	// Set the caption from the environment variable.
 	if root.settings.Caption == "" {
 		root.settings.Caption = viper.GetString("CAPTION")
