@@ -18,12 +18,19 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
 	"github.com/noborus/tcellansi"
+	"github.com/spf13/viper"
 )
 
 // Root is the root structure of the oviewer.
 type Root struct {
 	// tcell.Screen is the root screen.
 	tcell.Screen
+
+	// settings contains the runtime settings template.
+	// These settings serve as the base configuration for each document.
+	// Individual documents can override these settings as needed.
+	settings RunTimeSettings
+
 	// Doc is the current document.
 	Doc *Document
 	// helpDoc is the help document.
@@ -55,11 +62,12 @@ type Root struct {
 	// searchOpt is the search option.
 	searchOpt string
 
+	// Caption is the caption to display.
+	Caption string
 	// message is the message to display.
 	message string
 	// cancelKeys represents the cancellation key string.
 	cancelKeys []string
-
 	// DocList is the list of documents.
 	DocList []*Document
 	// scr contains the screen information.
@@ -80,6 +88,8 @@ type Root struct {
 	// mu controls the RWMutex.
 	mu sync.RWMutex
 
+	// FollowAll is a follow mode for all documents.
+	FollowAll bool
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
 }
@@ -164,9 +174,9 @@ func (r RulerType) String() string {
 	}
 }
 
-// general structure contains the general of the display.
-// general contains values that determine the behavior of each document.
-type general struct {
+// RunTimeSettings structure contains the RunTimeSettings of the display.
+// RunTimeSettings contains values that determine the behavior of each document.
+type RunTimeSettings struct {
 	// Converter is the converter name.
 	Converter string
 	// Caption is an additional caption to display after the file name.
@@ -359,6 +369,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	}
 	root := &Root{
 		minStartX: MinStartX,
+		settings:  NewRunTimeSettings(),
 	}
 	root.Config = NewConfig()
 	root.keyConfig = cbind.NewConfiguration()
@@ -383,6 +394,15 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 	root.logDoc = logDoc
 
 	return root, nil
+}
+
+// NewRunTimeSettings returns the structure of RunTimeSettings with default values.
+func NewRunTimeSettings() RunTimeSettings {
+	return RunTimeSettings{
+		TabWidth:       8,
+		MarkStyleWidth: 1,
+		Converter:      convEscaped,
+	}
 }
 
 // NewRoot returns the structure of the oviewer.
@@ -476,9 +496,29 @@ func openFiles(fileNames []string) (*Root, error) {
 
 // SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
+	root.settings = updateRunTimeSettings(root.settings, config.General)
+	// view mode.
 	viewMode, overwrite := config.Mode[config.ViewMode]
 	if overwrite {
-		config.General = mergeGeneral(config.General, viewMode)
+		root.settings = updateRunTimeSettings(root.settings, viewMode)
+	}
+
+	// Set the follow mode for all documents.
+	root.FollowAll = root.settings.FollowAll
+
+	// Set the caption from the environment variable.
+	if root.settings.Caption == "" {
+		root.settings.Caption = viper.GetString("CAPTION")
+	}
+
+	// Actually tabs when "\t" is specified as an option.
+	if root.settings.ColumnDelimiter == "\\t" {
+		root.settings.ColumnDelimiter = "\t"
+	}
+
+	// SectionHeader is enabled if SectionHeaderNum is greater than 0.
+	if root.settings.SectionHeaderNum > 0 {
+		root.settings.SectionHeader = true
 	}
 	root.Config = config
 }
@@ -656,8 +696,8 @@ func (root *Root) prepareRun(ctx context.Context) error {
 // setCaption sets the caption.
 // optimizes execution with the Man command.
 func (root *Root) setCaption() {
-	if root.General.Caption != "" {
-		root.Doc.Caption = root.General.Caption
+	if root.Caption != "" {
+		root.Doc.Caption = root.Caption
 		return
 	}
 
@@ -679,7 +719,7 @@ func (root *Root) setViewModeConfig() {
 // prepareAllDocuments prepares all documents.
 func (root *Root) prepareAllDocuments() {
 	for n, doc := range root.DocList {
-		doc.general = root.Config.General
+		doc.RunTimeSettings = root.settings
 		doc.regexpCompile()
 
 		if doc.FollowName {
@@ -688,11 +728,11 @@ func (root *Root) prepareAllDocuments() {
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
 		}
-		if doc.general.Converter != "" {
-			doc.conv = doc.converterType(doc.general.Converter)
+		if doc.RunTimeSettings.Converter != "" {
+			doc.conv = doc.converterType(doc.RunTimeSettings.Converter)
 		}
 		w := ""
-		if doc.general.WatchInterval > 0 {
+		if doc.RunTimeSettings.WatchInterval > 0 {
 			doc.watchMode()
 			w = "(watch)"
 		}
@@ -754,98 +794,108 @@ func (root *Root) debugMessage(msg string) {
 	log.Printf("%s:%s", root.Doc.FileName, msg)
 }
 
-// mergeGeneral overwrites a general structure with a struct.
-func mergeGeneral(src general, dst general) general {
-	if dst.Converter != "" {
-		src.Converter = dst.Converter
+// updateRunTimeSettings updates the RunTimeSettings.
+func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
+	if dst.TabWidth != nil {
+		src.TabWidth = *dst.TabWidth
 	}
-	if dst.ColumnDelimiter != "" {
-		src.ColumnDelimiter = dst.ColumnDelimiter
+	if dst.Header != nil {
+		src.Header = *dst.Header
 	}
-	if dst.SectionDelimiter != "" {
-		src.SectionDelimiter = dst.SectionDelimiter
+	if dst.VerticalHeader != nil {
+		src.VerticalHeader = *dst.VerticalHeader
 	}
-	if dst.JumpTarget != "" {
-		src.JumpTarget = dst.JumpTarget
+	if dst.HeaderColumn != nil {
+		src.HeaderColumn = *dst.HeaderColumn
 	}
-	if len(dst.MultiColorWords) > 0 {
-		src.MultiColorWords = dst.MultiColorWords
+	if dst.SkipLines != nil {
+		src.SkipLines = *dst.SkipLines
 	}
-	if dst.TabWidth != 0 {
-		src.TabWidth = dst.TabWidth
+	if dst.WatchInterval != nil {
+		src.WatchInterval = *dst.WatchInterval
 	}
-	if dst.Header != 0 {
-		src.Header = dst.Header
+	if dst.MarkStyleWidth != nil {
+		src.MarkStyleWidth = *dst.MarkStyleWidth
 	}
-	if dst.VerticalHeader != 0 {
-		src.VerticalHeader = dst.VerticalHeader
+	if dst.SectionStartPosition != nil {
+		src.SectionStartPosition = *dst.SectionStartPosition
 	}
-	if dst.HeaderColumn != 0 {
-		src.HeaderColumn = dst.HeaderColumn
+	if dst.SectionHeaderNum != nil {
+		src.SectionHeaderNum = *dst.SectionHeaderNum
 	}
-	if dst.SkipLines != 0 {
-		src.SkipLines = dst.SkipLines
+	if dst.HScrollWidth != nil {
+		src.HScrollWidth = *dst.HScrollWidth
 	}
-	if dst.WatchInterval != 0 {
-		src.WatchInterval = dst.WatchInterval
+	if dst.HScrollWidthNum != nil {
+		src.HScrollWidthNum = *dst.HScrollWidthNum
 	}
-	if dst.MarkStyleWidth != 0 {
-		src.MarkStyleWidth = dst.MarkStyleWidth
+	if dst.RulerType != nil {
+		src.RulerType = *dst.RulerType
 	}
-	if dst.SectionStartPosition != 0 {
-		src.SectionStartPosition = dst.SectionStartPosition
+	if dst.AlternateRows != nil {
+		src.AlternateRows = *dst.AlternateRows
 	}
-	if dst.SectionHeaderNum != 0 {
-		src.SectionHeaderNum = dst.SectionHeaderNum
+	if dst.ColumnMode != nil {
+		src.ColumnMode = *dst.ColumnMode
 	}
-	if dst.HScrollWidth != "" {
-		src.HScrollWidth = dst.HScrollWidth
+	if dst.ColumnWidth != nil {
+		src.ColumnWidth = *dst.ColumnWidth
 	}
-	if dst.HScrollWidthNum != 0 {
-		src.HScrollWidthNum = dst.HScrollWidthNum
+	if dst.ColumnRainbow != nil {
+		src.ColumnRainbow = *dst.ColumnRainbow
 	}
-	if dst.RulerType != RulerNone {
-		src.RulerType = dst.RulerType
+	if dst.LineNumMode != nil {
+		src.LineNumMode = *dst.LineNumMode
 	}
-	if dst.AlternateRows {
-		src.AlternateRows = dst.AlternateRows
+	if dst.WrapMode != nil {
+		src.WrapMode = *dst.WrapMode
 	}
-	if dst.ColumnMode {
-		src.ColumnMode = dst.ColumnMode
+	if dst.FollowMode != nil {
+		src.FollowMode = *dst.FollowMode
 	}
-	if dst.ColumnWidth {
-		src.ColumnWidth = dst.ColumnWidth
+	if dst.FollowAll != nil {
+		src.FollowAll = *dst.FollowAll
 	}
-	if dst.ColumnRainbow {
-		src.ColumnRainbow = dst.ColumnRainbow
+	if dst.FollowSection != nil {
+		src.FollowSection = *dst.FollowSection
 	}
-	if dst.LineNumMode {
-		src.LineNumMode = dst.LineNumMode
+	if dst.FollowName != nil {
+		src.FollowName = *dst.FollowName
 	}
-	if !dst.WrapMode { // Because wrap mode defaults to true.
-		src.WrapMode = dst.WrapMode
+	if dst.PlainMode != nil {
+		src.PlainMode = *dst.PlainMode
 	}
-	if dst.FollowMode {
-		src.FollowMode = dst.FollowMode
+	if dst.SectionHeader != nil {
+		src.SectionHeader = *dst.SectionHeader
 	}
-	if dst.FollowAll {
-		src.FollowAll = dst.FollowAll
+	if dst.HideOtherSection != nil {
+		src.HideOtherSection = *dst.HideOtherSection
 	}
-	if dst.FollowSection {
-		src.FollowSection = dst.FollowSection
+	if dst.ColumnDelimiter != nil {
+		src.ColumnDelimiter = *dst.ColumnDelimiter
 	}
-	if dst.FollowName {
-		src.FollowName = dst.FollowName
+	if dst.SectionDelimiter != nil {
+		src.SectionDelimiter = *dst.SectionDelimiter
 	}
-	if dst.SectionHeader {
-		src.SectionHeader = dst.SectionHeader
+	if dst.JumpTarget != nil {
+		src.JumpTarget = *dst.JumpTarget
 	}
-	if dst.HideOtherSection {
-		src.HideOtherSection = dst.HideOtherSection
+	if dst.MultiColorWords != nil {
+		src.MultiColorWords = *dst.MultiColorWords
 	}
-	if dst.PlainMode {
-		src.PlainMode = dst.PlainMode
+	if dst.Caption != nil {
+		src.Caption = *dst.Caption
 	}
+	if dst.Converter != nil {
+		src.Converter = *dst.Converter
+	}
+	if dst.Align != nil && *dst.Align {
+		src.Converter = convAlign
+	}
+	if dst.Raw != nil && *dst.Raw {
+		src.Converter = convRaw
+	}
+
 	return src
 }
 
@@ -904,7 +954,10 @@ func (root *Root) WriteCurrentScreen() {
 		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-1)
 	}
 	for _, str := range strs {
-		output.Write([]byte(str))
+		if _, err := output.Write([]byte(str)); err != nil {
+			log.Println(err)
+			return
+		}
 	}
 }
 
@@ -945,7 +998,7 @@ func realHeight(scr SCR) int {
 	return height
 }
 
-// WriteScreenContent writes to the screen terminal.
+// ScreenContent returns the screen content.
 func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
 	m := root.Doc
@@ -1039,6 +1092,7 @@ func (root *Root) debugNumOfChunk() {
 	}
 }
 
+// ListViewMode returns the list of view modes.
 func ListViewMode(config Config) []string {
 	list := make([]string, 0, len(config.Mode)+1)
 	list = append(list, nameGeneral)

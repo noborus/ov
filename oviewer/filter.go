@@ -51,7 +51,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	render.Caption = "filter:" + match
 	msg := "search:" + match
 	root.insertDocument(ctx, root.CurrentDoc, render)
-	render.general = mergeGeneral(root.Config.General, render.general)
+	render.RunTimeSettings = updateRunTimeSettings(render.RunTimeSettings, root.Config.General)
 	render.regexpCompile()
 
 	render.nonMatch = m.nonMatch

@@ -13,7 +13,7 @@ func main() {
 	defer func() {
 		cmd.Wait()
 	}()
-	ov.General.FollowAll = true
+	ov.FollowAll = true
 	if err := ov.Run(); err != nil {
 		panic(err)
 	}

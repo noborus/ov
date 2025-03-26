@@ -51,11 +51,6 @@ var (
 
 	// forceScreen is display screen even when redirecting output.
 	forceScreen bool
-
-	// alignF is align column.
-	alignF bool
-	// rawF is raw output of escape sequences.
-	rawF bool
 )
 
 var (
@@ -101,28 +96,6 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if completion != "" {
 			return Completion(cmd, completion)
 		}
-		// Set the caption from the environment variable.
-		if config.General.Caption == "" {
-			config.General.Caption = viper.GetString("CAPTION")
-		}
-
-		// Actually tabs when "\t" is specified as an option.
-		if config.General.ColumnDelimiter == "\\t" {
-			config.General.ColumnDelimiter = "\t"
-		}
-
-		// SectionHeader is enabled if SectionHeaderNum is greater than 0.
-		if config.General.SectionHeaderNum > 0 {
-			config.General.SectionHeader = true
-		}
-
-		// Set a converter by specifying flag.
-		if alignF {
-			config.General.Converter = "align"
-		} else if rawF {
-			config.General.Converter = "raw"
-		}
-
 		// Set a global variable to convert to a style before opening the file.
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
@@ -149,6 +122,7 @@ func HelpKey(cmd *cobra.Command, _ []string) {
 	fmt.Print(oviewer.DuplicateKeyBind(keyBind))
 }
 
+// ListViewMode displays the list of view modes.
 func ListViewMode() {
 	listView := oviewer.ListViewMode(config)
 	for _, v := range listView {
@@ -423,15 +397,17 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
-	rootCmd.PersistentFlags().BoolVarP(&alignF, "align", "l", false, "align the output columns for better readability")
-	rootCmd.PersistentFlags().BoolVarP(&rawF, "raw", "r", false, "raw escape sequences without processing")
-
 	// Config.General
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align]")
 	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths"}, cobra.ShellCompDirectiveNoFileComp
 	})
+
+	rootCmd.PersistentFlags().BoolP("align", "l", false, "align the output columns for better readability")
+	_ = viper.BindPFlag("general.Align", rootCmd.PersistentFlags().Lookup("align"))
+	rootCmd.PersistentFlags().BoolP("raw", "r", false, "raw escape sequences without processing")
+	_ = viper.BindPFlag("general.Raw", rootCmd.PersistentFlags().Lookup("raw"))
 
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
 	_ = viper.BindPFlag("general.TabWidth", rootCmd.PersistentFlags().Lookup("tab-width"))

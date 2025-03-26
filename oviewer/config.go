@@ -5,20 +5,20 @@ type Config struct {
 	// KeyBinding
 	Keybind map[string][]string
 	// Mode represents the operation of the customized mode.
-	Mode map[string]general
+	Mode map[string]General
 	// ViewMode represents the view mode.
 	// ViewMode sets several settings together and can be easily switched.
 	ViewMode string
 	// Default keybindings. Disabled if the default keybinding is "disable".
 	DefaultKeyBind string
-	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
-	StyleColumnRainbow []OVStyle
-	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
-	StyleMultiColorHighlight []OVStyle
 
 	// Prompt is the prompt setting.
 	Prompt OVPromptConfig
 
+	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
+	StyleColumnRainbow []OVStyle
+	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
+	StyleMultiColorHighlight []OVStyle
 	// StyleHeader is the style that applies to the header.
 	StyleHeader OVStyle
 	// StyleBody is the style that applies to the body.
@@ -55,8 +55,8 @@ type Config struct {
 	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
 	StyleVerticalHeaderBorder OVStyle
 
-	// General represents the general behavior.
-	General general
+	// GeneralConfig is the general setting.
+	General General
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int
@@ -95,6 +95,78 @@ type Config struct {
 	DisableColumnCycle bool
 	// Debug indicates whether to enable debug output.
 	Debug bool
+}
+
+// General is the general configuration.
+type General struct {
+	// Converter is the converter name.
+	Converter *string
+	// Align is the alignment.
+	Align *bool
+	// Raw is the raw setting.
+	Raw *bool
+	// Caption is an additional caption to display after the file name.
+	Caption *string
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter *string
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter *string
+	// Specified string for jumpTarget.
+	JumpTarget *string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords *[]string
+
+	// TabWidth is tab stop num.
+	TabWidth *int
+	// Header is number of header lines to be fixed.
+	Header *int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader *int
+	// HeaderColumn is the number of columns from the left to be fixed.
+	// If 0 is specified, no columns are fixed.
+	HeaderColumn *int
+	// SkipLines is the rows to skip.
+	SkipLines *int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval *int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth *int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition *int
+	// SectionHeaderNum is the number of lines in the section header.
+	SectionHeaderNum *int
+	// HScrollWidth is the horizontal scroll width.
+	HScrollWidth *string
+	// HScrollWidthNum is the horizontal scroll width.
+	HScrollWidthNum *int
+	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
+	RulerType *RulerType
+	// AlternateRows alternately style rows.
+	AlternateRows *bool
+	// ColumnMode is column mode.
+	ColumnMode *bool
+	// ColumnWidth is column width mode.
+	ColumnWidth *bool
+	// ColumnRainbow is column rainbow.
+	ColumnRainbow *bool
+	// LineNumMode displays line numbers.
+	LineNumMode *bool
+	// Wrap is Wrap mode.
+	WrapMode *bool
+	// FollowMode is the follow mode.
+	FollowMode *bool
+	// FollowAll is a follow mode for all documents.
+	FollowAll *bool
+	// FollowSection is a follow mode that uses section instead of line.
+	FollowSection *bool
+	// FollowName is the mode to follow files by name.
+	FollowName *bool
+	// PlainMode is whether to enable the original character decoration.
+	PlainMode *bool
+	// SectionHeader is whether to display the section header.
+	SectionHeader *bool
+	// HideOtherSection is whether to hide other sections.
+	HideOtherSection *bool
 }
 
 // OVPromptConfigNormal is the normal prompt setting.
@@ -174,10 +246,6 @@ func NewConfig() Config {
 			Background: "#333333",
 			Foreground: "#CCCCCC",
 			Bold:       true,
-		},
-		General: general{
-			TabWidth:       8,
-			MarkStyleWidth: 1,
 		},
 		Prompt: OVPromptConfig{
 			Normal: OVPromptConfigNormal{
