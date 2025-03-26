@@ -14,6 +14,8 @@ type Config struct {
 
 	// Prompt is the prompt setting.
 	Prompt OVPromptConfig
+	// MinStartX is the minimum value of the start position.
+	MinStartX int
 
 	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
 	StyleColumnRainbow []OVStyle
