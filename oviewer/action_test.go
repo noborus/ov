@@ -1897,31 +1897,31 @@ func TestRoot_format(t *testing.T) {
 			name:        "testAlignFormat",
 			converter:   convRaw,
 			formatFunc:  func(ctx context.Context) { root.alignFormat(ctx) },
-			wantMessage: "Set align mode",
+			wantMessage: "Set align converter",
 		},
 		{
 			name:        "testAlignFormatAlreadySet",
 			converter:   convAlign,
 			formatFunc:  func(ctx context.Context) { root.alignFormat(ctx) },
-			wantMessage: "Set es mode",
+			wantMessage: "Set es converter",
 		},
 		{
 			name:        "testRawFormat",
 			converter:   convAlign,
 			formatFunc:  func(ctx context.Context) { root.rawFormat(ctx) },
-			wantMessage: "Set raw mode",
+			wantMessage: "Set raw converter",
 		},
 		{
 			name:        "testRawFormatAlreadySet",
 			converter:   convRaw,
 			formatFunc:  func(ctx context.Context) { root.rawFormat(ctx) },
-			wantMessage: "Set es mode",
+			wantMessage: "Set es converter",
 		},
 		{
 			name:        "testEsFormat",
 			converter:   "",
 			formatFunc:  func(ctx context.Context) { root.esFormat(ctx) },
-			wantMessage: "Set es mode",
+			wantMessage: "Set es converter",
 		},
 	}
 	for _, tt := range tests {
