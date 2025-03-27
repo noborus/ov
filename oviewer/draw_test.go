@@ -444,11 +444,11 @@ func TestRoot_sectionLineHighlight(t *testing.T) {
 				t.Errorf("Root.sectionLineHighlight() = %v, want %v", p, tt.wantStr)
 			}
 			if tt.wantStyle {
-				if style != applyStyle(tcell.StyleDefault, root.StyleSectionLine) {
-					t.Errorf("Root.sectionLineHighlight() = %v, want %v", style, root.StyleSectionLine)
+				if style != applyStyle(tcell.StyleDefault, root.Doc.Style.SectionLine) {
+					t.Errorf("Root.sectionLineHighlight() = %v, want %v", style, root.Doc.Style.SectionLine)
 				}
 			} else {
-				if style == applyStyle(tcell.StyleDefault, root.StyleSectionLine) {
+				if style == applyStyle(tcell.StyleDefault, root.Doc.Style.SectionLine) {
 					t.Errorf("Root.sectionLineHighlight() = %v, want %v", style, tcell.StyleDefault)
 				}
 			}
