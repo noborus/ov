@@ -447,11 +447,14 @@ func getTty() (*os.File, error) {
 }
 
 // setViewMode switches to the preset display mode.
-// Set header lines and columnMode together.
 func (root *Root) setViewMode(ctx context.Context, modeName string) {
+	if modeName == "" {
+		return
+	}
+
 	settings, err := root.modeConfig(modeName)
 	if err != nil {
-		root.setMessage(err.Error())
+		root.setMessageLog(err.Error())
 		return
 	}
 	m := root.Doc
@@ -464,20 +467,21 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	if m.RunTimeSettings.Caption != "" {
 		m.Caption = m.RunTimeSettings.Caption
 	}
-	root.setMessagef("Set mode %s", modeName)
+	root.setMessageLogf("Set mode %s", modeName)
 }
 
 // modeConfig returns the configuration of the specified mode.
 func (root *Root) modeConfig(modeName string) (RunTimeSettings, error) {
 	if modeName == nameGeneral {
-		return root.settings, nil
+		settings := updateRunTimeSettings(root.Doc.RunTimeSettings, root.Config.General)
+		return settings, nil
 	}
 
-	c, ok := root.Config.Mode[modeName]
+	viewMode, ok := root.Config.Mode[modeName]
 	if !ok {
-		return RunTimeSettings{}, fmt.Errorf("%s mode not found", modeName)
+		return RunTimeSettings{}, fmt.Errorf("view mode not found: %s", modeName)
 	}
-	settings := updateRunTimeSettings(root.Doc.RunTimeSettings, c)
+	settings := updateRunTimeSettings(root.Doc.RunTimeSettings, viewMode)
 	return settings, nil
 }
 
@@ -491,6 +495,7 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 	m.conv = m.converterType(name)
 	m.ClearCache()
 	root.ViewSync(ctx)
+	root.setMessagef("Set %s converter", name)
 }
 
 // alignFormat sets converter type to align.
@@ -500,7 +505,6 @@ func (root *Root) alignFormat(ctx context.Context) {
 		return
 	}
 	root.setConverter(ctx, convAlign)
-	root.setMessage("Set align mode")
 }
 
 // rawFormat sets converter type to raw.
@@ -510,13 +514,11 @@ func (root *Root) rawFormat(ctx context.Context) {
 		return
 	}
 	root.setConverter(ctx, convRaw)
-	root.setMessage("Set raw mode")
 }
 
 // esFormat sets converter type to es.
 func (root *Root) esFormat(ctx context.Context) {
 	root.setConverter(ctx, convEscaped)
-	root.setMessage("Set es mode")
 }
 
 // setDelimiter sets the delimiter string.

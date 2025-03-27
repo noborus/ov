@@ -600,10 +600,15 @@ func (root *Root) SetConfig(config Config) {
 	root.settings = setOldStyle(root.settings, config)
 	// General settings.
 	root.settings = updateRunTimeSettings(root.settings, config.General)
+
 	// view mode.
-	viewMode, overwrite := config.Mode[config.ViewMode]
-	if overwrite {
-		root.settings = updateRunTimeSettings(root.settings, viewMode)
+	if config.ViewMode != "" {
+		viewMode, overwrite := config.Mode[config.ViewMode]
+		if overwrite {
+			root.settings = updateRunTimeSettings(root.settings, viewMode)
+		} else {
+			root.setMessageLogf("view mode not found: %s", config.ViewMode)
+		}
 	}
 
 	// Set the follow mode for all documents.
