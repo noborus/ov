@@ -742,7 +742,7 @@ func TestRoot_columnDelimiterHighlight(t *testing.T) {
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.ColumnDelimiterReg = condRegexpCompile(m.ColumnDelimiter)
 			m.columnCursor = tt.fields.columnCursor
-			root.StyleColumnHighlight = OVStyle{Bold: true}
+			root.Doc.Style.ColumnHighlight = OVStyle{Bold: true}
 			lineC := root.Doc.getLineC(tt.args.lineNum)
 			lineC.columnRanges = root.Doc.columnDelimiterRange(lineC)
 			root.columnHighlight(lineC)
@@ -808,8 +808,8 @@ func TestRoot_columnWidthHighlight(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, filepath.Join(testdata, "ps.txt"))
-			root.StyleColumnHighlight = OVStyle{Bold: true}
 			m := root.Doc
+			m.Style.ColumnHighlight = OVStyle{Bold: true}
 			m.ColumnWidth = true
 			m.ColumnMode = true
 			root.prepareScreen()

@@ -245,6 +245,48 @@ type RunTimeSettings struct {
 	SectionHeader bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection bool
+
+	// Style is the style of the document.
+	Style Style
+}
+
+// Style structure contains the style settings of the display.
+type Style struct {
+	// ColumnRainbow is the style that applies to the column rainbow color highlight.
+	ColumnRainbow []OVStyle
+	// MultiColorHighlight is the style that applies to the multi color highlight.
+	MultiColorHighlight []OVStyle
+	// Header is the style that applies to the header.
+	Header OVStyle
+	// Body is the style that applies to the body.
+	Body OVStyle
+	// LineNumber is a style that applies line number.
+	LineNumber OVStyle
+	// SearchHighlight is the style that applies to the search highlight.
+	SearchHighlight OVStyle
+	// ColumnHighlight is the style that applies to the column highlight.
+	ColumnHighlight OVStyle
+	// MarkLine is a style that marked line.
+	MarkLine OVStyle
+	// SectionLine is a style that section delimiter line.
+	SectionLine OVStyle
+	// VerticalHeader is a style that applies to the vertical header.
+	VerticalHeader OVStyle
+	// JumpTargetLine is the line that displays the search results.
+	JumpTargetLine OVStyle
+	// Alternate is a style that applies line by line.
+	Alternate OVStyle
+	// Ruler is a style that applies to the ruler.
+	Ruler OVStyle
+	// HeaderBorder is the style that applies to the boundary line of the header.
+	// The boundary line of the header refers to the visual separator between the header and the rest of the content.
+	HeaderBorder OVStyle
+	// SectionHeaderBorder is the style that applies to the boundary line of the section header.
+	// The boundary line of the section header is the line that separates different sections in the header.
+	SectionHeaderBorder OVStyle
+	// VerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
+	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
+	VerticalHeaderBorder OVStyle
 }
 
 var (
@@ -402,6 +444,64 @@ func NewRunTimeSettings() RunTimeSettings {
 		TabWidth:       8,
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
+		Style:          NewStyle(),
+	}
+}
+
+// NewStyle returns the structure of Style with default values.
+func NewStyle() Style {
+	return Style{
+		Header: OVStyle{
+			Bold: true,
+		},
+		Alternate: OVStyle{
+			Background: "gray",
+		},
+		LineNumber: OVStyle{
+			Bold: true,
+		},
+		SearchHighlight: OVStyle{
+			Reverse: true,
+		},
+		ColumnHighlight: OVStyle{
+			Reverse: true,
+		},
+		MarkLine: OVStyle{
+			Background: "darkgoldenrod",
+		},
+		SectionLine: OVStyle{
+			Background: "slateblue",
+		},
+		VerticalHeader: OVStyle{},
+		VerticalHeaderBorder: OVStyle{
+			Background: "#c0c0c0",
+		},
+		MultiColorHighlight: []OVStyle{
+			{Foreground: "red"},
+			{Foreground: "aqua"},
+			{Foreground: "yellow"},
+			{Foreground: "fuchsia"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "grey"},
+		},
+		ColumnRainbow: []OVStyle{
+			{Foreground: "white"},
+			{Foreground: "crimson"},
+			{Foreground: "aqua"},
+			{Foreground: "lightsalmon"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "yellowgreen"},
+		},
+		JumpTargetLine: OVStyle{
+			Underline: true,
+		},
+		Ruler: OVStyle{
+			Background: "#333333",
+			Foreground: "#CCCCCC",
+			Bold:       true,
+		},
 	}
 }
 
@@ -496,11 +596,19 @@ func openFiles(fileNames []string) (*Root, error) {
 
 // SetConfig sets config.
 func (root *Root) SetConfig(config Config) {
+	// Old Style* settings are loaded with lower priority.
+	root.settings = setOldStyle(root.settings, config)
+	// General settings.
 	root.settings = updateRunTimeSettings(root.settings, config.General)
+
 	// view mode.
-	viewMode, overwrite := config.Mode[config.ViewMode]
-	if overwrite {
-		root.settings = updateRunTimeSettings(root.settings, viewMode)
+	if config.ViewMode != "" {
+		viewMode, overwrite := config.Mode[config.ViewMode]
+		if overwrite {
+			root.settings = updateRunTimeSettings(root.settings, viewMode)
+		} else {
+			root.setMessageLogf("view mode not found: %s", config.ViewMode)
+		}
 	}
 
 	// Set the follow mode for all documents.
@@ -795,6 +903,28 @@ func (root *Root) debugMessage(msg string) {
 	log.Printf("%s:%s", root.Doc.FileName, msg)
 }
 
+// setOldStyle applies deprecated style settings for backward compatibility.
+// Deprecated: This function is planned to be removed in future versions.
+// It reads and applies old style settings to maintain compatibility with older configurations.
+// Use the new style configuration methods instead.
+func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
+	src.Style.Body = config.StyleBody
+	src.Style.Header = config.StyleHeader
+	src.Style.LineNumber = config.StyleLineNumber
+	src.Style.SearchHighlight = config.StyleSearchHighlight
+	src.Style.ColumnHighlight = config.StyleColumnHighlight
+	src.Style.MarkLine = config.StyleMarkLine
+	src.Style.SectionLine = config.StyleSectionLine
+	src.Style.VerticalHeader = config.StyleVerticalHeader
+	src.Style.JumpTargetLine = config.StyleJumpTargetLine
+	src.Style.Alternate = config.StyleAlternate
+	src.Style.Ruler = config.StyleRuler
+	src.Style.HeaderBorder = config.StyleHeaderBorder
+	src.Style.SectionHeaderBorder = config.StyleSectionHeaderBorder
+	src.Style.VerticalHeaderBorder = config.StyleVerticalHeaderBorder
+	return src
+}
+
 // updateRunTimeSettings updates the RunTimeSettings.
 func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.TabWidth != nil {
@@ -896,7 +1026,60 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.Raw != nil && *dst.Raw {
 		src.Converter = convRaw
 	}
+	src.Style = updateRuntimeStyle(src.Style, dst.Style)
+	return src
+}
 
+// updateRuntimeStyle updates the style.
+func updateRuntimeStyle(src Style, dst StyleConfig) Style {
+	if dst.ColumnRainbow != nil {
+		src.ColumnRainbow = *dst.ColumnRainbow
+	}
+	if dst.MultiColorHighlight != nil {
+		src.MultiColorHighlight = *dst.MultiColorHighlight
+	}
+	if dst.Header != nil {
+		src.Header = *dst.Header
+	}
+	if dst.Body != nil {
+		src.Body = *dst.Body
+	}
+	if dst.LineNumber != nil {
+		src.LineNumber = *dst.LineNumber
+	}
+	if dst.SearchHighlight != nil {
+		src.SearchHighlight = *dst.SearchHighlight
+	}
+	if dst.ColumnHighlight != nil {
+		src.ColumnHighlight = *dst.ColumnHighlight
+	}
+	if dst.MarkLine != nil {
+		src.MarkLine = *dst.MarkLine
+	}
+	if dst.SectionLine != nil {
+		src.SectionLine = *dst.SectionLine
+	}
+	if dst.VerticalHeader != nil {
+		src.VerticalHeader = *dst.VerticalHeader
+	}
+	if dst.JumpTargetLine != nil {
+		src.JumpTargetLine = *dst.JumpTargetLine
+	}
+	if dst.Alternate != nil {
+		src.Alternate = *dst.Alternate
+	}
+	if dst.Ruler != nil {
+		src.Ruler = *dst.Ruler
+	}
+	if dst.HeaderBorder != nil {
+		src.HeaderBorder = *dst.HeaderBorder
+	}
+	if dst.SectionHeaderBorder != nil {
+		src.SectionHeaderBorder = *dst.SectionHeaderBorder
+	}
+	if dst.VerticalHeaderBorder != nil {
+		src.VerticalHeaderBorder = *dst.VerticalHeaderBorder
+	}
 	return src
 }
 

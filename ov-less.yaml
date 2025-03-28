@@ -39,64 +39,64 @@ General:
   WrapMode: true
   ColumnDelimiter: ","
   MarkStyleWidth: 1
-
-# Style
-# String of the color name: Foreground, Background, UnderlineColor
-# Boolean: Bold, Blink, Dim, Italic, Underline
-# Number: UnderlineStyle
-StyleAlternate:
-  Background: "gray"
-StyleHeader:
-  Bold: true
-StyleBody:
-  # Add appropriate styles here
-StyleOverStrike:
-  Bold: true
-StyleOverLine:
-  Underline: true
-StyleLineNumber:
-  Bold: true
-StyleSearchHighlight:
-  Reverse: true
-StyleColumnHighlight:
-  Reverse: true
-StyleMarkLine:
-  Background: "darkgoldenrod"
-StyleSectionLine:
-  Background: "slateblue"
-StyleVerticalHeader:
-  # Add appropriate styles here
-StyleRuler:
-  Background: "#333333"
-  Foreground: "#CCCCCC"
-  Bold: true
-StyleHeaderBorder:
-  # Add appropriate styles here
-  # UnderlineStyle: 2
-StyleSectionHeaderBorder:
-  # Add appropriate styles here
-  # Underline: true
-  # UnderlineColor: "red"
-StyleVerticalHeaderBorder:
-  Background: "#c0c0c0"
-StyleMultiColorHighlight:
-  - Foreground: "red"
-  - Foreground: "aqua"
-  - Foreground: "yellow"
-  - Foreground: "fuchsia"
-  - Foreground: "lime"
-  - Foreground: "blue"
-  - Foreground: "grey"
-StyleColumnRainbow:
-  - Foreground: "white"
-  - Foreground: "crimson"
-  - Foreground: "aqua"
-  - Foreground: "lightsalmon"
-  - Foreground: "lime"
-  - Foreground: "blue"
-  - Foreground: "yellowgreen"
-StyleJumpTargetLine:
-  Underline: true
+  # Style
+  # String of the color name: Foreground, Background, UnderlineColor
+  # Boolean: Bold, Blink, Dim, Italic, Underline
+  # Number: UnderlineStyle
+  Style:
+    Alternate:
+        Background: "gray"
+    Header:
+        Bold: true
+    Body:
+        # Add appropriate styles here
+    OverStrike:
+        Bold: true
+    OverLine:
+        Underline: true
+    LineNumber:
+        Bold: true
+    SearchHighlight:
+        Reverse: true
+    ColumnHighlight:
+        Reverse: true
+    MarkLine:
+        Background: "darkgoldenrod"
+    SectionLine:
+        Background: "slateblue"
+    VerticalHeader:
+        # Add appropriate styles here
+    Ruler:
+        Background: "#333333"
+        Foreground: "#CCCCCC"
+        Bold: true
+    HeaderBorder:
+        # Add appropriate styles here
+        # UnderlineStyle: 2
+    SectionHeaderBorder:
+        # Add appropriate styles here
+        # Underline: true
+        # UnderlineColor: "red"
+    VerticalHeaderBorder:
+        Background: "#c0c0c0"
+    MultiColorHighlight:
+        - Foreground: "red"
+        - Foreground: "aqua"
+        - Foreground: "yellow"
+        - Foreground: "fuchsia"
+        - Foreground: "lime"
+        - Foreground: "blue"
+        - Foreground: "grey"
+    ColumnRainbow:
+        - Foreground: "white"
+        - Foreground: "crimson"
+        - Foreground: "aqua"
+        - Foreground: "lightsalmon"
+        - Foreground: "lime"
+        - Foreground: "blue"
+        - Foreground: "yellowgreen"
+    JumpTargetLine:
+        Underline: true
 
 # Keybind
 # Special key

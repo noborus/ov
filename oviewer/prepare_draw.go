@@ -402,7 +402,7 @@ func (root *Root) lineContent(lN int) LineC {
 	if m.ColumnMode {
 		lineC = m.columnRanges(lineC)
 	}
-	RangeStyle(lineC.lc, 0, len(lineC.lc), root.StyleBody)
+	RangeStyle(lineC.lc, 0, len(lineC.lc), m.Style.Body)
 	root.styleContent(lineC)
 	return lineC
 }
@@ -491,11 +491,11 @@ func (root *Root) columnHighlight(lineC LineC) {
 // multiColorHighlight applies styles to multiple words (regular expressions) individually.
 // The style of the first specified word takes precedence.
 func (root *Root) multiColorHighlight(lineC LineC) {
-	numC := len(root.StyleMultiColorHighlight)
+	numC := len(root.Doc.Style.MultiColorHighlight)
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
 		indexes := searchPositionReg(lineC.str, root.Doc.multiColorRegexps[i])
 		for _, idx := range indexes {
-			RangeStyle(lineC.lc, lineC.pos.x(idx[0]), lineC.pos.x(idx[1]), root.StyleMultiColorHighlight[i%numC])
+			RangeStyle(lineC.lc, lineC.pos.x(idx[0]), lineC.pos.x(idx[1]), root.Doc.Style.MultiColorHighlight[i%numC])
 		}
 	}
 }
@@ -509,7 +509,7 @@ func (root *Root) searchHighlight(lineC LineC) {
 
 	indexes := root.searchPosition(lineC.str)
 	for _, idx := range indexes {
-		RangeStyle(lineC.lc, lineC.pos.x(idx[0]), lineC.pos.x(idx[1]), root.StyleSearchHighlight)
+		RangeStyle(lineC.lc, lineC.pos.x(idx[0]), lineC.pos.x(idx[1]), root.Doc.Style.SearchHighlight)
 	}
 }
 
@@ -573,14 +573,14 @@ func (m Document) columnWidthRanges(lineC LineC) []columnRange {
 // applyColumnStyles applies the styles to the columns based on the calculated ranges.
 func (root *Root) applyColumnStyles(lineC LineC) {
 	m := root.Doc
-	numC := len(root.StyleColumnRainbow)
+	numC := len(m.Style.ColumnRainbow)
 
 	for c, colRange := range lineC.columnRanges {
 		if m.ColumnRainbow {
-			RangeStyle(lineC.lc, colRange.start, colRange.end, root.StyleColumnRainbow[c%numC])
+			RangeStyle(lineC.lc, colRange.start, colRange.end, m.Style.ColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
-			RangeStyle(lineC.lc, colRange.start, colRange.end, root.StyleColumnHighlight)
+			RangeStyle(lineC.lc, colRange.start, colRange.end, m.Style.ColumnHighlight)
 		}
 	}
 }

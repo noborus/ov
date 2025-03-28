@@ -108,7 +108,7 @@ func (root *Root) drawHeader() {
 		lX, lN = root.drawLine(y, lX, lN, lineC)
 		root.drawVerticalHeader(y, wrapNum, lineC)
 		// header style.
-		root.applyStyleToLine(y, root.StyleHeader)
+		root.applyStyleToLine(y, m.Style.Header)
 
 		wrapNum++
 		if lX == 0 {
@@ -116,7 +116,7 @@ func (root *Root) drawHeader() {
 		}
 	}
 	if root.scr.headerEnd > 0 {
-		root.applyStyleToLine(m.headerHeight-1, root.StyleHeaderBorder)
+		root.applyStyleToLine(m.headerHeight-1, m.Style.HeaderBorder)
 	}
 }
 
@@ -138,7 +138,7 @@ func (root *Root) drawSectionHeader() {
 
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		// section header style.
-		root.applyStyleToLine(y, root.StyleSectionLine)
+		root.applyStyleToLine(y, m.Style.SectionLine)
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
 		// markstyle is displayed above the section header.
@@ -157,7 +157,7 @@ func (root *Root) drawSectionHeader() {
 		lX = nextLX
 		lN = nextLN
 	}
-	root.applyStyleToLine(m.headerHeight+m.sectionHeaderHeight-1, root.StyleSectionHeaderBorder)
+	root.applyStyleToLine(m.headerHeight+m.sectionHeaderHeight-1, m.Style.SectionHeaderBorder)
 }
 
 // drawRuler draws the ruler.
@@ -172,7 +172,7 @@ func (root *Root) drawRuler() {
 		startX = root.scr.startX - root.Doc.x
 	}
 
-	style := applyStyle(defaultStyle, root.StyleRuler)
+	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
 	for x := 0; x < root.scr.vWidth; x++ {
 		n := x - startX + 1
 		if n < 0 {
@@ -271,13 +271,13 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
 		}
-		style := applyStyle(c.style, root.StyleVerticalHeader)
+		style := applyStyle(c.style, root.Doc.Style.VerticalHeader)
 		if n == widthVH-2 && c.width == 2 {
-			style = applyStyle(defaultStyle, root.StyleVerticalHeaderBorder)
+			style = applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
 			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
 			return
 		} else if n == widthVH-1 {
-			style = applyStyle(defaultStyle, root.StyleVerticalHeaderBorder)
+			style = applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
 			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
 			return
 		}
@@ -342,7 +342,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	// Line numbers start at 1 except for skip and header lines.
 	number = number - m.firstLine() + 1
 
-	style := applyStyle(defaultStyle, root.StyleLineNumber)
+	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := []rune(fmt.Sprintf("%*d", root.scr.startX-1, number))
 	for i := 0; i < len(numC); i++ {
 		root.Screen.SetContent(i, y, numC[i], nil, style)
@@ -377,7 +377,7 @@ func (root *Root) coordinatesStyle(lN int, y int) {
 		root.applyStyleToAlternate(lN, y)
 	}
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
-		root.applyStyleToLine(y, root.StyleJumpTargetLine)
+		root.applyStyleToLine(y, root.Doc.Style.JumpTargetLine)
 	}
 }
 
@@ -386,7 +386,7 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 	if (lN)%2 == 0 {
 		return
 	}
-	root.applyStyleToLine(y, root.StyleAlternate)
+	root.applyStyleToLine(y, root.Doc.Style.Alternate)
 }
 
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
@@ -401,7 +401,7 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	if !contains(m.marked, lN) {
 		return
 	}
-	root.applyStyleToRange(y, root.StyleMarkLine, 0, width)
+	root.applyStyleToRange(y, m.Style.MarkLine, 0, width)
 }
 
 // applyStyleToRange applies the style from the start to the end of the physical line.
@@ -429,7 +429,7 @@ func (root *Root) sectionLineHighlight(y int, line LineC) {
 	if line.sectionNm <= 0 || line.sectionNm > root.Doc.SectionHeaderNum {
 		return
 	}
-	root.applyStyleToLine(y, root.StyleSectionLine)
+	root.applyStyleToLine(y, root.Doc.Style.SectionLine)
 }
 
 // hideOtherSection hides other sections.

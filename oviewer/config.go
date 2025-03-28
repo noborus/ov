@@ -17,45 +17,10 @@ type Config struct {
 	// MinStartX is the minimum value of the start position.
 	MinStartX int
 
-	// StyleColumnRainbow  is the style that applies to the column rainbow color highlight.
-	StyleColumnRainbow []OVStyle
-	// StyleMultiColorHighlight is the style that applies to the multi color highlight.
-	StyleMultiColorHighlight []OVStyle
-	// StyleHeader is the style that applies to the header.
-	StyleHeader OVStyle
-	// StyleBody is the style that applies to the body.
-	StyleBody OVStyle
-	// StyleLineNumber is a style that applies line number.
-	StyleLineNumber OVStyle
-	// StyleSearchHighlight is the style that applies to the search highlight.
-	StyleSearchHighlight OVStyle
-	// StyleColumnHighlight is the style that applies to the column highlight.
-	StyleColumnHighlight OVStyle
-	// StyleMarkLine is a style that marked line.
-	StyleMarkLine OVStyle
-	// StyleSectionLine is a style that section delimiter line.
-	StyleSectionLine OVStyle
-	// StyleVerticalHeader is a style that applies to the vertical header.
-	StyleVerticalHeader OVStyle
-	// StyleJumpTargetLine is the line that displays the search results.
-	StyleJumpTargetLine OVStyle
-	// StyleAlternate is a style that applies line by line.
-	StyleAlternate OVStyle
 	// StyleOverStrike is a style that applies to overstrike.
 	StyleOverStrike OVStyle
 	// StyleOverLine is a style that applies to overstrike underlines.
 	StyleOverLine OVStyle
-	// StyleRuler is a style that applies to the ruler.
-	StyleRuler OVStyle
-	// StyleHeaderBorder is the style that applies to the boundary line of the header.
-	// The boundary line of the header refers to the visual separator between the header and the rest of the content.
-	StyleHeaderBorder OVStyle
-	// StyleSectionHeaderBorder is the style that applies to the boundary line of the section header.
-	// The boundary line of the section header is the line that separates different sections in the header.
-	StyleSectionHeaderBorder OVStyle
-	// StyleVerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
-	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
-	StyleVerticalHeaderBorder OVStyle
 
 	// GeneralConfig is the general setting.
 	General General
@@ -97,6 +62,8 @@ type Config struct {
 	DisableColumnCycle bool
 	// Debug indicates whether to enable debug output.
 	Debug bool
+	// deprecatedStyleConfig is the old style setting.
+	deprecatedStyleConfig `yaml:",inline" mapstructure:",squash"`
 }
 
 // General is the general configuration.
@@ -169,6 +136,8 @@ type General struct {
 	SectionHeader *bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection *bool
+	// Style is the style setting.
+	Style StyleConfig
 }
 
 // OVPromptConfigNormal is the normal prompt setting.
@@ -192,63 +161,6 @@ func NewConfig() Config {
 	return Config{
 		MemoryLimit:     -1,
 		MemoryLimitFile: 100,
-		StyleHeader: OVStyle{
-			Bold: true,
-		},
-		StyleAlternate: OVStyle{
-			Background: "gray",
-		},
-		StyleOverStrike: OVStyle{
-			Bold: true,
-		},
-		StyleOverLine: OVStyle{
-			Underline: true,
-		},
-		StyleLineNumber: OVStyle{
-			Bold: true,
-		},
-		StyleSearchHighlight: OVStyle{
-			Reverse: true,
-		},
-		StyleColumnHighlight: OVStyle{
-			Reverse: true,
-		},
-		StyleMarkLine: OVStyle{
-			Background: "darkgoldenrod",
-		},
-		StyleSectionLine: OVStyle{
-			Background: "slateblue",
-		},
-		StyleVerticalHeader: OVStyle{},
-		StyleVerticalHeaderBorder: OVStyle{
-			Background: "#c0c0c0",
-		},
-		StyleMultiColorHighlight: []OVStyle{
-			{Foreground: "red"},
-			{Foreground: "aqua"},
-			{Foreground: "yellow"},
-			{Foreground: "fuchsia"},
-			{Foreground: "lime"},
-			{Foreground: "blue"},
-			{Foreground: "grey"},
-		},
-		StyleColumnRainbow: []OVStyle{
-			{Foreground: "white"},
-			{Foreground: "crimson"},
-			{Foreground: "aqua"},
-			{Foreground: "lightsalmon"},
-			{Foreground: "lime"},
-			{Foreground: "blue"},
-			{Foreground: "yellowgreen"},
-		},
-		StyleJumpTargetLine: OVStyle{
-			Underline: true,
-		},
-		StyleRuler: OVStyle{
-			Background: "#333333",
-			Foreground: "#CCCCCC",
-			Bold:       true,
-		},
 		Prompt: OVPromptConfig{
 			Normal: OVPromptConfigNormal{
 				ShowFilename:   true,
@@ -257,4 +169,95 @@ func NewConfig() Config {
 			},
 		},
 	}
+}
+
+// StyleConfig is the style setting.
+type StyleConfig struct {
+	// ColumnRainbow is the style that applies to the column rainbow color highlight.
+	ColumnRainbow *[]OVStyle
+	// MultiColorHighlight is the style that applies to the multi color highlight.
+	MultiColorHighlight *[]OVStyle
+	// Header is the style that applies to the header.
+	Header *OVStyle
+	// Body is the style that applies to the body.
+	Body *OVStyle
+	// LineNumber is a style that applies line number.
+	LineNumber *OVStyle
+	// SearchHighlight is the style that applies to the search highlight.
+	SearchHighlight *OVStyle
+	// ColumnHighlight is the style that applies to the column highlight.
+	ColumnHighlight *OVStyle
+	// MarkLine is a style that marked line.
+	MarkLine *OVStyle
+	// SectionLine is a style that section delimiter line.
+	SectionLine *OVStyle
+	// VerticalHeader is a style that applies to the vertical header.
+	VerticalHeader *OVStyle
+	// JumpTargetLine is the line that displays the search results.
+	JumpTargetLine *OVStyle
+	// Alternate is a style that applies line by line.
+	Alternate *OVStyle
+	// Ruler is a style that applies to the ruler.
+	Ruler *OVStyle
+	// HeaderBorder is the style that applies to the boundary line of the header.
+	// The boundary line of the header refers to the visual separator between the header and the rest of the content.
+	HeaderBorder *OVStyle
+	// SectionHeaderBorder is the style that applies to the boundary line of the section header.
+	// The boundary line of the section header is the line that separates different sections in the header.
+	SectionHeaderBorder *OVStyle
+	// VerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
+	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
+	VerticalHeaderBorder *OVStyle
+}
+
+// deprecatedStyleConfig is the old style setting.
+type deprecatedStyleConfig struct {
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.ColumnRainbow instead.
+	StyleColumnRainbow []OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.MultiColorHighlight instead.
+	StyleMultiColorHighlight []OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.Header instead.
+	StyleHeader OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.Body instead.
+	StyleBody OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.LineNumber instead.
+	StyleLineNumber OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.SearchHighlight instead.
+	StyleSearchHighlight OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.ColumnHighlight instead.
+	StyleColumnHighlight OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.MarkLine instead.
+	StyleMarkLine OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.SectionLine instead.
+	StyleSectionLine OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.VerticalHeader instead.
+	StyleVerticalHeader OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.JumpTargetLine instead.
+	StyleJumpTargetLine OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.Alternate instead.
+	StyleAlternate OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.Ruler instead.
+	StyleRuler OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.HeaderBorder instead.
+	StyleHeaderBorder OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.SectionHeaderBorder instead.
+	StyleSectionHeaderBorder OVStyle
+	// Deprecated: This setting is planned to be removed in future versions.
+	// Use General.Style.VerticalHeaderBorder instead.
+	StyleVerticalHeaderBorder OVStyle
 }
