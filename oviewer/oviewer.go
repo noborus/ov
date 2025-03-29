@@ -847,6 +847,8 @@ func (root *Root) prepareAllDocuments() {
 		}
 		log.Printf("open [%d]%s%s", n, doc.FileName, w)
 	}
+	root.helpDoc.Style = root.settings.Style
+	root.logDoc.Style = root.settings.Style
 }
 
 // Close closes the oviewer.
