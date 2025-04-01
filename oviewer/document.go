@@ -27,7 +27,23 @@ const (
 	DocFilter
 )
 
+// documentType is the type of document.
 type documentType int
+
+// String returns the string representation of the document type.
+func (d documentType) String() string {
+	switch d {
+	case DocNormal:
+		return "normal"
+	case DocHelp:
+		return "help"
+	case DocLog:
+		return "log"
+	case DocFilter:
+		return "filter"
+	}
+	return "unknown"
+}
 
 // Document represents a document with various properties and methods for handling
 // file operations, caching, synchronization, and display settings.
