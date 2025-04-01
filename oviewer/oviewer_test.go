@@ -1118,3 +1118,308 @@ func Test_updateRuntimeSettings_AllFields(t *testing.T) {
 		})
 	}
 }
+
+func Test_updateRuntimeStyle(t *testing.T) {
+	redStyle := OVStyle{Foreground: "red"}
+	blueStyle := OVStyle{Foreground: "blue"}
+	boldStyle := OVStyle{Bold: true}
+
+	rainbowStyles := []OVStyle{{Foreground: "red"}, {Foreground: "green"}}
+	newRainbowStyles := []OVStyle{{Foreground: "yellow"}, {Foreground: "purple"}}
+
+	multiColorStyles := []OVStyle{{Foreground: "cyan"}, {Foreground: "magenta"}}
+	newMultiColorStyles := []OVStyle{{Foreground: "white"}, {Foreground: "black"}}
+
+	type args struct {
+		src Style
+		dst StyleConfig
+	}
+	tests := []struct {
+		name string
+		args args
+		want Style
+	}{
+		{
+			name: "empty update",
+			args: args{
+				src: NewStyle(),
+				dst: StyleConfig{},
+			},
+			want: NewStyle(),
+		},
+		{
+			name: "update column rainbow",
+			args: args{
+				src: Style{ColumnRainbow: rainbowStyles},
+				dst: StyleConfig{ColumnRainbow: &newRainbowStyles},
+			},
+			want: Style{ColumnRainbow: newRainbowStyles},
+		},
+		{
+			name: "update multi color highlight",
+			args: args{
+				src: Style{MultiColorHighlight: multiColorStyles},
+				dst: StyleConfig{MultiColorHighlight: &newMultiColorStyles},
+			},
+			want: Style{MultiColorHighlight: newMultiColorStyles},
+		},
+		{
+			name: "update header",
+			args: args{
+				src: Style{Header: redStyle},
+				dst: StyleConfig{Header: &blueStyle},
+			},
+			want: Style{Header: blueStyle},
+		},
+		{
+			name: "update body",
+			args: args{
+				src: Style{Body: redStyle},
+				dst: StyleConfig{Body: &blueStyle},
+			},
+			want: Style{Body: blueStyle},
+		},
+		{
+			name: "update line number",
+			args: args{
+				src: Style{LineNumber: redStyle},
+				dst: StyleConfig{LineNumber: &blueStyle},
+			},
+			want: Style{LineNumber: blueStyle},
+		},
+		{
+			name: "update search highlight",
+			args: args{
+				src: Style{SearchHighlight: redStyle},
+				dst: StyleConfig{SearchHighlight: &blueStyle},
+			},
+			want: Style{SearchHighlight: blueStyle},
+		},
+		{
+			name: "update column highlight",
+			args: args{
+				src: Style{ColumnHighlight: redStyle},
+				dst: StyleConfig{ColumnHighlight: &blueStyle},
+			},
+			want: Style{ColumnHighlight: blueStyle},
+		},
+		{
+			name: "update mark line",
+			args: args{
+				src: Style{MarkLine: redStyle},
+				dst: StyleConfig{MarkLine: &blueStyle},
+			},
+			want: Style{MarkLine: blueStyle},
+		},
+		{
+			name: "update section line",
+			args: args{
+				src: Style{SectionLine: redStyle},
+				dst: StyleConfig{SectionLine: &blueStyle},
+			},
+			want: Style{SectionLine: blueStyle},
+		},
+		{
+			name: "update vertical header",
+			args: args{
+				src: Style{VerticalHeader: redStyle},
+				dst: StyleConfig{VerticalHeader: &blueStyle},
+			},
+			want: Style{VerticalHeader: blueStyle},
+		},
+		{
+			name: "update jump target line",
+			args: args{
+				src: Style{JumpTargetLine: redStyle},
+				dst: StyleConfig{JumpTargetLine: &blueStyle},
+			},
+			want: Style{JumpTargetLine: blueStyle},
+		},
+		{
+			name: "update alternate",
+			args: args{
+				src: Style{Alternate: redStyle},
+				dst: StyleConfig{Alternate: &blueStyle},
+			},
+			want: Style{Alternate: blueStyle},
+		},
+		{
+			name: "update ruler",
+			args: args{
+				src: Style{Ruler: redStyle},
+				dst: StyleConfig{Ruler: &boldStyle},
+			},
+			want: Style{Ruler: boldStyle},
+		},
+		{
+			name: "update header border",
+			args: args{
+				src: Style{HeaderBorder: redStyle},
+				dst: StyleConfig{HeaderBorder: &blueStyle},
+			},
+			want: Style{HeaderBorder: blueStyle},
+		},
+		{
+			name: "update section header border",
+			args: args{
+				src: Style{SectionHeaderBorder: redStyle},
+				dst: StyleConfig{SectionHeaderBorder: &blueStyle},
+			},
+			want: Style{SectionHeaderBorder: blueStyle},
+		},
+		{
+			name: "update vertical header border",
+			args: args{
+				src: Style{VerticalHeaderBorder: redStyle},
+				dst: StyleConfig{VerticalHeaderBorder: &blueStyle},
+			},
+			want: Style{VerticalHeaderBorder: blueStyle},
+		},
+		{
+			name: "update multiple fields",
+			args: args{
+				src: Style{
+					Header:       redStyle,
+					Body:         redStyle,
+					LineNumber:   redStyle,
+					MarkLine:     redStyle,
+					SectionLine:  redStyle,
+					Ruler:        redStyle,
+					HeaderBorder: redStyle,
+				},
+				dst: StyleConfig{
+					Header:       &blueStyle,
+					Body:         &blueStyle,
+					Ruler:        &boldStyle,
+					HeaderBorder: &boldStyle,
+				},
+			},
+			want: Style{
+				Header:       blueStyle,
+				Body:         blueStyle,
+				LineNumber:   redStyle,
+				MarkLine:     redStyle,
+				SectionLine:  redStyle,
+				Ruler:        boldStyle,
+				HeaderBorder: boldStyle,
+			},
+		},
+		{
+			name: "complete style update",
+			args: args{
+				src: NewStyle(), // Starting with default style
+				dst: StyleConfig{
+					ColumnRainbow:        &newRainbowStyles,
+					MultiColorHighlight:  &newMultiColorStyles,
+					Header:               &blueStyle,
+					Body:                 &blueStyle,
+					LineNumber:           &blueStyle,
+					SearchHighlight:      &blueStyle,
+					ColumnHighlight:      &blueStyle,
+					MarkLine:             &blueStyle,
+					SectionLine:          &blueStyle,
+					VerticalHeader:       &blueStyle,
+					JumpTargetLine:       &blueStyle,
+					Alternate:            &blueStyle,
+					Ruler:                &boldStyle,
+					HeaderBorder:         &boldStyle,
+					SectionHeaderBorder:  &boldStyle,
+					VerticalHeaderBorder: &boldStyle,
+				},
+			},
+			want: Style{
+				ColumnRainbow:        newRainbowStyles,
+				MultiColorHighlight:  newMultiColorStyles,
+				Header:               blueStyle,
+				Body:                 blueStyle,
+				LineNumber:           blueStyle,
+				SearchHighlight:      blueStyle,
+				ColumnHighlight:      blueStyle,
+				MarkLine:             blueStyle,
+				SectionLine:          blueStyle,
+				VerticalHeader:       blueStyle,
+				JumpTargetLine:       blueStyle,
+				Alternate:            blueStyle,
+				Ruler:                boldStyle,
+				HeaderBorder:         boldStyle,
+				SectionHeaderBorder:  boldStyle,
+				VerticalHeaderBorder: boldStyle,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := updateRuntimeStyle(tt.args.src, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("updateRuntimeStyle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_outputOnExit(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName        string
+		IsWriteOnExit   bool
+		IsWriteOriginal bool
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		wantOutput string
+	}{
+		{
+			name: "no output",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "test.txt"),
+				IsWriteOnExit:   false,
+				IsWriteOriginal: false,
+			},
+			wantOutput: "",
+		},
+		{
+			name: "writeCurrentScreen",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "test.txt"),
+				IsWriteOnExit:   true,
+				IsWriteOriginal: false,
+			},
+			wantOutput: "test                                                                            \x1B[0m\n",
+		},
+		{
+			name: "writeOriginal",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "test.txt"),
+				IsWriteOnExit:   true,
+				IsWriteOriginal: true,
+			},
+			wantOutput: "test\n",
+		},
+		{
+			name: "writeLog when Debug is true",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "test.txt"),
+				IsWriteOnExit:   false,
+				IsWriteOriginal: false,
+			},
+			wantOutput: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			root.IsWriteOnExit = tt.fields.IsWriteOnExit
+			root.IsWriteOriginal = tt.fields.IsWriteOriginal
+			buf := &bytes.Buffer{}
+			root.outputOnExit(buf)
+			gotOutput := buf.String()
+			if gotOutput != tt.wantOutput {
+				t.Errorf("Root.outputOnExit() = \n%v, want \n%v", []byte(gotOutput), []byte(tt.wantOutput))
+			}
+		})
+	}
+}

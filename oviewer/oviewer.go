@@ -1109,16 +1109,8 @@ func (root *Root) docSmall() bool {
 
 // OutputOnExit outputs to the terminal when exiting.
 func (root *Root) OutputOnExit() {
-	if root.IsWriteOnExit {
-		if root.IsWriteOriginal {
-			root.WriteOriginal()
-		} else {
-			root.WriteCurrentScreen()
-		}
-	}
-	if root.Debug {
-		root.WriteLog()
-	}
+	output := os.Stdout
+	root.outputOnExit(output)
 }
 
 // WriteOriginal writes to the original terminal.
@@ -1130,6 +1122,25 @@ func (root *Root) WriteOriginal() {
 // WriteCurrentScreen writes to the current screen.
 func (root *Root) WriteCurrentScreen() {
 	output := os.Stdout
+	root.writeCurrentScreen(output)
+}
+
+// outputOnExit outputs to the terminal when exiting.
+func (root *Root) outputOnExit(output io.Writer) {
+	if root.IsWriteOnExit {
+		if root.IsWriteOriginal {
+			root.writeOriginal(output)
+		} else {
+			root.writeCurrentScreen(output)
+		}
+	}
+	if root.Debug {
+		root.writeLog(output)
+	}
+}
+
+// writeCurrentScreen writes to the current screen.
+func (root *Root) writeCurrentScreen(output io.Writer) {
 	strs := root.OnExit
 	if strs == nil {
 		height, err := root.dummyScreen()
@@ -1192,6 +1203,7 @@ func (root *Root) ScreenContent() []string {
 	return tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
 }
 
+// writeOriginal writes to the original terminal.
 func (root *Root) writeOriginal(output io.Writer) {
 	m := root.Doc
 	if m.bottomLN == 0 {
@@ -1233,11 +1245,11 @@ func (root *Root) WriteLog() {
 	root.writeLog(os.Stdout)
 }
 
-func (root *Root) writeLog(w io.Writer) {
+func (root *Root) writeLog(output io.Writer) {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	if err := m.Export(w, start, end); err != nil {
+	if err := m.Export(output, start, end); err != nil {
 		log.Println(err)
 	}
 }
