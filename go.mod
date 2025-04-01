@@ -1,9 +1,6 @@
 module github.com/noborus/ov
 
 go 1.22.0
-
-toolchain go1.23.3
-
 require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4
@@ -20,7 +17,7 @@ require (
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/ulikunitz/xz v0.5.12
 	golang.org/x/sync v0.11.0
 	golang.org/x/term v0.29.0
