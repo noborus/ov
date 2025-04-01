@@ -414,7 +414,7 @@ func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 		return lines
 	}
 	if m.SectionDelimiterReg == nil {
-		log.Printf("Regular expression is not set: %s", m.SectionDelimiter)
+		log.Printf("Regular expression is not set: %s\n", m.SectionDelimiter)
 		return lines
 	}
 	lNs := lineNumbers(lines)

@@ -40,7 +40,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	r, w := io.Pipe()
 	render, err := renderDoc(m, r)
 	if err != nil {
-		log.Printf("failed to filter document: %v", err)
+		log.Printf("failed to filter document: %v\n", err)
 		return
 	}
 	render.documentType = DocFilter
@@ -66,7 +66,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	for ln := 0; ln < render.firstLine(); ln++ {
 		line, err := m.Line(ln)
 		if err != nil {
-			log.Printf("failed to get line %d: %v", ln, err)
+			log.Printf("failed to get line %d: %v\n", ln, err)
 			break
 		}
 		render.lineNumMap.Store(ln, ln)

@@ -174,7 +174,7 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 	r = regexp.QuoteMeta(r)
 	re, err = regexp.Compile(r)
 	if err != nil {
-		log.Printf("regexpCompile failed %s", r)
+		log.Printf("regexpCompile failed %s:%v\n", r, err)
 		return nil
 	}
 	return re
