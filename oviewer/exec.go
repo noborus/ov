@@ -133,6 +133,7 @@ func (command *Command) stderrReload() *bufio.Reader {
 
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
+//
 // Deprecated: use [NewCommand] and [Exec] instead.
 func ExecCommand(cmd *exec.Cmd) (*Root, error) {
 	docout, docerr, err := newOutErrDocument()

@@ -629,6 +629,7 @@ func (m *Document) vHeaderWidth(lineC LineC) int {
 }
 
 // GetLine returns one line from buffer.
+//
 // Deprecated: Use [Document.LineString] instead.
 func (m *Document) GetLine(n int) string {
 	s, err := m.Line(n)
@@ -639,6 +640,7 @@ func (m *Document) GetLine(n int) string {
 }
 
 // LineString returns one line from buffer.
+//
 // Deprecated: Use [Document.LineStr] instead.
 func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)

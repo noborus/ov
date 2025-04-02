@@ -906,6 +906,7 @@ func (root *Root) debugMessage(msg string) {
 }
 
 // setOldStyle applies deprecated style settings for backward compatibility.
+//
 // Deprecated: This function is planned to be removed in future versions.
 // It reads and applies old style settings to maintain compatibility with older configurations.
 // Use the new style configuration methods instead.
