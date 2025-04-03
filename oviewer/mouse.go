@@ -163,13 +163,18 @@ func (root *Root) copyToClipboard(_ context.Context) {
 	root.setMessage("Copy")
 }
 
+// copyClipboard copies the string to the clipboard.
+// The method of copying to the clipboard is determined by the configuration.
+// The default method is to use the clipboard package.
+// "OSC52” can be specified (available only if the terminal supports it).
 func (root *Root) copyClipboard(str string) {
-	if root.Config.UseOSC52Clipboard {
+	switch root.Config.ClipboardMethod {
+	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
-		return
-	}
-	if err := clipboard.WriteAll(str); err != nil {
-		log.Printf("copyToClipboard: %v\n", err)
+	default:
+		if err := clipboard.WriteAll(str); err != nil {
+			log.Printf("copyToClipboard: %v\n", err)
+		}
 	}
 }
 
