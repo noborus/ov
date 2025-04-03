@@ -40,7 +40,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	r, w := io.Pipe()
 	render, err := renderDoc(m, r)
 	if err != nil {
-		log.Println(err)
+		log.Printf("failed to filter document: %v\n", err)
 		return
 	}
 	render.documentType = DocFilter
@@ -66,7 +66,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	for ln := 0; ln < render.firstLine(); ln++ {
 		line, err := m.Line(ln)
 		if err != nil {
-			log.Println(err)
+			log.Printf("failed to get line %d: %v\n", ln, err)
 			break
 		}
 		render.lineNumMap.Store(ln, ln)
@@ -112,6 +112,8 @@ func (root *Root) closeAllFilter(ctx context.Context) {
 		return
 	}
 
+	// closeAllDocumentsOfType closes all documents of the specified type.
+	// It returns the document number to switch to and a list of closed document names.
 	docNum, closed := root.closeAllDocumentsOfType(DocFilter)
 	root.setDocumentNum(ctx, docNum)
 

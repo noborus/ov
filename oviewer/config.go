@@ -63,6 +63,8 @@ type Config struct {
 	// Debug indicates whether to enable debug output.
 	Debug bool
 	// deprecatedStyleConfig is the old style setting.
+	//
+	// Deprecated: This setting is planned to be removed in future versions.
 	deprecatedStyleConfig `yaml:",inline" mapstructure:",squash"`
 }
 
@@ -211,6 +213,8 @@ type StyleConfig struct {
 }
 
 // deprecatedStyleConfig is the old style setting.
+//
+// Deprecated: This setting is planned to be removed in future versions.
 type deprecatedStyleConfig struct {
 	// Deprecated: This setting is planned to be removed in future versions.
 	// Use General.Style.ColumnRainbow instead.

@@ -305,6 +305,6 @@ func (m *Document) movePrevSectionLN(ctx context.Context, start int) error {
 // moveLastSection moves to the last section.
 func (m *Document) moveLastSection(ctx context.Context) {
 	if err := m.movePrevSectionLN(ctx, m.BufEndNum()+1); err != nil {
-		log.Printf("last section:%v", err)
+		log.Printf("last section: %v\n", err)
 	}
 }

@@ -201,7 +201,7 @@ func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
 func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	if lX < 0 {
-		log.Printf("Illegal lX:%d", lX)
+		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
 	screen := root.Screen

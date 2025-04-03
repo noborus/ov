@@ -160,7 +160,7 @@ func (root *Root) copyToClipboard(_ context.Context) {
 		return
 	}
 	if err := clipboard.WriteAll(str); err != nil {
-		log.Printf("copyToClipboard: %v", err)
+		log.Printf("copyToClipboard: %v\n", err)
 	}
 	root.setMessage("Copy")
 }
@@ -189,7 +189,7 @@ func (root *Root) pasteFromClipboard(context.Context) {
 
 	str, err := clipboard.ReadAll()
 	if err != nil {
-		log.Printf("pasteFromClipboard: %v", err)
+		log.Printf("pasteFromClipboard: %v\n", err)
 		return
 	}
 
@@ -342,7 +342,7 @@ func (scr SCR) selectLine(lineC LineC, x1 int, x2 int) string {
 	end := lineC.pos.n(x2)
 
 	if start > len(lineC.str) || end > len(lineC.str) || start > end {
-		log.Printf("selectLine:len(%d):start(%d):end(%d)", len(lineC.str), start, end)
+		log.Printf("selectLine:len(%d):start(%d):end(%d)\n", len(lineC.str), start, end)
 		return ""
 	}
 	return lineC.str[start:end]

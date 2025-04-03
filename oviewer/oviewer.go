@@ -703,7 +703,7 @@ func (root *Root) setKeyConfig(ctx context.Context) (map[string][]string, error)
 
 	keys, ok := keyBind[actionCancel]
 	if !ok {
-		log.Printf("no cancel key")
+		log.Println("no cancel key")
 	} else {
 		root.cancelKeys = keys
 	}
@@ -845,7 +845,7 @@ func (root *Root) prepareAllDocuments() {
 			doc.watchMode()
 			w = "(watch)"
 		}
-		log.Printf("open [%d]%s%s", n, doc.FileName, w)
+		log.Printf("open [%d]%s%s\n", n, doc.FileName, w)
 	}
 	root.helpDoc.Style = root.settings.Style
 	root.logDoc.Style = root.settings.Style
@@ -902,10 +902,11 @@ func (root *Root) debugMessage(msg string) {
 	if len(msg) == 0 {
 		return
 	}
-	log.Printf("%s:%s", root.Doc.FileName, msg)
+	log.Printf("%s:%s\n", root.Doc.FileName, msg)
 }
 
 // setOldStyle applies deprecated style settings for backward compatibility.
+//
 // Deprecated: This function is planned to be removed in future versions.
 // It reads and applies old style settings to maintain compatibility with older configurations.
 // Use the new style configuration methods instead.
@@ -1096,7 +1097,7 @@ func (root *Root) docSmall() bool {
 	for y := 0; y < m.BufEndNum(); y++ {
 		lc, err := m.contents(y)
 		if err != nil {
-			log.Printf("docSmall %d: %s", y, err)
+			log.Printf("docSmall %d: %v\n", y, err)
 			continue
 		}
 		height += 1 + (len(lc) / root.scr.vWidth)
@@ -1109,16 +1110,8 @@ func (root *Root) docSmall() bool {
 
 // OutputOnExit outputs to the terminal when exiting.
 func (root *Root) OutputOnExit() {
-	if root.IsWriteOnExit {
-		if root.IsWriteOriginal {
-			root.WriteOriginal()
-		} else {
-			root.WriteCurrentScreen()
-		}
-	}
-	if root.Debug {
-		root.WriteLog()
-	}
+	output := os.Stdout
+	root.outputOnExit(output)
 }
 
 // WriteOriginal writes to the original terminal.
@@ -1130,6 +1123,25 @@ func (root *Root) WriteOriginal() {
 // WriteCurrentScreen writes to the current screen.
 func (root *Root) WriteCurrentScreen() {
 	output := os.Stdout
+	root.writeCurrentScreen(output)
+}
+
+// outputOnExit outputs to the terminal when exiting.
+func (root *Root) outputOnExit(output io.Writer) {
+	if root.IsWriteOnExit {
+		if root.IsWriteOriginal {
+			root.writeOriginal(output)
+		} else {
+			root.writeCurrentScreen(output)
+		}
+	}
+	if root.Debug {
+		root.writeLog(output)
+	}
+}
+
+// writeCurrentScreen writes to the current screen.
+func (root *Root) writeCurrentScreen(output io.Writer) {
 	strs := root.OnExit
 	if strs == nil {
 		height, err := root.dummyScreen()
@@ -1192,6 +1204,7 @@ func (root *Root) ScreenContent() []string {
 	return tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
 }
 
+// writeOriginal writes to the original terminal.
 func (root *Root) writeOriginal(output io.Writer) {
 	m := root.Doc
 	if m.bottomLN == 0 {
@@ -1233,11 +1246,11 @@ func (root *Root) WriteLog() {
 	root.writeLog(os.Stdout)
 }
 
-func (root *Root) writeLog(w io.Writer) {
+func (root *Root) writeLog(output io.Writer) {
 	m := root.logDoc
 	start := max(0, m.BufEndNum()-MaxWriteLog)
 	end := m.BufEndNum()
-	if err := m.Export(w, start, end); err != nil {
+	if err := m.Export(output, start, end); err != nil {
 		log.Println(err)
 	}
 }
@@ -1263,18 +1276,18 @@ func (root *Root) debugNumOfChunk() {
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if MemoryLimit > 0 {
-				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
+				log.Printf("%s: The number of chunks is %d, of which %d(%v) are loaded\n", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 			}
 			continue
 		}
 		for n, chunk := range doc.store.chunks {
 			if n != 0 && len(chunk.lines) != 0 {
 				if !doc.store.loadedChunks.Contains(n) {
-					log.Printf("chunk %d is not under control %d", n, len(chunk.lines))
+					log.Printf("chunk %d is not under control %d\n", n, len(chunk.lines))
 				}
 			}
 		}
-		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
+		log.Printf("%s(seekable): The number of chunks is %d, of which %d(%v) are loaded\n", doc.FileName, len(doc.store.chunks), doc.store.loadedChunks.Len(), doc.store.loadedChunks.Keys())
 	}
 }
 

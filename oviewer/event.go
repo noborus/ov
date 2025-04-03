@@ -364,7 +364,7 @@ func (root *Root) postEvent(ev tcell.Event) {
 	}
 
 	if err := root.Screen.PostEvent(ev); err != nil {
-		log.Printf("postEvent %s", err)
+		log.Printf("postEvent: %v\n", err)
 		root.releaseEventBuffer()
 	}
 }

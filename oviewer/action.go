@@ -176,7 +176,7 @@ func (root *Root) watchControl() {
 	if !root.Doc.WatchMode {
 		return
 	}
-	log.Printf("watch start at interval %d", m.WatchInterval)
+	log.Printf("watch start at interval: %d\n", m.WatchInterval)
 	m.ticker = time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
 	atomic.StoreInt32(&m.tickerState, 1)
 	go func() {

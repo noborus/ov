@@ -1,6 +1,7 @@
 module github.com/noborus/ov
 
 go 1.22.0
+
 require (
 	code.rocketnine.space/tslocum/cbind v0.1.5
 	github.com/atotto/clipboard v0.1.4

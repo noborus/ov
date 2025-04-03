@@ -67,10 +67,10 @@ func (command *Command) Exec() (*Root, error) {
 	command.docerr.store.formfeedTime = true
 
 	if err = command.docout.ControlReader(so, command.Reload); err != nil {
-		log.Printf("%s", err)
+		log.Printf("Exec: %v", err)
 	}
 	if err = command.docerr.ControlReader(se, command.stderrReload); err != nil {
-		log.Printf("%s", err)
+		log.Printf("Exec: %v", err)
 	}
 	return NewOviewer(command.docout, command.docerr)
 }
@@ -87,7 +87,7 @@ func (command *Command) Wait() {
 
 	// Kill the command if it hasn't exited yet.
 	if err := command.cmd.Process.Kill(); err != nil {
-		log.Println(err)
+		log.Printf("Exec: %v", err)
 	}
 }
 
@@ -104,7 +104,7 @@ func (command *Command) Reload() *bufio.Reader {
 	command.cmd = exec.Command(command.args[0], command.args[1:]...)
 	so, se, err := commandStart(command.cmd)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Reload: %v", err)
 		str := fmt.Sprintf("command error: %s", err)
 		reader := bufio.NewReader(strings.NewReader(str))
 		return reader
@@ -133,6 +133,7 @@ func (command *Command) stderrReload() *bufio.Reader {
 
 // ExecCommand return the structure of oviewer.
 // ExecCommand executes the command and opens stdout/stderr as document.
+//
 // Deprecated: use [NewCommand] and [Exec] instead.
 func ExecCommand(cmd *exec.Cmd) (*Root, error) {
 	docout, docerr, err := newOutErrDocument()
@@ -148,12 +149,12 @@ func ExecCommand(cmd *exec.Cmd) (*Root, error) {
 	docout.Caption = "(" + cmd.Args[0] + ")" + docout.FileName
 	err = docout.ControlReader(so, nil)
 	if err != nil {
-		log.Printf("%s", err)
+		log.Printf("ExecCommand: %v", err)
 	}
 	docerr.Caption = "(" + cmd.Args[0] + ")" + docerr.FileName
 	err = docerr.ControlReader(se, nil)
 	if err != nil {
-		log.Printf("%s", err)
+		log.Printf("ExecCommand: %v", err)
 	}
 	return NewOviewer(docout, docerr)
 }
@@ -241,7 +242,7 @@ func ptyOutput(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 
 	go func() {
 		if err := cmd.Wait(); err != nil {
-			log.Printf("wait: %s", err)
+			log.Printf("pty wait: %v\n", err)
 		}
 		time.Sleep(100 * time.Millisecond)
 		stdout.Close()

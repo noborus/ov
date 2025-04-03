@@ -69,7 +69,7 @@ func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if err := m.seekChunk(reader, m.store.offset); err != nil {
 			atomic.StoreInt32(&m.store.eof, 1)
-			log.Printf("continueRead: %s", err)
+			log.Printf("continueRead: %v\n", err)
 			m.seekable = false
 		} else {
 			reader.Reset(m.file)
@@ -161,7 +161,7 @@ func (m *Document) loadChunk(reader *bufio.Reader, chunkNum int) (*bufio.Reader,
 		if errors.Is(err, io.EOF) {
 			return m.afterEOF(reader), nil
 		}
-		log.Printf("Failed to read the expected number of lines(%d:%d): %s", start, end, err)
+		log.Printf("Failed to read the expected number of lines(%d:%d): %v\n", start, end, err)
 		return nil, err
 	}
 	return reader, nil
@@ -244,7 +244,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 
 	atomic.StoreInt32(&m.closed, 1)
 	if err := m.file.Close(); err != nil {
-		log.Printf("reload: %s", err)
+		log.Printf("reload: %v\n", err)
 	}
 	m.ClearCache()
 
@@ -252,7 +252,7 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.store.eof, 0)
 	r, err := m.openFileReader(m.FileName)
 	if err != nil {
-		str := fmt.Sprintf("Access is no longer possible: %s", err)
+		str := fmt.Sprintf("Access is no longer possible: %v", err)
 		reader = bufio.NewReader(strings.NewReader(str))
 		return reader, nil
 	}
