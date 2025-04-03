@@ -55,6 +55,9 @@ type Config struct {
 	Incsearch bool
 	// NotifyEOF specifies the number of times to notify EOF.
 	NotifyEOF int
+	// UseOSC52Clipboard enables clipboard copy functionality using OSC52 escape sequence.
+	// Note: This may not work in all terminal emulators. Enable only if your terminal supports OSC52.
+	UseOSC52Clipboard bool
 
 	// ShrinkChar specifies the character to display when the column is shrunk.
 	ShrinkChar string

@@ -155,14 +155,22 @@ func (root *Root) copyToClipboard(_ context.Context) {
 		root.debugMessage("copyToClipboard: " + err.Error())
 		return
 	}
-
 	if len(str) == 0 {
+		return
+	}
+
+	root.copyClipboard(str)
+	root.setMessage("Copy")
+}
+
+func (root *Root) copyClipboard(str string) {
+	if root.Config.UseOSC52Clipboard {
+		root.Screen.SetClipboard([]byte(str))
 		return
 	}
 	if err := clipboard.WriteAll(str); err != nil {
 		log.Printf("copyToClipboard: %v\n", err)
 	}
-	root.setMessage("Copy")
 }
 
 type eventPaste struct {
