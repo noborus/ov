@@ -56,6 +56,13 @@ type Config struct {
 	// NotifyEOF specifies the number of times to notify EOF.
 	NotifyEOF int
 
+	// ClipboardMethod specifies the method to use for copying to the clipboard.
+	// Supported values:
+	// - "OSC52": Uses the OSC52 escape sequence for clipboard operations. This requires terminal support.
+	// - "default": Uses the default clipboard method provided by the system or application.
+	// In fact, all other settings are default except for OSC52. In the future, “auto” will be added.
+	ClipboardMethod string
+
 	// ShrinkChar specifies the character to display when the column is shrunk.
 	ShrinkChar string
 	// DisableColumnCycle indicates whether to disable column cycling.
