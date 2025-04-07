@@ -19,6 +19,9 @@
 #
 # ViewMode: markdown # Default view mode.
 #
+# For ClipboardMethod, specify “OSC52” to copy using OSC52 (if the terminal supports it).
+# ClipboardMethod: "default" # Clipboard method. Options: "OSC52" or other.
+#
 # Debug: false # Debug mode.
 #
 Prompt:
@@ -302,6 +305,9 @@ Mode:
   markdown:
     SectionDelimiter: "^#"
     WrapMode: true
+    Style:
+      SectionLine:
+        Background: "blue"
   psql:
     Header: 2
     AlternateRows: true

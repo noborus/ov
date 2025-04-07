@@ -314,7 +314,7 @@ The `--header` (`-H`) (default key `H`) option fixedly displays the specified nu
 ov --header 1 README.md
 ```
 
-[Related styling](#style-customization): `StyleHeader` and `StyleHeaderBorder`.
+[Related styling](#style-customization): `Header` and `HeaderBorder`.
 
 ####  4.2.1. <a name='skip'></a>Skip
 
@@ -336,7 +336,7 @@ ov --vertial-header=4 README.md
 
 If you want to specify by column instead of character, see [Header Column](#header-column).
 
-[Related styling](#style-customization): `StyleVerticalHeader` and `StyleVerticalHeaderBorder`.
+[Related styling](#style-customization): `VerticalHeader` and `VerticalHeaderBorder`.
 
 ###  4.4. <a name='column-mode'></a>Column mode
 
@@ -353,7 +353,7 @@ Enclose in '/' when using regular expressions.
 ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 ```
 
-[Related styling](#style-customization): `StyleColumnHighlight`,`StyleColumnRainbow`.
+[Related styling](#style-customization): `ColumnHighlight`,`ColumnRainbow`.
 
 ###  4.5. <a name='header-column'></a>Header Column
 
@@ -367,7 +367,7 @@ ov --column-mode --column-delimiter="," --header-column=2 test.csv
 
 When in column-mode, pressing `F` will switch to fixed display for the selected columns up to that point.
 
-[Related styling](#style-customization): `StyleVerticalHeader` and `StyleVerticalHeaderBorder`.
+[Related styling](#style-customization): `VerticalHeader` and `VerticalHeaderBorder`.
 
 ###  4.6. <a name='column-rainbow-mode'></a>Column rainbow mode
 
@@ -377,20 +377,22 @@ Specify `--column-rainbow`(default key is `ctrl+r`) in addition to the `--column
 Color customization is possible. Please specify 7 or more colors in `config.yaml`.
 
 ```yaml
-StyleColumnRainbow:
-  - Foreground: "white"
-  - Foreground: "aqua"
-  - Foreground: "lightsalmon"
-  - Foreground: "lime"
-  - Foreground: "blue"
-  - Foreground: "yellowgreen"
-  - Foreground: "red"
+Style:
+  ColumnRainbow:
+    - Foreground: "white"
+    - Foreground: "aqua"
+    - Foreground: "lightsalmon"
+    - Foreground: "lime"
+    - Foreground: "blue"
+    - Foreground: "yellowgreen"
+    - Foreground: "red"
 ```
 
 Style specifications other than `Foreground` can also be specified.
 
 ```yaml
-StyleColumnRainbow:
+Style:
+  ColumnRainbow:
     - Foreground: "white"
       Background: "red"
     - Foreground: "aqua"
@@ -406,7 +408,7 @@ StyleColumnRainbow:
     - Foreground: "red"
 ```
 
-[Related styling](#style-customization): `StyleColumnRainbow`.
+[Related styling](#style-customization): `ColumnRainbow`.
 
 ###  4.7. <a name='column-width'></a>Column width
 
@@ -436,7 +438,7 @@ The style can be set with [Style customization](#style-customization).
 ov --alternate-rows test.csv
 ```
 
-[Related styling](#style-customization): `StyleAlternate`.
+[Related styling](#style-customization): `Alternate`.
 
 ###  4.10. <a name='section'></a>Section
 
@@ -469,7 +471,7 @@ This is an example of using the `git` pager.
 	log = "ov -F --section-delimiter '^commit' --section-header-num 3"
 ```
 
-[Related styling](#style-customization): `StyleSectionLine`.
+[Related styling](#style-customization): `SectionLine`.
 
 ####  4.10.2. <a name='hide-other-sections'></a>hide other sections
 
@@ -593,7 +595,7 @@ Incsearch: true
 SmartCaseSensitive: true
 ```
 
-[Related styling](#style-customization): `StyleSearchHighlight`
+[Related styling](#style-customization): `SearchHighlight`
 
 ####  4.14.1. <a name='pattern'></a>Pattern
 
@@ -668,14 +670,14 @@ ls -alF|ov
 ###  4.16. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
-The mark is decorated with `StyleMarkLine` and `MarkStyleWidth`.
+The mark is decorated with `MarkLine` and `MarkStyleWidth`.
 
 Marks can be erased individually with the `M` key(default).
 It is also possible to delete all marks with the `ctrl + delete` key(default).
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 
-[Related styling](#style-customization): `StyleMarkLine`.
+[Related styling](#style-customization): `MarkLine`.
 
 ###  4.17. <a name='watch'></a>Watch
 
@@ -730,20 +732,21 @@ ov --multi-color "ERROR,WARN,INFO,DEBUG,not,^.{24}" access.log
 Color customization is possible. Please specify 7 or more colors in config.yaml.
 
 ```yaml
-StyleMultiColorHighlight:
-  - Foreground: "red"
-    Reverse: true
-  - Foreground: "aqua"
-    Underline: true
-  - Foreground: "yellow"
-    Background: "blue"
-  - Foreground: "fuchsia"
-  - Foreground: "lime"
-  - Foreground: "blue"
-  - Foreground: "#c0c0c0"
+Style:
+  MultiColorHighlight:
+    - Foreground: "red"
+      Reverse: true
+    - Foreground: "aqua"
+      Underline: true
+    - Foreground: "yellow"
+      Background: "blue"
+    - Foreground: "fuchsia"
+    - Foreground: "lime"
+    - Foreground: "blue"
+    - Foreground: "#c0c0c0"
 ```
 
-[Related styling](#style-customization): `StyleMultiColorHighlight`.
+[Related styling](#style-customization): `MultiColorHighlight`.
 
 ###  4.20. <a name='plain'></a>Plain
 
@@ -817,7 +820,7 @@ and the jump-target will be changed.
 ov --section-delimiter "^#" --jump-target section README.md
 ```
 
-[Related styling](#style-customization): `StyleJumpTarget`.
+[Related styling](#style-customization): `JumpTarget`.
 
 ###  4.24. <a name='view-mode'></a>View mode
 
@@ -863,10 +866,18 @@ Mode:
 `--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
 
-By default, it outputs the amount of the displayed screen and exits.
+*Change in v0.40.0*
+
+By default, it outputs the amount of the displayed screen **with all decorations**, such as search highlights, as it appears on the screen.
 
 ```console
 ov -X README.md
+```
+
+If you want to revert to the previous behavior (outputting the original text without decorations), set IsWriteOriginal: true in the configuration file.
+
+```yaml
+IsWriteOriginal: true
 ```
 
 You can change how much is written using `--exit-write-before` and `--exit-write-after`(default key `ctrl+q`).
@@ -945,7 +956,7 @@ ov --ruler=2 README.md
 
 ![ov-ruler.png](docs/ov-ruler.png)
 
-[Related styling](#style-customization): `StyleRuler` .
+[Related styling](#style-customization): `Ruler` .
 
 ###  4.30. <a name='redirect-output'></a>Redirect Output
 
@@ -1185,32 +1196,72 @@ It can also be changed after startup.
 
 You can customize the following items.
 
-* StyleAlternate
-* StyleHeader
-* StyleHeaderBorder
-* StyleOverStrike
-* StyleOverLine
-* StyleLineNumber
-* StyleSearchHighlight
-* StyleColumnHighlight
-* StyleMarkLine
-* StyleSectionLine
-* StyleSectionBorder
-* StyleMultiColorHighlight
-* StyleColumnRainbow
-* StyleJumpTargetLine
-* StyleVerticalHeader
-* StyleVerticalHeaderBorder
-* StyleRuler
-  
-> [!NOTE]
-> The following styles are added in v0.39.0:
-> 
-> * StyleHeaderBorder
-> * StyleSectionBorder
-> * StyleVerticalHeader
-> * StyleVerticalHeaderBorder
-> * StyleRuler
+*Changed in v0.40.0* The new style must be written in General:, Style:.
+
+It is now also possible to write it in the Mode: item.
+
+```yaml
+General:
+  Style:
+```
+
+```yaml
+Mode:
+  markdown:
+    SectionDelimiter: "^#"
+    WrapMode: true
+    Style:
+      SectionLine:
+        Background: "blue"
+```
+
+* Header
+* HeaderBorder
+* OverStrike
+* OverLine
+* LineNumber
+* SearchHighlight
+* ColumnHighlight
+* MarkLine
+* SectionLine
+* SectionBorder
+* MultiColorHighlight
+* ColumnRainbow
+* JumpTargetLine
+* VerticalHeader
+* VerticalHeaderBorder
+* Ruler
+* HeaderBorder
+* SectionBorder
+* VerticalHeader
+* VerticalHeaderBorder
+* Ruler
+
+From `v0.40.0`, it is recommended to use the `Style:` format for configuration. For example:
+
+```yaml
+General:
+  Style:
+    Header:
+      Foreground: "blue"
+      Background: "white"
+      Bold: true
+    HeaderBorder:
+      Foreground: "gray"
+      Underline: true
+```
+
+For backward compatibility, the `Style*` format is still supported but will be deprecated in the future. For example:
+
+```yaml
+StyleHeader:
+  Foreground: "blue"
+  Background: "white"
+  Bold: true
+StyleHeaderBorder:
+  Foreground: "gray"
+  Underline: true
+```
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
 Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderLineStyle, and UnderlineColor.
@@ -1218,10 +1269,12 @@ Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderLineS
 [Example]
 
 ```yaml
-StyleAlternate:
-  Background: "gray"
-  Bold: true
-  Underline: true
+General:
+  Style:
+    Alternate:
+      Background: "gray"
+      Bold: true
+      Underline: true
 ```
 
 | item name | value | example |
@@ -1237,25 +1290,23 @@ StyleAlternate:
 | UnderLineStyle | 0-5 | 2 |
 | UnderlineColor | "color name" or "rgb" | "red" |
 
-Specify `StyleMultiColorHighlight` and `StyleColumnRainbow` in an array.
+Specify `MultiColorHighlight` and `ColumnRainbow` in an array.
 
 ```yaml
-StyleMultiColorHighlight
-  - Foreground: "red"
-    Reverse: true
-  - Foreground: "aqua"
-    Underline: true
-```
-
-```yaml
-StyleColumnRainbow:
-  - Foreground: "white"
-    Background: "black"
-  - Foreground: "aqua"
-    Background: "black"
-    Underline: true
-  - Background: "lightsalmon"
-    UnderlineStyle: 2
+Style:
+  MultiColorHighlight:
+    - Foreground: "red"
+      Reverse: true
+    - Foreground: "aqua"
+      Underline: true
+  ColumnRainbow:
+    - Foreground: "white"
+      Background: "black"
+    - Foreground: "aqua"
+      Background: "black"
+      Underline: true
+    - Background: "lightsalmon"
+      UnderlineStyle: 2
 ```
 
 ####  8.1.1. <a name='underlinestyle'></a>UnderlineStyle
