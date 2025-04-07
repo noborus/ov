@@ -62,8 +62,6 @@ type Root struct {
 	// searchOpt is the search option.
 	searchOpt string
 
-	// Caption is the caption to display.
-	Caption string
 	// message is the message to display.
 	message string
 	// cancelKeys represents the cancellation key string.
@@ -805,8 +803,8 @@ func (root *Root) prepareRun(ctx context.Context) error {
 // setCaption sets the caption.
 // optimizes execution with the Man command.
 func (root *Root) setCaption() {
-	if root.Caption != "" {
-		root.Doc.Caption = root.Caption
+	if root.settings.Caption != "" {
+		root.Doc.Caption = root.settings.Caption
 		return
 	}
 
