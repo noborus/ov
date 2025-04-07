@@ -524,7 +524,7 @@ func init() {
 	_ = viper.BindPFlag("QuitSmall", rootCmd.PersistentFlags().Lookup("quit-if-one-screen"))
 
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
-	_ = viper.BindPFlag("IsScreenConent", rootCmd.PersistentFlags().Lookup("exit-write"))
+	_ = viper.BindPFlag("IsWriteOnExit", rootCmd.PersistentFlags().Lookup("exit-write"))
 
 	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "number before the current lines when exiting")
 	_ = viper.BindPFlag("BeforeWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-before"))
