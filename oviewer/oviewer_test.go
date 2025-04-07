@@ -793,7 +793,7 @@ func TestRoot_setCaption(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("MAN_PN", tt.fields.manpn)
 			root := rootHelper(t)
-			root.Caption = tt.fields.caption
+			root.settings.Caption = tt.fields.caption
 			root.setCaption()
 			if got := root.Doc.Caption; got != tt.want {
 				t.Errorf("Root.setCaption() = %v, want %v", got, "test")
