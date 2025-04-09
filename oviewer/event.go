@@ -175,6 +175,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	if root.quitSmallCountDown > 0 {
 		root.quitSmallCountDown--
 		if root.DocumentLen() == 2 && root.Doc.documentType == DocFilter && root.docSmall() {
+			root.draw(ctx)
 			root.WriteQuit(ctx)
 		}
 	}
