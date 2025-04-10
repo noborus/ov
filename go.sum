@@ -1,5 +1,5 @@
-code.rocketnine.space/tslocum/cbind v0.1.5 h1:i6NkeLLNPNMS4NWNi3302Ay3zSU6MrqOT+yJskiodxE=
-code.rocketnine.space/tslocum/cbind v0.1.5/go.mod h1:LtfqJTzM7qhg88nAvNhx+VnTjZ0SXBJtxBObbfBWo/M=
+codeberg.org/tslocum/cbind v0.1.5 h1:noFX9ckDmma1d6hJhXM1rwRterBvdPm6ctAb2h5ZAJs=
+codeberg.org/tslocum/cbind v0.1.5/go.mod h1:LtfqJTzM7qhg88nAvNhx+VnTjZ0SXBJtxBObbfBWo/M=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=

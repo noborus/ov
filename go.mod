@@ -43,3 +43,5 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace code.rocketnine.space/tslocum/cbind => codeberg.org/tslocum/cbind v0.1.5
