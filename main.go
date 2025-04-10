@@ -381,7 +381,7 @@ func init() {
 	})
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
-	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes")
+	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes defined in the configuration file")
 
 	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "command execution result instead of file")
 
