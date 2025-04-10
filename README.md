@@ -61,6 +61,7 @@ ov is a terminal pager.
   * 4.21. [Converter](#converter)
   * 4.22. [Align](#align)
     * 4.22.1. [Shrink](#shrink)
+    * 4.22.2. [Right Align](#right-align)
   * 4.23. [Jump target](#jump-target)
   * 4.24. [View mode](#view-mode)
   * 4.25. [Output on exit](#output-on-exit)
@@ -802,6 +803,10 @@ To change the character displayed when columns are shrunk, set ShrinkChar in the
 ShrinkChar: '.'
 ```
 
+####  4.22.2. <a name='right-align'></a>Right Align
+
+Columns displayed by alignment are left-justified. Columns can be right-aligned (default key alt+a).
+
 ###  4.23. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
@@ -860,6 +865,27 @@ Mode:
     ColumnDelimiter: ","
     ColumnRainbow: true
 ```
+
+#### List View Modes
+
+*Add in v0.40.0*
+
+The `--list-view-modes` option outputs a list of available view modes defined in the configuration file.
+
+```sh
+ov --config ov.yaml --list-view-modes
+```
+
+Example output:
+
+```plaintext
+general
+markdown
+mysql
+psql
+```
+
+This is useful for checking predefined view modes and their configurations.
 
 ###  4.25. <a name='output-on-exit'></a>Output on exit
 
@@ -1061,6 +1087,7 @@ MemoryLimit: 1000
 |       | --incsearch[=true\|false]                  | incremental search (default true)                              |
 | -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                       |
 | -n,   | --line-number                              | line number mode                                               |
+|       | --list-view-modes                          | list available view modes defined in the configuration file    |
 |       | --memory-limit int                         | number of chunks to limit in memory (default -1)               |
 |       | --memory-limit-file int                    | number of chunks to limit in memory for the file (default 100) |
 | -M,   | --multi-color strings                      | comma separated words(regexp) to color .e.g. "ERROR,WARNING"   |
@@ -1071,7 +1098,7 @@ MemoryLimit: 1000
 | -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                          |
 | -r,   | --raw                                      | raw escape sequences without processing                        |
 |       | --regexp-search                            | regular expression search                                      |
-|       | --ruler int                                | ruler type [1/2]                                               |
+|       | --ruler int                                | display ruler (=0: none, =1: relative, =2: absolute)           |
 |       | --section-delimiter regexp                 | regexp for section delimiter .e.g. "^#"                        |
 |       | --section-header                           | enable section-delimiter line as Header                        |
 |       | --section-header-num int                   | number of section header lines (default 1)                     |
@@ -1082,7 +1109,7 @@ MemoryLimit: 1000
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
 | -v,   | --version                                  | display version information                                    |
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
-|       | --view-mode string                         | apply predefined settings for a specific mode                  |
+| -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
 | -T,   | --watch seconds                            | watch mode interval(seconds)                                   |
 | -w,   | --wrap[=true\|false]                       | wrap mode (default true)                                       |
 
@@ -1096,6 +1123,7 @@ It can also be changed after startup.
 | [ctrl+c]                      | * cancel                                           |
 | [Q]                           | * output screen and quit                           |
 | [ctrl+q]                      | * set output screen and quit                       |
+| [alt+shift+F8]                | * set output original screen and quit              |
 | [ctrl+z]                      | * suspend                                          |
 | [h], [ctrl+alt+c], [ctrl+f1]  | * display help screen                              |
 | [ctrl+f2], [ctrl+alt+e]       | * display log screen                               |
