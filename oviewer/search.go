@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"unicode"
 
-	"code.rocketnine.space/tslocum/cbind"
+	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sync/errgroup"
 )

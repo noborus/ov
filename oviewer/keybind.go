@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"code.rocketnine.space/tslocum/cbind"
+	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 )
 
