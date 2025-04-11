@@ -14,7 +14,7 @@ import (
 	"sync"
 	"syscall"
 
-	"code.rocketnine.space/tslocum/cbind"
+	"codeberg.org/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v2"
 	"github.com/noborus/tcellansi"
