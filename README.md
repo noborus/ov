@@ -696,7 +696,7 @@ ov --watch 1 /proc/meminfo
 
 ###  4.18. <a name='mouse-support'></a>Mouse support
 
-The ov makes the mouse support its control.
+The `ov` makes the mouse support its control.
 This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
@@ -704,9 +704,20 @@ If mouse support is enabled, tabs and line breaks will be interpreted correctly 
 Copying to the clipboard uses [atotto/clipboard](https://github.com/atotto/clipboard).
 For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environments.
 
+*Add in v0.40.0*
+
+Alternatively, you can use the `OSC52` escape sequence for clipboard operations by setting
+`ClipboardMethod` to `OSC52` in the configuration file (`config.yaml`):
+
+```yaml
+ClipboardMethod: "OSC52"
+```
+
+This method is useful in environments where `OSC52` is supported by the terminal.
+
 Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
 
-Pasting in ov is done with the middle button.
+Pasting in `ov` is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
 Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
