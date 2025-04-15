@@ -909,20 +909,49 @@ func (root *Root) debugMessage(msg string) {
 // It reads and applies old style settings to maintain compatibility with older configurations.
 // Use the new style configuration methods instead.
 func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
-	src.Style.Body = config.StyleBody
-	src.Style.Header = config.StyleHeader
-	src.Style.LineNumber = config.StyleLineNumber
-	src.Style.SearchHighlight = config.StyleSearchHighlight
-	src.Style.ColumnHighlight = config.StyleColumnHighlight
-	src.Style.MarkLine = config.StyleMarkLine
-	src.Style.SectionLine = config.StyleSectionLine
-	src.Style.VerticalHeader = config.StyleVerticalHeader
-	src.Style.JumpTargetLine = config.StyleJumpTargetLine
-	src.Style.Alternate = config.StyleAlternate
-	src.Style.Ruler = config.StyleRuler
-	src.Style.HeaderBorder = config.StyleHeaderBorder
-	src.Style.SectionHeaderBorder = config.StyleSectionHeaderBorder
-	src.Style.VerticalHeaderBorder = config.StyleVerticalHeaderBorder
+	blank := OVStyle{}
+	if config.StyleBody != blank {
+		src.Style.Body = config.StyleBody
+	}
+	if config.StyleHeader != blank {
+		src.Style.Header = config.StyleHeader
+	}
+	if config.StyleLineNumber != blank {
+		src.Style.LineNumber = config.StyleLineNumber
+	}
+	if config.StyleSearchHighlight != blank {
+		src.Style.SearchHighlight = config.StyleSearchHighlight
+	}
+	if config.StyleColumnHighlight != blank {
+		src.Style.ColumnHighlight = config.StyleColumnHighlight
+	}
+	if config.StyleMarkLine != blank {
+		src.Style.MarkLine = config.StyleMarkLine
+	}
+	if config.StyleSectionLine != blank {
+		src.Style.SectionLine = config.StyleSectionLine
+	}
+	if config.StyleVerticalHeader != blank {
+		src.Style.VerticalHeader = config.StyleVerticalHeader
+	}
+	if config.StyleJumpTargetLine != blank {
+		src.Style.JumpTargetLine = config.StyleJumpTargetLine
+	}
+	if config.StyleAlternate != blank {
+		src.Style.Alternate = config.StyleAlternate
+	}
+	if config.StyleRuler != blank {
+		src.Style.Ruler = config.StyleRuler
+	}
+	if config.StyleHeaderBorder != blank {
+		src.Style.HeaderBorder = config.StyleHeaderBorder
+	}
+	if config.StyleSectionHeaderBorder != blank {
+		src.Style.SectionHeaderBorder = config.StyleSectionHeaderBorder
+	}
+	if config.StyleVerticalHeaderBorder != blank {
+		src.Style.VerticalHeaderBorder = config.StyleVerticalHeaderBorder
+	}
 	return src
 }
 
