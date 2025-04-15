@@ -247,7 +247,7 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 		if num+lCount > ChunkSize {
 			lSize = 0
 			lCount = ChunkSize - num
-			for i := 0; i < lCount; i++ {
+			for range lCount {
 				p := bytes.IndexByte(buf[lSize:bufLen], '\n')
 				lSize += p + 1
 			}

@@ -1121,7 +1121,7 @@ func (root *Root) docSmall() bool {
 		return false
 	}
 	height := 0
-	for y := 0; y < m.BufEndNum(); y++ {
+	for y := range m.BufEndNum() {
 		lc, err := m.contents(y)
 		if err != nil {
 			log.Printf("docSmall %d: %v\n", y, err)

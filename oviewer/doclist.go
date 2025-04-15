@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"slices"
 	"sync/atomic"
 )
 
@@ -70,7 +71,7 @@ func (root *Root) closeDocument(ctx context.Context) {
 	root.mu.Lock()
 	num := root.CurrentDoc
 	root.DocList[num].requestClose()
-	root.DocList = append(root.DocList[:num], root.DocList[num+1:]...)
+	root.DocList = slices.Delete(root.DocList, num, num+1)
 	if num > 0 {
 		num--
 	}
@@ -94,7 +95,7 @@ func (root *Root) closeAllDocumentsOfType(dType documentType) (int, []string) {
 		doc := root.DocList[i]
 		if doc.documentType == dType {
 			doc.requestClose()
-			root.DocList = append(root.DocList[:i], root.DocList[i+1:]...)
+			root.DocList = slices.Delete(root.DocList, i, i+1)
 			closed = append(closed, doc.FileName+doc.Caption)
 			if docNum == i {
 				docNum--

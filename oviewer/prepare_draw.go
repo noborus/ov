@@ -178,7 +178,7 @@ func (root *Root) setAlignConverter() {
 	for n := len(m.alignConv.columnAttrs); n < len(maxWidths)+1; n++ {
 		m.alignConv.columnAttrs = append(m.alignConv.columnAttrs, columnAttribute{})
 	}
-	for i := 0; i < len(addRight); i++ {
+	for i := range addRight {
 		if !m.alignConv.columnAttrs[i].rightAlign {
 			m.alignConv.columnAttrs[i].rightAlign = addRight[i] > 1
 		}
@@ -211,7 +211,7 @@ func maxWidthsDelm(lc contents, maxWidths []int, rightCount []int, delimiter str
 	}
 
 	start := pos.x(0)
-	for i := 0; i < len(indexes); i++ {
+	for i := range indexes {
 		end := pos.x(indexes[i][0])
 		delmEnd := pos.x(indexes[i][1])
 		width := end - start
@@ -232,7 +232,7 @@ func maxWidthsWidth(lc contents, maxWidths []int, rightCount []int, widths []int
 		return maxWidths, rightCount
 	}
 	start := 0
-	for i := 0; i < len(widths); i++ {
+	for i := range widths {
 		end := findColumnEnd(lc, widths, i, start) + 1
 		if start > end {
 			break
@@ -277,7 +277,7 @@ func trimWidth(lc contents) (int, int) {
 // trimmedIndices returns the start and end of the trimmed contents.
 func trimmedIndices(lc contents) (int, int) {
 	ts := 0
-	for i := 0; i < len(lc); i++ {
+	for i := range lc {
 		if !lc.IsSpace(i) {
 			ts = i
 			break
@@ -478,7 +478,7 @@ func (root *Root) styleContent(lineC LineC) {
 
 // plainStyle defaults to the original style.
 func (*Root) plainStyle(lc contents) {
-	for x := 0; x < len(lc); x++ {
+	for x := range lc {
 		lc[x].style = defaultStyle
 	}
 }
@@ -532,7 +532,7 @@ func (m Document) columnDelimiterRange(lineC LineC) []columnRange {
 
 	var columnRanges []columnRange
 	start := lineC.pos.x(0)
-	for columnNum := 0; columnNum < len(indexes); columnNum++ {
+	for columnNum := range indexes {
 		end := lineC.pos.x(indexes[columnNum][0])
 		delmEnd := lineC.pos.x(indexes[columnNum][1])
 		columnRanges = append(columnRanges, columnRange{start: start, end: end})
@@ -555,7 +555,7 @@ func (m Document) columnWidthRanges(lineC LineC) []columnRange {
 
 	var columnRanges []columnRange
 	start, end := 0, 0
-	for c := 0; c < len(indexes)+1; c++ {
+	for c := range len(indexes) + 1 {
 		if m.Converter == convAlign {
 			end = alignColumnEnd(lineC.lc, m.alignConv.maxWidths, c, start)
 		} else {

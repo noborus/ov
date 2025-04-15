@@ -110,7 +110,7 @@ func (a *align) convertDelm(src contents) contents {
 	}
 	dst := make(contents, 0, len(src))
 	start := pos.x(0)
-	for columnNum := 0; columnNum < len(indexes); columnNum++ {
+	for columnNum := range indexes {
 		end := pos.x(indexes[columnNum][0]) // Start of the delimiter.
 		delmEnd := pos.x(indexes[columnNum][1])
 		if a.isShrink(columnNum) {
@@ -140,7 +140,7 @@ func (a *align) convertWidth(src contents) contents {
 	dst := make(contents, 0, len(src))
 
 	start := 0
-	for columnNum := 0; columnNum < len(a.orgWidths); columnNum++ {
+	for columnNum := range a.orgWidths {
 		end := findColumnEnd(src, a.orgWidths, columnNum, start) + 1
 		end = min(end, len(src))
 
@@ -207,7 +207,7 @@ func appendShrink(lc contents) contents {
 
 // appendPaddings adds spaces to the lc.
 func appendPaddings(lc contents, num int) contents {
-	for i := 0; i < num; i++ {
+	for range num {
 		lc = append(lc, SpaceContent)
 	}
 	return lc

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -173,7 +174,7 @@ func (root *Root) drawRuler() {
 	}
 
 	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
-	for x := 0; x < root.scr.vWidth; x++ {
+	for x := range root.scr.vWidth {
 		n := x - startX + 1
 		if n < 0 {
 			continue
@@ -266,7 +267,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 	}
 
 	screen := root.Screen
-	for n := 0; n < widthVH; n++ {
+	for n := range widthVH {
 		c := DefaultContent
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
@@ -313,7 +314,7 @@ func (root *Root) blankLineNumber(y int) {
 	if root.scr.startX <= 0 {
 		return
 	}
-	for x := 0; x < root.scr.startX; x++ {
+	for x := range root.scr.startX {
 		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
 	}
 }
@@ -344,7 +345,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := []rune(fmt.Sprintf("%*d", root.scr.startX-1, number))
-	for i := 0; i < len(numC); i++ {
+	for i := range numC {
 		root.Screen.SetContent(i, y, numC[i], nil, style)
 	}
 	root.Screen.SetContent(len(numC), y, ' ', nil, defaultStyle)
@@ -398,7 +399,7 @@ func (root *Root) applyStyleToLine(y int, s OVStyle) {
 // applyMarkStyle applies the style from the left edge to the specified width.
 func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	m := root.Doc
-	if !contains(m.marked, lN) {
+	if !slices.Contains(m.marked, lN) {
 		return
 	}
 	root.applyStyleToRange(y, m.Style.MarkLine, 0, width)
@@ -492,7 +493,7 @@ func (root *Root) notifyEOFReached(m *Document) {
 
 // notify notifies by beeping and flashing the screen the specified number of times.
 func (root *Root) notify(count int) {
-	for i := 0; i < count; i++ {
+	for range count {
 		_ = root.Screen.Beep()
 		root.flash()
 	}

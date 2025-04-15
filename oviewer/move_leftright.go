@@ -73,7 +73,7 @@ func (m *Document) optimalCursor(scr SCR, cursor int) int {
 
 	// If the cursor is out of range, move to the nearest column.
 	if cl < leftLimit {
-		for n := 0; n < len(columns); n++ {
+		for n := range columns {
 			if columns[n].start > leftLimit {
 				return n
 			}

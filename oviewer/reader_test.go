@@ -156,7 +156,7 @@ func TestDocument_loadReadMem(t *testing.T) {
 				t.Fatal(err)
 			}
 			m.seekable = tt.fields.seekable
-			for i := 0; i < tt.fields.chunks; i++ {
+			for range tt.fields.chunks {
 				m.store.chunks = append(m.store.chunks, &chunk{})
 			}
 			atomic.StoreInt32(&m.store.eof, tt.fields.eof)

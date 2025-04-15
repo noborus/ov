@@ -8,6 +8,7 @@ import (
 
 	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
+	"maps"
 )
 
 // The name of the action to assign the key to.
@@ -458,9 +459,7 @@ func GetKeyBinds(config Config) KeyBind {
 	}
 
 	// Overwrite with config file.
-	for k, v := range config.Keybind {
-		keyBind[k] = v
-	}
+	maps.Copy(keyBind, config.Keybind)
 	return keyBind
 }
 

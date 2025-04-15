@@ -162,44 +162,6 @@ func Test_removeInt(t *testing.T) {
 	}
 }
 
-func Test_containsInt(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		list []int
-		e    int
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "testTrue",
-			args: args{
-				list: []int{1, 2, 3},
-				e:    3,
-			},
-			want: true,
-		},
-		{
-			name: "testFalse",
-			args: args{
-				list: []int{1, 2, 3},
-				e:    4,
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := contains(tt.args.list, tt.args.e); got != tt.want {
-				t.Errorf("containsInt() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_toAddTop(t *testing.T) {
 	t.Parallel()
 	type args struct {

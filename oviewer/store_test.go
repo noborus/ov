@@ -92,10 +92,10 @@ func testNewStore(t *testing.T, chunkNum int, capacity int) *store {
 	s.chunks = make([]*chunk, chunkNum)
 	t.Logf("capacity %d", capacity)
 	s.setNewLoadChunks(capacity)
-	for i := 0; i < chunkNum; i++ {
+	for i := range chunkNum {
 		chunk := NewChunk(0)
 		chunk.lines = make([][]byte, ChunkSize)
-		for j := 0; j < ChunkSize; j++ {
+		for j := range ChunkSize {
 			chunk.lines[j] = []byte("a")
 		}
 		s.chunks[i] = chunk

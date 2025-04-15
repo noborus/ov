@@ -322,7 +322,7 @@ func (scr SCR) branchWidth(lc contents, branch int) int {
 	i := 0
 	w := scr.startX
 	x := 0
-	for n := 0; n < len(lc); n++ {
+	for n := range lc {
 		c := lc[n]
 		if w+c.width > scr.vWidth {
 			i++
