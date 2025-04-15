@@ -55,7 +55,7 @@ General:
       # Add appropriate styles here
     LineNumber:
       Bold: true
-      StyleSearchHighlight:
+    SearchHighlight:
       Reverse: true
     ColumnHighlight:
       Reverse: true
@@ -64,18 +64,15 @@ General:
     SectionLine:
       Background: "slateblue"
     VerticalHeader:
-    # Add appropriate styles here
+      # Add appropriate styles here
     Ruler:
       Background: "#333333"
       Foreground: "#CCCCCC"
       Bold: true
     HeaderBorder:
-    # Add appropriate styles here
-    # UnderlineStyle: 2
+      # Add appropriate styles here
     SectionHeaderBorder:
-    # Add appropriate styles here
-    # Underline: true
-    # UnderlineColor: "red"
+      # Add appropriate styles here
     VerticalHeaderBorder:
       Background: "#c0c0c0"
     MultiColorHighlight:
