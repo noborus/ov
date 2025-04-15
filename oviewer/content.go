@@ -227,7 +227,7 @@ func (st *parseState) tabHandle() {
 	st.lc = append(st.lc, c)
 	st.tabx++
 	c.mainc = 0
-	for i := 0; i < tabStop-1; i++ {
+	for range tabStop - 1 {
 		st.lc = append(st.lc, c)
 		st.tabx++
 	}

@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -9,20 +10,10 @@ import (
 func remove[T comparable](list []T, s T) []T {
 	for n, l := range list {
 		if l == s {
-			list = append(list[:n], list[n+1:]...)
+			list = slices.Delete(list, n, n+1)
 		}
 	}
 	return list
-}
-
-// contains returns true if the specified value is included.
-func contains[T comparable](list []T, e T) bool {
-	for _, n := range list {
-		if e == n {
-			return true
-		}
-	}
-	return false
 }
 
 // toAddTop adds the string if it is not in list.
@@ -30,7 +21,7 @@ func toAddTop(list []string, s string) []string {
 	if len(s) == 0 {
 		return list
 	}
-	if !contains(list, s) {
+	if !slices.Contains(list, s) {
 		list = append([]string{s}, list...)
 	}
 	return list
@@ -41,7 +32,7 @@ func toAddLast(list []string, s string) []string {
 	if len(s) == 0 {
 		return list
 	}
-	if !contains(list, s) {
+	if !slices.Contains(list, s) {
 		list = append(list, s)
 	}
 	return list

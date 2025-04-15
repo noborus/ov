@@ -255,7 +255,7 @@ func TestRoot_closeAllDocumentsOfType(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			searcher := NewSearcher("test", nil, false, false)
 			ctx := context.Background()
-			for i := 0; i < tt.fields.count; i++ {
+			for range tt.fields.count {
 				root.filterDocument(ctx, searcher)
 			}
 			got, got1 := root.closeAllDocumentsOfType(DocFilter)

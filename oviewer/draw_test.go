@@ -12,7 +12,7 @@ import (
 func getContents(t *testing.T, root *Root, y int, width int) string {
 	t.Helper()
 	var buf strings.Builder
-	for x := 0; x < width; x++ {
+	for x := range width {
 		r, _, _, _ := root.Screen.GetContent(x, y)
 		buf.WriteRune(r)
 	}

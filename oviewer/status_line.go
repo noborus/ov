@@ -58,7 +58,7 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	leftContents := StrToContents(leftStatus.String(), -1)
 
 	if root.Config.Prompt.Normal.InvertColor {
-		for i := 0; i < len(leftContents); i++ {
+		for i := range leftContents {
 			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
 		}
 	}

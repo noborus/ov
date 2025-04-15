@@ -439,10 +439,10 @@ func TestDocument_movePgUpDown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := moveText(t)
 			m.WrapMode = tt.fields.wrap
-			for i := 0; i < tt.fields.down; i++ {
+			for range tt.fields.down {
 				m.movePgDn()
 			}
-			for i := 0; i < tt.fields.up; i++ {
+			for range tt.fields.up {
 				m.movePgUp()
 			}
 			if m.topLX != tt.wantLX {
@@ -512,10 +512,10 @@ func TestDocument_moveHfUpDown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := moveText(t)
 			m.WrapMode = tt.fields.wrap
-			for i := 0; i < tt.fields.down; i++ {
+			for range tt.fields.down {
 				m.moveHfDn()
 			}
-			for i := 0; i < tt.fields.up; i++ {
+			for range tt.fields.up {
 				m.moveHfUp()
 			}
 			if m.topLX != tt.wantLX {

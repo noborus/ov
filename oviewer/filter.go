@@ -60,7 +60,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	}
 
 	// Copy the header
-	for ln := 0; ln < render.firstLine(); ln++ {
+	for ln := range render.firstLine() {
 		line, err := m.Line(ln)
 		if err != nil {
 			log.Printf("failed to get line %d: %v\n", ln, err)
