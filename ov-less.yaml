@@ -75,11 +75,8 @@ General:
         Bold: true
     HeaderBorder:
         # Add appropriate styles here
-        # UnderlineStyle: 2
     SectionHeaderBorder:
         # Add appropriate styles here
-        # Underline: true
-        # UnderlineColor: "red"
     VerticalHeaderBorder:
         Background: "#c0c0c0"
     MultiColorHighlight:
