@@ -42,22 +42,22 @@ archives:
   -
     id: ov-archives
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    builds:
-    - ov-linux
-    - ov-other
+    ids:
+      - ov-linux
+      - ov-other
     files:
       - LICENSE
       - README.md
       - ov.yaml
       - ov-less.yaml
-    format: zip
+    formats: [ 'zip' ]
 
 nfpms:
   -
     id: ov-nfpms
     file_name_template: "{{ .ConventionalFileName }}"
-    builds:
-    - ov-linux
+    ids:
+      - ov-linux
     homepage: https://github.com/noborus/ov
     maintainer: Noboru Saito <noborusai@gmail.com>
     description: ov is a feature rich terminal pager.
