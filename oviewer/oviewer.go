@@ -1115,6 +1115,7 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 
 // docSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) docSmall() bool {
+	root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
 	root.prepareScreen()
 	m := root.Doc
 	if !m.BufEOF() {

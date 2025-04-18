@@ -56,6 +56,10 @@ type Config struct {
 	// NotifyEOF specifies the number of times to notify EOF.
 	NotifyEOF int
 
+	// ReadWaitTime is the time to wait for reading before starting a search.
+	// Measured in milliseconds.
+	ReadWaitTime int
+
 	// ClipboardMethod specifies the method to use for copying to the clipboard.
 	// Supported values:
 	// - "OSC52": Uses the OSC52 escape sequence for clipboard operations. This requires terminal support.
@@ -177,6 +181,7 @@ func NewConfig() Config {
 				ProcessOfCount: true,
 			},
 		},
+		ReadWaitTime: 1000,
 	}
 }
 
