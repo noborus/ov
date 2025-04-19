@@ -688,7 +688,10 @@ func (root *Root) sendNextBackSearch(context.Context) {
 // Normally, the event is executed from Confirm.
 func (root *Root) Search(str string) {
 	root.Pattern = str
-	root.sendSearch(str)
+	go func() {
+		root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
+		root.sendSearch(str)
+	}()
 }
 
 // eventSearch represents search event.

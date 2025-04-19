@@ -1,5 +1,7 @@
 package oviewer
 
+import "time"
+
 // Config represents the settings of ov.
 type Config struct {
 	// KeyBinding
@@ -55,6 +57,9 @@ type Config struct {
 	Incsearch bool
 	// NotifyEOF specifies the number of times to notify EOF.
 	NotifyEOF int
+
+	// ReadWaitTime is the time to wait for reading before starting a search.
+	ReadWaitTime time.Duration
 
 	// ClipboardMethod specifies the method to use for copying to the clipboard.
 	// Supported values:
@@ -177,6 +182,7 @@ func NewConfig() Config {
 				ProcessOfCount: true,
 			},
 		},
+		ReadWaitTime: 1000 * time.Millisecond,
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -466,6 +467,29 @@ func (m *Document) WaitEOF() {
 		return
 	}
 	m.cond.Wait()
+}
+
+// WaitEOFWithTimeout waits for EOF with a timeout.
+// Parameters:
+// - timeout: the duration to wait before timing out.
+func (m *Document) WaitEOFWithTimeout(timeout time.Duration) {
+	if m.BufEOF() {
+		return
+	}
+
+	doneCh := make(chan struct{})
+	go func() {
+		m.cond.L.Lock()
+		defer m.cond.L.Unlock()
+		m.cond.Wait()
+		doneCh <- struct{}{}
+	}()
+
+	select {
+	case <-doneCh:
+	case <-time.After(timeout):
+		log.Println("WaitEOFWithTimeout timed out")
+	}
 }
 
 // BufEOF checks if the end of the file (EOF) has been reached in the document buffer.
