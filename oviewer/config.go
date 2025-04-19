@@ -59,7 +59,6 @@ type Config struct {
 	NotifyEOF int
 
 	// ReadWaitTime is the time to wait for reading before starting a search.
-	// Measured in milliseconds.
 	ReadWaitTime time.Duration
 
 	// ClipboardMethod specifies the method to use for copying to the clipboard.
