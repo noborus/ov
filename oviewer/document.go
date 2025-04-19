@@ -469,6 +469,9 @@ func (m *Document) WaitEOF() {
 	m.cond.Wait()
 }
 
+// WaitEOFWithTimeout waits for EOF with a timeout.
+// Parameters:
+// - timeout: the duration to wait before timing out.
 func (m *Document) WaitEOFWithTimeout(timeout time.Duration) {
 	if m.BufEOF() {
 		return
