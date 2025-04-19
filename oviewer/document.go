@@ -469,7 +469,7 @@ func (m *Document) WaitEOF() {
 	m.cond.Wait()
 }
 
-func (m *Document) WaitEOFWithTimeout(timeout int) {
+func (m *Document) WaitEOFWithTimeout(timeout time.Duration) {
 	if m.BufEOF() {
 		return
 	}
@@ -482,10 +482,9 @@ func (m *Document) WaitEOFWithTimeout(timeout int) {
 		doneCh <- struct{}{}
 	}()
 
-	timeoutCh := time.After(time.Duration(timeout) * time.Millisecond)
 	select {
 	case <-doneCh:
-	case <-timeoutCh:
+	case <-time.After(timeout):
 		log.Println("WaitEOFWithTimeout timed out")
 	}
 }
