@@ -1,5 +1,7 @@
 package oviewer
 
+import "time"
+
 // Config represents the settings of ov.
 type Config struct {
 	// KeyBinding
@@ -58,7 +60,7 @@ type Config struct {
 
 	// ReadWaitTime is the time to wait for reading before starting a search.
 	// Measured in milliseconds.
-	ReadWaitTime int
+	ReadWaitTime time.Duration
 
 	// ClipboardMethod specifies the method to use for copying to the clipboard.
 	// Supported values:
@@ -181,7 +183,7 @@ func NewConfig() Config {
 				ProcessOfCount: true,
 			},
 		},
-		ReadWaitTime: 1000,
+		ReadWaitTime: 1000 * time.Millisecond,
 	}
 }
 
