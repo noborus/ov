@@ -32,6 +32,8 @@ Prompt:
 
 # ShrinkChar: '…' # Characters displayed when the column is shrinking.
 
+# ReadWaitTime: 1s # Time to wait for a search while reading. 1s is the default.
+
 General:
   TabWidth: 8
   Header: 0

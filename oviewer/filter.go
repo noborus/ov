@@ -15,6 +15,13 @@ type filterDocument struct {
 
 // Filter fires the filter event.
 func (root *Root) Filter(str string, nonMatch bool) {
+	go func() {
+		root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
+		root.sendFilter(str, nonMatch)
+	}()
+}
+
+func (root *Root) sendFilter(str string, nonMatch bool) {
 	root.Doc.nonMatch = nonMatch
 	root.input.value = str
 	ev := &eventInputSearch{
