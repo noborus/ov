@@ -87,24 +87,24 @@ func TestRoot_toggle(t *testing.T) {
 func TestToggleRuler(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
-	root.Doc.RunTimeSettings.RulerType = RulerNone
+	root.Doc.RulerType = RulerNone
 
 	// Test toggling from RulerNone to RulerRelative
 	root.toggleRuler(ctx)
-	if root.Doc.RunTimeSettings.RulerType != RulerRelative {
-		t.Errorf("expected RulerType to be RulerRelative, got %v", root.Doc.RunTimeSettings.RulerType)
+	if root.Doc.RulerType != RulerRelative {
+		t.Errorf("expected RulerType to be RulerRelative, got %v", root.Doc.RulerType)
 	}
 
 	// Test toggling from RulerRelative to RulerAbsolute
 	root.toggleRuler(ctx)
-	if root.Doc.RunTimeSettings.RulerType != RulerAbsolute {
-		t.Errorf("expected RulerType to be RulerAbsolute, got %v", root.Doc.RunTimeSettings.RulerType)
+	if root.Doc.RulerType != RulerAbsolute {
+		t.Errorf("expected RulerType to be RulerAbsolute, got %v", root.Doc.RulerType)
 	}
 
 	// Test toggling from RulerAbsolute to RulerNone
 	root.toggleRuler(ctx)
-	if root.Doc.RunTimeSettings.RulerType != RulerNone {
-		t.Errorf("expected RulerType to be RulerNone, got %v", root.Doc.RunTimeSettings.RulerType)
+	if root.Doc.RulerType != RulerNone {
+		t.Errorf("expected RulerType to be RulerNone, got %v", root.Doc.RulerType)
 	}
 }
 
@@ -1286,8 +1286,8 @@ func TestRoot_setWriteBA(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			ctx := context.Background()
 			root.setWriteBA(ctx, tt.args.input)
-			if root.IsWriteOnExit != tt.want {
-				t.Errorf("setWriteBA() = %v, want %v", root.IsWriteOnExit, tt.want)
+			if root.Config.IsWriteOnExit != tt.want {
+				t.Errorf("setWriteBA() = %v, want %v", root.Config.IsWriteOnExit, tt.want)
 			}
 		})
 	}
@@ -1511,7 +1511,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 			root.prepareDraw(context.Background())
 			root.Doc.HideOtherSection = tt.fields.HideOtherSection
 			root.WriteQuit(ctx)
-			if got := root.AfterWriteOriginal; got != tt.want {
+			if got := root.Config.AfterWriteOriginal; got != tt.want {
 				t.Errorf("WriteQuit() AfterWriteOriginal = %v, want %v", got, tt.want)
 			}
 		})

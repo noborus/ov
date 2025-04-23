@@ -24,7 +24,7 @@ import (
 // Root is the root structure of the oviewer.
 type Root struct {
 	// tcell.Screen is the root screen.
-	tcell.Screen
+	Screen tcell.Screen
 
 	// settings contains the runtime settings template.
 	// These settings serve as the base configuration for each document.
@@ -71,7 +71,7 @@ type Root struct {
 	// scr contains the screen information.
 	scr SCR
 	// Config is the configuration of ov.
-	Config
+	Config Config
 	// Original position at the start of search.
 	OriginPos int
 
@@ -732,8 +732,8 @@ func (root *Root) Run() error {
 	}
 
 	// Quit if fits on screen.
-	if root.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
-		root.IsWriteOnExit = true
+	if root.Config.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
+		root.Config.IsWriteOnExit = true
 		return nil
 	}
 
@@ -792,9 +792,9 @@ func (root *Root) prepareRun(ctx context.Context) error {
 	root.setViewModeConfig()
 	root.prepareAllDocuments()
 	// Quit by filter result. This is evaluated lazily.
-	if root.QuitSmallFilter {
+	if root.Config.QuitSmallFilter {
 		root.quitSmallCountDown = QuitSmallCountDown
-		root.QuitSmall = false
+		root.Config.QuitSmall = false
 	}
 	root.ViewSync(ctx)
 	return nil
@@ -835,11 +835,11 @@ func (root *Root) prepareAllDocuments() {
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
 		}
-		if doc.RunTimeSettings.Converter != "" {
-			doc.conv = doc.converterType(doc.RunTimeSettings.Converter)
+		if doc.Converter != "" {
+			doc.conv = doc.converterType(doc.Converter)
 		}
 		w := ""
-		if doc.RunTimeSettings.WatchInterval > 0 {
+		if doc.WatchInterval > 0 {
 			doc.watchMode()
 			w = "(watch)"
 		}
@@ -868,7 +868,7 @@ func (root *Root) setMessage(msg string) {
 	root.message = msg
 	root.debugMessage(msg)
 	root.drawStatus()
-	root.Show()
+	root.Screen.Show()
 }
 
 // setMessageLogf displays a formatted message in the status and outputs it to the log.
@@ -885,12 +885,12 @@ func (root *Root) setMessageLog(msg string) {
 	root.message = msg
 	log.Print(msg)
 	root.drawStatus()
-	root.Show()
+	root.Screen.Show()
 }
 
 // debugMessage outputs a debug message.
 func (root *Root) debugMessage(msg string) {
-	if !root.Debug {
+	if !root.Config.Debug {
 		return
 	}
 	if root.Doc == root.logDoc.Document {
@@ -1155,14 +1155,14 @@ func (root *Root) WriteCurrentScreen() {
 
 // outputOnExit outputs to the terminal when exiting.
 func (root *Root) outputOnExit(output io.Writer) {
-	if root.IsWriteOnExit {
-		if root.IsWriteOriginal {
+	if root.Config.IsWriteOnExit {
+		if root.Config.IsWriteOriginal {
 			root.writeOriginal(output)
 		} else {
 			root.writeCurrentScreen(output)
 		}
 	}
-	if root.Debug {
+	if root.Config.Debug {
 		root.writeLog(output)
 	}
 }
@@ -1193,11 +1193,11 @@ func (root *Root) dummyScreen() (int, error) {
 		return 0, err
 	}
 	height := root.scr.vHeight
-	if root.BeforeWriteOriginal != 0 || root.AfterWriteOriginal != 0 {
-		root.Doc.topLN = max(root.Doc.topLN+root.Doc.firstLine()-root.BeforeWriteOriginal, 0)
+	if root.Config.BeforeWriteOriginal != 0 || root.Config.AfterWriteOriginal != 0 {
+		root.Doc.topLN = max(root.Doc.topLN+root.Doc.firstLine()-root.Config.BeforeWriteOriginal, 0)
 		end := root.Doc.bottomLN
-		if root.AfterWriteOriginal != 0 {
-			end = root.Doc.topLN + root.AfterWriteOriginal
+		if root.Config.AfterWriteOriginal != 0 {
+			end = root.Doc.topLN + root.Config.AfterWriteOriginal
 		}
 		height = end - root.Doc.topLN
 	}
@@ -1258,10 +1258,10 @@ func (root *Root) writeOriginal(output io.Writer) {
 		secAdd = m.SectionHeaderNum
 	}
 	// body
-	start := max(m.topLN+m.firstLine()+secAdd, root.scr.sectionHeaderEnd) - root.BeforeWriteOriginal
+	start := max(m.topLN+m.firstLine()+secAdd, root.scr.sectionHeaderEnd) - root.Config.BeforeWriteOriginal
 	end := m.bottomLN - 1
-	if root.AfterWriteOriginal != 0 {
-		end = m.topLN + root.AfterWriteOriginal - 1
+	if root.Config.AfterWriteOriginal != 0 {
+		end = m.topLN + root.Config.AfterWriteOriginal - 1
 	}
 	if err := m.Export(output, start, end); err != nil {
 		log.Println(err)
@@ -1295,11 +1295,11 @@ func (scr SCR) lineNumber(y int) LineNumber {
 
 // debugNumOfChunk outputs the number of chunks.
 func (root *Root) debugNumOfChunk() {
-	if !root.Debug {
+	if !root.Config.Debug {
 		return
 	}
-	log.Println("MemoryLimit:", root.MemoryLimit)
-	log.Println("MemoryLimitFile:", root.MemoryLimitFile)
+	log.Println("MemoryLimit:", root.Config.MemoryLimit)
+	log.Println("MemoryLimitFile:", root.Config.MemoryLimitFile)
 	for _, doc := range root.DocList {
 		if !doc.seekable {
 			if MemoryLimit > 0 {

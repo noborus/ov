@@ -24,7 +24,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
-	ov.StyleSearchHighlight = oviewer.OVStyle{
+	ov.Config.StyleSearchHighlight = oviewer.OVStyle{
 		Foreground: "gold",
 		Reverse:    true,
 		Blink:      true,

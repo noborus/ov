@@ -261,7 +261,7 @@ func NewDocument() (*Document, error) {
 		return nil, err
 	}
 	m.alignConv = newAlignConverter(m.ColumnWidth)
-	m.conv = m.converterType(m.RunTimeSettings.Converter)
+	m.conv = m.converterType(m.Converter)
 
 	m.cond = sync.NewCond(&sync.Mutex{})
 	return m, nil

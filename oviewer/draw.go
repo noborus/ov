@@ -46,14 +46,14 @@ func (root *Root) draw(ctx context.Context) {
 	}
 
 	root.drawStatus()
-	root.Show()
+	root.Screen.Show()
 }
 
 // drawBody draws body.
 func (root *Root) drawBody(lX int, lN int) (int, int) {
 	m := root.Doc
 
-	markStyleWidth := min(root.scr.vWidth, root.Doc.RunTimeSettings.MarkStyleWidth)
+	markStyleWidth := min(root.scr.vWidth, root.Doc.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-statusLine; y++ {
@@ -143,7 +143,7 @@ func (root *Root) drawSectionHeader() {
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
 		// markstyle is displayed above the section header.
-		markStyleWidth := min(root.scr.vWidth, m.RunTimeSettings.MarkStyleWidth)
+		markStyleWidth := min(root.scr.vWidth, m.MarkStyleWidth)
 		root.applyMarkStyle(lN, y, markStyleWidth)
 		// Underline search lines when they overlap in section headers.
 		if lN == m.lastSearchLN {
@@ -408,7 +408,7 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 // applyStyleToRange applies the style from the start to the end of the physical line.
 func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
-		mainc, combc, style, width := root.GetContent(x, y)
+		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		newStyle := applyStyle(style, s)
 		if style != newStyle {
 			root.Screen.SetContent(x, y, mainc, combc, newStyle)
