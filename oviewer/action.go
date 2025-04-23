@@ -459,14 +459,14 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	}
 	m := root.Doc
 	m.RunTimeSettings = settings
-	m.conv = m.converterType(m.RunTimeSettings.Converter)
+	m.conv = m.converterType(m.Converter)
+	// Set caption.
+	if settings.Caption != "" {
+		m.Caption = settings.Caption
+	}
 	m.regexpCompile()
 	m.ClearCache()
 	root.ViewSync(ctx)
-	// Set caption.
-	if m.RunTimeSettings.Caption != "" {
-		m.Caption = m.RunTimeSettings.Caption
-	}
 	root.setMessageLogf("Set mode %s", modeName)
 }
 
@@ -488,10 +488,10 @@ func (root *Root) modeConfig(modeName string) (RunTimeSettings, error) {
 // setConverter sets the converter type.
 func (root *Root) setConverter(ctx context.Context, name string) {
 	m := root.Doc
-	if m.RunTimeSettings.Converter == name {
+	if m.Converter == name {
 		return
 	}
-	m.RunTimeSettings.Converter = name
+	m.Converter = name
 	m.conv = m.converterType(name)
 	m.ClearCache()
 	root.ViewSync(ctx)
@@ -574,10 +574,10 @@ func (root *Root) setWriteBA(ctx context.Context, input string) {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
 	}
-	root.BeforeWriteOriginal = before
-	root.AfterWriteOriginal = after
-	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.BeforeWriteOriginal, root.AfterWriteOriginal))
-	root.IsWriteOnExit = true
+	root.Config.BeforeWriteOriginal = before
+	root.Config.AfterWriteOriginal = after
+	root.debugMessage(fmt.Sprintf("Before:After:%d:%d", root.Config.BeforeWriteOriginal, root.Config.AfterWriteOriginal))
+	root.Config.IsWriteOnExit = true
 	root.Quit(ctx)
 }
 
@@ -845,16 +845,16 @@ func (root *Root) Cancel(context.Context) {
 
 // toggleWriteOriginal toggles the write flag.
 func (root *Root) toggleWriteOriginal(context.Context) {
-	root.IsWriteOriginal = !root.IsWriteOriginal
-	root.setMessagef("Set WriteOriginal %t", root.IsWriteOriginal)
+	root.Config.IsWriteOriginal = !root.Config.IsWriteOriginal
+	root.setMessagef("Set WriteOriginal %t", root.Config.IsWriteOriginal)
 }
 
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit(ctx context.Context) {
-	root.IsWriteOnExit = true
-	if root.Doc.HideOtherSection && root.AfterWriteOriginal == 0 {
+	root.Config.IsWriteOnExit = true
+	if root.Doc.HideOtherSection && root.Config.AfterWriteOriginal == 0 {
 		// hide other section.
-		root.AfterWriteOriginal = root.bottomSectionLN(ctx)
+		root.Config.AfterWriteOriginal = root.bottomSectionLN(ctx)
 	}
 	root.OnExit = root.ScreenContent()
 
@@ -864,11 +864,11 @@ func (root *Root) WriteQuit(ctx context.Context) {
 // bottomSectionLN returns the number of lines to write.
 func (root *Root) bottomSectionLN(ctx context.Context) int {
 	if root.Doc.SectionDelimiter == "" {
-		return root.AfterWriteOriginal
+		return root.Config.AfterWriteOriginal
 	}
 	lN, err := root.Doc.nextSection(ctx, root.Doc.topLN+root.Doc.firstLine()-root.Doc.SectionStartPosition)
 	if err != nil {
-		return root.AfterWriteOriginal
+		return root.Config.AfterWriteOriginal
 	}
 	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }

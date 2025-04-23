@@ -419,7 +419,7 @@ func TestRoot_writeOriginal(t *testing.T) {
 				root.Doc.SectionHeader = true
 			}
 			root.prepareScreen()
-			root.AfterWriteOriginal = tt.fields.AfterWriteOriginal
+			root.Config.AfterWriteOriginal = tt.fields.AfterWriteOriginal
 			output := &bytes.Buffer{}
 			root.writeOriginal(output)
 			if gotOutput := output.String(); gotOutput != tt.want.output {
@@ -875,12 +875,12 @@ func TestRoot_prepareRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
-			root.QuitSmall = tt.fields.QuitSmall
-			root.QuitSmallFilter = tt.fields.QuitSmallFilter
+			root.Config.QuitSmall = tt.fields.QuitSmall
+			root.Config.QuitSmallFilter = tt.fields.QuitSmallFilter
 			if err := root.prepareRun(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Root.prepareRun() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if got := root.QuitSmall; got != tt.wantQuit {
+			if got := root.Config.QuitSmall; got != tt.wantQuit {
 				t.Errorf("Root.prepareRun() = %v, want %v", got, tt.wantQuit)
 			}
 		})
@@ -1412,8 +1412,8 @@ func TestRoot_outputOnExit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
-			root.IsWriteOnExit = tt.fields.IsWriteOnExit
-			root.IsWriteOriginal = tt.fields.IsWriteOriginal
+			root.Config.IsWriteOnExit = tt.fields.IsWriteOnExit
+			root.Config.IsWriteOriginal = tt.fields.IsWriteOriginal
 			buf := &bytes.Buffer{}
 			root.outputOnExit(buf)
 			gotOutput := buf.String()

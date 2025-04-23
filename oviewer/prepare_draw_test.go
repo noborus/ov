@@ -643,7 +643,7 @@ func TestRoot_searchHighlight(t *testing.T) {
 
 			lineC := root.Doc.getLineC(tt.args.lineNum)
 			root.searcher = tt.fields.searcher
-			root.StyleSearchHighlight = OVStyle{Reverse: true}
+			root.Config.StyleSearchHighlight = OVStyle{Reverse: true}
 			root.searchHighlight(lineC)
 			if lineC.str != tt.want.str {
 				t.Errorf("\nline: %v\nwant: %v\n", lineC.str, tt.want.str)

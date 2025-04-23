@@ -189,8 +189,8 @@ func RunOviewer(args []string) error {
 		ov.Filter(nonMatchFilter, true)
 	}
 
-	if ov.QuitSmall && (filter != "" || nonMatchFilter != "") {
-		ov.QuitSmallFilter = true
+	if ov.Config.QuitSmall && (filter != "" || nonMatchFilter != "") {
+		ov.Config.QuitSmallFilter = true
 	}
 	// Run oviewer.
 	if err := ov.Run(); err != nil {
