@@ -1254,10 +1254,17 @@ Mode:
         Background: "blue"
 ```
 
+> **Note**: `StyleOverStrike` and `StyleOverLine` must be set at the top level and cannot be specified in the `Mode` section.
+>
+>```config.yaml
+>StyleOverStrike:
+>  Bold: true
+>StyleOverLine:
+>  Underline: true
+>```
+
 * Header
 * HeaderBorder
-* OverStrike
-* OverLine
 * LineNumber
 * SearchHighlight
 * ColumnHighlight
