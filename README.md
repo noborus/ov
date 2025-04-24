@@ -1254,7 +1254,8 @@ Mode:
         Background: "blue"
 ```
 
-> **Note**: `StyleOverStrike` and `StyleOverLine` must be set at the top level and cannot be specified in the `Mode` section.
+> [!NOTE]
+> `StyleOverStrike` and `StyleOverLine` must be set at the top level and cannot be specified in the `Mode` section.
 >
 >```config.yaml
 >StyleOverStrike:
