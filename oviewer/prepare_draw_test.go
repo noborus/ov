@@ -974,6 +974,16 @@ func Test_findColumnEnd(t *testing.T) {
 			},
 			want: 31,
 		},
+		{
+			name: "Test findColumnEnd10Over",
+			args: args{
+				str:   "あいうえお かきくけこ さしすせそ",
+				pos:   []int{10, 15},
+				n:     1,
+				start: 10,
+			},
+			want: 21,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

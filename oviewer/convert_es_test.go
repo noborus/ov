@@ -244,6 +244,33 @@ func Test_sgrStyle(t *testing.T) {
 			want:    tcell.StyleDefault.Dim(true).Italic(true).Underline(true).Blink(true).Reverse(true).StrikeThrough(true),
 			wantErr: false,
 		},
+		{
+			name: "UnderLine double",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "4:2",
+			},
+			want:    tcell.StyleDefault.Underline(true).Underline(underLineStyle("2")),
+			wantErr: false,
+		},
+		{
+			name: "UnderLine double2",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "21",
+			},
+			want:    tcell.StyleDefault.Underline(true).Underline(underLineStyle("2")),
+			wantErr: false,
+		},
+		{
+			name: "UnderLine color",
+			args: args{
+				style:        tcell.StyleDefault,
+				csiParameter: "4;58;2;255;0;0",
+			},
+			want:    tcell.StyleDefault.Underline(true).Underline(tcell.GetColor("#FF0000")),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

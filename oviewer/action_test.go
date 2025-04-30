@@ -2271,3 +2271,103 @@ func TestDocument_toggleRightAlign(t *testing.T) {
 		})
 	}
 }
+func TestRoot_setViewMode(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	type args struct {
+		modeName string
+	}
+	tests := []struct {
+		name          string
+		ViewMode      string
+		args          args
+		general       General
+		wantErr       bool
+		wantMessage   string
+		wantCaption   string
+		wantConverter string
+	}{
+		{
+			name:     "testSetViewModeEmpty",
+			ViewMode: "General",
+			args: args{
+				modeName: "",
+			},
+			general: General{
+				Converter: strPtr("es"),
+			},
+			wantErr:       false,
+			wantMessage:   "",
+			wantConverter: convEscaped,
+		},
+		{
+			name: "testSetViewModeGeneral",
+			args: args{
+				modeName: nameGeneral,
+			},
+			ViewMode: "General",
+			general: General{
+				Converter: strPtr("es"),
+			},
+			wantErr:       false,
+			wantMessage:   "Set mode general",
+			wantCaption:   "",
+			wantConverter: convEscaped,
+		},
+		{
+			name:     "testSetViewModeCustom",
+			ViewMode: "custom",
+			args: args{
+				modeName: "custom",
+			},
+			general: General{
+				Caption:   strPtr("Custom Mode"),
+				Converter: strPtr("align"),
+			},
+			wantErr:       false,
+			wantMessage:   "Set mode custom",
+			wantCaption:   "Custom Mode",
+			wantConverter: convAlign,
+		},
+		{
+			name:     "testSetViewModeNotFound",
+			ViewMode: "notfound",
+			args: args{
+				modeName: "not",
+			},
+			general: General{
+				Caption: strPtr("Not Found Mode"),
+			},
+			wantErr:     true,
+			wantMessage: "view mode not found: not",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Config = Config{
+				Mode: map[string]General{
+					tt.ViewMode: tt.general,
+				},
+			}
+			root.Doc.Caption = ""
+			root.setViewMode(ctx, tt.args.modeName)
+
+			if tt.wantErr {
+				if !strings.Contains(root.message, tt.wantMessage) {
+					t.Errorf("setViewMode() error message = %v, want %v", root.message, tt.wantMessage)
+				}
+			} else {
+				if !strings.Contains(root.message, tt.wantMessage) {
+					t.Errorf("setViewMode() message = %v, want %v", root.message, tt.wantMessage)
+				}
+				if root.Doc.Caption != tt.wantCaption {
+					t.Errorf("setViewMode() caption = %v, want %v", root.Doc.Caption, tt.wantCaption)
+				}
+				if root.Doc.Converter != tt.wantConverter {
+					t.Errorf("setViewMode() converter = %v, want %v", root.Doc.Converter, tt.wantConverter)
+				}
+			}
+		})
+	}
+}
