@@ -115,7 +115,7 @@ func (es *escapeSequence) parseEscapeSequence(st *parseState) bool {
 		es.parseCSI(st, mainc)
 		return true
 	case otherSequence:
-		es.state = ansiEscape
+		es.parseOther(st, mainc)
 		return true
 	case systemSequence:
 		es.parseOSC(st, mainc)
@@ -184,6 +184,7 @@ func parseSGR(paramStr string) OVStyle {
 		switch sgr.code {
 		case 0: // Reset.
 			s = OVStyle{}
+			s.Reset = true
 		case 1: // Bold On
 			s.Bold = true
 			s.UnBold = false
@@ -480,4 +481,18 @@ func oscStyle(style tcell.Style, paramStr string) tcell.Style {
 		style = style.Url(url)
 	}
 	return style
+}
+
+// parseOther parses the other escape sequences.
+func (es *escapeSequence) parseOther(st *parseState, mainc rune) {
+	switch mainc {
+	case 'B': // ESC(B
+		es.parameter.Reset()
+		st.style = tcell.StyleDefault
+		es.state = ansiText
+		return
+	case 0x1b: // ESC.
+		es.state = ansiEscape
+		return
+	}
 }

@@ -97,7 +97,20 @@ func Test_escapeSequence_convert(t *testing.T) {
 				},
 			},
 			want:      true,
-			wantState: ansiEscape,
+			wantState: otherSequence,
+		},
+		{
+			name: "test-OtherSequence3",
+			fields: fields{
+				state: otherSequence,
+			},
+			args: args{
+				st: &parseState{
+					mainc: 'B',
+				},
+			},
+			want:      true,
+			wantState: ansiText,
 		},
 		{
 			name: "test-ControlSequence",
@@ -392,6 +405,7 @@ func Test_parseSGR(t *testing.T) {
 				params: "38;5;216;0;4",
 			},
 			want: OVStyle{
+				Reset:     true,
 				Underline: true,
 			},
 		},

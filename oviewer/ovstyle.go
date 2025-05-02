@@ -50,6 +50,8 @@ type OVStyle struct {
 	UnStrikeThrough bool
 	// if true, sub overline (not yet supported).
 	UnOverLine bool
+	// If true, reset all styles.
+	Reset bool
 }
 
 // ToTcellStyle convert from OVStyle to tcell style.
@@ -75,6 +77,9 @@ func ToTcellStyle(s OVStyle) tcell.Style {
 
 // applyStyle applies the OVStyle to the tcell style.
 func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
+	if s.Reset {
+		style = tcell.StyleDefault
+	}
 	if s.Foreground != "" {
 		style = style.Foreground(tcell.GetColor(s.Foreground))
 	}
