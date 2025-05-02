@@ -405,6 +405,7 @@ func Test_parseSGR(t *testing.T) {
 				params: "38;5;216;0;4",
 			},
 			want: OVStyle{
+				Reset:     true,
 				Underline: true,
 			},
 		},
