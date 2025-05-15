@@ -21,6 +21,7 @@ func (root *Root) Filter(str string, nonMatch bool) {
 	}()
 }
 
+// sendFilter sends the filter event to the document.
 func (root *Root) sendFilter(str string, nonMatch bool) {
 	root.Doc.nonMatch = nonMatch
 	root.input.value = str
@@ -126,15 +127,4 @@ func (root *Root) closeAllFilter(ctx context.Context) {
 		return
 	}
 	root.setMessageLogf("close %s", strings.Join(closed, ", "))
-}
-
-// writeLine writes a line to w.
-// It adds a newline to the end of the line.
-func writeLine(w io.Writer, line []byte) {
-	if _, err := w.Write(line); err != nil {
-		panic(err)
-	}
-	if _, err := w.Write([]byte("\n")); err != nil {
-		panic(err)
-	}
 }
