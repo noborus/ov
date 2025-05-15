@@ -1177,6 +1177,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			return
 		}
 		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-1)
+		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
 		if _, err := output.Write([]byte(str)); err != nil {
@@ -1228,7 +1229,9 @@ func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
 	m := root.Doc
 	height := realHeight(root.scr)
-	return tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
+	strs = tcellansi.TrimRightSpaces(strs)
+	return strs
 }
 
 // writeOriginal writes to the original terminal.
