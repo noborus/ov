@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"io"
+	"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -78,4 +80,17 @@ func allStringIndex(s string, substr string) [][]int {
 		pos = strings.Index(s, substr)
 	}
 	return result
+}
+
+// writeLine writes a line to w.
+// It adds a newline to the end of the line.
+// It panics if there is an error.
+func writeLine(w io.Writer, line []byte) {
+	if _, err := w.Write(line); err != nil {
+		log.Printf("%s:%s", line, err)
+		return
+	}
+	if _, err := w.Write([]byte("\n")); err != nil {
+		log.Printf("%s:%s", line, err)
+	}
 }

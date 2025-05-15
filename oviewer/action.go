@@ -906,7 +906,7 @@ func (root *Root) toggleShrinkColumn(_ context.Context) {
 	}
 }
 
-// shinkColumn shrinks or expands the specified column.
+// shrinkColumn shrinks or expands the specified column.
 func (m *Document) shrinkColumn(cursor int, shrink bool) error {
 	if err := m.isValidColumn(cursor); err != nil {
 		return err
