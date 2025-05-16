@@ -1387,7 +1387,16 @@ func TestRoot_outputOnExit(t *testing.T) {
 				IsWriteOnExit:   true,
 				IsWriteOriginal: false,
 			},
-			wantOutput: "test                                                                            \x1B[0m\n",
+			wantOutput: "test\n",
+		},
+		{
+			name: "writeCurrentScreen_test4",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "test4.txt"),
+				IsWriteOnExit:   true,
+				IsWriteOriginal: false,
+			},
+			wantOutput: "\x1b[38;2;255;175;135m\x1b[1mHello\033[0m\n",
 		},
 		{
 			name: "writeOriginal",
