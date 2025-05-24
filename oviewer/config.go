@@ -68,6 +68,8 @@ type Config struct {
 	// In fact, all other settings are default except for OSC52. In the future, “auto” will be added.
 	ClipboardMethod string
 
+	// Editor is the editor command to use for editing files.
+	Editor string
 	// ShrinkChar specifies the character to display when the column is shrunk.
 	ShrinkChar string
 	// DisableColumnCycle indicates whether to disable column cycling.
