@@ -6,9 +6,10 @@ import (
 	"io"
 	"strings"
 
+	"maps"
+
 	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
-	"maps"
 )
 
 // The name of the action to assign the key to.
@@ -18,6 +19,7 @@ const (
 	actionCancel         = "cancel"
 	actionWriteExit      = "write_exit"
 	actionSuspend        = "suspend"
+	actionEdit           = "edit"
 	actionSync           = "sync"
 	actionFollow         = "follow_mode"
 	actionFollowAll      = "follow_all"
@@ -117,6 +119,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionCancel:         root.Cancel,
 		actionWriteExit:      root.WriteQuit,
 		actionSuspend:        root.suspend,
+		actionEdit:           root.edit,
 		actionSync:           root.ViewSync,
 		actionFollow:         root.toggleFollowMode,
 		actionFollowAll:      root.toggleFollowAll,
@@ -220,6 +223,7 @@ func defaultKeyBinds() KeyBind {
 		actionCancel:         {"ctrl+c"},
 		actionWriteExit:      {"Q"},
 		actionSuspend:        {"ctrl+z"},
+		actionEdit:           {"alt+v"},
 		actionSync:           {"ctrl+l"},
 		actionFollow:         {"ctrl+f"},
 		actionFollowAll:      {"ctrl+a"},
@@ -323,6 +327,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionWriteBA, "set output screen and quit")
 	k.writeKeyBind(&b, actionWriteOriginal, "set output original screen and quit")
 	k.writeKeyBind(&b, actionSuspend, "suspend")
+	k.writeKeyBind(&b, actionEdit, "edit current document")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
