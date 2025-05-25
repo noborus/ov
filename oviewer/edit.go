@@ -64,7 +64,7 @@ func (root *Root) identifyEditor() string {
 		return sensibleEditor
 	}
 
-	return "vi"
+	return DefaultEditor
 }
 
 // replaceEditorArgs replaces %d with numStr and %f with fileName in the editor command string.
