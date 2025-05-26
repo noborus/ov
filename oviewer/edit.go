@@ -18,10 +18,16 @@ const DefaultEditor = "vim +%d %f"
 // edit suspends the current screen display and runs the edit.
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
-	fileName, err := root.editFileName()
-	if err != nil {
-		root.setMessageLog(err.Error())
-		return
+	isTemp := !root.Doc.seekable
+	fileName := root.Doc.FileName
+
+	if isTemp {
+		var err error
+		fileName, err = root.saveTempFile()
+		if err != nil {
+			root.setMessageLog(err.Error())
+			return
+		}
 	}
 
 	if err := root.Screen.Suspend(); err != nil {
@@ -41,7 +47,9 @@ func (root *Root) edit(context.Context) {
 			return
 		}
 		// Reload the document after editing.
-		if root.Doc.seekable {
+		if isTemp {
+			os.Remove(fileName) // Clean up the temporary file.
+		} else {
 			root.reload(root.Doc)
 			root.sendGoto(num + 1)
 		}
@@ -60,24 +68,6 @@ func (root *Root) edit(context.Context) {
 		errMsg = fmt.Errorf("failed to run editor command '%s %s': %w", command, strings.Join(args, " "), err)
 		log.Println(errMsg)
 	}
-}
-
-// editFileName determines the file name to edit based on the document's properties.
-// If the document is seekable, it uses the original file name.
-// If not, it saves the document to a temporary file and returns that file name.
-func (root *Root) editFileName() (string, error) {
-	fileName := root.Doc.FileName
-	if root.Doc.seekable {
-		return fileName, nil
-	}
-
-	log.Println("Editing non-seekable document")
-	saveTempFile, err := root.saveTempFile()
-	if err != nil {
-		return "", err
-	}
-	log.Println("Editing non-seekable document, using temporary file:", saveTempFile)
-	return saveTempFile, nil
 }
 
 // saveTempFile saves the current document to a temporary file and returns its name.
