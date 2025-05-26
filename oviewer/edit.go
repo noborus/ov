@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -12,34 +13,79 @@ import (
 )
 
 // DefaultEditor is the fallback editor to use if no other editor is specified.
-const DefaultEditor = "vi"
+const DefaultEditor = "vim +%d %f"
 
 // edit suspends the current screen display and runs the edit.
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
+	isTemp := !root.Doc.seekable
+	fileName := root.Doc.FileName
+
+	if isTemp {
+		var err error
+		fileName, err = root.saveTempFile()
+		if err != nil {
+			root.setMessageLog(err.Error())
+			return
+		}
+	}
+
 	if err := root.Screen.Suspend(); err != nil {
 		root.setMessageLog(err.Error())
 		return
 	}
+
+	var errMsg error = nil
+	num := max(root.Doc.topLN+root.Doc.firstLine(), 0)
 	defer func() {
 		log.Println("Resume from editor")
 		if err := root.Screen.Resume(); err != nil {
 			log.Println(err)
 		}
+		if errMsg != nil {
+			root.setMessageLog(errMsg.Error())
+			return
+		}
+		// Reload the document after editing.
+		if isTemp {
+			os.Remove(fileName) // Clean up the temporary file.
+		} else {
+			root.reload(root.Doc)
+			root.sendGoto(num + 1)
+		}
 	}()
 	editor := root.identifyEditor()
 
-	numStr := strconv.Itoa(root.Doc.topLN + root.Doc.firstLine())
-	command, args := replaceEditorArgs(editor, numStr, root.Doc.FileName)
+	numStr := strconv.Itoa(num)
+	command, args := replaceEditorArgs(editor, numStr, fileName)
 
 	log.Println("Editing with command:", command, "and args:", args)
 	c := exec.Command(command, args...)
-	c.Stdin = os.Stdin
+	c.Stdin = os.Stdout
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		root.setMessageLog(err.Error())
+		errMsg = fmt.Errorf("failed to run editor command '%s %s': %w", command, strings.Join(args, " "), err)
+		log.Println(errMsg)
 	}
+}
+
+// saveTempFile saves the current document to a temporary file and returns its name.
+func (root *Root) saveTempFile() (string, error) {
+	tempFile, err := os.CreateTemp("", "ov-edit-*.txt")
+	if err != nil {
+		return "", err
+	}
+	defer tempFile.Close()
+
+	if err := root.Doc.Export(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum()); err != nil {
+		log.Printf("Failed to export document to temporary file: %v", err)
+		return "", err
+	}
+	fileName := tempFile.Name()
+	os.Chmod(fileName, 0o400) // Read-only permission
+
+	return fileName, nil
 }
 
 // identifyEditor determines the editor to use based on environment variables and configuration.
