@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -27,12 +28,17 @@ func (root *Root) edit(context.Context) {
 		root.setMessageLog(err.Error())
 		return
 	}
+
+	var errMsg error = nil
 	num := max(root.Doc.topLN+root.Doc.firstLine(), 0)
-	log.Println("num", num)
 	defer func() {
 		log.Println("Resume from editor")
 		if err := root.Screen.Resume(); err != nil {
 			log.Println(err)
+		}
+		if errMsg != nil {
+			root.setMessageLog(errMsg.Error())
+			return
 		}
 		// Reload the document after editing.
 		if root.Doc.seekable {
@@ -51,7 +57,8 @@ func (root *Root) edit(context.Context) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
-		root.setMessageLog(err.Error())
+		errMsg = fmt.Errorf("failed to run editor command '%s %s': %w", command, strings.Join(args, " "), err)
+		log.Println(errMsg)
 	}
 }
 
