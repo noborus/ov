@@ -233,7 +233,7 @@ func maxWidthsWidth(lc contents, maxWidths []int, rightCount []int, widths []int
 	}
 	start := 0
 	for i := range widths {
-		end := findColumnEnd(lc, widths, i, start) + 1
+		end := min(findColumnEnd(lc, widths, i, start)+1, len(lc))
 		if start > end {
 			break
 		}
