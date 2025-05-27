@@ -43,7 +43,7 @@ func (root *Root) edit(context.Context) {
 			log.Println(err)
 		}
 		if errMsg != nil {
-			root.setMessageLog(errMsg.Error())
+			root.setMessage(errMsg.Error())
 			return
 		}
 		// Reload the document after editing.
