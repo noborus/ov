@@ -115,27 +115,6 @@ func (substr regexpWord) String() string {
 	return substr.word
 }
 
-// stripRegexpES is a regular expression that excludes escape sequences.
-var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\b")
-
-// stripEscapeSequenceString strips if it contains escape sequences.
-func stripEscapeSequenceString(src string) string {
-	if !strings.ContainsAny(src, "\x1b\b") {
-		return src
-	}
-	// Remove EscapeSequence.
-	return stripRegexpES.ReplaceAllString(src, "")
-}
-
-// stripEscapeSequence strips if it contains escape sequences.
-func stripEscapeSequenceBytes(src []byte) []byte {
-	if !bytes.ContainsAny(src, "\x1b\b") {
-		return src
-	}
-	// Remove EscapeSequence.
-	return stripRegexpES.ReplaceAll(src, []byte(""))
-}
-
 // NewSearcher returns the Searcher interface suitable for the search term.
 func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, regexpSearch bool) Searcher {
 	if regexpSearch && word != regexp.QuoteMeta(word) {
