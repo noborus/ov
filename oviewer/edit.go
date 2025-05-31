@@ -78,7 +78,7 @@ func (root *Root) saveTempFile() (string, error) {
 	}
 	defer tempFile.Close()
 
-	if err := root.Doc.Export(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum()); err != nil {
+	if err := root.tempExport(tempFile); err != nil {
 		log.Printf("Failed to export document to temporary file: %v", err)
 		return "", err
 	}
@@ -86,6 +86,15 @@ func (root *Root) saveTempFile() (string, error) {
 	os.Chmod(fileName, 0o400) // Read-only permission
 
 	return fileName, nil
+}
+
+// tempExport exports the current document to a temporary file.
+func (root *Root) tempExport(tempFile *os.File) error {
+	if root.Doc.PlainMode {
+		// If the document is in plain mode, export it as plain text.
+		return root.Doc.ExportPlain(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum())
+	}
+	return root.Doc.Export(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum())
 }
 
 // identifyEditor determines the editor to use based on environment variables and configuration.
