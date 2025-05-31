@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"regexp"
@@ -93,4 +94,25 @@ func writeLine(w io.Writer, line []byte) {
 	if _, err := w.Write([]byte("\n")); err != nil {
 		log.Printf("%s:%s", line, err)
 	}
+}
+
+// stripEscapeSequenceString removes escape sequences and backspaces from a string.
+// It is used to identify and remove these sequences from strings or byte slices.
+var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\\x08")
+
+func stripEscapeSequenceString(src string) string {
+	if !strings.ContainsAny(src, "\x1b\\x08") {
+		return src
+	}
+	// Remove EscapeSequence.
+	return stripRegexpES.ReplaceAllString(src, "")
+}
+
+// stripEscapeSequence strips if it contains escape sequences.
+func stripEscapeSequenceBytes(src []byte) []byte {
+	if !bytes.ContainsAny(src, "\x1b\x08") {
+		return src
+	}
+	// Remove EscapeSequence.
+	return stripRegexpES.ReplaceAll(src, []byte(""))
 }
