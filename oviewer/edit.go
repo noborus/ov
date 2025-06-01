@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
+	"golang.org/x/term"
 )
 
 // DefaultEditor is the fallback editor to use if no other editor is specified.
@@ -18,8 +19,8 @@ const DefaultEditor = "vim +%d %f"
 // edit suspends the current screen display and runs the edit.
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
-	isTemp := !root.Doc.seekable
 	fileName := root.Doc.FileName
+	isTemp := !root.Doc.seekable
 
 	if isTemp {
 		var err error
@@ -28,6 +29,18 @@ func (root *Root) edit(context.Context) {
 			root.setMessageLog(err.Error())
 			return
 		}
+	}
+
+	stdin := os.Stdin
+	if !term.IsTerminal(int(stdin.Fd())) {
+		tty, err := getTTY()
+		if err != nil {
+			err = fmt.Errorf("failed to open tty: %w", err)
+			root.setMessageLog(err.Error())
+			return
+		}
+		defer tty.Close()
+		stdin = tty
 	}
 
 	if err := root.Screen.Suspend(); err != nil {
@@ -61,7 +74,7 @@ func (root *Root) edit(context.Context) {
 
 	log.Println("Editing with command:", command, "and args:", args)
 	c := exec.Command(command, args...)
-	c.Stdin = os.Stdout
+	c.Stdin = stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
