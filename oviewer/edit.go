@@ -20,7 +20,10 @@ const DefaultEditor = "vim +%d %f"
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
 	fileName := root.Doc.FileName
-	isTemp := !root.Doc.seekable
+	isTemp := false
+	if root.Doc.PlainMode || !root.Doc.seekable {
+		isTemp = true
+	}
 
 	if isTemp {
 		var err error
@@ -61,7 +64,9 @@ func (root *Root) edit(context.Context) {
 		}
 		// Reload the document after editing.
 		if isTemp {
-			os.Remove(fileName) // Clean up the temporary file.
+			if err := os.Remove(fileName); err != nil {
+				log.Printf("Failed to remove temporary file %s: %v", fileName, err)
+			}
 		} else {
 			root.reload(root.Doc)
 			root.sendGoto(num + 1)
@@ -118,10 +123,6 @@ func (root *Root) identifyEditor() string {
 
 	if editor := root.Config.Editor; editor != "" {
 		return editor
-	}
-
-	if visual := os.Getenv("VISUAL"); visual != "" {
-		return visual
 	}
 
 	if editor := os.Getenv("EDITOR"); editor != "" {
