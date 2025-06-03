@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
+	"golang.org/x/term"
 )
 
 // DefaultEditor is the fallback editor to use if no other editor is specified.
@@ -18,8 +19,11 @@ const DefaultEditor = "vim +%d %f"
 // edit suspends the current screen display and runs the edit.
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
-	isTemp := !root.Doc.seekable
 	fileName := root.Doc.FileName
+	isTemp := false
+	if root.Doc.PlainMode || !root.Doc.seekable {
+		isTemp = true
+	}
 
 	if isTemp {
 		var err error
@@ -28,6 +32,18 @@ func (root *Root) edit(context.Context) {
 			root.setMessageLog(err.Error())
 			return
 		}
+	}
+
+	stdin := os.Stdin
+	if !term.IsTerminal(int(stdin.Fd())) {
+		tty, err := getTTY()
+		if err != nil {
+			err = fmt.Errorf("failed to open tty: %w", err)
+			root.setMessageLog(err.Error())
+			return
+		}
+		defer tty.Close()
+		stdin = tty
 	}
 
 	if err := root.Screen.Suspend(); err != nil {
@@ -48,7 +64,9 @@ func (root *Root) edit(context.Context) {
 		}
 		// Reload the document after editing.
 		if isTemp {
-			os.Remove(fileName) // Clean up the temporary file.
+			if err := os.Remove(fileName); err != nil {
+				log.Printf("Failed to remove temporary file %s: %v", fileName, err)
+			}
 		} else {
 			root.reload(root.Doc)
 			root.sendGoto(num + 1)
@@ -61,7 +79,7 @@ func (root *Root) edit(context.Context) {
 
 	log.Println("Editing with command:", command, "and args:", args)
 	c := exec.Command(command, args...)
-	c.Stdin = os.Stdout
+	c.Stdin = stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
@@ -78,7 +96,7 @@ func (root *Root) saveTempFile() (string, error) {
 	}
 	defer tempFile.Close()
 
-	if err := root.Doc.Export(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum()); err != nil {
+	if err := root.tempExport(tempFile); err != nil {
 		log.Printf("Failed to export document to temporary file: %v", err)
 		return "", err
 	}
@@ -86,6 +104,15 @@ func (root *Root) saveTempFile() (string, error) {
 	os.Chmod(fileName, 0o400) // Read-only permission
 
 	return fileName, nil
+}
+
+// tempExport exports the current document to a temporary file.
+func (root *Root) tempExport(tempFile *os.File) error {
+	if root.Doc.PlainMode {
+		// If the document is in plain mode, export it as plain text.
+		return root.Doc.ExportPlain(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum())
+	}
+	return root.Doc.Export(tempFile, root.Doc.BufStartNum(), root.Doc.BufEndNum())
 }
 
 // identifyEditor determines the editor to use based on environment variables and configuration.
@@ -96,10 +123,6 @@ func (root *Root) identifyEditor() string {
 
 	if editor := root.Config.Editor; editor != "" {
 		return editor
-	}
-
-	if visual := os.Getenv("VISUAL"); visual != "" {
-		return visual
 	}
 
 	if editor := os.Getenv("EDITOR"); editor != "" {

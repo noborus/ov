@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"io"
 	"log"
+	"os"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 )
@@ -115,4 +117,20 @@ func stripEscapeSequenceBytes(src []byte) []byte {
 	}
 	// Remove EscapeSequence.
 	return stripRegexpES.ReplaceAll(src, []byte(""))
+}
+
+// getShell returns the shell name based on the operating system.
+func getShell() string {
+	if runtime.GOOS == "windows" {
+		return "CMD.EXE"
+	}
+	return "/bin/sh"
+}
+
+// getTTY returns the TTY file based on the operating system.
+func getTTY() (*os.File, error) {
+	if runtime.GOOS == "windows" {
+		return os.Open("CONIN$")
+	}
+	return os.Open("/dev/tty")
 }

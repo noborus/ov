@@ -409,18 +409,15 @@ func (root *Root) subShell(shell string) error {
 	if shell == "" {
 		shell = getShell()
 	}
-
 	stdin := os.Stdin
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		// Use TTY as stdin when the current stdin is not a terminal.
-		tty, err := getTty()
+	if !term.IsTerminal(int(stdin.Fd())) {
+		tty, err := getTTY()
 		if err != nil {
-			return fmt.Errorf("failed to open tty: %w", err)
+			return fmt.Errorf("failed to get stdin: %w", err)
 		}
 		defer tty.Close()
 		stdin = tty
 	}
-
 	c := exec.Command(shell, "-l")
 	c.Stdin = stdin
 	c.Stdout = os.Stdout
@@ -430,20 +427,6 @@ func (root *Root) subShell(shell string) error {
 	}
 	fmt.Println("resume ov")
 	return nil
-}
-
-func getShell() string {
-	if runtime.GOOS == "windows" {
-		return "CMD.EXE"
-	}
-	return "/bin/sh"
-}
-
-func getTty() (*os.File, error) {
-	if runtime.GOOS == "windows" {
-		return os.Open("CONIN$")
-	}
-	return os.Open("/dev/tty")
 }
 
 // setViewMode switches to the preset display mode.

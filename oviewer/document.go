@@ -422,6 +422,18 @@ func (m *Document) CurrentLN() int {
 
 // Export exports the document in the specified range.
 func (m *Document) Export(w io.Writer, start int, end int) error {
+	return m.export(w, start, end, m.store.export)
+}
+
+// ExportPlain exports the document in the specified range without ANSI escape sequences.
+func (m *Document) ExportPlain(w io.Writer, start int, end int) error {
+	return m.export(w, start, end, m.store.exportPlain)
+}
+
+// storeExportFunc is a function type for exporting lines from a chunk.
+type storeExportFunc func(w io.Writer, chunk *chunk, start int, end int) error
+
+func (m *Document) export(w io.Writer, start int, end int, exportFunc storeExportFunc) error {
 	end = min(end, m.BufEndNum()-1)
 	startChunk, startCn := chunkLineNum(start)
 	endChunk, endCn := chunkLineNum(end)
@@ -433,7 +445,7 @@ func (m *Document) Export(w io.Writer, start int, end int) error {
 			ecn = endCn + 1
 		}
 		chunk := m.store.chunks[chunkNum]
-		if err := m.store.export(w, chunk, scn, ecn); err != nil {
+		if err := exportFunc(w, chunk, scn, ecn); err != nil {
 			return err
 		}
 		scn = 0

@@ -373,3 +373,19 @@ func (s *store) export(w io.Writer, chunk *chunk, start int, end int) error {
 	}
 	return nil
 }
+
+// exportPlain exports the plain text without ANSI escape sequences.
+func (s *store) exportPlain(w io.Writer, chunk *chunk, start int, end int) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	start = max(0, start)
+	end = min(len(chunk.lines), end)
+	for i := start; i < end; i++ {
+		plain := stripEscapeSequenceBytes(chunk.lines[i])
+		if _, err := w.Write(plain); err != nil {
+			return err
+		}
+	}
+	return nil
+}
