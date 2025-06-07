@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,15 @@ import (
 )
 
 // DefaultEditor is the fallback editor to use if no other editor is specified.
-const DefaultEditor = "vim +%d %f"
+var DefaultEditor string
+
+func init() {
+	if runtime.GOOS == "windows" {
+		DefaultEditor = "notepad %f"
+	} else {
+		DefaultEditor = "vim +%d %f"
+	}
+}
 
 // edit suspends the current screen display and runs the edit.
 // It will return when you exit the edit.
@@ -101,7 +110,10 @@ func (root *Root) saveTempFile() (string, error) {
 		return "", err
 	}
 	fileName := tempFile.Name()
-	os.Chmod(fileName, 0o400) // Read-only permission
+	if err := os.Chmod(fileName, 0o400); err != nil {
+		log.Printf("Failed to set read-only permission for temporary file %s: %v", fileName, err)
+		return "", err
+	}
 
 	return fileName, nil
 }
@@ -173,6 +185,7 @@ func replaceEditorArgs(editorCmd, numStr, fileName string) (string, []string) {
 		args[i] = arg
 	}
 	if !hasFile {
+		log.Printf("Warning: The editor command does not include '%%f'. The file name '%s' will be appended to the argument list.", fileName)
 		args = append(args, fileName)
 	}
 	return command, args
