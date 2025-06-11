@@ -1433,11 +1433,11 @@ Mode:
 | Converter           | Converter name                                            | `Converter: "es"`               |
 | Align               | Enable column alignment                                   | `Align: true`                   |
 | Raw                 | Display raw escape sequences without interpretation       | `Raw: true`                     |
-| Caption             | Additional caption to display after the file name         | `Caption: "My Caption"`         |
+| Caption             | The string to display instead of the file name            | `Caption: "My Caption"`         |
 | ColumnDelimiter     | Column delimiter character or regex                       | `ColumnDelimiter: ","`          |
 | SectionDelimiter    | Section delimiter (can use regex)                        | `SectionDelimiter: "^#"`        |
 | JumpTarget          | Specify jump target line or position                      | `JumpTarget: "10"`              |
-| MultiColorWords     | Words to highlight (space separated or array)             | `MultiColorWords: ["ERROR", "WARN"]` |
+| MultiColorWords     | Words to highlight (array)                                | `MultiColorWords: ["ERROR", "WARN"]` |
 | TabWidth            | Tab stop width                                            | `TabWidth: 4`                   |
 | Header              | Number of header lines to fix                             | `Header: 1`                     |
 | VerticalHeader      | Number of characters to fix as vertical header            | `VerticalHeader: 4`             |
@@ -1463,7 +1463,6 @@ Mode:
 | PlainMode           | Enable plain (no decoration) mode                         | `PlainMode: true`               |
 | SectionHeader       | Display section header                                    | `SectionHeader: true`           |
 | HideOtherSection    | Hide other sections                                       | `HideOtherSection: true`        |
-| HideStatusLine      | Hide the status line                                      | `HideStatusLine: true`          |
 
 ##  9. <a name='vs'></a>VS
 
