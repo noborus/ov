@@ -64,6 +64,7 @@ ov is a terminal pager.
     * 4.22.2. [Right Align](#right-align)
   * 4.23. [Jump target](#jump-target)
   * 4.24. [View mode](#view-mode)
+    * 4.24.1. [List View Modes](#list-view-modes)
   * 4.25. [Output on exit](#output-on-exit)
   * 4.26. [Quit if one screen](#quit-if-one-screen)
   * 4.27. [Suspend](#suspend)
@@ -80,6 +81,7 @@ ov is a terminal pager.
     * 8.1.1. [UnderlineStyle](#underlinestyle)
   * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
   * 8.3. [Key binding customization](#key-binding-customization)
+  * 8.4. [General configuration](#general-configuration)
 * 9. [VS](#vs)
 * 10. [Work together](#work-together)
 * 11. [Contributing](#contributing)
@@ -877,7 +879,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-#### List View Modes
+####  4.24.1. <a name='list-view-modes'></a>List View Modes
 
 *Add in v0.40.0*
 
@@ -1406,6 +1408,61 @@ You can customize key bindings.
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
+
+###  8.4. <a name='general-configuration'></a>General configuration
+
+You can also customize the `General` configuration in the `config.yaml` file.
+
+> **Note**
+> All `General` configuration items can also be set for each view mode under the `Mode` section.
+> For example, you can specify `MultiColorWords` only for markdown mode as follows:
+
+```yaml
+Mode:
+  markdown:
+    MultiColorWords:
+      - "ERROR"
+      - "WARN"
+      - "TODO"
+      - "FIXME"
+      - "NOTE"
+```
+
+| Name                | Description                                               | Example                         |
+|---------------------|----------------------------------------------------------|---------------------------------|
+| Converter           | Converter name                                            | `Converter: "es"`               |
+| Align               | Enable column alignment                                   | `Align: true`                   |
+| Raw                 | Display raw escape sequences without interpretation       | `Raw: true`                     |
+| Caption             | The string to display instead of the file name            | `Caption: "My Caption"`         |
+| ColumnDelimiter     | Column delimiter character or regex                       | `ColumnDelimiter: ","`          |
+| SectionDelimiter    | Section delimiter (can use regex)                        | `SectionDelimiter: "^#"`        |
+| JumpTarget          | Specify jump target line or position                      | `JumpTarget: "10"`              |
+| MultiColorWords     | Words to highlight (array)                                | `MultiColorWords: ["ERROR", "WARN"]` |
+| TabWidth            | Tab stop width                                            | `TabWidth: 4`                   |
+| Header              | Number of header lines to fix                             | `Header: 1`                     |
+| VerticalHeader      | Number of characters to fix as vertical header            | `VerticalHeader: 4`             |
+| HeaderColumn        | Number of columns to fix from the left                    | `HeaderColumn: 2`               |
+| SkipLines           | Number of lines to skip                                   | `SkipLines: 1`                  |
+| WatchInterval       | Watch interval (seconds)                                  | `WatchInterval: 2`              |
+| MarkStyleWidth      | Width to apply the style of the marked line               | `MarkStyleWidth: 1`             |
+| SectionStartPosition| Section start position                                    | `SectionStartPosition: 0`       |
+| SectionHeaderNum    | Number of lines in the section header                     | `SectionHeaderNum: 3`           |
+| HScrollWidth        | Horizontal scroll width (number, percent, or .int)        | `HScrollWidth: "10%"`           |
+| HScrollWidthNum     | Horizontal scroll width (number)                          | `HScrollWidthNum: 10`           |
+| RulerType           | Ruler type (0: none, 1: relative, 2: absolute)            | `RulerType: 1`                  |
+| AlternateRows       | Alternate row styling                                     | `AlternateRows: true`           |
+| ColumnMode          | Enable column mode                                        | `ColumnMode: true`              |
+| ColumnWidth         | Enable column width detection mode                        | `ColumnWidth: true`             |
+| ColumnRainbow       | Enable rainbow coloring for columns                       | `ColumnRainbow: true`           |
+| LineNumMode         | Display line numbers                                      | `LineNumMode: true`             |
+| WrapMode            | Enable line wrapping                                      | `WrapMode: true`                |
+| FollowMode          | Enable follow mode                                        | `FollowMode: true`              |
+| FollowAll           | Enable follow mode for all documents                      | `FollowAll: true`               |
+| FollowSection       | Enable section-based follow mode                          | `FollowSection: true`           |
+| FollowName          | Follow files by name                                      | `FollowName: true`              |
+| PlainMode           | Enable plain (no decoration) mode                         | `PlainMode: true`               |
+| SectionHeader       | Display section header                                    | `SectionHeader: true`           |
+| HideOtherSection    | Hide other sections                                       | `HideOtherSection: true`        |
 
 ##  9. <a name='vs'></a>VS
 
