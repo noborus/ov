@@ -107,8 +107,8 @@ type SCR struct {
 	startX int
 	// startY is the start position of y.
 	startY int
-	// statutsLineHeight is the height of the status line.
-	statutsLineHeight int
+	// statusLineHeight is the height of the status line.
+	statusLineHeight int
 
 	// rulerHeight is the height of the ruler.
 	rulerHeight int

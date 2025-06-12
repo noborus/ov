@@ -14,7 +14,7 @@ const DefaultStatusLine = 1
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
-	if root.scr.statutsLineHeight == 0 {
+	if root.scr.statusLineHeight == 0 {
 		root.Screen.HideCursor()
 		return
 	}

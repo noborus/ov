@@ -25,7 +25,7 @@ func (root *Root) prepareScreen() {
 	// Do not allow size 0.
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statutsLineHeight
+	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
 	root.Doc.width = root.scr.vWidth - root.scr.startX
 	root.Doc.height = root.Doc.statusPos
 
@@ -92,8 +92,8 @@ func (root *Root) determineStatusLine() int {
 
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
-	root.scr.statutsLineHeight = root.determineStatusLine()
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statutsLineHeight
+	root.scr.statusLineHeight = root.determineStatusLine()
+	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
 	root.Doc.height = root.Doc.statusPos
 	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {

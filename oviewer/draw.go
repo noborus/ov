@@ -56,7 +56,7 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 	markStyleWidth := min(root.scr.vWidth, root.Doc.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
-	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statutsLineHeight; y++ {
+	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statusLineHeight; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			log.Panicf("line is not found %d", lN)
