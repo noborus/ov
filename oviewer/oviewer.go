@@ -1185,7 +1185,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-1)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-root.scr.statusLineHeight)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1225,7 +1225,7 @@ func (root *Root) dummyScreen() (int, error) {
 
 func realHeight(scr SCR) int {
 	height := 0
-	for ; height < scr.vHeight-1; height++ {
+	for ; height < scr.vHeight-scr.statusLineHeight; height++ {
 		if !scr.lines[scr.numbers[height].number].valid {
 			break
 		}
