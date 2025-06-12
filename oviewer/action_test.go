@@ -2271,6 +2271,7 @@ func TestDocument_toggleRightAlign(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_setViewMode(t *testing.T) {
 	root := rootHelper(t)
 	ctx := context.Background()
@@ -2369,5 +2370,29 @@ func TestRoot_setViewMode(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRoot_toggleStatusLine(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	// Initially StatusLine should be false
+	root.Doc.StatusLine = false
+	root.toggleStatusLine(ctx)
+	if !root.Doc.StatusLine {
+		t.Errorf("toggleStatusLine() StatusLine = %v, want %v", root.Doc.StatusLine, true)
+	}
+	if root.message != "Status Line visible" {
+		t.Errorf("toggleStatusLine() message = %v, want %v", root.message, "Status Line visible")
+	}
+
+	// Toggle again, should be false
+	root.toggleStatusLine(ctx)
+	if root.Doc.StatusLine {
+		t.Errorf("toggleStatusLine() StatusLine = %v, want %v", root.Doc.StatusLine, false)
+	}
+	if root.message != "Status Line hidden" {
+		t.Errorf("toggleStatusLine() message = %v, want %v", root.message, "Status Line hidden")
 	}
 }

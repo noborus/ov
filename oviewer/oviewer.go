@@ -107,6 +107,9 @@ type SCR struct {
 	startX int
 	// startY is the start position of y.
 	startY int
+	// statusLineHeight is the height of the status line.
+	statusLineHeight int
+
 	// rulerHeight is the height of the ruler.
 	rulerHeight int
 	// HeaderLN is the number of header lines.
@@ -243,6 +246,8 @@ type RunTimeSettings struct {
 	SectionHeader bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection bool
+	// StatusLine is whether to hide the status line.
+	StatusLine bool
 
 	// Style is the style of the document.
 	Style Style
@@ -443,6 +448,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
 		Style:          NewStyle(),
+		StatusLine:     true,
 	}
 }
 
@@ -1032,6 +1038,9 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.HideOtherSection != nil {
 		src.HideOtherSection = *dst.HideOtherSection
 	}
+	if dst.StatusLine != nil {
+		src.StatusLine = *dst.StatusLine
+	}
 	if dst.ColumnDelimiter != nil {
 		src.ColumnDelimiter = *dst.ColumnDelimiter
 	}
@@ -1176,7 +1185,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-1)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-root.scr.statusLineHeight)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1216,7 +1225,7 @@ func (root *Root) dummyScreen() (int, error) {
 
 func realHeight(scr SCR) int {
 	height := 0
-	for ; height < scr.vHeight-1; height++ {
+	for ; height < scr.vHeight-scr.statusLineHeight; height++ {
 		if !scr.lines[scr.numbers[height].number].valid {
 			break
 		}

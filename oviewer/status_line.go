@@ -9,11 +9,16 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// statusLine is the number of lines in the status bar.
-const statusLine = 1
+// DefaultStatusLine is the number of lines in the status line.
+const DefaultStatusLine = 1
 
 // drawStatus draws a status line.
 func (root *Root) drawStatus() {
+	if root.scr.statusLineHeight == 0 {
+		root.Screen.HideCursor()
+		return
+	}
+
 	root.clearY(root.Doc.statusPos)
 	leftContents, cursorPos := root.leftStatus()
 	root.setContentString(0, root.Doc.statusPos, leftContents)

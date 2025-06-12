@@ -508,6 +508,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
+	rootCmd.PersistentFlags().BoolP("status-line", "", true, "status line")
+	_ = viper.BindPFlag("general.StatusLine", rootCmd.PersistentFlags().Lookup("status-line"))
+
 	rootCmd.PersistentFlags().IntP("ruler", "", 0, "display ruler (=0: none, =1: relative, =2: absolute)")
 	_ = viper.BindPFlag("general.RulerType", rootCmd.PersistentFlags().Lookup("ruler"))
 	rootCmd.PersistentFlags().Lookup("ruler").NoOptDefVal = "1"

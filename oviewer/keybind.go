@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
-
 	"maps"
+	"strings"
 
 	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
@@ -47,6 +46,7 @@ const (
 	actionCloseAllFilter = "close_all_filter"
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
+	actionStatusLine     = "status_line"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionFixedColumn    = "fixed_column"
@@ -147,6 +147,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionCloseAllFilter: root.closeAllFilter,
 		actionToggleMouse:    root.toggleMouse,
 		actionHideOther:      root.toggleHideOtherSection,
+		actionStatusLine:     root.toggleStatusLine,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionFixedColumn:    root.toggleFixedColumn,
@@ -258,6 +259,7 @@ func defaultKeyBinds() KeyBind {
 		actionRightAlign:     {"alt+a"},
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
+		actionStatusLine:     {"ctrl+F10"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
@@ -386,6 +388,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionAlignFormat, "align columns")
 	k.writeKeyBind(&b, actionRawFormat, "raw output")
 	k.writeKeyBind(&b, actionRuler, "ruler toggle")
+	k.writeKeyBind(&b, actionStatusLine, "status line toggle")
 
 	writeHeader(&b, "Change Display with Input")
 	k.writeKeyBind(&b, actionViewMode, "view mode selection")

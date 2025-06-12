@@ -1180,6 +1180,63 @@ func TestRoot_setAlignConverter(t *testing.T) {
 	}
 }
 
+func TestRoot_determineStatusLine(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := sectionHeader1Helper(t)
+	root.message = ""
+	root.Doc.StatusLine = false
+	tests := []struct {
+		name       string
+		statusLine bool
+		message    string
+		inputEvent Eventer
+		want       int
+	}{
+		{
+			name:       "StatusLine true",
+			statusLine: true,
+			message:    "",
+			inputEvent: normal(),
+			want:       DefaultStatusLine,
+		},
+		{
+			name:       "StatusLine false, message exists",
+			statusLine: false,
+			message:    "some message",
+			inputEvent: normal(),
+			want:       DefaultStatusLine,
+		},
+		{
+			name:       "StatusLine false, no message, Normal mode",
+			statusLine: false,
+			message:    "",
+			inputEvent: normal(),
+			want:       0,
+		},
+		{
+			name:       "StatusLine false, no message, Insert mode",
+			statusLine: false,
+			message:    "",
+			inputEvent: newGotoEvent(root.input.Candidate[Goline]),
+			want:       DefaultStatusLine,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.StatusLine = tt.statusLine
+			root.message = tt.message
+			root.input.Event = tt.inputEvent
+			got := root.determineStatusLine()
+			if got != tt.want {
+				t.Errorf("determineStatusLine() got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_maxWidthsDelm(t *testing.T) {
 	type args struct {
 		maxWidths    []int
