@@ -107,6 +107,9 @@ type SCR struct {
 	startX int
 	// startY is the start position of y.
 	startY int
+	// statutsLineHeight is the height of the status line.
+	statutsLineHeight int
+
 	// rulerHeight is the height of the ruler.
 	rulerHeight int
 	// HeaderLN is the number of header lines.
@@ -243,6 +246,8 @@ type RunTimeSettings struct {
 	SectionHeader bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection bool
+	// StatusLine is whether to hide the status line.
+	StatusLine bool
 
 	// Style is the style of the document.
 	Style Style
@@ -443,6 +448,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
 		Style:          NewStyle(),
+		StatusLine:     true,
 	}
 }
 
@@ -1031,6 +1037,9 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	}
 	if dst.HideOtherSection != nil {
 		src.HideOtherSection = *dst.HideOtherSection
+	}
+	if dst.StatusLine != nil {
+		src.StatusLine = *dst.StatusLine
 	}
 	if dst.ColumnDelimiter != nil {
 		src.ColumnDelimiter = *dst.ColumnDelimiter

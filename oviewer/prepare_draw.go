@@ -25,7 +25,7 @@ func (root *Root) prepareScreen() {
 	// Do not allow size 0.
 	root.scr.vWidth = max(root.scr.vWidth, 1)
 	root.scr.vHeight = max(root.scr.vHeight, 1)
-	root.Doc.statusPos = root.scr.vHeight - statusLine
+	root.Doc.statusPos = root.scr.vHeight - root.scr.statutsLineHeight
 	root.Doc.width = root.scr.vWidth - root.scr.startX
 	root.Doc.height = root.Doc.statusPos
 
@@ -75,8 +75,26 @@ func (root *Root) ViewSync(context.Context) {
 	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.Doc.JumpTarget, root.scr.vHeight)
 }
 
+// determineStatusLine determines the height of the status line.
+// If the status line is enabled, it returns DefaultStatusLine.
+func (root *Root) determineStatusLine() int {
+	if root.Doc.StatusLine {
+		return DefaultStatusLine
+	}
+	if len(root.message) > 0 {
+		return DefaultStatusLine
+	}
+	if root.input.Event.Mode() == Normal {
+		return 0
+	}
+	return DefaultStatusLine
+}
+
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
+	root.scr.statutsLineHeight = root.determineStatusLine()
+	root.Doc.statusPos = root.scr.vHeight - root.scr.statutsLineHeight
+	root.Doc.height = root.Doc.statusPos
 	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {
 		defer func() {

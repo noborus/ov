@@ -120,6 +120,16 @@ func (root *Root) toggleMouse(context.Context) {
 	}
 }
 
+// toggleStatusLine toggles the status line visibility.
+func (root *Root) toggleStatusLine(context.Context) {
+	root.Doc.StatusLine = !root.Doc.StatusLine
+	if root.Doc.StatusLine {
+		root.setMessage("Status Line visible")
+	} else {
+		root.setMessage("Status Line hidden")
+	}
+}
+
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
 	switch root.Doc.RulerType {

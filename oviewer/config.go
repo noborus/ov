@@ -152,6 +152,8 @@ type General struct {
 	SectionHeader *bool
 	// HideOtherSection is whether to hide other sections.
 	HideOtherSection *bool
+	// StatusLine indicates whether to hide the status line.
+	StatusLine *bool
 	// Style is the style setting.
 	Style StyleConfig
 }

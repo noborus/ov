@@ -52,12 +52,15 @@ func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
 func intPtr(i int) *int {
 	return &i
 }
+
 func strPtr(s string) *string {
 	return &s
 }
+
 func boolPtr(b bool) *bool {
 	return &b
 }
+
 func TestNewOviewer(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -468,6 +471,7 @@ func TestRoot_docSmall(t *testing.T) {
 		})
 	}
 }
+
 func Test_updateRuntimeSettings(t *testing.T) {
 	type args struct {
 		runtime       RunTimeSettings
