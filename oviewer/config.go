@@ -1,6 +1,8 @@
 package oviewer
 
-import "time"
+import (
+	"time"
+)
 
 // Config represents the settings of ov.
 type Config struct {
@@ -154,8 +156,34 @@ type General struct {
 	HideOtherSection *bool
 	// StatusLine indicates whether to hide the status line.
 	StatusLine *bool
+	// Prompt is the prompt configuration.
+	Prompt PromptConfig
 	// Style is the style setting.
 	Style StyleConfig
+}
+
+// PromptConfigNormal is the normal prompt setting.
+type PromptConfigNormal struct {
+	// ShowFilename controls whether to display filename.
+	ShowFilename *bool
+	// InvertColor controls whether the text is colored and inverted.
+	InvertColor *bool
+	// ProcessOfCount controls whether to display the progress of the count.
+	ProcessOfCount *bool
+	// CursorType controls the type of cursor to display.
+	CursorType *int
+}
+
+// PromptConfigInput is the input prompt setting.
+type PromptConfigInput struct {
+	CursorType *int
+}
+
+// PromptConfig is the prompt setting.
+type PromptConfig struct {
+	// Normal is the normal prompt setting.
+	Normal PromptConfigNormal
+	Input  PromptConfigInput
 }
 
 // OVPromptConfigNormal is the normal prompt setting.
@@ -166,12 +194,32 @@ type OVPromptConfigNormal struct {
 	InvertColor bool
 	// ProcessOfCount controls whether to display the progress of the count.
 	ProcessOfCount bool
+	// CursorType controls the type of cursor to display.
+	CursorType int
+}
+
+// OVPromptConfigInput is the input prompt setting.
+type OVPromptConfigInput struct {
+	CursorType int
 }
 
 // OVPromptConfig is the prompt setting.
 type OVPromptConfig struct {
 	// Normal is the normal prompt setting.
 	Normal OVPromptConfigNormal
+	Input  OVPromptConfigInput
+}
+
+// NewOVPromptConfig returns the structure of OVPromptConfig with default values.
+func NewOVPromptConfig() OVPromptConfig {
+	return OVPromptConfig{
+		Normal: OVPromptConfigNormal{
+			ShowFilename:   true,
+			InvertColor:    true,
+			ProcessOfCount: true,
+		},
+		Input: OVPromptConfigInput{},
+	}
 }
 
 // NewConfig return the structure of Config with default values.
@@ -179,14 +227,7 @@ func NewConfig() Config {
 	return Config{
 		MemoryLimit:     -1,
 		MemoryLimitFile: 100,
-		Prompt: OVPromptConfig{
-			Normal: OVPromptConfigNormal{
-				ShowFilename:   true,
-				InvertColor:    true,
-				ProcessOfCount: true,
-			},
-		},
-		ReadWaitTime: 1000 * time.Millisecond,
+		ReadWaitTime:    1000 * time.Millisecond,
 	}
 }
 
@@ -227,6 +268,10 @@ type StyleConfig struct {
 	// VerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
 	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
 	VerticalHeaderBorder *OVStyle
+	// LeftStatus is the style that applies to the left side of the status line.
+	LeftStatus *OVStyle
+	// RightStatus is the style that applies to the right side of the status line.
+	RightStatus *OVStyle
 }
 
 // deprecatedStyleConfig is the old style setting.
