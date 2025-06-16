@@ -609,6 +609,8 @@ func openFiles(fileNames []string) (*Root, error) {
 func (root *Root) SetConfig(config Config) {
 	// Old Style* settings are loaded with lower priority.
 	root.settings = setOldStyle(root.settings, config)
+	// Old Prompt settings are loaded with lower priority.
+	root.settings = setOldPrompt(root.settings, config)
 	// General settings.
 	root.settings = updateRunTimeSettings(root.settings, config.General)
 
@@ -968,6 +970,24 @@ func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
 	return src
 }
 
+// setOldPrompt applies deprecated prompt settings for backward compatibility.
+//
+// Deprecated: This function is planned to be removed in future versions.
+func setOldPrompt(src RunTimeSettings, config Config) RunTimeSettings {
+	prompt := config.Prompt
+	// Old PromptConfig settings are loaded with lower priority.
+	if !prompt.Normal.ShowFilename {
+		src.OVPromptConfig.Normal.ShowFilename = prompt.Normal.ShowFilename
+	}
+	if !prompt.Normal.InvertColor {
+		src.OVPromptConfig.Normal.InvertColor = prompt.Normal.InvertColor
+	}
+	if !prompt.Normal.ProcessOfCount {
+		src.OVPromptConfig.Normal.ProcessOfCount = prompt.Normal.ProcessOfCount
+	}
+	return src
+}
+
 // updateRunTimeSettings updates the RunTimeSettings.
 func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.TabWidth != nil {
@@ -1082,7 +1102,6 @@ func updatePromptConfig(src OVPromptConfig, dst PromptConfig) OVPromptConfig {
 	if dst.Normal.InvertColor != nil {
 		src.Normal.InvertColor = *dst.Normal.InvertColor
 	}
-	log.Println("updatePromptConfig:", dst.Normal.ShowFilename)
 	if dst.Normal.ShowFilename != nil {
 		src.Normal.ShowFilename = *dst.Normal.ShowFilename
 	}
