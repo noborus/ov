@@ -1120,6 +1120,7 @@ MemoryLimit: 1000
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
+|       | --status-line[=true|false]                 | status line (default true)                                     |
 | -v,   | --version                                  | display version information                                    |
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
@@ -1191,6 +1192,7 @@ It can also be changed after startup.
 | [alt+F]                       | * align columns                                    |
 | [alt+R]                       | * raw output                                       |
 | [alt+shift+F9]                | * ruler toggle                                     |
+| [ctrl+F10]                    | * status line toggle                               |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
@@ -1375,14 +1377,29 @@ UnderlineStyle is specified by a number from 0 to 5. This corresponds to the esc
 
 You can customize the bottom status line.
 
-[Example]
+The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.
+You can enable or disable the status line with the `StatusLine` option in the configuration file.
 
 ```yaml
-Prompt
-  Normal:
-    ShowFilename: false
-    InvertColor: false
-    ProcessOfCount: false
+General:
+  StatusLine: false
+```
+
+If you set StatusLine to false, the status line will not be displayed at all times; it will only appear when necessary (such as during search input).
+
+You can also customize the appearance and behavior of the status line by modifying the Prompt section in the configuration file.
+
+```yaml
+General:
+  StatusLine: true
+  Prompt:
+    Normal:
+      ShowFilename: true
+      InvertColor: true
+      ProcessOfCount: true
+      CursorType: 0
+    Input:
+      CursorType: 1
 ```
 
 | item name | description | default |
@@ -1390,6 +1407,19 @@ Prompt
 | ShowFilename| Display file name | true |
 | InvertColor| Display file name inverted and changed color| true |
 | ProcessOfCount| Update the progress while counting the number of lines | true |
+| CursorType | Cursor type (see below) | 0 |
+
+Currently, CursorType is specified as a number (not all devices support this).
+
+| CursorType | Description |
+|:-----------|:------------|
+| 0 | default |
+| 1 | blinking block |
+| 2 | steady block |
+| 3 | blinking underline |
+| 4 | steady underline |
+| 5 | blinking bar |
+| 6 | steady bar |
 
 ###  8.3. <a name='key-binding-customization'></a>Key binding customization
 
@@ -1463,6 +1493,8 @@ Mode:
 | PlainMode           | Enable plain (no decoration) mode                         | `PlainMode: true`               |
 | SectionHeader       | Display section header                                    | `SectionHeader: true`           |
 | HideOtherSection    | Hide other sections                                       | `HideOtherSection: true`        |
+| StatueLine          | Display status line at the bottom                         | `StatusLine: true`              |
+| Prompt              | Customize the bottom prompt                               | see [Customizing the bottom status line](#customizing-the-bottom-status-line) |
 
 ##  9. <a name='vs'></a>VS
 
