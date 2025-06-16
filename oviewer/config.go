@@ -17,7 +17,7 @@ type Config struct {
 	DefaultKeyBind string
 
 	// Prompt is the prompt setting.
-	Prompt OVPromptConfig
+	Prompt PromptConfig
 	// MinStartX is the minimum value of the start position.
 	MinStartX int
 

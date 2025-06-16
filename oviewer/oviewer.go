@@ -976,14 +976,14 @@ func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
 func setOldPrompt(src RunTimeSettings, config Config) RunTimeSettings {
 	prompt := config.Prompt
 	// Old PromptConfig settings are loaded with lower priority.
-	if !prompt.Normal.ShowFilename {
-		src.OVPromptConfig.Normal.ShowFilename = prompt.Normal.ShowFilename
+	if prompt.Normal.ShowFilename != nil {
+		src.OVPromptConfig.Normal.ShowFilename = *prompt.Normal.ShowFilename
 	}
-	if !prompt.Normal.InvertColor {
-		src.OVPromptConfig.Normal.InvertColor = prompt.Normal.InvertColor
+	if prompt.Normal.InvertColor != nil {
+		src.OVPromptConfig.Normal.InvertColor = *prompt.Normal.InvertColor
 	}
-	if !prompt.Normal.ProcessOfCount {
-		src.OVPromptConfig.Normal.ProcessOfCount = prompt.Normal.ProcessOfCount
+	if prompt.Normal.ProcessOfCount != nil {
+		src.OVPromptConfig.Normal.ProcessOfCount = *prompt.Normal.ProcessOfCount
 	}
 	return src
 }
