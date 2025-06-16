@@ -80,6 +80,7 @@ ov is a terminal pager.
   * 8.1. [Style customization](#style-customization)
     * 8.1.1. [UnderlineStyle](#underlinestyle)
   * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
+    * 8.2.1. [Customizing LeftStatus and RightStatus styles](#customizing-leftstatus-and-rightstatus-styles)
   * 8.3. [Key binding customization](#key-binding-customization)
   * 8.4. [General configuration](#general-configuration)
 * 9. [VS](#vs)
@@ -1287,6 +1288,8 @@ Mode:
 * VerticalHeader
 * VerticalHeaderBorder
 * Ruler
+* LeftStatus
+* RightStatus
 
 From `v0.40.0`, it is recommended to use the `Style:` format for configuration. For example:
 
@@ -1420,6 +1423,30 @@ Currently, CursorType is specified as a number (not all devices support this).
 | 4 | steady underline |
 | 5 | blinking bar |
 | 6 | steady bar |
+
+####  8.2.1. <a name='customizing-leftstatus-and-rightstatus-styles'></a>Customizing LeftStatus and RightStatus styles
+
+You can customize the style of the left and right areas of the status line using `LeftStatus` and `RightStatus` under the `Style` section.
+
+```yaml
+General:
+  Style:
+    LeftStatus:
+      Foreground: "yellow"
+      Background: "blue"
+      Bold: true
+    RightStatus:
+      Foreground: "white"
+      Background: "gray"
+      Italic: true
+  Prompt:
+    Normal:
+      InvertColor: false  # Important: Set this to false to enable LeftStatus styles
+```
+
+> **Note:**
+> If `InvertColor` is set to `true`, the file name and related areas will be displayed with inverted colors, and the `LeftStatus`/`RightStatus` styles will not be applied.
+> To enable your custom styles, set `InvertColor: false`.
 
 ###  8.3. <a name='key-binding-customization'></a>Key binding customization
 
