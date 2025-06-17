@@ -1408,9 +1408,17 @@ You can customize the bottom status line.
 The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.
 You can enable or disable the status line with the `StatusLine` option in the configuration file.
 
+**You can also toggle the status line using the command-line option `--status-line=false` or by pressing the shortcut key (default `ctrl+F10`) during runtime.**
+
 ```yaml
 General:
   StatusLine: false
+```
+
+For example, to start ov with the status line disabled:
+
+```sh
+ov --status-line=false README.md
 ```
 
 If you set `StatusLine` to false, the status line will not be displayed except when necessary (such as during search input).
@@ -1442,12 +1450,12 @@ Currently, set CursorType as a number (not all devices support this).
 | CursorType | Description |
 |:-----------|:------------|
 | 0 | default |
-| 1 | blinking block |
-| 2 | steady block |
-| 3 | blinking underline |
-| 4 | steady underline |
-| 5 | blinking bar |
-| 6 | steady bar |
+| 1 | blinking block(▮) |
+| 2 | steady block(▮) |
+| 3 | blinking underline(_) |
+| 4 | steady underline(_) |
+| 5 | blinking bar(❙) |
+| 6 | steady bar(❙) |
 
 ####  8.2.1. <a name='customizing-leftstatus-and-rightstatus-styles'></a>Customizing LeftStatus and RightStatus styles
 
