@@ -63,7 +63,7 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 	RangeStyle(leftContents, 0, len(leftContents), root.Doc.Style.LeftStatus)
 	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
-	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
+	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
 
 	if root.Doc.Normal.InvertColor {
 		for i := range leftContents {

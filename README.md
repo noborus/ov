@@ -1378,6 +1378,8 @@ UnderlineStyle is specified by a number from 0 to 5. This corresponds to the esc
 
 ###  8.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
+*Added in v0.42.0*
+
 You can customize the bottom status line.
 
 The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.

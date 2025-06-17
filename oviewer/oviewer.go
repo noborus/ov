@@ -1112,7 +1112,7 @@ func updatePromptConfig(src OVPromptConfig, dst PromptConfig) OVPromptConfig {
 		src.Normal.CursorType = *dst.Normal.CursorType
 	}
 	if dst.Input.CursorType != nil {
-		src.Normal.CursorType = *dst.Normal.CursorType
+		src.Input.CursorType = *dst.Input.CursorType
 	}
 	return src
 }
