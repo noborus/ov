@@ -80,6 +80,7 @@ ov is a terminal pager.
   * 8.1. [Style customization](#style-customization)
     * 8.1.1. [UnderlineStyle](#underlinestyle)
   * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
+    * 8.2.1. [Customizing LeftStatus and RightStatus styles](#customizing-leftstatus-and-rightstatus-styles)
   * 8.3. [Key binding customization](#key-binding-customization)
   * 8.4. [General configuration](#general-configuration)
 * 9. [VS](#vs)
@@ -936,8 +937,6 @@ This can be useful when you only want to view small files or when you want to qu
 
 If you want to enable this option by default, set `QuitSmall` to `true` in the configuration file.
 
-**Note:** The original text will be displayed without any styling applied by `ov`.
-
 ```yaml
 QuitSmall: true
 ```
@@ -1120,6 +1119,7 @@ MemoryLimit: 1000
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
+|       | --status-line[=true|false]                 | status line (default true)                                     |
 | -v,   | --version                                  | display version information                                    |
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
@@ -1191,6 +1191,7 @@ It can also be changed after startup.
 | [alt+F]                       | * align columns                                    |
 | [alt+R]                       | * raw output                                       |
 | [alt+shift+F9]                | * ruler toggle                                     |
+| [ctrl+F10]                    | * status line toggle                               |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
@@ -1285,6 +1286,8 @@ Mode:
 * VerticalHeader
 * VerticalHeaderBorder
 * Ruler
+* LeftStatus
+* RightStatus
 
 From `v0.40.0`, it is recommended to use the `Style:` format for configuration. For example:
 
@@ -1373,16 +1376,33 @@ UnderlineStyle is specified by a number from 0 to 5. This corresponds to the esc
 
 ###  8.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
+*Added in v0.42.0*
+
 You can customize the bottom status line.
 
-[Example]
+The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.
+You can enable or disable the status line with the `StatusLine` option in the configuration file.
 
 ```yaml
-Prompt
-  Normal:
-    ShowFilename: false
-    InvertColor: false
-    ProcessOfCount: false
+General:
+  StatusLine: false
+```
+
+If you set `StatusLine` to false, the status line will not be displayed except when necessary (such as during search input).
+
+You can also customize the appearance and behavior of the status line by modifying the Prompt section in the configuration file.
+
+```yaml
+General:
+  StatusLine: true
+  Prompt:
+    Normal:
+      ShowFilename: true
+      InvertColor: true
+      ProcessOfCount: true
+      CursorType: 0
+    Input:
+      CursorType: 1
 ```
 
 | item name | description | default |
@@ -1390,6 +1410,43 @@ Prompt
 | ShowFilename| Display file name | true |
 | InvertColor| Display file name inverted and changed color| true |
 | ProcessOfCount| Update the progress while counting the number of lines | true |
+| CursorType | Cursor type (see below) | 0 |
+
+Currently, set CursorType as a number (not all devices support this).
+
+| CursorType | Description |
+|:-----------|:------------|
+| 0 | default |
+| 1 | blinking block |
+| 2 | steady block |
+| 3 | blinking underline |
+| 4 | steady underline |
+| 5 | blinking bar |
+| 6 | steady bar |
+
+####  8.2.1. <a name='customizing-leftstatus-and-rightstatus-styles'></a>Customizing LeftStatus and RightStatus styles
+
+You can customize the style of the left and right areas of the status line using `LeftStatus` and `RightStatus` under the `Style` section.
+
+```yaml
+General:
+  Style:
+    LeftStatus:
+      Foreground: "yellow"
+      Background: "blue"
+      Bold: true
+    RightStatus:
+      Foreground: "white"
+      Background: "gray"
+      Italic: true
+  Prompt:
+    Normal:
+      InvertColor: false  # Important: Set this to false to enable LeftStatus styles
+```
+
+> [!NOTE]
+> If `InvertColor` is set to `true`, the file name and related areas will be displayed with inverted colors, and the `LeftStatus`/`RightStatus` styles will not be applied.
+> To enable your custom styles, set `InvertColor: false`.
 
 ###  8.3. <a name='key-binding-customization'></a>Key binding customization
 
@@ -1413,7 +1470,7 @@ See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more inform
 
 You can also customize the `General` configuration in the `config.yaml` file.
 
-> **Note**
+> [!NOTE]
 > All `General` configuration items can also be set for each view mode under the `Mode` section.
 > For example, you can specify `MultiColorWords` only for markdown mode as follows:
 
@@ -1463,6 +1520,8 @@ Mode:
 | PlainMode           | Enable plain (no decoration) mode                         | `PlainMode: true`               |
 | SectionHeader       | Display section header                                    | `SectionHeader: true`           |
 | HideOtherSection    | Hide other sections                                       | `HideOtherSection: true`        |
+| StatueLine          | Display status line at the bottom                         | `StatusLine: true`              |
+| Prompt              | Customize the bottom prompt                               | see [Customizing the bottom status line](#customizing-the-bottom-status-line) |
 
 ##  9. <a name='vs'></a>VS
 

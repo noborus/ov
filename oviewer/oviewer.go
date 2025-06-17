@@ -249,6 +249,8 @@ type RunTimeSettings struct {
 	// StatusLine is whether to hide the status line.
 	StatusLine bool
 
+	// PromptConfig is the prompt configuration.
+	OVPromptConfig
 	// Style is the style of the document.
 	Style Style
 }
@@ -290,6 +292,10 @@ type Style struct {
 	// VerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
 	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
 	VerticalHeaderBorder OVStyle
+	// LeftStatus is the style that applies to the left status line.
+	LeftStatus OVStyle
+	// RightStatus is the style that applies to the right status line.
+	RightStatus OVStyle
 }
 
 var (
@@ -447,6 +453,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		TabWidth:       8,
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
+		OVPromptConfig: NewOVPromptConfig(),
 		Style:          NewStyle(),
 		StatusLine:     true,
 	}
@@ -602,6 +609,8 @@ func openFiles(fileNames []string) (*Root, error) {
 func (root *Root) SetConfig(config Config) {
 	// Old Style* settings are loaded with lower priority.
 	root.settings = setOldStyle(root.settings, config)
+	// Old Prompt settings are loaded with lower priority.
+	root.settings = setOldPrompt(root.settings, config)
 	// General settings.
 	root.settings = updateRunTimeSettings(root.settings, config.General)
 
@@ -961,6 +970,24 @@ func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
 	return src
 }
 
+// setOldPrompt applies deprecated prompt settings for backward compatibility.
+//
+// Deprecated: This function is planned to be removed in future versions.
+func setOldPrompt(src RunTimeSettings, config Config) RunTimeSettings {
+	prompt := config.Prompt
+	// Old PromptConfig settings are loaded with lower priority.
+	if prompt.Normal.ShowFilename != nil {
+		src.OVPromptConfig.Normal.ShowFilename = *prompt.Normal.ShowFilename
+	}
+	if prompt.Normal.InvertColor != nil {
+		src.OVPromptConfig.Normal.InvertColor = *prompt.Normal.InvertColor
+	}
+	if prompt.Normal.ProcessOfCount != nil {
+		src.OVPromptConfig.Normal.ProcessOfCount = *prompt.Normal.ProcessOfCount
+	}
+	return src
+}
+
 // updateRunTimeSettings updates the RunTimeSettings.
 func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.TabWidth != nil {
@@ -1065,7 +1092,28 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.Raw != nil && *dst.Raw {
 		src.Converter = convRaw
 	}
+	src.OVPromptConfig = updatePromptConfig(src.OVPromptConfig, dst.Prompt)
 	src.Style = updateRuntimeStyle(src.Style, dst.Style)
+	return src
+}
+
+// updatePromptConfig updates the prompt configuration.
+func updatePromptConfig(src OVPromptConfig, dst PromptConfig) OVPromptConfig {
+	if dst.Normal.InvertColor != nil {
+		src.Normal.InvertColor = *dst.Normal.InvertColor
+	}
+	if dst.Normal.ShowFilename != nil {
+		src.Normal.ShowFilename = *dst.Normal.ShowFilename
+	}
+	if dst.Normal.ProcessOfCount != nil {
+		src.Normal.ProcessOfCount = *dst.Normal.ProcessOfCount
+	}
+	if dst.Normal.CursorType != nil {
+		src.Normal.CursorType = *dst.Normal.CursorType
+	}
+	if dst.Input.CursorType != nil {
+		src.Input.CursorType = *dst.Input.CursorType
+	}
 	return src
 }
 
@@ -1118,6 +1166,12 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 	}
 	if dst.VerticalHeaderBorder != nil {
 		src.VerticalHeaderBorder = *dst.VerticalHeaderBorder
+	}
+	if dst.LeftStatus != nil {
+		src.LeftStatus = *dst.LeftStatus
+	}
+	if dst.RightStatus != nil {
+		src.RightStatus = *dst.RightStatus
 	}
 	return src
 }

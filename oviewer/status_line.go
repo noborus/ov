@@ -52,17 +52,20 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	}
 
 	leftStatus.WriteString(root.statusDisplay())
-
 	if root.Doc.Caption != "" {
 		leftStatus.WriteString(root.Doc.Caption)
-	} else if root.Config.Prompt.Normal.ShowFilename {
+	} else if root.Doc.Normal.ShowFilename {
 		leftStatus.WriteString(root.Doc.FileName)
 	}
 	leftStatus.WriteString(":")
 	leftStatus.WriteString(root.message)
 	leftContents := StrToContents(leftStatus.String(), -1)
 
-	if root.Config.Prompt.Normal.InvertColor {
+	RangeStyle(leftContents, 0, len(leftContents), root.Doc.Style.LeftStatus)
+	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
+	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
+
+	if root.Doc.Normal.InvertColor {
 		for i := range leftContents {
 			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
 		}
@@ -97,6 +100,11 @@ func (root *Root) inputLeftStatus() (contents, int) {
 	input := root.input
 	prompt := root.inputPrompt()
 	leftContents := StrToContents(prompt+input.value, -1)
+
+	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
+	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
+	RangeStyle(leftContents, 0, len(leftContents), root.Doc.Style.LeftStatus)
+
 	return leftContents, len(prompt) + input.cursorX
 }
 
@@ -123,5 +131,7 @@ func (root *Root) rightStatus() contents {
 	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
 		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
-	return StrToContents(str, -1)
+	contents := StrToContents(str, -1)
+	RangeStyle(contents, 0, len(contents), root.Doc.Style.RightStatus)
+	return contents
 }

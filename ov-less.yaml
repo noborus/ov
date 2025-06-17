@@ -25,11 +25,6 @@
 #
 # Debug: false # Debug mode.
 #
-Prompt:
-  Normal:
-#    ShowFilename: true # Show the filename.
-#    InvertColor: true # Invert the color of the prompt.
-#    ProcessOfCount: true # Show the process of count.
 
 # ShrinkChar: '…' # Characters displayed when the column is shrinking.
 
@@ -44,6 +39,15 @@ General:
   WrapMode: true
   ColumnDelimiter: ","
   MarkStyleWidth: 1
+  Prompt:
+    Normal:
+#      ShowFilename: true # Show the filename.
+#      InvertColor: true # Invert the color of the prompt.
+#      ProcessOfCount: true # Show the process of count.
+#      CursorType: 0 # Cursor type for the normal prompt.
+    Input:
+#      CursorType: 1 # Cursor type for the input prompt.
+
   # Style
   # String of the color name: Foreground, Background, UnderlineColor
   # Boolean: Bold, Blink, Dim, Italic, Underline
