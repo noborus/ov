@@ -68,9 +68,10 @@ ov is a terminal pager.
   * 4.25. [Output on exit](#output-on-exit)
   * 4.26. [Quit if one screen](#quit-if-one-screen)
   * 4.27. [Suspend](#suspend)
-  * 4.28. [Save](#save)
-  * 4.29. [Ruler](#ruler)
-  * 4.30. [Redirect Output](#redirect-output)
+  * 4.28. [Edit](#edit)
+  * 4.29. [Save](#save)
+  * 4.30. [Ruler](#ruler)
+  * 4.31. [Redirect Output](#redirect-output)
 * 5. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 5.1. [Regular file (seekable)](#regular-file-(seekable))
   * 5.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -960,7 +961,30 @@ suspended ov (use 'exit' to resume)
 > [!NOTE]
 > Until v0.36.0, it was a Subshell method.
 
-###  4.28. <a name='save'></a>Save
+###  4.28. <a name='edit'></a>Edit
+
+*Added in v0.42.0*
+
+You can edit the currently displayed file with your preferred editor by pressing the default key `alt+v`.
+
+If the file is not a regular file (for example, when viewing input from a pipe or standard input), a temporary file is created and passed to the editor for editing. This ensures that you can still edit the content even if the original input is not seekable.
+
+The editor command is determined by the `OVEDIT` or `EDITOR` environment variable.
+
+You can use `%f` and `%d` as arguments in the editor command:
+
+* `%f` will be replaced with the current file name.
+* `%d` will be replaced with the current line number.
+
+For example:
+
+```env
+OVEDIT="vim +%d %f"
+```
+
+This will open the current file in `vim` at the specified line number.
+
+###  4.29. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
@@ -977,7 +1001,7 @@ If the file name already exists, select `Overwrite`, `Append`, or `Cancel`.
 overwrite? (O)overwrite, (A)append, (N)cancel
 ```
 
-###  4.29. <a name='ruler'></a>Ruler
+###  4.30. <a name='ruler'></a>Ruler
 
 *Added in v0.39.0*
 
@@ -996,7 +1020,7 @@ ov --ruler=2 README.md
 
 [Related styling](#style-customization): `Ruler` .
 
-###  4.30. <a name='redirect-output'></a>Redirect Output
+###  4.31. <a name='redirect-output'></a>Redirect Output
 
 By default, `ov` does not show the screen when output is redirected.
 To force display, use the `--force-screen` option:
@@ -1138,6 +1162,7 @@ It can also be changed after startup.
 | [ctrl+q]                      | * set output screen and quit                       |
 | [alt+shift+F8]                | * set output original screen and quit              |
 | [ctrl+z]                      | * suspend                                          |
+| [alt+v]                       | * edit current document                            |
 | [h], [ctrl+alt+c], [ctrl+f1]  | * display help screen                              |
 | [ctrl+f2], [ctrl+alt+e]       | * display log screen                               |
 | [ctrl+l]                      | * screen sync                                      |
@@ -1520,7 +1545,7 @@ Mode:
 | PlainMode           | Enable plain (no decoration) mode                         | `PlainMode: true`               |
 | SectionHeader       | Display section header                                    | `SectionHeader: true`           |
 | HideOtherSection    | Hide other sections                                       | `HideOtherSection: true`        |
-| StatueLine          | Display status line at the bottom                         | `StatusLine: true`              |
+| StatusLine          | Display status line at the bottom                         | `StatusLine: true`              |
 | Prompt              | Customize the bottom prompt                               | see [Customizing the bottom status line](#customizing-the-bottom-status-line) |
 
 ##  9. <a name='vs'></a>VS
