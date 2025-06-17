@@ -937,8 +937,6 @@ This can be useful when you only want to view small files or when you want to qu
 
 If you want to enable this option by default, set `QuitSmall` to `true` in the configuration file.
 
-**Note:** The original text will be displayed without any styling applied by `ov`.
-
 ```yaml
 QuitSmall: true
 ```
@@ -1390,7 +1388,7 @@ General:
   StatusLine: false
 ```
 
-If you set StatusLine to false, the status line will not be displayed at all times; it will only appear when necessary (such as during search input).
+If you set `StatusLine` to false, the status line will not be displayed except when necessary (such as during search input).
 
 You can also customize the appearance and behavior of the status line by modifying the Prompt section in the configuration file.
 
@@ -1414,7 +1412,7 @@ General:
 | ProcessOfCount| Update the progress while counting the number of lines | true |
 | CursorType | Cursor type (see below) | 0 |
 
-Currently, CursorType is specified as a number (not all devices support this).
+Currently, set CursorType as a number (not all devices support this).
 
 | CursorType | Description |
 |:-----------|:------------|
@@ -1446,7 +1444,7 @@ General:
       InvertColor: false  # Important: Set this to false to enable LeftStatus styles
 ```
 
-> **Note:**
+> [!NOTE]
 > If `InvertColor` is set to `true`, the file name and related areas will be displayed with inverted colors, and the `LeftStatus`/`RightStatus` styles will not be applied.
 > To enable your custom styles, set `InvertColor: false`.
 
@@ -1472,7 +1470,7 @@ See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more inform
 
 You can also customize the `General` configuration in the `config.yaml` file.
 
-> **Note**
+> [!NOTE]
 > All `General` configuration items can also be set for each view mode under the `Mode` section.
 > For example, you can specify `MultiColorWords` only for markdown mode as follows:
 
