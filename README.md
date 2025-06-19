@@ -1143,7 +1143,7 @@ MemoryLimit: 1000
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
 | -x,   | --tab-width int                            | tab stop width (default 8)                                     |
-|       | --status-line[=true|false]                 | status line (default true)                                     |
+|       | --status-line[=true\|false]                | status line (default true)                                     |
 | -v,   | --version                                  | display version information                                    |
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
