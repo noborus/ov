@@ -844,6 +844,12 @@ func (root *Root) toggleWriteOriginal(context.Context) {
 
 // WriteQuit sets the write flag and executes a quit event.
 func (root *Root) WriteQuit(ctx context.Context) {
+	if root.Doc.documentType != DocNormal {
+		log.Println("WriteQuit: not a normal document")
+		root.Quit(ctx)
+		return
+	}
+
 	root.Config.IsWriteOnExit = true
 	if root.Doc.HideOtherSection && root.Config.AfterWriteOriginal == 0 {
 		// hide other section.
