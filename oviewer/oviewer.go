@@ -860,8 +860,9 @@ func (root *Root) prepareAllDocuments() {
 		}
 		log.Printf("open [%d]%s%s\n", n, doc.FileName, w)
 	}
-	root.helpDoc.Style = root.settings.Style
-	root.logDoc.Style = root.settings.Style
+
+	root.helpDoc.RunTimeSettings = updateRunTimeSettings(root.helpDoc.RunTimeSettings, root.Config.HelpDoc)
+	root.logDoc.RunTimeSettings = updateRunTimeSettings(root.logDoc.RunTimeSettings, root.Config.LogDoc)
 }
 
 // Close closes the oviewer.

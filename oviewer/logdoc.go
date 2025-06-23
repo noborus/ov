@@ -64,3 +64,27 @@ func (logDoc *LogDocument) chanWrite() {
 		s.mu.Unlock()
 	}
 }
+
+// NewLogStyle generates a style for log documents.
+func NewLogStyle() Style {
+	return Style{
+		SearchHighlight: OVStyle{
+			Reverse: true,
+		},
+		MarkLine: OVStyle{
+			Background: "darkgoldenrod",
+		},
+		MultiColorHighlight: []OVStyle{
+			{Foreground: "red"},
+			{Foreground: "aqua"},
+			{Foreground: "yellow"},
+			{Foreground: "fuchsia"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "grey"},
+		},
+		JumpTargetLine: OVStyle{
+			Underline: true,
+		},
+	}
+}
