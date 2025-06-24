@@ -28,6 +28,10 @@ type Config struct {
 
 	// GeneralConfig is the general setting.
 	General General
+	// helpConfig is the help setting.
+	HelpDoc General
+	// LogConfig is the log setting.
+	LogDoc General
 	// BeforeWriteOriginal specifies the number of lines before the current position.
 	// 0 is the top of the current screen
 	BeforeWriteOriginal int

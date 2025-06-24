@@ -31,6 +31,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.SectionHeader = true
 	m.setSectionDelimiter("\t")
 	m.SectionHeaderNum = 1
+	m.Style = NewHelpStyle()
 	atomic.StoreInt32(&m.closed, 1)
 	if err := m.ControlReader(helpStr, nil); err != nil {
 		return nil, err
@@ -65,4 +66,43 @@ func DuplicateKeyBind(k KeyBind) string {
 		fmt.Fprintf(w, "%s [%s] for %s\n", gchalk.Red("Duplicate key"), v.key, strings.Join(v.action, ", "))
 	}
 	return w.String()
+}
+
+// NewHelpStyle returns a Style for the help document.
+func NewHelpStyle() Style {
+	return Style{
+		Header: OVStyle{
+			Foreground: "gold",
+			Background: "darkblue",
+			Bold:       true,
+		},
+		SectionLine: OVStyle{
+			Background: "slateblue",
+			Bold:       true,
+		},
+		Alternate: OVStyle{
+			Background: "gray",
+		},
+		LineNumber: OVStyle{
+			Bold: true,
+		},
+		SearchHighlight: OVStyle{
+			Reverse: true,
+		},
+		MarkLine: OVStyle{
+			Background: "darkgoldenrod",
+		},
+		MultiColorHighlight: []OVStyle{
+			{Foreground: "red"},
+			{Foreground: "aqua"},
+			{Foreground: "yellow"},
+			{Foreground: "fuchsia"},
+			{Foreground: "lime"},
+			{Foreground: "blue"},
+			{Foreground: "grey"},
+		},
+		JumpTargetLine: OVStyle{
+			Underline: true,
+		},
+	}
 }
