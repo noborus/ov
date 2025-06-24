@@ -82,8 +82,9 @@ ov is a terminal pager.
     * 8.1.1. [UnderlineStyle](#underlinestyle)
   * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
     * 8.2.1. [Customizing LeftStatus and RightStatus styles](#customizing-leftstatus-and-rightstatus-styles)
-  * 8.3. [Key binding customization](#key-binding-customization)
-  * 8.4. [General configuration](#general-configuration)
+  * 8.3. [Help and Log Documentation customization](#help-and-log-documentation-customization)
+  * 8.4. [Key binding customization](#key-binding-customization)
+  * 8.5. [General configuration](#general-configuration)
 * 9. [VS](#vs)
 * 10. [Work together](#work-together)
 * 11. [Contributing](#contributing)
@@ -1481,7 +1482,7 @@ General:
 > If `InvertColor` is set to `true`, the file name and related areas will be displayed with inverted colors, and the `LeftStatus`/`RightStatus` styles will not be applied.
 > To enable your custom styles, set `InvertColor: false`.
 
-### Help and Log Documentation customization
+###  8.3. <a name='help-and-log-documentation-customization'></a>Help and Log Documentation customization
 
 You can also customize the Help and Log documentation screens.
 By adding `HelpDoc` and `LogDoc` entries at the same level as `General` in your configuration file, you can apply the same types of customizations as for `General`.
@@ -1509,7 +1510,7 @@ LogDoc:
 
 For example, you can set different colors or styles for the Help and Log screens as shown above.
 
-###  8.3. <a name='key-binding-customization'></a>Key binding customization
+###  8.4. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
 
@@ -1527,7 +1528,7 @@ You can customize key bindings.
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
 
-###  8.4. <a name='general-configuration'></a>General configuration
+###  8.5. <a name='general-configuration'></a>General configuration
 
 You can also customize the `General` configuration in the `config.yaml` file.
 
