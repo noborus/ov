@@ -334,10 +334,10 @@ ov --skip-lines 1 --header 1 README.md
 
 *Added in v0.39.0*
 
-The `--vertical-header` (`-y`) (defakult key `y`) option fixedly displays the specified number of chars.
+The `--vertical-header` (`-y`) (default key `y`) option fixedly displays the specified number of characters.
 
 ```console
-ov --vertial-header=4 README.md
+ov --vertical-header=4 README.md
 ```
 
 If you want to specify by column instead of character, see [Header Column](#header-column).
@@ -632,7 +632,7 @@ The filter is a regular expression.
 ov --filter "^#" README.md
 ```
 
-Also, specify the non-matching line instead of the non-matching line.
+You can also filter for lines that do not match the specified pattern.
 
 If you press `!` on `&` while inputting a filter, non-matching lines will be targeted.
 
@@ -702,7 +702,7 @@ ov --watch 1 /proc/meminfo
 ###  4.18. <a name='mouse-support'></a>Mouse support
 
 The `ov` makes the mouse support its control.
-This can be disabled with the option `--disable-mouse`(default key `ctrl+F3`, `ctrl+alt+r`).
+This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `ctrl+F3` and `ctrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -1483,6 +1483,8 @@ General:
 > To enable your custom styles, set `InvertColor: false`.
 
 ###  8.3. <a name='help-and-log-documentation-customization'></a>Help and Log Documentation customization
+
+*Added in v0.42.0*
 
 You can also customize the Help and Log documentation screens.
 By adding `HelpDoc` and `LogDoc` entries at the same level as `General` in your configuration file, you can apply the same types of customizations as for `General`.
