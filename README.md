@@ -1481,6 +1481,34 @@ General:
 > If `InvertColor` is set to `true`, the file name and related areas will be displayed with inverted colors, and the `LeftStatus`/`RightStatus` styles will not be applied.
 > To enable your custom styles, set `InvertColor: false`.
 
+### Help and Log Documentation customization
+
+You can also customize the Help and Log documentation screens.
+By adding `HelpDoc` and `LogDoc` entries at the same level as `General` in your configuration file, you can apply the same types of customizations as for `General`.
+This allows you to individually style and configure the Help and Log screens.
+
+```yaml
+General:
+  Style:
+    Header:
+      Background: "blue"
+      Bold: true
+
+HelpDoc:
+  Style:
+    Header:
+      Background: "green"
+      Bold: true
+
+LogDoc:
+  Style:
+    Header:
+      Background: "aqua"
+      Bold: true
+```
+
+For example, you can set different colors or styles for the Help and Log screens as shown above.
+
 ###  8.3. <a name='key-binding-customization'></a>Key binding customization
 
 You can customize key bindings.
