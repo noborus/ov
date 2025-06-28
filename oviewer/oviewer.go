@@ -602,7 +602,7 @@ func openFiles(fileNames []string) (*Root, error) {
 		}
 	}
 
-	return root, err
+	return root, nil
 }
 
 // SetConfig sets config.
@@ -1354,7 +1354,7 @@ func (scr SCR) lineNumber(y int) LineNumber {
 	if len(scr.numbers) == 0 {
 		return LineNumber{}
 	}
-	if y >= 0 && y <= len(scr.numbers) {
+	if y >= 0 && y < len(scr.numbers) {
 		return scr.numbers[y]
 	}
 	return scr.numbers[0]
