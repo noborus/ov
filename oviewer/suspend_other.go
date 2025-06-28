@@ -1,5 +1,4 @@
-//go:build windows
-// +build windows
+//go:build !unix
 
 package oviewer
 
@@ -7,7 +6,7 @@ import (
 	"os"
 )
 
-// Dummy function because there is no sigtstp in windows.
+// Dummy function because there is no SIGTSTP in non-Unix systems.
 func registerSIGTSTP() chan os.Signal {
 	sigSuspend := make(chan os.Signal, 1)
 	return sigSuspend

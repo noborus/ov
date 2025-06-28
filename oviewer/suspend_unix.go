@@ -1,5 +1,4 @@
-//go:build !windows
-// +build !windows
+//go:build unix
 
 package oviewer
 
@@ -7,6 +6,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 // registerSIGTSTP registers SIGTSTP signal.
@@ -18,6 +19,6 @@ func registerSIGTSTP() chan os.Signal {
 
 // suspendProcess sends SIGSTOP signal to the process group.
 func suspendProcess() error {
-	pid := syscall.Getpgrp()
-	return syscall.Kill(-pid, syscall.SIGSTOP)
+	pid := unix.Getpgrp()
+	return unix.Kill(-pid, syscall.SIGSTOP)
 }
