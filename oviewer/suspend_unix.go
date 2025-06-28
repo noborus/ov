@@ -20,5 +20,5 @@ func registerSIGTSTP() chan os.Signal {
 // suspendProcess sends SIGSTOP signal to the process group.
 func suspendProcess() error {
 	pid := unix.Getpgrp()
-	return syscall.Kill(-pid, syscall.SIGSTOP)
+	return unix.Kill(-pid, syscall.SIGSTOP)
 }
