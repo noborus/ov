@@ -168,7 +168,7 @@ func (root *Root) reload(m *Document) {
 // toggleWatch toggles watch mode.
 func (root *Root) toggleWatch(context.Context) {
 	if root.Doc.WatchMode {
-		root.Doc.unWatchMode()
+		root.Doc.unwatchMode()
 	} else {
 		root.Doc.watchMode()
 	}
@@ -551,7 +551,7 @@ func (root *Root) setWatchInterval(input string) {
 
 	root.Doc.WatchInterval = interval
 	if root.Doc.WatchInterval == 0 {
-		root.Doc.unWatchMode()
+		root.Doc.unwatchMode()
 	} else {
 		root.Doc.watchMode()
 	}

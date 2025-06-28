@@ -28,7 +28,7 @@ const (
 	DocFilter
 )
 
-// documentType is the type of document.
+// documentType represents the type of document (e.g., normal, help, log, filter).
 type documentType int
 
 // String returns the string representation of the document type.
@@ -599,7 +599,7 @@ func (m *Document) watchMode() {
 }
 
 // unwatchMode unwatch mode for the document.
-func (m *Document) unWatchMode() {
+func (m *Document) unwatchMode() {
 	m.WatchMode = false
 	m.FollowSection = false
 }
@@ -666,7 +666,7 @@ func (m *Document) vHeaderWidth(lineC LineC) int {
 
 // GetLine returns one line from buffer.
 //
-// Deprecated: Use [Document.LineString] instead.
+// Deprecated: Use [Document.LineStr] instead.
 func (m *Document) GetLine(n int) string {
 	s, err := m.Line(n)
 	if err != nil {
@@ -675,9 +675,10 @@ func (m *Document) GetLine(n int) string {
 	return string(s)
 }
 
-// LineString returns one line from buffer.
+// LineString returns one line from the buffer as a string.
 //
-// Deprecated: Use [Document.LineStr] instead.
+// Deprecated: This method is deprecated because it does not return an error and may silently ignore failures.
+// Please use [Document.LineStr] instead, which returns both the string and an error for better error handling.
 func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)
 	return str
