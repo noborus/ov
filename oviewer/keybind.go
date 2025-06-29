@@ -214,7 +214,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 	}
 }
 
-// KeyBind is the mapping of action and key.
+// KeyBind represents a mapping from action names to their associated key sequences.
 type KeyBind map[string][]string
 
 // defaultKeyBinds are the default keybindings.
@@ -506,7 +506,9 @@ func setHandler(ctx context.Context, c *cbind.Configuration, name string, keys [
 		}
 		if key == tcell.KeyRune {
 			c.SetRune(mod, ch, wrapEventHandler(ctx, handler))
-			// Added "shift+N" instead of 'N' to get it on windows.
+			// On Windows, some shifted keys (like 'N' as "shift+n") may not be recognized as their uppercase rune,
+			// so we explicitly bind both the plain and shifted versions to ensure the keybinding works across platforms.
+			// This is especially necessary for ASCII characters between '!' (0x21) and '`' (0x60).
 			if 0x21 <= ch && ch <= 0x60 {
 				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(ctx, handler))
 			}
