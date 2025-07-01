@@ -1,4 +1,4 @@
-//go:build unix && !solaris && !illumos
+//go:build solaris || illumos
 
 package oviewer
 
@@ -19,6 +19,10 @@ func registerSIGTSTP() chan os.Signal {
 
 // suspendProcess sends SIGSTOP signal to the process group.
 func suspendProcess() error {
-	pid := unix.Getpgrp()
+	pid, err := unix.Getpgrp()
+	if err != nil {
+		return err
+	}
+
 	return unix.Kill(-pid, syscall.SIGSTOP)
 }
