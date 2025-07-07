@@ -124,8 +124,14 @@ KeyBind:
         - "Q"
     set_write_exit:
         - "ctrl+q"
+    write_original:
+        - "alt+shift+F8"
     suspend:
         - "ctrl+z"
+    edit:
+        - "v"
+    status_line:
+        - "ctrl+F10"
     sync:
         - "r"
         - "ctrl+l"
@@ -277,6 +283,8 @@ KeyBind:
         - "alt+f"
     shrink_column:
         - "alt+x"
+    right_align:
+        - "alt+a"
     toggle_ruler:
         - "alt+shift+F9"
     plain_mode:
