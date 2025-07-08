@@ -141,6 +141,12 @@ sudo port install ov
 ###  2.4. <a name='homebrew(macos-or-linux)'></a>Homebrew(macOS or Linux)
 
 ```console
+brew install ov
+```
+
+Or from the original tap:
+
+```console
 brew install noborus/tap/ov
 ```
 
