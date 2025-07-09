@@ -1264,7 +1264,7 @@ func (root *Root) dummyScreen() (int, error) {
 		if root.Config.AfterWriteOriginal != 0 {
 			end = root.Doc.topLN + root.Config.AfterWriteOriginal
 		}
-		height = end - root.Doc.topLN
+		height = max(end-root.Doc.topLN, 0)
 	}
 	root.Screen.SetSize(root.scr.vWidth, height)
 	if root.Pattern != "" {
