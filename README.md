@@ -361,6 +361,9 @@ ov --column-delimiter "," --column-mode test.csv
 Regular expressions can be used for the `--column-delimiter`.
 Enclose in '/' when using regular expressions.
 
+> [!TIP]
+> Use regex delimiters like `/\s+/` for variable whitespace or `/[,;]/` for multiple delimiter characters.
+
 ```console
 ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 ```
@@ -524,6 +527,9 @@ ov --follow-mode /var/log/syslog
 
 ####  4.12.1. <a name='follow-name'></a>Follow name
 
+> [!TIP]
+> Use `--follow-name` instead of `--follow-mode` when files might be rotated (like log files). This ensures you continue following the new file even if the original is moved or deleted.
+
 You can specify the file name to follow with `--follow-name`(like `tail -F`).
 Monitor file names instead of file descriptors.
 
@@ -559,7 +565,10 @@ Exec mode captures the output of a command and displays it in `ov`.
 It works similarly to `watch`, but with advanced paging features.
 
 Use the `--exec` (`-e`) option to run the command and display stdout/stderr separately.
-Arguments after (`--`) are interpreted as command arguments.
+
+> [!TIP]
+> When using `--exec`, you must insert `--` to separate ov's options from the command you want to run.
+> Everything after `--` is interpreted as the command and its arguments.
 
 ```console
 ov --exec -- ls -l
@@ -708,7 +717,7 @@ ov --watch 1 /proc/meminfo
 ###  4.18. <a name='mouse-support'></a>Mouse support
 
 The `ov` makes the mouse support its control.
-This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `ctrl+F3` and `ctrl+alt+r`).
+This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `ctrl+alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -719,6 +728,9 @@ For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environ
 
 Alternatively, you can use the `OSC52` escape sequence for clipboard operations by setting
 `ClipboardMethod` to `OSC52` in the configuration file (`config.yaml`):
+
+> [!TIP]
+> Use `OSC52` method if you're working over SSH or in terminal multiplexers like tmux/screen where traditional clipboard tools might not work.
 
 ```yaml
 ClipboardMethod: "OSC52"
@@ -1175,7 +1187,7 @@ It can also be changed after startup.
 | [ctrl+l]                      | * screen sync                                      |
 | [ctrl+f]                      | * follow mode toggle                               |
 | [ctrl+a]                      | * follow all mode toggle                           |
-| [ctrl+f3], [ctrl+alt+r]       | * enable/disable mouse                             |
+| [ctrl+alt+r]                  | * enable/disable mouse                             |
 | [S]                           | * save buffer to file                              |
 | **Moving**                    |                                                    |
 | [Enter], [Down], [ctrl+N]     | * forward by one line                              |
