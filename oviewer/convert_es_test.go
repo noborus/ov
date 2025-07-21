@@ -513,12 +513,89 @@ func Test_parseSGR2(t *testing.T) {
 			want: OVStyle{},
 		},
 		{
+			name: "test-rgb-invalid2",
+			args: args{
+				params: "4;48:2:255:0:-",
+			},
+			want: OVStyle{},
+		},
+		{
 			name: "test-rgb-over",
 			args: args{
 				params: "4;38:2:255:0:999",
 			},
 			want: OVStyle{
 				Underline: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseSGR(tt.args.params); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseSGR() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseSGR3(t *testing.T) {
+	type args struct {
+		params string
+	}
+	tests := []struct {
+		name string
+		args args
+		want OVStyle
+	}{
+		{
+			name: "test-not-supported",
+			args: args{
+				params: "99;a:4",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-overline-on",
+			args: args{
+				params: "53",
+			},
+			want: OVStyle{
+				OverLine: true,
+			},
+		},
+		{
+			name: "test-overline-off",
+			args: args{
+				params: "55",
+			},
+			want: OVStyle{
+				OverLine:   false,
+				UnOverLine: true,
+			},
+		},
+		{
+			name: "test-underline-color-error",
+			args: args{
+				params: "58;a",
+			},
+			want: OVStyle{},
+		},
+		{
+			name: "test-underline-color-default",
+			args: args{
+				params: "59",
+			},
+			want: OVStyle{
+				UnderlineColor: "default",
+			},
+		},
+		{
+			name: "test-vertical-line-on",
+			args: args{
+				params: "74",
+			},
+			want: OVStyle{
+				VerticalAlignType: 1,
 			},
 		},
 	}
