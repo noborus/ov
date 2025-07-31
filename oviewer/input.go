@@ -397,7 +397,8 @@ func blankCandidate() *candidate {
 	}
 }
 
-// upNum returns the number of the previous candidate.
+// upNum returns the incremented number as a string; if the input is not a valid integer, it returns "0".
+// "0" is returned when the input cannot be parsed as an integer, indicating an invalid or empty input.
 func upNum(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil {
@@ -407,6 +408,8 @@ func upNum(str string) string {
 }
 
 // downNum returns the number of the next candidate.
+// If the input string is not a valid integer or the value is less than or equal to 0,
+// it returns "0" to prevent negative or invalid numbers.
 func downNum(str string) string {
 	n, err := strconv.Atoi(str)
 	if err != nil || n <= 0 {

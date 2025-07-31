@@ -25,7 +25,7 @@ const (
 func (root *Root) saveBuffer(input string) {
 	fileName := strings.TrimSpace(input)
 
-	flag, err := root.saveFlag(fileName)
+	flag, err := root.promptSaveFlag(fileName)
 	if err != nil {
 		root.setMessage("save cancel")
 		return
@@ -46,7 +46,8 @@ func (root *Root) saveBuffer(input string) {
 	root.setMessageLogf("saved %s", fileName)
 }
 
-func (root *Root) saveFlag(fileName string) (int, error) {
+// promptSaveFlag prompts the user to confirm the save action and returns the appropriate file open flag.
+func (root *Root) promptSaveFlag(fileName string) (int, error) {
 	flag := os.O_WRONLY | os.O_CREATE
 	_, err := os.Stat(fileName)
 	if err == nil {
@@ -77,6 +78,7 @@ func (root *Root) saveConfirm() saveSelection {
 	}
 }
 
+// saveConfirmKey processes the key event for save confirmation.
 func saveConfirmKey(ev *tcell.EventKey) saveSelection {
 	switch ev.Key() {
 	case tcell.KeyRune:

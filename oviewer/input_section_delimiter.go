@@ -52,7 +52,9 @@ func (*eventSectionDelimiter) Prompt() string {
 // Confirm returns the event when the input is confirmed.
 func (e *eventSectionDelimiter) Confirm(str string) tcell.Event {
 	e.value = str
-	e.clist.toLast(str)
+	if str != "" {
+		e.clist.toLast(str)
+	}
 	e.SetEventNow()
 	return e
 }

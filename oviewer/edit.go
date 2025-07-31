@@ -60,7 +60,7 @@ func (root *Root) edit(context.Context) {
 		return
 	}
 
-	var errMsg error = nil
+	var errMsg error
 	num := max(root.Doc.topLN+root.Doc.firstLine(), 0)
 	defer func() {
 		log.Println("Resume from editor")
@@ -72,13 +72,13 @@ func (root *Root) edit(context.Context) {
 			return
 		}
 		// Reload the document after editing.
-		if isTemp {
-			if err := os.Remove(fileName); err != nil {
-				log.Printf("Failed to remove temporary file %s: %v", fileName, err)
-			}
-		} else {
+		if !isTemp {
 			root.reload(root.Doc)
 			root.sendGoto(num + 1)
+		}
+		// If the file is temporary, remove it after editing.
+		if err := os.Remove(fileName); err != nil {
+			log.Printf("Failed to remove temporary file %s: %v", fileName, err)
 		}
 	}()
 	editor := root.identifyEditor()
@@ -149,6 +149,7 @@ func (root *Root) identifyEditor() string {
 }
 
 // replaceEditorArgs replaces %d with numStr and %f with fileName in the editor command string.
+// It returns the command name as the first return value and the argument slice as the second.
 // If %f is not present, fileName is appended at the end.
 func replaceEditorArgs(editorCmd, numStr, fileName string) (string, []string) {
 	args, err := shlex.Split(editorCmd)

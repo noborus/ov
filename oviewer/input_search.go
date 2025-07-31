@@ -82,7 +82,7 @@ type eventInputSearch struct {
 	searchType searchType
 }
 
-// newSearchEvent returns SearchInput.
+// newSearchEvent returns a new eventInputSearch.
 func newSearchEvent(clist *candidate, searchType searchType) *eventInputSearch {
 	return &eventInputSearch{
 		value:      "",
