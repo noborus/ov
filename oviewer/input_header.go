@@ -13,7 +13,7 @@ func (root *Root) inputHeader(context.Context) {
 	input.Event = newHeaderEvent()
 }
 
-// eventHeader represents the goto input mode.
+// eventHeader represents the header input mode.
 type eventHeader struct {
 	tcell.EventTime
 	value string

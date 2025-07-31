@@ -9,7 +9,7 @@ import (
 // setSaveBuffer is a wrapper to move to setSaveBufferMode.
 func (root *Root) inputSaveBuffer(_ context.Context) {
 	if root.Doc.seekable {
-		root.setMessage("Does not support saving regular files")
+		root.setMessage("Cannot save seekable files")
 		return
 	}
 	input := root.input
@@ -17,14 +17,14 @@ func (root *Root) inputSaveBuffer(_ context.Context) {
 	input.Event = newSaveBufferEvent(input.Candidate[SaveBuffer])
 }
 
-// eventSaveBuffer represents the mode input mode.
+// eventSaveBuffer represents the input event for save buffer mode.
 type eventSaveBuffer struct {
 	tcell.EventTime
 	clist *candidate
 	value string
 }
 
-// newSaveBufferEvent returns SaveBufferModeEvent.
+// newSaveBufferEvent returns an eventSaveBuffer for save buffer mode.
 func newSaveBufferEvent(clist *candidate) *eventSaveBuffer {
 	return &eventSaveBuffer{clist: clist}
 }

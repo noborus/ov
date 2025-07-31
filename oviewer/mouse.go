@@ -56,6 +56,8 @@ func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 	}
 
 	// Avoid redrawing with other mouse events.
+	// Skipping redraw here prevents unnecessary screen updates for mouse events
+	// that do not affect the view, improving performance and reducing flicker.
 	root.skipDraw = true
 }
 
