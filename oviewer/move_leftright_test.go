@@ -385,7 +385,7 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 				cycle: false,
 			},
 			wantErr: false,
-			wantX:   25,
+			wantX:   7,
 		},
 		{
 			name: "moveLeftWithWrapMode",
@@ -421,6 +421,23 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 			wantErr: false,
 			wantX:   44,
 		},
+		{
+			name: "moveLeftUnevenColumns",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "column3.txt"),
+				wrap:            false,
+				columnDelimiter: ",",
+				x:               0,
+				width:           80,
+				columnCursor:    8,
+			},
+			args: args{
+				n:     1,
+				cycle: true,
+			},
+			wantErr: false,
+			wantX:   0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -434,9 +451,101 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
-			m.columnCursor = tt.fields.columnCursor
 			ctx := context.Background()
 			root.prepareDraw(ctx)
+			m.columnCursor = tt.fields.columnCursor
+			if err := m.moveColumnLeft(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
+				t.Errorf("Document.moveColumnLeft() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if m.x != tt.wantX {
+				t.Errorf("Document.moveColumnLeft() = %v, want %v", m.x, tt.wantX)
+			}
+		})
+	}
+}
+
+func TestDocument_moveColumnLeftHeaderColumn(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName        string
+		wrap            bool
+		columnDelimiter string
+		x               int
+		width           int
+		HeaderColumn    int
+		verticalHeader  int
+		columnCursor    int
+		columnStart     int
+	}
+	type args struct {
+		n     int
+		cycle bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		wantX   int
+	}{
+		{
+			name: "moveLeftToBeforeHeaderColumn",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				wrap:            true,
+				columnDelimiter: ",",
+				x:               30,
+				width:           40,
+				HeaderColumn:    3,
+				columnCursor:    4,
+				columnStart:     0,
+			},
+			args: args{
+				n:     2, // cursor (4) - n (2) = 2, which is < HeaderColumn (3) + columnStart (0)
+				cycle: false,
+			},
+			wantErr: false,
+			wantX:   0, // Should set m.x to 0
+		},
+		{
+			name: "moveLeftToBeforeHeaderColumnWithColumnStart",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				wrap:            true,
+				columnDelimiter: ",",
+				x:               50,
+				width:           40,
+				HeaderColumn:    2,
+				columnCursor:    5,
+				columnStart:     1,
+			},
+			args: args{
+				n:     3, // cursor (5) - n (3) = 2, which is < HeaderColumn (2) + columnStart (1) = 3
+				cycle: false,
+			},
+			wantErr: false,
+			wantX:   0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			m := root.Doc
+			m.WrapMode = tt.fields.wrap
+			m.ColumnMode = true
+			m.ColumnDelimiter = tt.fields.columnDelimiter
+			m.x = tt.fields.x
+			m.width = tt.fields.width
+			m.VerticalHeader = tt.fields.verticalHeader
+			m.HeaderColumn = tt.fields.HeaderColumn
+			m.columnStart = tt.fields.columnStart
+			ctx := context.Background()
+			root.prepareDraw(ctx)
+			m.columnCursor = tt.fields.columnCursor
 			if err := m.moveColumnLeft(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnLeft() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -574,6 +683,109 @@ func TestDocument_moveColumnRight(t *testing.T) {
 			},
 			wantErr: false,
 			wantX:   37,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			m := root.Doc
+			m.WrapMode = tt.fields.wrap
+			m.ColumnMode = true
+			m.ColumnDelimiter = tt.fields.columnDelimiter
+			m.x = tt.fields.x
+			m.width = tt.fields.width
+			m.VerticalHeader = tt.fields.verticalHeader
+			m.HeaderColumn = tt.fields.HeaderColumn
+			m.columnCursor = tt.fields.columnCursor
+			ctx := context.Background()
+			root.prepareDraw(ctx)
+			if err := m.moveColumnRight(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
+				t.Errorf("Document.moveColumnRight() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if m.x != tt.wantX {
+				t.Errorf("Document.moveColumnRight() = %v, want %v", m.x, tt.wantX)
+			}
+		})
+	}
+}
+
+func TestDocument_moveColumnRightEdgeCases(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName        string
+		wrap            bool
+		columnDelimiter string
+		x               int
+		width           int
+		HeaderColumn    int
+		verticalHeader  int
+		columnCursor    int
+	}
+	type args struct {
+		n     int
+		cycle bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		wantX   int
+	}{
+		{
+			name: "moveRightScrollOnly",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				wrap:            false,
+				columnDelimiter: ",",
+				x:               0,
+				width:           30, // Narrow width to trigger scrolling
+				columnCursor:    6,  // Large column that extends beyond screen
+			},
+			args: args{
+				n:     0,
+				cycle: false,
+			},
+			wantErr: false,
+			wantX:   0, // Should scroll without moving cursor
+		},
+		{
+			name: "moveRightNoColumnsError",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "normal.txt"),
+				wrap:            false,
+				columnDelimiter: "",
+				x:               0,
+				width:           40,
+				columnCursor:    0,
+			},
+			args: args{
+				n:     1,
+				cycle: false,
+			},
+			wantErr: true,
+			wantX:   0,
+		},
+		{
+			name: "moveRightShortLine",
+			fields: fields{
+				fileName:        filepath.Join(testdata, "MOCK_DATA.csv"),
+				wrap:            false,
+				columnDelimiter: ",",
+				x:               0,
+				width:           200, // Very wide screen
+				columnCursor:    6,   // Move to last column
+			},
+			args: args{
+				n:     1,
+				cycle: false,
+			},
+			wantErr: false,
+			wantX:   0, // Line is shorter than screen width, should set x based on line length
 		},
 	}
 	for _, tt := range tests {
