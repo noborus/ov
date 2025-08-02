@@ -67,7 +67,7 @@ func (m *Document) optimalCursor(scr SCR, cursor int) int {
 	cl := columns[cursor].start
 	cr := columns[cursor].end
 	// No need to move if on screen.
-	if cl > leftLimit && cr < rightLimit {
+	if cl >= leftLimit && cr <= rightLimit {
 		return cursor
 	}
 
@@ -170,6 +170,13 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	}
 
 	columns := lineC.columnRanges
+	if len(columns) <= cursor {
+		// If the cursor is out of range (column count is inconsistent across lines),
+		// only update the cursor position without changing the display position (m.x).
+		// This allows the cursor to move to a position that may exist on other lines.
+		return nil
+	}
+
 	leftLimit := max(0, m.x) + vh
 	cl := columns[cursor].start
 	cr := columns[cursor].end
@@ -208,7 +215,6 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 			return nil
 		}
 	}
-
 	// Move to the next column.
 	cursor := m.columnCursor + n
 	if !isValidCursor(lineC, cursor) {
@@ -234,7 +240,7 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 		m.x = max(0, len(lineC.lc)-width)
 		return nil
 	}
-	m.x = min(cr-width, cl-vh)
+	m.x = max(0, min(cr-width, cl-vh))
 	return nil
 }
 
