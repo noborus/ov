@@ -290,7 +290,7 @@ func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = remove(root.Doc.marked, lN)
 	root.Doc.marked = append(root.Doc.marked, lN)
-	root.Doc.markedPoint++
+	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
 }
 

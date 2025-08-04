@@ -13,8 +13,8 @@ import (
 
 // remove removes the value of the specified string from slice.
 func remove[T comparable](list []T, s T) []T {
-	for n, l := range list {
-		if l == s {
+	for n := len(list) - 1; n >= 0; n-- {
+		if list[n] == s {
 			list = slices.Delete(list, n, n+1)
 		}
 	}
