@@ -391,14 +391,17 @@ func (root *Root) monitorEOF() {
 	}
 	log.Println("monitorEOF")
 	for _, m := range root.DocList {
-		go func() {
-			if !m.BufEOF() {
-				m.cond.L.Lock()
-				m.cond.Wait()
-				m.cond.L.Unlock()
-			}
-			root.sendReachEOF(m)
-			log.Println("EOF reached", m.FileName)
-		}()
+		go root.waitForEOF(m)
 	}
+}
+
+// waitForEOF waits for a document to reach EOF and sends notification.
+func (root *Root) waitForEOF(m *Document) {
+	if !m.BufEOF() {
+		m.cond.L.Lock()
+		m.cond.Wait()
+		m.cond.L.Unlock()
+	}
+	root.sendReachEOF(m)
+	log.Println("EOF reached", m.FileName)
 }

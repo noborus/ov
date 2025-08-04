@@ -105,6 +105,14 @@ func Test_removeStr(t *testing.T) {
 			},
 			want: []string{"a", "b", "c"},
 		},
+		{
+			name: "doubleRemove",
+			args: args{
+				list: []string{"a", "b", "b", "c"},
+				s:    "b",
+			},
+			want: []string{"a", "c"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
