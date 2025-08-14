@@ -24,12 +24,12 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
-	ov.Config.StyleSearchHighlight = oviewer.OVStyle{
+	time.Sleep(time.Second * 1)
+	ov.Doc.Style.SearchHighlight = oviewer.OVStyle{
 		Foreground: "gold",
 		Reverse:    true,
 		Blink:      true,
 	}
-	time.Sleep(time.Second * 1)
 	ov.MoveBottom()
 	ov.BackSearch("main")
 
