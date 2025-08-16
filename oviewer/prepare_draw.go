@@ -654,34 +654,24 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 	return rPos
 }
 
-// findPrevSpace returns the position of the previous space.
+// findPrevSpace returns the position just before the previous space.
 func findPrevSpace(lc contents, start int) int {
-	p := start
-	for {
-		if p <= 0 {
-			break
-		}
+	for p := start; p > 0; p-- {
 		if lc.IsSpace(p) {
-			break
+			return p
 		}
-		p--
 	}
-	return p
+	return 0
 }
 
-// findNextSpace returns the position of the next space.
+// findNextSpace returns the position of the next space or the end of contents.
 func findNextSpace(lc contents, start int) int {
-	p := start
-	for {
-		if p >= len(lc) {
-			break
-		}
+	for p := start; p < len(lc); p++ {
 		if lc.IsSpace(p) {
-			break
+			return p
 		}
-		p++
 	}
-	return p
+	return len(lc)
 }
 
 // alignColumnEnd returns the position of the end of a column.
