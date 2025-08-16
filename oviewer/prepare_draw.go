@@ -532,7 +532,7 @@ func (root *Root) searchHighlight(lineC LineC) {
 }
 
 // columnRanges sets the column ranges.
-func (m Document) columnRanges(lineC LineC) LineC {
+func (m *Document) columnRanges(lineC LineC) LineC {
 	if m.ColumnWidth {
 		lineC.columnRanges = m.columnWidthRanges(lineC)
 	} else {
@@ -542,7 +542,7 @@ func (m Document) columnRanges(lineC LineC) LineC {
 }
 
 // columnDelimiterRange returns the ranges of the columns.
-func (m Document) columnDelimiterRange(lineC LineC) []columnRange {
+func (m *Document) columnDelimiterRange(lineC LineC) []columnRange {
 	indexes := allIndex(lineC.str, m.ColumnDelimiter, m.ColumnDelimiterReg)
 	if len(indexes) == 0 {
 		return nil
@@ -565,7 +565,7 @@ func (m Document) columnDelimiterRange(lineC LineC) []columnRange {
 }
 
 // columnWidthRanges returns the ranges of the columns.
-func (m Document) columnWidthRanges(lineC LineC) []columnRange {
+func (m *Document) columnWidthRanges(lineC LineC) []columnRange {
 	indexes := m.columnWidths
 	if len(indexes) == 0 {
 		return nil
