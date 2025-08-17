@@ -842,6 +842,7 @@ func (root *Root) setViewModeConfig() {
 func (root *Root) prepareAllDocuments() {
 	for n, doc := range root.DocList {
 		doc.RunTimeSettings = root.settings
+		doc.RunTimeSettings = updateRunTimeSettings(doc.RunTimeSettings, doc.General)
 		doc.regexpCompile()
 
 		if doc.FollowName {
