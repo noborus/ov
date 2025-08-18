@@ -38,7 +38,7 @@ type General struct {
 	SectionStartPosition *int
 	// SectionHeaderNum is the number of lines in the section header.
 	SectionHeaderNum *int
-	// HScrollWidth is the horizontal scroll width as a string (e.g., "80%", "100px").
+	// HScrollWidth is the horizontal scroll width as a string (e.g., "80%", "40").
 	HScrollWidth *string
 	// HScrollWidthNum is the horizontal scroll width as an integer (number of columns).
 	HScrollWidthNum *int
@@ -72,7 +72,6 @@ type General struct {
 	HideOtherSection *bool
 	// StatusLine indicates whether to hide the status line.
 	StatusLine *bool
-	// Prompt is the prompt configuration.
 	// PromptConfig holds settings related to the command prompt.
 	Prompt PromptConfig
 	// Style is the style setting for general appearance and formatting.
