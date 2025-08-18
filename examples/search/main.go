@@ -14,7 +14,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// All Documents.
+	/*
+		ov.Config.General.Style = oviewer.StyleConfig{
+			SearchHighlight: &oviewer.OVStyle{
+				Foreground: "gold",
+				Reverse:    true,
+				Blink:      true,
+			},
+		}
+		ov.SetConfig(ov.Config)
+	*/
+	// Only this Document.
+	ov.Doc.General.Style = oviewer.StyleConfig{
+		SearchHighlight: &oviewer.OVStyle{
+			Foreground: "gold",
+			Reverse:    true,
+			Blink:      true,
+		},
+	}
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -25,11 +43,6 @@ func main() {
 		}
 	}()
 	time.Sleep(time.Second * 1)
-	ov.Doc.Style.SearchHighlight = oviewer.OVStyle{
-		Foreground: "gold",
-		Reverse:    true,
-		Blink:      true,
-	}
 	ov.MoveBottom()
 	ov.BackSearch("main")
 

@@ -27,9 +27,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Set in general as individual modes will be overwritten.
-	ov.Doc.FollowMode = true
-	ov.Doc.MultiColorWords = []string{"error:", "info:", "warn:", "debug:"}
+	ov.Doc.General.SetMultiColorWords([]string{"error:", "info:", "warn:", "debug:"})
+	ov.Doc.General.SetFollowMode(true)
 	if err := ov.Run(); err != nil {
 		log.Fatal(err)
 	}
