@@ -412,6 +412,13 @@ var (
 // This is a function of tcell.NewScreen but can be replaced with mock.
 var tcellNewScreen = tcell.NewScreen
 
+// SetTcellNewScreen sets the function to create a new tcell screen.
+// This is used for testing purposes to replace the tcell.NewScreen function.
+// It allows for mocking the screen creation in tests.
+func SetTcellNewScreen(f func() (tcell.Screen, error)) {
+	tcellNewScreen = f
+}
+
 // NewOviewer return the structure of oviewer.
 // NewOviewer requires one or more documents.
 func NewOviewer(docs ...*Document) (*Root, error) {

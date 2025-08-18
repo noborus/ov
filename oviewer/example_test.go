@@ -3,10 +3,26 @@ package oviewer_test
 import (
 	"bytes"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"testing"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/noborus/ov/oviewer"
 )
+
+const cwd = ".."
+
+var testdata = filepath.Join(cwd, "testdata")
+
+// This is a function of tcell.NewScreen but can be replaced with mock.
+var tcellNewScreen = tcell.NewScreen
+
+// fakeScreen returns a fake screen.
+func fakeScreen() (tcell.Screen, error) {
+	// width, height := 80, 25
+	return tcell.NewSimulationScreen(""), nil
+}
 
 func ExampleOpen() {
 	ov, err := oviewer.Open("example_test.go")
@@ -76,5 +92,54 @@ func ExampleSearch() {
 	ov.Search("H")
 	if err := ov.Run(); err != nil {
 		panic(err)
+	}
+}
+
+func TestExample_HeaderOption(t *testing.T) {
+	oviewer.SetTcellNewScreen(fakeScreen)
+	defer func() {
+		oviewer.SetTcellNewScreen(tcell.NewScreen)
+	}()
+	ov, err := oviewer.Open(filepath.Join(testdata, "test.txt"))
+	if err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	ov.Config.General.SetHeader(2)
+	if ov.Config.General.Header == nil || *ov.Config.General.Header != 2 {
+		t.Errorf("Config.General.SetHeader did not set header correctly: got %v", ov.Config.General.Header)
+	}
+}
+
+func TestExample_DocumentGeneral(t *testing.T) {
+	oviewer.SetTcellNewScreen(fakeScreen)
+	defer func() {
+		oviewer.SetTcellNewScreen(tcell.NewScreen)
+	}()
+	ov, err := oviewer.Open(filepath.Join(testdata, "test.txt"))
+	if err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	ov.Doc.General.SetHeader(3)
+	if ov.Doc.General.Header == nil || *ov.Doc.General.Header != 3 {
+		t.Errorf("Doc.General.SetHeader did not set header correctly: got %v", ov.Doc.General.Header)
+	}
+}
+
+func TestExample_FollowMode(t *testing.T) {
+	oviewer.SetTcellNewScreen(fakeScreen)
+	defer func() {
+		oviewer.SetTcellNewScreen(tcell.NewScreen)
+	}()
+	ov, err := oviewer.Open(filepath.Join(testdata, "test.txt"))
+	if err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	ov.Config.General.SetFollowMode(true)
+	if ov.Config.General.FollowMode == nil || *ov.Config.General.FollowMode != true {
+		t.Errorf("Options.SetFollowMode did not set follow mode correctly: got %v", ov.Config.General.FollowMode)
+	}
+	ov.Doc.General.SetFollowMode(false)
+	if ov.Doc.General.FollowMode == nil || *ov.Doc.General.FollowMode != false {
+		t.Errorf("Doc.General.SetFollowMode did not set follow mode correctly: got %v", ov.Doc.General.FollowMode)
 	}
 }
