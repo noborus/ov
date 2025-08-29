@@ -50,11 +50,9 @@ func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 		return
 	}
 
-	if button != tcell.ButtonNone || root.scr.mouseSelect {
-		root.selectRange(ctx, ev)
+	if root.mouseSelect(ctx, ev) {
 		return
 	}
-
 	// Avoid redrawing with other mouse events.
 	// Skipping redraw here prevents unnecessary screen updates for mouse events
 	// that do not affect the view, improving performance and reducing flicker.
@@ -91,47 +89,101 @@ func (root *Root) wheelLeft(ctx context.Context) {
 	}
 }
 
-// selectRange saves the position by selecting the range with the mouse.
-// The selection range is represented by (x1, y1), (x2, y2).
-func (root *Root) selectRange(ctx context.Context, ev *tcell.EventMouse) {
+// mouseSelect handles mouse selection.
+func (root *Root) mouseSelect(ctx context.Context, ev *tcell.EventMouse) bool {
 	button := ev.Buttons()
+
+	// Handle middle button paste regardless of state
 	if button == tcell.ButtonMiddle {
 		root.Paste(ctx)
-		return
+		root.setMessage("Paste")
+		return true
 	}
 
-	if !root.scr.mouseSelect && button == tcell.ButtonPrimary {
-		root.setMessage("")
-		if ev.Modifiers()&tcell.ModCtrl != 0 {
-			root.scr.mouseRectangle = true
-		} else {
-			root.scr.mouseRectangle = false
-		}
-		root.scr.mouseSelect = true
-		root.scr.mousePressed = true
-		root.scr.x1, root.scr.y1 = ev.Position()
+	switch root.scr.mouseSelect {
+	case SelectNone:
+		return root.handleSelectNone(ctx, ev, button)
+	case SelectActive:
+		return root.handleSelectActive(ctx, ev, button)
+	case SelectCopied:
+		return root.handleSelectCopied(ctx, ev, button)
+	default:
+		return false
+	}
+}
+
+// handleSelectNone handles mouse events when no selection is active.
+func (root *Root) handleSelectNone(_ context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
+	if button != tcell.ButtonPrimary {
+		return false
 	}
 
-	if root.scr.mousePressed {
-		root.scr.x2, root.scr.y2 = ev.Position()
+	root.scr.x1, root.scr.y1 = ev.Position()
+	root.scr.x2, root.scr.y2 = root.scr.x1, root.scr.y1
+	root.scr.mouseRectangle = false
+	// If the Ctrl key is pressed, rectangle selection is enabled.
+	if ev.Modifiers()&tcell.ModCtrl != 0 {
+		root.scr.mouseRectangle = true
 	}
+	root.scr.mouseSelect = SelectActive
+	root.scr.mousePressed = true
+	return true
+}
 
-	if root.scr.mouseSelect {
-		if button == tcell.ButtonNone {
+// handleSelectActive handles mouse events during active selection.
+func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
+	switch button {
+	case tcell.ButtonPrimary:
+		root.selectRange(ctx, ev)
+		return true
+	case tcell.ButtonNone:
+		// Check if mouse has moved enough to be considered a selection
+		if root.hasMinimumSelection() {
+			root.scr.mouseSelect = SelectCopied
 			root.scr.mousePressed = false
-		} else if !root.scr.mousePressed {
+			root.CopySelect(ctx)
+		} else {
+			// Reset selection if no meaningful movement occurred
 			root.resetSelect()
-			if button == tcell.ButtonPrimary || button == tcell.ButtonSecondary {
-				root.CopySelect(ctx)
-			}
 		}
+		return true
+	default:
+		return true
 	}
+}
+
+// handleSelectCopied handles mouse events when selection is copied.
+func (root *Root) handleSelectCopied(_ context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
+	if button == tcell.ButtonPrimary {
+		root.resetSelect()
+		root.scr.x1, root.scr.y1 = ev.Position()
+		root.scr.x2, root.scr.y2 = root.scr.x1, root.scr.y1
+		root.scr.mouseRectangle = ev.Modifiers()&tcell.ModCtrl != 0
+		root.scr.mouseSelect = SelectActive
+		root.scr.mousePressed = true
+	}
+	return true
+}
+
+// hasMinimumSelection checks if the selection is large enough to be meaningful
+func (root *Root) hasMinimumSelection() bool {
+	// Require movement of at least 1 position in either direction
+	return root.scr.x1 != root.scr.x2 || root.scr.y1 != root.scr.y2
+}
+
+// selectRange saves the position by selecting the range with the mouse.
+// The selection range is represented by (x1, y1), (x2, y2).
+func (root *Root) selectRange(_ context.Context, ev *tcell.EventMouse) {
+	root.scr.x2, root.scr.y2 = ev.Position()
 }
 
 // resetSelect resets the selection.
 func (root *Root) resetSelect() {
-	root.scr.mouseSelect = false
+	root.scr.mouseSelect = SelectNone
+	root.scr.x1, root.scr.y1 = 0, 0
+	root.scr.x2, root.scr.y2 = 0, 0
 	root.scr.mousePressed = false
+	root.setMessage("")
 }
 
 // eventCopySelect represents a mouse select event.

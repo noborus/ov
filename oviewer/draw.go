@@ -41,7 +41,7 @@ func (root *Root) draw(ctx context.Context) {
 		root.drawSectionHeader()
 	}
 
-	if root.scr.mouseSelect {
+	if root.scr.mouseSelect != SelectNone {
 		root.drawSelect(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2, true)
 	}
 

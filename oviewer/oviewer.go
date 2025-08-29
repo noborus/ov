@@ -92,6 +92,15 @@ type Root struct {
 	skipDraw bool
 }
 
+// MouseSelectState represents the state of mouse selection.
+type MouseSelectState int
+
+const (
+	SelectNone   MouseSelectState = iota // no selection
+	SelectActive                         // selecting
+	SelectCopied                         // selection copied
+)
+
 // SCR contains the screen information.
 type SCR struct {
 	// lines is the lines of the screen.
@@ -131,7 +140,7 @@ type SCR struct {
 	x2 int
 	y2 int
 	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
+	mouseSelect MouseSelectState
 	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
 	// mouseRectangle is a flag for rectangle selection.
