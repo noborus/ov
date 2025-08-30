@@ -42,7 +42,7 @@ func (root *Root) draw(ctx context.Context) {
 	}
 
 	if root.scr.mouseSelect != SelectNone {
-		root.drawSelect(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2, true)
+		root.drawSelect(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2, root.scr.mouseSelect)
 	}
 
 	root.drawStatus()
@@ -444,7 +444,7 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 // drawSelect highlights the selection.
 // Multi-line selection is included until the end of the line,
 // but if the rectangle flag is true, the rectangle will be the range.
-func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
+func (root *Root) drawSelect(x1, y1, x2, y2 int, sel MouseSelectState) {
 	if y2 < y1 {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
@@ -453,32 +453,43 @@ func (root *Root) drawSelect(x1, y1, x2, y2 int, sel bool) {
 		if x2 < x1 {
 			x1, x2 = x2, x1
 		}
-		root.reverseRange(y1, x1, x2+1, sel)
+		root.applySelectionRange(y1, x1, x2+1, sel)
 		return
 	}
 	if root.scr.mouseRectangle {
 		for y := y1; y <= y2; y++ {
-			root.reverseRange(y, x1, x2+1, sel)
+			root.applySelectionRange(y, x1, x2+1, sel)
 		}
 		return
 	}
 
-	root.reverseRange(y1, x1, root.scr.vWidth, sel)
+	root.applySelectionRange(y1, x1, root.scr.vWidth, sel)
 	for y := y1 + 1; y < y2; y++ {
-		root.reverseRange(y, 0, root.scr.vWidth, sel)
+		root.applySelectionRange(y, 0, root.scr.vWidth, sel)
 	}
-	root.reverseRange(y2, 0, x2+1, sel)
+	root.applySelectionRange(y2, 0, x2+1, sel)
 }
 
-// reverseRange reverses the specified range.
-func (root *Root) reverseRange(y int, start int, end int, sel bool) {
+// applySelectionRange applies selection style to the specified range.
+func (root *Root) applySelectionRange(y int, start int, end int, selectState MouseSelectState) {
 	if start >= end {
 		return
 	}
+
+	var selectStyle OVStyle
+	switch selectState {
+	case SelectActive:
+		selectStyle = root.Doc.Style.SelectActive
+	case SelectCopied:
+		selectStyle = root.Doc.Style.SelectCopied
+	default:
+		return // No selection style to apply
+	}
+
 	for x := start; x < end; x++ {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
-		style = style.Reverse(sel)
-		root.Screen.SetContent(x, y, mainc, combc, style)
+		newStyle := applyStyle(style, selectStyle)
+		root.Screen.SetContent(x, y, mainc, combc, newStyle)
 		if width == 2 {
 			x++
 		}

@@ -305,6 +305,10 @@ type Style struct {
 	LeftStatus OVStyle
 	// RightStatus is the style that applies to the right status line.
 	RightStatus OVStyle
+	// SelectActive is the style that applies to the text being selected (during mouse drag).
+	SelectActive OVStyle
+	// SelectCopied is the style that applies to the text that has been copied to clipboard.
+	SelectCopied OVStyle
 }
 
 var (
@@ -528,6 +532,12 @@ func NewStyle() Style {
 			Background: "#333333",
 			Foreground: "#CCCCCC",
 			Bold:       true,
+		},
+		SelectActive: OVStyle{
+			Reverse: true,
+		},
+		SelectCopied: OVStyle{
+			Background: "slategrey",
 		},
 	}
 }
@@ -1190,6 +1200,12 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 	}
 	if dst.RightStatus != nil {
 		src.RightStatus = *dst.RightStatus
+	}
+	if dst.SelectActive != nil {
+		src.SelectActive = *dst.SelectActive
+	}
+	if dst.SelectCopied != nil {
+		src.SelectCopied = *dst.SelectCopied
 	}
 	return src
 }
