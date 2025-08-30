@@ -1329,6 +1329,8 @@ func Test_updateRuntimeStyle(t *testing.T) {
 					HeaderBorder:         &boldStyle,
 					SectionHeaderBorder:  &boldStyle,
 					VerticalHeaderBorder: &boldStyle,
+					SelectActive:         &blueStyle,
+					SelectCopied:         &blueStyle,
 				},
 			},
 			want: Style{
@@ -1348,6 +1350,8 @@ func Test_updateRuntimeStyle(t *testing.T) {
 				HeaderBorder:         boldStyle,
 				SectionHeaderBorder:  boldStyle,
 				VerticalHeaderBorder: boldStyle,
+				SelectActive:         blueStyle,
+				SelectCopied:         blueStyle,
 			},
 		},
 	}
