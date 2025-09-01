@@ -14,8 +14,7 @@ import (
 
 var (
 	WheelScrollNum      = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
-	DoubleClickInterval = 500 * time.Millisecond // Double click detection time
-	DoubleClickDistance = 2                      // Maximum allowed movement distance (in characters) for double click detection
+	DoubleClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double click detection
 )
 
 // ClickState holds the state for click detection.
