@@ -92,6 +92,15 @@ type Root struct {
 	skipDraw bool
 }
 
+// MouseSelectState represents the state of mouse selection.
+type MouseSelectState int
+
+const (
+	SelectNone   MouseSelectState = iota // no selection
+	SelectActive                         // selecting
+	SelectCopied                         // selection copied
+)
+
 // SCR contains the screen information.
 type SCR struct {
 	// lines is the lines of the screen.
@@ -131,7 +140,7 @@ type SCR struct {
 	x2 int
 	y2 int
 	// mouseSelect is a flag with mouse selection.
-	mouseSelect bool
+	mouseSelect MouseSelectState
 	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
 	// mouseRectangle is a flag for rectangle selection.
@@ -296,6 +305,10 @@ type Style struct {
 	LeftStatus OVStyle
 	// RightStatus is the style that applies to the right status line.
 	RightStatus OVStyle
+	// SelectActive is the style that applies to the text being selected (during mouse drag).
+	SelectActive OVStyle
+	// SelectCopied is the style that applies to the text that has been copied to clipboard.
+	SelectCopied OVStyle
 }
 
 var (
@@ -519,6 +532,12 @@ func NewStyle() Style {
 			Background: "#333333",
 			Foreground: "#CCCCCC",
 			Bold:       true,
+		},
+		SelectActive: OVStyle{
+			Reverse: true,
+		},
+		SelectCopied: OVStyle{
+			Background: "slategrey",
 		},
 	}
 }
@@ -1181,6 +1200,12 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 	}
 	if dst.RightStatus != nil {
 		src.RightStatus = *dst.RightStatus
+	}
+	if dst.SelectActive != nil {
+		src.SelectActive = *dst.SelectActive
+	}
+	if dst.SelectCopied != nil {
+		src.SelectCopied = *dst.SelectCopied
 	}
 	return src
 }

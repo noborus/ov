@@ -198,6 +198,10 @@ type StyleConfig struct {
 	LeftStatus *OVStyle
 	// RightStatus is the style that applies to the right side of the status line.
 	RightStatus *OVStyle
+	// SelectActive is the style that applies to the text being selected (during mouse drag).
+	SelectActive *OVStyle
+	// SelectCopied is the style that applies to the text that has been copied to clipboard.
+	SelectCopied *OVStyle
 }
 
 // deprecatedStyleConfig is the old style setting.
