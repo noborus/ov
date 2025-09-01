@@ -4,14 +4,33 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
+	"unicode"
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 )
 
-// WheelScrollNum is the number of lines to scroll with the mouse wheel.
-var WheelScrollNum = 2
+const (
+	charTypeWhitespace   = 0
+	charTypeAlphanumeric = 1
+	charTypeOther        = 2
+)
+
+var (
+	WheelScrollNum      = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
+	DoubleClickInterval = 500 * time.Millisecond // Double click detection time
+	DoubleClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double click detection
+)
+
+// ClickState holds the state for click detection.
+type ClickState struct {
+	lastClickTime time.Time
+	lastClickX    int
+	lastClickY    int
+	clickCount    int
+}
 
 // mouseEvent handles mouse events.
 func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
@@ -113,21 +132,69 @@ func (root *Root) mouseSelect(ctx context.Context, ev *tcell.EventMouse) bool {
 }
 
 // handleSelectNone handles mouse events when no selection is active.
-func (root *Root) handleSelectNone(_ context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
+func (root *Root) handleSelectNone(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
 	if button != tcell.ButtonPrimary {
 		return false
 	}
 
-	root.scr.x1, root.scr.y1 = ev.Position()
-	root.scr.x2, root.scr.y2 = root.scr.x1, root.scr.y1
-	root.scr.mouseRectangle = false
-	// If the Ctrl key is pressed, rectangle selection is enabled.
-	if ev.Modifiers()&tcell.ModCtrl != 0 {
-		root.scr.mouseRectangle = true
+	return root.handlePrimaryButtonClick(ctx, ev)
+}
+
+// handleSelectCopied handles mouse events when selection is copied.
+func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
+	if button != tcell.ButtonPrimary {
+		return false
 	}
+
+	// Reset previous selection before handling new click
+	root.resetSelect()
+	return root.handlePrimaryButtonClick(ctx, ev)
+}
+
+// ClickType represents the type of mouse click
+type ClickType int
+
+const (
+	ClickSingle ClickType = iota
+	ClickDouble
+	ClickExpired // Time expired, should reset state
+)
+
+// handlePrimaryButtonClick handles primary button click events (common logic)
+func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
+	x, y := ev.Position()
+	now := time.Now()
+
+	clickType := root.checkClickType(x, y, now)
+
+	switch clickType {
+	case ClickDouble:
+		root.handleDoubleClick(ctx, ev)
+		return true
+	case ClickExpired:
+		root.resetClickState()
+		fallthrough
+	case ClickSingle:
+		root.updateClickState(x, y, now)
+		root.startSelection(x, y, ev.Modifiers())
+		return true
+	}
+
+	return false
+}
+
+// startSelection initializes a new selection
+func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
+	root.scr.x1, root.scr.y1 = x, y
+	root.scr.x2, root.scr.y2 = x, y
+
 	root.scr.mouseSelect = SelectActive
 	root.scr.mousePressed = true
-	return true
+	root.scr.mouseRectangle = false
+	// If Ctrl is pressed, enable rectangle selection
+	if modifiers&tcell.ModCtrl != 0 {
+		root.scr.mouseRectangle = true
+	}
 }
 
 // handleSelectActive handles mouse events during active selection.
@@ -152,17 +219,119 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 	}
 }
 
-// handleSelectCopied handles mouse events when selection is copied.
-func (root *Root) handleSelectCopied(_ context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
-	if button == tcell.ButtonPrimary {
-		root.resetSelect()
-		root.scr.x1, root.scr.y1 = ev.Position()
-		root.scr.x2, root.scr.y2 = root.scr.x1, root.scr.y1
-		root.scr.mouseRectangle = ev.Modifiers()&tcell.ModCtrl != 0
-		root.scr.mouseSelect = SelectActive
-		root.scr.mousePressed = true
+// Add new function to properly reset click state
+// resetClickState resets the click state
+func (root *Root) resetClickState() {
+	root.clickState.clickCount = 0
+	root.clickState.lastClickTime = time.Time{}
+	root.clickState.lastClickX = 0
+	root.clickState.lastClickY = 0
+}
+
+// checkClickType determines the type of click and handles state management
+func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
+	if root.clickState.clickCount == 0 {
+		return ClickSingle
 	}
-	return true
+
+	timeDiff := now.Sub(root.clickState.lastClickTime)
+	if timeDiff > DoubleClickInterval {
+		return ClickExpired
+	}
+
+	distanceX := abs(x - root.clickState.lastClickX)
+	distanceY := abs(y - root.clickState.lastClickY)
+
+	if distanceX <= DoubleClickDistance && distanceY <= DoubleClickDistance {
+		return ClickDouble
+	}
+
+	return ClickSingle
+}
+
+// handleDoubleClick handles double click events for word selection
+func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
+	x, y := ev.Position()
+
+	// Find word boundaries
+	startX, endX := root.findWordBoundaries(x, y)
+
+	root.scr.x1, root.scr.y1 = startX, y
+	root.scr.x2, root.scr.y2 = endX, y
+	root.scr.mouseSelect = SelectCopied
+	root.scr.mousePressed = false
+	root.CopySelect(ctx)
+	// Reset click state after handling double click
+	root.resetClickState()
+}
+
+// updateClickState updates the click state
+func (root *Root) updateClickState(x, y int, now time.Time) {
+	root.clickState.lastClickTime = now
+	root.clickState.lastClickX = x
+	root.clickState.lastClickY = y
+	root.clickState.clickCount++
+}
+
+// findWordBoundaries finds word boundaries for the given position
+func (root *Root) findWordBoundaries(x, y int) (int, int) {
+	ln := root.scr.lineNumber(y)
+	line, ok := root.scr.lines[ln.number]
+	if !ok || !line.valid {
+		return x, x
+	}
+
+	// Convert screen coordinates to content coordinates
+	contentX := root.Doc.x + x + root.scr.branchWidth(line.lc, ln.wrap)
+
+	// Get character type at current position
+	charType := root.getCharTypeAt(line, contentX)
+
+	// Search left boundary
+	startX := x
+	for startX > 0 {
+		testContentX := root.Doc.x + (startX - 1) + root.scr.branchWidth(line.lc, ln.wrap)
+		if root.getCharTypeAt(line, testContentX) != charType {
+			break
+		}
+		startX--
+	}
+
+	// Search right boundary
+	endX := x
+	for endX < root.scr.vWidth-1 {
+		testContentX := root.Doc.x + (endX + 1) + root.scr.branchWidth(line.lc, ln.wrap)
+		if root.getCharTypeAt(line, testContentX) != charType {
+			break
+		}
+		endX++
+	}
+
+	return startX, endX
+}
+
+// getCharTypeAt returns character type at the given content position
+func (root *Root) getCharTypeAt(line LineC, contentX int) int {
+	if contentX < 0 || contentX >= len(line.lc) {
+		return charTypeWhitespace // Out of bounds treated as whitespace
+	}
+
+	char := line.lc[contentX].mainc
+	if char == ' ' || char == '\t' {
+		return charTypeWhitespace
+	}
+	if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' {
+		return charTypeAlphanumeric
+	}
+	return charTypeOther
+}
+
+// abs returns the absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 // hasMinimumSelection checks if the selection is large enough to be meaningful
