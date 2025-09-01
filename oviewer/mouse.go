@@ -12,8 +12,15 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+const (
+	charTypeWhitespace   = 0
+	charTypeAlphanumeric = 1
+	charTypeOther        = 2
+)
+
 var (
 	WheelScrollNum      = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
+	DoubleClickInterval = 500 * time.Millisecond // Double click detection time
 	DoubleClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double click detection
 )
 
@@ -144,23 +151,36 @@ func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, 
 	return root.handlePrimaryButtonClick(ctx, ev)
 }
 
+// ClickType represents the type of mouse click
+type ClickType int
+
+const (
+	ClickSingle ClickType = iota
+	ClickDouble
+	ClickExpired // Time expired, should reset state
+)
+
 // handlePrimaryButtonClick handles primary button click events (common logic)
 func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
 	x, y := ev.Position()
 	now := time.Now()
 
-	// Check for double click
-	if root.isDoubleClick(x, y, now) {
+	clickType := root.checkClickType(x, y, now)
+
+	switch clickType {
+	case ClickDouble:
 		root.handleDoubleClick(ctx, ev)
+		return true
+	case ClickExpired:
+		root.resetClickState()
+		fallthrough
+	case ClickSingle:
+		root.updateClickState(x, y, now)
+		root.startSelection(x, y, ev.Modifiers())
 		return true
 	}
 
-	// Update click state for single click
-	root.updateClickState(x, y, now)
-
-	// Start new selection
-	root.startSelection(x, y, ev.Modifiers())
-	return true
+	return false
 }
 
 // startSelection initializes a new selection
@@ -208,29 +228,25 @@ func (root *Root) resetClickState() {
 	root.clickState.lastClickY = 0
 }
 
-// isDoubleClick checks if the current click is a double click
-func (root *Root) isDoubleClick(x, y int, now time.Time) bool {
+// checkClickType determines the type of click and handles state management
+func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 	if root.clickState.clickCount == 0 {
-		return false
+		return ClickSingle
 	}
+
 	timeDiff := now.Sub(root.clickState.lastClickTime)
 	if timeDiff > DoubleClickInterval {
-		root.resetClickState() // Reset if too much time has passed
-		return false
+		return ClickExpired
 	}
 
 	distanceX := abs(x - root.clickState.lastClickX)
 	distanceY := abs(y - root.clickState.lastClickY)
 
-	return distanceX <= DoubleClickDistance && distanceY <= DoubleClickDistance
-}
+	if distanceX <= DoubleClickDistance && distanceY <= DoubleClickDistance {
+		return ClickDouble
+	}
 
-// updateClickState updates the click state
-func (root *Root) updateClickState(x, y int, now time.Time) {
-	root.clickState.lastClickTime = now
-	root.clickState.lastClickX = x
-	root.clickState.lastClickY = y
-	root.clickState.clickCount++
+	return ClickSingle
 }
 
 // handleDoubleClick handles double click events for word selection
@@ -247,6 +263,14 @@ func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
 	root.CopySelect(ctx)
 	// Reset click state after handling double click
 	root.resetClickState()
+}
+
+// updateClickState updates the click state
+func (root *Root) updateClickState(x, y int, now time.Time) {
+	root.clickState.lastClickTime = now
+	root.clickState.lastClickX = x
+	root.clickState.lastClickY = y
+	root.clickState.clickCount++
 }
 
 // findWordBoundaries finds word boundaries for the given position
@@ -289,17 +313,17 @@ func (root *Root) findWordBoundaries(x, y int) (int, int) {
 // getCharTypeAt returns character type at the given content position
 func (root *Root) getCharTypeAt(line LineC, contentX int) int {
 	if contentX < 0 || contentX >= len(line.lc) {
-		return 0 // Out of range is treated as whitespace
+		return charTypeWhitespace // Out of bounds treated as whitespace
 	}
 
 	char := line.lc[contentX].mainc
 	if char == ' ' || char == '\t' {
-		return 1 // Whitespace
+		return charTypeWhitespace
 	}
 	if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' {
-		return 2 // Alphanumeric and underscore
+		return charTypeAlphanumeric
 	}
-	return 3 // Other characters
+	return charTypeOther
 }
 
 // abs returns the absolute value of an integer
