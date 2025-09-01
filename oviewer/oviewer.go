@@ -90,6 +90,8 @@ type Root struct {
 	FollowAll bool
 	// skipDraw is set to true when the mouse cursor just moves (no event occurs).
 	skipDraw bool
+	// clickState is the state of mouse click.
+	clickState ClickState
 }
 
 // MouseSelectState represents the state of mouse selection.
