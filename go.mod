@@ -20,7 +20,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/pflag v1.0.9
 	github.com/spf13/viper v1.20.1
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/sync v0.16.0
