@@ -12,6 +12,15 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// ClickType represents the type of mouse click
+type ClickType int
+
+const (
+	ClickSingle ClickType = iota
+	ClickDouble
+	ClickExpired // Time expired, should reset state
+)
+
 const (
 	charTypeWhitespace   = 0
 	charTypeAlphanumeric = 1
@@ -72,9 +81,7 @@ func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 	if root.mouseSelect(ctx, ev) {
 		return
 	}
-	// Avoid redrawing with other mouse events.
-	// Skipping redraw here prevents unnecessary screen updates for mouse events
-	// that do not affect the view, improving performance and reducing flicker.
+	// Skip redraw for non-selection mouse events.
 	root.skipDraw = true
 }
 
@@ -90,6 +97,7 @@ func (root *Root) wheelDown(context.Context) {
 	root.moveDown(WheelScrollNum)
 }
 
+// wheelRight moves the mouse wheel right.
 func (root *Root) wheelRight(ctx context.Context) {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
@@ -99,6 +107,7 @@ func (root *Root) wheelRight(ctx context.Context) {
 	}
 }
 
+// wheelLeft moves the mouse wheel left.
 func (root *Root) wheelLeft(ctx context.Context) {
 	root.setMessage("")
 	if root.Doc.ColumnMode {
@@ -150,15 +159,6 @@ func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, 
 	root.resetSelect()
 	return root.handlePrimaryButtonClick(ctx, ev)
 }
-
-// ClickType represents the type of mouse click
-type ClickType int
-
-const (
-	ClickSingle ClickType = iota
-	ClickDouble
-	ClickExpired // Time expired, should reset state
-)
 
 // handlePrimaryButtonClick handles primary button click events (common logic)
 func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
@@ -219,8 +219,7 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 	}
 }
 
-// Add new function to properly reset click state
-// resetClickState resets the click state
+// resetClickState resets the click state.
 func (root *Root) resetClickState() {
 	root.clickState.clickCount = 0
 	root.clickState.lastClickTime = time.Time{}
@@ -228,7 +227,7 @@ func (root *Root) resetClickState() {
 	root.clickState.lastClickY = 0
 }
 
-// checkClickType determines the type of click and handles state management
+// checkClickType determines the type of click based on timing and position.
 func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 	if root.clickState.clickCount == 0 {
 		return ClickSingle
@@ -249,20 +248,39 @@ func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 	return ClickSingle
 }
 
-// handleDoubleClick handles double click events for word selection
+// handleDoubleClick handles double click events for word/column selection
 func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
-	x, y := ev.Position()
-
-	// Find word boundaries
-	startX, endX := root.findWordBoundaries(x, y)
-
-	root.scr.x1, root.scr.y1 = startX, y
-	root.scr.x2, root.scr.y2 = endX, y
+	root.doubleClickSetRange(ev)
 	root.scr.mouseSelect = SelectCopied
 	root.scr.mousePressed = false
 	root.CopySelect(ctx)
-	// Reset click state after handling double click
 	root.resetClickState()
+}
+
+// doubleClickSetRange sets the selection range for double click events.
+func (root *Root) doubleClickSetRange(ev *tcell.EventMouse) {
+	x, y := ev.Position()
+	ln := root.scr.lineNumber(y)
+	lineC, ok := root.scr.lines[ln.number]
+	if !ok || !lineC.valid {
+		root.scr.x1, root.scr.y1 = x, y
+		root.scr.x2, root.scr.y2 = x, y
+		return
+	}
+
+	if len(lineC.columnRanges) > 0 {
+		startX, startY, endX, endY := root.findColumnBoundaries(x, y, lineC, ln)
+		if startX != endX || startY != endY {
+			root.scr.x1, root.scr.y1 = startX, startY
+			root.scr.x2, root.scr.y2 = endX, endY
+			return
+		}
+		// If no column found, fall through to word selection.
+	}
+
+	startX, startY, endX, endY := root.findWordBoundariesInLine(x, y, lineC, ln)
+	root.scr.x1, root.scr.y1 = startX, startY
+	root.scr.x2, root.scr.y2 = endX, endY
 }
 
 // updateClickState updates the click state
@@ -273,41 +291,86 @@ func (root *Root) updateClickState(x, y int, now time.Time) {
 	root.clickState.clickCount++
 }
 
-// findWordBoundaries finds word boundaries for the given position
-func (root *Root) findWordBoundaries(x, y int) (int, int) {
-	ln := root.scr.lineNumber(y)
-	line, ok := root.scr.lines[ln.number]
-	if !ok || !line.valid {
-		return x, x
+// findColumnBoundaries selects the entire column at the given position.
+func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
+	contentX := root.Doc.x + (x - root.scr.startX) + root.scr.branchWidth(lineC.lc, ln.wrap)
+	startCol, endCol, ok := root.findColumnRange(contentX, lineC.columnRanges)
+	if !ok {
+		return x, y, x, y
 	}
+	startX := x - (contentX - startCol)
+	startY := y
+	for startX < root.scr.startX {
+		startY--
+		startX = root.scr.vWidth - (root.scr.startX - startX)
+	}
+	endX := x + (endCol - contentX) - 1
+	endY := y
+	if !root.Doc.WrapMode {
+		return startX, startY, endX, endY
+	}
+	// Handle wrapping for endX
+	wrappedX := root.scr.vWidth - 1
+	for endX > root.scr.vWidth-1 {
+		prevIdx := wrappedX
+		if prevIdx >= 0 && prevIdx < len(lineC.lc) && lineC.lc[prevIdx].width == 2 {
+			endX++
+		}
+		endY++
+		endX = root.scr.startX + (endX - root.scr.vWidth)
+		wrappedX += root.scr.vWidth
+	}
+	return startX, startY, endX, endY
+}
 
-	// Convert screen coordinates to content coordinates
-	contentX := root.Doc.x + x + root.scr.branchWidth(line.lc, ln.wrap)
+// findColumnRange returns the start and end of the column range containing contentX, or ok=false if not found.
+func (root *Root) findColumnRange(contentX int, columnRanges []columnRange) (start, end int, ok bool) {
+	for _, colRange := range columnRanges {
+		if contentX >= colRange.start && contentX <= colRange.end {
+			return colRange.start, colRange.end, true
+		}
+	}
+	return 0, 0, false
+}
 
-	// Get character type at current position
-	charType := root.getCharTypeAt(line, contentX)
-
-	// Search left boundary
+// findWordBoundariesInLine selects the word at the given position.
+func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
+	x = x - root.scr.startX
+	contentX := x + root.scr.branchWidth(lineC.lc, ln.wrap)
+	if contentX < 0 || contentX >= len(lineC.lc) {
+		// Out of bounds: return clicked position only
+		return x + root.scr.startX, y, x + root.scr.startX, y
+	}
+	charType := root.getCharTypeAt(lineC, contentX)
 	startX := x
-	for startX > 0 {
-		testContentX := root.Doc.x + (startX - 1) + root.scr.branchWidth(line.lc, ln.wrap)
-		if root.getCharTypeAt(line, testContentX) != charType {
+	startY := y
+	for ln.wrap >= 0 {
+		testContentX := (startX - 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
+		if root.getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		startX--
+		if startX < root.scr.startX {
+			ln.wrap--
+			startX = root.scr.vWidth
+			startY--
+		}
 	}
-
-	// Search right boundary
-	endX := x
-	for endX < root.scr.vWidth-1 {
-		testContentX := root.Doc.x + (endX + 1) + root.scr.branchWidth(line.lc, ln.wrap)
-		if root.getCharTypeAt(line, testContentX) != charType {
+	endX := startX
+	endY := startY
+	for endX < len(lineC.lc)-1 {
+		testContentX := (endX + 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
+		if root.getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		endX++
+		if root.Doc.WrapMode && endX >= root.scr.vWidth-1 {
+			endX = root.scr.startX
+			endY++
+			ln.wrap++
+		}
 	}
-
-	return startX, endX
+	return startX + root.scr.startX, startY, endX + root.scr.startX, endY
 }
 
 // getCharTypeAt returns character type at the given content position
@@ -324,14 +387,6 @@ func (root *Root) getCharTypeAt(line LineC, contentX int) int {
 		return charTypeAlphanumeric
 	}
 	return charTypeOther
-}
-
-// abs returns the absolute value of an integer
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
 }
 
 // hasMinimumSelection checks if the selection is large enough to be meaningful
@@ -437,102 +492,102 @@ func (root *Root) pasteFromClipboard(context.Context) {
 	input.cursorX += runewidth.StringWidth(str)
 }
 
-func (root *Root) rangeToString(x1, y1, x2, y2 int) (string, error) {
-	x1, y1, x2, y2 = normalizeRange(x1, y1, x2, y2)
+func (root *Root) rangeToString(startX, startY, endX, endY int) (string, error) {
+	startX, startY, endX, endY = normalizeRange(startX, startY, endX, endY)
 	if root.scr.mouseRectangle {
-		return root.scr.rectangleToString(root.Doc, x1, y1, x2, y2)
+		return root.scr.rectangleToString(root.Doc, startX, startY, endX, endY)
 	}
-	return root.scr.lineRangeToString(root.Doc, x1, y1, x2, y2)
+	return root.scr.lineRangeToString(root.Doc, startX, startY, endX, endY)
 }
 
-func normalizeRange(x1, y1, x2, y2 int) (int, int, int, int) {
-	if y2 < y1 {
-		y1, y2 = y2, y1
-		x1, x2 = x2, x1
+func normalizeRange(startX, startY, endX, endY int) (int, int, int, int) {
+	if endY < startY {
+		startY, endY = endY, startY
+		startX, endX = endX, startX
 	}
-	if y1 == y2 {
-		if x2 < x1 {
-			x1, x2 = x2, x1
+	if startY == endY {
+		if endX < startX {
+			startX, endX = endX, startX
 		}
 	}
-	return x1, y1, x2, y2
+	return startX, startY, endX, endY
 }
 
 // lineRangeToString returns the selection.
-// The arguments must be x1 <= x2 and y1 <= y2.
+// The arguments must be startX <= endX and startY <= endY.
 // ...◼◻◻◻◻◻
 // ◻◻◻◻◻◻◻◻
 // ◻◻◻◼......
-func (scr SCR) lineRangeToString(m *Document, x1, y1, x2, y2 int) (string, error) {
-	l1 := scr.lineNumber(y1)
-	line1, ok := scr.lines[l1.number]
-	if !ok || !line1.valid {
+func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (string, error) {
+	l1 := scr.lineNumber(startY)
+	lineC1, ok := scr.lines[l1.number]
+	if !ok || !lineC1.valid {
 		return "", ErrOutOfRange
 	}
-	wx1 := scr.branchWidth(line1.lc, l1.wrap)
+	wx1 := scr.branchWidth(lineC1.lc, l1.wrap)
 
 	var l2 LineNumber
-	for y := y2; ; y-- {
+	for y := endY; ; y-- {
 		l := scr.lineNumber(y)
 		if l.number < m.BufEndNum() {
 			l2 = l
-			y2 = y
+			endY = y
 			break
 		}
 	}
 
-	line2, ok := scr.lines[l2.number]
-	if !ok || !line2.valid {
+	lineC2, ok := scr.lines[l2.number]
+	if !ok || !lineC2.valid {
 		return "", ErrOutOfRange
 	}
-	wx2 := scr.branchWidth(line2.lc, l2.wrap)
+	wx2 := scr.branchWidth(lineC2.lc, l2.wrap)
 
 	if l1.number == l2.number {
-		x1 := m.x + x1 + wx1
-		x2 := m.x + x2 + wx2
-		return scr.selectLine(line1, x1, x2+1), nil
+		x1 := m.x + startX + wx1
+		x2 := m.x + endX + wx2
+		return scr.selectLine(lineC1, x1, x2+1), nil
 	}
 
 	var buff strings.Builder
 
-	first := scr.selectLine(line1, m.x+x1+wx1, -1)
+	first := scr.selectLine(lineC1, m.x+startX+wx1, -1)
 	buff.WriteString(first)
 	buff.WriteByte('\n')
 
-	for y := y1 + 1; y < y2; y++ {
+	for y := startY + 1; y < endY; y++ {
 		ln := scr.lineNumber(y)
 		if ln.number == l1.number || ln.number == l2.number || ln.wrap > 0 {
 			continue
 		}
-		line, ok := scr.lines[ln.number]
-		if !ok || !line.valid {
+		lineC, ok := scr.lines[ln.number]
+		if !ok || !lineC.valid {
 			break
 		}
-		str := scr.selectLine(line, 0, -1)
+		str := scr.selectLine(lineC, 0, -1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}
 
-	last := scr.selectLine(line2, 0, m.x+x2+wx2+1)
+	last := scr.selectLine(lineC2, 0, m.x+endX+wx2+1)
 	buff.WriteString(last)
 	return buff.String(), nil
 }
 
 // rectangleToByte returns a rectangular range.
-// The arguments must be x1 <= x2 and y1 <= y2.
+// The arguments must be startX <= endX and startY <= endY.
 // ...◼◻◻...
 // ...◻◻◻...
 // ...◻◻◼...
-func (scr SCR) rectangleToString(m *Document, x1, y1, x2, y2 int) (string, error) {
+func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (string, error) {
 	var buff strings.Builder
-	for y := y1; y <= y2; y++ {
+	for y := startY; y <= endY; y++ {
 		ln := scr.lineNumber(y)
 		lineC, ok := scr.lines[ln.number]
 		if !ok || !lineC.valid {
 			break
 		}
 		wx := scr.branchWidth(lineC.lc, ln.wrap)
-		str := scr.selectLine(lineC, m.x+x1+wx, m.x+x2+wx+1)
+		str := scr.selectLine(lineC, m.x+startX+wx, m.x+endX+wx+1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}
@@ -561,21 +616,22 @@ func (scr SCR) branchWidth(lc contents, branch int) int {
 }
 
 // selectLine returns a string in the specified range on one line.
-// The arguments must be x1 <= x2.
-func (scr SCR) selectLine(lineC LineC, x1 int, x2 int) string {
+// startX: start position (relative to the visible area), endX: end position (relative to the visible area, exclusive).
+// The arguments must be startX <= endX.
+func (scr SCR) selectLine(lineC LineC, startX int, endX int) string {
 	maxX := len(lineC.lc)
 	// -1 is a special max value.
-	if x2 == -1 {
-		x2 = maxX
+	if endX == -1 {
+		endX = maxX
 	}
-	x1 -= scr.startX
-	x2 -= scr.startX
-	x1 = max(0, x1)
-	x2 = max(0, x2)
-	x1 = min(x1, maxX)
-	x2 = min(x2, maxX)
-	start := lineC.pos.n(x1)
-	end := lineC.pos.n(x2)
+	startX -= scr.startX
+	endX -= scr.startX
+	startX = max(0, startX)
+	endX = max(0, endX)
+	startX = min(startX, maxX)
+	endX = min(endX, maxX)
+	start := lineC.pos.n(startX)
+	end := lineC.pos.n(endX)
 
 	if start > len(lineC.str) || end > len(lineC.str) || start > end {
 		log.Printf("selectLine:len(%d):start(%d):end(%d)\n", len(lineC.str), start, end)

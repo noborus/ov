@@ -21,6 +21,14 @@ func remove[T comparable](list []T, s T) []T {
 	return list
 }
 
+// abs returns the absolute value of an integer.
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
 // toAddTop adds the string if it is not in list.
 func toAddTop(list []string, s string) []string {
 	if len(s) == 0 {
