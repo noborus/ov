@@ -20,6 +20,7 @@ import (
 func (root *Root) toggleWrapMode(context.Context) {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
+	root.resetSelect()
 
 	// Move cursor to correct position
 	x, err := m.optimalX(root.scr, m.columnCursor)
@@ -141,6 +142,7 @@ func (root *Root) toggleRuler(ctx context.Context) {
 		root.Doc.RulerType = RulerNone
 	}
 	root.setMessagef("Set Ruler %s", root.Doc.RulerType.String())
+	root.resetSelect()
 	root.ViewSync(ctx)
 }
 
