@@ -18,6 +18,7 @@ type ClickType int
 const (
 	ClickSingle ClickType = iota
 	ClickDouble
+	ClickTriple
 	ClickExpired // Time expired, should reset state
 )
 
@@ -28,9 +29,9 @@ const (
 )
 
 var (
-	WheelScrollNum      = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
-	DoubleClickInterval = 500 * time.Millisecond // Double click detection time
-	DoubleClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double click detection
+	WheelScrollNum = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
+	ClickInterval  = 500 * time.Millisecond // Double/triple click detection time
+	ClickDistance  = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double/triple click detection
 )
 
 // ClickState holds the state for click detection.
@@ -160,7 +161,7 @@ func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, 
 	return root.handlePrimaryButtonClick(ctx, ev)
 }
 
-// handlePrimaryButtonClick handles primary button click events (common logic)
+// handlePrimaryButtonClick handles single/double/triple click events
 func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
 	x, y := ev.Position()
 	now := time.Now()
@@ -168,8 +169,12 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 	clickType := root.checkClickType(x, y, now)
 
 	switch clickType {
+	case ClickTriple:
+		root.handleTripleClick(ctx, ev)
+		return true
 	case ClickDouble:
 		root.handleDoubleClick(ctx, ev)
+		root.updateClickState(x, y, now)
 		return true
 	case ClickExpired:
 		root.resetClickState()
@@ -234,27 +239,30 @@ func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 	}
 
 	timeDiff := now.Sub(root.clickState.lastClickTime)
-	if timeDiff > DoubleClickInterval {
+	if timeDiff > ClickInterval {
 		return ClickExpired
 	}
 
 	distanceX := abs(x - root.clickState.lastClickX)
 	distanceY := abs(y - root.clickState.lastClickY)
 
-	if distanceX <= DoubleClickDistance && distanceY <= DoubleClickDistance {
-		return ClickDouble
+	if distanceX <= ClickDistance && distanceY <= ClickDistance {
+		switch root.clickState.clickCount {
+		case 1:
+			return ClickDouble
+		case 2:
+			return ClickTriple
+		}
 	}
-
 	return ClickSingle
 }
 
-// handleDoubleClick handles double click events for word/column selection
+// handleDoubleClick handles double click events for word/column selection (triple click uses handleTripleClick)
 func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
 	root.doubleClickSetRange(ev)
 	root.scr.mouseSelect = SelectCopied
 	root.scr.mousePressed = false
 	root.CopySelect(ctx)
-	root.resetClickState()
 }
 
 // doubleClickSetRange sets the selection range for double click events.
@@ -399,6 +407,25 @@ func (root *Root) hasMinimumSelection() bool {
 // The selection range is represented by (x1, y1), (x2, y2).
 func (root *Root) selectRange(_ context.Context, ev *tcell.EventMouse) {
 	root.scr.x2, root.scr.y2 = ev.Position()
+}
+
+// handleTripleClick handles triple click events (selects the whole line)
+func (root *Root) handleTripleClick(ctx context.Context, ev *tcell.EventMouse) {
+	x, y := ev.Position()
+	ln := root.scr.lineNumber(y)
+	lineC, ok := root.scr.lines[ln.number]
+	if !ok || !lineC.valid {
+		root.scr.x1, root.scr.y1 = x, y
+		root.scr.x2, root.scr.y2 = x, y
+	} else {
+		// Select the whole line (visible area)
+		root.scr.x1, root.scr.y1 = root.scr.startX, y
+		root.scr.x2, root.scr.y2 = root.scr.startX+root.scr.vWidth-1, y
+	}
+	root.scr.mouseSelect = SelectCopied
+	root.scr.mousePressed = false
+	root.CopySelect(ctx)
+	root.resetClickState()
 }
 
 // resetSelect resets the selection.
