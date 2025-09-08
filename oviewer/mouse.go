@@ -171,6 +171,7 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 	switch clickType {
 	case ClickTriple:
 		root.handleTripleClick(ctx, ev)
+		root.resetClickState()
 		return true
 	case ClickDouble:
 		root.handleDoubleClick(ctx, ev)
@@ -413,19 +414,24 @@ func (root *Root) selectRange(_ context.Context, ev *tcell.EventMouse) {
 func (root *Root) handleTripleClick(ctx context.Context, ev *tcell.EventMouse) {
 	x, y := ev.Position()
 	ln := root.scr.lineNumber(y)
+	ln.wrap = 0
+	// Start with y at the beginning of the line.
+	y = root.scr.lineY(ln)
 	lineC, ok := root.scr.lines[ln.number]
 	if !ok || !lineC.valid {
 		root.scr.x1, root.scr.y1 = x, y
 		root.scr.x2, root.scr.y2 = x, y
 	} else {
-		// Select the whole line (visible area)
 		root.scr.x1, root.scr.y1 = root.scr.startX, y
-		root.scr.x2, root.scr.y2 = root.scr.startX+root.scr.vWidth-1, y
+		lastY := y
+		for endY := y; endY < len(root.scr.numbers) && root.scr.lineNumber(endY).number == ln.number; endY++ {
+			lastY = endY
+		}
+		root.scr.x2, root.scr.y2 = root.scr.startX+root.scr.vWidth-1, lastY
 	}
 	root.scr.mouseSelect = SelectCopied
 	root.scr.mousePressed = false
 	root.CopySelect(ctx)
-	root.resetClickState()
 }
 
 // resetSelect resets the selection.
