@@ -1395,6 +1395,17 @@ func (scr SCR) lineNumber(y int) LineNumber {
 	return scr.numbers[0]
 }
 
+// lineY returns the screen y position for a given LineNumber.
+// If not found, returns -1.
+func (scr SCR) lineY(ln LineNumber) int {
+	for y, num := range scr.numbers {
+		if num == ln {
+			return y
+		}
+	}
+	return -1
+}
+
 // debugNumOfChunk outputs the number of chunks.
 func (root *Root) debugNumOfChunk() {
 	if !root.Config.Debug {
