@@ -1,6 +1,6 @@
 module github.com/noborus/ov
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.2
 
@@ -24,7 +24,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/sync v0.16.0
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.36.0
 	golang.org/x/term v0.34.0
 )
 
