@@ -496,8 +496,25 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 	}
 }
 
+func (root *Root) quitCheck() bool {
+	if !root.Config.QuitSmall {
+		return false
+	}
+	if !root.docSmall() {
+		return false
+	}
+	if root.DocumentLen() == 1 && !root.Config.QuitSmallFilter {
+		root.Config.IsWriteOnExit = true
+		return true
+	}
+	return false
+}
+
 // notifyEOFReached notifies that EOF has been reached.
 func (root *Root) notifyEOFReached(m *Document) {
+	if root.Config.NotifyEOF == 0 {
+		return
+	}
 	root.setMessagef("EOF reached %s", m.FileName)
 	root.notify(root.Config.NotifyEOF)
 }

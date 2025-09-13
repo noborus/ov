@@ -54,6 +54,8 @@ func (root *Root) insertDocument(ctx context.Context, num int, m *Document) {
 	root.DocList = append(root.DocList[:num+1], append([]*Document{m}, root.DocList[num+1:]...)...)
 	root.mu.Unlock()
 
+	go root.waitForEOF(m)
+
 	root.setDocumentNum(ctx, num+1)
 	root.setMessageLogf("insert %s%s", m.FileName, m.Caption)
 }
