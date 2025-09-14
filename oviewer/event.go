@@ -67,6 +67,10 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventSearchMove:
 		root.searchGo(ctx, ev.ln, ev.searcher)
 	case *eventReachEOF:
+		// Quit if small doc and config allows
+		if root.quitCheck() {
+			return true
+		}
 		root.notifyEOFReached(ev.m)
 
 	// Input confirmation action event.
@@ -386,10 +390,6 @@ func (root *Root) sendReachEOF(m *Document) {
 
 // monitorEOF monitors the EOF of the document.
 func (root *Root) monitorEOF() {
-	if root.Config.NotifyEOF == 0 {
-		return
-	}
-	log.Println("monitorEOF")
 	for _, m := range root.DocList {
 		go root.waitForEOF(m)
 	}
@@ -403,5 +403,4 @@ func (root *Root) waitForEOF(m *Document) {
 		m.cond.L.Unlock()
 	}
 	root.sendReachEOF(m)
-	log.Println("EOF reached", m.FileName)
 }

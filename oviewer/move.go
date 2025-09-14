@@ -97,6 +97,12 @@ func (root *Root) nextSection(ctx context.Context) {
 			root.setMessage("No more next sections")
 		}
 	}
+
+	if root.Config.QuitSmall {
+		// Reset quitSmallCountDown to avoid quitting when a key is pressed.
+		root.Config.QuitSmall = false
+		root.setMessage("Quit small mode canceled")
+	}
 }
 
 // prevSection moves up to the delimiter of the previous section.

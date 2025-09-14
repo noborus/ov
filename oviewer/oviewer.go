@@ -774,12 +774,6 @@ func (root *Root) Run() error {
 		return err
 	}
 
-	// Quit if fits on screen.
-	if root.Config.QuitSmall && root.DocumentLen() == 1 && root.docSmall() {
-		root.Config.IsWriteOnExit = true
-		return nil
-	}
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	sigSuspend := registerSIGTSTP()
@@ -834,6 +828,11 @@ func (root *Root) prepareRun(ctx context.Context) error {
 
 	root.setViewModeConfig()
 	root.prepareAllDocuments()
+	// follow mode or follow all disables quit if the output fits on one screen.
+	if root.Doc.FollowMode || root.FollowAll {
+		root.Config.QuitSmall = false
+		root.Config.QuitSmallFilter = false
+	}
 	// Quit by filter result. This is evaluated lazily.
 	if root.Config.QuitSmallFilter {
 		root.quitSmallCountDown = QuitSmallCountDown
