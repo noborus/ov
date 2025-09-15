@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"log"
 	"slices"
 	"sync/atomic"
 )
@@ -38,7 +39,10 @@ func (root *Root) hasDocChanged() bool {
 
 // addDocument adds a document and displays it.
 func (root *Root) addDocument(ctx context.Context, addDoc *Document) {
-	root.mu.Lock()
+	if !root.mu.TryLock() {
+		log.Print("failed to acquire lock")
+		return
+	}
 	root.DocList = append(root.DocList, addDoc)
 	root.mu.Unlock()
 
@@ -48,7 +52,10 @@ func (root *Root) addDocument(ctx context.Context, addDoc *Document) {
 
 // insertDocument inserts a document after the specified number and displays it.
 func (root *Root) insertDocument(ctx context.Context, num int, m *Document) {
-	root.mu.Lock()
+	if !root.mu.TryLock() {
+		log.Print("failed to acquire lock")
+		return
+	}
 	num = max(0, num)
 	num = min(len(root.DocList)-1, num)
 	root.DocList = append(root.DocList[:num+1], append([]*Document{m}, root.DocList[num+1:]...)...)
@@ -66,9 +73,10 @@ func (root *Root) closeDocument(ctx context.Context) {
 		return
 	}
 
-	root.setMessageLogf("close [%d]%s%s", root.CurrentDoc, root.Doc.FileName, root.Doc.Caption)
-
-	root.mu.Lock()
+	if !root.mu.TryLock() {
+		log.Print("failed to acquire lock")
+		return
+	}
 	num := root.CurrentDoc
 	root.DocList[num].requestClose()
 	root.DocList = slices.Delete(root.DocList, num, num+1)
@@ -78,11 +86,15 @@ func (root *Root) closeDocument(ctx context.Context) {
 	root.mu.Unlock()
 
 	root.setDocumentNum(ctx, num)
+	root.setMessageLogf("close [%d]%s%s", root.CurrentDoc, root.Doc.FileName, root.Doc.Caption)
 }
 
 // closeAllDocumentsOfType closes all documents of the specified type.
 func (root *Root) closeAllDocumentsOfType(dType documentType) (int, []string) {
-	root.mu.Lock()
+	if !root.mu.TryLock() {
+		log.Print("failed to acquire lock")
+		return 0, nil
+	}
 	defer root.mu.Unlock()
 
 	docLen := len(root.DocList)
