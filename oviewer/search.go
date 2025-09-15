@@ -455,16 +455,23 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	if err != nil {
 		return err
 	}
-	// Allow only some events while searching.
+	// eventQueue stores events that occur during search.
+	var eventQueue []tcell.Event
 	for {
 		ev := root.Screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventKey: // cancel key?
 			c.Capture(ev)
 		case *eventSearchQuit: // found
+			// Replay events that occurred during the search.
+			for _, queued := range eventQueue {
+				root.postEvent(queued)
+			}
 			return nil
 		case *eventUpdateEndNum:
 			root.updateEndNum()
+		case *eventReachEOF:
+			eventQueue = append(eventQueue, ev)
 		default:
 			// ignore other events.
 		}
