@@ -203,7 +203,7 @@ func (m *Document) moveYDown(moveY int) bool {
 	return m.limitMoveDown(lX, lN-m.firstLine())
 }
 
-// limitMoveUp moves up by the specified number of y.
+// moveLimitYUp moves up by the specified number of y.
 // The movement is limited to the top of the document.
 func (m *Document) moveLimitYUp(moveY int) bool {
 	m.moveYUp(moveY)
