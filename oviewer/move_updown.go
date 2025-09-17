@@ -68,44 +68,46 @@ func (m *Document) moveLineNth(lN int, nTh int) (int, int) {
 }
 
 // movePgUp moves up one screen.
-func (m *Document) movePgUp() {
-	m.moveLimitYUp(m.height)
+func (m *Document) movePgUp() bool {
+	return m.moveLimitYUp(m.height)
 }
 
 // movePgDn moves down one screen.
-func (m *Document) movePgDn() {
-	m.moveYDown(m.height)
+func (m *Document) movePgDn() bool {
+	return m.moveYDown(m.height)
 }
 
 // moveHfUp moves up half a screen.
-func (m *Document) moveHfUp() {
-	m.moveLimitYUp(m.height / 2)
+func (m *Document) moveHfUp() bool {
+	return m.moveLimitYUp(m.height / 2)
 }
 
 // moveHfDn moves down half a screen.
-func (m *Document) moveHfDn() {
-	m.moveYDown(m.height / 2)
+func (m *Document) moveHfDn() bool {
+	return m.moveYDown(m.height / 2)
 }
 
 // limitMoveDown limits the movement of the cursor when moving down.
-func (m *Document) limitMoveDown(lX int, lN int) {
+// Returns true if reached the bottom line.
+func (m *Document) limitMoveDown(lX int, lN int) bool {
 	if lN+m.height < m.BufEndNum()-m.SkipLines {
 		m.topLX = lX
 		m.topLN = lN
-		return
+		return false
 	}
 
 	tX, tN := m.bottomLineNum(m.BufEndNum(), m.height-lastLineMargin)
 	if lN < tN || (lN == tN && lX < tX) {
 		m.topLX = lX
 		m.topLN = lN
-		return
+		return false
 	}
 	// move to bottom
 	if m.topLN < tN || (m.topLN == tN && m.topLX < tX) {
 		m.topLX = tX
 		m.topLN = tN
 	}
+	return true
 }
 
 // numOfWrap returns the number of wrap from lX and lN.
@@ -170,16 +172,14 @@ func (m *Document) numUp(lX int, lN int, upY int) (int, int) {
 }
 
 // moveYDown moves down by the specified number of y.
-func (m *Document) moveYDown(moveY int) {
+func (m *Document) moveYDown(moveY int) bool {
 	if !m.WrapMode {
-		m.limitMoveDown(0, m.topLN+moveY)
-		return
+		return m.limitMoveDown(0, m.topLN+moveY)
 	}
 
 	// WrapMode
 	if m.topLN < 0 {
-		m.limitMoveDown(m.topLX, m.topLN+1)
-		return
+		return m.limitMoveDown(m.topLX, m.topLN+1)
 	}
 	lN := m.topLN + m.firstLine()
 	lX := m.topLX
@@ -200,16 +200,18 @@ func (m *Document) moveYDown(moveY int) {
 		}
 		n++
 	}
-	m.limitMoveDown(lX, lN-m.firstLine())
+	return m.limitMoveDown(lX, lN-m.firstLine())
 }
 
-// moveLimitYUp moves up by the specified number of y.
+// limitMoveUp moves up by the specified number of y.
 // The movement is limited to the top of the document.
-func (m *Document) moveLimitYUp(moveY int) {
+func (m *Document) moveLimitYUp(moveY int) bool {
 	m.moveYUp(moveY)
 	if m.topLN < m.BufStartNum() {
 		m.moveTop()
+		return true
 	}
+	return false
 }
 
 // moveYUp moves up by the specified number of y.

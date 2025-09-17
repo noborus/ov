@@ -175,6 +175,8 @@ type Document struct {
 	reopenable bool
 	// nonMatch indicates if non-matching lines are searched.
 	nonMatch bool
+	// pauseFollow indicates if follow mode is paused.
+	pauseFollow bool
 	// General is the General settings.
 	General General
 }

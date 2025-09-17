@@ -80,6 +80,8 @@ type Config struct {
 	ShrinkChar string
 	// DisableColumnCycle indicates whether to disable column cycling.
 	DisableColumnCycle bool
+	// DisableStickYFollow indicates whether to disable sticky follow mode.
+	DisableStickyFollow bool
 	// Debug indicates whether to enable debug output.
 	Debug bool
 	// deprecatedStyleConfig is the old style setting.

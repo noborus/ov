@@ -85,11 +85,13 @@ func (root *Root) toggleRainbow(context.Context) {
 // toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode(context.Context) {
 	root.Doc.FollowMode = !root.Doc.FollowMode
+	root.Doc.pauseFollow = false
 }
 
 // toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll(context.Context) {
 	root.FollowAll = !root.FollowAll
+	root.Doc.pauseFollow = false
 	root.mu.Lock()
 	for _, doc := range root.DocList {
 		doc.latestNum = doc.BufEndNum()
@@ -99,6 +101,7 @@ func (root *Root) toggleFollowAll(context.Context) {
 
 // toggleFollowSection toggles follow section mode.
 func (root *Root) toggleFollowSection(context.Context) {
+	root.Doc.pauseFollow = false
 	root.Doc.FollowSection = !root.Doc.FollowSection
 }
 
@@ -210,6 +213,7 @@ func (root *Root) watchControl() {
 // searchGo will go to the line with the matching term after searching.
 // Jump by section if JumpTargetSection is true.
 func (root *Root) searchGo(ctx context.Context, lN int, searcher Searcher) {
+	root.setPauseFollow()
 	root.resetSelect()
 	root.Doc.lastSearchLN = lN
 	start, end := root.searchXPos(lN, searcher)
@@ -758,13 +762,18 @@ func calculatePosition(str string, length int) (float64, error) {
 
 // TailSync move to tail and sync.
 func (root *Root) TailSync(ctx context.Context) {
-	root.Doc.moveBottom()
+	if !root.Doc.pauseFollow {
+		root.Doc.moveBottom()
+	}
 	root.ViewSync(ctx)
 }
 
 // tailSection moves to the last section
 // and adjusts to its original position.
 func (root *Root) tailSection(ctx context.Context) {
+	if root.Doc.pauseFollow {
+		return
+	}
 	moved := root.Doc.topLN - root.Doc.lastSectionPosNum
 	root.Doc.moveLastSection(ctx)
 	if moved > 0 && (root.Doc.topLN+moved) < root.Doc.BufEndNum() {
@@ -959,4 +968,14 @@ func (m *Document) isValidColumn(cursor int) error {
 		return ErrNoColumnSelected
 	}
 	return nil
+}
+
+// setPauseFollow sets pauseFollow to true if sticky follow is not disabled.
+func (root *Root) setPauseFollow() {
+	if root.Config.DisableStickyFollow {
+		return
+	}
+	if root.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
+		root.Doc.pauseFollow = true
+	}
 }
