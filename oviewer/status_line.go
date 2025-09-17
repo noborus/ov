@@ -76,6 +76,15 @@ func (root *Root) normalLeftStatus() (contents, int) {
 
 // statusDisplay returns the status mode of the document.
 func (root *Root) statusDisplay() string {
+	stMode := root.statusMode()
+	if !root.Doc.pauseFollow {
+		return stMode
+	}
+	return fmt.Sprintf("||%s", stMode)
+}
+
+// statusMode returns the status mode of the document.
+func (root *Root) statusMode() string {
 	if root.Doc.WatchMode {
 		// Watch mode doubles as FollowSection mode.
 		return "(Watch)"

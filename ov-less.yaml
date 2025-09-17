@@ -17,6 +17,7 @@
 #
 # DisableMouse: false # Disable mouse support.
 # DisableColumnCycle: false # Disable cycling when moving columns.
+# DisableStickyFollow: false # Disable sticky follow mode.
 #
 # ViewMode: markdown # Default view mode.
 #

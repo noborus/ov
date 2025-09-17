@@ -12,6 +12,7 @@ const bottomMargin = 2
 
 // Go to the top line.
 func (root *Root) moveTop(context.Context) {
+	root.setPauseFollow()
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -24,10 +25,12 @@ func (root *Root) moveBottom(context.Context) {
 	defer root.releaseEventBuffer()
 
 	root.Doc.moveBottom()
+	root.Doc.pauseFollow = false
 }
 
 // Move up one screen.
 func (root *Root) movePgUp(context.Context) {
+	root.setPauseFollow()
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -39,11 +42,14 @@ func (root *Root) movePgDn(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.movePgDn()
+	if root.Doc.movePgDn() {
+		root.Doc.pauseFollow = false
+	}
 }
 
 // Moves up half a screen.
 func (root *Root) moveHfUp(context.Context) {
+	root.setPauseFollow()
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -55,11 +61,14 @@ func (root *Root) moveHfDn(context.Context) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveHfDn()
+	if root.Doc.moveHfDn() {
+		root.Doc.pauseFollow = false
+	}
 }
 
 // Move up one line.
 func (root *Root) moveUpOne(context.Context) {
+	root.setPauseFollow()
 	root.moveUp(1)
 }
 
@@ -70,6 +79,7 @@ func (root *Root) moveDownOne(context.Context) {
 
 // Move up by n amount.
 func (root *Root) moveUp(n int) {
+	root.setPauseFollow()
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
@@ -81,7 +91,9 @@ func (root *Root) moveDown(n int) {
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
-	root.Doc.moveYDown(n)
+	if root.Doc.moveYDown(n) {
+		root.Doc.pauseFollow = false
+	}
 }
 
 // nextSection moves down to the next section's delimiter.
@@ -90,6 +102,7 @@ func (root *Root) nextSection(ctx context.Context) {
 	defer root.releaseEventBuffer()
 
 	if err := root.Doc.moveNextSection(ctx); err != nil {
+		root.Doc.pauseFollow = false
 		// Move by page if there is no section.
 		root.Doc.movePgDn()
 		// Last section or no section.
@@ -107,6 +120,7 @@ func (root *Root) nextSection(ctx context.Context) {
 
 // prevSection moves up to the delimiter of the previous section.
 func (root *Root) prevSection(ctx context.Context) {
+	root.setPauseFollow()
 	root.resetSelect()
 	defer root.releaseEventBuffer()
 
