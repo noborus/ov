@@ -71,6 +71,7 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		if root.quitCheck() {
 			return true
 		}
+		root.Config.QuitSmall = false
 		root.notifyEOFReached(ev.m)
 
 	// Input confirmation action event.
