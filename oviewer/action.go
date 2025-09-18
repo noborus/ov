@@ -972,10 +972,16 @@ func (m *Document) isValidColumn(cursor int) error {
 
 // setPauseFollow sets pauseFollow to true if sticky follow is not disabled.
 func (root *Root) setPauseFollow() {
+	// If sticky follow is disabled, do nothing.
 	if root.Config.DisableStickyFollow {
+		return
+	}
+	// If already paused, do nothing.
+	if root.Doc.pauseFollow {
 		return
 	}
 	if root.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
 		root.Doc.pauseFollow = true
+		root.Doc.pauseLastNum = max(root.Doc.BufEndNum()-1, 0)
 	}
 }

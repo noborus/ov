@@ -177,6 +177,8 @@ type Document struct {
 	nonMatch bool
 	// pauseFollow indicates if follow mode is paused.
 	pauseFollow bool
+	// pauseFollowNum is the line number where follow mode was paused.
+	pauseLastNum int
 	// General is the General settings.
 	General General
 }
