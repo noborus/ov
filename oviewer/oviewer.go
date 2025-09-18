@@ -1213,6 +1213,9 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 	if dst.SelectCopied != nil {
 		src.SelectCopied = *dst.SelectCopied
 	}
+	if dst.PauseLine != nil {
+		src.PauseLine = *dst.PauseLine
+	}
 	return src
 }
 

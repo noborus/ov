@@ -204,6 +204,8 @@ type StyleConfig struct {
 	SelectActive *OVStyle
 	// SelectCopied is the style that applies to the text that has been copied to clipboard.
 	SelectCopied *OVStyle
+	// PauseLine is the style that applies to the line where follow mode is paused.
+	PauseLine *OVStyle
 }
 
 // deprecatedStyleConfig is the old style setting.
