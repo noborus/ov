@@ -380,6 +380,9 @@ func (root *Root) coordinatesStyle(lN int, y int) {
 	if root.Doc.jumpTargetHeight != 0 && root.Doc.headerHeight+root.Doc.jumpTargetHeight == y {
 		root.applyStyleToLine(y, root.Doc.Style.JumpTargetLine)
 	}
+	if root.Doc.pauseFollow && lN == root.Doc.pauseLastNum {
+		root.applyStyleToLine(y, root.Doc.Style.PauseLine)
+	}
 }
 
 // applyStyleToAlternate applies from beginning to end of line.

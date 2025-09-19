@@ -311,6 +311,8 @@ type Style struct {
 	SelectActive OVStyle
 	// SelectCopied is the style that applies to the text that has been copied to clipboard.
 	SelectCopied OVStyle
+	// PauseLine is the style that applies to the line where follow mode is paused.
+	PauseLine OVStyle
 }
 
 var (
@@ -540,6 +542,9 @@ func NewStyle() Style {
 		},
 		SelectCopied: OVStyle{
 			Background: "slategrey",
+		},
+		PauseLine: OVStyle{
+			Background: "#663333",
 		},
 	}
 }
@@ -1207,6 +1212,9 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 	}
 	if dst.SelectCopied != nil {
 		src.SelectCopied = *dst.SelectCopied
+	}
+	if dst.PauseLine != nil {
+		src.PauseLine = *dst.PauseLine
 	}
 	return src
 }
