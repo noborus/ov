@@ -29,18 +29,23 @@ func init() {
 // It will return when you exit the edit.
 func (root *Root) edit(context.Context) {
 	fileName := root.Doc.FileName
-	isTemp := false
-	if root.Doc.PlainMode || !root.Doc.seekable {
-		isTemp = true
-	}
 
-	if isTemp {
-		var err error
-		fileName, err = root.saveTempFile()
+	isTemp := false
+	// If the document is in plain mode or not seekable, save it to a temporary file.
+	if root.Doc.PlainMode || !root.Doc.seekable {
+		f, err := root.saveTempFile()
 		if err != nil {
 			root.setMessageLog(err.Error())
 			return
 		}
+		isTemp = true
+		fileName = f
+		defer func() {
+			log.Println("Removing temporary file:", fileName)
+			if err := os.Remove(fileName); err != nil {
+				log.Printf("Failed to remove temporary file %s: %v", fileName, err)
+			}
+		}()
 	}
 
 	stdin := os.Stdin
@@ -75,10 +80,6 @@ func (root *Root) edit(context.Context) {
 		if !isTemp {
 			root.reload(root.Doc)
 			root.sendGoto(num + 1)
-		}
-		// If the file is temporary, remove it after editing.
-		if err := os.Remove(fileName); err != nil {
-			log.Printf("Failed to remove temporary file %s: %v", fileName, err)
 		}
 	}()
 	editor := root.identifyEditor()
