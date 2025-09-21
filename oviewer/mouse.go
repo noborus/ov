@@ -12,7 +12,7 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// ClickType represents the type of mouse click
+// ClickType represents the type of mouse click.
 type ClickType int
 
 const (
@@ -161,7 +161,7 @@ func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, 
 	return root.handlePrimaryButtonClick(ctx, ev)
 }
 
-// handlePrimaryButtonClick handles single/double/triple click events
+// handlePrimaryButtonClick handles single/double/triple click events.
 func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
 	x, y := ev.Position()
 	now := time.Now()
@@ -189,7 +189,7 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 	return false
 }
 
-// startSelection initializes a new selection
+// startSelection initializes a new selection.
 func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
 	root.scr.x1, root.scr.y1 = x, y
 	root.scr.x2, root.scr.y2 = x, y
@@ -258,7 +258,7 @@ func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 	return ClickSingle
 }
 
-// handleDoubleClick handles double click events for word/column selection (triple click uses handleTripleClick)
+// handleDoubleClick handles double click events for word/column selection (triple click uses handleTripleClick).
 func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
 	root.doubleClickSetRange(ev)
 	root.scr.mouseSelect = SelectCopied
@@ -292,7 +292,7 @@ func (root *Root) doubleClickSetRange(ev *tcell.EventMouse) {
 	root.scr.x2, root.scr.y2 = endX, endY
 }
 
-// updateClickState updates the click state
+// updateClickState updates the click state.
 func (root *Root) updateClickState(x, y int, now time.Time) {
 	root.clickState.lastClickTime = now
 	root.clickState.lastClickX = x
@@ -382,7 +382,7 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 	return startX + root.scr.startX, startY, endX + root.scr.startX, endY
 }
 
-// getCharTypeAt returns character type at the given content position
+// getCharTypeAt returns character type at the given content position.
 func (root *Root) getCharTypeAt(line LineC, contentX int) int {
 	if contentX < 0 || contentX >= len(line.lc) {
 		return charTypeWhitespace // Out of bounds treated as whitespace
@@ -398,7 +398,7 @@ func (root *Root) getCharTypeAt(line LineC, contentX int) int {
 	return charTypeOther
 }
 
-// hasMinimumSelection checks if the selection is large enough to be meaningful
+// hasMinimumSelection checks if the selection is large enough to be meaningful.
 func (root *Root) hasMinimumSelection() bool {
 	// Require movement of at least 1 position in either direction
 	return root.scr.x1 != root.scr.x2 || root.scr.y1 != root.scr.y2
@@ -410,7 +410,7 @@ func (root *Root) selectRange(_ context.Context, ev *tcell.EventMouse) {
 	root.scr.x2, root.scr.y2 = ev.Position()
 }
 
-// handleTripleClick handles triple click events (selects the whole line)
+// handleTripleClick handles triple click events (selects the whole line).
 func (root *Root) handleTripleClick(ctx context.Context, ev *tcell.EventMouse) {
 	x, y := ev.Position()
 	ln := root.scr.lineNumber(y)

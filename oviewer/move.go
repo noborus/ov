@@ -25,6 +25,7 @@ func (root *Root) moveBottom(context.Context) {
 	defer root.releaseEventBuffer()
 
 	root.Doc.moveBottom()
+	// Follow mode is unconditionally resumed when moving to the bottom.
 	root.Doc.pauseFollow = false
 }
 
@@ -111,8 +112,10 @@ func (root *Root) nextSection(ctx context.Context) {
 		}
 	}
 
+	// Cancel quit small mode.
+	// Normally determined after file load, but prevents quitting when input is slow (e.g., from stdin).
+	// No separate key binding due to its specific use case.
 	if root.Config.QuitSmall {
-		// Reset quitSmallCountDown to avoid quitting when a key is pressed.
 		root.Config.QuitSmall = false
 		root.setMessage("Quit small mode canceled")
 	}
