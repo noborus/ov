@@ -499,6 +499,7 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 	}
 }
 
+// quitCheck checks if it should quit when the document is small.
 func (root *Root) quitCheck() bool {
 	if !root.Config.QuitSmall {
 		return false
