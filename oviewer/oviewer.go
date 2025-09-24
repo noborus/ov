@@ -1226,6 +1226,7 @@ func (root *Root) docSmall() bool {
 	if !m.BufEOF() {
 		return false
 	}
+	screenHeight := root.scr.vHeight - root.scr.statusLineHeight
 	height := 0
 	for y := range m.BufEndNum() {
 		lc, err := m.contents(y)
@@ -1234,7 +1235,7 @@ func (root *Root) docSmall() bool {
 			continue
 		}
 		height += 1 + (len(lc) / root.scr.vWidth)
-		if height > root.scr.vHeight {
+		if height > screenHeight {
 			return false
 		}
 	}
@@ -1282,7 +1283,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height-root.scr.statusLineHeight)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1316,7 +1317,7 @@ func (root *Root) dummyScreen() (int, error) {
 	root.prepareScreen()
 	root.prepareDraw(ctx)
 	root.draw(ctx)
-	height = realHeight(root.scr) + 1
+	height = realHeight(root.scr)
 	return height, nil
 }
 
