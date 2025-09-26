@@ -462,7 +462,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 		switch ev := ev.(type) {
 		case *tcell.EventKey: // cancel key?
 			c.Capture(ev)
-		case *eventSearchQuit: // found
+		case *eventSearchQuit, *eventSearchMove: // found or moved
 			// Replay events that occurred during the search.
 			for _, queued := range eventQueue {
 				root.postEvent(queued)
@@ -474,6 +474,8 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 			eventQueue = append(eventQueue, ev)
 		default:
 			// ignore other events.
+			log.Println("cancelWait: ignore event", ev)
+			return nil
 		}
 	}
 }
