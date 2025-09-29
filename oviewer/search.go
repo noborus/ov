@@ -153,6 +153,8 @@ func regexpCompile(r string, caseSensitive bool) *regexp.Regexp {
 	r = regexp.QuoteMeta(r)
 	re, err = regexp.Compile(r)
 	if err != nil {
+		// This should never happen since QuoteMeta escapes all special characters
+		// making the string a valid regular expression, but we handle it for safety.
 		log.Printf("regexpCompile failed %s:%v\n", r, err)
 		return nil
 	}

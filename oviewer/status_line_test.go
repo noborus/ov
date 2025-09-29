@@ -96,6 +96,7 @@ func TestRoot_statusDisplay(t *testing.T) {
 		FollowMode    bool
 		FollowName    bool
 		WatchMode     bool
+		pauseFollow   bool
 	}
 	tests := []struct {
 		name   string
@@ -138,6 +139,14 @@ func TestRoot_statusDisplay(t *testing.T) {
 			},
 			want: "(Follow Mode)",
 		},
+		{
+			name: "pause follow",
+			fields: fields{
+				FollowMode:  true,
+				pauseFollow: true,
+			},
+			want: "||(Follow Mode)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,6 +156,7 @@ func TestRoot_statusDisplay(t *testing.T) {
 			root.FollowAll = tt.fields.FollowAll
 			root.Doc.FollowName = tt.fields.FollowName
 			root.Doc.FollowMode = tt.fields.FollowMode
+			root.Doc.pauseFollow = tt.fields.pauseFollow
 			if got := root.statusDisplay(); got != tt.want {
 				t.Errorf("Root.statusDisplay() = %v, want %v", got, tt.want)
 			}

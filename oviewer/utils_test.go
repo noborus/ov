@@ -512,3 +512,46 @@ func Test_allStringIndex(t *testing.T) {
 		})
 	}
 }
+func Test_abs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		n    int
+		want int
+	}{
+		{
+			name: "positive number",
+			n:    5,
+			want: 5,
+		},
+		{
+			name: "negative number",
+			n:    -7,
+			want: 7,
+		},
+		{
+			name: "zero",
+			n:    0,
+			want: 0,
+		},
+		{
+			name: "large positive",
+			n:    123456,
+			want: 123456,
+		},
+		{
+			name: "large negative",
+			n:    -987654,
+			want: 987654,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := abs(tt.n)
+			if got != tt.want {
+				t.Errorf("abs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
