@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.18.0
-	github.com/mattn/go-runewidth v0.0.17
+	github.com/mattn/go-runewidth v0.0.19
 	github.com/noborus/guesswidth v0.4.0
 	github.com/noborus/tcellansi v0.2.0
 	github.com/pierrec/lz4/v4 v4.1.22
@@ -29,6 +29,7 @@ require (
 )
 
 require (
+	github.com/clipperhouse/uax29/v2 v2.2.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
