@@ -645,6 +645,13 @@ func Test_condRegexpCompile(t *testing.T) {
 			},
 			want: regexp.MustCompile(``),
 		},
+		{
+			name: "testunclosed bracket",
+			args: args{
+				in: `/[abc/`,
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

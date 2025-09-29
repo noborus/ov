@@ -80,7 +80,7 @@ func (root *Root) statusDisplay() string {
 	if !root.Doc.pauseFollow {
 		return stMode
 	}
-	return fmt.Sprintf("||%s", stMode)
+	return "||" + stMode
 }
 
 // statusMode returns the status mode of the document.

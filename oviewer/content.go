@@ -333,6 +333,9 @@ func writeRune(w *strings.Builder, r rune) int {
 // x returns the x position on the screen.
 // [n]byte -> x.
 func (pos widthPos) x(n int) int {
+	if n < 0 {
+		return 0
+	}
 	if n < len(pos) {
 		return pos[n]
 	}
@@ -341,10 +344,12 @@ func (pos widthPos) x(n int) int {
 
 // n return string position from content.
 // x -> [n]byte.
-func (pos widthPos) n(w int) int {
-	x := w
+func (pos widthPos) n(x int) int {
+	if x < 0 {
+		return 0
+	}
 	for _, c := range pos {
-		if c >= w {
+		if c >= x {
 			x = c
 			break
 		}

@@ -26,8 +26,8 @@ func Parse_Helper(b *testing.B, fileName string) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		StrToContents(string(f), 8)
 	}
 }
@@ -53,8 +53,8 @@ func Draw_Helper(b *testing.B, fileName string) {
 	ctx := context.Background()
 
 	root.ViewSync(ctx)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		root.draw(ctx)
 		root.Doc.ClearCache()
 	}
