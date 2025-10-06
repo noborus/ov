@@ -56,9 +56,15 @@ func KeyBindString(k KeyBind) string {
 // DuplicateKeyBind returns a string representing duplicate key bindings.
 func DuplicateKeyBind(k KeyBind) string {
 	w := &strings.Builder{}
-	dupkey := findDuplicateKeyBind(k)
+	dupkey, errors := findDuplicateKeyBind(k)
+	if len(errors) > 0 {
+		fmt.Fprintf(w, "\n\t%s\n", gchalk.Bold("Invalid key bindings:"))
+		for _, err := range errors {
+			fmt.Fprintf(w, "%s %s\n", gchalk.Red("Error:"), err)
+		}
+	}
 	if len(dupkey) == 0 {
-		return ""
+		return w.String()
 	}
 	fmt.Fprintf(w, "\n\tDuplicate key bindings:\n")
 	for _, v := range dupkey {
