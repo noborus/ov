@@ -592,7 +592,7 @@ func normalizeKeyWithPrefix(key, action string) (string, error) {
 // findDuplicateKeyBind scans the provided KeyBind map and returns a slice of duplicate,
 // where each duplicate contains a key and the list of actions that share that key.
 // Input: keyBind - a map of action names to their associated key sequences.
-// Output: a slice of duplicate structs for keys assigned to multiple actions and any errors encountered.
+// Output: a slice of keyActionMapping structs for keys assigned to multiple actions and any errors encountered.
 func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
 	keyActions := make(map[string]keyActionMapping)
 	var errors []error
