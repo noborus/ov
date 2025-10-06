@@ -246,7 +246,7 @@ KeyBind:
     previous_doc:
         - "["
     toggle_mouse:
-        - "ctrl+f3"
+        - "ctrl+F4"
         - "ctrl+alt+r"
     multi_color:
         - "."

@@ -512,16 +512,23 @@ func setHandler(ctx context.Context, c *cbind.Configuration, name string, keys [
 			if 0x21 <= ch && ch <= 0x60 {
 				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(ctx, handler))
 			}
-		} else {
-			// ctrl+h, Backspace and ctrl+Backspace can only be assigned one handler.
-			if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
-				c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
-				c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
-				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
-				c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
-				continue
-			}
-			c.SetKey(mod, key, wrapEventHandler(ctx, handler))
+			continue
+		}
+
+		c.SetKey(mod, key, wrapEventHandler(ctx, handler))
+
+		// Special case: if ctrl+j is bound, also bind Enter to the same action.
+		if key == tcell.KeyEnter && strings.ToLower(k) == "ctrl+j" {
+			// Also bind to actual Ctrl+J event
+			c.SetKey(tcell.ModCtrl, tcell.KeyCtrlJ, wrapEventHandler(ctx, handler))
+		}
+
+		// ctrl+h, Backspace and ctrl+Backspace can only be assigned one handler.
+		if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
+			c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
+			c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
+			c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
+			c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
 		}
 	}
 	return nil
@@ -541,30 +548,84 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	return true
 }
 
-type duplicate struct {
+// keyActionMapping represents a key that is assigned to multiple actions.
+type keyActionMapping struct {
 	key    string
 	action []string
 }
 
-func findDuplicateKeyBind(keyBind KeyBind) []duplicate {
-	keyActions := make(map[string]duplicate)
-	for k, v := range keyBind {
-		for _, key := range v {
-			if strings.HasPrefix(k, "input_") {
-				key = "input_" + key
+// normalizeKey normalizes a key string by decoding and re-encoding it.
+// This ensures consistent key representation for duplicate detection.
+func normalizeKey(key string) (string, error) {
+	dm, dk, dc, err := cbind.Decode(key)
+	if err != nil {
+		return "", err
+	}
+
+	encoded, err := cbind.Encode(dm, dk, dc)
+	if err != nil {
+		return "", err
+	}
+
+	// If the original was ctrl+J and encode result is Enter, keep ctrl+j
+	lowerKey := strings.ToLower(key)
+	if encoded == "Enter" && lowerKey == "ctrl+j" {
+		return "ctrl+j", nil
+	}
+
+	return encoded, nil
+}
+
+// normalizeKeyWithPrefix normalizes a key and adds input_ prefix if the action is an input action.
+func normalizeKeyWithPrefix(key, action string) (string, error) {
+	normalizedKey, err := normalizeKey(key)
+	if err != nil {
+		return "", err
+	}
+
+	if strings.HasPrefix(action, "input_") {
+		return "input_" + normalizedKey, nil
+	}
+	return normalizedKey, nil
+}
+
+// findDuplicateKeyBind scans the provided KeyBind map and returns a slice of duplicate,
+// where each duplicate contains a key and the list of actions that share that key.
+// Input: keyBind - a map of action names to their associated key sequences.
+// Output: a slice of keyActionMapping structs for keys assigned to multiple actions and any errors encountered.
+func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
+	keyActions := make(map[string]keyActionMapping)
+	var errors []error
+
+	for action, keys := range keyBind {
+		for _, key := range keys {
+			normalizedKey, err := normalizeKeyWithPrefix(key, action)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("key %s for action %s", key, action))
+				continue // Skip this key and continue with the next one.
 			}
-			if _, ok := keyActions[key]; ok {
-				keyActions[key] = duplicate{key: key, action: append(keyActions[key].action, k)}
+
+			if existing, exists := keyActions[normalizedKey]; exists {
+				keyActions[normalizedKey] = keyActionMapping{
+					key:    normalizedKey,
+					action: append(existing.action, action),
+				}
 			} else {
-				keyActions[key] = duplicate{key: key, action: []string{k}}
+				keyActions[normalizedKey] = keyActionMapping{
+					key:    normalizedKey,
+					action: []string{action},
+				}
 			}
 		}
 	}
-	q := make([]duplicate, 0, len(keyActions))
-	for _, v := range keyActions {
-		if len(v.action) > 1 {
-			q = append(q, v)
+
+	// Return only keys with multiple actions (duplicates)
+	duplicates := make([]keyActionMapping, 0, len(keyActions))
+	for _, mapping := range keyActions {
+		if len(mapping.action) > 1 {
+			duplicates = append(duplicates, mapping)
 		}
 	}
-	return q
+
+	return duplicates, errors
 }
