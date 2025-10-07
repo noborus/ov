@@ -39,6 +39,8 @@ General:
   WrapMode: true
   ColumnDelimiter: ","
   MarkStyleWidth: 1
+# HScrollWidth: 10%
+# VScrollLines: 2
   Prompt:
     Normal:
 #      ShowFilename: true # Show the filename.

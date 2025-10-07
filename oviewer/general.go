@@ -42,6 +42,8 @@ type General struct {
 	HScrollWidth *string
 	// HScrollWidthNum is the horizontal scroll width as an integer (number of columns).
 	HScrollWidthNum *int
+	// VScrollLines is the number of lines to scroll with the mouse wheel.
+	VScrollLines *int
 	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
 	RulerType *RulerType
 	// AlternateRows alternately style rows.
@@ -188,6 +190,10 @@ func (g *General) SetHScrollWidth(width string) {
 // SetHScrollWidthNum sets the horizontal scroll width as an integer.
 func (g *General) SetHScrollWidthNum(num int) {
 	g.HScrollWidthNum = &num
+}
+
+func (g *General) SetVScrollLines(num int) {
+	g.VScrollLines = &num
 }
 
 // SetRulerType sets the ruler type.
