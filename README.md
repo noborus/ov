@@ -1,5 +1,7 @@
 # ov - feature rich terminal pager
 
+<!-- markdownlint-disable MD029 MD036 -->
+
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
@@ -48,6 +50,7 @@ ov is a terminal pager.
     * 4.12.1. [Follow name](#follow-name)
     * 4.12.2. [Follow all mode](#follow-all-mode)
     * 4.12.3. [Follow section mode](#follow-section-mode)
+    * 4.12.4. [Sticky Follow](#sticky-follow)
   * 4.13. [Exec mode](#exec-mode)
   * 4.14. [Search](#search)
     * 4.14.1. [Pattern](#pattern)
@@ -56,6 +59,9 @@ ov is a terminal pager.
   * 4.16. [Mark](#mark)
   * 4.17. [Watch](#watch)
   * 4.18. [Mouse support](#mouse-support)
+    * 4.18.1. [Text Selection](#text-selection)
+    * 4.18.2. [Wheel scroll](#wheel-scroll)
+    * 4.18.3. [Scroll Amount Configuration](#scroll-amount-configuration)
   * 4.19. [Multi color highlight](#multi-color-highlight)
   * 4.20. [Plain](#plain)
   * 4.21. [Converter](#converter)
@@ -559,6 +565,34 @@ ov --section-delimiter "^#" --follow-section README.md
 > [!NOTE]
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
+####  4.12.4. <a name='sticky-follow'></a>Sticky Follow
+
+*Added in v0.44.0*
+
+Follow mode uses **Sticky follow** by default. In Sticky follow mode, when you move up from the bottom, follow mode temporarily pauses. Follow mode resumes automatically when you return to the bottom of the file.
+
+This behavior allows you to:
+
+* Scroll up to examine previous content without losing your position
+* Automatically resume following new content when you return to the bottom
+* Maintain context while monitoring live files
+
+**Visual Indicators:**
+
+When follow mode is paused, you'll see visual indicators to help you understand the current state:
+
+* `||` appears at the beginning of the status line to indicate that follow mode is paused
+* The line where follow mode was paused is highlighted with the `PauseLine` style
+
+You can disable Sticky follow by setting `DisableStickyFollow: true` in your configuration file:
+
+```yaml
+General:
+  DisableStickyFollow: true
+```
+
+[Related styling](#style-customization): `PauseLine`.
+
 ###  4.13. <a name='exec-mode'></a>Exec mode
 
 Exec mode captures the output of a command and displays it in `ov`.
@@ -743,7 +777,54 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in `ov` is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-Also, if mouse support is enabled, horizontal scrolling is possible with `shift+wheel`.
+####  4.18.1. <a name='text-selection'></a>Text Selection
+
+*Added in v0.44.0*
+
+The mouse supports intelligent text selection for improved productivity:
+
+* **Single click**: Place cursor and start text selection by dragging
+* **Double click**: Select the word under the cursor
+* **Triple click**: Select the entire line under the cursor
+
+These selection methods work seamlessly with the clipboard functionality. After making a selection with double or triple click, the selected text is automatically copied to the clipboard.
+
+####  4.18.2. <a name='wheel-scroll'></a>Wheel scroll
+
+When mouse support is enabled, you can use the mouse wheel for navigation:
+
+* **Vertical scrolling**: Use the mouse wheel to scroll up and down
+* **Horizontal scrolling**: Use `Shift + wheel` to scroll left and right
+
+####  4.18.3. <a name='scroll-amount-configuration'></a>Scroll Amount Configuration
+
+You can customize the scroll amounts using command-line options or configuration file settings:
+
+**Vertical Scroll Amount:**
+
+*Added in v0.44.0*
+
+* Command-line: Not directly configurable (uses system default)
+* Config file: Set `VScrollLines` in the `General` section
+
+```yaml
+General:
+  VScrollLines: 3
+```
+
+**Horizontal Scroll Amount:**
+
+Horizontal Scroll Amount:
+
+Command-line: --hscroll-width (e.g., --hscroll-width "20%" or --hscroll-width "10")
+Config file: Set HScrollWidth in the General section
+
+```yaml
+General:
+  HScrollWidth: "10%"  # Percentage of screen width
+  # or
+  HScrollWidth: "20"   # Specific number of columns
+```
 
 ###  4.19. <a name='multi-color-highlight'></a>Multi color highlight
 
@@ -1332,6 +1413,9 @@ Mode:
 * Ruler
 * LeftStatus
 * RightStatus
+* SelectActive
+* SelectCopied
+* PauseLine
 
 From `v0.40.0`, it is recommended to use the `Style:` format for configuration. For example:
 
@@ -1574,7 +1658,7 @@ Mode:
 | Raw                 | Display raw escape sequences without interpretation       | `Raw: true`                     |
 | Caption             | The string to display instead of the file name            | `Caption: "My Caption"`         |
 | ColumnDelimiter     | Column delimiter character or regex                       | `ColumnDelimiter: ","`          |
-| SectionDelimiter    | Section delimiter (can use regex)                        | `SectionDelimiter: "^#"`        |
+| SectionDelimiter    | Section delimiter (can use regex)                         | `SectionDelimiter: "^#"`        |
 | JumpTarget          | Specify jump target line or position                      | `JumpTarget: "10"`              |
 | MultiColorWords     | Words to highlight (array)                                | `MultiColorWords: ["ERROR", "WARN"]` |
 | TabWidth            | Tab stop width                                            | `TabWidth: 4`                   |
@@ -1588,6 +1672,7 @@ Mode:
 | SectionHeaderNum    | Number of lines in the section header                     | `SectionHeaderNum: 3`           |
 | HScrollWidth        | Horizontal scroll width (number, percent, or .int)        | `HScrollWidth: "10%"`           |
 | HScrollWidthNum     | Horizontal scroll width (number)                          | `HScrollWidthNum: 10`           |
+| VScrollLines        | Vertical scroll lines                                     | `VScrollLines: 2`               |
 | RulerType           | Ruler type (0: none, 1: relative, 2: absolute)            | `RulerType: 1`                  |
 | AlternateRows       | Alternate row styling                                     | `AlternateRows: true`           |
 | ColumnMode          | Enable column mode                                        | `ColumnMode: true`              |
@@ -1615,8 +1700,8 @@ The following software can be used instead. If you are not satisfied with `ov`, 
   * `most` is a general-purpose pager with split-window capabilities.
 * [pspg](https://github.com/okbob/pspg)
   * `pspg` is a pager suitable for output of psql etc.
-* [moar](https://github.com/walles/moar)
-  * `moar` is a pager with code highlighting.
+* [moor](https://github.com/walles/moor)
+  * `Moor` is a pager. It's designed to just do the right thing without any configuration.
 * [slit](https://github.com/tigrawap/slit)
   * `slit` is a pager suitable for viewing logs.
 * [lnav](https://lnav.org/)
