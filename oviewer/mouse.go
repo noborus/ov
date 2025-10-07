@@ -29,9 +29,8 @@ const (
 )
 
 var (
-	WheelScrollNum = 2                      // WheelScrollNum is the number of lines to scroll with the mouse wheel.
-	ClickInterval  = 500 * time.Millisecond // Double/triple click detection time
-	ClickDistance  = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double/triple click detection
+	ClickInterval = 500 * time.Millisecond // Double/triple click detection time
+	ClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double/triple click detection
 )
 
 // ClickState holds the state for click detection.
@@ -89,13 +88,14 @@ func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 // wheelUp moves the mouse wheel up.
 func (root *Root) wheelUp(context.Context) {
 	root.setMessage("")
-	root.moveUp(WheelScrollNum)
+	root.moveUp(root.Doc.VScrollLines)
 }
 
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown(context.Context) {
 	root.setMessage("")
-	root.moveDown(WheelScrollNum)
+	log.Println("vScrollLines:", root.Doc.VScrollLines)
+	root.moveDown(root.Doc.VScrollLines)
 }
 
 // wheelRight moves the mouse wheel right.

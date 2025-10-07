@@ -229,6 +229,8 @@ type RunTimeSettings struct {
 	HScrollWidth string
 	// HScrollWidthNum is the horizontal scroll width.
 	HScrollWidthNum int
+	// VScrollLines is the number of lines to scroll with the mouse wheel.
+	VScrollLines int
 	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
 	RulerType RulerType
 	// AlternateRows alternately style rows.
@@ -480,6 +482,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		OVPromptConfig: NewOVPromptConfig(),
 		Style:          NewStyle(),
 		StatusLine:     true,
+		VScrollLines:   2,
 	}
 }
 
@@ -823,9 +826,6 @@ func (root *Root) prepareRun(ctx context.Context) error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
 	}
-	if root.Config.WheelScrollLines > 0 {
-		WheelScrollNum = root.Config.WheelScrollLines
-	}
 
 	if root.Config.ShrinkChar != "" {
 		Shrink = []rune(root.Config.ShrinkChar)[0]
@@ -1059,6 +1059,9 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	}
 	if dst.HScrollWidthNum != nil {
 		src.HScrollWidthNum = *dst.HScrollWidthNum
+	}
+	if dst.VScrollLines != nil {
+		src.VScrollLines = *dst.VScrollLines
 	}
 	if dst.RulerType != nil {
 		src.RulerType = *dst.RulerType

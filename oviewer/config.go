@@ -82,8 +82,6 @@ type Config struct {
 	DisableColumnCycle bool
 	// DisableStickYFollow indicates whether to disable sticky follow mode.
 	DisableStickyFollow bool
-	// WheelScrollLines specifies the number of lines to scroll with the mouse wheel.
-	WheelScrollLines int
 	// Debug indicates whether to enable debug output.
 	Debug bool
 	// deprecatedStyleConfig is the old style setting.
