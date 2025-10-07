@@ -30,6 +30,10 @@
 
 # ReadWaitTime: 1s # Time to wait for a search while reading. 1s is the default.
 
+# WheelScrollNum is the number of lines to scroll with the mouse wheel.
+# Adjust this value to match your terminal's scroll speed.
+# WheelScrollLines: 2
+
 General:
   TabWidth: 8
   Header: 0

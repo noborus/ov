@@ -823,6 +823,9 @@ func (root *Root) prepareRun(ctx context.Context) error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
 	}
+	if root.Config.WheelScrollLines > 0 {
+		WheelScrollNum = root.Config.WheelScrollLines
+	}
 
 	if root.Config.ShrinkChar != "" {
 		Shrink = []rune(root.Config.ShrinkChar)[0]
