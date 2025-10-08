@@ -150,12 +150,6 @@ sudo port install ov
 brew install ov
 ```
 
-Or from the original tap:
-
-```console
-brew install noborus/tap/ov
-```
-
 ###  2.5. <a name='winget(windows)'></a>winget(windows)
 
 ```console
