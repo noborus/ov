@@ -68,23 +68,6 @@ nfpms:
     bindir: /usr/bin
     epoch: "1"
 
-brews:
-  -
-    name: ov
-    repository:
-      owner: noborus
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    commit_author:
-      name: noborus
-      email: noborusai@gmail.com
-    homepage: https://github.com/noborus/ov
-    description: "Feature rich terminal pager"
-    test:
-      system "#{bin}/ov --version"
-    install:
-      bin.install "ov"
-
 winget:
   -
     name: ov
