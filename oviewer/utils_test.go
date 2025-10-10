@@ -512,6 +512,7 @@ func Test_allStringIndex(t *testing.T) {
 		})
 	}
 }
+
 func Test_abs(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

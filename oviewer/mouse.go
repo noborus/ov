@@ -94,7 +94,6 @@ func (root *Root) wheelUp(context.Context) {
 // wheelDown moves the mouse wheel down.
 func (root *Root) wheelDown(context.Context) {
 	root.setMessage("")
-	log.Println("vScrollLines:", root.Doc.VScrollLines)
 	root.moveDown(root.Doc.VScrollLines)
 }
 
@@ -207,11 +206,11 @@ func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
 func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
 	switch button {
 	case tcell.ButtonPrimary:
-		root.selectRange(ctx, ev)
+		root.scr.x2, root.scr.y2 = ev.Position()
 		return true
 	case tcell.ButtonNone:
 		// Check if mouse has moved enough to be considered a selection
-		if root.hasMinimumSelection() {
+		if root.scr.x1 != root.scr.x2 || root.scr.y1 != root.scr.y2 {
 			root.scr.mouseSelect = SelectCopied
 			root.scr.mousePressed = false
 			root.CopySelect(ctx)
@@ -303,7 +302,7 @@ func (root *Root) updateClickState(x, y int, now time.Time) {
 // findColumnBoundaries selects the entire column at the given position.
 func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
 	contentX := root.Doc.x + (x - root.scr.startX) + root.scr.branchWidth(lineC.lc, ln.wrap)
-	startCol, endCol, ok := root.findColumnRange(contentX, lineC.columnRanges)
+	startCol, endCol, ok := findColumnRange(contentX, lineC.columnRanges)
 	if !ok {
 		return x, y, x, y
 	}
@@ -332,16 +331,6 @@ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (in
 	return startX, startY, endX, endY
 }
 
-// findColumnRange returns the start and end of the column range containing contentX, or ok=false if not found.
-func (root *Root) findColumnRange(contentX int, columnRanges []columnRange) (start, end int, ok bool) {
-	for _, colRange := range columnRanges {
-		if contentX >= colRange.start && contentX <= colRange.end {
-			return colRange.start, colRange.end, true
-		}
-	}
-	return 0, 0, false
-}
-
 // findWordBoundariesInLine selects the word at the given position.
 func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
 	x = x - root.scr.startX
@@ -350,12 +339,12 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 		// Out of bounds: return clicked position only
 		return x + root.scr.startX, y, x + root.scr.startX, y
 	}
-	charType := root.getCharTypeAt(lineC, contentX)
+	charType := getCharTypeAt(lineC, contentX)
 	startX := x
 	startY := y
 	for ln.wrap >= 0 {
 		testContentX := (startX - 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
-		if root.getCharTypeAt(lineC, testContentX) != charType {
+		if getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		startX--
@@ -369,7 +358,7 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 	endY := startY
 	for endX < len(lineC.lc)-1 {
 		testContentX := (endX + 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
-		if root.getCharTypeAt(lineC, testContentX) != charType {
+		if getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		endX++
@@ -382,13 +371,32 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 	return startX + root.scr.startX, startY, endX + root.scr.startX, endY
 }
 
+// findColumnRange returns the start and end of the column range containing contentX, or ok=false if not found.
+func findColumnRange(contentX int, columnRanges []columnRange) (start, end int, ok bool) {
+	for _, colRange := range columnRanges {
+		if contentX >= colRange.start && contentX <= colRange.end {
+			return colRange.start, colRange.end, true
+		}
+	}
+	return 0, 0, false
+}
+
 // getCharTypeAt returns character type at the given content position.
-func (root *Root) getCharTypeAt(line LineC, contentX int) int {
+func getCharTypeAt(line LineC, contentX int) int {
 	if contentX < 0 || contentX >= len(line.lc) {
 		return charTypeWhitespace // Out of bounds treated as whitespace
 	}
-
-	char := line.lc[contentX].mainc
+	content := line.lc[contentX]
+	char := content.mainc
+	width := content.width
+	if width == 0 && char == 0 {
+		if contentX == 0 {
+			return charTypeOther
+		}
+		// If width is 0, check the previous character.
+		char = line.lc[contentX-1].mainc
+		width = 2
+	}
 	if char == ' ' || char == '\t' {
 		return charTypeWhitespace
 	}
@@ -396,18 +404,6 @@ func (root *Root) getCharTypeAt(line LineC, contentX int) int {
 		return charTypeAlphanumeric
 	}
 	return charTypeOther
-}
-
-// hasMinimumSelection checks if the selection is large enough to be meaningful.
-func (root *Root) hasMinimumSelection() bool {
-	// Require movement of at least 1 position in either direction
-	return root.scr.x1 != root.scr.x2 || root.scr.y1 != root.scr.y2
-}
-
-// selectRange saves the position by selecting the range with the mouse.
-// The selection range is represented by (x1, y1), (x2, y2).
-func (root *Root) selectRange(_ context.Context, ev *tcell.EventMouse) {
-	root.scr.x2, root.scr.y2 = ev.Position()
 }
 
 // handleTripleClick handles triple click events (selects the whole line).
