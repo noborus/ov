@@ -370,3 +370,150 @@ func TestSCR_selectLine(t *testing.T) {
 		})
 	}
 }
+func Test_getCharTypeAt(t *testing.T) {
+	type args struct {
+		line     LineC
+		contentX int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "Whitespace-space",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents(" ", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeWhitespace,
+		},
+		{
+			name: "Whitespace-tab",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("\t", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeWhitespace,
+		},
+		{
+			name: "Alphanumeric-letter",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("a", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeAlphanumeric,
+		},
+		{
+			name: "Alphanumeric-digit",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("5", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeAlphanumeric,
+		},
+		{
+			name: "Alphanumeric-underscore",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("_", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeAlphanumeric,
+		},
+		{
+			name: "Other-symbol",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("!", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeOther,
+		},
+		{
+			name: "Other-non-ascii",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("あ", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 0,
+			},
+			want: charTypeAlphanumeric,
+		},
+		{
+			name: "Other-non-ascii2",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("あ", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 1,
+			},
+			want: charTypeAlphanumeric,
+		},
+		{
+			name: "OutOfBounds-negative",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("abc", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: -1,
+			},
+			want: charTypeWhitespace,
+		},
+		{
+			name: "OutOfBounds-tooLarge",
+			args: args{
+				line: func() LineC {
+					lc := StrToContents("abc", 8)
+					lineC := LineC{lc: lc}
+					return lineC
+				}(),
+				contentX: 3,
+			},
+			want: charTypeWhitespace,
+		},
+		{
+			name: "EmptyLine",
+			args: args{
+				line:     LineC{lc: []content{}},
+				contentX: 0,
+			},
+			want: charTypeWhitespace,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getCharTypeAt(tt.args.line, tt.args.contentX); got != tt.want {
+				t.Errorf("getCharTypeAt() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
