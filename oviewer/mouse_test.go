@@ -370,6 +370,7 @@ func TestSCR_selectLine(t *testing.T) {
 		})
 	}
 }
+
 func Test_getCharTypeAt(t *testing.T) {
 	type args struct {
 		line     LineC
