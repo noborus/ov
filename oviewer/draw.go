@@ -223,6 +223,9 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 			break
 		}
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
+		if c.width == 2 {
+			n++
+		}
 	}
 	return lX, lN
 }
@@ -245,6 +248,9 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 		}
 		c := lineC.lc[lX+n]
 		screen.SetContent(x, y, c.mainc, c.combc, c.style)
+		if c.width == 2 {
+			n++
+		}
 	}
 	lN++
 	return lX, lN
@@ -267,22 +273,28 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 	}
 
 	screen := root.Screen
-	for n := range widthVH {
+	x := root.scr.startX
+	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
 		}
-		style := applyStyle(c.style, root.Doc.Style.VerticalHeader)
 		if n == widthVH-2 && c.width == 2 {
-			style = applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
+			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
+			screen.SetContent(x, y, c.mainc, c.combc, style)
 			return
 		} else if n == widthVH-1 {
-			style = applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
+			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
+			screen.SetContent(x, y, c.mainc, c.combc, style)
 			return
 		}
-		screen.SetContent(root.scr.startX+n, y, c.mainc, c.combc, style)
+		style := applyStyle(c.style, root.Doc.Style.VerticalHeader)
+		screen.SetContent(x, y, c.mainc, c.combc, style)
+		x++
+		if c.width == 2 {
+			x++
+			n++
+		}
 	}
 }
 
@@ -354,10 +366,15 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 // setContentString is a helper function that draws a string with setContent.
 func (root *Root) setContentString(vx int, vy int, lc contents) {
 	screen := root.Screen
-	for x, content := range lc {
-		screen.SetContent(vx+x, vy, content.mainc, content.combc, content.style)
+	x := vx
+	for _, content := range lc {
+		screen.SetContent(x, vy, content.mainc, content.combc, content.style)
+		x++
+		if content.width == 2 {
+			x++
+		}
 	}
-	screen.SetContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
+	screen.SetContent(x, vy, 0, nil, defaultStyle.Normal())
 }
 
 // clearEOL clears from the specified position to the right end.
