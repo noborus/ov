@@ -190,6 +190,7 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 
 // startSelection initializes a new selection.
 func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
+	x, y = root.adjustPositionForWideChar(x, y)
 	root.scr.x1, root.scr.y1 = x, y
 	root.scr.x2, root.scr.y2 = x, y
 
@@ -206,7 +207,8 @@ func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
 func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
 	switch button {
 	case tcell.ButtonPrimary:
-		root.scr.x2, root.scr.y2 = ev.Position()
+		x, y := ev.Position()
+		root.scr.x2, root.scr.y2 = root.adjustPositionForWideChar(x, y)
 		return true
 	case tcell.ButtonNone:
 		// Check if mouse has moved enough to be considered a selection
@@ -222,6 +224,18 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 	default:
 		return true
 	}
+}
+
+// adjustPositionForWideChar adjusts the position if a wide character is clicked.
+func (root *Root) adjustPositionForWideChar(x, y int) (int, int) {
+	p, _, _, _ := root.Screen.GetContent(x, y)
+	if p == ' ' && x > 0 {
+		_, _, _, w := root.Screen.GetContent(x-1, y) // Adjust for clicking the second half of a wide character
+		if w == 2 {
+			x--
+		}
+	}
+	return x, y
 }
 
 // resetClickState resets the click state.
