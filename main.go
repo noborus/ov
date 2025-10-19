@@ -562,6 +562,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("view-mode", "m", "", "apply predefined settings for a specific mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
+	rootCmd.PersistentFlags().BoolP("set-terminal-title", "", false, "set terminal title")
+	_ = viper.BindPFlag("SetTerminalTitle", rootCmd.PersistentFlags().Lookup("set-terminal-title"))
+
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
 	_ = viper.BindPFlag("Debug", rootCmd.PersistentFlags().Lookup("debug"))
 }

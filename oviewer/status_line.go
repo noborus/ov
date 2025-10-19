@@ -51,12 +51,8 @@ func (root *Root) normalLeftStatus() (contents, int) {
 		}
 	}
 
-	leftStatus.WriteString(root.statusDisplay())
-	if root.Doc.Caption != "" {
-		leftStatus.WriteString(root.Doc.Caption)
-	} else if root.Doc.Normal.ShowFilename {
-		leftStatus.WriteString(root.Doc.FileName)
-	}
+	leftStatus.WriteString(root.displayStatus())
+	leftStatus.WriteString(root.displayTitle())
 	leftStatus.WriteString(":")
 	leftStatus.WriteString(root.message)
 	leftContents := StrToContents(leftStatus.String(), -1)
@@ -74,8 +70,8 @@ func (root *Root) normalLeftStatus() (contents, int) {
 	return leftContents, len(leftContents)
 }
 
-// statusDisplay returns the status mode of the document.
-func (root *Root) statusDisplay() string {
+// displayStatus returns the status mode of the document.
+func (root *Root) displayStatus() string {
 	stMode := root.statusMode()
 	if !root.Doc.pauseFollow {
 		return stMode
