@@ -24,6 +24,8 @@
 # For ClipboardMethod, specify “OSC52” to copy using OSC52 (if the terminal supports it).
 # ClipboardMethod: "default" # Clipboard method. Options: "OSC52" or other.
 #
+# SetTerminalTitle: false # Set terminal title to display filename.
+#
 # Debug: false # Debug mode.
 #
 

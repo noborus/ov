@@ -82,6 +82,8 @@ type Config struct {
 	DisableColumnCycle bool
 	// DisableStickYFollow indicates whether to disable sticky follow mode.
 	DisableStickyFollow bool
+	// SetTerminalTitle indicates whether to set the terminal title to display filename.
+	SetTerminalTitle bool
 	// Debug indicates whether to enable debug output.
 	Debug bool
 	// deprecatedStyleConfig is the old style setting.

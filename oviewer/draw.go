@@ -46,6 +46,7 @@ func (root *Root) draw(ctx context.Context) {
 	}
 
 	root.drawStatus()
+	root.drawTitle()
 	root.Screen.Show()
 }
 
@@ -361,6 +362,21 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 		root.Screen.SetContent(i, y, numC[i], nil, style)
 	}
 	root.Screen.SetContent(len(numC), y, ' ', nil, defaultStyle)
+}
+
+// drawTitle sets the terminal title if TerminalTitle is enabled.
+func (root *Root) drawTitle() {
+	if root.Config.SetTerminalTitle {
+		root.Screen.SetTitle(root.displayTitle())
+	}
+}
+
+// displayTitle returns the caption string of the document.
+func (root *Root) displayTitle() string {
+	if root.Doc.Caption != "" {
+		return root.Doc.Caption
+	}
+	return root.Doc.FileName
 }
 
 // setContentString is a helper function that draws a string with setContent.

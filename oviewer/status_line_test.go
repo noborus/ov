@@ -157,7 +157,7 @@ func TestRoot_statusDisplay(t *testing.T) {
 			root.Doc.FollowName = tt.fields.FollowName
 			root.Doc.FollowMode = tt.fields.FollowMode
 			root.Doc.pauseFollow = tt.fields.pauseFollow
-			if got := root.statusDisplay(); got != tt.want {
+			if got := root.displayStatus(); got != tt.want {
 				t.Errorf("Root.statusDisplay() = %v, want %v", got, tt.want)
 			}
 		})
