@@ -250,7 +250,7 @@ func defaultKeyBinds() KeyBind {
 		actionPreviousDoc:    {"["},
 		actionCloseDoc:       {"ctrl+k"},
 		actionCloseAllFilter: {"K"},
-		actionToggleMouse:    {"ctrl+alt+r"},
+		actionToggleMouse:    {"ctrl+F8", "ctrl+alt+r"},
 		actionHideOther:      {"alt+-"},
 		actionAlignFormat:    {"alt+F"},
 		actionRawFormat:      {"alt+R"},
