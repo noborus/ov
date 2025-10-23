@@ -15,9 +15,6 @@ const cwd = ".."
 
 var testdata = filepath.Join(cwd, "testdata")
 
-// This is a function of tcell.NewScreen but can be replaced with mock.
-var tcellNewScreen = tcell.NewScreen
-
 // fakeScreen returns a fake screen.
 func fakeScreen() (tcell.Screen, error) {
 	// width, height := 80, 25

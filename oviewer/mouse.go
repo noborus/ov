@@ -409,7 +409,6 @@ func getCharTypeAt(line LineC, contentX int) int {
 		}
 		// If width is 0, check the previous character.
 		char = line.lc[contentX-1].mainc
-		width = 2
 	}
 	if char == ' ' || char == '\t' {
 		return charTypeWhitespace
