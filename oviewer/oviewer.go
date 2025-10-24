@@ -367,13 +367,13 @@ const (
 
 var (
 	// ErrOutOfRange indicates that value is out of range.
-	ErrOutOfRange = errors.New("out of range")
+	ErrOutOfRange = errors.New("value out of range")
 	// ErrNotInMemory indicates that value is not in memory.
-	ErrNotInMemory = errors.New("not in memory")
+	ErrNotInMemory = errors.New("value not in memory")
 	// ErrFatalCache indicates that the cache value had a fatal error.
-	ErrFatalCache = errors.New("fatal error in cache value")
+	ErrFatalCache = errors.New("fatal cache error")
 	// ErrMissingFile indicates that the file does not exist.
-	ErrMissingFile = errors.New("missing filename")
+	ErrMissingFile = errors.New("missing file")
 	// ErrIsDirectory indicates that specify a directory instead of a file.
 	ErrIsDirectory = errors.New("is a directory")
 	// ErrNotFound indicates not found.
@@ -385,47 +385,53 @@ var (
 	// ErrInvalidNumber indicates an invalid number.
 	ErrInvalidNumber = errors.New("invalid number")
 	// ErrFailedKeyBind indicates keybinding failed.
-	ErrFailedKeyBind = errors.New("failed to set keybind")
+	ErrFailedKeyBind = errors.New("failed to set key bindings")
 	// ErrSignalCatch indicates that the signal has been caught.
-	ErrSignalCatch = errors.New("signal catch")
+	ErrSignalCatch = errors.New("signal caught")
 	// ErrAlreadyClose indicates that it is already closed.
 	ErrAlreadyClose = errors.New("already closed")
 	// ErrCannotClose indicates that it cannot be closed.
-	ErrCannotClose = errors.New("cannot close")
+	ErrCannotClose = errors.New("cannot be closed")
 	// ErrRequestClose indicates that the request is to close.
-	ErrRequestClose = errors.New("request close")
+	ErrRequestClose = errors.New("close requested")
 	// ErrNoColumn indicates that cursor specified a nonexistent column.
-	ErrNoColumn = errors.New("no column")
+	ErrNoColumn = errors.New("column not found")
 	// ErrNoDelimiter indicates that the line containing the delimiter could not be found.
-	ErrNoDelimiter = errors.New("no delimiter")
+	ErrNoDelimiter = errors.New("delimiter not found")
 	// ErrNoMoreSection indicates that the section could not be found.
-	ErrNoMoreSection = errors.New("no more section")
+	ErrNoMoreSection = errors.New("no more sections")
 	// ErrOverScreen indicates that the specified screen is out of range.
-	ErrOverScreen = errors.New("over screen")
+	ErrOverScreen = errors.New("screen position out of range")
 	// ErrOutOfChunk indicates that the specified Chunk is out of range.
-	ErrOutOfChunk = errors.New("out of chunk")
+	ErrOutOfChunk = errors.New("chunk out of range")
 	// ErrNotLoaded indicates that it cannot be loaded.
 	ErrNotLoaded = errors.New("not loaded")
 	// ErrEOFreached indicates that EOF has been reached.
 	ErrEOFreached = errors.New("EOF reached")
 	// ErrPreventReload indicates that reload is prevented.
-	ErrPreventReload = errors.New("prevent reload")
+	ErrPreventReload = errors.New("reload prevented")
 	// ErrOverChunkLimit indicates that the chunk limit has been exceeded.
-	ErrOverChunkLimit = errors.New("over chunk limit")
+	ErrOverChunkLimit = errors.New("chunk limit exceeded")
 	// ErrAlreadyLoaded indicates that the chunk already loaded.
 	ErrAlreadyLoaded = errors.New("chunk already loaded")
 	// ErrEvictedMemory indicates that it has been evicted from memory.
-	ErrEvictedMemory = errors.New("evicted memory")
+	ErrEvictedMemory = errors.New("evicted from memory")
 	// ErrNotAlignMode indicates that it is not an align mode.
-	ErrNotAlignMode = errors.New("not an align mode")
+	ErrNotAlignMode = errors.New("not in align mode")
 	// ErrNoColumnSelected indicates that no column is selected.
 	ErrNoColumnSelected = errors.New("no column selected")
 	// ErrInvalidSGR indicates that the SGR is invalid.
 	ErrInvalidSGR = errors.New("invalid SGR")
 	// ErrNotSupport indicates that it is not supported.
-	ErrNotSupport = errors.New("not support")
+	ErrNotSupport = errors.New("not supported")
 	// ErrInvalidDocumentNum indicates that the document number is invalid.
 	ErrInvalidDocumentNum = errors.New("invalid document number")
+	// ErrInvalidModeName indicates that the specified view mode was not found.
+	ErrInvalidModeName = errors.New("view mode not found")
+	// ErrInvalidRGBColor indicates that the RGB color is invalid.
+	ErrInvalidRGBColor = errors.New("invalid RGB color")
+	// ErrInvalidKey indicates that the key format is invalid.
+	ErrInvalidKey = errors.New("invalid key format")
 )
 
 // This is a function of tcell.NewScreen but can be replaced with mock.

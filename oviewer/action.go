@@ -478,7 +478,7 @@ func (root *Root) modeConfig(modeName string) (RunTimeSettings, error) {
 
 	viewMode, ok := root.Config.Mode[modeName]
 	if !ok {
-		return RunTimeSettings{}, fmt.Errorf("view mode not found: %s", modeName)
+		return RunTimeSettings{}, fmt.Errorf("%w: %s", ErrInvalidModeName, modeName)
 	}
 	settings := updateRunTimeSettings(root.Doc.RunTimeSettings, viewMode)
 	return settings, nil

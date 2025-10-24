@@ -601,7 +601,7 @@ func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
 		for _, key := range keys {
 			normalizedKey, err := normalizeKeyWithPrefix(key, action)
 			if err != nil {
-				errors = append(errors, fmt.Errorf("key %s for action %s", key, action))
+				errors = append(errors, fmt.Errorf("%w: key %s for action %s", ErrInvalidKey, key, action))
 				continue // Skip this key and continue with the next one.
 			}
 

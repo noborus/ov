@@ -430,7 +430,7 @@ func parseRGBColor(red string, green string, blue string) (string, error) {
 	g, err2 := esNumber(green)
 	b, err3 := esNumber(blue)
 	if err1 != nil || err2 != nil || err3 != nil {
-		return "", fmt.Errorf("invalid RGB color values: %v, %v, %v", red, green, blue)
+		return "", fmt.Errorf("%w: %v, %v, %v", ErrInvalidRGBColor, red, green, blue)
 	}
 	if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 {
 		return "", nil
