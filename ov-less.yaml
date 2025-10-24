@@ -267,6 +267,7 @@ KeyBind:
     previous_doc:
         - "["
     toggle_mouse:
+        - "ctrl+F8"
         - "ctrl+alt+r"
     multi_color:
         - "."

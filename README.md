@@ -1233,11 +1233,12 @@ MemoryLimit: 1000
 |       | --section-header                           | enable section-delimiter line as Header                        |
 |       | --section-header-num int                   | number of section header lines (default 1)                     |
 |       | --section-start int                        | section start position                                         |
+|       | --set-terminal-title                       | set terminal title                                             |
 |       | --skip-extract                             | skip extracting compressed files                               |
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
-| -x,   | --tab-width int                            | tab stop width (default 8)                                     |
 |       | --status-line[=true\|false]                | status line (default true)                                     |
+| -x,   | --tab-width int                            | tab stop width (default 8)                                     |
 | -v,   | --version                                  | display version information                                    |
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
@@ -1262,7 +1263,7 @@ It can also be changed after startup.
 | [ctrl+l]                      | * screen sync                                      |
 | [ctrl+f]                      | * follow mode toggle                               |
 | [ctrl+a]                      | * follow all mode toggle                           |
-| [ctrl+alt+r]                  | * enable/disable mouse                             |
+| [ctrl+F8], [ctrl+alt+r]       | * enable/disable mouse                             |
 | [S]                           | * save buffer to file                              |
 | **Moving**                    |                                                    |
 | [Enter], [Down], [ctrl+N]     | * forward by one line                              |
