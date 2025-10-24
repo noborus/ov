@@ -1811,7 +1811,7 @@ func TestRoot_closeFile(t *testing.T) {
 				seekable: true,
 			},
 			wantErr: true,
-			message: "cannot close",
+			message: "cannot be closed",
 		},
 	}
 	for _, tt := range tests {
