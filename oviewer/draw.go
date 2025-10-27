@@ -366,15 +366,14 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 // setContentString is a helper function that draws a string with setContent.
 func (root *Root) setContentString(vx int, vy int, lc contents) {
 	screen := root.Screen
-	x := vx
-	for _, content := range lc {
-		screen.SetContent(x, vy, content.mainc, content.combc, content.style)
-		x++
-		if content.width == 2 {
-			x++
+	for n := 0; n < len(lc); n++ {
+		c := lc[n]
+		screen.SetContent(vx+n, vy, c.mainc, c.combc, c.style)
+		if c.width == 2 {
+			n++
 		}
 	}
-	screen.SetContent(x, vy, 0, nil, defaultStyle.Normal())
+	screen.SetContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
 }
 
 // clearEOL clears from the specified position to the right end.
