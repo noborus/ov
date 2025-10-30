@@ -617,3 +617,133 @@ func TestRoot_calculateVerticalHeader(t *testing.T) {
 		})
 	}
 }
+
+func TestNeedsDisplaySync(t *testing.T) {
+	tests := []struct {
+		name     string
+		mainc    rune
+		combc    []rune
+		expected bool
+	}{
+		// No combining characters, not emoji
+		{"ASCII letter", 'a', nil, false},
+		{"ASCII digit", '5', nil, false},
+		{"ASCII space", ' ', nil, false},
+
+		// CJK characters (wide, but not ambiguous)
+		{"CJK character", 'あ', nil, false},
+
+		// Latin-1 characters (some are ambiguous!)
+		{"Latin à (ambiguous)", 'à', nil, true},
+		{"Latin á (ambiguous)", 'á', nil, true},
+		{"Latin â (not ambiguous)", 'â', nil, false},
+		{"Latin é (ambiguous)", 'é', nil, true},
+		{"Latin ë (not ambiguous)", 'ë', nil, false},
+
+		// Traditional ambiguous width characters
+		{"Section sign", '§', nil, true},
+		{"Degree sign", '°', nil, true},
+		{"Plus-minus", '±', nil, true},
+
+		// Box drawing characters
+		{"Box horizontal", '─', nil, true},
+		{"Box vertical", '│', nil, true},
+
+		// Mathematical symbols (ambiguous)
+		{"Mathematical symbol ∀", '∀', nil, true},
+		{"Mathematical symbol ∃", '∃', nil, true},
+
+		// Arrow symbols (ambiguous)
+		{"Arrow →", '→', nil, true},
+		{"Arrow ←", '←', nil, true},
+		{"Arrow ↑", '↑', nil, true},
+		{"Arrow ↓", '↓', nil, true},
+
+		// With combining characters (always true)
+		{"ASCII with combining", 'a', []rune{0x0300}, true},
+		{"Emoji with ZWJ", '👨', []rune{0x200D}, true},
+		{"Emoji with variation selector", '⚕', []rune{0xFE0F}, true},
+		{"Emoji with skin tone", '👋', []rune{0x1F3FB}, true},
+
+		// Emoji range test (no combining characters)
+		{"Regional indicator", '🇺', nil, true}, // U+1F1FA
+		{"Another regional", '🇲', nil, true},   // U+1F1F2
+		{"Fire emoji", '🔥', nil, true},         // U+1F525
+		{"Rocket emoji", '🚀', nil, true},       // U+1F680
+		{"Grinning face", '😀', nil, true},      // U+1F600
+		{"Thinking face", '🤔', nil, true},      // U+1F914
+		{"Rainbow", '🌈', nil, true},            // U+1F308
+
+		// Outside emoji range
+		{"Before emoji range", 0x1F1DF, nil, false},
+		{"After emoji range", 0x1FA00, nil, false},
+
+		// Boundary value test
+		{"First regional", 0x1F1E0, nil, true},
+		{"Last in range", 0x1F9FF, nil, true},
+		{"Just after range", 0x1FA00, nil, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := needsDisplaySync(tt.mainc, tt.combc)
+			if result != tt.expected {
+				t.Errorf("needsDisplaySync(%c / U+%04X, %v) = %v, want %v",
+					tt.mainc, tt.mainc, tt.combc, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestNeedsDisplaySyncComplexSequences(t *testing.T) {
+	tests := []struct {
+		name     string
+		mainc    rune
+		combc    []rune
+		expected bool
+	}{
+		// ZWJ sequences
+		{"ZWJ sequence start", '👨', []rune{0x200D, '⚕', 0xFE0F}, true},
+		{"With multiple combining", '👋', []rune{0x1F3FB, 0x200D, '♂', 0xFE0F}, true},
+
+		// Variation selectors
+		{"Variation selector 15", '⚕', []rune{0xFE0E}, true},
+		{"Variation selector 16", '⚕', []rune{0xFE0F}, true},
+
+		// Skin tone modifiers
+		{"Light skin tone", '👋', []rune{0x1F3FB}, true},
+		{"Medium-light skin", '👋', []rune{0x1F3FC}, true},
+		{"Medium skin", '👋', []rune{0x1F3FD}, true},
+		{"Medium-dark skin", '👋', []rune{0x1F3FE}, true},
+		{"Dark skin tone", '👋', []rune{0x1F3FF}, true},
+
+		// Multiple combining characters
+		{"Multiple combiners", 'a', []rune{0x0300, 0x0301}, true},
+		{"Empty combining", 'a', []rune{}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := needsDisplaySync(tt.mainc, tt.combc)
+			if result != tt.expected {
+				t.Errorf("needsDisplaySync(%c / U+%04X, %v) = %v, want %v",
+					tt.mainc, tt.mainc, tt.combc, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestNeedsDisplaySyncPerformance(t *testing.T) {
+	// Performance test for ASCII characters (most frequent case)
+	asciiChars := []rune{
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		' ', '!', '@', '#', '$', '%', '^', '&', '*', '(',
+	}
+
+	for _, r := range asciiChars {
+		if needsDisplaySync(r, nil) {
+			t.Errorf("ASCII character %c should not need display sync", r)
+		}
+	}
+}

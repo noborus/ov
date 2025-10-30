@@ -147,6 +147,8 @@ type SCR struct {
 	mousePressed bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
+	// forceDisplaySync forces synchronous display.
+	forceDisplaySync bool
 }
 
 // LineNumber is Number of logical lines and number of wrapping lines on the screen.

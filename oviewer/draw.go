@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/mattn/go-runewidth"
 )
 
 // defaultStyle is used when the style is not specified.
@@ -16,7 +17,8 @@ var defaultStyle = tcell.StyleDefault
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
 	m := root.Doc
-
+	shouldSync := root.scr.forceDisplaySync
+	root.scr.forceDisplaySync = false
 	// Prepare the screen for drawing.
 	root.prepareDraw(ctx)
 
@@ -47,7 +49,12 @@ func (root *Root) draw(ctx context.Context) {
 
 	root.drawStatus()
 	root.drawTitle()
-	root.Screen.Show()
+
+	if shouldSync {
+		root.Screen.Sync()
+	} else {
+		root.Screen.Show()
+	}
 }
 
 // drawBody draws body.
@@ -182,12 +189,12 @@ func (root *Root) drawRuler() {
 		}
 		numStr := []rune(fmt.Sprintf("%3d", n))
 		if numStr[2] == '0' {
-			root.Screen.SetContent(x-1, 0, numStr[0], nil, style)
-			root.Screen.SetContent(x, 0, numStr[1], nil, style)
+			root.setContent(x-1, 0, numStr[0], nil, style)
+			root.setContent(x, 0, numStr[1], nil, style)
 		} else {
-			root.Screen.SetContent(x, 0, ' ', nil, style)
+			root.setContent(x, 0, ' ', nil, style)
 		}
-		root.Screen.SetContent(x, 1, numStr[2], nil, style)
+		root.setContent(x, 1, numStr[2], nil, style)
 	}
 }
 
@@ -206,7 +213,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
-	screen := root.Screen
 	for n := 0; ; n++ {
 		x := root.scr.startX + n
 		if lX+n >= len(lineC.lc) {
@@ -223,7 +229,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 			lX += n
 			break
 		}
-		screen.SetContent(x, y, c.mainc, c.combc, c.style)
+		root.setContent(x, y, c.mainc, c.combc, c.style)
 		if c.width == 2 {
 			n++
 		}
@@ -234,7 +240,6 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
 func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	lX = max(lX, root.minStartX)
-	screen := root.Screen
 	for n := 0; root.scr.startX+n < root.scr.vWidth; n++ {
 		x := root.scr.startX + n
 		if lX+n >= len(lineC.lc) {
@@ -244,11 +249,11 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 		}
 		if lX+n < 0 {
 			c := DefaultContent
-			screen.SetContent(x, y, c.mainc, c.combc, c.style)
+			root.setContent(x, y, c.mainc, c.combc, c.style)
 			continue
 		}
 		c := lineC.lc[lX+n]
-		screen.SetContent(x, y, c.mainc, c.combc, c.style)
+		root.setContent(x, y, c.mainc, c.combc, c.style)
 		if c.width == 2 {
 			n++
 		}
@@ -273,7 +278,6 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		widthVH--
 	}
 
-	screen := root.Screen
 	x := root.scr.startX
 	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
@@ -282,15 +286,15 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		}
 		if n == widthVH-2 && c.width == 2 {
 			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			screen.SetContent(x, y, c.mainc, c.combc, style)
+			root.setContent(x, y, c.mainc, c.combc, style)
 			return
 		} else if n == widthVH-1 {
 			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			screen.SetContent(x, y, c.mainc, c.combc, style)
+			root.setContent(x, y, c.mainc, c.combc, style)
 			return
 		}
 		style := applyStyle(c.style, root.Doc.Style.VerticalHeader)
-		screen.SetContent(x, y, c.mainc, c.combc, style)
+		root.setContent(x, y, c.mainc, c.combc, style)
 		x++
 		if c.width == 2 {
 			x++
@@ -328,7 +332,7 @@ func (root *Root) blankLineNumber(y int) {
 		return
 	}
 	for x := range root.scr.startX {
-		root.Screen.SetContent(x, y, ' ', nil, defaultStyle)
+		root.setContent(x, y, ' ', nil, defaultStyle)
 	}
 }
 
@@ -359,9 +363,9 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := []rune(fmt.Sprintf("%*d", root.scr.startX-1, number))
 	for i := range numC {
-		root.Screen.SetContent(i, y, numC[i], nil, style)
+		root.setContent(i, y, numC[i], nil, style)
 	}
-	root.Screen.SetContent(len(numC), y, ' ', nil, defaultStyle)
+	root.setContent(len(numC), y, ' ', nil, defaultStyle)
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.
@@ -381,21 +385,20 @@ func (root *Root) displayTitle() string {
 
 // setContentString is a helper function that draws a string with setContent.
 func (root *Root) setContentString(vx int, vy int, lc contents) {
-	screen := root.Screen
 	for n := 0; n < len(lc); n++ {
 		c := lc[n]
-		screen.SetContent(vx+n, vy, c.mainc, c.combc, c.style)
+		root.setContent(vx+n, vy, c.mainc, c.combc, c.style)
 		if c.width == 2 {
 			n++
 		}
 	}
-	screen.SetContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
+	root.setContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
 }
 
 // clearEOL clears from the specified position to the right end.
 func (root *Root) clearEOL(x int, y int, style tcell.Style) {
 	for ; x < root.scr.vWidth; x++ {
-		root.Screen.SetContent(x, y, ' ', nil, style)
+		root.setContent(x, y, ' ', nil, style)
 	}
 }
 
@@ -446,7 +449,7 @@ func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		newStyle := applyStyle(style, s)
 		if style != newStyle {
-			root.Screen.SetContent(x, y, mainc, combc, newStyle)
+			root.setContent(x, y, mainc, combc, newStyle)
 		}
 		if width == 2 {
 			x++
@@ -524,7 +527,7 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 	for x := start; x < end; x++ {
 		mainc, combc, style, width := root.Screen.GetContent(x, y)
 		newStyle := applyStyle(style, selectStyle)
-		root.Screen.SetContent(x, y, mainc, combc, newStyle)
+		root.setContent(x, y, mainc, combc, newStyle)
 		if width == 2 {
 			x++
 		}
@@ -573,4 +576,41 @@ func (root *Root) flash() {
 	time.Sleep(50 * time.Millisecond)
 	root.draw(context.Background())
 	time.Sleep(100 * time.Millisecond)
+}
+
+// setContent wraps Screen.SetContent and checks for display sync needs.
+func (root *Root) setContent(x, y int, mainc rune, combc []rune, style tcell.Style) {
+	if !root.scr.forceDisplaySync && needsDisplaySync(mainc, combc) {
+		root.scr.forceDisplaySync = true
+	}
+	root.Screen.SetContent(x, y, mainc, combc, style)
+}
+
+// needsDisplaySync checks if display sync handling is needed.
+// This is required when there's a mismatch between the character width
+// recognized by tcell and the actual display width in the terminal.
+// When this mismatch occurs, the display can become corrupted, so we
+// need to use Screen.Sync() instead of Screen.Show() to ensure proper rendering.
+//
+// Common cases that require sync:
+// - Combining characters (ZWJ sequences, variation selectors, skin tone modifiers)
+// - Ambiguous width characters (box drawing, mathematical symbols, etc.)
+// - Regional indicator symbols used in flag emojis (🇺🇸, 🇯🇵, etc.)
+// - Complex character sequences that may be rendered differently across terminals
+func needsDisplaySync(mainc rune, combc []rune) bool {
+	// Any combining characters can cause display issues
+	if len(combc) > 0 {
+		return true
+	}
+	// Check for ambiguous width characters using runewidth library
+	if runewidth.IsAmbiguousWidth(mainc) {
+		return true
+	}
+	// Regional indicator symbols and emoji range that commonly cause issues
+	// Check for regional indicator symbols (used in flag emojis).
+	if mainc >= 0x1F1E0 && mainc <= 0x1F9FF {
+		return true
+	}
+
+	return false
 }
