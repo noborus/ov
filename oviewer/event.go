@@ -125,6 +125,30 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	return false
 }
 
+// quitCheck checks if it should quit when the document is small.
+func (root *Root) quitCheck() bool {
+	if !root.Config.QuitSmall {
+		return false
+	}
+	if !root.docSmall() {
+		return false
+	}
+	if root.DocumentLen() == 1 && !root.Config.QuitSmallFilter {
+		root.Config.IsWriteOnExit = true
+		return true
+	}
+	return false
+}
+
+// notifyEOFReached notifies that EOF has been reached.
+func (root *Root) notifyEOFReached(m *Document) {
+	if root.Config.NotifyEOF == 0 {
+		return
+	}
+	root.setMessagef("EOF reached %s", m.FileName)
+	root.execNotify(root.Config.NotifyEOF)
+}
+
 // sendGoto fires an eventGoto event that moves to the specified line.
 func (root *Root) sendGoto(num int) {
 	ev := &eventGoto{}

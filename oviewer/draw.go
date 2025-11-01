@@ -16,50 +16,36 @@ var defaultStyle = tcell.StyleDefault
 
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
-	m := root.Doc
 	shouldSync := root.scr.forceDisplaySync
 	root.scr.forceDisplaySync = false
-	// Prepare the screen for drawing.
+	defer func() {
+		if shouldSync {
+			root.Screen.Sync()
+		} else {
+			root.Screen.Show()
+		}
+	}()
+
 	root.prepareDraw(ctx)
+	root.drawBody()
 
 	root.drawRuler()
-	// Body.
-	lX := m.topLX
-	lN := m.topLN + root.scr.headerEnd
-	// If WrapMode is off, lX is always 0.
-	if !m.WrapMode {
-		lX = 0
-	}
-	lX, lN = root.drawBody(lX, lN)
-	m.bottomLX = lX
-	m.bottomLN = lN
-
-	// Header.
-	if m.headerHeight > 0 {
-		root.drawHeader()
-	}
-	// Section header.
-	if m.sectionHeaderHeight > 0 {
-		root.drawSectionHeader()
-	}
-
-	if root.scr.mouseSelect != SelectNone {
-		root.drawSelect(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2, root.scr.mouseSelect)
-	}
-
+	root.drawHeader()
+	root.drawSectionHeader()
+	root.drawSelect()
 	root.drawStatus()
 	root.drawTitle()
-
-	if shouldSync {
-		root.Screen.Sync()
-	} else {
-		root.Screen.Show()
-	}
 }
 
-// drawBody draws body.
-func (root *Root) drawBody(lX int, lN int) (int, int) {
+// drawBody draws the body.
+// drawBody sets bottomLN and bottomLX of the document.
+func (root *Root) drawBody() {
 	m := root.Doc
+	lX := m.topLX
+	lN := m.topLN + root.scr.headerEnd
+	if !m.WrapMode { // If WrapMode is off, topLX is always 0.
+		lX = 0
+	}
 
 	markStyleWidth := min(root.scr.vWidth, root.Doc.MarkStyleWidth)
 
@@ -95,13 +81,16 @@ func (root *Root) drawBody(lX int, lN int) (int, int) {
 		lX = nextLX
 		lN = nextLN
 	}
-	return lX, lN
+	m.bottomLN = lN
+	m.bottomLX = lX
 }
 
 // drawHeader draws header.
 func (root *Root) drawHeader() {
 	m := root.Doc
-
+	if m.headerHeight == 0 {
+		return
+	}
 	// wrapNum is the number of wrapped lines.
 	wrapNum := 0
 	lX := 0
@@ -133,7 +122,9 @@ func (root *Root) drawHeader() {
 // The section header overrides the body.
 func (root *Root) drawSectionHeader() {
 	m := root.Doc
-
+	if m.sectionHeaderHeight == 0 {
+		return
+	}
 	wrapNum := 0
 	lX := 0
 	lN := root.scr.sectionHeaderLN
@@ -479,10 +470,19 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 	root.clearY(y)
 }
 
-// drawSelect highlights the selection.
+// drawSelect highlights the mouse selection.
 // Multi-line selection is included until the end of the line,
 // but if the rectangle flag is true, the rectangle will be the range.
-func (root *Root) drawSelect(x1, y1, x2, y2 int, sel MouseSelectState) {
+func (root *Root) drawSelect() {
+	if root.scr.mouseSelect == SelectNone {
+		return
+	}
+
+	sel := root.scr.mouseSelect
+	x1 := root.scr.x1
+	y1 := root.scr.y1
+	x2 := root.scr.x2
+	y2 := root.scr.y2
 	if y2 < y1 {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
@@ -534,32 +534,8 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 	}
 }
 
-// quitCheck checks if it should quit when the document is small.
-func (root *Root) quitCheck() bool {
-	if !root.Config.QuitSmall {
-		return false
-	}
-	if !root.docSmall() {
-		return false
-	}
-	if root.DocumentLen() == 1 && !root.Config.QuitSmallFilter {
-		root.Config.IsWriteOnExit = true
-		return true
-	}
-	return false
-}
-
-// notifyEOFReached notifies that EOF has been reached.
-func (root *Root) notifyEOFReached(m *Document) {
-	if root.Config.NotifyEOF == 0 {
-		return
-	}
-	root.setMessagef("EOF reached %s", m.FileName)
-	root.notify(root.Config.NotifyEOF)
-}
-
-// notify notifies by beeping and flashing the screen the specified number of times.
-func (root *Root) notify(count int) {
+// execNotify notifies by beeping and flashing the screen the specified number of times.
+func (root *Root) execNotify(count int) {
 	for range count {
 		_ = root.Screen.Beep()
 		root.flash()
