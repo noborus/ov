@@ -147,6 +147,8 @@ type SCR struct {
 	mousePressed bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
+	// hasAnchorPoint is a flag whether anchor point exists.
+	hasAnchorPoint bool
 	// forceDisplaySync forces synchronous display.
 	forceDisplaySync bool
 }

@@ -163,7 +163,15 @@ func (root *Root) handleSelectCopied(ctx context.Context, ev *tcell.EventMouse, 
 // handlePrimaryButtonClick handles single/double/triple click events.
 func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
 	x, y := ev.Position()
+	mod := ev.Modifiers()
 	now := time.Now()
+
+	// Alt+click extension has priority over click type detection
+	if mod&tcell.ModAlt != 0 && root.scr.hasAnchorPoint {
+		// Update click state for Alt+click (to maintain consistency)
+		root.updateClickState(x, y, now)
+		return root.extendSelectionWithAltClick(ev)
+	}
 
 	clickType := root.checkClickType(x, y, now)
 
@@ -188,6 +196,15 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 	return false
 }
 
+// extendSelectionWithAltClick extends the current selection to the Alt+click position.
+// This implements the anchor-and-extend selection workflow where the first click
+// sets an anchor point and Alt+click extends the selection to the new position.
+func (root *Root) extendSelectionWithAltClick(ev *tcell.EventMouse) bool {
+	root.scr.x2, root.scr.y2 = ev.Position()
+	root.scr.mouseSelect = SelectActive
+	return true
+}
+
 // startSelection initializes a new selection.
 func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
 	x, y = root.adjustPositionForWideChar(x, y)
@@ -195,6 +212,7 @@ func (root *Root) startSelection(x, y int, modifiers tcell.ModMask) {
 	root.scr.x2, root.scr.y2 = x, y
 
 	root.scr.mouseSelect = SelectActive
+	root.scr.hasAnchorPoint = true
 	root.scr.mousePressed = true
 	root.scr.mouseRectangle = false
 	// If Ctrl is pressed, enable rectangle selection
@@ -217,8 +235,9 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 			root.scr.mousePressed = false
 			root.CopySelect(ctx)
 		} else {
-			// Reset selection if no meaningful movement occurred
-			root.resetSelect()
+			// No selection made, reset
+			root.scr.mouseSelect = SelectNone
+			root.scr.mousePressed = false
 		}
 		return true
 	default:
@@ -274,6 +293,13 @@ func (root *Root) checkClickType(x, y int, now time.Time) ClickType {
 // handleDoubleClick handles double click events for word/column selection (triple click uses handleTripleClick).
 func (root *Root) handleDoubleClick(ctx context.Context, ev *tcell.EventMouse) {
 	root.doubleClickSetRange(ev)
+
+	// Check if a valid selection range was created
+	if root.scr.x1 == root.scr.x2 && root.scr.y1 == root.scr.y2 {
+		// No selection range found, clear anchor and reset
+		root.resetSelect()
+		return
+	}
 	root.scr.mouseSelect = SelectCopied
 	root.scr.mousePressed = false
 	root.CopySelect(ctx)
@@ -449,6 +475,7 @@ func (root *Root) resetSelect() {
 	root.scr.x1, root.scr.y1 = 0, 0
 	root.scr.x2, root.scr.y2 = 0, 0
 	root.scr.mousePressed = false
+	root.scr.hasAnchorPoint = false
 	root.setMessage("")
 }
 

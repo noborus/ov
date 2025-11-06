@@ -14,6 +14,10 @@ import (
 // defaultStyle is used when the style is not specified.
 var defaultStyle = tcell.StyleDefault
 
+var anchorPointStyle = OVStyle{
+	Reverse: true,
+}
+
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
 	shouldSync := root.scr.forceDisplaySync
@@ -474,15 +478,24 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 // Multi-line selection is included until the end of the line,
 // but if the rectangle flag is true, the rectangle will be the range.
 func (root *Root) drawSelect() {
-	if root.scr.mouseSelect == SelectNone {
-		return
-	}
-
 	sel := root.scr.mouseSelect
 	x1 := root.scr.x1
 	y1 := root.scr.y1
 	x2 := root.scr.x2
 	y2 := root.scr.y2
+
+	if root.scr.hasAnchorPoint {
+		// Highlight the anchor point if the mouse was clicked but no selection is active.
+		if x1 == x2 && y1 == y2 {
+			root.applyStyleToRange(y1, anchorPointStyle, x1, x2+1)
+			return
+		}
+	}
+
+	if sel == SelectNone {
+		return
+	}
+
 	if y2 < y1 {
 		y1, y2 = y2, y1
 		x1, x2 = x2, x1
