@@ -200,7 +200,8 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 // This implements the anchor-and-extend selection workflow where the first click
 // sets an anchor point and Alt+click extends the selection to the new position.
 func (root *Root) extendSelectionWithAltClick(ev *tcell.EventMouse) bool {
-	root.scr.x2, root.scr.y2 = ev.Position()
+	x, y := ev.Position()
+	root.scr.x2, root.scr.y2 = root.adjustPositionForWideChar(x, y)
 	root.scr.mouseSelect = SelectActive
 	return true
 }
