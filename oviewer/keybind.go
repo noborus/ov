@@ -544,8 +544,28 @@ func wrapEventHandler(ctx context.Context, f func(context.Context)) func(_ *tcel
 
 // keyCapture does the actual key action.
 func (root *Root) keyCapture(ev *tcell.EventKey) bool {
-	root.keyConfig.Capture(ev)
-	return true
+	if root.keyConfig.Capture(ev) == nil {
+		return true
+	}
+	if root.Config.Debug {
+		root.setMessageLogf("key \"%s\" not assigned", root.formatKeyName(ev))
+	}
+	return false
+}
+
+// formatKeyName formats the key name for better readability
+func (root *Root) formatKeyName(ev *tcell.EventKey) string {
+	// For regular printable characters, just show the character
+	if ev.Rune() != 0 && ev.Rune() > 32 && ev.Rune() < 127 {
+		// Check for modifiers
+		if ev.Modifiers() != tcell.ModNone {
+			return ev.Name() // Use the full name for modified keys
+		}
+		return string(ev.Rune()) // Just show the character for simple keys
+	}
+
+	// For special keys, use the standard name
+	return ev.Name()
 }
 
 // keyActionMapping represents a key that is assigned to multiple actions.
