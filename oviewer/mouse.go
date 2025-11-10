@@ -12,6 +12,9 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+// clipboardTimeout is the timeout duration for clipboard operations.
+const clipboardTimeout = 2 * time.Second
+
 // ClickType represents the type of mouse click.
 type ClickType int
 
@@ -520,9 +523,24 @@ func (root *Root) copyClipboard(str string) {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
 	default:
-		if err := clipboard.WriteAll(str); err != nil {
-			log.Printf("copyToClipboard: %v\n", err)
+		go root.copyToClipboardAsync(str)
+	}
+}
+
+// copyToClipboardAsync copies to clipboard with timeout to prevent blocking.
+func (root *Root) copyToClipboardAsync(str string) {
+	done := make(chan error, 1)
+	go func() {
+		done <- clipboard.WriteAll(str)
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			log.Printf("copyToClipboard failed: %v\n", err)
 		}
+	case <-time.After(clipboardTimeout):
+		log.Printf("copyToClipboard: timeout (clipboard command may be hanging)\n")
 	}
 }
 
