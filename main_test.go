@@ -8,7 +8,6 @@ import (
 )
 
 func Test_initConfig(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
 		name    string
 		xdg     string
@@ -43,8 +42,9 @@ func Test_initConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.xdg != "" {
-				os.Setenv("XDG_CONFIG_HOME", tt.xdg)
+				t.Setenv("XDG_CONFIG_HOME", tt.xdg)
 			}
+
 			cfgFile = tt.cfgFile
 			// Backup original stderr
 			origStderr := os.Stderr
@@ -63,6 +63,7 @@ func Test_initConfig(t *testing.T) {
 			if _, err := io.Copy(&buf, r); err != nil {
 				t.Fatal(err)
 			}
+
 			capturedStderr := buf.String()
 
 			// Now you can assert capturedStderr
