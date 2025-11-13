@@ -145,11 +145,15 @@ func (root *Root) mouseSelect(ctx context.Context, ev *tcell.EventMouse) bool {
 
 // handleSelectNone handles mouse events when no selection is active.
 func (root *Root) handleSelectNone(ctx context.Context, ev *tcell.EventMouse, button tcell.ButtonMask) bool {
-	if button != tcell.ButtonPrimary {
-		return false
+	if button == tcell.ButtonPrimary {
+		return root.handlePrimaryButtonClick(ctx, ev)
 	}
 
-	return root.handlePrimaryButtonClick(ctx, ev)
+	if button == tcell.ButtonSecondary {
+		return root.handleSecondaryButtonClick(ctx, ev)
+	}
+
+	return false
 }
 
 // handleSelectCopied handles mouse events when selection is copied.
@@ -199,6 +203,17 @@ func (root *Root) handlePrimaryButtonClick(ctx context.Context, ev *tcell.EventM
 	return false
 }
 
+func (root *Root) handleSecondaryButtonClick(ctx context.Context, ev *tcell.EventMouse) bool {
+	if !root.scr.hasAnchorPoint {
+		return false
+	}
+	x, y := ev.Position()
+	root.scr.x2, root.scr.y2 = root.adjustPositionForWideChar(x, y)
+	root.CopySelect(ctx)
+	root.scr.mousePressed = false
+	return true
+}
+
 // extendSelectionWithAltClick extends the current selection to the Alt+click position.
 // This implements the anchor-and-extend selection workflow where the first click
 // sets an anchor point and Alt+click extends the selection to the new position.
@@ -235,8 +250,6 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 	case tcell.ButtonNone:
 		// Check if mouse has moved enough to be considered a selection
 		if root.scr.x1 != root.scr.x2 || root.scr.y1 != root.scr.y2 {
-			root.scr.mouseSelect = SelectCopied
-			root.scr.mousePressed = false
 			root.CopySelect(ctx)
 		} else {
 			// No selection made, reset
@@ -490,6 +503,9 @@ type eventCopySelect struct {
 
 // CopySelect fires the eventCopySelect event.
 func (root *Root) CopySelect(context.Context) {
+	root.scr.mouseSelect = SelectCopied
+	root.scr.mousePressed = false
+
 	root.sendCopySelect()
 }
 
