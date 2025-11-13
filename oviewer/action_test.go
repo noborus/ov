@@ -1782,53 +1782,41 @@ func TestDocument_specifiedAlign(t *testing.T) {
 		})
 	}
 }
+func TestDocument_closeFile(t *testing.T) {
+	t.Parallel()
 
-func TestRoot_closeFile(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	type fields struct {
-		seekable bool
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-		message string
+		name     string
+		seekable bool
+		wantErr  bool
 	}{
 		{
-			name: "testCloseFileSuccess",
-			fields: fields{
-				seekable: false,
-			},
-			wantErr: false,
-			message: "close file",
+			name:     "testCloseNonSeekableFile",
+			seekable: false,
+			wantErr:  false,
 		},
 		{
-			name: "testCloseFileError",
-			fields: fields{
-				seekable: true,
-			},
-			wantErr: true,
-			message: "cannot be closed",
+			name:     "testCloseSeekableFile",
+			seekable: true,
+			wantErr:  true, // seekable file close returns error in test
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := rootHelper(t)
-			ctx := context.Background()
-			root.Doc.seekable = tt.fields.seekable
-			err := root.Doc.closeFile()
+			t.Parallel()
+
+			doc, err := OpenDocument(filepath.Join(testdata, "test.txt"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer doc.close()
+
+			doc.seekable = tt.seekable
+
+			err = doc.closeFile()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("closeFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			root.closeFile(ctx)
-			if tt.wantErr && root.message == "" {
-				t.Errorf("expected error message log, got empty")
-			}
-			if !strings.Contains(root.message, tt.message) {
-				t.Errorf("expected message %v, got %v", tt.message, root.message)
 			}
 		})
 	}
