@@ -11,14 +11,11 @@ import (
 	"strings"
 )
 
-// remove removes the value of the specified string from slice.
+// remove removes all occurrences of the specified value from slice.
 func remove[T comparable](list []T, s T) []T {
-	for n := len(list) - 1; n >= 0; n-- {
-		if list[n] == s {
-			list = slices.Delete(list, n, n+1)
-		}
-	}
-	return list
+	return slices.DeleteFunc(list, func(v T) bool {
+		return v == s
+	})
 }
 
 // abs returns the absolute value of an integer.
@@ -35,7 +32,7 @@ func toAddTop(list []string, s string) []string {
 		return list
 	}
 	if !slices.Contains(list, s) {
-		list = append([]string{s}, list...)
+		return slices.Insert(list, 0, s)
 	}
 	return list
 }
@@ -57,9 +54,10 @@ func toLast(list []string, s string) []string {
 		return list
 	}
 
-	list = remove(list, s)
-	list = append(list, s)
-	return list
+	list = slices.DeleteFunc(list, func(v string) bool {
+		return v == s
+	})
+	return append(list, s)
 }
 
 // allIndex is a wrapper that returns either a regular expression index or a string index.
