@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/mattn/go-runewidth"
 	"github.com/rivo/uniseg"
 )
 
@@ -43,7 +42,7 @@ var Shrink rune = '…'
 var ShrinkContent = content{
 	mainc: Shrink,
 	combc: nil,
-	width: 1,
+	width: uniseg.StringWidth(string(Shrink)),
 	style: tcell.StyleDefault,
 }
 
@@ -52,7 +51,7 @@ func SetShrinkContent(shrink rune) {
 	ShrinkContent = content{
 		mainc: shrink,
 		combc: nil,
-		width: runewidth.RuneWidth(shrink),
+		width: uniseg.StringWidth(string(shrink)),
 		style: tcell.StyleDefault,
 	}
 }
@@ -130,7 +129,7 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 		if conv.convert(st) {
 			continue
 		}
-		st.parseChar(st.mainc, st.combc)
+		st.parseChar(gr.Str())
 	}
 	st.mainc = '\n'
 	st.combc = nil
@@ -139,19 +138,21 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 }
 
 // parseChar parses a single character.
-func (st *parseState) parseChar(mainc rune, combc []rune) {
-	width := runewidth.RuneWidth(mainc)
+func (st *parseState) parseChar(gr string) {
+	width := uniseg.StringWidth(gr)
 	if width == 0 {
-		st.zeroWidthHandle(mainc)
+		st.zeroWidthHandle(st.mainc)
 		return
 	}
 
-	c := DefaultContent
-	c.mainc = mainc
-	if len(combc) > 0 {
-		c.combc = combc
+	c := content{
+		mainc: st.mainc,
+		width: width,
+		style: st.style,
 	}
-	c.width = width
+	if len(st.combc) > 0 {
+		c.combc = st.combc
+	}
 	st.tabx += width
 
 	c.style = st.style

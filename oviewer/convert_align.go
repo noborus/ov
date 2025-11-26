@@ -3,7 +3,7 @@ package oviewer
 import (
 	"regexp"
 
-	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 )
 
 // align is a converter that aligns columns.
@@ -80,7 +80,7 @@ func (a *align) convert(st *parseState) bool {
 		return false
 	}
 	a.count += 1
-	if runewidth.RuneWidth(st.mainc) > 1 {
+	if uniseg.StringWidth(string(append([]rune{st.mainc}, st.combc...))) > 1 {
 		a.count += 1
 	}
 
@@ -148,7 +148,7 @@ func (a *align) convertWidth(src contents) contents {
 		if a.isShrink(columnNum) {
 			dst = appendShrink(dst)
 			dst = append(dst, SpaceContent)
-			a.maxWidths[columnNum] = runewidth.RuneWidth(Shrink)
+			a.maxWidths[columnNum] = uniseg.StringWidth(string(Shrink))
 			start = end
 			continue
 		}
