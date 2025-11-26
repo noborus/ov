@@ -475,7 +475,8 @@ func Test_StrToContentsCombining(t *testing.T) {
 			name: "testEmojiFlagSequence",
 			args: args{line: string([]rune{'\U0001f1ef', '\U0001f1f5'}), tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('🇯'), combc: []rune{'🇵'}},
+				{width: 2, style: tcell.StyleDefault, mainc: rune('🇯'), combc: []rune{'🇵'}},
+				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
 			},
 		},
 		{
@@ -492,7 +493,7 @@ func Test_StrToContentsCombining(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseString() got = %v, want %v", got, tt.want)
+				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
 			}
 		})
 	}
