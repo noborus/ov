@@ -9,7 +9,6 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
-	"github.com/mattn/go-runewidth"
 )
 
 // clipboardTimeout is the timeout duration for clipboard operations.
@@ -588,12 +587,9 @@ func (root *Root) pasteFromClipboard(context.Context) {
 		return
 	}
 
-	pos := countToCursor(input.value, input.cursorX+1)
-	runes := []rune(input.value)
-	input.value = string(runes[:pos])
-	input.value += str
-	input.value += string(runes[pos:])
-	input.cursorX += runewidth.StringWidth(str)
+	left, right := splitAtWidth(input.value, input.cursorX)
+	input.value = left + str + right
+	input.cursorX += stringWidth(str)
 }
 
 func (root *Root) rangeToString(startX, startY, endX, endY int) (string, error) {

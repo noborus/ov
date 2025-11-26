@@ -7,7 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func candidateHelpter() *candidate {
+func candidateHelper() *candidate {
 	return &candidate{
 		list: []string{"a", "b", "c"},
 	}
@@ -236,7 +236,7 @@ func TestInput_previous(t *testing.T) {
 		{
 			name: "testPrevious",
 			fields: fields{
-				Event:   newSearchEvent(candidateHelpter(), forward),
+				Event:   newSearchEvent(candidateHelper(), forward),
 				value:   "test",
 				cursorX: 4,
 			},
@@ -273,7 +273,7 @@ func TestInput_next(t *testing.T) {
 		{
 			name: "testNext",
 			fields: fields{
-				Event:   newSearchEvent(candidateHelpter(), forward),
+				Event:   newSearchEvent(candidateHelper(), forward),
 				value:   "test",
 				cursorX: 4,
 			},
@@ -806,6 +806,219 @@ func TestRoot_inputDown(t *testing.T) {
 			got := tt.Event.Down(tt.args.str)
 			if got != tt.want {
 				t.Errorf("Root.inputDown() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_stringWidth(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+		want int
+	}{
+		{
+			name: "empty string",
+			str:  "",
+			want: 0,
+		},
+		{
+			name: "ascii string",
+			str:  "test",
+			want: 4,
+		},
+		{
+			name: "single tab",
+			str:  "\t",
+			want: 2,
+		},
+		{
+			name: "multiple tabs",
+			str:  "\t\t\t",
+			want: 6,
+		},
+		{
+			name: "tab with text",
+			str:  "test\tvalue",
+			want: 11,
+		},
+		{
+			name: "wide characters",
+			str:  "テスト",
+			want: 6,
+		},
+		{
+			name: "mixed ascii and wide",
+			str:  "test テスト",
+			want: 11,
+		},
+		{
+			name: "tab with wide characters",
+			str:  "\tテスト",
+			want: 8,
+		},
+		{
+			name: "emoji",
+			str:  "👍",
+			want: 2,
+		},
+		{
+			name: "mixed content",
+			str:  "a\tb👍c",
+			want: 7,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := stringWidth(tt.str); got != tt.want {
+				t.Errorf("stringWidth() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+func Test_splitAtWidth(t *testing.T) {
+	tests := []struct {
+		name        string
+		s           string
+		targetWidth int
+		wantLeft    string
+		wantRight   string
+	}{
+		{
+			name:        "empty string",
+			s:           "",
+			targetWidth: 5,
+			wantLeft:    "",
+			wantRight:   "",
+		},
+		{
+			name:        "zero width",
+			s:           "test",
+			targetWidth: 0,
+			wantLeft:    "",
+			wantRight:   "test",
+		},
+		{
+			name:        "split ascii at middle",
+			s:           "test",
+			targetWidth: 2,
+			wantLeft:    "te",
+			wantRight:   "st",
+		},
+		{
+			name:        "split ascii at end",
+			s:           "test",
+			targetWidth: 4,
+			wantLeft:    "test",
+			wantRight:   "",
+		},
+		{
+			name:        "split beyond length",
+			s:           "test",
+			targetWidth: 10,
+			wantLeft:    "test",
+			wantRight:   "",
+		},
+		{
+			name:        "split with single tab",
+			s:           "\t",
+			targetWidth: 1,
+			wantLeft:    "",
+			wantRight:   "\t",
+		},
+		{
+			name:        "split with tab width 2",
+			s:           "\t",
+			targetWidth: 2,
+			wantLeft:    "\t",
+			wantRight:   "",
+		},
+		{
+			name:        "split with tab and text before",
+			s:           "ab\tcd",
+			targetWidth: 3,
+			wantLeft:    "ab",
+			wantRight:   "\tcd",
+		},
+		{
+			name:        "split with tab and text after width",
+			s:           "ab\tcd",
+			targetWidth: 4,
+			wantLeft:    "ab\t",
+			wantRight:   "cd",
+		},
+		{
+			name:        "split multiple tabs",
+			s:           "\t\t\t",
+			targetWidth: 4,
+			wantLeft:    "\t\t",
+			wantRight:   "\t",
+		},
+		{
+			name:        "split wide characters",
+			s:           "テスト",
+			targetWidth: 4,
+			wantLeft:    "テス",
+			wantRight:   "ト",
+		},
+		{
+			name:        "split wide characters exact",
+			s:           "テスト",
+			targetWidth: 6,
+			wantLeft:    "テスト",
+			wantRight:   "",
+		},
+		{
+			name:        "split mixed ascii and wide",
+			s:           "testテスト",
+			targetWidth: 8,
+			wantLeft:    "testテス",
+			wantRight:   "ト",
+		},
+		{
+			name:        "split with emoji",
+			s:           "a👍b",
+			targetWidth: 2,
+			wantLeft:    "a",
+			wantRight:   "👍b",
+		},
+		{
+			name:        "split with emoji at boundary",
+			s:           "a👍b",
+			targetWidth: 3,
+			wantLeft:    "a👍",
+			wantRight:   "b",
+		},
+		{
+			name:        "split complex mixed content",
+			s:           "a\tテスト👍",
+			targetWidth: 5,
+			wantLeft:    "a\tテ",
+			wantRight:   "スト👍",
+		},
+		{
+			name:        "split at tab boundary",
+			s:           "test\tvalue",
+			targetWidth: 6,
+			wantLeft:    "test\t",
+			wantRight:   "value",
+		},
+		{
+			name:        "split just before tab",
+			s:           "test\tvalue",
+			targetWidth: 5,
+			wantLeft:    "test",
+			wantRight:   "\tvalue",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotLeft, gotRight := splitAtWidth(tt.s, tt.targetWidth)
+			if gotLeft != tt.wantLeft {
+				t.Errorf("splitAtWidth() gotLeft = %q, want %q", gotLeft, tt.wantLeft)
+			}
+			if gotRight != tt.wantRight {
+				t.Errorf("splitAtWidth() gotRight = %q, want %q", gotRight, tt.wantRight)
 			}
 		})
 	}

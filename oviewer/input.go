@@ -3,10 +3,11 @@ package oviewer
 import (
 	"context"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 )
 
 // InputMode represents the state of the input.
@@ -147,74 +148,148 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	case tcell.KeyEscape:
 		input.value = ""
 		input.Event = normal()
-		return false
 	case tcell.KeyEnter:
 		return true
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if input.cursorX <= 0 {
-			return false
+		if input.cursorX > 0 {
+			input.value, input.cursorX = deleteAtWidth(input.value, input.cursorX, true)
 		}
-		pos := countToCursor(input.value, input.cursorX)
-		runes := []rune(input.value)
-		input.value = string(runes[:pos])
-		input.cursorX = stringWidth(input.value)
-		next := pos + 1
-		for ; next < len(runes); next++ {
-			if runewidth.RuneWidth(runes[next]) != 0 {
-				break
-			}
-		}
-		input.value += string(runes[next:])
 	case tcell.KeyDelete:
-		pos := countToCursor(input.value, input.cursorX)
-		runes := []rune(input.value)
-		dp := 1
-		if input.cursorX == 0 {
-			dp = 0
-		}
-		input.value = string(runes[:pos+dp])
-		next := pos + 1
-		for ; next < len(runes); next++ {
-			if runewidth.RuneWidth(runes[next]) != 0 {
-				break
-			}
-		}
-		if len(runes) > next {
-			input.value += string(runes[dp+next:])
-		}
+		input.value, _ = deleteAtWidth(input.value, input.cursorX, false)
 	case tcell.KeyLeft:
-		if input.cursorX <= 0 {
-			return false
-		}
-		pos := countToCursor(input.value, input.cursorX)
-		runes := []rune(input.value)
-		input.cursorX = stringWidth(string(runes[:pos]))
-		if pos > 0 && runes[pos-1] == '\t' {
-			input.cursorX--
+		if input.cursorX > 0 {
+			input.cursorX = cursorLeft(input.value, input.cursorX)
 		}
 	case tcell.KeyRight:
-		pos := countToCursor(input.value, input.cursorX+1)
-		runes := []rune(input.value)
-		if len(runes) > pos {
-			input.cursorX = stringWidth(string(runes[:pos+1]))
+		newCursor := cursorRight(input.value, input.cursorX)
+		if newCursor != input.cursorX {
+			input.cursorX = newCursor
 		}
 	case tcell.KeyTAB:
-		pos := countToCursor(input.value, input.cursorX+1)
-		runes := []rune(input.value)
-		input.value = string(runes[:pos])
-		input.value += "\t"
+		left, right := splitAtWidth(input.value, input.cursorX)
+		input.value = left + "\t" + right
 		input.cursorX += 2
-		input.value += string(runes[pos:])
 	case tcell.KeyRune:
-		pos := countToCursor(input.value, input.cursorX+1)
-		runes := []rune(input.value)
-		input.value = string(runes[:pos])
-		r := evKey.Rune()
-		input.value += string(r)
-		input.value += string(runes[pos:])
-		input.cursorX += runewidth.RuneWidth(r)
+		r := string(evKey.Rune())
+		left, right := splitAtWidth(input.value, input.cursorX)
+		input.value = left + r + right
+		input.cursorX += uniseg.StringWidth(r)
+		// Correct cursorX if it exceeds the actual string width
+		// This can happen with combining characters that trigger multiple input events
+		actualWidth := stringWidth(input.value)
+		if input.cursorX > actualWidth {
+			input.cursorX = actualWidth
+		}
 	}
 	return false
+}
+
+// stringWidth returns the number of widths of the input.
+// Tab is 2 characters.
+func stringWidth(str string) int {
+	tabCount := strings.Count(str, "\t")
+	return uniseg.StringWidth(str) + (tabCount * 2)
+}
+
+// graphemeWidth returns the display width of a grapheme.
+// Tab characters are counted as 2, all other graphemes use uniseg.StringWidth.
+func graphemeWidth(gr *uniseg.Graphemes) int {
+	r := gr.Runes()
+	if len(r) == 1 && r[0] == '\t' {
+		return 2
+	}
+	return uniseg.StringWidth(gr.Str())
+}
+
+// splitAtWidth splits the string at the specified display width.
+// It returns the left part (up to targetWidth) and the right part (after targetWidth).
+func splitAtWidth(s string, targetWidth int) (string, string) {
+	bytePos := 0
+	width := 0
+	gr := uniseg.NewGraphemes(s)
+
+	for gr.Next() {
+		if width >= targetWidth {
+			break
+		}
+		gw := graphemeWidth(gr)
+		if width+gw > targetWidth {
+			break
+		}
+		width += gw
+		bytePos += len(gr.Bytes())
+	}
+	return s[:bytePos], s[bytePos:]
+}
+
+// cursorLeft returns the cursor position moved left by one grapheme.
+func cursorLeft(s string, cursorWidth int) int {
+	width := 0
+	prevWidth := 0
+	gr := uniseg.NewGraphemes(s)
+	for gr.Next() {
+		gw := graphemeWidth(gr)
+		if width >= cursorWidth {
+			break
+		}
+		prevWidth = width
+		width += gw
+	}
+	return prevWidth
+}
+
+// cursorRight returns the cursor position moved right by one grapheme.
+// If the cursor is already at the end, it returns the current position.
+func cursorRight(s string, cursorWidth int) int {
+	width := 0
+	gr := uniseg.NewGraphemes(s)
+	for gr.Next() {
+		gw := graphemeWidth(gr)
+		if width >= cursorWidth {
+			return width + gw
+		}
+		width += gw
+	}
+	return cursorWidth // Already at the end
+}
+
+// deleteAtWidth deletes a grapheme at the cursor position.
+// If backspace is true, it deletes the grapheme before the cursor (Backspace behavior).
+// If backspace is false, it deletes the grapheme at the cursor (Delete behavior).
+// It returns the new string and the new cursor position.
+func deleteAtWidth(s string, cursorWidth int, backspace bool) (string, int) {
+	var result strings.Builder
+	width := 0
+	newCursorWidth := cursorWidth
+	deleted := false
+
+	gr := uniseg.NewGraphemes(s)
+	for gr.Next() {
+		grapheme := gr.Str()
+		gw := graphemeWidth(gr)
+
+		if backspace {
+			// Backspace: delete the grapheme before cursor
+			if !deleted && width+gw >= cursorWidth && width < cursorWidth {
+				// This is the grapheme to delete
+				newCursorWidth = width
+				deleted = true
+				continue
+			}
+		} else {
+			// Delete: delete the grapheme at cursor
+			if !deleted && width >= cursorWidth {
+				// This is the grapheme to delete
+				deleted = true
+				continue
+			}
+		}
+
+		result.WriteString(grapheme)
+		width += gw
+	}
+
+	return result.String(), newCursorWidth
 }
 
 // reset resets the input.
@@ -225,14 +300,12 @@ func (input *Input) reset() {
 
 func (input *Input) previous() {
 	input.value = input.Event.Up(input.value)
-	runes := []rune(input.value)
-	input.cursorX = stringWidth(string(runes))
+	input.cursorX = stringWidth(input.value)
 }
 
 func (input *Input) next() {
 	input.value = input.Event.Down(input.value)
-	runes := []rune(input.value)
-	input.cursorX = stringWidth(string(runes))
+	input.cursorX = stringWidth(input.value)
 }
 
 // toggleCaseSensitive toggles case sensitivity.
@@ -278,36 +351,6 @@ func (root *Root) candidatePrevious(context.Context) {
 // candidateNext searches the next history.
 func (root *Root) candidateNext(context.Context) {
 	root.input.next()
-}
-
-// stringWidth returns the number of widths of the input.
-// Tab is 2 characters.
-func stringWidth(str string) int {
-	width := 0
-	for _, r := range str {
-		width += runewidth.RuneWidth(r)
-		if r == '\t' {
-			width += 2
-		}
-	}
-	return width
-}
-
-// countToCursor returns the number of characters in the input.
-func countToCursor(str string, cursor int) int {
-	width := 0
-	i := 0
-	for _, r := range str {
-		width += runewidth.RuneWidth(r)
-		if r == '\t' {
-			width += 2
-		}
-		if width >= cursor {
-			return i
-		}
-		i++
-	}
-	return i
 }
 
 // Eventer is a generic interface for inputs.
