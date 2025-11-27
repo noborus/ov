@@ -145,7 +145,7 @@ func (root *Root) drawSectionHeader() {
 		root.applyStyleToLine(y, m.Style.SectionLine)
 
 		root.drawVerticalHeader(y, wrapNum, lineC)
-		// markstyle is displayed above the section header.
+		// markStyle is displayed above the section header.
 		markStyleWidth := min(root.scr.vWidth, m.MarkStyleWidth)
 		root.applyMarkStyle(lN, y, markStyleWidth)
 		// Underline search lines when they overlap in section headers.
@@ -327,7 +327,7 @@ func (root *Root) blankLineNumber(y int) {
 		return
 	}
 	for x := range root.scr.startX {
-		root.setContent(x, y, ' ', nil, defaultStyle)
+		root.Screen.PutStr(x, y, " ")
 	}
 }
 
@@ -356,11 +356,8 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	number = number - m.firstLine() + 1
 
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
-	numC := []rune(fmt.Sprintf("%*d", root.scr.startX-1, number))
-	for i := range numC {
-		root.setContent(i, y, numC[i], nil, style)
-	}
-	root.setContent(len(numC), y, ' ', nil, defaultStyle)
+	numC := fmt.Sprintf("%*d ", root.scr.startX-1, number)
+	root.Screen.PutStrStyled(0, y, numC, style)
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.
@@ -441,10 +438,10 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 // applyStyleToRange applies the style from the start to the end of the physical line.
 func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
-		mainc, combc, style, width := root.Screen.GetContent(x, y)
+		str, style, width := root.Screen.Get(x, y)
 		newStyle := applyStyle(style, s)
 		if style != newStyle {
-			root.setContent(x, y, mainc, combc, newStyle)
+			root.Screen.Put(x, y, str, newStyle)
 		}
 		if width == 2 {
 			x++
@@ -538,9 +535,9 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 	}
 
 	for x := start; x < end; x++ {
-		mainc, combc, style, width := root.Screen.GetContent(x, y)
+		str, style, width := root.Screen.Get(x, y)
 		newStyle := applyStyle(style, selectStyle)
-		root.setContent(x, y, mainc, combc, newStyle)
+		root.Screen.Put(x, y, str, newStyle)
 		if width == 2 {
 			x++
 		}
@@ -591,6 +588,7 @@ func needsDisplaySync(mainc rune, combc []rune) bool {
 	if len(combc) > 0 {
 		return true
 	}
+
 	// Check for ambiguous width characters using runewidth library
 	if runewidth.IsAmbiguousWidth(mainc) {
 		return true
