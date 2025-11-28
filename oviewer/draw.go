@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -164,6 +165,12 @@ func (root *Root) drawSectionHeader() {
 	root.applyStyleToLine(m.headerHeight+m.sectionHeaderHeight-1, m.Style.SectionHeaderBorder)
 }
 
+const (
+	minusRuler = "0"
+	tenRuler   = "         1         2         3         4         5         6         7         8         9         0"
+	oneRuler   = "1234567890"
+)
+
 // drawRuler draws the ruler.
 func (root *Root) drawRuler() {
 	rulerType := root.Doc.RulerType
@@ -171,26 +178,23 @@ func (root *Root) drawRuler() {
 		return
 	}
 
+	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
+
 	startX := 0
+	offset := 0
 	if !root.Doc.WrapMode && rulerType == RulerRelative {
 		startX = root.scr.startX - root.Doc.x
-	}
-
-	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
-	for x := range root.scr.vWidth {
-		n := x - startX + 1
-		if n < 0 {
-			continue
+		if startX < 0 {
+			offset = -startX
+			startX = 0
 		}
-		numStr := []rune(fmt.Sprintf("%3d", n))
-		if numStr[2] == '0' {
-			root.setContent(x-1, 0, numStr[0], nil, style)
-			root.setContent(x, 0, numStr[1], nil, style)
-		} else {
-			root.setContent(x, 0, ' ', nil, style)
-		}
-		root.setContent(x, 1, numStr[2], nil, style)
 	}
+	root.Screen.PutStrStyled(0, 0, strings.Repeat(" ", startX), style)
+	root.Screen.PutStrStyled(0, 1, strings.Repeat(minusRuler, startX), style)
+	tensLine := strings.Repeat(tenRuler, (root.scr.vWidth+offset)/100+1)
+	onesLine := strings.Repeat(oneRuler, (root.scr.vWidth+offset)/10+1)
+	root.Screen.PutStrStyled(startX, 0, tensLine[offset:], style)
+	root.Screen.PutStrStyled(startX, 1, onesLine[offset:], style)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
