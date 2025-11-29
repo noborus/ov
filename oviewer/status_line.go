@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/uniseg"
 )
 
 // DefaultStatusLine is the number of lines in the status line.
@@ -20,63 +21,62 @@ func (root *Root) drawStatus() {
 	}
 
 	root.clearY(root.Doc.statusPos)
-	leftContents, cursorPos := root.leftStatus()
-	root.setContentString(0, root.Doc.statusPos, leftContents)
-
-	rightContents := root.rightStatus()
-	root.setContentString(root.scr.vWidth-len(rightContents), root.Doc.statusPos, rightContents)
-
-	root.Screen.ShowCursor(cursorPos, root.Doc.statusPos)
+	root.drawLeftStatus()
+	root.drawRightStatus()
 }
 
-// leftStatus returns the status of the left side.
-func (root *Root) leftStatus() (contents, int) {
+// drawLeftStatus draws the status of the left side and positions the cursor.
+func (root *Root) drawLeftStatus() {
+	var pos int
 	if root.input.Event.Mode() == Normal {
-		return root.normalLeftStatus()
+		pos = root.normalLeftStatus()
+	} else {
+		pos = root.inputLeftStatus()
 	}
-	return root.inputLeftStatus()
+	root.Screen.ShowCursor(pos, root.Doc.statusPos)
 }
 
 // normalLeftStatus returns the status of the left side of the normal mode.
-func (root *Root) normalLeftStatus() (contents, int) {
-	var leftStatus strings.Builder
-
+func (root *Root) normalLeftStatus() int {
 	color := tcell.ColorWhite
+	numVisible := false
 	if root.DocumentLen() > 1 && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
-		leftStatus.WriteString("[")
-		leftStatus.WriteString(strconv.Itoa(root.CurrentDoc))
-		leftStatus.WriteString("]")
+		numVisible = true
 		if root.CurrentDoc != 0 {
 			color = tcell.Color((root.CurrentDoc + 8) % 16)
 		}
 	}
 
-	leftStatus.WriteString(root.displayStatus())
-	leftStatus.WriteString(root.displayTitle())
-	leftStatus.WriteString(":")
-	leftStatus.WriteString(root.message)
-	leftContents := StrToContents(leftStatus.String(), -1)
+	str := root.StrLeftStatus(numVisible)
+	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
+	if root.Doc.Normal.InvertColor {
+		style = style.Foreground(tcell.ColorValid + color).Reverse(true)
+	}
+	root.Screen.PutStrStyled(0, root.Doc.statusPos, str, style)
 
-	RangeStyle(leftContents, 0, len(leftContents), root.Doc.Style.LeftStatus)
 	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
 
-	if root.Doc.Normal.InvertColor {
-		for i := range leftContents {
-			leftContents[i].style = leftContents[i].style.Foreground(tcell.ColorValid + color).Reverse(true)
-		}
-	}
-
-	return leftContents, len(leftContents)
+	return uniseg.StringWidth(str)
 }
 
-// displayStatus returns the status mode of the document.
-func (root *Root) displayStatus() string {
-	stMode := root.statusMode()
-	if !root.Doc.pauseFollow {
-		return stMode
+// StrLeftStatus returns the left status string.
+func (root *Root) StrLeftStatus(numVisible bool) string {
+	var leftStatus strings.Builder
+
+	if numVisible {
+		leftStatus.WriteString("[")
+		leftStatus.WriteString(strconv.Itoa(root.CurrentDoc))
+		leftStatus.WriteString("]")
 	}
-	return "||" + stMode
+	if root.Doc.pauseFollow {
+		leftStatus.WriteString("||")
+	}
+	leftStatus.WriteString(root.statusMode())
+	leftStatus.WriteString(root.displayTitle())
+	leftStatus.WriteString(":")
+	leftStatus.WriteString(root.message)
+	return leftStatus.String()
 }
 
 // statusMode returns the status mode of the document.
@@ -100,17 +100,17 @@ func (root *Root) statusMode() string {
 	return ""
 }
 
-// inputLeftStatus returns the status of the left side of the input.
-func (root *Root) inputLeftStatus() (contents, int) {
+// inputLeftStatus draws the input status on the left side and returns the cursor position.
+func (root *Root) inputLeftStatus() int {
 	input := root.input
 	prompt := root.inputPrompt()
-	leftContents := StrToContents(prompt+input.value, -1)
 
+	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
+	root.Screen.PutStrStyled(0, root.Doc.statusPos, prompt+input.value, style)
 	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
-	RangeStyle(leftContents, 0, len(leftContents), root.Doc.Style.LeftStatus)
 
-	return leftContents, len(prompt) + input.cursorX
+	return uniseg.StringWidth(prompt) + input.cursorX
 }
 
 // inputPrompt returns a string describing the input field.
@@ -126,8 +126,8 @@ func (root *Root) inputPrompt() string {
 	return prompt.String()
 }
 
-// rightStatus returns the status of the right side.
-func (root *Root) rightStatus() contents {
+// drawRightStatus draws the status of the right side.
+func (root *Root) drawRightStatus() {
 	next := ""
 	if !root.Doc.BufEOF() {
 		next = "..."
@@ -136,7 +136,7 @@ func (root *Root) rightStatus() contents {
 	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
 		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
-	contents := StrToContents(str, -1)
-	RangeStyle(contents, 0, len(contents), root.Doc.Style.RightStatus)
-	return contents
+	width := uniseg.StringWidth(str)
+	style := applyStyle(tcell.StyleDefault, root.Doc.Style.RightStatus)
+	root.Screen.PutStrStyled(root.scr.vWidth-width, root.Doc.statusPos, str, style)
 }
