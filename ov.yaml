@@ -282,9 +282,9 @@ KeyBind:
     convert_type:
         - "alt+t"
     align_format:
-        - "alt+F"
+        - "alt+f"
     raw_format:
-        - "alt+R"
+        - "alt+r"
     vertical_header:
         - "y"
     header_column:
