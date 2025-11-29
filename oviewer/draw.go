@@ -247,8 +247,7 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 			break
 		}
 		if lX+n < 0 {
-			c := DefaultContent
-			root.setContent(x, y, c.mainc, c.combc, c.style)
+			root.Screen.Put(x, y, " ", defaultStyle)
 			continue
 		}
 		c := lineC.lc[lX+n]
@@ -283,16 +282,12 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		if n < len(lineC.lc) {
 			c = lineC.lc[n]
 		}
-		if n == widthVH-2 && c.width == 2 {
-			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			root.setContent(x, y, c.mainc, c.combc, style)
-			return
-		} else if n == widthVH-1 {
-			style := applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
-			root.setContent(x, y, c.mainc, c.combc, style)
-			return
+		var style tcell.Style
+		if n == widthVH-1 || (n == widthVH-2 && c.width == 2) {
+			style = applyStyle(defaultStyle, root.Doc.Style.VerticalHeaderBorder)
+		} else {
+			style = applyStyle(c.style, root.Doc.Style.VerticalHeader)
 		}
-		style := applyStyle(c.style, root.Doc.Style.VerticalHeader)
 		root.setContent(x, y, c.mainc, c.combc, style)
 		x++
 		if c.width == 2 {
@@ -379,23 +374,12 @@ func (root *Root) displayTitle() string {
 	return root.Doc.FileName
 }
 
-// setContentString is a helper function that draws a string with setContent.
-func (root *Root) setContentString(vx int, vy int, lc contents) {
-	for n := 0; n < len(lc); n++ {
-		c := lc[n]
-		root.setContent(vx+n, vy, c.mainc, c.combc, c.style)
-		if c.width == 2 {
-			n++
-		}
-	}
-	root.setContent(vx+len(lc), vy, 0, nil, defaultStyle.Normal())
-}
-
 // clearEOL clears from the specified position to the right end.
 func (root *Root) clearEOL(x int, y int, style tcell.Style) {
-	for ; x < root.scr.vWidth; x++ {
-		root.setContent(x, y, ' ', nil, style)
+	if x >= root.scr.vWidth {
+		return
 	}
+	root.Screen.PutStrStyled(x, y, strings.Repeat(" ", root.scr.vWidth-x), style)
 }
 
 // clearY clear the specified line.
