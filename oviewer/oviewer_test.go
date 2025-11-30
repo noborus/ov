@@ -298,7 +298,7 @@ func TestRoot_setKeyConfig(t *testing.T) {
 		{
 			name:    "test-ov.yaml",
 			cfgFile: filepath.Join(cwd, "ov.yaml"),
-			want:    []string{"Enter", "Down", "ctrl+N"},
+			want:    []string{"Enter", "Down", "ctrl+n"},
 			wantErr: false,
 		},
 		{
