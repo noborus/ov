@@ -2,10 +2,12 @@ package oviewer
 
 import (
 	"context"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
 
+	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/uniseg"
 )
@@ -144,42 +146,53 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	if evKey == nil {
 		return false
 	}
-	switch evKey.Key() {
-	case tcell.KeyEscape:
-		input.value = ""
-		input.Event = normal()
-	case tcell.KeyEnter:
-		return true
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		if input.cursorX > 0 {
-			input.value, input.cursorX = deleteAtWidth(input.value, input.cursorX, true)
-		}
-	case tcell.KeyDelete:
-		input.value, _ = deleteAtWidth(input.value, input.cursorX, false)
-	case tcell.KeyLeft:
-		if input.cursorX > 0 {
-			input.cursorX = cursorLeft(input.value, input.cursorX)
-		}
-	case tcell.KeyRight:
-		newCursor := cursorRight(input.value, input.cursorX)
-		if newCursor != input.cursorX {
-			input.cursorX = newCursor
-		}
-	case tcell.KeyTAB:
-		left, right := splitAtWidth(input.value, input.cursorX)
-		input.value = left + "\t" + right
-		input.cursorX += 2
-	case tcell.KeyRune:
-		r := string(evKey.Rune())
+
+	mod := evKey.Modifiers()
+	key := evKey.Key()
+	rune := evKey.Rune()
+
+	if key == tcell.KeyRune {
+		r := string(rune)
 		left, right := splitAtWidth(input.value, input.cursorX)
 		input.value = left + r + right
 		input.cursorX += uniseg.StringWidth(r)
-		// Correct cursorX if it exceeds the actual string width
-		// This can happen with combining characters that trigger multiple input events
 		actualWidth := stringWidth(input.value)
 		if input.cursorX > actualWidth {
 			input.cursorX = actualWidth
 		}
+		return false
+	}
+
+	keyStr, err := cbind.Encode(mod, key, rune)
+	if err != nil {
+		log.Printf("Error encoding key event: %v", err)
+		return false
+	}
+	switch strings.ToLower(keyStr) {
+	case "escape":
+		input.value = ""
+		input.Event = normal()
+	case "enter":
+		return true
+	case "backspace", "backspace2", "ctrl+h":
+		if input.cursorX > 0 {
+			input.value, input.cursorX = deleteAtWidth(input.value, input.cursorX, true)
+		}
+	case "delete":
+		input.value, _ = deleteAtWidth(input.value, input.cursorX, false)
+	case "left":
+		if input.cursorX > 0 {
+			input.cursorX = cursorLeft(input.value, input.cursorX)
+		}
+	case "right":
+		newCursor := cursorRight(input.value, input.cursorX)
+		if newCursor != input.cursorX {
+			input.cursorX = newCursor
+		}
+	case "tab":
+		left, right := splitAtWidth(input.value, input.cursorX)
+		input.value = left + "\t" + right
+		input.cursorX += 2
 	}
 	return false
 }
