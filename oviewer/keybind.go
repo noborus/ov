@@ -262,7 +262,7 @@ func defaultKeyBinds() KeyBind {
 		actionStatusLine:     {"ctrl+F10"},
 
 		// Move actions.
-		actionMoveDown:       {"Enter", "Down", "ctrl+N"},
+		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
 		actionMoveUp:         {"Up", "ctrl+p"},
 		actionMoveTop:        {"Home"},
 		actionMoveWidthLeft:  {"ctrl+shift+left"},

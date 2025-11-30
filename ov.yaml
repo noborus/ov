@@ -164,7 +164,7 @@ KeyBind:
     down:
         - "Enter"
         - "Down"
-        - "ctrl+N"
+        - "ctrl+n"
     up:
         - "Up"
         - "ctrl+p"

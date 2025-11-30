@@ -173,7 +173,7 @@ KeyBind:
         - "ctrl+y"
         - "k"
         - "K"
-        - "ctrl+K"
+        - "ctrl+k"
         - "Up"
     top:
         - "Home"
