@@ -264,9 +264,9 @@ KeyBind:
         - "ctrl+F9"
         - "ctrl+alt+s"
     width_left:
-        - "ctrl+shift+left"
+        - "alt+left"
     width_right:
-        - "ctrl+shift+right"
+        - "alt+right"
     begin_left:
         - "shift+Home"
     end_right:
