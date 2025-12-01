@@ -516,20 +516,6 @@ func setHandler(ctx context.Context, c *cbind.Configuration, name string, keys [
 		}
 
 		c.SetKey(mod, key, wrapEventHandler(ctx, handler))
-
-		// Special case: if ctrl+j is bound, also bind Enter to the same action.
-		if key == tcell.KeyEnter && strings.ToLower(k) == "ctrl+j" {
-			// Also bind to actual Ctrl+J event
-			c.SetKey(tcell.ModCtrl, tcell.KeyCtrlJ, wrapEventHandler(ctx, handler))
-		}
-
-		// ctrl+h, Backspace and ctrl+Backspace can only be assigned one handler.
-		if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
-			c.SetKey(tcell.ModNone, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
-			c.SetKey(tcell.ModNone, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
-			c.SetKey(tcell.ModCtrl, tcell.KeyBackspace, wrapEventHandler(ctx, handler))
-			c.SetKey(tcell.ModCtrl, tcell.KeyBackspace2, wrapEventHandler(ctx, handler))
-		}
 	}
 	return nil
 }
