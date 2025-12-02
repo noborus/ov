@@ -1,6 +1,6 @@
 # ov - feature rich terminal pager
 
-<!-- markdownlint-disable MD029 MD036 -->
+<!-- markdownlint-disable MD019 MD029 MD033 MD036 -->
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
@@ -343,8 +343,6 @@ ov --skip-lines 1 --header 1 README.md
 
 ###  4.3. <a name='vertical-header'></a>Vertical Header
 
-*Added in v0.39.0*
-
 The `--vertical-header` (`-y`) (default key `y`) option fixedly displays the specified number of characters.
 
 ```console
@@ -376,8 +374,6 @@ ps aux | ov -H1 --column-delimiter "/\s+/" --column-rainbow --column-mode
 [Related styling](#style-customization): `ColumnHighlight`,`ColumnRainbow`.
 
 ###  4.5. <a name='header-column'></a>Header Column
-
-*Added in v0.39.0*
 
 The `--header-column` (`-Y`) (default key is `Y`) option fixedly displays the specified number of columns when `column-mode` is enabled.
 
@@ -487,8 +483,8 @@ This is an example of using the `git` pager.
 
 ```gitconfig
 [pager]
-	diff = "ov -F --section-delimiter '^diff'"
-	log = "ov -F --section-delimiter '^commit' --section-header-num 3"
+  diff = "ov -F --section-delimiter '^diff'"
+  log = "ov -F --section-delimiter '^commit' --section-header-num 3"
 ```
 
 [Related styling](#style-customization): `SectionLine`.
@@ -806,9 +802,9 @@ You can customize the scroll amounts using command-line options or configuration
 You can now use "Anchor and Extend Selection" with the mouse:
 
 * **Set Anchor**: Left-click to set an anchor point.
- **Extend Selection**: After setting an anchor, use `Alt+Click` or right-click to extend the selection from the anchor to the clicked position and copy the selected range.
-- **Clear Anchor**: If no selection is created, double-click will clear the anchor.
-- **Anchor Highlight**: When there is no selection, the anchor point is visually highlighted (reverse style).
+* **Extend Selection**: After setting an anchor, use `Alt+Click` or right-click to extend the selection from the anchor to the clicked position and copy the selected range.
+* **Clear Anchor**: If no selection is created, double-click will clear the anchor.
+* **Anchor Highlight**: When there is no selection, the anchor point is visually highlighted (reverse style).
 
 This feature enables flexible, editor-like selection and copy operations using the mouse.
 
@@ -1114,8 +1110,6 @@ overwrite? (O)overwrite, (A)append, (N)cancel
 ```
 
 ###  4.30. <a name='ruler'></a>Ruler
-
-*Added in v0.39.0*
 
 The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
 
