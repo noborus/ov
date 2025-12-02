@@ -62,6 +62,7 @@ ov is a terminal pager.
     * 4.18.1. [Text Selection](#text-selection)
     * 4.18.2. [Wheel scroll](#wheel-scroll)
     * 4.18.3. [Scroll Amount Configuration](#scroll-amount-configuration)
+    * 4.18.4. [Anchor and Extend Selection](#anchor-and-extend-selection)
   * 4.19. [Multi color highlight](#multi-color-highlight)
   * 4.20. [Plain](#plain)
   * 4.21. [Converter](#converter)
@@ -89,6 +90,9 @@ ov is a terminal pager.
   * 8.2. [Customizing the bottom status line](#customizing-the-bottom-status-line)
     * 8.2.1. [Customizing LeftStatus and RightStatus styles](#customizing-leftstatus-and-rightstatus-styles)
   * 8.3. [Terminal Title](#terminal-title)
+    * 8.3.1. [Command line usage](#command-line-usage)
+    * 8.3.2. [Configuration file](#configuration-file)
+    * 8.3.3. [Custom terminal title](#custom-terminal-title)
   * 8.4. [Help and Log Documentation customization](#help-and-log-documentation-customization)
   * 8.5. [Key binding customization](#key-binding-customization)
   * 8.6. [General configuration](#general-configuration)
@@ -693,12 +697,12 @@ the command will display the results of the filter and then quit if the results 
 $ ps aux|ov -H1 --filter postgres --quit-if-one-screen
 USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
 postgres    1589  0.0  0.0 221992 29952 ?        Ss   Jul24   0:02 /usr/lib/postgresql/14/bin/postgres -D /var/lib/postgresql/14/main -c config_file=/etc/postgresql/14/main/postgresql.conf
-postgres    1624  0.0  0.0 222104  9544 ?        Ss   Jul24   0:00 postgres: 14/main: checkpointer 
-postgres    1626  0.0  0.0 221992  8392 ?        Ss   Jul24   0:00 postgres: 14/main: background writer 
-postgres    1627  0.0  0.0 221992 11464 ?        Ss   Jul24   0:00 postgres: 14/main: walwriter 
-postgres    1628  0.0  0.0 222560  9928 ?        Ss   Jul24   0:01 postgres: 14/main: autovacuum launcher 
-postgres    1629  0.0  0.0  76728  7112 ?        Ss   Jul24   0:01 postgres: 14/main: stats collector 
-postgres    1631  0.0  0.0 222420  8904 ?        Ss   Jul24   0:00 postgres: 14/main: logical replication launcher 
+postgres    1624  0.0  0.0 222104  9544 ?        Ss   Jul24   0:00 postgres: 14/main: checkpointer
+postgres    1626  0.0  0.0 221992  8392 ?        Ss   Jul24   0:00 postgres: 14/main: background writer
+postgres    1627  0.0  0.0 221992 11464 ?        Ss   Jul24   0:00 postgres: 14/main: walwriter
+postgres    1628  0.0  0.0 222560  9928 ?        Ss   Jul24   0:01 postgres: 14/main: autovacuum launcher
+postgres    1629  0.0  0.0  76728  7112 ?        Ss   Jul24   0:01 postgres: 14/main: stats collector
+postgres    1631  0.0  0.0 222420  8904 ?        Ss   Jul24   0:00 postgres: 14/main: logical replication launcher
 noborus   193766  0.0  0.0 1603756 7552 pts/0    Rl+  10:37   0:00 ov -H1 -F --filter postgres
 ```
 
@@ -794,6 +798,19 @@ When mouse support is enabled, you can use the mouse wheel for navigation:
 ####  4.18.3. <a name='scroll-amount-configuration'></a>Scroll Amount Configuration
 
 You can customize the scroll amounts using command-line options or configuration file settings:
+
+####  4.18.4. <a name='anchor-and-extend-selection'></a>Anchor and Extend Selection
+
+*Added in v0.50.0*
+
+You can now use "Anchor and Extend Selection" with the mouse:
+
+* **Set Anchor**: Left-click to set an anchor point.
+ **Extend Selection**: After setting an anchor, use `Alt+Click` or right-click to extend the selection from the anchor to the clicked position and copy the selected range.
+- **Clear Anchor**: If no selection is created, double-click will clear the anchor.
+- **Anchor Highlight**: When there is no selection, the anchor point is visually highlighted (reverse style).
+
+This feature enables flexible, editor-like selection and copy operations using the mouse.
 
 **Vertical Scroll Amount:**
 
@@ -1267,7 +1284,7 @@ It can also be changed after startup.
 | [ctrl+F8], [ctrl+alt+r]       | * enable/disable mouse                             |
 | [S]                           | * save buffer to file                              |
 | **Moving**                    |                                                    |
-| [Enter], [Down], [ctrl+N]     | * forward by one line                              |
+| [Enter], [Down], [ctrl+n]     | * forward by one line                              |
 | [Up], [ctrl+p]                | * backward by one line                             |
 | [Home]                        | * go to top of document                            |
 | [End]                         | * go to end of document                            |
@@ -1279,8 +1296,8 @@ It can also be changed after startup.
 | [right]                       | * scroll to right                                  |
 | [ctrl+left]                   | * scroll left half screen                          |
 | [ctrl+right]                  | * scroll right half screen                         |
-| [ctrl+shift+left]             | * scroll left specified width                      |
-| [ctrl+shift+right]            | * scroll right specified width                     |
+| [alt+left]                    | * scroll left specified width                      |
+| [alt+right]                   | * scroll right specified width                     |
 | [shift+Home]                  | * go to beginning of line                          |
 | [shift+End]                   | * go to end of line                                |
 | [g]                           | * go to line(input number or `.n` or `n%` allowed) |
@@ -1309,8 +1326,8 @@ It can also be changed after startup.
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
 | [ctrl+e]                      | * original decoration toggle(plain)                |
-| [alt+F]                       | * align columns                                    |
-| [alt+R]                       | * raw output                                       |
+| [alt+f]                       | * align columns                                    |
+| [alt+r]                       | * raw output                                       |
 | [alt+shift+F9]                | * ruler toggle                                     |
 | [ctrl+F10]                    | * status line toggle                               |
 | **Change Display with Input** |                                                    |
@@ -1352,6 +1369,23 @@ It can also be changed after startup.
 | [Down]                        | * next candidate                                   |
 | [ctrl+c]                      | * copy to clipboard                                |
 | [ctrl+v]                      | * paste from clipboard                             |
+
+### Ctrl key and corresponding key pairs (commonly treated as the same in terminals)
+
+In many terminals, certain Ctrl key combinations and regular keys (such as Backspace, Tab, Enter) are treated as the same input. Here are typical examples:
+
+| Ctrl Key | Corresponding Key |
+|----------|-------------------|
+| Ctrl+H   | Backspace         |
+| Ctrl+I   | Tab               |
+| Ctrl+M   | Enter             |
+| Ctrl+J   | Line Feed         |
+
+Depending on the terminal or application, these keys may not be distinguished and can behave identically.
+
+*Added in v0.50.0*
+
+However, in terminals that support the Kitty keyboard protocol (see [Kitty Keyboard Protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/)), these keys can be distinguished and sent separately.
 
 ##  8. <a name='customize'></a>Customize
 
@@ -1588,19 +1622,19 @@ You can configure `ov` to set the terminal title to show the currently viewed fi
 
 The terminal title can be customized using the `--set-terminal-title` command line option or by configuring it in the `config.yaml` file.
 
-#### Command line usage
+####  8.3.1. <a name='command-line-usage'></a>Command line usage
 
 ```console
 ov --set-terminal-title README.md
 ```
 
-#### Configuration file
+####  8.3.2. <a name='configuration-file'></a>Configuration file
 
 ```yaml
 SetTerminalTitle: true
 ```
 
-#### Custom terminal title
+####  8.3.3. <a name='custom-terminal-title'></a>Custom terminal title
 
 You can set a custom title using the `--caption` option (see [Caption](#caption) for more details):
 
