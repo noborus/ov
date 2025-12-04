@@ -263,9 +263,9 @@ func (root *Root) handleSelectActive(ctx context.Context, ev *tcell.EventMouse, 
 
 // adjustPositionForWideChar adjusts the position if a wide character is clicked.
 func (root *Root) adjustPositionForWideChar(x, y int) (int, int) {
-	p, _, _, _ := root.Screen.GetContent(x, y)
-	if p == ' ' && x > 0 {
-		_, _, _, w := root.Screen.GetContent(x-1, y) // Adjust for clicking the second half of a wide character
+	p, _, _ := root.Screen.Get(x, y)
+	if p == " " && x > 0 {
+		_, _, w := root.Screen.Get(x-1, y) // Adjust for clicking the second half of a wide character
 		if w == 2 {
 			x--
 		}
