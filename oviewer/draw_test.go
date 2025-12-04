@@ -13,8 +13,8 @@ func getContents(t *testing.T, root *Root, y int, width int) string {
 	t.Helper()
 	var buf strings.Builder
 	for x := range width {
-		r, _, _, _ := root.Screen.GetContent(x, y)
-		buf.WriteRune(r)
+		s, _, _ := root.Screen.Get(x, y)
+		buf.WriteString(s)
 	}
 	return buf.String()
 }
