@@ -28,7 +28,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 0x1b,
+					str: "\x1b",
 				},
 			},
 			want:      true,
@@ -41,7 +41,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 'P',
+					str: "P",
 				},
 			},
 			want:      true,
@@ -54,7 +54,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 0x1b,
+					str: "\x1b",
 				},
 			},
 			want:      true,
@@ -67,7 +67,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: '(',
+					str: "(",
 				},
 			},
 			want:      true,
@@ -80,7 +80,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: '@',
+					str: "@",
 				},
 			},
 			want:      true,
@@ -93,7 +93,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 'a',
+					str: "a",
 				},
 			},
 			want:      true,
@@ -106,7 +106,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 'B',
+					str: "B",
 				},
 			},
 			want:      true,
@@ -119,7 +119,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 'm',
+					str: "m",
 				},
 			},
 			want:      true,
@@ -132,7 +132,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 'A',
+					str: "A",
 				},
 			},
 			want:      true,
@@ -145,7 +145,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: '?',
+					str: "?",
 				},
 			},
 			want:      true,
@@ -158,7 +158,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: '@',
+					str: "@",
 				},
 			},
 			want:      true,
@@ -171,7 +171,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					mainc: 0x07,
+					str: string(rune(0x07)),
 				},
 			},
 			want:      true,

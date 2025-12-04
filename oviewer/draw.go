@@ -10,6 +10,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 )
 
 // defaultStyle is used when the style is not specified.
@@ -228,7 +229,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 			lX += n
 			break
 		}
-		root.setContent(x, y, c.mainc, c.combc, c.style)
+		root.put(x, y, c.str, c.style)
 		if c.width == 2 {
 			n++
 		}
@@ -251,7 +252,7 @@ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) 
 			continue
 		}
 		c := lineC.lc[lX+n]
-		root.setContent(x, y, c.mainc, c.combc, c.style)
+		root.put(x, y, c.str, c.style)
 		if c.width == 2 {
 			n++
 		}
@@ -288,7 +289,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		} else {
 			style = applyStyle(c.style, root.Doc.Style.VerticalHeader)
 		}
-		root.setContent(x, y, c.mainc, c.combc, style)
+		root.put(x, y, c.str, style)
 		x++
 		if c.width == 2 {
 			x++
@@ -552,12 +553,12 @@ func (root *Root) flash() {
 	time.Sleep(100 * time.Millisecond)
 }
 
-// setContent wraps Screen.SetContent and checks for display sync needs.
-func (root *Root) setContent(x, y int, mainc rune, combc []rune, style tcell.Style) {
-	if !root.scr.forceDisplaySync && needsDisplaySync(mainc, combc) {
+// put wraps Screen.put and checks for display sync needs.
+func (root *Root) put(x, y int, str string, style tcell.Style) {
+	root.Screen.Put(x, y, str, style)
+	if !root.scr.forceDisplaySync && needsDisplaySync(str) {
 		root.scr.forceDisplaySync = true
 	}
-	root.Screen.SetContent(x, y, mainc, combc, style)
 }
 
 // needsDisplaySync checks if display sync handling is needed.
@@ -571,21 +572,28 @@ func (root *Root) setContent(x, y int, mainc rune, combc []rune, style tcell.Sty
 // - Ambiguous width characters (box drawing, mathematical symbols, etc.)
 // - Regional indicator symbols used in flag emojis (🇺🇸, 🇯🇵, etc.)
 // - Complex character sequences that may be rendered differently across terminals
-func needsDisplaySync(mainc rune, combc []rune) bool {
-	// Any combining characters can cause display issues
-	if len(combc) > 0 {
-		return true
-	}
+func needsDisplaySync(str string) bool {
+	gr := uniseg.NewGraphemes(str)
+	for gr.Next() {
+		runes := gr.Runes()
+		if len(runes) == 0 {
+			continue
+		}
+		// Any combining characters can cause display issues
+		if len(runes) > 1 {
+			return true
+		}
 
-	// Check for ambiguous width characters using runewidth library
-	if runewidth.IsAmbiguousWidth(mainc) {
-		return true
+		mainc := runes[0]
+		// Check for ambiguous width characters using runewidth library
+		if runewidth.IsAmbiguousWidth(mainc) {
+			return true
+		}
+		// Regional indicator symbols and emoji range that commonly cause issues
+		// Check for regional indicator symbols (used in flag emojis).
+		if mainc >= 0x1F1E0 && mainc <= 0x1F9FF {
+			return true
+		}
 	}
-	// Regional indicator symbols and emoji range that commonly cause issues
-	// Check for regional indicator symbols (used in flag emojis).
-	if mainc >= 0x1F1E0 && mainc <= 0x1F9FF {
-		return true
-	}
-
 	return false
 }

@@ -8,12 +8,11 @@ import (
 )
 
 // content represents one character on the terminal.
-// content is a value that can be set in SetContent() of tcell.
+// content is a value that can be set in Put() of tcell.
 type content struct {
 	style tcell.Style
-	combc []rune
+	str   string
 	width int
-	mainc rune
 }
 
 // contents represents one line of contents.
@@ -21,48 +20,43 @@ type contents []content
 
 // DefaultContent is a blank Content.
 var DefaultContent = content{
-	mainc: 0,
-	combc: nil,
+	str:   "",
 	width: 0,
 	style: tcell.StyleDefault,
 }
 
 // SpaceContent is a space character.
 var SpaceContent = content{
-	mainc: ' ',
-	combc: nil,
+	str:   " ",
 	width: 1,
 	style: tcell.StyleDefault,
 }
 
 // Shrink is a character that represents a shrunk column.
-var Shrink rune = '…'
+var Shrink string = "…"
 
 // ShrinkContent is a content that represents a shrunk column.
 var ShrinkContent = content{
-	mainc: Shrink,
-	combc: nil,
-	width: uniseg.StringWidth(string(Shrink)),
+	str:   Shrink,
+	width: uniseg.StringWidth(Shrink),
 	style: tcell.StyleDefault,
 }
 
 // SetShrinkContent sets the shrink character.
-func SetShrinkContent(shrink rune) {
+func SetShrinkContent(shrink string) {
 	ShrinkContent = content{
-		mainc: shrink,
-		combc: nil,
-		width: uniseg.StringWidth(string(shrink)),
+		str:   shrink,
+		width: uniseg.StringWidth(shrink),
 		style: tcell.StyleDefault,
 	}
 }
 
 // EOFC is the EOF character.
-const EOFC rune = '~'
+const EOFC string = "~"
 
 // EOFContent is EOFC only.
 var EOFContent = content{
-	mainc: EOFC,
-	combc: nil,
+	str:   EOFC,
 	width: 1,
 	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
 }
@@ -70,8 +64,7 @@ var EOFContent = content{
 // parseState represents the affected state after parsing.
 type parseState struct {
 	lc        contents
-	mainc     rune
-	combc     []rune
+	str       string
 	style     tcell.Style
 	eolStyle  tcell.Style
 	bsContent content
@@ -122,17 +115,13 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 
 	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {
-		r := gr.Runes()
-		st.mainc = r[0]
-		st.combc = r[1:]
-
+		st.str = gr.Str()
 		if conv.convert(st) {
 			continue
 		}
 		st.parseChar(gr.Str())
 	}
-	st.mainc = '\n'
-	st.combc = nil
+	st.str = "\n"
 	conv.convert(st)
 	return st.lc, st.eolStyle
 }
@@ -140,18 +129,15 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 // parseChar parses a single character.
 func (st *parseState) parseChar(gr string) {
 	width := uniseg.StringWidth(gr)
-	if width == 0 {
-		st.zeroWidthHandle(st.mainc)
+	if width == 0 && gr != "" {
+		st.zeroWidthHandle([]rune(st.str)[0])
 		return
 	}
 
 	c := content{
-		mainc: st.mainc,
+		str:   gr,
 		width: width,
 		style: st.style,
-	}
-	if len(st.combc) > 0 {
-		c.combc = st.combc
 	}
 	st.tabx += width
 
@@ -169,10 +155,10 @@ func (st *parseState) parseChar(gr string) {
 
 // overstrike set style for overstrike.
 func (st *parseState) overstrike(m content, style tcell.Style) tcell.Style {
-	switch st.bsContent.mainc {
-	case m.mainc:
+	switch st.bsContent.str {
+	case m.str:
 		style = OverStrikeStyle
-	case '_':
+	case "_":
 		style = OverLineStyle
 	}
 	st.bsFlag = false
@@ -181,22 +167,24 @@ func (st *parseState) overstrike(m content, style tcell.Style) tcell.Style {
 }
 
 // zeroWidthHandle handles zero-width characters.
-func (st *parseState) zeroWidthHandle(mainc rune) {
+func (st *parseState) zeroWidthHandle(r rune) {
 	switch {
-	case mainc == '\t': // TAB
+	case r == '\t': // TAB
 		st.tabHandle()
 		return
-	case mainc == '\b': // BackSpace
+	case r == '\b': // BackSpace
 		st.backspaceHandle()
 		return
-	case mainc == '\r': // CR
+	case r == '\r': // CR
 		return
-	case mainc < 0x20: // control character
-		st.controlCharHandle(mainc)
+	case r < 0x20: // control character
+		st.controlCharHandle(r)
+		return
+	case r == 0x7f: // DEL
+		st.controlCharHandle(r)
 		return
 	}
 	lastC := st.lc.last()
-	lastC.combc = append(lastC.combc, mainc)
 	n := len(st.lc) - lastC.width
 	if n >= 0 && len(st.lc) > n {
 		st.lc[n] = lastC
@@ -214,9 +202,9 @@ func (st *parseState) tabHandle() {
 	if st.tabWidth < 0 { // display \t
 		c.width = 1
 		c.style = st.style.Reverse(true)
-		c.mainc = rune('\\')
+		c.str = "\\"
 		st.lc = append(st.lc, c)
-		c.mainc = rune('t')
+		c.str = "t"
 		st.lc = append(st.lc, c)
 		st.tabx += 2
 		return
@@ -225,10 +213,10 @@ func (st *parseState) tabHandle() {
 	tabStop := st.tabWidth - (st.tabx % st.tabWidth)
 	c.width = 1
 	c.style = st.style
-	c.mainc = rune('\t')
+	c.str = "\t"
 	st.lc = append(st.lc, c)
 	st.tabx++
-	c.mainc = 0
+	c.str = ""
 	for range tabStop - 1 {
 		st.lc = append(st.lc, c)
 		st.tabx++
@@ -251,9 +239,9 @@ func (st *parseState) backspaceHandle() {
 }
 
 // controlCharHandle handles control characters.
-func (st *parseState) controlCharHandle(mainc rune) {
+func (st *parseState) controlCharHandle(r rune) {
 	c := DefaultContent
-	c.mainc = mainc
+	c.str = string(r)
 	c.width = 0
 	st.lc = append(st.lc, c)
 }
@@ -281,16 +269,13 @@ func ContentsToStr(lc contents) (string, widthPos) {
 
 	i, bn := 0, 0
 	for n, c := range lc {
-		if c.mainc == 0 {
+		if c.str == "" {
 			continue
 		}
 		for ; i <= bn; i++ {
 			pos = append(pos, n)
 		}
-		bn += writeRune(&buff, c.mainc)
-		for _, r := range c.combc {
-			bn += writeRune(&buff, r)
-		}
+		bn += writeString(&buff, c.str)
 	}
 
 	str := buff.String()
@@ -311,7 +296,7 @@ func (lc contents) IsSpace(n int) bool {
 	if n >= len(lc) {
 		return false
 	}
-	return lc[n].mainc == ' '
+	return lc[n].str == " "
 }
 
 // IsFullWidth returns true if the specified position is a full-width character.
@@ -323,8 +308,8 @@ func (lc contents) IsFullWidth(n int) bool {
 }
 
 // writeRune writes a rune to strings.Builder.
-func writeRune(w *strings.Builder, r rune) int {
-	n, err := w.WriteRune(r)
+func writeString(w *strings.Builder, s string) int {
+	n, err := w.WriteString(s)
 	if err != nil {
 		panic(err)
 	}

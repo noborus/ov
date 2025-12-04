@@ -443,19 +443,19 @@ func getCharTypeAt(line LineC, contentX int) int {
 		return charTypeWhitespace // Out of bounds treated as whitespace
 	}
 	content := line.lc[contentX]
-	char := content.mainc
+	str := content.str
 	width := content.width
-	if width == 0 && char == 0 {
+	if width == 0 && str == "" {
 		if contentX == 0 {
 			return charTypeOther
 		}
 		// If width is 0, check the previous character.
-		char = line.lc[contentX-1].mainc
+		str = line.lc[contentX-1].str
 	}
-	if char == ' ' || char == '\t' {
+	if str == " " || str == "\t" {
 		return charTypeWhitespace
 	}
-	if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' {
+	if unicode.IsLetter(rune(str[0])) || unicode.IsDigit(rune(str[0])) || str == "_" {
 		return charTypeAlphanumeric
 	}
 	return charTypeOther
