@@ -80,11 +80,11 @@ func (a *align) convert(st *parseState) bool {
 		return false
 	}
 	a.count += 1
-	if uniseg.StringWidth(string(append([]rune{st.mainc}, st.combc...))) > 1 {
+	if uniseg.StringWidth(st.str) > 1 {
 		a.count += 1
 	}
 
-	if st.mainc != '\n' {
+	if st.str != "\n" {
 		return false
 	}
 
@@ -236,13 +236,13 @@ func (a *align) isRightAlign(col int) bool {
 }
 
 func findStartWithTrim(lc contents, s int) int {
-	for ; s < len(lc) && lc[s].mainc == ' '; s++ {
+	for ; s < len(lc) && lc[s].str == " "; s++ {
 	}
 	return s
 }
 
 func findEndWidthTrim(lc contents, e int) int {
-	for ; e > 0 && lc[e-1].mainc == ' '; e-- {
+	for ; e > 0 && lc[e-1].str == " "; e-- {
 	}
 	return e
 }

@@ -19,7 +19,7 @@ func Test_rawConverter_convert(t *testing.T) {
 			r:    *newRawConverter(),
 			str:  "abc",
 			st: &parseState{
-				mainc: '\n',
+				str: "\n",
 			},
 			want:    false,
 			wantStr: "abc",
@@ -29,7 +29,7 @@ func Test_rawConverter_convert(t *testing.T) {
 			r:    *newRawConverter(),
 			str:  "abc",
 			st: &parseState{
-				mainc: 0x1b,
+				str: "\x1b",
 			},
 			want:    true,
 			wantStr: "abc^[",

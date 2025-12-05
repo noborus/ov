@@ -36,74 +36,75 @@ func Test_StrToContentsNormal(t *testing.T) {
 				line: "test", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, mainc: rune('t')},
-				{width: 1, mainc: rune('e')},
-				{width: 1, mainc: rune('s')},
-				{width: 1, mainc: rune('t')},
+				{width: 1, str: "t"},
+				{width: 1, str: "e"},
+				{width: 1, str: "s"},
+				{width: 1, str: "t"},
 			},
 		},
 		{
 			name: "testASCII",
 			args: args{line: "abc", tabWidth: 4},
 			want: contents{
-				{width: 1, mainc: rune('a')},
-				{width: 1, mainc: rune('b')},
-				{width: 1, mainc: rune('c')},
+				{width: 1, str: "a"},
+				{width: 1, str: "b"},
+				{width: 1, str: "c"},
 			},
 		},
 		{
 			name: "testHiragana",
 			args: args{line: "あ", tabWidth: 4},
 			want: contents{
-				{width: 2, mainc: rune('あ')},
-				{width: 0, mainc: 0},
+				{width: 2, str: "あ"},
+				{width: 0, str: ""},
 			},
 		},
 		{
 			name: "testKANJI",
 			args: args{line: "漢", tabWidth: 4},
 			want: contents{
-				{width: 2, mainc: rune('漢')},
-				{width: 0, mainc: 0},
+				{width: 2, str: "漢"},
+				{width: 0, str: ""},
 			},
 		},
 		{
 			name: "testMIX",
 			args: args{line: "abc漢", tabWidth: 4},
 			want: contents{
-				{width: 1, mainc: rune('a')},
-				{width: 1, mainc: rune('b')},
-				{width: 1, mainc: rune('c')},
-				{width: 2, mainc: rune('漢')},
-				{width: 0, mainc: 0},
+				{width: 1, str: "a"},
+				{width: 1, str: "b"},
+				{width: 1, str: "c"},
+				{width: 2, str: "漢"},
+				{width: 0, str: ""},
 			},
 		},
 		{
 			name: "testTab",
 			args: args{line: "a\tb", tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('\t')},
-				{width: 1, style: tcell.StyleDefault, mainc: rune(0)},
-				{width: 1, style: tcell.StyleDefault, mainc: rune(0)},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('b')},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 1, style: tcell.StyleDefault, str: "\t"},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+				{width: 1, style: tcell.StyleDefault, str: "b"},
 			},
 		},
 		{
 			name: "testFormFeed",
 			args: args{line: "a\fa", tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
-				{width: 0, style: tcell.StyleDefault, mainc: rune('\f')},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 0, style: tcell.StyleDefault, str: "\f"},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
 			},
 		},
 		{
 			name: "testDEL",
 			args: args{line: "a\u007fa", tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: []rune{0x7f}},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a')},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 0, style: tcell.StyleDefault, str: "\u007f"},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
 			},
 		},
 	}
@@ -112,7 +113,7 @@ func Test_StrToContentsNormal(t *testing.T) {
 			t.Parallel()
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
+				t.Errorf("parseString() got = \n%#v, want \n%#v", got, tt.want)
 			}
 		})
 	}
@@ -133,54 +134,54 @@ func Test_StrToContentsOverlapping(t *testing.T) {
 			name: "testOverstrike",
 			args: args{line: "a\ba", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('a'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "a"},
 			},
 		},
 		{
 			name: "testOverstrike2",
 			args: args{line: "\ba", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
 			},
 		},
 		{
 			name: "testOverstrike3",
 			args: args{line: "あ\bあ", tabWidth: 8},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault.Bold(true), str: "あ"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 		{
 			name: "testOverstrike4",
 			args: args{line: "\a", tabWidth: 8},
 			want: contents{
-				{width: 0, style: tcell.StyleDefault, mainc: '\a', combc: nil},
+				{width: 0, style: tcell.StyleDefault, str: "\a"},
 			},
 		},
 		{
 			name: "testOverstrike5",
 			args: args{line: "あ\bああ\bあ", tabWidth: 8},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
-				{width: 2, style: tcell.StyleDefault.Bold(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault.Bold(true), str: "あ"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
+				{width: 2, style: tcell.StyleDefault.Bold(true), str: "あ"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 		{
 			name: "testOverstrikeUnderLine",
 			args: args{line: "_\ba", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Underline(true), str: "a"},
 			},
 		},
 		{
 			name: "testOverstrikeUnderLine2",
 			args: args{line: "_\bあ", tabWidth: 8},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault.Underline(true), mainc: rune('あ'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault.Underline(true), str: "あ"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 	}
@@ -210,10 +211,10 @@ func Test_StrToContentsStyle1(t *testing.T) {
 			name: "testTabMinus",
 			args: args{line: "a\tb", tabWidth: -1},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('\\'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('t'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('b'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 1, style: tcell.StyleDefault.Reverse(true), str: "\\"},
+				{width: 1, style: tcell.StyleDefault.Reverse(true), str: "t"},
+				{width: 1, style: tcell.StyleDefault, str: "b"},
 			},
 		},
 		{
@@ -222,9 +223,9 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mred\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('e'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "e"},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "d"},
 			},
 		},
 		{
@@ -233,7 +234,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[90mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorGray), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorGray), str: "c"},
 			},
 		},
 		{
@@ -242,7 +243,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[100mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGray), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGray), str: "c"},
 			},
 		},
 		{
@@ -251,7 +252,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1), mainc: 'c', combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1), str: "c"},
 			},
 		},
 		{
@@ -260,7 +261,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;5;1;48;5;2mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1).Background(tcell.ColorValid + 2), mainc: 'c', combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1).Background(tcell.ColorValid + 2), str: "c"},
 			},
 		},
 		{
@@ -269,7 +270,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;2;250;123;250mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(250, 123, 250)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(250, 123, 250)), str: "c"},
 			},
 		},
 		{
@@ -278,7 +279,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;2;255;0;0;48;2;0;0;255mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(255, 0, 0)).Background(tcell.NewRGBColor(0, 0, 255)), mainc: rune('c'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.NewRGBColor(255, 0, 0)).Background(tcell.NewRGBColor(0, 0, 255)), str: "c"},
 			},
 		},
 		{
@@ -287,7 +288,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[39md\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, str: "d"},
 			},
 		},
 		{
@@ -296,10 +297,10 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[1mbold\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('o'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('l'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "o"},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "l"},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "d"},
 			},
 		},
 		{
@@ -308,8 +309,8 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mr\x1B[me", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault, str: "e"},
 			},
 		},
 		{
@@ -318,8 +319,8 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mr\x1Bce", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: rune('r'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault, str: "e"},
 			},
 		},
 		{
@@ -328,7 +329,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B]sub\x1Bmt", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
+				{width: 1, style: tcell.StyleDefault, str: "t"},
 			},
 		},
 	}
@@ -360,10 +361,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[1mbo\x1B[22mld\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(true), mainc: rune('o'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(false), mainc: rune('l'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Bold(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Bold(true), str: "o"},
+				{width: 1, style: tcell.StyleDefault.Bold(false), str: "l"},
+				{width: 1, style: tcell.StyleDefault.Bold(false), str: "d"},
 			},
 		},
 		{
@@ -372,10 +373,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[3mab\x1B[23mcd\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Italic(true), mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Italic(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Italic(false), mainc: rune('c'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Italic(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Italic(true), str: "a"},
+				{width: 1, style: tcell.StyleDefault.Italic(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Italic(false), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Italic(false), str: "d"},
 			},
 		},
 		{
@@ -384,10 +385,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[4mab\x1B[24mcd\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Underline(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Underline(false), mainc: rune('c'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Underline(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Underline(true), str: "a"},
+				{width: 1, style: tcell.StyleDefault.Underline(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Underline(false), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Underline(false), str: "d"},
 			},
 		},
 		{
@@ -396,10 +397,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[5mab\x1B[25mcd\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Blink(true), mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Blink(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Blink(false), mainc: rune('c'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Blink(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Blink(true), str: "a"},
+				{width: 1, style: tcell.StyleDefault.Blink(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Blink(false), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Blink(false), str: "d"},
 			},
 		},
 		{
@@ -408,10 +409,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[7mab\x1B[27mcd\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Reverse(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Reverse(false), mainc: rune('c'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Reverse(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Reverse(true), str: "a"},
+				{width: 1, style: tcell.StyleDefault.Reverse(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.Reverse(false), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Reverse(false), str: "d"},
 			},
 		},
 		{
@@ -420,10 +421,10 @@ func Test_StrToContentUnStyle(t *testing.T) {
 				line: "\x1B[9mab\x1B[29mcd\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.StrikeThrough(true), mainc: rune('a'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.StrikeThrough(true), mainc: rune('b'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.StrikeThrough(false), mainc: rune('c'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.StrikeThrough(false), mainc: rune('d'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.StrikeThrough(true), str: "a"},
+				{width: 1, style: tcell.StyleDefault.StrikeThrough(true), str: "b"},
+				{width: 1, style: tcell.StyleDefault.StrikeThrough(false), str: "c"},
+				{width: 1, style: tcell.StyleDefault.StrikeThrough(false), str: "d"},
 			},
 		},
 	}
@@ -453,38 +454,38 @@ func Test_StrToContentsCombining(t *testing.T) {
 			name: "testIVS",
 			args: args{line: string([]rune{'\u908a', '\U000e0104'}), tabWidth: 4},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault, mainc: rune('邊'), combc: []rune{0x000e0104}},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault, str: "\u908a\U000e0104"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 		{
 			name: "testEmojiCombiningSequence",
 			args: args{line: string([]rune{'1', '\ufe0f', '\u20e3'}), tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: []rune{0xfe0f, 0x20e3}},
+				{width: 1, style: tcell.StyleDefault, str: "1\ufe0f\u20e3"},
 			},
 		},
 		{
 			name: "testEmojiModifierSequence",
 			args: args{line: string([]rune{'\u261d', '\U0001f3fb'}), tabWidth: 4},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: rune('☝'), combc: []rune{0x0001f3fb}},
+				{width: 1, style: tcell.StyleDefault, str: "\u261d\U0001f3fb"},
 			},
 		},
 		{
 			name: "testEmojiFlagSequence",
 			args: args{line: string([]rune{'\U0001f1ef', '\U0001f1f5'}), tabWidth: 4},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault, mainc: rune('🇯'), combc: []rune{'🇵'}},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault, str: "\U0001f1ef\U0001f1f5"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 		{
 			name: "testEmojiZWJSequence",
 			args: args{line: string([]rune{'\U0001f468', '\u200d', '\U0001f468', '\u200d', '\U0001f466'}), tabWidth: 4},
 			want: contents{
-				{width: 2, style: tcell.StyleDefault, mainc: rune('👨'), combc: []rune{'\u200d', '\U0001f468', '\u200d', '\U0001f466'}},
-				{width: 0, style: tcell.StyleDefault, mainc: 0, combc: nil},
+				{width: 2, style: tcell.StyleDefault, str: "\U0001f468\u200d\U0001f468\u200d\U0001f466"},
+				{width: 0, style: tcell.StyleDefault, str: ""},
 			},
 		},
 	}
@@ -514,30 +515,30 @@ func Test_StrToContentsHyperlink(t *testing.T) {
 			name: "testHyperLink",
 			args: args{line: "\x1b]8;;http://example.com\x1b\\link\x1b]8;;\x1b\\", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: rune('l'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: rune('i'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: rune('n'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: rune('k'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), str: "l"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), str: "i"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), str: "n"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), str: "k"},
 			},
 		},
 		{
 			name: "testHyperLinkID",
 			args: args{line: "\x1b]8;1;http://example.com\x1b\\link\x1b]8;;\x1b\\", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: rune('l'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: rune('i'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: rune('n'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: rune('k'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), str: "l"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), str: "i"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), str: "n"},
+				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), str: "k"},
 			},
 		},
 		{
 			name: "testHyperLinkfile",
 			args: args{line: "\x1b]8;;file:///file\afile\x1b]8;;\x1b\\", tabWidth: 8},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('f'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('i'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('l'), combc: nil},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: rune('e'), combc: nil},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), str: "f"},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), str: "i"},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), str: "l"},
+				{width: 1, style: tcell.StyleDefault.Url("file:///file"), str: "e"},
 			},
 		},
 	}
@@ -573,27 +574,27 @@ func Test_lastContent(t *testing.T) {
 			name: "tset1",
 			args: args{
 				lc: contents{
-					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune('s'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
+					{width: 1, style: tcell.StyleDefault, str: "t"},
+					{width: 1, style: tcell.StyleDefault, str: "e"},
+					{width: 1, style: tcell.StyleDefault, str: "s"},
+					{width: 1, style: tcell.StyleDefault, str: "t"},
 				},
 			},
-			want: content{width: 1, style: tcell.StyleDefault, mainc: rune('t'), combc: nil},
+			want: content{width: 1, style: tcell.StyleDefault, str: "t"},
 		},
 		{
 			name: "tsetWide",
 			args: args{
 				lc: contents{
-					{width: 2, style: tcell.StyleDefault, mainc: rune('あ'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
-					{width: 2, style: tcell.StyleDefault, mainc: rune('い'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
-					{width: 2, style: tcell.StyleDefault, mainc: rune('う'), combc: nil},
-					{width: 1, style: tcell.StyleDefault, mainc: rune(' '), combc: nil},
+					{width: 2, style: tcell.StyleDefault, str: "あ"},
+					{width: 1, style: tcell.StyleDefault, str: " "},
+					{width: 2, style: tcell.StyleDefault, str: "い"},
+					{width: 1, style: tcell.StyleDefault, str: " "},
+					{width: 2, style: tcell.StyleDefault, str: "う"},
+					{width: 1, style: tcell.StyleDefault, str: " "},
 				},
 			},
-			want: content{width: 2, style: tcell.StyleDefault, mainc: rune('う'), combc: nil},
+			want: content{width: 2, style: tcell.StyleDefault, str: "う"},
 		},
 	}
 	for _, tt := range tests {
@@ -601,324 +602,6 @@ func Test_lastContent(t *testing.T) {
 			t.Parallel()
 			if got := tt.args.lc.last(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("lastContent() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_ContentsToStr(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name  string
-		str   string
-		want1 string
-		want2 widthPos
-	}{
-		{
-			name:  "test1",
-			str:   "test",
-			want1: "test",
-			want2: widthPos{0, 1, 2, 3, 4},
-		},
-		{
-			name:  "testTab",
-			str:   "t\test",
-			want1: "t\test",
-			want2: widthPos{0, 1, 8, 9, 10, 11},
-		},
-		{
-			name:  "testBackSpace",
-			str:   "t\btest",
-			want1: "test",
-			want2: widthPos{0, 1, 2, 3, 4},
-		},
-		{
-			name:  "testEscape",
-			str:   "\x1b[40;38;5;82mHello \x1b[30;48;5;82mWorld\x1b[0m",
-			want1: "Hello World",
-			want2: widthPos{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-		},
-		{
-			name:  "testMultiByte",
-			str:   "あいうえお倍",
-			want1: "あいうえお倍",
-			want2: widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10, 12, 12, 12},
-		},
-		{
-			name:  "testEmojiZWJSequence",
-			str:   string([]rune{'\U0001f468', '\u200d', '\U0001f468', '\u200d', '\U0001f466'}),
-			want1: "👨‍👨‍👦",
-			want2: widthPos{0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			lc := StrToContents(tt.str, 8)
-			got1, got2 := ContentsToStr(lc)
-			if got1 != tt.want1 {
-				t.Errorf("contentsToStr() = %v, want %v", got1, tt.want1)
-			}
-			if !reflect.DeepEqual(got2, tt.want2) {
-				t.Errorf("contentsToStr() = %v, want %v", got2, tt.want2)
-			}
-		})
-	}
-}
-
-func Test_widthPos_x(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		x int
-	}
-	tests := []struct {
-		name string
-		pos  widthPos
-		args args
-		want int
-	}{
-		{
-			name: "\ttest",
-			pos:  widthPos{0, 1, 8, 9, 10, 11},
-			args: args{2},
-			want: 8,
-		},
-		{
-			name: "あいうえお",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{12},
-			want: 8,
-		},
-		{
-			name: "あいうえお2",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{20},
-			want: 10,
-		},
-		{
-			name: "あいうえお3",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{-1},
-			want: 0,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := tt.pos.x(tt.args.x); got != tt.want {
-				t.Errorf("widthPos.x() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_widthPos_n(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		w int
-	}
-	tests := []struct {
-		name string
-		pos  widthPos
-		args args
-		want int
-	}{
-		{
-			name: "\ttest",
-			pos:  widthPos{0, 1, 8, 9, 10, 11},
-			args: args{8},
-			want: 2,
-		},
-		{
-			name: "あいうえお",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{8},
-			want: 12,
-		},
-		{
-			name: "あいうえお2",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{9},
-			want: 15,
-		},
-		{
-			name: "あいうえお3",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{20},
-			want: 15,
-		},
-		{
-			name: "あいうえお4",
-			pos:  widthPos{0, 2, 2, 2, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 10},
-			args: args{-1},
-			want: 0,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := tt.pos.n(tt.args.w); got != tt.want {
-				t.Errorf("widthPos.n() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestRawStrToContents(t *testing.T) {
-	type args struct {
-		str      string
-		tabWidth int
-	}
-	tests := []struct {
-		name string
-		args args
-		want contents
-	}{
-		{
-			name: "red",
-			args: args{
-				str: "\x1B[31mred\x1B[m", tabWidth: 8,
-			},
-			want: contents{
-				{width: 0, style: tcell.StyleDefault, mainc: rune('^'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('3'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('1'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('m'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('r'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('e'), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('d'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: rune('^'), combc: nil},
-				{width: 0, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('['), combc: nil},
-				{width: 1, style: tcell.StyleDefault, mainc: rune('m'), combc: nil},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := RawStrToContents(tt.args.str, tt.args.tabWidth); !reflect.DeepEqual(got, tt.want) {
-				str := got.String()
-				t.Logf("got: %#v %#v", str, tt.want.String())
-				t.Errorf("RawStrToContents() = \n%v, want \n%v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_parseLine(t *testing.T) {
-	type args struct {
-		str      string
-		tabWidth int
-	}
-	tests := []struct {
-		name  string
-		args  args
-		want  contents
-		want1 tcell.Style
-	}{
-		{
-			name: "testEscapeSequence",
-			args: args{
-				str: "\x1b[31mred\x1b[m",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'r'},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'e'},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), mainc: 'd'},
-			},
-			want1: tcell.StyleDefault,
-		},
-		{
-			name: "testClearLine0",
-			args: args{
-				str: "\x1b[42mt\x1b[0K",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
-			},
-			want1: tcell.StyleDefault.Background(tcell.ColorGreen),
-		},
-		{
-			name: "testClearLineBlank",
-			args: args{
-				str: "\x1b[42mt\x1b[K",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
-			},
-			want1: tcell.StyleDefault.Background(tcell.ColorGreen),
-		},
-		{
-			name: "testClearLine1",
-			args: args{
-				str: "\x1b[42mt\x1b[1K", // Not supported
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGreen), mainc: 't'},
-			},
-			want1: tcell.StyleDefault,
-		},
-		{
-			name: "testHyperLinkError",
-			args: args{
-				str: "\x1b]+8;;http://example.com\x1b\\link\x1b]8;;\x1b\\",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault, mainc: 'l'},
-				{width: 1, style: tcell.StyleDefault, mainc: 'i'},
-				{width: 1, style: tcell.StyleDefault, mainc: 'n'},
-				{width: 1, style: tcell.StyleDefault, mainc: 'k'},
-			},
-		},
-		{
-			name: "testHyperLink",
-			args: args{
-				str: "\x1b]8;;http://example.com\x1b\\link\x1b]8;;\x1b\\",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'l'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'i'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'n'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com"), mainc: 'k'},
-			},
-			want1: tcell.StyleDefault,
-		},
-		{
-			name: "testHyperLinkID",
-			args: args{
-				str: "\x1b]8;1;http://example.com\x1b\\link\x1b]8;;\x1b\\",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'l'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'i'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'n'},
-				{width: 1, style: tcell.StyleDefault.Url("http://example.com").UrlId("1"), mainc: 'k'},
-			},
-		},
-		{
-			name: "testHyperLinkFile",
-			args: args{
-				str: "\x1b]8;;file:///file\afile\x1b]8;;\a",
-			},
-			want: contents{
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'f'},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'i'},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'l'},
-				{width: 1, style: tcell.StyleDefault.Url("file:///file"), mainc: 'e'},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			conv := newESConverter()
-			got, got1 := parseLine(conv, tt.args.str, tt.args.tabWidth)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseLine() got = \n%#v, want \n%#v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("parseLine() got1 = %#v, want %#v", got1, tt.want1)
 			}
 		})
 	}

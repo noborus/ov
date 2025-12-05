@@ -37,8 +37,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("a,b,c\n", 8),
-					mainc: '\n',
+					lc:  StrToContents("a,b,c\n", 8),
+					str: "\n",
 				},
 			},
 			want:    false,
@@ -55,8 +55,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("", 8),
-					mainc: '\n',
+					lc:  StrToContents("", 8),
+					str: "\n",
 				},
 			},
 			want:    false,
@@ -73,8 +73,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("", 8),
-					mainc: '\x1b',
+					lc:  StrToContents("", 8),
+					str: "\x1b",
 				},
 			},
 			want:    true,
@@ -91,8 +91,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("", 8),
-					mainc: 'a',
+					lc:  StrToContents("", 8),
+					str: "a",
 				},
 			},
 			want:    false,
@@ -109,8 +109,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("a,b,", 8),
-					mainc: 'あ',
+					lc:  StrToContents("a,b,", 8),
+					str: "あ",
 				},
 			},
 			want:    false,
@@ -127,8 +127,8 @@ func Test_align_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					lc:    StrToContents("a  b  c\n", 8),
-					mainc: '\n',
+					lc:  StrToContents("a  b  c\n", 8),
+					str: "\n",
 				},
 			},
 			want:    false,
@@ -540,7 +540,7 @@ func Test_appendShrink(t *testing.T) {
 		lc contents
 	}
 	type fields struct {
-		shrink rune
+		shrink string
 	}
 	tests := []struct {
 		name   string
@@ -551,7 +551,7 @@ func Test_appendShrink(t *testing.T) {
 		{
 			name: "appendShrink1",
 			fields: fields{
-				shrink: '.',
+				shrink: ".",
 			},
 			args: args{
 				lc: StrToContents("abc", 8),
@@ -561,7 +561,7 @@ func Test_appendShrink(t *testing.T) {
 		{
 			name: "appendShrink2",
 			fields: fields{
-				shrink: '略',
+				shrink: "略",
 			},
 			args: args{
 				lc: StrToContents("abc", 8),

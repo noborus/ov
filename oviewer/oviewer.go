@@ -838,7 +838,7 @@ func (root *Root) prepareRun(ctx context.Context) error {
 	}
 
 	if root.Config.ShrinkChar != "" {
-		Shrink = []rune(root.Config.ShrinkChar)[0]
+		Shrink = root.Config.ShrinkChar
 		SetShrinkContent(Shrink)
 	}
 

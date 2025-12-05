@@ -74,7 +74,7 @@ func (es *escapeSequence) convert(st *parseState) bool {
 // parseEscapeSequence parses the escape sequence.
 // convert parses an escape sequence and changes state.
 func (es *escapeSequence) parseEscapeSequence(st *parseState) bool {
-	mainc := st.mainc
+	mainc := firstRune(st.str)
 	switch es.state {
 	case ansiEscape:
 		switch mainc {
