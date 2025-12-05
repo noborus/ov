@@ -30,8 +30,8 @@ const (
 // Parameters outside this range will result in an error and will not be considered as CSI.
 // Errors within this range will not affect the CSI.
 const (
-	csiParamStart = " "
-	csiParamEnd   = "?"
+	csiParamStart = 0x20
+	csiParamEnd   = 0x3F
 )
 
 const (
@@ -74,29 +74,29 @@ func (es *escapeSequence) convert(st *parseState) bool {
 // parseEscapeSequence parses the escape sequence.
 // convert parses an escape sequence and changes state.
 func (es *escapeSequence) parseEscapeSequence(st *parseState) bool {
-	str := st.str
+	mainc := firstRune(st.str)
 	switch es.state {
 	case ansiEscape:
-		switch str {
-		case "[": // CSI(Control Sequence Introducer).
+		switch mainc {
+		case '[': // CSI(Control Sequence Introducer).
 			es.parameter.Reset()
 			es.state = ansiControlSequence
 			return true
-		case "]": // OSC(Operating System Command Sequence).
+		case ']': // OSC(Operating System Command Sequence).
 			es.parameter.Reset()
 			es.state = systemSequence
 			return true
-		case "c": // Reset.
+		case 'c': // Reset.
 			st.style = tcell.StyleDefault
 			es.state = ansiText
 			return true
-		case "P", "X", "^", "_": // Substrings and commands.
+		case 'P', 'X', '^', '_': // Substrings and commands.
 			es.state = ansiSubstring
 			return true
-		case "(":
+		case '(':
 			es.state = otherSequence
 			return true
-		case "\\":
+		case '\\':
 			parameter := es.parameter.String()
 			es.parameter.Reset()
 			st.style = oscStyle(st.style, parameter)
@@ -107,36 +107,36 @@ func (es *escapeSequence) parseEscapeSequence(st *parseState) bool {
 			return true
 		}
 	case ansiSubstring:
-		if str == "\x1b" {
+		if mainc == 0x1b {
 			es.state = ansiControlSequence
 		}
 		return true
 	case ansiControlSequence:
-		es.parseCSI(st, str)
+		es.parseCSI(st, mainc)
 		return true
 	case otherSequence:
-		es.parseOther(st, str)
+		es.parseOther(st, mainc)
 		return true
 	case systemSequence:
-		es.parseOSC(st, str)
+		es.parseOSC(st, mainc)
 		return true
 	}
-	switch str {
-	case "\x1b":
+	switch mainc {
+	case 0x1b:
 		es.state = ansiEscape
 		return true
-	case "\n":
+	case '\n':
 		return false
 	}
 	return false
 }
 
 // parseCSI parses the CSI(Control Sequence Introducer) escape sequence.
-func (es *escapeSequence) parseCSI(st *parseState, str string) {
+func (es *escapeSequence) parseCSI(st *parseState, mainc rune) {
 	switch {
-	case str == "m": // SGR(Set Graphics Rendition).
+	case mainc == 'm': // SGR(Set Graphics Rendition).
 		st.style = sgrStyle(st.style, es.parameter.String())
-	case str == "K": // Erase in Line.
+	case mainc == 'K': // Erase in Line.
 		// CSI 0 K or CSI K maintains the style after the newline
 		params := es.parameter.String()
 		if params == "" || params == "0" {
@@ -144,10 +144,10 @@ func (es *escapeSequence) parseCSI(st *parseState, str string) {
 			_, bg, _ := st.style.Decompose()
 			st.eolStyle = st.eolStyle.Background(bg)
 		}
-	case str >= "A" && str <= "T": // Cursor Movement.
+	case mainc >= 'A' && mainc <= 'T': // Cursor Movement.
 		// Ignore.
-	case str >= csiParamStart && str <= csiParamEnd: // Parameters.
-		es.parameter.WriteString(str)
+	case mainc >= csiParamStart && mainc <= csiParamEnd: // Parameters.
+		es.parameter.WriteRune(mainc)
 		return
 	}
 	// End of escape sequence.
@@ -440,20 +440,20 @@ func parseRGBColor(red string, green string, blue string) (string, error) {
 }
 
 // parseOSC parses the OSC(Operating System Command Sequence) escape sequence.
-func (es *escapeSequence) parseOSC(st *parseState, str string) {
-	switch str {
-	case "\a": // BEL is also interpreted as ST.
+func (es *escapeSequence) parseOSC(st *parseState, mainc rune) {
+	switch mainc {
+	case '\a': // BEL is also interpreted as ST.
 		parameter := es.parameter.String()
 		es.parameter.Reset()
 		st.style = oscStyle(st.style, parameter)
 		es.state = ansiText
 		return
-	case "\x1b": // ESC.
+	case 0x1b: // ESC.
 		es.state = ansiEscape
 		return
 	}
 
-	es.parameter.WriteString(str)
+	es.parameter.WriteRune(mainc)
 }
 
 // oscStyle returns tcell.Style from the OSC escape sequence.
@@ -484,14 +484,14 @@ func oscStyle(style tcell.Style, paramStr string) tcell.Style {
 }
 
 // parseOther parses the other escape sequences.
-func (es *escapeSequence) parseOther(st *parseState, str string) {
-	switch str {
-	case "B": // ESC(B
+func (es *escapeSequence) parseOther(st *parseState, mainc rune) {
+	switch mainc {
+	case 'B': // ESC(B
 		es.parameter.Reset()
 		st.style = tcell.StyleDefault
 		es.state = ansiText
 		return
-	case "\x1b": // ESC.
+	case 0x1b: // ESC.
 		es.state = ansiEscape
 		return
 	}

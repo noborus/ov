@@ -553,7 +553,7 @@ func (root *Root) flash() {
 	time.Sleep(100 * time.Millisecond)
 }
 
-// put wraps Screen.put and checks for display sync needs.
+// put calls Screen.Put and checks if display sync is needed.
 func (root *Root) put(x, y int, str string, style tcell.Style) {
 	root.Screen.Put(x, y, str, style)
 	if !root.scr.forceDisplaySync && needsDisplaySync(str) {

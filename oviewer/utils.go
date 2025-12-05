@@ -140,3 +140,11 @@ func getTTY() (*os.File, error) {
 	}
 	return os.Open("/dev/tty")
 }
+
+// firstRune returns the first rune of the string.
+func firstRune(s string) rune {
+	if len(s) == 0 {
+		return rune(0)
+	}
+	return []rune(s)[0]
+}

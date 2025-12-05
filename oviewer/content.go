@@ -130,7 +130,7 @@ func parseLine(conv Converter, str string, tabWidth int) (contents, tcell.Style)
 func (st *parseState) parseChar(gr string) {
 	width := uniseg.StringWidth(gr)
 	if width == 0 && gr != "" {
-		st.zeroWidthHandle([]rune(st.str)[0])
+		st.zeroWidthHandle(firstRune(st.str))
 		return
 	}
 

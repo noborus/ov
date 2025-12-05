@@ -22,6 +22,19 @@ func Test_escapeSequence_convert(t *testing.T) {
 		wantState int
 	}{
 		{
+			name: "test-blank",
+			fields: fields{
+				state: ansiText,
+			},
+			args: args{
+				st: &parseState{
+					str: "",
+				},
+			},
+			want:      false,
+			wantState: ansiText,
+		},
+		{
 			name: "test-escapeSequence",
 			fields: fields{
 				state: ansiText,
@@ -171,7 +184,7 @@ func Test_escapeSequence_convert(t *testing.T) {
 			},
 			args: args{
 				st: &parseState{
-					str: string(rune(0x07)),
+					str: "\x07",
 				},
 			},
 			want:      true,
