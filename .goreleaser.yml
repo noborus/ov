@@ -80,7 +80,7 @@ winget:
       owner: noborus
       name: winget-pkgs
       branch: "ov-{{ .Version }}"
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.APP_TOKEN }}"
       pull_request:
         enabled: false
         draft: false
