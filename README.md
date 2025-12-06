@@ -84,6 +84,7 @@ ov is a terminal pager.
   * 5.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
 * 6. [Command option](#command-option)
 * 7. [Key bindings](#key-bindings)
+  * 7.1. [Ctrl key and corresponding key pairs (commonly treated as the same in terminals)](#ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals))
 * 8. [Customize](#customize)
   * 8.1. [Style customization](#style-customization)
     * 8.1.1. [UnderlineStyle](#underlinestyle)
@@ -1364,7 +1365,7 @@ It can also be changed after startup.
 | [ctrl+c]                      | * copy to clipboard                                |
 | [ctrl+v]                      | * paste from clipboard                             |
 
-### Ctrl key and corresponding key pairs (commonly treated as the same in terminals)
+###  7.1. <a name='ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)'></a>Ctrl key and corresponding key pairs (commonly treated as the same in terminals)
 
 In many terminals, certain Ctrl key combinations and regular keys (such as Backspace, Tab, Enter) are treated as the same input. Here are typical examples:
 
