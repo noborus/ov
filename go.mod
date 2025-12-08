@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.2
 
 require (
-	codeberg.org/tslocum/cbind v0.1.7
+	codeberg.org/tslocum/cbind v0.1.8
 	github.com/atotto/clipboard v0.1.4
 	github.com/creack/pty v1.1.24
 	github.com/fsnotify/fsnotify v1.9.0
@@ -32,6 +32,7 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
+	github.com/gdamore/tcell/v3 v3.0.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jwalton/go-supportscolor v1.2.0 // indirect

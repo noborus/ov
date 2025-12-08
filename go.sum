@@ -1,5 +1,5 @@
-codeberg.org/tslocum/cbind v0.1.7 h1:yexPwmLhVD/kuxwhC+F/aWqcJo1TPpfrjoKzAiEA9a0=
-codeberg.org/tslocum/cbind v0.1.7/go.mod h1:dZog3xKY8KC7j6FJmRUAdXAzVRIzQsG5UHr5DpyA//0=
+codeberg.org/tslocum/cbind v0.1.8 h1:6NA91gq0Ae6ipv4kguCYG2F5sNA6JqbU0iJ+DLVyAkA=
+codeberg.org/tslocum/cbind v0.1.8/go.mod h1:A6hjqRDPZa6DJesTigEXBVYBNQs7MOX5edv/bZMPNhw=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/clipperhouse/stringish v0.1.1 h1:+NSqMOr3GR6k1FdRhhnXrLfztGzuG+VuFDfatpWHKCs=
@@ -19,6 +19,8 @@ github.com/gdamore/encoding v1.0.1 h1:YzKZckdBL6jVt2Gc+5p82qhrGiqMdG/eNs6Wy0u3Uh
 github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeeklsSDPivEo=
 github.com/gdamore/tcell/v2 v2.13.2 h1:5j4srfF8ow3HICOv/61/sOhQtA25qxEB2XR3Q/Bhx2g=
 github.com/gdamore/tcell/v2 v2.13.2/go.mod h1:+Wfe208WDdB7INEtCsNrAN6O2m+wsTPk1RAovjaILlo=
+github.com/gdamore/tcell/v3 v3.0.1 h1:ntu29ZztQTOgXu++mUkjC+6BS405fhjEd8a2sGAiGT4=
+github.com/gdamore/tcell/v3 v3.0.1/go.mod h1:OoJxRXVKR7ROCFzAIUkHHy/7mWTkz9sNfWLhdEsNHVM=
 github.com/go-viper/mapstructure/v2 v2.4.0 h1:EBsztssimR/CONLSZZ04E8qAkxNYq4Qp9LvH92wZUgs=
 github.com/go-viper/mapstructure/v2 v2.4.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
