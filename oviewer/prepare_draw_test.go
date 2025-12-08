@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func sectionHeader1Helper(t *testing.T) *Root {

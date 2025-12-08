@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // saveSelection represents the state of the save selection.
@@ -67,7 +67,7 @@ func (root *Root) promptSaveFlag(fileName string) (int, error) {
 // saveConfirm waits for the user to confirm the save.
 func (root *Root) saveConfirm() saveSelection {
 	for {
-		ev := root.Screen.PollEvent()
+		ev := <-root.Screen.EventQ()
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
 			s := saveConfirmKey(ev)
@@ -82,12 +82,12 @@ func (root *Root) saveConfirm() saveSelection {
 func saveConfirmKey(ev *tcell.EventKey) saveSelection {
 	switch ev.Key() {
 	case tcell.KeyRune:
-		switch ev.Rune() {
-		case 'o', 'O':
+		switch ev.Str() {
+		case "o", "O":
 			return saveOverWrite
-		case 'a', 'A':
+		case "a", "A":
 			return saveAppend
-		case 'n', 'N', 'q', 'Q':
+		case "n", "N", "q", "Q":
 			return saveCancel
 		}
 	case tcell.KeyEscape:

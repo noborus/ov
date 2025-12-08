@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func getContents(t *testing.T, root *Root, y int, width int) string {

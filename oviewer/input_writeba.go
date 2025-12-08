@@ -3,7 +3,7 @@ package oviewer
 import (
 	"context"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // inputWriteBA sets the inputMode to WriteBA.

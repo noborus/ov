@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // searchCandidateListLen is the number of search candidates for multicolor.

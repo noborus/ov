@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func Test_escapeSequence_convert(t *testing.T) {
@@ -304,8 +304,12 @@ func Test_sgrStyle(t *testing.T) {
 			got := sgrStyle(tt.args.style, tt.args.csiParameter)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("csToStyle() = %v, want %v", got, tt.want)
-				gfg, gbg, gattr := got.Decompose()
-				wfg, wbg, wattr := tt.want.Decompose()
+				gfg := got.GetForeground()
+				gbg := got.GetBackground()
+				gattr := got.GetAttributes()
+				wfg := tt.want.GetForeground()
+				wbg := tt.want.GetBackground()
+				wattr := tt.want.GetAttributes()
 				t.Errorf("csToStyle() = %x,%x,%v, want %x,%x,%v", gfg.Hex(), gbg.Hex(), gattr, wfg.Hex(), wbg.Hex(), wattr)
 			}
 		})

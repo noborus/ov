@@ -3,7 +3,7 @@ package oviewer
 import (
 	"context"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // inputWatchInterval sets the inputMode to Watch.

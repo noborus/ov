@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"

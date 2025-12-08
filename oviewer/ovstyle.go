@@ -3,7 +3,7 @@ package oviewer
 import (
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // OVStyle represents a style in addition to the original style.

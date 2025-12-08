@@ -15,7 +15,7 @@ import (
 	"unicode"
 
 	"codeberg.org/tslocum/cbind"
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -460,7 +460,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 	// eventQueue stores events that occur during search.
 	var eventQueue []tcell.Event
 	for {
-		ev := root.Screen.PollEvent()
+		ev := <-root.Screen.EventQ()
 		switch ev := ev.(type) {
 		case *tcell.EventKey: // cancel key?
 			c.Capture(ev)
@@ -485,15 +485,7 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 // cancelKeys sets the cancel key.
 func cancelKeys(c *cbind.Configuration, cancelKeys []string, cancelApp func(_ *tcell.EventKey) *tcell.EventKey) (*cbind.Configuration, error) {
 	for _, k := range cancelKeys {
-		mod, key, ch, err := cbind.Decode(k)
-		if err != nil {
-			return c, fmt.Errorf("%w [%s] for cancel: %w", ErrFailedKeyBind, k, err)
-		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, cancelApp)
-		} else {
-			c.SetKey(mod, key, cancelApp)
-		}
+		c.Set(k, cancelApp)
 	}
 	return c, nil
 }
@@ -527,9 +519,6 @@ func (root *Root) sendSearchMove(lineNum int, searcher Searcher) {
 
 // incrementalSearch performs incremental search by setting and input mode.
 func (root *Root) incrementalSearch(ctx context.Context) {
-	if root.Screen.HasPendingEvent() {
-		return
-	}
 	if !root.Config.Incsearch {
 		return
 	}

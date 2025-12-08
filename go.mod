@@ -5,18 +5,18 @@ go 1.24.0
 toolchain go1.24.2
 
 require (
-	codeberg.org/tslocum/cbind v0.1.7
+	codeberg.org/tslocum/cbind v0.1.8
 	github.com/atotto/clipboard v0.1.4
 	github.com/creack/pty v1.1.24
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gdamore/tcell/v2 v2.13.2
+	github.com/gdamore/tcell/v3 v3.0.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.18.2
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/noborus/guesswidth v0.4.0
-	github.com/noborus/tcellansi v0.3.0
+	github.com/noborus/tcellansi v0.3.1-0.20251207223822-2e5b810a9267
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.10.2

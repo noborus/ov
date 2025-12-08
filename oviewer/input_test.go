@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func candidateHelper() *candidate {
@@ -36,7 +36,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyEnter, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyEnter, "", 0),
 			},
 			want:      true,
 			wantValue: "test",
@@ -48,7 +48,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyEscape, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyEscape, "", 0),
 			},
 			want:      false,
 			wantValue: "",
@@ -60,7 +60,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyRune, 'a', 0),
+				evKey: tcell.NewEventKey(tcell.KeyRune, "a", 0),
 			},
 			want:      false,
 			wantValue: "testa",
@@ -72,7 +72,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyTAB, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyTAB, "", 0),
 			},
 			want:      false,
 			wantValue: "test\t",
@@ -84,7 +84,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyBackspace, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyBackspace, "", 0),
 			},
 			want:      false,
 			wantValue: "tes",
@@ -96,7 +96,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 0,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyDelete, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyDelete, "", 0),
 			},
 			want:      false,
 			wantValue: "est",
@@ -108,7 +108,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 4,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyLeft, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyLeft, "", 0),
 			},
 			want:      false,
 			wantValue: "test",
@@ -120,7 +120,7 @@ func TestInput_keyEvent(t *testing.T) {
 				cursorX: 0,
 			},
 			args: args{
-				evKey: tcell.NewEventKey(tcell.KeyRight, 0, 0),
+				evKey: tcell.NewEventKey(tcell.KeyRight, "", 0),
 			},
 			want:      false,
 			wantValue: "test",

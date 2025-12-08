@@ -3,7 +3,7 @@ package oviewer
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func Test_saveConfirmKey(t *testing.T) {
@@ -18,35 +18,35 @@ func Test_saveConfirmKey(t *testing.T) {
 		{
 			name: "saveOverWrite",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyRune, 'O', tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyRune, "O", tcell.ModNone),
 			},
 			want: saveOverWrite,
 		},
 		{
 			name: "saveAppend",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyRune, "A", tcell.ModNone),
 			},
 			want: saveAppend,
 		},
 		{
 			name: "saveCancel",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyRune, 'N', tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyRune, "N", tcell.ModNone),
 			},
 			want: saveCancel,
 		},
 		{
 			name: "saveCancel2",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyEscape, "", tcell.ModNone),
 			},
 			want: saveCancel,
 		},
 		{
 			name: "saveIgnore",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyRune, "I", tcell.ModNone),
 			},
 			want: saveIgnore,
 		},

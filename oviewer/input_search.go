@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // searchType is the type of search.
