@@ -46,8 +46,8 @@ github.com/mattn/go-runewidth v0.0.19 h1:v++JhqYnZuu5jSKrk9RbgF5v4CGUjqRfBm05byF
 github.com/mattn/go-runewidth v0.0.19/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
 github.com/noborus/guesswidth v0.4.0 h1:+PPh+Z+GM4mKmVrhYR4lpjeyBuLMSVo2arM+VErdHIc=
 github.com/noborus/guesswidth v0.4.0/go.mod h1:ghA6uh9RcK+uSmaDDmBMj/tRZ3BSpspDP6DMF5Xk3bc=
-github.com/noborus/tcellansi v0.4.0 h1:TMxW1JjJdKGJxNJL63DJskDnYjRoh8NKY5u2WaMAKek=
-github.com/noborus/tcellansi v0.4.0/go.mod h1:1R4Q5JEOnLeYwa9+HQqVZv7WRkQDkoDScgKfoN5G+Zk=
+github.com/noborus/tcellansi v0.4.1 h1:Z7rliNUCtXNek/TjRugLNr15DxbQt4jgg4cDBzjJ+oQ=
+github.com/noborus/tcellansi v0.4.1/go.mod h1:V1q4ffVGQ5t9BopMAdAh9UuTMqnhEd88XA1Ilsb5+qg=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pierrec/lz4/v4 v4.1.22 h1:cKFw6uJDK+/gfw5BcDL0JL5aBsAFdsIT18eRtLj7VIU=

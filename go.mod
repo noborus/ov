@@ -16,7 +16,7 @@ require (
 	github.com/klauspost/compress v1.18.2
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/noborus/guesswidth v0.4.0
-	github.com/noborus/tcellansi v0.4.0
+	github.com/noborus/tcellansi v0.4.1
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.10.2
