@@ -25,7 +25,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/sync v0.19.0
 	golang.org/x/sys v0.39.0
-	golang.org/x/term v0.37.0
+	golang.org/x/term v0.38.0
 )
 
 require (
