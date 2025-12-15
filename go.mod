@@ -16,7 +16,7 @@ require (
 	github.com/klauspost/compress v1.18.2
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/noborus/guesswidth v0.4.0
-	github.com/noborus/tcellansi v0.3.0
+	github.com/noborus/tcellansi v0.3.1
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.10.2
@@ -42,6 +42,6 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
