@@ -1,6 +1,6 @@
 package oviewer
 
-import "github.com/gdamore/tcell/v2"
+import "github.com/gdamore/tcell/v3"
 
 // eventNormal represents the normal input mode.
 // This is a dummy as it normally does not accept input.

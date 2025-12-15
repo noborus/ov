@@ -3,7 +3,7 @@ package oviewer
 import (
 	"context"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // inputGoLine sets the inputMode to Goline.

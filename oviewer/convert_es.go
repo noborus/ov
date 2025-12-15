@@ -7,7 +7,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // convert_es converts an ANSI escape sequence to an ov representation.
@@ -141,7 +141,7 @@ func (es *escapeSequence) parseCSI(st *parseState, mainc rune) {
 		params := es.parameter.String()
 		if params == "" || params == "0" {
 			// can change the background color of the line.
-			_, bg, _ := st.style.Decompose()
+			bg := st.style.GetBackground()
 			st.eolStyle = st.eolStyle.Background(bg)
 		}
 	case mainc >= 'A' && mainc <= 'T': // Cursor Movement.

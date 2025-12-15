@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"codeberg.org/tslocum/cbind"
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // The name of the action to assign the key to.
@@ -500,22 +500,9 @@ func (root *Root) setHandlers(ctx context.Context, keyBind KeyBind) error {
 // setHandler sets multiple keys in one action handler.
 func setHandler(ctx context.Context, c *cbind.Configuration, name string, keys []string, handler func(context.Context)) error {
 	for _, k := range keys {
-		mod, key, ch, err := cbind.Decode(k)
-		if err != nil {
+		if err := c.Set(k, wrapEventHandler(ctx, handler)); err != nil {
 			return fmt.Errorf("%w [%s] for %s: %w", ErrFailedKeyBind, k, name, err)
 		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, wrapEventHandler(ctx, handler))
-			// On Windows, some shifted keys (like 'N' as "shift+n") may not be recognized as their uppercase rune,
-			// so we explicitly bind both the plain and shifted versions to ensure the keybinding works across platforms.
-			// This is especially necessary for ASCII characters between '!' (0x21) and '`' (0x60).
-			if 0x21 <= ch && ch <= 0x60 {
-				c.SetRune(mod|tcell.ModShift, ch, wrapEventHandler(ctx, handler))
-			}
-			continue
-		}
-
-		c.SetKey(mod, key, wrapEventHandler(ctx, handler))
 	}
 	return nil
 }
@@ -541,15 +528,6 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 
 // formatKeyName formats the key name for better readability
 func (root *Root) formatKeyName(ev *tcell.EventKey) string {
-	// For regular printable characters, just show the character
-	if ev.Rune() != 0 && ev.Rune() > 32 && ev.Rune() < 127 {
-		// Check for modifiers
-		if ev.Modifiers() != tcell.ModNone {
-			return ev.Name() // Use the full name for modified keys
-		}
-		return string(ev.Rune()) // Just show the character for simple keys
-	}
-
 	// For special keys, use the standard name
 	return ev.Name()
 }

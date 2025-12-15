@@ -3,7 +3,7 @@ package oviewer
 import (
 	"context"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // inputSkipLines sets the inputMode to SkipLines.

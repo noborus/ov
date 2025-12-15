@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 func TestRoot_MoveLine(t *testing.T) {
@@ -118,7 +118,7 @@ func TestRoot_event(t *testing.T) {
 		{
 			name: "event key",
 			args: args{
-				ev: tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				ev: tcell.NewEventKey(tcell.KeyRune, "a", tcell.ModNone),
 			},
 			want: false,
 		},

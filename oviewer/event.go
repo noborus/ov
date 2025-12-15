@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // UpdateInterval is the update interval that calls eventUpdate().
@@ -23,7 +23,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 
 	for {
 		root.everyUpdate(ctx)
-		ev := root.Screen.PollEvent()
+		ev := <-root.Screen.EventQ()
 		if quit := root.event(ctx, ev); quit {
 			close(quitChan)
 			return
@@ -379,8 +379,12 @@ func (root *Root) sendReload(m *Document) {
 
 // releaseEventBuffer will release all event buffers.
 func (root *Root) releaseEventBuffer() {
-	for root.Screen.HasPendingEvent() {
-		_ = root.Screen.PollEvent()
+	for {
+		select {
+		case <-root.Screen.EventQ():
+		default:
+			return
+		}
 	}
 }
 
@@ -392,9 +396,11 @@ func (root *Root) postEvent(ev tcell.Event) {
 	if root.Screen == nil {
 		return
 	}
-
-	if err := root.Screen.PostEvent(ev); err != nil {
-		log.Printf("postEvent: %v\n", err)
+	select {
+	case root.Screen.EventQ() <- ev:
+		return
+	default:
+		log.Printf("postEvent: %v\n", tcell.ErrEventQFull)
 		root.releaseEventBuffer()
 	}
 }

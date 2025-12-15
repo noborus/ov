@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	"github.com/atotto/clipboard"
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 )
 
 // clipboardTimeout is the timeout duration for clipboard operations.

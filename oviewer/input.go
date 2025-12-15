@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"codeberg.org/tslocum/cbind"
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 	"github.com/rivo/uniseg"
 )
 
@@ -130,7 +130,7 @@ func (root *Root) inputCapture(ev *tcell.EventKey) *tcell.EventKey {
 // shouldCaptureExclamationMark checks if the current input mode is Filter and the key event is '!'.
 // It returns true if the '!' key should be captured and not input, otherwise false.
 func (root *Root) shouldCaptureExclamationMark(ev *tcell.EventKey) bool {
-	if ev.Rune() == '!' {
+	if ev.Str() == "!" {
 		if root.input.Event.Mode() != Filter {
 			return true
 		}
@@ -149,13 +149,12 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 
 	mod := evKey.Modifiers()
 	key := evKey.Key()
-	rune := evKey.Rune()
+	str := evKey.Str()
 
 	if key == tcell.KeyRune {
-		r := string(rune)
 		left, right := splitAtWidth(input.value, input.cursorX)
-		input.value = left + r + right
-		input.cursorX += uniseg.StringWidth(r)
+		input.value = left + str + right
+		input.cursorX += uniseg.StringWidth(str)
 		actualWidth := stringWidth(input.value)
 		if input.cursorX > actualWidth {
 			input.cursorX = actualWidth
@@ -163,7 +162,7 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		return false
 	}
 
-	keyStr, err := cbind.Encode(mod, key, rune)
+	keyStr, err := cbind.Encode(mod, key, str)
 	if err != nil {
 		log.Printf("Error encoding key event: %v", err)
 		return false
