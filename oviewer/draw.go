@@ -534,7 +534,9 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 }
 
 // execNotify notifies by beeping and flashing the screen the specified number of times.
-func (root *Root) execNotify(count int) {
+func (root *Root) execNotify(msg string, count int) {
+	root.setMessage(msg)
+	root.Screen.ShowNotification("ov notify", msg)
 	for range count {
 		_ = root.Screen.Beep()
 		root.flash()
