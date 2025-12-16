@@ -156,17 +156,15 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 // only support 0-5.
 // 0: None, 1: Single, 2: Double, 3: Curly, 4: Dotted, 5: Dashed
 func underLineStyle(ustyle string) tcell.UnderlineStyle {
-	n, err := strconv.Atoi(ustyle)
+	val, err := strconv.ParseUint(ustyle, 10, 8)
 	if err != nil {
 		return tcell.UnderlineStyleNone
 	}
-
-	us := tcell.UnderlineStyle(n)
+	us := tcell.UnderlineStyle(val)
 	if us < tcell.UnderlineStyleNone || us > tcell.UnderlineStyleDashed {
 		// Note: It is not appropriate to turn off the underline style for out-of-range values.
 		// It is out of specification.
 		return tcell.UnderlineStyleNone
 	}
-
 	return us
 }
