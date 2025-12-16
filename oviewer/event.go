@@ -145,8 +145,8 @@ func (root *Root) notifyEOFReached(m *Document) {
 	if root.Config.NotifyEOF == 0 {
 		return
 	}
-	root.setMessagef("EOF reached %s", m.FileName)
-	root.execNotify(root.Config.NotifyEOF)
+	msg := "EOF reached: " + m.FileName
+	root.execNotify(msg, root.Config.NotifyEOF)
 }
 
 // sendGoto fires an eventGoto event that moves to the specified line.
