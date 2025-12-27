@@ -337,6 +337,35 @@ func TestRoot_setKeyConfig(t *testing.T) {
 		})
 	}
 }
+func TestSetConfig_WithViewMode(t *testing.T) {
+	// prepare config with a view mode that sets FollowAll and TabWidth
+	cfg := NewConfig()
+	if cfg.Mode == nil {
+		cfg.Mode = make(map[string]General)
+	}
+	var g General
+	g.SetFollowAll(true)
+	g.SetTabWidth(4)
+	cfg.Mode["myview"] = g
+	cfg.ViewMode = "myview"
+	cfg.MinStartX = 12
+
+	root := &Root{settings: NewRunTimeSettings()}
+	root.SetConfig(cfg)
+
+	if !root.settings.FollowAll {
+		t.Fatalf("expected settings.FollowAll=true, got false")
+	}
+	if !root.FollowAll {
+		t.Fatalf("expected root.FollowAll=true, got false")
+	}
+	if root.settings.TabWidth != 4 {
+		t.Fatalf("expected TabWidth=4, got %d", root.settings.TabWidth)
+	}
+	if root.minStartX != 12 {
+		t.Fatalf("expected minStartX=12, got %d", root.minStartX)
+	}
+}
 
 func TestRoot_writeOriginal(t *testing.T) {
 	tcellNewScreen = fakeScreen
@@ -1440,5 +1469,58 @@ func TestRoot_outputOnExit(t *testing.T) {
 				t.Errorf("Root.outputOnExit() = \n%v, want \n%v", []byte(gotOutput), []byte(tt.wantOutput))
 			}
 		})
+	}
+}
+func Test_openFiles_AllFail(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() { tcellNewScreen = tcell.NewScreen }()
+
+	files := []string{filepath.Join(testdata, "err.txt")}
+	root, err := openFiles(files)
+	if root != nil {
+		t.Fatalf("expected nil root, got %v", root)
+	}
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func Test_openFiles_PartialSuccess(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() { tcellNewScreen = tcell.NewScreen }()
+
+	files := []string{
+		filepath.Join(testdata, "test.txt"),
+		filepath.Join(testdata, "err.txt"),
+	}
+	root, err := openFiles(files)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if root == nil {
+		t.Fatalf("expected root, got nil")
+	}
+	if len(root.DocList) != 1 {
+		t.Fatalf("expected 1 document, got %d", len(root.DocList))
+	}
+}
+
+func Test_openFiles_AllSuccess(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() { tcellNewScreen = tcell.NewScreen }()
+
+	files := []string{
+		filepath.Join(testdata, "test.txt"),
+		filepath.Join(testdata, "test2.txt"),
+	}
+	root, err := openFiles(files)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if root == nil {
+		t.Fatalf("expected root, got nil")
+	}
+	if len(root.DocList) != 2 {
+		t.Fatalf("expected 2 documents, got %d", len(root.DocList))
 	}
 }
