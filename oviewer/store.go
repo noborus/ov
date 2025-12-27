@@ -360,6 +360,7 @@ func (s *store) appendFormFeed(chunk *chunk) {
 	}
 }
 
+// export exports the lines including ANSI escape sequences.
 func (s *store) export(w io.Writer, chunk *chunk, start int, end int) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

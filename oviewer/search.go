@@ -485,7 +485,10 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 // cancelKeys sets the cancel key.
 func cancelKeys(c *cbind.Configuration, cancelKeys []string, cancelApp func(_ *tcell.EventKey) *tcell.EventKey) (*cbind.Configuration, error) {
 	for _, k := range cancelKeys {
-		c.Set(k, cancelApp)
+		err := c.Set(k, cancelApp)
+		if err != nil {
+			return nil, fmt.Errorf("cancelKeys: %w", err)
+		}
 	}
 	return c, nil
 }

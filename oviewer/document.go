@@ -177,7 +177,7 @@ type Document struct {
 	nonMatch bool
 	// pauseFollow indicates if follow mode is paused.
 	pauseFollow bool
-	// pauseFollowNum is the line number where follow mode was paused.
+	// pauseLastNum is the line number where follow mode was paused.
 	pauseLastNum int
 	// General is the General settings.
 	General General
@@ -207,7 +207,7 @@ type store struct {
 	eof int32
 	// size is the number of bytes read.
 	size int64
-	// offset
+	// offset is the current byte offset in the file.
 	offset int64
 	// formfeedTime adds time on formfeed.
 	formfeedTime bool
@@ -428,18 +428,18 @@ func (m *Document) CurrentLN() int {
 
 // Export exports the document in the specified range.
 func (m *Document) Export(w io.Writer, start int, end int) error {
-	return m.export(w, start, end, m.store.export)
+	return m.exportRange(w, start, end, false)
 }
 
 // ExportPlain exports the document in the specified range without ANSI escape sequences.
 func (m *Document) ExportPlain(w io.Writer, start int, end int) error {
-	return m.export(w, start, end, m.store.exportPlain)
+	return m.exportRange(w, start, end, true)
 }
 
-// storeExportFunc is a function type for exporting lines from a chunk.
-type storeExportFunc func(w io.Writer, chunk *chunk, start int, end int) error
-
-func (m *Document) export(w io.Writer, start int, end int, exportFunc storeExportFunc) error {
+// exportRange exports the document in the specified range.
+// If plain is true, it writes plain text (no ANSI escapes), otherwise
+// it preserves ANSI escape sequences.
+func (m *Document) exportRange(w io.Writer, start int, end int, plain bool) error {
 	end = min(end, m.BufEndNum()-1)
 	startChunk, startCn := chunkLineNum(start)
 	endChunk, endCn := chunkLineNum(end)
@@ -451,7 +451,13 @@ func (m *Document) export(w io.Writer, start int, end int, exportFunc storeExpor
 			ecn = endCn + 1
 		}
 		chunk := m.store.chunks[chunkNum]
-		if err := exportFunc(w, chunk, scn, ecn); err != nil {
+		var err error
+		if plain {
+			err = m.store.exportPlain(w, chunk, scn, ecn)
+		} else {
+			err = m.store.export(w, chunk, scn, ecn)
+		}
+		if err != nil {
 			return err
 		}
 		scn = 0
@@ -472,7 +478,7 @@ func (m *Document) BufEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
 }
 
-// BufEndNum return last line number.
+// storeEndNum returns the last line number from the main store, ignoring follow mode.
 func (m *Document) storeEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
 }
