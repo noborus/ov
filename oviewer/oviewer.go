@@ -628,12 +628,10 @@ func openFiles(fileNames []string) (*Root, error) {
 		docList = append(docList, m)
 	}
 
-	if len(openErrs) > 1 {
-		openErrs = append([]error{ErrMissingFile}, openErrs...)
-	}
-	errs := errors.Join(openErrs...)
 	// If none of the documents are present, the program exits with an error.
 	if len(docList) == 0 {
+		openErrs = append([]error{ErrMissingFile}, openErrs...)
+		errs := errors.Join(openErrs...)
 		return nil, errs
 	}
 
@@ -642,9 +640,9 @@ func openFiles(fileNames []string) (*Root, error) {
 		return nil, err
 	}
 	// Errors that could not be OpenDocument are output to the log.
-	if errs, ok := errs.(interface{ Unwrap() []error }); ok {
-		for _, err := range errs.Unwrap() {
-			log.Println(err)
+	if len(openErrs) > 0 {
+		for _, e := range openErrs {
+			log.Println(e)
 		}
 	}
 
