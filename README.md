@@ -1,6 +1,6 @@
 # ov - feature rich terminal pager
 
-<!-- markdownlint-disable MD019 MD029 MD033 MD036 -->
+<!-- markdownlint-disable MD019 MD029 MD033 MD036 MD060 -->
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
@@ -822,8 +822,6 @@ General:
 ```
 
 **Horizontal Scroll Amount:**
-
-Horizontal Scroll Amount:
 
 Command-line: --hscroll-width (e.g., --hscroll-width "20%" or --hscroll-width "10")
 Config file: Set HScrollWidth in the General section
@@ -1683,13 +1681,17 @@ You can customize key bindings.
     down:
         - "Enter"
         - "Down"
-        - "ctrl+N"
+        - "ctrl+n"
     up:
         - "Up"
         - "ctrl+p"
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
+
+> [!NOTE]
+> Some keys may not work depending on the terminal.
+> See also [Ctrl key and corresponding key pairs (commonly treated as the same in terminals)](#ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)).
 
 ###  8.6. <a name='general-configuration'></a>General configuration
 
