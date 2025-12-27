@@ -662,8 +662,8 @@ func (root *Root) SetConfig(config Config) {
 
 	// view mode.
 	if config.ViewMode != "" {
-		viewMode, overwrite := config.Mode[config.ViewMode]
-		if overwrite {
+		viewMode, ok := config.Mode[config.ViewMode]
+		if ok {
 			root.settings = updateRunTimeSettings(root.settings, viewMode)
 		} else {
 			root.setMessageLogf("view mode not found: %s", config.ViewMode)
