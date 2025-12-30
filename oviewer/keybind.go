@@ -87,6 +87,7 @@ const (
 	actionJumpTarget     = "jump_target"
 	actionMultiColor     = "multi_color"
 	actionSaveBuffer     = "save_buffer"
+	actionPipeBuffer     = "pipe_buffer"
 	actionSearch         = "search"
 	actionBackSearch     = "backsearch"
 	actionFilter         = "filter"
@@ -188,6 +189,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionJumpTarget:     root.inputJumpTarget,
 		actionMultiColor:     root.inputMultiColor,
 		actionSaveBuffer:     root.inputSaveBuffer,
+		actionPipeBuffer:     root.inputPipeBuffer,
 		actionSearch:         root.inputForwardSearch,
 		actionBackSearch:     root.inputBackSearch,
 		actionFilter:         root.inputSearchFilter,
@@ -293,6 +295,7 @@ func defaultKeyBinds() KeyBind {
 		actionJumpTarget:     {"j"},
 		actionMultiColor:     {"."},
 		actionSaveBuffer:     {"S"},
+		actionPipeBuffer:     {"|"},
 		actionSearch:         {"/"},
 		actionBackSearch:     {"?"},
 		actionFilter:         {"&"},
@@ -337,6 +340,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
 	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
 	k.writeKeyBind(&b, actionSaveBuffer, "save buffer to file")
+	k.writeKeyBind(&b, actionPipeBuffer, "pipe buffer to command")
 
 	writeHeader(&b, "Moving")
 	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
