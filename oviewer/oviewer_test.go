@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v3"
 	"github.com/spf13/viper"
 )
@@ -1523,4 +1525,50 @@ func Test_openFiles_AllSuccess(t *testing.T) {
 	if len(root.DocList) != 2 {
 		t.Fatalf("expected 2 documents, got %d", len(root.DocList))
 	}
+}
+
+func TestSetWatcher_SymlinkResolution(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() { tcellNewScreen = tcell.NewScreen }()
+
+	// Create a temporary directory and file
+	tmpDir := t.TempDir()
+	realFile := filepath.Join(tmpDir, "realfile.txt")
+	if err := os.WriteFile(realFile, []byte("test content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink directory pointing to tmpDir
+	symlinkDir := filepath.Join(tmpDir, "symlink")
+	if err := os.Symlink(tmpDir, symlinkDir); err != nil {
+		t.Skipf("cannot create symlink: %v", err)
+	}
+
+	// Open file via symlink path
+	symlinkPath := filepath.Join(symlinkDir, "realfile.txt")
+	root, err := Open(symlinkPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create watcher and call SetWatcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer watcher.Close()
+
+	root.SetWatcher(watcher)
+
+	// Verify that doc.filepath is resolved to the real path (no symlinks)
+	doc := root.DocList[0]
+	realPath, err := filepath.EvalSymlinks(symlinkPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if doc.filepath != realPath {
+		t.Errorf("doc.filepath = %v, want %v (symlink should be resolved)", doc.filepath, realPath)
+	}
+
+	root.Quit(context.Background())
 }
