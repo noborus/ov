@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v3"
@@ -1531,16 +1533,22 @@ func TestSetWatcher_SymlinkResolution(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() { tcellNewScreen = tcell.NewScreen }()
 
-	// Create a temporary directory and file
-	tmpDir := t.TempDir()
+	// Create a temporary directory for test files (separate from t.TempDir to control cleanup order)
+	tmpDir, err := os.MkdirTemp("", "ov-symlink-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	realFile := filepath.Join(tmpDir, "realfile.txt")
 	if err := os.WriteFile(realFile, []byte("test content"), 0644); err != nil {
+		os.RemoveAll(tmpDir)
 		t.Fatal(err)
 	}
 
 	// Create a symlink directory pointing to tmpDir
 	symlinkDir := filepath.Join(tmpDir, "symlink")
 	if err := os.Symlink(tmpDir, symlinkDir); err != nil {
+		os.RemoveAll(tmpDir)
 		t.Skipf("cannot create symlink: %v", err)
 	}
 
@@ -1548,15 +1556,16 @@ func TestSetWatcher_SymlinkResolution(t *testing.T) {
 	symlinkPath := filepath.Join(symlinkDir, "realfile.txt")
 	root, err := Open(symlinkPath)
 	if err != nil {
+		os.RemoveAll(tmpDir)
 		t.Fatal(err)
 	}
 
 	// Create watcher and call SetWatcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
+		os.RemoveAll(tmpDir)
 		t.Fatal(err)
 	}
-	defer watcher.Close()
 
 	root.SetWatcher(watcher)
 
@@ -1564,11 +1573,25 @@ func TestSetWatcher_SymlinkResolution(t *testing.T) {
 	doc := root.DocList[0]
 	realPath, err := filepath.EvalSymlinks(symlinkPath)
 	if err != nil {
+		watcher.Close()
+		os.RemoveAll(tmpDir)
 		t.Fatal(err)
 	}
 	if doc.filepath != realPath {
 		t.Errorf("doc.filepath = %v, want %v (symlink should be resolved)", doc.filepath, realPath)
 	}
 
-	root.Quit(context.Background())
+	// Cleanup: close watcher first to release directory handle
+	// This order is important on Windows where files/directories can't be deleted while handles are open
+	watcher.Close()
+
+	// Close the document by sending close request through channel and waiting for completion
+	doc.requestClose()
+
+	// Give the system time to release file handles (especially needed on Windows)
+	runtime.GC()
+	time.Sleep(100 * time.Millisecond)
+
+	// Now we can safely remove the temp directory
+	os.RemoveAll(tmpDir)
 }
