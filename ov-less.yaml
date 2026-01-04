@@ -275,6 +275,8 @@ KeyBind:
         - "alt+j"
     save_buffer:
         - "s"
+    pipe_buffer:
+        - "|"
     convert_type:
         - "ctrl+alt+t"
     align_format:
