@@ -26,6 +26,7 @@ const (
 	DocHelp
 	DocLog
 	DocFilter
+	DocPipe
 )
 
 // documentType represents the type of document (e.g., normal, help, log, filter).
@@ -42,6 +43,8 @@ func (d documentType) String() string {
 		return "log"
 	case DocFilter:
 		return "filter"
+	case DocPipe:
+		return "pipe"
 	}
 	return "unknown"
 }

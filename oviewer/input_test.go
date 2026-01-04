@@ -342,6 +342,14 @@ func TestRoot_inputPrompt(t *testing.T) {
 	if root.inputPrompt() != "(Save)file:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "(Save)file:")
 	}
+	root.inputPipeBuffer(ctx)
+	if root.inputPrompt() != "(Pipe)command:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "(Pipe)command:")
+	}
+	root.inputPipeBufferDoc(ctx)
+	if root.inputPrompt() != "(PipeDoc)command:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "(PipeDoc)command:")
+	}
 	root.inputViewMode(ctx)
 	if root.inputPrompt() != "Mode:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Mode:")

@@ -256,6 +256,10 @@ KeyBind:
         - "."
     jump_target:
         - "j"
+    # pipe_buffer:
+    #     - "|"
+    # pipe_buffer_doc:
+    #     - "!"
     plain_mode:
         - "ctrl+e"
     rainbow_mode:
