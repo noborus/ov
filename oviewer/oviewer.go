@@ -17,6 +17,7 @@ import (
 	"codeberg.org/tslocum/cbind"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/noborus/tcellansi"
 	"github.com/spf13/viper"
 )
@@ -785,7 +786,7 @@ func (root *Root) Run() error {
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
-
+	//time.Sleep(10 * time.Second)
 	if err := root.prepareRun(ctx); err != nil {
 		return err
 	}
@@ -1310,7 +1311,12 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 
 // dummyScreen creates a dummy screen.
 func (root *Root) dummyScreen() (int, error) {
-	root.Screen = tcell.NewSimulationScreen("")
+	mt := vt.NewMockTerm()
+	scr, err := tcell.NewTerminfoScreenFromTty(mt)
+	if err != nil {
+		return 0, err
+	}
+	root.Screen = scr
 	if err := root.Screen.Init(); err != nil {
 		return 0, err
 	}

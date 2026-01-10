@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/noborus/ov/oviewer"
 )
 
@@ -18,7 +19,8 @@ var testdata = filepath.Join(cwd, "testdata")
 // fakeScreen returns a fake screen.
 func fakeScreen() (tcell.Screen, error) {
 	// width, height := 80, 25
-	return tcell.NewSimulationScreen(""), nil
+	mt := vt.NewMockTerm()
+	return tcell.NewTerminfoScreenFromTty(mt)
 }
 
 func ExampleOpen() {

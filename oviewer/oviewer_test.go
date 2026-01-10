@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/spf13/viper"
 )
 
@@ -19,7 +20,8 @@ var testdata = filepath.Join(cwd, "testdata")
 // fakeScreen returns a fake screen.
 func fakeScreen() (tcell.Screen, error) {
 	// width, height := 80, 25
-	return tcell.NewSimulationScreen(""), nil
+	mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
+	return tcell.NewTerminfoScreenFromTty(mt)
 }
 
 func rootHelper(t *testing.T) *Root {
@@ -230,7 +232,6 @@ func TestRoot_Run(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewOviewer error = %v", err)
 			}
-			root.Screen = tcell.NewSimulationScreen("")
 			go func() {
 				if err := root.Run(); (err != nil) != tt.wantErr {
 					t.Errorf("Root.Run() error = %v, wantErr %v", err, tt.wantErr)
@@ -314,7 +315,12 @@ func TestRoot_setKeyConfig(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewOviewer error = %v", err)
 			}
-			root.Screen = tcell.NewSimulationScreen("")
+			mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
+			scr, err := tcell.NewTerminfoScreenFromTty(mt)
+			if err != nil {
+				t.Fatalf("NewTerminfoScreenFromTty error = %v", err)
+			}
+			root.Screen = scr
 			viper.SetConfigFile(tt.cfgFile)
 			var config Config
 			viper.AutomaticEnv() // read in environment variables that match
