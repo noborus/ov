@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/gdamore/tcell/v3/vt"
 	"github.com/spf13/viper"
 )
@@ -262,7 +263,7 @@ func Test_applyStyle(t *testing.T) {
 					Foreground: "white",
 				},
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
+			want: tcell.StyleDefault.Foreground(color.White).Background(color.Red),
 		},
 		{
 			name: "test2",

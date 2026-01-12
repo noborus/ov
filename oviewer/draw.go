@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/mattn/go-runewidth"
 	"github.com/rivo/uniseg"
 )
@@ -545,10 +546,10 @@ func (root *Root) execNotify(msg string, count int) {
 
 // flash flashes the screen.
 func (root *Root) flash() {
-	root.Screen.Fill(' ', tcell.StyleDefault.Background(tcell.ColorWhite))
+	root.Screen.Fill(' ', tcell.StyleDefault.Background(color.White))
 	root.Screen.Sync()
 	time.Sleep(50 * time.Millisecond)
-	root.Screen.Fill(' ', tcell.StyleDefault.Background(tcell.ColorBlack))
+	root.Screen.Fill(' ', tcell.StyleDefault.Background(color.Black))
 	root.Screen.Sync()
 	time.Sleep(50 * time.Millisecond)
 	root.draw(context.Background())

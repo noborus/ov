@@ -19,7 +19,7 @@ var testdata = filepath.Join(cwd, "testdata")
 // fakeScreen returns a fake screen.
 func fakeScreen() (tcell.Screen, error) {
 	// width, height := 80, 25
-	mt := vt.NewMockTerm()
+	mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
 	return tcell.NewTerminfoScreenFromTty(mt)
 }
 

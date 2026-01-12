@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/rivo/uniseg"
 )
 
@@ -38,23 +39,23 @@ func (root *Root) drawLeftStatus() {
 
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() int {
-	color := tcell.ColorWhite
+	sColor := color.White
 	numVisible := false
 	if root.DocumentLen() > 1 && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 		numVisible = true
 		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
+			sColor = color.Color((root.CurrentDoc + 8) % 16)
 		}
 	}
 
 	str := root.StrLeftStatus(numVisible)
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
 	if root.Doc.Normal.InvertColor {
-		style = style.Foreground(tcell.ColorValid + color).Reverse(true)
+		style = style.Foreground(color.IsValid + sColor).Reverse(true)
 	}
 	root.Screen.PutStrStyled(0, root.Doc.statusPos, str, style)
 
-	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
+	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
 
 	return uniseg.StringWidth(str)
@@ -107,7 +108,7 @@ func (root *Root) inputLeftStatus() int {
 
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
 	root.Screen.PutStrStyled(0, root.Doc.statusPos, prompt+input.value, style)
-	cursorColor := tcell.GetColor(root.Doc.Style.LeftStatus.Foreground)
+	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
 
 	return uniseg.StringWidth(prompt) + input.cursorX
