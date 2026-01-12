@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 func Test_escapeSequence_convert(t *testing.T) {
@@ -223,7 +224,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "38;5;1",
 			},
-			want:    tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+			want:    tcell.StyleDefault.Foreground(color.Maroon),
 			wantErr: false,
 		},
 		{
@@ -232,7 +233,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "38;5;21",
 			},
-			want:    tcell.StyleDefault.Foreground(tcell.GetColor("#0000ff")),
+			want:    tcell.StyleDefault.Foreground(color.GetColor("#0000ff")),
 			wantErr: false,
 		},
 		{
@@ -241,7 +242,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "38;2;255;0;0",
 			},
-			want:    tcell.StyleDefault.Foreground(tcell.GetColor("#FF0000")),
+			want:    tcell.StyleDefault.Foreground(color.GetColor("#FF0000")),
 			wantErr: false,
 		},
 		{
@@ -294,7 +295,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "4;58;2;255;0;0",
 			},
-			want:    tcell.StyleDefault.Underline(true).Underline(tcell.GetColor("#FF0000")),
+			want:    tcell.StyleDefault.Underline(true).Underline(color.GetColor("#FF0000")),
 			wantErr: false,
 		},
 	}

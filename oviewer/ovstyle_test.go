@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 func TestToTcellStyle(t *testing.T) {
@@ -23,7 +24,7 @@ func TestToTcellStyle(t *testing.T) {
 				Foreground: "red",
 				Background: "blue",
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorRed).Background(tcell.ColorBlue),
+			want: tcell.StyleDefault.Foreground(color.Red).Background(color.Blue),
 		},
 		{
 			name: "all styles",
@@ -40,8 +41,8 @@ func TestToTcellStyle(t *testing.T) {
 				UnderlineColor: "green",
 				StrikeThrough:  true,
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorRed).
-				Background(tcell.ColorBlue).
+			want: tcell.StyleDefault.Foreground(color.Red).
+				Background(color.Blue).
 				Blink(true).
 				Bold(true).
 				Dim(true).
@@ -49,7 +50,7 @@ func TestToTcellStyle(t *testing.T) {
 				Reverse(true).
 				Underline(true).
 				Underline(tcell.UnderlineStyleSolid).
-				Underline(tcell.ColorGreen).
+				Underline(color.Green).
 				StrikeThrough(true),
 		},
 	}
@@ -80,7 +81,7 @@ func TestApplyStyle(t *testing.T) {
 				Foreground: "red",
 				Background: "blue",
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorRed).Background(tcell.ColorBlue),
+			want: tcell.StyleDefault.Foreground(color.Red).Background(color.Blue),
 		},
 		{
 			name: "all styles",
@@ -97,8 +98,8 @@ func TestApplyStyle(t *testing.T) {
 				UnderlineColor: "green",
 				StrikeThrough:  true,
 			},
-			want: tcell.StyleDefault.Foreground(tcell.ColorRed).
-				Background(tcell.ColorBlue).
+			want: tcell.StyleDefault.Foreground(color.Red).
+				Background(color.Blue).
 				Blink(true).
 				Bold(true).
 				Dim(true).
@@ -106,7 +107,7 @@ func TestApplyStyle(t *testing.T) {
 				Reverse(true).
 				Underline(true).
 				Underline(tcell.UnderlineStyleSolid).
-				Underline(tcell.ColorGreen).
+				Underline(color.Green).
 				StrikeThrough(true),
 		},
 		{

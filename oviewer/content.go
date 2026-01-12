@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/rivo/uniseg"
 )
 
@@ -58,7 +59,7 @@ const EOFC string = "~"
 var EOFContent = content{
 	str:   EOFC,
 	width: 1,
-	style: tcell.StyleDefault.Foreground(tcell.ColorGray),
+	style: tcell.StyleDefault.Foreground(color.Gray),
 }
 
 // parseState represents the affected state after parsing.

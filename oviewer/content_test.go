@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 func setup() {
@@ -223,9 +224,9 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mred\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "e"},
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "d"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Maroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Maroon), str: "e"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Maroon), str: "d"},
 			},
 		},
 		{
@@ -234,7 +235,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[90mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorGray), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Gray), str: "c"},
 			},
 		},
 		{
@@ -243,7 +244,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[100mc\x1B[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Background(tcell.ColorGray), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Background(color.Gray), str: "c"},
 			},
 		},
 		{
@@ -252,7 +253,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;5;1mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.IsValid + 1), str: "c"},
 			},
 		},
 		{
@@ -261,7 +262,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1b[38;5;1;48;5;2mc\x1b[m", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorValid + 1).Background(tcell.ColorValid + 2), str: "c"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.IsValid + 1).Background(color.IsValid + 2), str: "c"},
 			},
 		},
 		{
@@ -309,7 +310,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mr\x1B[me", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Maroon), str: "r"},
 				{width: 1, style: tcell.StyleDefault, str: "e"},
 			},
 		},
@@ -319,7 +320,7 @@ func Test_StrToContentsStyle1(t *testing.T) {
 				line: "\x1B[31mr\x1Bce", tabWidth: 8,
 			},
 			want: contents{
-				{width: 1, style: tcell.StyleDefault.Foreground(tcell.ColorMaroon), str: "r"},
+				{width: 1, style: tcell.StyleDefault.Foreground(color.Maroon), str: "r"},
 				{width: 1, style: tcell.StyleDefault, str: "e"},
 			},
 		},

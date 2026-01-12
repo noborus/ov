@@ -1311,7 +1311,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 
 // dummyScreen creates a dummy screen.
 func (root *Root) dummyScreen() (int, error) {
-	mt := vt.NewMockTerm()
+	mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
 	scr, err := tcell.NewTerminfoScreenFromTty(mt)
 	if err != nil {
 		return 0, err

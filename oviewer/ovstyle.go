@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 // OVStyle represents a style in addition to the original style.
@@ -57,8 +58,8 @@ type OVStyle struct {
 // ToTcellStyle convert from OVStyle to tcell style.
 func ToTcellStyle(s OVStyle) tcell.Style {
 	style := tcell.StyleDefault
-	style = style.Foreground(tcell.GetColor(s.Foreground))
-	style = style.Background(tcell.GetColor(s.Background))
+	style = style.Foreground(color.GetColor(s.Foreground))
+	style = style.Background(color.GetColor(s.Background))
 	style = style.Blink(s.Blink)
 	style = style.Bold(s.Bold)
 	style = style.Dim(s.Dim)
@@ -69,7 +70,7 @@ func ToTcellStyle(s OVStyle) tcell.Style {
 		style = style.Underline(underLineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
-		style = style.Underline(tcell.GetColor(s.UnderlineColor))
+		style = style.Underline(color.GetColor(s.UnderlineColor))
 	}
 	style = style.StrikeThrough(s.StrikeThrough)
 	return style
@@ -81,10 +82,10 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = tcell.StyleDefault
 	}
 	if s.Foreground != "" {
-		style = style.Foreground(tcell.GetColor(s.Foreground))
+		style = style.Foreground(color.GetColor(s.Foreground))
 	}
 	if s.Background != "" {
-		style = style.Background(tcell.GetColor(s.Background))
+		style = style.Background(color.GetColor(s.Background))
 	}
 	// tcell does not support vertical align type.
 	// if s.VerticalAlignType != 0 {
@@ -113,7 +114,7 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Underline(underLineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
-		style = style.Underline(tcell.GetColor(s.UnderlineColor))
+		style = style.Underline(color.GetColor(s.UnderlineColor))
 	}
 	if s.StrikeThrough {
 		style = style.StrikeThrough(true)
