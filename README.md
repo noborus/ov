@@ -1689,6 +1689,16 @@ You can customize key bindings.
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
 
+Pipe the current buffer to an external command by binding `pipe_buffer` (terminal output) or
+`pipe_buffer_doc` (open output as a new document). Example:
+
+```yaml
+    pipe_buffer:
+        - "|"
+    pipe_buffer_doc:
+        - "!"
+```
+
 > [!NOTE]
 > Some keys may not work depending on the terminal.
 > See also [Ctrl key and corresponding key pairs (commonly treated as the same in terminals)](#ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)).

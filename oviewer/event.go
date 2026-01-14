@@ -91,6 +91,12 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.setMultiColor(ev.value)
 	case *eventSaveBuffer:
 		root.saveBuffer(ev.value)
+	case *eventPipeBuffer:
+		if ev.toDoc {
+			root.pipeBufferDoc(ctx, ev.value)
+		} else {
+			root.pipeBuffer(ev.value)
+		}
 	case *eventInputSearch:
 		root.firstSearch(ctx, ev.searchType)
 	case *eventSkipLines:
