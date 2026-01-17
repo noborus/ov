@@ -26,9 +26,9 @@ func sectionHeader2Helper(t *testing.T) *Root {
 func sectionHeaderTextHelper(t *testing.T, fileName string) *Root {
 	t.Helper()
 	root := rootFileReadHelper(t, filepath.Join(testdata, fileName))
-	m := root.Doc
-	m.width = 80
+	root.scr.vWidth = 80
 	root.scr.vHeight = 24
+	m := root.Doc
 	m.topLX = 0
 	root.scr.lines = make(map[int]LineC)
 	return root
@@ -1155,9 +1155,9 @@ func TestRoot_setAlignConverter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, filepath.Join(testdata, tt.fields.fileName))
-			m := root.Doc
-			m.width = 80
+			root.scr.vWidth = 80
 			root.scr.vHeight = 24
+			m := root.Doc
 			m.topLX = 0
 			m.Header = tt.fields.header
 			m.ColumnMode = true
