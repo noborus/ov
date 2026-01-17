@@ -22,12 +22,10 @@ const (
 // prepareScreen prepares when the screen size is changed.
 func (root *Root) prepareScreen() {
 	root.scr.vWidth, root.scr.vHeight = root.Screen.Size()
-	// Do not allow size 0.
-	root.scr.vWidth = max(root.scr.vWidth, 1)
-	root.scr.vHeight = max(root.scr.vHeight, 1)
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
-	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.Doc.statusPos
+	// Do not allow very small screens.
+	root.scr.vWidth = max(root.scr.vWidth, 2)
+	root.scr.vHeight = max(root.scr.vHeight, 2)
+	root.updateDocumentSize()
 
 	root.scr.rulerHeight = 0
 	if root.Doc.RulerType != RulerNone {
@@ -66,6 +64,14 @@ func (root *Root) prepareStartX() {
 	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
 }
 
+// updateDocumentSize updates the document size.
+func (root *Root) updateDocumentSize() {
+	m := root.Doc
+	m.width = root.scr.vWidth - root.scr.startX
+	m.height = root.scr.vHeight - root.scr.statusLineHeight
+	m.statusPos = m.height
+}
+
 // ViewSync redraws the whole thing.
 func (root *Root) ViewSync(context.Context) {
 	root.resetSelect()
@@ -93,8 +99,7 @@ func (root *Root) determineStatusLine() int {
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.statusLineHeight = root.determineStatusLine()
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
-	root.Doc.height = root.Doc.statusPos
+	root.updateDocumentSize()
 	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {
 		defer func() {
