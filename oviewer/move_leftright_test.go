@@ -156,12 +156,12 @@ func TestDocument_optimalCursor(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -270,12 +270,12 @@ func TestDocument_optimalX(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -443,12 +443,12 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -534,12 +534,12 @@ func TestDocument_moveColumnLeftHeaderColumn(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnStart = tt.fields.columnStart
@@ -689,12 +689,12 @@ func TestDocument_moveColumnRight(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnCursor = tt.fields.columnCursor
@@ -792,12 +792,12 @@ func TestDocument_moveColumnRightEdgeCases(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileName)
 			root.prepareScreen()
+			root.scr.vWidth = tt.fields.width
 			m := root.Doc
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
 			m.x = tt.fields.x
-			m.width = tt.fields.width
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnCursor = tt.fields.columnCursor

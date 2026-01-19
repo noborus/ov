@@ -133,11 +133,11 @@ func (root *Root) drawRightStatus() {
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	str := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
+	numStr := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
 	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
-		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
+		numStr = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
-	width := uniseg.StringWidth(str)
+	numWidth := uniseg.StringWidth(numStr)
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.RightStatus)
-	root.Screen.PutStrStyled(root.scr.vWidth-width, root.Doc.statusPos, str, style)
+	root.Screen.PutStrStyled(root.scr.vWidth-numWidth, root.Doc.statusPos, numStr, style)
 }
