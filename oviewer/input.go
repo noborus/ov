@@ -50,6 +50,8 @@ const (
 	JumpTarget
 	// SaveBuffer is for saving the buffer.
 	SaveBuffer
+	// PipeBuffer is for piping the buffer to a command.
+	PipeBuffer
 	// SectionNum is for setting the section number.
 	SectionNum
 	// ConvertType is for setting the convert type.
@@ -91,6 +93,7 @@ func NewInput() *Input {
 	i.Candidate[MultiColor] = multiColorCandidate()
 	i.Candidate[JumpTarget] = jumpTargetCandidate()
 	i.Candidate[SaveBuffer] = blankCandidate()
+	i.Candidate[PipeBuffer] = blankCandidate()
 	i.Candidate[ConvertType] = converterCandidate()
 
 	i.Event = &eventNormal{}
