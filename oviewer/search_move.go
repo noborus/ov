@@ -67,10 +67,10 @@ func (m *Document) searchGoX(start int, end int) {
 	}
 
 	// If the search term is outside the width of the screen when in NoWrapMode.
-	if start < m.x {
-		m.x = 0
+	if start < m.scrollX {
+		m.scrollX = 0
 	}
-	if end > m.x+m.width-1 {
-		m.x = max(end-(m.width-columnMargin), 0)
+	if end > m.scrollX+m.width-1 {
+		m.scrollX = max(end-(m.width-columnMargin), 0)
 	}
 }

@@ -6,36 +6,36 @@ const columnMargin = 2
 // moveHfLeft moves to the left half screen.
 func (m *Document) moveHfLeft() {
 	hfSize := (m.width / 2)
-	if m.x > 0 && (m.x-hfSize) <= 0 {
-		m.x = 0
+	if m.scrollX > 0 && (m.scrollX-hfSize) <= 0 {
+		m.scrollX = 0
 		return
 	}
-	m.x -= hfSize
+	m.scrollX -= hfSize
 }
 
 // moveHfRight moves to the right half screen.
 func (m *Document) moveHfRight() {
-	if m.x < 0 {
-		m.x = 0
+	if m.scrollX < 0 {
+		m.scrollX = 0
 		return
 	}
-	m.x += (m.width / 2)
+	m.scrollX += (m.width / 2)
 }
 
 // moveNormalLeft moves to the left.
 func (m *Document) moveNormalLeft(n int) {
-	m.x -= n
+	m.scrollX -= n
 }
 
 // moveNormalRight moves to the right.
 func (m *Document) moveNormalRight(n int) {
-	m.x += n
+	m.scrollX += n
 }
 
 // moveBeginLeft moves the document view to the left edge of the screen.
 // It sets the horizontal position to 0 and determines the starting column.
 func (m *Document) moveBeginLeft(_ SCR) {
-	m.x = 0
+	m.scrollX = 0
 	m.columnCursor = m.columnStart
 }
 
@@ -43,7 +43,7 @@ func (m *Document) moveBeginLeft(_ SCR) {
 func (m *Document) moveEndRight(scr SCR) {
 	x, cursor := maxLineSize(scr.lines)
 	width := m.width - columnMargin
-	m.x = max(0, x-width)
+	m.scrollX = max(0, x-width)
 	m.columnCursor = cursor
 }
 
@@ -62,8 +62,8 @@ func (m *Document) optimalCursor(scr SCR, cursor int) int {
 		return len(columns) - 1
 	}
 
-	leftLimit := m.x + m.vHeaderWidth(lineC)
-	rightLimit := (m.x + m.width) - columnMargin
+	leftLimit := m.scrollX + m.vHeaderWidth(lineC)
+	rightLimit := (m.scrollX + m.width) - columnMargin
 	cl := columns[cursor].start
 	cr := columns[cursor].end
 	// No need to move if on screen.
@@ -108,19 +108,19 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 
 	columns := lineC.columnRanges
 	if cursor >= len(columns) {
-		return m.x, ErrOverScreen
+		return m.scrollX, ErrOverScreen
 	}
 
 	width := m.width - columnMargin
 	vh := m.vHeaderWidth(lineC) + 1
-	leftLimit := m.x + vh
-	rightLimit := m.x + width
+	leftLimit := m.scrollX + vh
+	rightLimit := m.scrollX + width
 	cl := columns[cursor].start + 1
 	cr := columns[cursor].end
 
 	// No need to move if on screen.
 	if cl > leftLimit && cr < rightLimit {
-		return m.x, nil
+		return m.scrollX, nil
 	}
 
 	// Move if off screen.
@@ -145,9 +145,9 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	// Check if only scrolling is needed without moving the cursor.
 	if !m.WrapMode && isValidCursor(lineC, m.columnCursor) {
 		cl := lineC.columnRanges[m.columnCursor].start
-		if m.x > 0 && m.x+vh > cl {
+		if m.scrollX > 0 && m.scrollX+vh > cl {
 			// Movement of x only.
-			m.x = max(0, cl-vh)
+			m.scrollX = max(0, cl-vh)
 			return nil
 		}
 	}
@@ -165,7 +165,7 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	// Move to the previous column.
 	m.columnCursor = cursor
 	if cursor < m.HeaderColumn+m.columnStart {
-		m.x = 0
+		m.scrollX = 0
 		return nil
 	}
 
@@ -177,7 +177,7 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 		return nil
 	}
 
-	leftLimit := max(0, m.x) + vh
+	leftLimit := max(0, m.scrollX) + vh
 	cl := columns[cursor].start
 	cr := columns[cursor].end
 
@@ -189,10 +189,10 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 	if cr < width {
 		// Set m.x to 0 because the right edge of the cursor fits within the screen
 		// even when displayed from the beginning.
-		m.x = 0
+		m.scrollX = 0
 		return nil
 	}
-	m.x = max(cl-columnMargin, cr-(width-vh)) - vh
+	m.scrollX = max(cl-columnMargin, cr-(width-vh)) - vh
 	return nil
 }
 
@@ -208,10 +208,10 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	// Check if only scrolling is needed without moving the cursor.
 	if !m.WrapMode && isValidCursor(lineC, m.columnCursor) {
 		cr := lineC.columnRanges[m.columnCursor].end
-		if m.x+width < cr {
+		if m.scrollX+width < cr {
 			// Movement of x only.
-			move := ((m.x - vh) + width) * n
-			m.x = min(move, cr-width)
+			move := ((m.scrollX - vh) + width) * n
+			m.scrollX = min(move, cr-width)
 			return nil
 		}
 	}
@@ -225,7 +225,7 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 		return ErrOverScreen
 	}
 	m.columnCursor = cursor
-	rightLimit := m.x + width
+	rightLimit := m.scrollX + width
 	cl := lineC.columnRanges[cursor].start
 	cr := lineC.columnRanges[cursor].end
 
@@ -237,10 +237,10 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 	// Move if off screen.
 	if len(lineC.lc) < rightLimit {
 		// Set m.x to the right edge of the screen because the line is shorter than the screen width.
-		m.x = max(0, len(lineC.lc)-width)
+		m.scrollX = max(0, len(lineC.lc)-width)
 		return nil
 	}
-	m.x = max(0, min(cr-width, cl-vh))
+	m.scrollX = max(0, min(cr-width, cl-vh))
 	return nil
 }
 

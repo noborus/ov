@@ -133,8 +133,8 @@ type Document struct {
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
 
-	// x is the starting position of the current x.
-	x int
+	// scrollX is the starting position of the current scrollX.
+	scrollX int
 	// columnCursor is the number of columns.
 	columnCursor int
 	// columnStart is the starting position of the column.

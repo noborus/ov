@@ -185,7 +185,7 @@ func (root *Root) drawRuler() {
 	startX := 0
 	offset := 0
 	if !root.Doc.WrapMode && rulerType == RulerRelative {
-		startX = root.scr.startX - root.Doc.x
+		startX = root.scr.startX - root.Doc.scrollX
 		if startX < 0 {
 			offset = -startX
 			startX = 0
@@ -205,7 +205,7 @@ func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return root.drawWrapLine(y, lX, lN, lineC)
 	}
 
-	return root.drawNoWrapLine(y, root.Doc.x, lN, lineC)
+	return root.drawNoWrapLine(y, root.Doc.scrollX, lN, lineC)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.

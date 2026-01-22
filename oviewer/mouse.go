@@ -357,7 +357,7 @@ func (root *Root) updateClickState(x, y int, now time.Time) {
 
 // findColumnBoundaries selects the entire column at the given position.
 func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
-	contentX := root.Doc.x + (x - root.scr.startX) + root.scr.branchWidth(lineC.lc, ln.wrap)
+	contentX := root.Doc.scrollX + (x - root.scr.startX) + root.scr.branchWidth(lineC.lc, ln.wrap)
 	startCol, endCol, ok := findColumnRange(contentX, lineC.columnRanges)
 	if !ok {
 		return x, y, x, y
@@ -643,14 +643,14 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
 	wx2 := scr.branchWidth(lineC2.lc, l2.wrap)
 
 	if l1.number == l2.number {
-		x1 := m.x + startX + wx1
-		x2 := m.x + endX + wx2
+		x1 := m.scrollX + startX + wx1
+		x2 := m.scrollX + endX + wx2
 		return scr.selectLine(lineC1, x1, x2+1), nil
 	}
 
 	var buff strings.Builder
 
-	first := scr.selectLine(lineC1, m.x+startX+wx1, -1)
+	first := scr.selectLine(lineC1, m.scrollX+startX+wx1, -1)
 	buff.WriteString(first)
 	buff.WriteByte('\n')
 
@@ -668,7 +668,7 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
 		buff.WriteByte('\n')
 	}
 
-	last := scr.selectLine(lineC2, 0, m.x+endX+wx2+1)
+	last := scr.selectLine(lineC2, 0, m.scrollX+endX+wx2+1)
 	buff.WriteString(last)
 	return buff.String(), nil
 }
@@ -687,7 +687,7 @@ func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (s
 			break
 		}
 		wx := scr.branchWidth(lineC.lc, ln.wrap)
-		str := scr.selectLine(lineC, m.x+startX+wx, m.x+endX+wx+1)
+		str := scr.selectLine(lineC, m.scrollX+startX+wx, m.scrollX+endX+wx+1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}

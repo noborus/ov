@@ -246,46 +246,46 @@ func TestRoot_moveLateral(t *testing.T) {
 			root.everyUpdate(context.Background())
 			root.Doc.ColumnMode = false
 			root.Doc.WrapMode = false
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.prepareDraw(ctx)
 			root.moveLeftOne(ctx)
-			if root.Doc.x != tt.want.leftOne {
-				t.Errorf("leftOne got %d, want %d", root.Doc.x, tt.want.leftOne)
+			if root.Doc.scrollX != tt.want.leftOne {
+				t.Errorf("leftOne got %d, want %d", root.Doc.scrollX, tt.want.leftOne)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveRightOne(ctx)
-			if root.Doc.x != tt.want.rightOne {
-				t.Errorf("rightOne got %d, want %d", root.Doc.x, tt.want.rightOne)
+			if root.Doc.scrollX != tt.want.rightOne {
+				t.Errorf("rightOne got %d, want %d", root.Doc.scrollX, tt.want.rightOne)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveHfLeft(ctx)
-			if root.Doc.x != tt.want.hfLeft {
-				t.Errorf("moveHfLeft got %d, want %d", root.Doc.x, tt.want.hfLeft)
+			if root.Doc.scrollX != tt.want.hfLeft {
+				t.Errorf("moveHfLeft got %d, want %d", root.Doc.scrollX, tt.want.hfLeft)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveHfRight(ctx)
-			if root.Doc.x != tt.want.hfRight {
-				t.Errorf("moveHfRight got %d, want %d", root.Doc.x, tt.want.hfRight)
+			if root.Doc.scrollX != tt.want.hfRight {
+				t.Errorf("moveHfRight got %d, want %d", root.Doc.scrollX, tt.want.hfRight)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveWidthLeft(ctx)
-			if root.Doc.x != tt.want.widthLeft {
-				t.Errorf("moveWidthLeft got %d, want %d", root.Doc.x, tt.want.widthLeft)
+			if root.Doc.scrollX != tt.want.widthLeft {
+				t.Errorf("moveWidthLeft got %d, want %d", root.Doc.scrollX, tt.want.widthLeft)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveWidthRight(ctx)
-			if root.Doc.x != tt.want.widthRight {
-				t.Errorf("moveWidthRight got %d, want %d", root.Doc.x, tt.want.widthRight)
+			if root.Doc.scrollX != tt.want.widthRight {
+				t.Errorf("moveWidthRight got %d, want %d", root.Doc.scrollX, tt.want.widthRight)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveBeginLeft(ctx)
-			if root.Doc.x != tt.want.bgLeft {
-				t.Errorf("moveBeginLeft got %d, want %d", root.Doc.x, tt.want.bgLeft)
+			if root.Doc.scrollX != tt.want.bgLeft {
+				t.Errorf("moveBeginLeft got %d, want %d", root.Doc.scrollX, tt.want.bgLeft)
 			}
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.moveEndRight(ctx)
-			if root.Doc.x != tt.want.endRight {
-				t.Errorf("moveEndRight got %d, want %d", root.Doc.x, tt.want.endRight)
+			if root.Doc.scrollX != tt.want.endRight {
+				t.Errorf("moveEndRight got %d, want %d", root.Doc.scrollX, tt.want.endRight)
 			}
 		})
 	}
