@@ -115,10 +115,6 @@ type SCR struct {
 	vWidth int
 	// vHeight represents the screen height.
 	vHeight int
-	// startX is the start position of x.
-	startX int
-	// startY is the start position of y.
-	startY int
 	// statusLineHeight is the height of the status line.
 	statusLineHeight int
 

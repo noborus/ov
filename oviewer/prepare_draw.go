@@ -31,7 +31,7 @@ func (root *Root) prepareScreen() {
 	if root.Doc.RulerType != RulerNone {
 		root.scr.rulerHeight = rulerHeight
 	}
-	root.scr.startY = root.scr.rulerHeight
+	root.Doc.startY = root.scr.rulerHeight
 
 	n, err := calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)
 	if err != nil {
@@ -52,7 +52,7 @@ func (root *Root) prepareScreen() {
 
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
-	root.scr.startX = 0
+	root.Doc.startX = 0
 	m := root.Doc
 	if !m.LineNumMode {
 		return
@@ -61,13 +61,13 @@ func (root *Root) prepareStartX() {
 	if m.parent != nil {
 		m = m.parent
 	}
-	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+	root.Doc.startX = len(strconv.Itoa(m.BufEndNum())) + 1
 }
 
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
-	m.width = root.scr.vWidth - root.scr.startX
+	m.width = root.scr.vWidth - root.Doc.startX
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }

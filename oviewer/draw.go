@@ -102,7 +102,7 @@ func (root *Root) drawHeader() {
 	wrapNum := 0
 	lX := 0
 	lN := root.scr.headerLN
-	for y := root.scr.startY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
+	for y := root.Doc.startY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			log.Panicf("line is not found %d", lN)
@@ -185,7 +185,7 @@ func (root *Root) drawRuler() {
 	startX := 0
 	offset := 0
 	if !root.Doc.WrapMode && rulerType == RulerRelative {
-		startX = root.scr.startX - root.Doc.scrollX
+		startX = root.Doc.startX - root.Doc.scrollX
 		if startX < 0 {
 			offset = -startX
 			startX = 0
@@ -215,7 +215,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return 0, 0
 	}
 	for n := 0; ; n++ {
-		x := root.scr.startX + n
+		x := root.Doc.startX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -241,8 +241,8 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
 func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	lX = max(lX, root.minStartX)
-	for n := 0; root.scr.startX+n < root.scr.vWidth; n++ {
-		x := root.scr.startX + n
+	for n := 0; root.Doc.startX+n < root.scr.vWidth; n++ {
+		x := root.Doc.startX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -278,7 +278,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		widthVH--
 	}
 
-	x := root.scr.startX
+	x := root.Doc.startX
 	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
@@ -324,10 +324,10 @@ func (root *Root) blankLineNumber(y int) {
 	if !root.Doc.LineNumMode {
 		return
 	}
-	if root.scr.startX <= 0 {
+	if root.Doc.startX <= 0 {
 		return
 	}
-	for x := range root.scr.startX {
+	for x := range root.Doc.startX {
 		root.Screen.PutStr(x, y, " ")
 	}
 }
@@ -342,7 +342,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 		root.blankLineNumber(y)
 		return
 	}
-	if root.scr.startX <= 0 {
+	if root.Doc.startX <= 0 {
 		return
 	}
 
@@ -357,7 +357,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	number = number - m.firstLine() + 1
 
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
-	numC := fmt.Sprintf("%*d ", root.scr.startX-1, number)
+	numC := fmt.Sprintf("%*d ", root.Doc.startX-1, number)
 	root.Screen.PutStrStyled(0, y, numC, style)
 }
 
