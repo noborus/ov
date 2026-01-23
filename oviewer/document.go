@@ -133,12 +133,20 @@ type Document struct {
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
 
-	// x is the starting position of the current x.
-	x int
+	// startX is the start position of x.
+	startX int
+	// startY is the start position of y.
+	startY int
+	// scrollX is the starting position of the current scrollX.
+	scrollX int
 	// columnCursor is the number of columns.
 	columnCursor int
 	// columnStart is the starting position of the column.
 	columnStart int
+	// bodyStartX is the start position of the document body, excluding the line number area.
+	bodyStartX int
+	// bodyWidth is the width of the document body. excluding line number area.
+	bodyWidth int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int

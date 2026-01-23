@@ -161,7 +161,7 @@ func TestDocument_optimalCursor(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -275,7 +275,7 @@ func TestDocument_optimalX(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -448,7 +448,7 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			ctx := context.Background()
@@ -457,8 +457,8 @@ func TestDocument_moveColumnLeft(t *testing.T) {
 			if err := m.moveColumnLeft(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnLeft() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if m.x != tt.wantX {
-				t.Errorf("Document.moveColumnLeft() = %v, want %v", m.x, tt.wantX)
+			if m.scrollX != tt.wantX {
+				t.Errorf("Document.moveColumnLeft() = %v, want %v", m.scrollX, tt.wantX)
 			}
 		})
 	}
@@ -539,7 +539,7 @@ func TestDocument_moveColumnLeftHeaderColumn(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnStart = tt.fields.columnStart
@@ -549,8 +549,8 @@ func TestDocument_moveColumnLeftHeaderColumn(t *testing.T) {
 			if err := m.moveColumnLeft(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnLeft() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if m.x != tt.wantX {
-				t.Errorf("Document.moveColumnLeft() = %v, want %v", m.x, tt.wantX)
+			if m.scrollX != tt.wantX {
+				t.Errorf("Document.moveColumnLeft() = %v, want %v", m.scrollX, tt.wantX)
 			}
 		})
 	}
@@ -694,7 +694,7 @@ func TestDocument_moveColumnRight(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnCursor = tt.fields.columnCursor
@@ -703,8 +703,8 @@ func TestDocument_moveColumnRight(t *testing.T) {
 			if err := m.moveColumnRight(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnRight() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if m.x != tt.wantX {
-				t.Errorf("Document.moveColumnRight() = %v, want %v", m.x, tt.wantX)
+			if m.scrollX != tt.wantX {
+				t.Errorf("Document.moveColumnRight() = %v, want %v", m.scrollX, tt.wantX)
 			}
 		})
 	}
@@ -797,7 +797,7 @@ func TestDocument_moveColumnRightEdgeCases(t *testing.T) {
 			m.WrapMode = tt.fields.wrap
 			m.ColumnMode = true
 			m.ColumnDelimiter = tt.fields.columnDelimiter
-			m.x = tt.fields.x
+			m.scrollX = tt.fields.x
 			m.VerticalHeader = tt.fields.verticalHeader
 			m.HeaderColumn = tt.fields.HeaderColumn
 			m.columnCursor = tt.fields.columnCursor
@@ -806,8 +806,8 @@ func TestDocument_moveColumnRightEdgeCases(t *testing.T) {
 			if err := m.moveColumnRight(tt.args.n, root.scr, tt.args.cycle); (err != nil) != tt.wantErr {
 				t.Errorf("Document.moveColumnRight() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if m.x != tt.wantX {
-				t.Errorf("Document.moveColumnRight() = %v, want %v", m.x, tt.wantX)
+			if m.scrollX != tt.wantX {
+				t.Errorf("Document.moveColumnRight() = %v, want %v", m.scrollX, tt.wantX)
 			}
 		})
 	}

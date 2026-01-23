@@ -28,7 +28,7 @@ func (root *Root) toggleWrapMode(context.Context) {
 		root.setMessageLog(err.Error())
 		return
 	}
-	m.x = x
+	m.scrollX = x
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
 }
 

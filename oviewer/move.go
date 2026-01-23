@@ -196,7 +196,7 @@ func (root *Root) moveHfLeft(context.Context) {
 	defer root.releaseEventBuffer()
 
 	root.Doc.moveHfLeft()
-	root.Doc.x = max(root.Doc.x, root.minStartX)
+	root.Doc.scrollX = max(root.Doc.scrollX, root.minStartX)
 }
 
 // Move to the right by half a screen.
@@ -221,7 +221,7 @@ func (root *Root) moveEndRight(context.Context) {
 // moveNormalLeft moves the screen left.
 func (root *Root) moveNormalLeft(n int) {
 	root.Doc.moveNormalLeft(n)
-	root.Doc.x = max(root.Doc.x, root.minStartX)
+	root.Doc.scrollX = max(root.Doc.scrollX, root.minStartX)
 }
 
 // moveNormalRight moves the screen right.

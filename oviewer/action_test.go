@@ -1017,14 +1017,14 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 			root.setDelimiter(",")
 			root.Doc.ColumnMode = true
 			root.Doc.WrapMode = tt.fields.wrapMode
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.Doc.columnCursor = tt.fields.columnCursor
 			root.toggleWrapMode(ctx)
 			if root.Doc.WrapMode != tt.want.wrapMode {
 				t.Errorf("ColumnDelimiter WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
 			}
-			if root.Doc.x != tt.want.x {
-				t.Errorf("ColumnDelimiter WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			if root.Doc.scrollX != tt.want.x {
+				t.Errorf("ColumnDelimiter WrapMode() x = %v, want %v", root.Doc.scrollX, tt.want.x)
 			}
 			if root.Doc.columnCursor != tt.want.columnCursor {
 				t.Errorf("ColumnDelimiter WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)
@@ -1100,7 +1100,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 			ctx := context.Background()
 			root.Doc.ColumnWidth = true
 			root.Doc.WrapMode = tt.fields.wrapMode
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.Doc.columnCursor = tt.fields.columnCursor
 			root.Doc.setColumnWidths()
 			root.prepareDraw(ctx)
@@ -1108,8 +1108,8 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 			if root.Doc.WrapMode != tt.want.wrapMode {
 				t.Errorf("ColumnWidth WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
 			}
-			if root.Doc.x != tt.want.x {
-				t.Errorf("ColumnWidth WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			if root.Doc.scrollX != tt.want.x {
+				t.Errorf("ColumnWidth WrapMode() x = %v, want %v", root.Doc.scrollX, tt.want.x)
 			}
 			if root.Doc.columnCursor != tt.want.columnCursor {
 				t.Errorf("ColumnWidth WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)

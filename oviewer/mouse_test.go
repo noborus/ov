@@ -15,7 +15,6 @@ func setupSCRHelper(t *testing.T, m *Document) SCR {
 		numbers: []LineNumber{{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {4, 1}, {5, 0}, {6, 0}, {7, 0}, {8, 0}},
 		vWidth:  80,
 		vHeight: 24,
-		startX:  0,
 		lines:   make(map[int]LineC, 0),
 	}
 	for i := range 10 {
@@ -306,8 +305,7 @@ func TestSCR_selectLine(t *testing.T) {
 		want   string
 	}{
 		{
-			name:   "test1",
-			fields: fields{startX: 0},
+			name: "test1",
 			args: args{
 				line: NewLineC(t, "test", 8),
 				x1:   0,
@@ -316,8 +314,7 @@ func TestSCR_selectLine(t *testing.T) {
 			want: "test",
 		},
 		{
-			name:   "testParts",
-			fields: fields{startX: 0},
+			name: "testParts",
 			args: args{
 				line: NewLineC(t, "test", 8),
 				x1:   1,
@@ -328,8 +325,7 @@ func TestSCR_selectLine(t *testing.T) {
 		{
 			// 2  4  6  8  10
 			// あ い う え お
-			name:   "testあいうえお",
-			fields: fields{startX: 0},
+			name: "testあいうえお",
 			args: args{
 				line: NewLineC(t, "あいうえお", 8),
 				x1:   0,
@@ -338,8 +334,7 @@ func TestSCR_selectLine(t *testing.T) {
 			want: "あい",
 		},
 		{
-			name:   "test2あいうえお",
-			fields: fields{startX: 0},
+			name: "test2あいうえお",
 			args: args{
 				line: NewLineC(t, "あいうえお", 8),
 				x1:   0,
@@ -348,8 +343,7 @@ func TestSCR_selectLine(t *testing.T) {
 			want: "あいうえお",
 		},
 		{
-			name:   "test3あいうえお",
-			fields: fields{startX: 0},
+			name: "test3あいうえお",
 			args: args{
 				line: NewLineC(t, "あいうえお", 8),
 				x1:   1,
@@ -361,10 +355,7 @@ func TestSCR_selectLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			scr := SCR{
-				startX: tt.fields.startX,
-			}
-			if got := scr.selectLine(tt.args.line, tt.args.x1, tt.args.x2); got != tt.want {
+			if got := selectLine(tt.args.line, 0, tt.args.x1, tt.args.x2); got != tt.want {
 				t.Errorf("SCR.selectLine() = %v, want %v", got, tt.want)
 			}
 		})
@@ -514,6 +505,121 @@ func Test_getCharTypeAt(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getCharTypeAt(tt.args.line, tt.args.contentX); got != tt.want {
 				t.Errorf("getCharTypeAt() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_branchWidth(t *testing.T) {
+	type args struct {
+		lc     contents
+		branch int
+		width  int
+		offset int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "No wrap, single branch",
+			args: args{
+				lc: contents{
+					{str: "a", width: 1},
+					{str: "b", width: 1},
+					{str: "c", width: 1},
+				},
+				branch: 0,
+				width:  10,
+				offset: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "Wrap after width, branch 1",
+			args: args{
+				lc: contents{
+					{str: "a", width: 1},
+					{str: "b", width: 1},
+					{str: "c", width: 1},
+				},
+				branch: 1,
+				width:  10,
+				offset: 0,
+			},
+			want: 3,
+		},
+		{
+			name: "Offset applied, branch 1",
+			args: args{
+				lc: contents{
+					{str: "a", width: 1},
+					{str: "b", width: 1},
+					{str: "c", width: 1},
+				},
+				branch: 1,
+				width:  10,
+				offset: 1,
+			},
+			want: 3,
+		},
+		{
+			name: "Wide characters, wrap at width",
+			args: args{
+				lc: contents{
+					{str: "あ", width: 2},
+					{str: "い", width: 2},
+					{str: "う", width: 2},
+					{str: "え", width: 2},
+				},
+				branch: 1,
+				width:  10,
+				offset: 0,
+			},
+			want: 8,
+		},
+		{
+			name: "Empty contents",
+			args: args{
+				lc:     contents{},
+				branch: 0,
+				width:  10,
+				offset: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "Branch greater than possible wraps",
+			args: args{
+				lc: contents{
+					{str: "a", width: 2},
+					{str: "b", width: 2},
+				},
+				branch: 5,
+				width:  10,
+				offset: 0,
+			},
+			want: 4,
+		},
+		{
+			name: "Offset nonzero, no wrap",
+			args: args{
+				lc: contents{
+					{str: "a", width: 1},
+					{str: "b", width: 1},
+				},
+				branch: 0,
+				width:  10,
+				offset: 2,
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := branchWidth(tt.args.lc, tt.args.branch, tt.args.width, tt.args.offset); got != tt.want {
+				t.Errorf("branchWidth() = %v, want %v", got, tt.want)
 			}
 		})
 	}
