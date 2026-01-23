@@ -184,8 +184,9 @@ func (root *Root) drawRuler() {
 
 	startX := 0
 	offset := 0
-	if !root.Doc.WrapMode && rulerType == RulerRelative {
-		startX = root.Doc.startX - root.Doc.scrollX
+	if rulerType == RulerRelative {
+		startX = root.Doc.bodyStartX - root.Doc.scrollX
+		log.Println("drawRuler:", startX)
 		if startX < 0 {
 			offset = -startX
 			startX = 0
@@ -215,7 +216,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return 0, 0
 	}
 	for n := 0; ; n++ {
-		x := root.Doc.startX + n
+		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -241,8 +242,8 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
 func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	lX = max(lX, root.minStartX)
-	for n := 0; root.Doc.startX+n < root.scr.vWidth; n++ {
-		x := root.Doc.startX + n
+	for n := 0; root.Doc.bodyStartX+n < root.scr.vWidth; n++ {
+		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -278,7 +279,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		widthVH--
 	}
 
-	x := root.Doc.startX
+	x := root.Doc.bodyStartX
 	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
@@ -324,10 +325,10 @@ func (root *Root) blankLineNumber(y int) {
 	if !root.Doc.LineNumMode {
 		return
 	}
-	if root.Doc.startX <= 0 {
+	if root.Doc.bodyStartX <= 0 {
 		return
 	}
-	for x := range root.Doc.startX {
+	for x := range root.Doc.bodyStartX {
 		root.Screen.PutStr(x, y, " ")
 	}
 }
@@ -342,7 +343,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 		root.blankLineNumber(y)
 		return
 	}
-	if root.Doc.startX <= 0 {
+	if root.Doc.bodyStartX <= 0 {
 		return
 	}
 
@@ -357,7 +358,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	number = number - m.firstLine() + 1
 
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
-	numC := fmt.Sprintf("%*d ", root.Doc.startX-1, number)
+	numC := fmt.Sprintf("%*d ", root.Doc.bodyStartX-1, number)
 	root.Screen.PutStrStyled(0, y, numC, style)
 }
 
@@ -413,7 +414,7 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
 func (root *Root) applyStyleToLine(y int, s OVStyle) {
-	root.applyStyleToRange(y, s, 0, root.scr.vWidth)
+	root.applyStyleToRange(y, s, root.Doc.startX, root.Doc.startX+root.Doc.width)
 }
 
 // applyMarkStyle applies the style from the left edge to the specified width.
@@ -422,7 +423,7 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	if !slices.Contains(m.marked, lN) {
 		return
 	}
-	root.applyStyleToRange(y, m.Style.MarkLine, 0, width)
+	root.applyStyleToRange(y, m.Style.MarkLine, root.Doc.startX, root.Doc.startX+width)
 }
 
 // applyStyleToRange applies the style from the start to the end of the physical line.

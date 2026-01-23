@@ -143,6 +143,10 @@ type Document struct {
 	columnCursor int
 	// columnStart is the starting position of the column.
 	columnStart int
+	// bodyStartX is the start position of the document body, excluding the line number area.
+	bodyStartX int
+	// bodyWidth is the width of the document body. excluding line number area.
+	bodyWidth int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int

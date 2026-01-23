@@ -57,20 +57,20 @@ func (m *Document) searchGoSection(ctx context.Context, lN int, start int, end i
 
 // searchGoX moves to the specified x position.
 func (m *Document) searchGoX(start int, end int) {
-	if m.width == 0 {
+	if m.bodyWidth == 0 {
 		return
 	}
 	m.topLX = 0
 	// If the search term is outside the height of the screen when in WrapMode.
-	if nTh := start / m.width; nTh > m.height {
-		m.topLX = nTh * m.width
+	if nTh := start / m.bodyWidth; nTh > m.height {
+		m.topLX = nTh * m.bodyWidth
 	}
 
 	// If the search term is outside the width of the screen when in NoWrapMode.
 	if start < m.scrollX {
 		m.scrollX = 0
 	}
-	if end > m.scrollX+m.width-1 {
-		m.scrollX = max(end-(m.width-columnMargin), 0)
+	if end > m.scrollX+m.bodyWidth-1 {
+		m.scrollX = max(end-(m.bodyWidth-columnMargin), 0)
 	}
 }

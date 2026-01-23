@@ -5,7 +5,7 @@ const columnMargin = 2
 
 // moveHfLeft moves to the left half screen.
 func (m *Document) moveHfLeft() {
-	hfSize := (m.width / 2)
+	hfSize := (m.bodyWidth / 2)
 	if m.scrollX > 0 && (m.scrollX-hfSize) <= 0 {
 		m.scrollX = 0
 		return
@@ -19,7 +19,7 @@ func (m *Document) moveHfRight() {
 		m.scrollX = 0
 		return
 	}
-	m.scrollX += (m.width / 2)
+	m.scrollX += (m.bodyWidth / 2)
 }
 
 // moveNormalLeft moves to the left.
@@ -42,7 +42,7 @@ func (m *Document) moveBeginLeft(_ SCR) {
 // moveEndRight moves to the right edge of the screen.
 func (m *Document) moveEndRight(scr SCR) {
 	x, cursor := maxLineSize(scr.lines)
-	width := m.width - columnMargin
+	width := m.bodyWidth - columnMargin
 	m.scrollX = max(0, x-width)
 	m.columnCursor = cursor
 }
@@ -63,7 +63,7 @@ func (m *Document) optimalCursor(scr SCR, cursor int) int {
 	}
 
 	leftLimit := m.scrollX + m.vHeaderWidth(lineC)
-	rightLimit := (m.scrollX + m.width) - columnMargin
+	rightLimit := (m.scrollX + m.bodyWidth) - columnMargin
 	cl := columns[cursor].start
 	cr := columns[cursor].end
 	// No need to move if on screen.
@@ -111,7 +111,7 @@ func (m *Document) optimalX(scr SCR, cursor int) (int, error) {
 		return m.scrollX, ErrOverScreen
 	}
 
-	width := m.width - columnMargin
+	width := m.bodyWidth - columnMargin
 	vh := m.vHeaderWidth(lineC) + 1
 	leftLimit := m.scrollX + vh
 	rightLimit := m.scrollX + width
@@ -140,7 +140,7 @@ func (m *Document) moveColumnLeft(n int, scr SCR, cycle bool) error {
 		return err
 	}
 
-	width := m.width - columnMargin
+	width := m.bodyWidth - columnMargin
 	vh := m.vHeaderWidth(lineC) + 1
 	// Check if only scrolling is needed without moving the cursor.
 	if !m.WrapMode && isValidCursor(lineC, m.columnCursor) {
@@ -203,7 +203,7 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 		return err
 	}
 
-	width := m.width - columnMargin
+	width := m.bodyWidth - columnMargin
 	vh := m.vHeaderWidth(lineC) + 1
 	// Check if only scrolling is needed without moving the cursor.
 	if !m.WrapMode && isValidCursor(lineC, m.columnCursor) {

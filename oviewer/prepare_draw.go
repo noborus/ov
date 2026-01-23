@@ -53,6 +53,7 @@ func (root *Root) prepareScreen() {
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
 	root.Doc.startX = 0
+	root.Doc.bodyStartX = root.Doc.startX
 	m := root.Doc
 	if !m.LineNumMode {
 		return
@@ -61,13 +62,14 @@ func (root *Root) prepareStartX() {
 	if m.parent != nil {
 		m = m.parent
 	}
-	root.Doc.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+	root.Doc.bodyStartX = root.Doc.startX + len(strconv.Itoa(m.BufEndNum())) + 1
 }
 
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
-	m.width = root.scr.vWidth - root.Doc.startX
+	m.width = root.scr.vWidth - m.startX
+	m.bodyWidth = root.scr.vWidth - m.bodyStartX
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }

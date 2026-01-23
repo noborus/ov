@@ -1294,7 +1294,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.bodyWidth, 0, height)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1352,7 +1352,7 @@ func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
 	m := root.Doc
 	height := realHeight(root.scr)
-	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.bodyWidth, 0, height)
 	strs = tcellansi.TrimRightSpaces(strs)
 	return strs
 }

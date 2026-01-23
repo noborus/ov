@@ -234,7 +234,7 @@ func (m *Document) leftMostX(lN int) []int {
 	if err != nil {
 		return nil
 	}
-	return leftX(m.width, lc)
+	return leftX(m.bodyWidth, lc)
 }
 
 // leftX returns a list of left - most x positions when wrapping.
