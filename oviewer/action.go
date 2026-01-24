@@ -134,6 +134,18 @@ func (root *Root) toggleStatusLine(context.Context) {
 	}
 }
 
+func (root *Root) toggleSideBar(ctx context.Context) {
+	root.sidebarVisible = !root.sidebarVisible
+	if root.sidebarVisible {
+		root.setMessage("Sidebar visible")
+		root.sidebarWidth = 20 // Example fixed width; adjust as needed
+	} else {
+		root.setMessage("Sidebar hidden")
+		root.sidebarWidth = 0
+	}
+	root.ViewSync(ctx)
+}
+
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
 	switch root.Doc.RulerType {

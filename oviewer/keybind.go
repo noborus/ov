@@ -47,6 +47,7 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
 	actionStatusLine     = "status_line"
+	actionSideBar        = "toggle_sidebar"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionFixedColumn    = "fixed_column"
@@ -148,6 +149,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionToggleMouse:    root.toggleMouse,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionStatusLine:     root.toggleStatusLine,
+		actionSideBar:        root.toggleSideBar,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionFixedColumn:    root.toggleFixedColumn,
@@ -260,6 +262,7 @@ func defaultKeyBinds() KeyBind {
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
 		actionStatusLine:     {"ctrl+F10"},
+		actionSideBar:        {"b"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
@@ -331,6 +334,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSuspend, "suspend")
 	k.writeKeyBind(&b, actionEdit, "edit current document")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
+	k.writeKeyBind(&b, actionSideBar, "toggle sidebar")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
