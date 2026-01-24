@@ -637,7 +637,7 @@ func (root *Root) drawSidebar() {
 		prefix := "  "
 		if i == root.CurrentDoc {
 			style = currentStyle
-			prefix = "→ "
+			prefix = "> "
 		}
 		// Add arrow or space at the beginning
 		out := prefix + line
