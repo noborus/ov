@@ -20,6 +20,7 @@ import (
 	"github.com/gdamore/tcell/v3/vt"
 	"github.com/noborus/tcellansi"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 // Root is the root structure of the oviewer.
@@ -1307,7 +1308,15 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 
 // dummyScreen creates a dummy screen.
 func (root *Root) dummyScreen() (int, error) {
-	mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
+	col := 80
+	row := 25
+	fd := int(os.Stdout.Fd())
+	w, h, err := term.GetSize(fd)
+	if err == nil && w > 0 && h > 0 {
+		col = w
+		row = h
+	}
+	mt := vt.NewMockTerm(vt.MockOptSize{X: vt.Col(col), Y: vt.Row(row)})
 	scr, err := tcell.NewTerminfoScreenFromTty(mt)
 	if err != nil {
 		return 0, err
