@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 
@@ -420,10 +419,10 @@ func (root *Root) applyStyleToLine(y int, s OVStyle) {
 // applyMarkStyle applies the style from the left edge to the specified width.
 func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	m := root.Doc
-	if !slices.Contains(m.marked, lN) {
+	if !m.marked.contains(lN) {
 		return
 	}
-	root.applyStyleToRange(y, m.Style.MarkLine, root.Doc.startX, root.Doc.startX+width)
+	root.applyStyleToRange(y, m.Style.MarkLine, root.Doc.bodyStartX, root.Doc.bodyStartX+width)
 }
 
 // applyStyleToRange applies the style from the start to the end of the physical line.
