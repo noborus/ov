@@ -396,6 +396,9 @@ func (root *Root) postEvent(ev tcell.Event) {
 	if root.Screen == nil {
 		return
 	}
+	if root.isClosed.Load() {
+		return
+	}
 	select {
 	case root.Screen.EventQ() <- ev:
 		return
