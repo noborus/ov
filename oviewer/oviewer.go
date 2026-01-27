@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"codeberg.org/tslocum/cbind"
@@ -87,6 +88,8 @@ type Root struct {
 
 	// mu controls the RWMutex.
 	mu sync.RWMutex
+	// isClosed indicates whether it is closed.
+	isClosed atomic.Bool
 
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool
@@ -909,6 +912,7 @@ func (root *Root) prepareAllDocuments() {
 
 // Close closes the oviewer.
 func (root *Root) Close() {
+	root.isClosed.Store(true)
 	root.Screen.Fini()
 }
 
