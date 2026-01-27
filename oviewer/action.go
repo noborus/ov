@@ -274,7 +274,7 @@ func (root *Root) nextMark(context.Context) {
 	} else {
 		root.Doc.markedPoint = 0
 	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
+	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
 }
 
 // prevMark moves to the previous mark.
@@ -288,14 +288,43 @@ func (root *Root) prevMark(context.Context) {
 	} else {
 		root.Doc.markedPoint = len(root.Doc.marked) - 1
 	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
+	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
+}
+
+func (list MarkedList) remove(lineNumber int) MarkedList {
+	for i, m := range list {
+		if m.lineNum == lineNumber {
+			return append(list[:i], list[i+1:]...)
+		}
+	}
+	return list
+}
+
+func (list MarkedList) contains(lineNumber int) bool {
+	for _, m := range list {
+		if m.lineNum == lineNumber {
+			return true
+		}
+	}
+	return false
 }
 
 // addMark marks the current line number.
 func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
-	root.Doc.marked = remove(root.Doc.marked, lN)
-	root.Doc.marked = append(root.Doc.marked, lN)
+	root.Doc.marked = root.Doc.marked.remove(lN)
+	lineC, ok := root.scr.lines[lN]
+	if !ok {
+		root.setMessagef("Cannot mark line %d", lN-root.Doc.firstLine()+1)
+		return
+	}
+	s := strings.TrimSpace(lineC.str)
+	r := []rune(s)
+	if len(r) > 100 {
+		s = string(r[:100])
+	}
+	mark := Mark{lineNum: lN, content: s}
+	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
 }
@@ -303,7 +332,7 @@ func (root *Root) addMark(context.Context) {
 // removeMark removes the current line number from the mark.
 func (root *Root) removeMark(context.Context) {
 	lN := root.firstBodyLine()
-	marked := remove(root.Doc.marked, lN)
+	marked := root.Doc.marked.remove(lN)
 	if len(root.Doc.marked) == len(marked) {
 		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
 		return

@@ -1191,7 +1191,11 @@ func TestRoot_nextMark(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root.nextMark(context.Background()) // no marked
-			root.Doc.marked = []int{1, 3, 5}
+			root.Doc.marked = MarkedList{
+				Mark{lineNum: 1, content: "a"},
+				Mark{lineNum: 3, content: "b"},
+				Mark{lineNum: 5, content: "c"},
+			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.nextMark(context.Background())
 			if root.Doc.topLN != tt.wantLine {
@@ -1233,7 +1237,11 @@ func TestRoot_prevMark(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root.prevMark(context.Background()) // no marked
-			root.Doc.marked = []int{1, 3, 5}
+			root.Doc.marked = MarkedList{
+				Mark{lineNum: 1, content: "a"},
+				Mark{lineNum: 3, content: "b"},
+				Mark{lineNum: 5, content: "c"},
+			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.prevMark(context.Background())
 			if root.Doc.topLN != tt.wantLine {

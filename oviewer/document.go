@@ -92,7 +92,7 @@ type Document struct {
 	filepath string
 
 	// marked is a list of marked line numbers.
-	marked []int
+	marked MarkedList
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
@@ -256,6 +256,13 @@ type columnRange struct {
 	start int
 	end   int
 }
+
+type Mark struct {
+	lineNum int
+	content string
+}
+
+type MarkedList []Mark
 
 // NewDocument creates and initializes a new [Document] with default settings.
 // It returns a pointer to the Document and an error if the cache initialization fails.
