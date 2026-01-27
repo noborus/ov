@@ -259,7 +259,7 @@ type columnRange struct {
 
 type Mark struct {
 	lineNum int
-	content string
+	content contents
 }
 
 type MarkedList []Mark

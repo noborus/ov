@@ -318,12 +318,8 @@ func (root *Root) addMark(context.Context) {
 		root.setMessagef("Cannot mark line %d", lN-root.Doc.firstLine()+1)
 		return
 	}
-	s := strings.TrimSpace(lineC.str)
-	r := []rune(s)
-	if len(r) > 100 {
-		s = string(r[:100])
-	}
-	mark := Mark{lineNum: lN, content: s}
+
+	mark := Mark{lineNum: lN, content: lineC.lc}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
