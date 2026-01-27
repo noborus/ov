@@ -97,6 +97,17 @@ type Root struct {
 	skipDraw bool
 	// clickState is the state of mouse click.
 	clickState ClickState
+
+	// sidebarVisible is whether the sidebar is visible.
+	sidebarVisible bool
+	// sidebarMode is the mode of the sidebar.
+	sidebarMode SidebarMode
+	// SidebarItems is the items to display in the sidebar.
+	SidebarItems []SidebarItem
+	// SidebarHelpItems is the help items to display in the sidebar.
+	SidebarHelpItems []SidebarItem
+	// sidebarWidth is the width of the sidebar.
+	sidebarWidth int
 }
 
 // MouseSelectState represents the state of mouse selection.

@@ -134,6 +134,39 @@ func (root *Root) toggleStatusLine(context.Context) {
 	}
 }
 
+func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
+	if root.sidebarVisible && root.sidebarMode == mode {
+		root.sidebarVisible = false
+		root.sidebarWidth = 0
+		root.setMessage("Sidebar hidden")
+	} else {
+		root.sidebarMode = mode
+		root.sidebarVisible = true
+		root.sidebarWidth = 20
+		switch mode {
+		case SidebarModeMark:
+			root.setMessage("Mark List visible")
+		case SidebarModeDocList:
+			root.setMessage("Doc List visible")
+		case SidebarModeHelp:
+			root.setMessage("Help visible")
+		}
+	}
+	root.ViewSync(ctx)
+}
+
+func (root *Root) toggleSidebarHelp(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeHelp)
+}
+
+func (root *Root) toggleShowMarkList(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeMark)
+}
+
+func (root *Root) toggleShowDocList(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeDocList)
+}
+
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
 	switch root.Doc.RulerType {

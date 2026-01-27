@@ -47,6 +47,9 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
 	actionStatusLine     = "status_line"
+	actionSidebarHelp    = "toggle_sidebar_help"
+	actionMarkList       = "show_mark_list"
+	actionDocList        = "show_doc_list"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionFixedColumn    = "fixed_column"
@@ -148,6 +151,9 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionToggleMouse:    root.toggleMouse,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionStatusLine:     root.toggleStatusLine,
+		actionSidebarHelp:    root.toggleSidebarHelp,
+		actionMarkList:       root.toggleShowMarkList,
+		actionDocList:        root.toggleShowDocList,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionFixedColumn:    root.toggleFixedColumn,
@@ -260,6 +266,9 @@ func defaultKeyBinds() KeyBind {
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
 		actionStatusLine:     {"ctrl+F10"},
+		actionSidebarHelp:    {"f1"},
+		actionMarkList:       {","},
+		actionDocList:        {"f"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
@@ -331,6 +340,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionSuspend, "suspend")
 	k.writeKeyBind(&b, actionEdit, "edit current document")
 	k.writeKeyBind(&b, actionHelp, "display help screen")
+	k.writeKeyBind(&b, actionSidebarHelp, "toggle sidebar help")
 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
 	k.writeKeyBind(&b, actionSync, "screen sync")
 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
@@ -362,6 +372,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
 	k.writeKeyBind(&b, actionCloseAllFilter, "close all filtered documents")
+	k.writeKeyBind(&b, actionDocList, "show document list sidebar")
 
 	writeHeader(&b, "Mark position")
 	k.writeKeyBind(&b, actionMark, "mark current position")
@@ -369,6 +380,7 @@ func (k KeyBind) String() string {
 	k.writeKeyBind(&b, actionRemoveAllMark, "remove all mark")
 	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
 	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
+	k.writeKeyBind(&b, actionMarkList, "show mark list sidebar")
 
 	writeHeader(&b, "Search")
 	k.writeKeyBind(&b, actionSearch, "forward search mode")
