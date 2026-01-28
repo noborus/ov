@@ -546,6 +546,7 @@ func Test_branchWidth(t *testing.T) {
 				},
 				branch: 1,
 				width:  10,
+				offset: 0,
 			},
 			want: 3,
 		},
@@ -559,6 +560,7 @@ func Test_branchWidth(t *testing.T) {
 				},
 				branch: 1,
 				width:  10,
+				offset: 1,
 			},
 			want: 3,
 		},
@@ -573,6 +575,7 @@ func Test_branchWidth(t *testing.T) {
 				},
 				branch: 1,
 				width:  10,
+				offset: 0,
 			},
 			want: 8,
 		},
@@ -582,6 +585,7 @@ func Test_branchWidth(t *testing.T) {
 				lc:     contents{},
 				branch: 0,
 				width:  10,
+				offset: 0,
 			},
 			want: 0,
 		},
@@ -594,6 +598,7 @@ func Test_branchWidth(t *testing.T) {
 				},
 				branch: 5,
 				width:  10,
+				offset: 0,
 			},
 			want: 4,
 		},
@@ -606,13 +611,14 @@ func Test_branchWidth(t *testing.T) {
 				},
 				branch: 0,
 				width:  10,
+				offset: 2,
 			},
 			want: 0,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := branchWidth(tt.args.lc, tt.args.branch, tt.args.width); got != tt.want {
+			if got := branchWidth(tt.args.lc, tt.args.branch, tt.args.width, tt.args.offset); got != tt.want {
 				t.Errorf("branchWidth() = %v, want %v", got, tt.want)
 			}
 		})
