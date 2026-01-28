@@ -300,6 +300,21 @@ func (lc contents) IsSpace(n int) bool {
 	return lc[n].str == " "
 }
 
+// TrimLeft trims leading spaces, tabs, and blank cells from contents.
+func (lc contents) TrimLeft() contents {
+	next := 0
+	for _, c := range lc {
+		if c.str == " " || c.str == "\t" || c.str == "" {
+			next++
+		} else {
+			break
+		}
+	}
+	lc = lc[next:]
+
+	return lc
+}
+
 // IsFullWidth returns true if the specified position is a full-width character.
 func (lc contents) IsFullWidth(n int) bool {
 	if n >= len(lc) {

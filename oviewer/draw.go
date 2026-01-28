@@ -623,23 +623,19 @@ func (root *Root) drawSidebar() {
 
 // drawSidebarList displays a list of SidebarItem in the sidebar.
 func (root *Root) drawSidebarList(items []SidebarItem) {
-	sidebarWidth := root.sidebarWidth
 	sidebarStyle := tcell.StyleDefault
 	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
 	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
 	height := root.scr.vHeight
-	maxList := min(len(items), height-2) // Leave space for borders
+	maxList := min(len(items), height-2)
 	for i := range maxList {
 		item := items[i]
 		style := sidebarStyle
-		prefix := "  "
 		if item.IsCurrent {
 			style = currentStyle
-			prefix = "> "
 		}
-		root.Screen.PutStrStyled(0, i+2, prefix, style)
-		width := min(sidebarWidth-4, len(item.Contents))
+		width := min(root.sidebarWidth-2, len(item.Contents))
 		out := item.Contents[:width].String()
-		root.Screen.PutStrStyled(2, i+2, out, style)
+		root.Screen.PutStrStyled(0, i+2, out, style)
 	}
 }
