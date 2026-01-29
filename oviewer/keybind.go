@@ -47,7 +47,7 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
 	actionStatusLine     = "status_line"
-	actionSidebarHelp    = "toggle_sidebar_help"
+	actionSidebarHelp    = "sidebar_help"
 	actionMarkList       = "show_mark_list"
 	actionDocList        = "show_doc_list"
 	actionAlignFormat    = "align_format"
@@ -266,7 +266,7 @@ func defaultKeyBinds() KeyBind {
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
 		actionStatusLine:     {"ctrl+F10"},
-		actionSidebarHelp:    {"f1"},
+		actionSidebarHelp:    {"alt+h"},
 		actionMarkList:       {","},
 		actionDocList:        {"f"},
 

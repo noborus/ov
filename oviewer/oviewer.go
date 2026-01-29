@@ -797,7 +797,6 @@ func (root *Root) Run() error {
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
-	//time.Sleep(10 * time.Second)
 	if err := root.prepareRun(ctx); err != nil {
 		return err
 	}
