@@ -20,7 +20,8 @@ type Config struct {
 	Prompt PromptConfig
 	// MinStartX is the minimum value of the start position.
 	MinStartX int
-
+	// SidebarWidth is the width of the sidebar as a string (e.g., "30%", "10").
+	SidebarWidth string
 	// StyleOverStrike is a style that applies to overstrike.
 	StyleOverStrike OVStyle
 	// StyleOverLine is a style that applies to overstrike underlines.
@@ -158,6 +159,7 @@ func NewConfig() Config {
 		MemoryLimit:     -1,
 		MemoryLimitFile: 100,
 		ReadWaitTime:    1000 * time.Millisecond,
+		SidebarWidth:    defaultSidebarWidthString,
 	}
 }
 

@@ -152,7 +152,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionHideOther:      root.toggleHideOtherSection,
 		actionStatusLine:     root.toggleStatusLine,
 		actionSidebarHelp:    root.toggleSidebarHelp,
-		actionMarkList:       root.toggleShowMarkList,
+		actionMarkList:       root.toggleSidebarMarkList,
 		actionDocList:        root.toggleShowDocList,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
