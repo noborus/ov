@@ -1130,27 +1130,27 @@ func TestRoot_Mark(t *testing.T) {
 		root.Doc.topLN = 1
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, contents: root.Doc.getLineC(1).lc}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, contents: root.Doc.getLineC(1).lc}}))
 		}
 		root.Doc.topLN = 10
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}, {lineNum: 10, content: root.Doc.getLineC(10).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}, {lineNum: 10, content: root.Doc.getLineC(10).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, contents: root.Doc.getLineC(1).lc}, {lineNum: 10, contents: root.Doc.getLineC(10).lc}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, contents: root.Doc.getLineC(1).lc}, {lineNum: 10, contents: root.Doc.getLineC(10).lc}}))
 		}
 		root.Doc.topLN = 1
 		root.draw(ctx)
 		root.removeMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}})) {
-			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, contents: root.Doc.getLineC(10).lc}})) {
+			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, contents: root.Doc.getLineC(10).lc}}))
 		}
 		root.removeMark(ctx)
 		root.Doc.topLN = 2
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}, {lineNum: 2, content: root.Doc.getLineC(2).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}, {lineNum: 2, content: root.Doc.getLineC(2).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, contents: root.Doc.getLineC(10).lc}, {lineNum: 2, contents: root.Doc.getLineC(2).lc}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, contents: root.Doc.getLineC(10).lc}, {lineNum: 2, contents: root.Doc.getLineC(2).lc}}))
 		}
 		root.removeAllMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, MarkedList(nil)) {
@@ -1192,9 +1192,9 @@ func TestRoot_nextMark(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root.nextMark(context.Background()) // no marked
 			root.Doc.marked = MarkedList{
-				Mark{lineNum: 1, content: StrToContents("a", 0)},
-				Mark{lineNum: 3, content: StrToContents("b", 0)},
-				Mark{lineNum: 5, content: StrToContents("c", 0)},
+				Mark{lineNum: 1, contents: StrToContents("a", 0)},
+				Mark{lineNum: 3, contents: StrToContents("b", 0)},
+				Mark{lineNum: 5, contents: StrToContents("c", 0)},
 			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.nextMark(context.Background())
@@ -1238,9 +1238,9 @@ func TestRoot_prevMark(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root.prevMark(context.Background()) // no marked
 			root.Doc.marked = MarkedList{
-				Mark{lineNum: 1, content: StrToContents("a", 0)},
-				Mark{lineNum: 3, content: StrToContents("b", 0)},
-				Mark{lineNum: 5, content: StrToContents("c", 0)},
+				Mark{lineNum: 1, contents: StrToContents("a", 0)},
+				Mark{lineNum: 3, contents: StrToContents("b", 0)},
+				Mark{lineNum: 5, contents: StrToContents("c", 0)},
 			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.prevMark(context.Background())

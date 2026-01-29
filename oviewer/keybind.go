@@ -47,6 +47,9 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
 	actionStatusLine     = "status_line"
+	actionSidebarHelp    = "sidebar_help"
+	actionMarkList       = "show_mark_list"
+	actionDocList        = "show_doc_list"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionFixedColumn    = "fixed_column"
@@ -148,6 +151,9 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionToggleMouse:    root.toggleMouse,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionStatusLine:     root.toggleStatusLine,
+		actionSidebarHelp:    root.toggleSidebarHelp,
+		actionMarkList:       root.toggleShowMarkList,
+		actionDocList:        root.toggleShowDocList,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionFixedColumn:    root.toggleFixedColumn,
@@ -260,6 +266,9 @@ func defaultKeyBinds() KeyBind {
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
 		actionStatusLine:     {"ctrl+F10"},
+		actionSidebarHelp:    {"alt+h"},
+		actionMarkList:       {","},
+		actionDocList:        {"f"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
@@ -319,121 +328,162 @@ func defaultKeyBinds() KeyBind {
 	}
 }
 
+type KeyBindDescription struct {
+	Group       string
+	Action      string
+	Description string
+}
+
+var keyBindDescriptions = []KeyBindDescription{
+	// General
+	{Group: "", Action: actionExit, Description: "quit"},
+	{Group: "", Action: actionCancel, Description: "cancel"},
+	{Group: "", Action: actionWriteExit, Description: "output screen and quit"},
+	{Group: "", Action: actionWriteBA, Description: "set output screen and quit"},
+	{Group: "", Action: actionWriteOriginal, Description: "set output original screen and quit"},
+	{Group: "", Action: actionSuspend, Description: "suspend"},
+	{Group: "", Action: actionEdit, Description: "edit current document"},
+	{Group: "", Action: actionHelp, Description: "display help screen"},
+	{Group: "", Action: actionSidebarHelp, Description: "toggle sidebar help"},
+	{Group: "", Action: actionLogDoc, Description: "display log screen"},
+	{Group: "", Action: actionSync, Description: "screen sync"},
+	{Group: "", Action: actionFollow, Description: "follow mode toggle"},
+	{Group: "", Action: actionFollowAll, Description: "follow all mode toggle"},
+	{Group: "", Action: actionToggleMouse, Description: "enable/disable mouse"},
+	{Group: "", Action: actionSaveBuffer, Description: "save buffer to file"},
+
+	// Moving
+	{Group: "Moving", Action: actionMoveDown, Description: "forward by one line"},
+	{Group: "Moving", Action: actionMoveUp, Description: "backward by one line"},
+	{Group: "Moving", Action: actionMoveTop, Description: "go to top of document"},
+	{Group: "Moving", Action: actionMoveBottom, Description: "go to end of document"},
+	{Group: "Moving", Action: actionMovePgDn, Description: "forward by page"},
+	{Group: "Moving", Action: actionMovePgUp, Description: "backward by page"},
+	{Group: "Moving", Action: actionMoveHfDn, Description: "forward a half page"},
+	{Group: "Moving", Action: actionMoveHfUp, Description: "backward a half page"},
+	{Group: "Moving", Action: actionMoveLeft, Description: "scroll to left"},
+	{Group: "Moving", Action: actionMoveRight, Description: "scroll to right"},
+	{Group: "Moving", Action: actionMoveHfLeft, Description: "scroll left half screen"},
+	{Group: "Moving", Action: actionMoveHfRight, Description: "scroll right half screen"},
+	{Group: "Moving", Action: actionMoveWidthLeft, Description: "scroll left specified width"},
+	{Group: "Moving", Action: actionMoveWidthRight, Description: "scroll right specified width"},
+	{Group: "Moving", Action: actionMoveBeginLeft, Description: "go to beginning of line"},
+	{Group: "Moving", Action: actionMoveEndRight, Description: "go to end of line"},
+	{Group: "Moving", Action: actionGoLine, Description: "go to line(input number or `.n` or `n%` allowed)"},
+
+	// Move document
+	{Group: "Move document", Action: actionNextDoc, Description: "next document"},
+	{Group: "Move document", Action: actionPreviousDoc, Description: "previous document"},
+	{Group: "Move document", Action: actionCloseDoc, Description: "close current document"},
+	{Group: "Move document", Action: actionCloseAllFilter, Description: "close all filtered documents"},
+	{Group: "Move document", Action: actionDocList, Description: "show document list sidebar"},
+
+	// Mark position
+	{Group: "Mark position", Action: actionMark, Description: "mark current position"},
+	{Group: "Mark position", Action: actionRemoveMark, Description: "remove mark current position"},
+	{Group: "Mark position", Action: actionRemoveAllMark, Description: "remove all mark"},
+	{Group: "Mark position", Action: actionMoveMark, Description: "move to next marked position"},
+	{Group: "Mark position", Action: actionMovePrevMark, Description: "move to previous marked position"},
+	{Group: "Mark position", Action: actionMarkList, Description: "show mark list sidebar"},
+
+	// Search
+	{Group: "Search", Action: actionSearch, Description: "forward search mode"},
+	{Group: "Search", Action: actionBackSearch, Description: "backward search mode"},
+	{Group: "Search", Action: actionNextSearch, Description: "repeat forward search"},
+	{Group: "Search", Action: actionNextBackSearch, Description: "repeat backward search"},
+	{Group: "Search", Action: actionFilter, Description: "filter search mode"},
+
+	// Change display
+	{Group: "Change display", Action: actionWrap, Description: "wrap/nowrap toggle"},
+	{Group: "Change display", Action: actionColumnMode, Description: "column mode toggle"},
+	{Group: "Change display", Action: actionColumnWidth, Description: "column width toggle"},
+	{Group: "Change display", Action: actionRainbow, Description: "column rainbow toggle"},
+	{Group: "Change display", Action: actionAlternate, Description: "alternate rows of style toggle"},
+	{Group: "Change display", Action: actionLineNumMode, Description: "line number toggle"},
+	{Group: "Change display", Action: actionPlain, Description: "original decoration toggle(plain)"},
+	{Group: "Change display", Action: actionAlignFormat, Description: "align columns"},
+	{Group: "Change display", Action: actionRawFormat, Description: "raw output"},
+	{Group: "Change display", Action: actionRuler, Description: "ruler toggle"},
+	{Group: "Change display", Action: actionStatusLine, Description: "status line toggle"},
+
+	// Change Display with Input
+	{Group: "Change Display with Input", Action: actionViewMode, Description: "view mode selection"},
+	{Group: "Change Display with Input", Action: actionDelimiter, Description: "column delimiter string"},
+	{Group: "Change Display with Input", Action: actionHeader, Description: "number of header lines"},
+	{Group: "Change Display with Input", Action: actionSkipLines, Description: "number of skip lines"},
+	{Group: "Change Display with Input", Action: actionTabWidth, Description: "TAB width"},
+	{Group: "Change Display with Input", Action: actionMultiColor, Description: "multi color highlight"},
+	{Group: "Change Display with Input", Action: actionJumpTarget, Description: "jump target(`.n` or `n%` or `section` allowed)"},
+	{Group: "Change Display with Input", Action: actionConvertType, Description: "convert type selection"},
+	{Group: "Change Display with Input", Action: actionVerticalHeader, Description: "number of vertical header"},
+	{Group: "Change Display with Input", Action: actionHeaderColumn, Description: "number of header column"},
+
+	// Column operation
+	{Group: "Column operation", Action: actionFixedColumn, Description: "header column fixed toggle"},
+	{Group: "Column operation", Action: actionShrinkColumn, Description: "shrink column toggle(align mode only)"},
+	{Group: "Column operation", Action: actionRightAlign, Description: "right align column toggle(align mode only)"},
+
+	// Section operation
+	{Group: "Section operation", Action: actionSection, Description: "section delimiter regular expression"},
+	{Group: "Section operation", Action: actionSectionStart, Description: "section start position"},
+	{Group: "Section operation", Action: actionNextSection, Description: "next section"},
+	{Group: "Section operation", Action: actionPrevSection, Description: "previous section"},
+	{Group: "Section operation", Action: actionLastSection, Description: "last section"},
+	{Group: "Section operation", Action: actionFollowSection, Description: "follow section mode toggle"},
+	{Group: "Section operation", Action: actionSectionNum, Description: "number of section header lines"},
+	{Group: "Section operation", Action: actionHideOther, Description: `hide "other" section toggle`},
+
+	// Close and reload
+	{Group: "Close and reload", Action: actionCloseFile, Description: "close file"},
+	{Group: "Close and reload", Action: actionReload, Description: "reload file"},
+	{Group: "Close and reload", Action: actionWatch, Description: "watch mode"},
+	{Group: "Close and reload", Action: actionWatchInterval, Description: "set watch interval"},
+
+	// Key binding when typing
+	{Group: "Key binding when typing", Action: inputCaseSensitive, Description: "case-sensitive toggle"},
+	{Group: "Key binding when typing", Action: inputSmartCaseSensitive, Description: "smart case-sensitive toggle"},
+	{Group: "Key binding when typing", Action: inputRegexpSearch, Description: "regular expression search toggle"},
+	{Group: "Key binding when typing", Action: inputIncSearch, Description: "incremental search toggle"},
+	{Group: "Key binding when typing", Action: inputNonMatch, Description: "non-match toggle"},
+	{Group: "Key binding when typing", Action: inputPrevious, Description: "previous candidate"},
+	{Group: "Key binding when typing", Action: inputNext, Description: "next candidate"},
+	{Group: "Key binding when typing", Action: inputCopy, Description: "copy to clipboard"},
+	{Group: "Key binding when typing", Action: inputPaste, Description: "paste from clipboard"},
+}
+
 // String returns keybind as a string for help.
 func (k KeyBind) String() string {
 	var b strings.Builder
 	writeHeaderTh(&b)
-	k.writeKeyBind(&b, actionExit, "quit")
-	k.writeKeyBind(&b, actionCancel, "cancel")
-	k.writeKeyBind(&b, actionWriteExit, "output screen and quit")
-	k.writeKeyBind(&b, actionWriteBA, "set output screen and quit")
-	k.writeKeyBind(&b, actionWriteOriginal, "set output original screen and quit")
-	k.writeKeyBind(&b, actionSuspend, "suspend")
-	k.writeKeyBind(&b, actionEdit, "edit current document")
-	k.writeKeyBind(&b, actionHelp, "display help screen")
-	k.writeKeyBind(&b, actionLogDoc, "display log screen")
-	k.writeKeyBind(&b, actionSync, "screen sync")
-	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
-	k.writeKeyBind(&b, actionFollowAll, "follow all mode toggle")
-	k.writeKeyBind(&b, actionToggleMouse, "enable/disable mouse")
-	k.writeKeyBind(&b, actionSaveBuffer, "save buffer to file")
-
-	writeHeader(&b, "Moving")
-	k.writeKeyBind(&b, actionMoveDown, "forward by one line")
-	k.writeKeyBind(&b, actionMoveUp, "backward by one line")
-	k.writeKeyBind(&b, actionMoveTop, "go to top of document")
-	k.writeKeyBind(&b, actionMoveBottom, "go to end of document")
-	k.writeKeyBind(&b, actionMovePgDn, "forward by page")
-	k.writeKeyBind(&b, actionMovePgUp, "backward by page")
-	k.writeKeyBind(&b, actionMoveHfDn, "forward a half page")
-	k.writeKeyBind(&b, actionMoveHfUp, "backward a half page")
-	k.writeKeyBind(&b, actionMoveLeft, "scroll to left")
-	k.writeKeyBind(&b, actionMoveRight, "scroll to right")
-	k.writeKeyBind(&b, actionMoveHfLeft, "scroll left half screen")
-	k.writeKeyBind(&b, actionMoveHfRight, "scroll right half screen")
-	k.writeKeyBind(&b, actionMoveWidthLeft, "scroll left specified width")
-	k.writeKeyBind(&b, actionMoveWidthRight, "scroll right specified width")
-	k.writeKeyBind(&b, actionMoveBeginLeft, "go to beginning of line")
-	k.writeKeyBind(&b, actionMoveEndRight, "go to end of line")
-	k.writeKeyBind(&b, actionGoLine, "go to line(input number or `.n` or `n%` allowed)")
-
-	writeHeader(&b, "Move document")
-	k.writeKeyBind(&b, actionNextDoc, "next document")
-	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
-	k.writeKeyBind(&b, actionCloseDoc, "close current document")
-	k.writeKeyBind(&b, actionCloseAllFilter, "close all filtered documents")
-
-	writeHeader(&b, "Mark position")
-	k.writeKeyBind(&b, actionMark, "mark current position")
-	k.writeKeyBind(&b, actionRemoveMark, "remove mark current position")
-	k.writeKeyBind(&b, actionRemoveAllMark, "remove all mark")
-	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
-	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
-
-	writeHeader(&b, "Search")
-	k.writeKeyBind(&b, actionSearch, "forward search mode")
-	k.writeKeyBind(&b, actionBackSearch, "backward search mode")
-	k.writeKeyBind(&b, actionNextSearch, "repeat forward search")
-	k.writeKeyBind(&b, actionNextBackSearch, "repeat backward search")
-	k.writeKeyBind(&b, actionFilter, "filter search mode")
-
-	writeHeader(&b, "Change display")
-	k.writeKeyBind(&b, actionWrap, "wrap/nowrap toggle")
-	k.writeKeyBind(&b, actionColumnMode, "column mode toggle")
-	k.writeKeyBind(&b, actionColumnWidth, "column width toggle")
-	k.writeKeyBind(&b, actionRainbow, "column rainbow toggle")
-	k.writeKeyBind(&b, actionAlternate, "alternate rows of style toggle")
-	k.writeKeyBind(&b, actionLineNumMode, "line number toggle")
-	k.writeKeyBind(&b, actionPlain, "original decoration toggle(plain)")
-	k.writeKeyBind(&b, actionAlignFormat, "align columns")
-	k.writeKeyBind(&b, actionRawFormat, "raw output")
-	k.writeKeyBind(&b, actionRuler, "ruler toggle")
-	k.writeKeyBind(&b, actionStatusLine, "status line toggle")
-
-	writeHeader(&b, "Change Display with Input")
-	k.writeKeyBind(&b, actionViewMode, "view mode selection")
-	k.writeKeyBind(&b, actionDelimiter, "column delimiter string")
-	k.writeKeyBind(&b, actionHeader, "number of header lines")
-	k.writeKeyBind(&b, actionSkipLines, "number of skip lines")
-	k.writeKeyBind(&b, actionTabWidth, "TAB width")
-	k.writeKeyBind(&b, actionMultiColor, "multi color highlight")
-	k.writeKeyBind(&b, actionJumpTarget, "jump target(`.n` or `n%` or `section` allowed)")
-	k.writeKeyBind(&b, actionConvertType, "convert type selection")
-	k.writeKeyBind(&b, actionVerticalHeader, "number of vertical header")
-	k.writeKeyBind(&b, actionHeaderColumn, "number of header column")
-
-	writeHeader(&b, "Column operation")
-	k.writeKeyBind(&b, actionFixedColumn, "header column fixed toggle")
-	k.writeKeyBind(&b, actionShrinkColumn, "shrink column toggle(align mode only)")
-	k.writeKeyBind(&b, actionRightAlign, "right align column toggle(align mode only)")
-
-	writeHeader(&b, "Section operation")
-	k.writeKeyBind(&b, actionSection, "section delimiter regular expression")
-	k.writeKeyBind(&b, actionSectionStart, "section start position")
-	k.writeKeyBind(&b, actionNextSection, "next section")
-	k.writeKeyBind(&b, actionPrevSection, "previous section")
-	k.writeKeyBind(&b, actionLastSection, "last section")
-	k.writeKeyBind(&b, actionFollowSection, "follow section mode toggle")
-	k.writeKeyBind(&b, actionSectionNum, "number of section header lines")
-	k.writeKeyBind(&b, actionHideOther, `hide "other" section toggle`)
-
-	writeHeader(&b, "Close and reload")
-	k.writeKeyBind(&b, actionCloseFile, "close file")
-	k.writeKeyBind(&b, actionReload, "reload file")
-	k.writeKeyBind(&b, actionWatch, "watch mode")
-	k.writeKeyBind(&b, actionWatchInterval, "set watch interval")
-
-	writeHeader(&b, "Key binding when typing")
-	k.writeKeyBind(&b, inputCaseSensitive, "case-sensitive toggle")
-	k.writeKeyBind(&b, inputSmartCaseSensitive, "smart case-sensitive toggle")
-	k.writeKeyBind(&b, inputRegexpSearch, "regular expression search toggle")
-	k.writeKeyBind(&b, inputIncSearch, "incremental search toggle")
-	k.writeKeyBind(&b, inputNonMatch, "non-match toggle")
-	k.writeKeyBind(&b, inputPrevious, "previous candidate")
-	k.writeKeyBind(&b, inputNext, "next candidate")
-	k.writeKeyBind(&b, inputCopy, "copy to clipboard")
-	k.writeKeyBind(&b, inputPaste, "paste from clipboard")
+	group := "nogroup"
+	for _, bind := range keyBindDescriptions {
+		if bind.Group != group {
+			group = bind.Group
+			writeHeader(&b, group)
+		}
+		keys := k[bind.Action]
+		b.WriteString(fmt.Sprintf(" %-30s * %s\n", "["+strings.Join(keys, "], [")+"]", bind.Description))
+	}
 	return b.String()
+}
+
+func (k KeyBind) GetKeyBindDescriptions(group string) [][]string {
+	var descriptions [][]string
+
+	if group != "all" {
+		for _, bind := range keyBindDescriptions {
+			if bind.Group != group {
+				continue
+			}
+			descriptions = append(descriptions, []string{bind.Description, strings.Join(k[bind.Action], ", ")})
+		}
+		return descriptions
+	}
+
+	for _, bind := range keyBindDescriptions {
+		descriptions = append(descriptions, []string{bind.Description, strings.Join(k[bind.Action], ", ")})
+	}
+	return descriptions
 }
 
 func writeHeaderTh(w io.Writer) {

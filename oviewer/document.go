@@ -143,9 +143,15 @@ type Document struct {
 	columnCursor int
 	// columnStart is the starting position of the column.
 	columnStart int
-	// bodyStartX is the start position of the document body, excluding the line number area.
+	// leftMargin is the left margin for body drawing.
+	leftMargin int
+	// rightMargin is the right margin for body drawing.
+	rightMargin int
+	// lineNumberWidth is the width of the line number area (0 is not displayed).
+	lineNumberWidth int
+	// bodyStartX is the actual start position of the body (leftMargin + lineNumberWidth)
 	bodyStartX int
-	// bodyWidth is the width of the document body. excluding line number area.
+	// bodyWidth is the width of the document body (excluding left/right margin and line number area).
 	bodyWidth int
 
 	// lastSearchLN is the last search line number.
@@ -258,8 +264,8 @@ type columnRange struct {
 }
 
 type Mark struct {
-	lineNum int
-	content contents
+	lineNum  int
+	contents contents
 }
 
 type MarkedList []Mark

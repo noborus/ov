@@ -52,24 +52,25 @@ func (root *Root) prepareScreen() {
 
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
-	root.Doc.startX = 0
-	root.Doc.bodyStartX = root.Doc.startX
 	m := root.Doc
-	if !m.LineNumMode {
-		return
+	m.bodyStartX = 0
+	m.leftMargin = root.sidebarWidth
+	m.rightMargin = 0
+	m.lineNumberWidth = 0
+	if m.LineNumMode {
+		if m.parent != nil {
+			m = m.parent
+		}
+		m.lineNumberWidth = len(strconv.Itoa(m.BufEndNum())) + 1
 	}
-
-	if m.parent != nil {
-		m = m.parent
-	}
-	root.Doc.bodyStartX = root.Doc.startX + len(strconv.Itoa(m.BufEndNum())) + 1
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth
 }
 
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
-	m.width = root.scr.vWidth - m.startX
-	m.bodyWidth = root.scr.vWidth - m.bodyStartX
+	m.width = root.scr.vWidth - m.bodyStartX
+	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin)
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }
@@ -102,6 +103,7 @@ func (root *Root) determineStatusLine() int {
 func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.statusLineHeight = root.determineStatusLine()
 	root.updateDocumentSize()
+	root.prepareSidebarItems()
 	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {
 		defer func() {
