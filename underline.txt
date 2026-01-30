@@ -1,0 +1,15 @@
+  [97m[1mUnderlineColor Examples (Press ESC to exit)[0m
+
+  [97m[4m[58:5:9mSolid Red Underline[0m         [90mStyle: Solid, Color: Red[0m
+
+  [97m[4:2m[58:5:12mDouble Blue Underline[0m       [90mStyle: Double, Color: Blue[0m
+
+  [97m[4:3m[58:5:2mCurly Green Underline[0m       [90mStyle: Curly, Color: Green[0m
+
+  [97m[4:4m[58:5:11mDotted Yellow Underline[0m     [90mStyle: Dotted, Color: Yellow[0m
+
+  [97m[4:5m[58:2:139:0:139mDashed Magenta Underline[0m    [90mStyle: Dashed, Color: Magenta[0m
+
+  [97m[4:3m[58:2:255:165:0mCustom RGB Orange Curly Underline[0m
+
+  [97m[4:3m[58:2:255:165:0mカスタムCustom RGB Orange Curly Underline[0m

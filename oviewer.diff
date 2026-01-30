@@ -1,0 +1,847 @@
+diff --git a/oviewer/action.go b/oviewer/action.go
+index 050cb47..1abf4e3 100644
+--- a/oviewer/action.go
++++ b/oviewer/action.go
+@@ -134,6 +134,39 @@ func (root *Root) toggleStatusLine(context.Context) {
+ 	}
+ }
+ 
++func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
++	if root.sidebarVisible && root.sidebarMode == mode {
++		root.sidebarVisible = false
++		root.sidebarWidth = 0
++		root.setMessage("Sidebar hidden")
++	} else {
++		root.sidebarMode = mode
++		root.sidebarVisible = true
++		root.sidebarWidth = 20
++		switch mode {
++		case SidebarModeMark:
++			root.setMessage("Mark List visible")
++		case SidebarModeDocList:
++			root.setMessage("Doc List visible")
++		case SidebarModeHelp:
++			root.setMessage("Help visible")
++		}
++	}
++	root.ViewSync(ctx)
++}
++
++func (root *Root) toggleSidebarHelp(ctx context.Context) {
++	root.toggleSidebar(ctx, SidebarModeHelp)
++}
++
++func (root *Root) toggleShowMarkList(ctx context.Context) {
++	root.toggleSidebar(ctx, SidebarModeMark)
++}
++
++func (root *Root) toggleShowDocList(ctx context.Context) {
++	root.toggleSidebar(ctx, SidebarModeDocList)
++}
++
+ // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
+ func (root *Root) toggleRuler(ctx context.Context) {
+ 	switch root.Doc.RulerType {
+@@ -318,8 +351,12 @@ func (root *Root) addMark(context.Context) {
+ 		root.setMessagef("Cannot mark line %d", lN-root.Doc.firstLine()+1)
+ 		return
+ 	}
+-
+-	mark := Mark{lineNum: lN, content: lineC.lc}
++	s := strings.TrimSpace(lineC.str)
++	r := []rune(s)
++	if len(r) > 100 {
++		s = string(r[:100])
++	}
++	mark := Mark{lineNum: lN, content: s}
+ 	root.Doc.marked = append(root.Doc.marked, mark)
+ 	root.Doc.markedPoint = len(root.Doc.marked) - 1
+ 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
+diff --git a/oviewer/action_test.go b/oviewer/action_test.go
+index 28b8efd..4197537 100644
+--- a/oviewer/action_test.go
++++ b/oviewer/action_test.go
+@@ -1130,27 +1130,27 @@ func TestRoot_Mark(t *testing.T) {
+ 		root.Doc.topLN = 1
+ 		root.draw(ctx)
+ 		root.addMark(ctx)
+-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}})) {
+-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}}))
++		if !reflect.DeepEqual(root.Doc.marked, MarkedList{Mark{lineNum: 1, content: "2"}}) {
++			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList{Mark{lineNum: 1, content: "2"}})
+ 		}
+ 		root.Doc.topLN = 10
+ 		root.draw(ctx)
+ 		root.addMark(ctx)
+-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}, {lineNum: 10, content: root.Doc.getLineC(10).lc}})) {
+-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 1, content: root.Doc.getLineC(1).lc}, {lineNum: 10, content: root.Doc.getLineC(10).lc}}))
++		if !reflect.DeepEqual(root.Doc.marked, MarkedList{Mark{lineNum: 1, content: "2"}, Mark{lineNum: 10, content: "11"}}) {
++			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList{Mark{lineNum: 1, content: "2"}, Mark{lineNum: 10, content: "k"}})
+ 		}
+ 		root.Doc.topLN = 1
+ 		root.draw(ctx)
+ 		root.removeMark(ctx)
+-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}})) {
+-			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}}))
++		if !reflect.DeepEqual(root.Doc.marked, MarkedList{Mark{lineNum: 10, content: "11"}}) {
++			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MarkedList{Mark{lineNum: 10, content: "11"}})
+ 		}
+ 		root.removeMark(ctx)
+ 		root.Doc.topLN = 2
+ 		root.draw(ctx)
+ 		root.addMark(ctx)
+-		if !reflect.DeepEqual(root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}, {lineNum: 2, content: root.Doc.getLineC(2).lc}})) {
+-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList([]Mark{{lineNum: 10, content: root.Doc.getLineC(10).lc}, {lineNum: 2, content: root.Doc.getLineC(2).lc}}))
++		if !reflect.DeepEqual(root.Doc.marked, MarkedList{Mark{lineNum: 10, content: "11"}, Mark{lineNum: 2, content: "3"}}) {
++			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MarkedList{Mark{lineNum: 10, content: "11"}, Mark{lineNum: 2, content: "3"}})
+ 		}
+ 		root.removeAllMark(ctx)
+ 		if !reflect.DeepEqual(root.Doc.marked, MarkedList(nil)) {
+@@ -1192,9 +1192,9 @@ func TestRoot_nextMark(t *testing.T) {
+ 		t.Run(tt.name, func(t *testing.T) {
+ 			root.nextMark(context.Background()) // no marked
+ 			root.Doc.marked = MarkedList{
+-				Mark{lineNum: 1, content: StrToContents("a", 0)},
+-				Mark{lineNum: 3, content: StrToContents("b", 0)},
+-				Mark{lineNum: 5, content: StrToContents("c", 0)},
++				Mark{lineNum: 1, content: "a"},
++				Mark{lineNum: 3, content: "b"},
++				Mark{lineNum: 5, content: "c"},
+ 			}
+ 			root.Doc.markedPoint = tt.markedPoint
+ 			root.nextMark(context.Background())
+@@ -1238,9 +1238,9 @@ func TestRoot_prevMark(t *testing.T) {
+ 		t.Run(tt.name, func(t *testing.T) {
+ 			root.prevMark(context.Background()) // no marked
+ 			root.Doc.marked = MarkedList{
+-				Mark{lineNum: 1, content: StrToContents("a", 0)},
+-				Mark{lineNum: 3, content: StrToContents("b", 0)},
+-				Mark{lineNum: 5, content: StrToContents("c", 0)},
++				Mark{lineNum: 1, content: "a"},
++				Mark{lineNum: 3, content: "b"},
++				Mark{lineNum: 5, content: "c"},
+ 			}
+ 			root.Doc.markedPoint = tt.markedPoint
+ 			root.prevMark(context.Background())
+diff --git a/oviewer/document.go b/oviewer/document.go
+index 0dccb70..3b2d5b2 100644
+--- a/oviewer/document.go
++++ b/oviewer/document.go
+@@ -133,8 +133,6 @@ type Document struct {
+ 	// bottomLX is the leftmost X position on the last line.
+ 	bottomLX int
+ 
+-	// startX is the start position of x.
+-	startX int
+ 	// startY is the start position of y.
+ 	startY int
+ 	// scrollX is the starting position of the current scrollX.
+@@ -143,9 +141,15 @@ type Document struct {
+ 	columnCursor int
+ 	// columnStart is the starting position of the column.
+ 	columnStart int
+-	// bodyStartX is the start position of the document body, excluding the line number area.
++	// leftMargin is the left margin for body drawing.
++	leftMargin int
++	// rightMargin is the right margin for body drawing.
++	rightMargin int
++	// lineNumberWidth is the width of the line number area (0 is not displayed).
++	lineNumberWidth int
++	// bodyStartX is the actual start position of the body (leftMargin + lineNumberWidth)
+ 	bodyStartX int
+-	// bodyWidth is the width of the document body. excluding line number area.
++	// bodyWidth is the width of the document body (excluding left/right margin and line number area).
+ 	bodyWidth int
+ 
+ 	// lastSearchLN is the last search line number.
+@@ -259,7 +263,7 @@ type columnRange struct {
+ 
+ type Mark struct {
+ 	lineNum int
+-	content contents
++	content string
+ }
+ 
+ type MarkedList []Mark
+diff --git a/oviewer/draw.go b/oviewer/draw.go
+index 5b703c5..23d8a26 100644
+--- a/oviewer/draw.go
++++ b/oviewer/draw.go
+@@ -33,6 +33,7 @@ func (root *Root) draw(ctx context.Context) {
+ 	}()
+ 
+ 	root.prepareDraw(ctx)
++	root.drawSidebar()
+ 	root.drawBody()
+ 
+ 	root.drawRuler()
+@@ -53,7 +54,7 @@ func (root *Root) drawBody() {
+ 		lX = 0
+ 	}
+ 
+-	markStyleWidth := min(root.scr.vWidth, root.Doc.MarkStyleWidth)
++	markStyleWidth := min(root.Doc.width, root.Doc.MarkStyleWidth)
+ 
+ 	wrapNum := m.numOfWrap(lX, lN)
+ 	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statusLineHeight; y++ {
+@@ -181,10 +182,9 @@ func (root *Root) drawRuler() {
+ 
+ 	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
+ 
+-	startX := 0
++	startX := root.Doc.leftMargin - root.Doc.scrollX
+ 	offset := 0
+ 	if rulerType == RulerRelative {
+-		startX = root.Doc.bodyStartX - root.Doc.scrollX
+ 		log.Println("drawRuler:", startX)
+ 		if startX < 0 {
+ 			offset = -startX
+@@ -224,7 +224,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
+ 			break
+ 		}
+ 		c := lineC.lc[lX+n]
+-		if x+c.width > root.scr.vWidth {
++		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
+ 			// Right edge.
+ 			root.clearEOL(x, y, defaultStyle)
+ 			lX += n
+@@ -241,7 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
+ // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
+ func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
+ 	lX = max(lX, root.minStartX)
+-	for n := 0; root.Doc.bodyStartX+n < root.scr.vWidth; n++ {
++	for n := 0; n < root.Doc.bodyWidth; n++ {
+ 		x := root.Doc.bodyStartX + n
+ 		if lX+n >= len(lineC.lc) {
+ 			// EOL
+@@ -278,7 +278,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
+ 		widthVH--
+ 	}
+ 
+-	x := root.Doc.bodyStartX
++	x := root.Doc.leftMargin
+ 	for n := 0; n < widthVH; n++ {
+ 		c := DefaultContent
+ 		if n < len(lineC.lc) {
+@@ -324,10 +324,10 @@ func (root *Root) blankLineNumber(y int) {
+ 	if !root.Doc.LineNumMode {
+ 		return
+ 	}
+-	if root.Doc.bodyStartX <= 0 {
++	if root.Doc.lineNumberWidth <= 0 {
+ 		return
+ 	}
+-	for x := range root.Doc.bodyStartX {
++	for x := root.Doc.leftMargin; x < root.Doc.bodyStartX; x++ {
+ 		root.Screen.PutStr(x, y, " ")
+ 	}
+ }
+@@ -342,7 +342,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
+ 		root.blankLineNumber(y)
+ 		return
+ 	}
+-	if root.Doc.bodyStartX <= 0 {
++	if root.Doc.lineNumberWidth <= 0 {
+ 		return
+ 	}
+ 
+@@ -357,8 +357,8 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
+ 	number = number - m.firstLine() + 1
+ 
+ 	style := applyStyle(defaultStyle, m.Style.LineNumber)
+-	numC := fmt.Sprintf("%*d ", root.Doc.bodyStartX-1, number)
+-	root.Screen.PutStrStyled(0, y, numC, style)
++	numC := fmt.Sprintf("%*d ", root.Doc.lineNumberWidth-1, number)
++	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, style)
+ }
+ 
+ // drawTitle sets the terminal title if TerminalTitle is enabled.
+@@ -413,7 +413,7 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
+ // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
+ // Apply styles to the screen.
+ func (root *Root) applyStyleToLine(y int, s OVStyle) {
+-	root.applyStyleToRange(y, s, root.Doc.startX, root.Doc.startX+root.Doc.width)
++	root.applyStyleToRange(y, s, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
+ }
+ 
+ // applyMarkStyle applies the style from the left edge to the specified width.
+@@ -466,9 +466,9 @@ func (root *Root) hideOtherSection(y int, line LineC) {
+ // but if the rectangle flag is true, the rectangle will be the range.
+ func (root *Root) drawSelect() {
+ 	sel := root.scr.mouseSelect
+-	x1 := root.scr.x1
++	x1 := max(root.scr.x1, root.Doc.bodyStartX)
+ 	y1 := root.scr.y1
+-	x2 := root.scr.x2
++	x2 := min(root.scr.x2, root.Doc.bodyStartX+root.Doc.bodyWidth-1)
+ 	y2 := root.scr.y2
+ 
+ 	if root.scr.hasAnchorPoint {
+@@ -501,11 +501,11 @@ func (root *Root) drawSelect() {
+ 		return
+ 	}
+ 
+-	root.applySelectionRange(y1, x1, root.scr.vWidth, sel)
++	root.applySelectionRange(y1, x1, root.Doc.bodyStartX+root.Doc.bodyWidth, sel)
+ 	for y := y1 + 1; y < y2; y++ {
+-		root.applySelectionRange(y, 0, root.scr.vWidth, sel)
++		root.applySelectionRange(y, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.bodyWidth, sel)
+ 	}
+-	root.applySelectionRange(y2, 0, x2+1, sel)
++	root.applySelectionRange(y2, root.Doc.bodyStartX, x2+1, sel)
+ }
+ 
+ // applySelectionRange applies selection style to the specified range.
+@@ -600,3 +600,46 @@ func needsDisplaySync(str string) bool {
+ 	}
+ 	return false
+ }
++
++// drawSidebar draws the sidebar.
++func (root *Root) drawSidebar() {
++	if !root.sidebarVisible {
++		return
++	}
++	sidebarWidth := root.sidebarWidth
++	sidebarStyle := tcell.StyleDefault
++	borderStyle := tcell.StyleDefault.Background(color.Gray)
++	height := root.scr.vHeight
++	// Sidebar background
++	for y := range height {
++		for x := 0; x < sidebarWidth-1; x++ {
++			root.Screen.Put(x, y, " ", sidebarStyle)
++		}
++		root.Screen.Put(sidebarWidth-1, y, " ", borderStyle)
++	}
++	// SidebarItems is prepared in prepareDraw.
++	root.drawSidebarList(root.SidebarItems)
++}
++
++// drawSidebarList displays a list of SidebarItem in the sidebar.
++func (root *Root) drawSidebarList(items []SidebarItem) {
++	sidebarWidth := root.sidebarWidth
++	sidebarStyle := tcell.StyleDefault
++	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
++	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
++	height := root.scr.vHeight
++	maxList := min(len(items), height-2) // Leave space for borders
++	for i := range maxList {
++		item := items[i]
++		style := sidebarStyle
++		prefix := "  "
++		if item.IsCurrent {
++			style = currentStyle
++			prefix = "> "
++		}
++		root.Screen.PutStrStyled(0, i+2, prefix, style)
++		width := min(sidebarWidth-4, len(item.Contents))
++		out := item.Contents[:width].String()
++		root.Screen.PutStrStyled(2, i+2, out, style)
++	}
++}
+diff --git a/oviewer/event.go b/oviewer/event.go
+index 71a4abe..6e79adc 100644
+--- a/oviewer/event.go
++++ b/oviewer/event.go
+@@ -396,9 +396,6 @@ func (root *Root) postEvent(ev tcell.Event) {
+ 	if root.Screen == nil {
+ 		return
+ 	}
+-	if root.isClosed.Load() {
+-		return
+-	}
+ 	select {
+ 	case root.Screen.EventQ() <- ev:
+ 		return
+diff --git a/oviewer/keybind.go b/oviewer/keybind.go
+index 0eb5cc0..ef6cbc3 100644
+--- a/oviewer/keybind.go
++++ b/oviewer/keybind.go
+@@ -47,6 +47,9 @@ const (
+ 	actionToggleMouse    = "toggle_mouse"
+ 	actionHideOther      = "hide_other"
+ 	actionStatusLine     = "status_line"
++	actionSidebarHelp    = "toggle_sidebar_help"
++	actionMarkList       = "show_mark_list"
++	actionDocList        = "show_doc_list"
+ 	actionAlignFormat    = "align_format"
+ 	actionRawFormat      = "raw_format"
+ 	actionFixedColumn    = "fixed_column"
+@@ -148,6 +151,9 @@ func (root *Root) handlers() map[string]func(context.Context) {
+ 		actionToggleMouse:    root.toggleMouse,
+ 		actionHideOther:      root.toggleHideOtherSection,
+ 		actionStatusLine:     root.toggleStatusLine,
++		actionSidebarHelp:    root.toggleSidebarHelp,
++		actionMarkList:       root.toggleShowMarkList,
++		actionDocList:        root.toggleShowDocList,
+ 		actionAlignFormat:    root.alignFormat,
+ 		actionRawFormat:      root.rawFormat,
+ 		actionFixedColumn:    root.toggleFixedColumn,
+@@ -260,6 +266,9 @@ func defaultKeyBinds() KeyBind {
+ 		actionRuler:          {"alt+shift+F9"},
+ 		actionWriteOriginal:  {"alt+shift+F8"},
+ 		actionStatusLine:     {"ctrl+F10"},
++		actionSidebarHelp:    {"b"},
++		actionMarkList:       {","},
++		actionDocList:        {"f"},
+ 
+ 		// Move actions.
+ 		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
+@@ -331,6 +340,7 @@ func (k KeyBind) String() string {
+ 	k.writeKeyBind(&b, actionSuspend, "suspend")
+ 	k.writeKeyBind(&b, actionEdit, "edit current document")
+ 	k.writeKeyBind(&b, actionHelp, "display help screen")
++	k.writeKeyBind(&b, actionSidebarHelp, "toggle sidebar help")
+ 	k.writeKeyBind(&b, actionLogDoc, "display log screen")
+ 	k.writeKeyBind(&b, actionSync, "screen sync")
+ 	k.writeKeyBind(&b, actionFollow, "follow mode toggle")
+@@ -362,6 +372,7 @@ func (k KeyBind) String() string {
+ 	k.writeKeyBind(&b, actionPreviousDoc, "previous document")
+ 	k.writeKeyBind(&b, actionCloseDoc, "close current document")
+ 	k.writeKeyBind(&b, actionCloseAllFilter, "close all filtered documents")
++	k.writeKeyBind(&b, actionDocList, "show document list sidebar")
+ 
+ 	writeHeader(&b, "Mark position")
+ 	k.writeKeyBind(&b, actionMark, "mark current position")
+@@ -369,6 +380,7 @@ func (k KeyBind) String() string {
+ 	k.writeKeyBind(&b, actionRemoveAllMark, "remove all mark")
+ 	k.writeKeyBind(&b, actionMoveMark, "move to next marked position")
+ 	k.writeKeyBind(&b, actionMovePrevMark, "move to previous marked position")
++	k.writeKeyBind(&b, actionMarkList, "show mark list sidebar")
+ 
+ 	writeHeader(&b, "Search")
+ 	k.writeKeyBind(&b, actionSearch, "forward search mode")
+diff --git a/oviewer/mouse.go b/oviewer/mouse.go
+index 4a406da..cc7aa4f 100644
+--- a/oviewer/mouse.go
++++ b/oviewer/mouse.go
+@@ -357,16 +357,16 @@ func (root *Root) updateClickState(x, y int, now time.Time) {
+ 
+ // findColumnBoundaries selects the entire column at the given position.
+ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
+-	contentX := root.Doc.scrollX + (x - root.Doc.bodyStartX) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
++	contentX := root.Doc.scrollX + x + branchWidth(lineC.lc, ln.wrap, root.Doc.bodyWidth)
+ 	startCol, endCol, ok := findColumnRange(contentX, lineC.columnRanges)
+ 	if !ok {
+ 		return x, y, x, y
+ 	}
+ 	startX := x - (contentX - startCol)
+ 	startY := y
+-	for startX < root.Doc.bodyStartX {
++	for startX < 0 {
+ 		startY--
+-		startX = root.scr.vWidth - (root.Doc.bodyStartX - startX)
++		startX = root.Doc.bodyWidth - startX
+ 	}
+ 	endX := x + (endCol - contentX) - 1
+ 	endY := y
+@@ -374,52 +374,58 @@ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (in
+ 		return startX, startY, endX, endY
+ 	}
+ 	// Handle wrapping for endX
+-	wrappedX := root.scr.vWidth - 1
+-	for endX > root.scr.vWidth-1 {
++	wrappedX := root.Doc.bodyWidth - 1
++	for endX > root.Doc.bodyWidth-1 {
+ 		prevIdx := wrappedX
+ 		if prevIdx >= 0 && prevIdx < len(lineC.lc) && lineC.lc[prevIdx].width == 2 {
+ 			endX++
+ 		}
+ 		endY++
+-		endX = root.Doc.bodyStartX + (endX - root.scr.vWidth)
+-		wrappedX += root.scr.vWidth
++		endX = endX - root.Doc.bodyWidth
++		wrappedX += root.Doc.bodyWidth
+ 	}
+ 	return startX, startY, endX, endY
+ }
+ 
+ // findWordBoundariesInLine selects the word at the given position.
+ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
+-	x = x - root.Doc.bodyStartX
+-	contentX := x + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
++	if x < root.Doc.bodyStartX || x >= root.Doc.bodyStartX+root.Doc.bodyWidth {
++		log.Printf("findWordBoundariesInLine: out of bounds x=%d bodyStartX=%d bodyWidth=%d\n", x, root.Doc.bodyStartX, root.Doc.bodyWidth)
++		return x, y, x, y
++	}
++	contentX := branchWidth(lineC.lc, ln.wrap, root.Doc.bodyWidth)
+ 	if contentX < 0 || contentX >= len(lineC.lc) {
+ 		// Out of bounds: return clicked position only
+-		return x + root.Doc.bodyStartX, y, x + root.Doc.bodyStartX, y
++		log.Printf("findWordBoundariesInLine: out of bounds contentX=%d len=%d\n", contentX, len(lineC.lc))
++		return x, y, x, y
+ 	}
++	log.Println("findWordBoundariesInLine: start", x, root.Doc.bodyStartX)
++	x = x - root.Doc.bodyStartX
+ 	charType := getCharTypeAt(lineC, contentX)
+ 	startX := x
+ 	startY := y
+ 	for ln.wrap >= 0 {
+-		testContentX := (startX - 1) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
++		testContentX := (startX - 1) + branchWidth(lineC.lc, ln.wrap, root.Doc.bodyWidth)
+ 		if getCharTypeAt(lineC, testContentX) != charType {
+ 			break
+ 		}
+ 		startX--
+-		if startX < root.Doc.bodyStartX {
++		if startX < 0 {
+ 			ln.wrap--
+-			startX = root.scr.vWidth
++			startX = root.Doc.bodyWidth
+ 			startY--
+ 		}
+ 	}
+ 	endX := startX
+ 	endY := startY
+ 	for endX < len(lineC.lc)-1 {
+-		testContentX := (endX + 1) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
++		testContentX := (endX + 1) + branchWidth(lineC.lc, ln.wrap, root.Doc.bodyWidth)
+ 		if getCharTypeAt(lineC, testContentX) != charType {
+ 			break
+ 		}
+ 		endX++
+-		if root.Doc.WrapMode && endX >= root.scr.vWidth-1 {
+-			endX = root.Doc.bodyStartX
++		if root.Doc.WrapMode && endX >= root.Doc.bodyWidth-1 {
++			endX = 0
+ 			endY++
+ 			ln.wrap++
+ 		}
+@@ -478,7 +484,7 @@ func (root *Root) handleTripleClick(ctx context.Context, ev *tcell.EventMouse) {
+ 		for endY := y; endY < len(root.scr.numbers) && root.scr.lineNumber(endY).number == ln.number; endY++ {
+ 			lastY = endY
+ 		}
+-		root.scr.x2, root.scr.y2 = root.Doc.bodyStartX+root.scr.vWidth-1, lastY
++		root.scr.x2, root.scr.y2 = root.Doc.bodyStartX+root.Doc.bodyWidth-1, lastY
+ 	}
+ 	root.scr.mouseSelect = SelectCopied
+ 	root.scr.mousePressed = false
+@@ -624,7 +630,7 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
+ 	if !ok || !lineC1.valid {
+ 		return "", ErrOutOfRange
+ 	}
+-	wx1 := branchWidth(lineC1.lc, l1.wrap, scr.vWidth, m.bodyStartX)
++	wx1 := branchWidth(lineC1.lc, l1.wrap, scr.vWidth)
+ 	var l2 LineNumber
+ 	for y := endY; ; y-- {
+ 		l := scr.lineNumber(y)
+@@ -639,7 +645,7 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
+ 	if !ok || !lineC2.valid {
+ 		return "", ErrOutOfRange
+ 	}
+-	wx2 := branchWidth(lineC2.lc, l2.wrap, scr.vWidth, m.bodyStartX)
++	wx2 := branchWidth(lineC2.lc, l2.wrap, m.bodyWidth)
+ 	if l1.number == l2.number {
+ 		x1 := m.scrollX + startX + wx1
+ 		x2 := m.scrollX + endX + wx2
+@@ -684,7 +690,7 @@ func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (s
+ 		if !ok || !lineC.valid {
+ 			break
+ 		}
+-		wx := branchWidth(lineC.lc, ln.wrap, scr.vWidth, m.bodyStartX)
++		wx := branchWidth(lineC.lc, ln.wrap, scr.vWidth)
+ 		str := selectLine(lineC, m.bodyStartX, m.scrollX+startX+wx, m.scrollX+endX+wx+1)
+ 		buff.WriteString(str)
+ 		buff.WriteByte('\n')
+@@ -694,14 +700,14 @@ func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (s
+ 
+ // branchWidth returns the leftmost position of the number of wrapped line.
+ // If the wide character is at the right end, it may wrap one character forward.
+-func branchWidth(lc contents, branch int, width int, offset int) int {
++func branchWidth(lc contents, branch int, width int) int {
+ 	branchCount := 0
+-	w := offset
++	w := 0
+ 	x := 0
+ 	for _, c := range lc {
+ 		if w+c.width > width {
+ 			branchCount++
+-			w = offset
++			w = 0
+ 		}
+ 		if branchCount >= branch {
+ 			break
+diff --git a/oviewer/mouse_test.go b/oviewer/mouse_test.go
+index f806845..8c64db9 100644
+--- a/oviewer/mouse_test.go
++++ b/oviewer/mouse_test.go
+@@ -546,7 +546,6 @@ func Test_branchWidth(t *testing.T) {
+ 				},
+ 				branch: 1,
+ 				width:  10,
+-				offset: 0,
+ 			},
+ 			want: 3,
+ 		},
+@@ -560,7 +559,6 @@ func Test_branchWidth(t *testing.T) {
+ 				},
+ 				branch: 1,
+ 				width:  10,
+-				offset: 1,
+ 			},
+ 			want: 3,
+ 		},
+@@ -575,7 +573,6 @@ func Test_branchWidth(t *testing.T) {
+ 				},
+ 				branch: 1,
+ 				width:  10,
+-				offset: 0,
+ 			},
+ 			want: 8,
+ 		},
+@@ -585,7 +582,6 @@ func Test_branchWidth(t *testing.T) {
+ 				lc:     contents{},
+ 				branch: 0,
+ 				width:  10,
+-				offset: 0,
+ 			},
+ 			want: 0,
+ 		},
+@@ -598,7 +594,6 @@ func Test_branchWidth(t *testing.T) {
+ 				},
+ 				branch: 5,
+ 				width:  10,
+-				offset: 0,
+ 			},
+ 			want: 4,
+ 		},
+@@ -611,14 +606,13 @@ func Test_branchWidth(t *testing.T) {
+ 				},
+ 				branch: 0,
+ 				width:  10,
+-				offset: 2,
+ 			},
+ 			want: 0,
+ 		},
+ 	}
+ 	for _, tt := range tests {
+ 		t.Run(tt.name, func(t *testing.T) {
+-			if got := branchWidth(tt.args.lc, tt.args.branch, tt.args.width, tt.args.offset); got != tt.want {
++			if got := branchWidth(tt.args.lc, tt.args.branch, tt.args.width); got != tt.want {
+ 				t.Errorf("branchWidth() = %v, want %v", got, tt.want)
+ 			}
+ 		})
+diff --git a/oviewer/oviewer.go b/oviewer/oviewer.go
+index 86155d9..25262c2 100644
+--- a/oviewer/oviewer.go
++++ b/oviewer/oviewer.go
+@@ -12,7 +12,6 @@ import (
+ 	"regexp"
+ 	"sort"
+ 	"sync"
+-	"sync/atomic"
+ 	"syscall"
+ 
+ 	"codeberg.org/tslocum/cbind"
+@@ -21,7 +20,6 @@ import (
+ 	"github.com/gdamore/tcell/v3/vt"
+ 	"github.com/noborus/tcellansi"
+ 	"github.com/spf13/viper"
+-	"golang.org/x/term"
+ )
+ 
+ // Root is the root structure of the oviewer.
+@@ -88,8 +86,6 @@ type Root struct {
+ 
+ 	// mu controls the RWMutex.
+ 	mu sync.RWMutex
+-	// isClosed indicates whether it is closed.
+-	isClosed atomic.Bool
+ 
+ 	// FollowAll is a follow mode for all documents.
+ 	FollowAll bool
+@@ -97,6 +93,17 @@ type Root struct {
+ 	skipDraw bool
+ 	// clickState is the state of mouse click.
+ 	clickState ClickState
++
++	// sidebarVisible is whether the sidebar is visible.
++	sidebarVisible bool
++	// sidebarMode is the mode of the sidebar.
++	sidebarMode SidebarMode
++	// SidebarItems is the items to display in the sidebar.
++	SidebarItems []SidebarItem
++	// SidebarHelpItems is the help items to display in the sidebar.
++	SidebarHelpItems []SidebarItem
++	// sidebarWidth is the width of the sidebar.
++	sidebarWidth int
+ }
+ 
+ // MouseSelectState represents the state of mouse selection.
+@@ -912,7 +919,6 @@ func (root *Root) prepareAllDocuments() {
+ 
+ // Close closes the oviewer.
+ func (root *Root) Close() {
+-	root.isClosed.Store(true)
+ 	root.Screen.Fini()
+ }
+ 
+@@ -1312,15 +1318,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
+ 
+ // dummyScreen creates a dummy screen.
+ func (root *Root) dummyScreen() (int, error) {
+-	col := 80
+-	row := 25
+-	fd := int(os.Stdout.Fd())
+-	w, h, err := term.GetSize(fd)
+-	if err == nil && w > 0 && h > 0 {
+-		col = w
+-		row = h
+-	}
+-	mt := vt.NewMockTerm(vt.MockOptSize{X: vt.Col(col), Y: vt.Row(row)})
++	mt := vt.NewMockTerm(vt.MockOptSize{X: 80, Y: 25})
+ 	scr, err := tcell.NewTerminfoScreenFromTty(mt)
+ 	if err != nil {
+ 		return 0, err
+diff --git a/oviewer/prepare_draw.go b/oviewer/prepare_draw.go
+index cbf58a5..3fbbc3f 100644
+--- a/oviewer/prepare_draw.go
++++ b/oviewer/prepare_draw.go
+@@ -52,24 +52,25 @@ func (root *Root) prepareScreen() {
+ 
+ // prepareStartX prepares the start position of the x.
+ func (root *Root) prepareStartX() {
+-	root.Doc.startX = 0
+-	root.Doc.bodyStartX = root.Doc.startX
+ 	m := root.Doc
+-	if !m.LineNumMode {
+-		return
+-	}
+-
+-	if m.parent != nil {
+-		m = m.parent
++	m.bodyStartX = 0
++	m.leftMargin = root.sidebarWidth
++	m.rightMargin = 0
++	m.lineNumberWidth = 0
++	if m.LineNumMode {
++		if m.parent != nil {
++			m = m.parent
++		}
++		m.lineNumberWidth = len(strconv.Itoa(m.BufEndNum())) + 1
+ 	}
+-	root.Doc.bodyStartX = root.Doc.startX + len(strconv.Itoa(m.BufEndNum())) + 1
++	m.bodyStartX = m.leftMargin + m.lineNumberWidth
+ }
+ 
+ // updateDocumentSize updates the document size.
+ func (root *Root) updateDocumentSize() {
+ 	m := root.Doc
+-	m.width = root.scr.vWidth - m.startX
+-	m.bodyWidth = root.scr.vWidth - m.bodyStartX
++	m.width = root.scr.vWidth - m.bodyStartX
++	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin)
+ 	m.height = root.scr.vHeight - root.scr.statusLineHeight
+ 	m.statusPos = m.height
+ }
+@@ -102,6 +103,7 @@ func (root *Root) determineStatusLine() int {
+ func (root *Root) prepareDraw(ctx context.Context) {
+ 	root.scr.statusLineHeight = root.determineStatusLine()
+ 	root.updateDocumentSize()
++	root.prepareSidebarItems()
+ 	// Set the columnCursor at the first run.
+ 	if len(root.scr.lines) == 0 {
+ 		defer func() {
+diff --git a/oviewer/sidebar.go b/oviewer/sidebar.go
+new file mode 100644
+index 0000000..3a25fcd
+--- /dev/null
++++ b/oviewer/sidebar.go
+@@ -0,0 +1,97 @@
++package oviewer
++
++import (
++	"fmt"
++	"strings"
++)
++
++// SidebarItem represents an item to display in the sidebar.
++type SidebarItem struct {
++	Contents  contents
++	IsCurrent bool
++}
++
++type SidebarMode int
++
++// sidebarMode represents the mode of the sidebar.
++const (
++	// SidebarModeNone is no sidebar.
++	SidebarModeNone SidebarMode = iota
++	// SidebarModeDocList is the document list sidebar.
++	SidebarModeDocList
++	// SidebarModeMark is the mark sidebar.
++	SidebarModeMark
++	// SidebarModeHelp is the help sidebar.
++	SidebarModeHelp
++)
++
++// String returns the string representation of the SidebarMode.
++func (s SidebarMode) String() string {
++	switch s {
++	case SidebarModeDocList:
++		return "Files"
++	case SidebarModeMark:
++		return "Marks"
++	case SidebarModeHelp:
++		return "Help"
++	default:
++		return "none"
++	}
++}
++
++// prepareSidebarItems creates the sidebarItems slice for display.
++func (root *Root) prepareSidebarItems() {
++	var items []SidebarItem
++	switch root.sidebarMode {
++	case SidebarModeMark:
++		items = root.sidebarItemsForMark()
++	case SidebarModeDocList:
++		items = root.sidebarItemsForDocList()
++	case SidebarModeHelp:
++		items = root.sidebarItemsForHelp()
++	}
++	root.SidebarItems = items
++}
++
++// sidebarItemsForMark creates SidebarItems for the mark sidebar.
++func (root *Root) sidebarItemsForMark() []SidebarItem {
++	var items []SidebarItem
++	marks := root.Doc.marked
++	for i, mark := range marks {
++		content := StrToContents(mark.content, 0)
++		isCurrent := (i == root.Doc.markedPoint)
++		items = append(items, SidebarItem{Contents: content, IsCurrent: isCurrent})
++	}
++	return items
++}
++
++// sidebarItemsForDocList creates SidebarItems for the document list sidebar.
++func (root *Root) sidebarItemsForDocList() []SidebarItem {
++	var items []SidebarItem
++	for i, doc := range root.DocList {
++		displayName := doc.FileName
++		text := fmt.Sprintf("%2d %s", i, displayName)
++		isCurrent := (i == root.CurrentDoc)
++		content := StrToContents(text, 0)
++		items = append(items, SidebarItem{Contents: content, IsCurrent: isCurrent})
++	}
++	return items
++}
++
++// sidebarItemsForHelp creates SidebarItems for the help sidebar.
++func (root *Root) sidebarItemsForHelp() []SidebarItem {
++	if root.SidebarHelpItems != nil {
++		return root.SidebarHelpItems
++	}
++	var items []SidebarItem
++	keyBinds := GetKeyBinds(root.Config)
++	for description, keys := range keyBinds {
++		line := "[" + strings.Join(keys, " ") + "]"
++		content := StrToContents(line, 0)
++		items = append(items, SidebarItem{Contents: content, IsCurrent: false})
++		contentDesc := StrToContents("  "+description, 0)
++		items = append(items, SidebarItem{Contents: contentDesc, IsCurrent: false})
++	}
++	root.SidebarHelpItems = items
++	return items
++}

@@ -358,12 +358,7 @@ func (list MarkedList) contains(lineNumber int) bool {
 func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = root.Doc.marked.remove(lN)
-	lineC, ok := root.scr.lines[lN]
-	if !ok {
-		root.setMessagef("Cannot mark line %d", lN-root.Doc.firstLine()+1)
-		return
-	}
-
+	lineC := root.lineContent(lN)
 	mark := Mark{lineNum: lN, contents: lineC.lc}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1

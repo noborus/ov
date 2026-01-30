@@ -1,0 +1,1 @@
+This is the first line.\033[2BThis is the second line after moving the cursor down.

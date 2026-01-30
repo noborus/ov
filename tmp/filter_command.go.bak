@@ -1,0 +1,129 @@
+package oviewer
+
+import (
+	"bufio"
+	"context"
+	"io"
+	"log"
+	"os/exec"
+	"strings"
+)
+
+// filterCommandDocument is a document for filtering with a command.
+type filterCommandDocument struct {
+	*Document
+	cmd *exec.Cmd
+	w   io.WriteCloser
+	r   io.ReadCloser
+}
+
+// FilterCommand sets up and executes a filter command using the "column" utility with a fixed width of 100 columns.
+// It delegates the actual execution to the filterCommand method, passing the context, command, and arguments.
+// This function is typically used to format output in a columnar layout.
+func (root *Root) FilterCommand(ctx context.Context) {
+	command := "column"
+	args := []string{"-c", "1000"}
+	root.filterCommand(ctx, command, args)
+}
+
+// filterCommand executes a command to filter the document.
+// It creates a new document and writes the command's output to it.
+func (root *Root) filterCommand(ctx context.Context, command string, args []string) {
+	m := root.Doc
+
+	// Create a pipe for the command's stdin and stdout.
+	cmd := exec.Command(command, args...)
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		log.Printf("failed to create stdin pipe: %v\n", err)
+
+		return
+	}
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Printf("failed to create stdout pipe: %v\n", err)
+
+		return
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Printf("failed to create stderr pipe: %v\n", err)
+
+		return
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			log.Printf("stderr: %s\n", scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Printf("error reading stderr: %v\n", err)
+		}
+	}()
+	// Create a new document for the filtered output.
+	render, err := renderDoc(m, stdout)
+	if err != nil {
+		log.Printf("failed to render document: %v\n", err)
+
+		return
+	}
+
+	render.documentType = DocFilter
+	render.Caption = "command: " + command + " " + strings.Join(args, " ")
+	root.insertDocument(ctx, root.CurrentDoc, render)
+	render.RunTimeSettings = m.RunTimeSettings
+	render.regexpCompile()
+
+	filterDoc := &filterCommandDocument{
+		Document: render,
+		cmd:      cmd,
+		w:        stdin,
+		r:        stdout,
+	}
+	commandWriter(m, filterDoc)
+}
+
+// commandWriter writes the original document's content to the command's stdin.
+func commandWriter(m *Document, filterDoc *filterCommandDocument) {
+	// Write the original document's content to the command's stdin.
+	go func() {
+		defer filterDoc.w.Close()
+
+		for ln := range m.BufEndNum() {
+			line, err := m.Line(ln)
+			if err != nil {
+				log.Printf("failed to get line %d: %v\n", ln, err)
+
+				break
+			}
+
+			writeLine(filterDoc.w, line)
+		}
+
+		log.Println("Finished writing to command's stdin.")
+	}()
+
+	// Start the command.
+	log.Println("Starting command...")
+
+	if err := filterDoc.cmd.Start(); err != nil {
+		log.Printf("failed to start command: %v\n", err)
+
+		return
+	}
+	// Wait for the command to finish.
+	go func() {
+		log.Println("Waiting for command to finish...")
+
+		if err := filterDoc.cmd.Wait(); err != nil {
+			log.Printf("command execution failed: %v\n", err)
+		}
+
+		log.Println("Command finished.")
+	}()
+}

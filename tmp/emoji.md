@@ -1,0 +1,60 @@
+| Native | Apple | Android | Android2 | Symbola | Twitter | Unicode | Bytes | Description |
+|--------|-------|---------|---------|---------|---------|---------|---------------|-------------|
+| 😁     | 😁    | 😁      | 😁      | 😁      | 😁      | U+1F601 | \xF0\x9F\x98\x81 | GRINNING FACE WITH SMILING EYES |
+| 😂     | 😂    | 😂      | 😂      | 😂      | 😂      | U+1F602 | \xF0\x9F\x98\x82 | FACE WITH TEARS OF JOY |
+| 😃     | 😃    | 😃      | 😃      | 😃      | 😃      | U+1F603 | \xF0\x9F\x98\x83 | SMILING FACE WITH OPEN MOUTH |
+| 😄     | 😄    | 😄      | 😄      | 😄      | 😄      | U+1F604 | \xF0\x9F\x98\x84 | SMILING FACE WITH OPEN MOUTH AND SMILING EYES |
+| 😅     | 😅    | 😅      | 😅      | 😅      | 😅      | U+1F605 | \xF0\x9F\x98\x85 | SMILING FACE WITH OPEN MOUTH AND COLD SWEAT |
+| 😆     | 😆    | 😆      | 😆      | 😆      | 😆      | U+1F606 | \xF0\x9F\x98\x86 | SMILING FACE WITH OPEN MOUTH AND TIGHTLY-CLOSED EYES |
+| 😉     | 😉    | 😉      | 😉      | 😉      | 😉      | U+1F609 | \xF0\x9F\x98\x89 | WINKING FACE |
+| 😊     | 😊    | 😊      | 😊      | 😊      | 😊      | U+1F60A | \xF0\x9F\x98\x8A | SMILING FACE WITH SMILING EYES |
+| 😋     | 😋    | 😋      | 😋      | 😋      | 😋      | U+1F60B | \xF0\x9F\x98\x8B | FACE SAVOURING DELICIOUS FOOD |
+| 😌     | 😌    | 😌      | 😌      | 😌      | 😌      | U+1F60C | \xF0\x9F\x98\x8C | RELIEVED FACE |
+| 😍     | 😍    | 😍      | 😍      | 😍      | 😍      | U+1F60D | \xF0\x9F\x98\x8D | SMILING FACE WITH HEART-SHAPED EYES |
+| 😏     | 😏    | 😏      | 😏      | 😏      | 😏      | U+1F60F | \xF0\x9F\x98\x8F | SMIRKING FACE |
+| 😒     | 😒    | 😒      | 😒      | 😒      | 😒      | U+1F612 | \xF0\x9F\x98\x92 | UNAMUSED FACE |
+| 😓     | 😓    | 😓      | 😓      | 😓      | 😓      | U+1F613 | \xF0\x9F\x98\x93 | FACE WITH COLD SWEAT |
+| 😔     | 😔    | 😔      | 😔      | 😔      | 😔      | U+1F614 | \xF0\x9F\x98\x94 | PENSIVE FACE |
+| 😖     | 😖    | 😖      | 😖      | 😖      | 😖      | U+1F616 | \xF0\x9F\x98\x96 | CONFOUNDED FACE |
+| 😘     | 😘    | 😘      | 😘      | 😘      | 😘      | U+1F618 | \xF0\x9F\x98\x98 | FACE THROWING A KISS |
+| 😚     | 😚    | 😚      | 😚      | 😚      | 😚      | U+1F61A | \xF0\x9F\x98\x9A | KISSING FACE WITH CLOSED EYES |
+| 😜     | 😜    | 😜      | 😜      | 😜      | 😜      | U+1F61C | \xF0\x9F\x98\x9C | FACE WITH STUCK-OUT TONGUE AND WINKING EYE |
+| 😝     | 😝    | 😝      | 😝      | 😝      | 😝      | U+1F61D | \xF0\x9F\x98\x9D | FACE WITH STUCK-OUT TONGUE AND TIGHTLY-CLOSED EYES |
+| 😞     | 😞    | 😞      | 😞      | 😞      | 😞      | U+1F61E | \xF0\x9F\x98\x9E | DISAPPOINTED FACE |
+| 😠     | 😠    | 😠      | 😠      | 😠      | 😠      | U+1F620 | \xF0\x9F\x98\xA0 | ANGRY FACE |
+| 😡     | 😡    | 😡      | 😡      | 😡      | 😡      | U+1F621 | \xF0\x9F\x98\xA1 | POUTING FACE |
+| 😢     | 😢    | 😢      | 😢      | 😢      | 😢      | U+1F622 | \xF0\x9F\x98\xA2 | CRYING FACE |
+| 😣     | 😣    | 😣      | 😣      | 😣      | 😣      | U+1F623 | \xF0\x9F\x98\xA3 | PERSEVERING FACE |
+| 😤     | 😤    | 😤      | 😤      | 😤      | 😤      | U+1F624 | \xF0\x9F\x98\xA4 | FACE WITH LOOK OF TRIUMPH |
+| 😥     | 😥    | 😥      | 😥      | 😥      | 😥      | U+1F625 | \xF0\x9F\x98\xA5 | DISAPPOINTED BUT RELIEVED FACE |
+| 😨     | 😨    | 😨      | 😨      | 😨      | 😨      | U+1F628 | \xF0\x9F\x98\xA8 | FEARFUL FACE |
+| 😩     | 😩    | 😩      | 😩      | 😩      | 😩      | U+1F629 | \xF0\x9F\x98\xA9 | WEARY FACE |
+| 😪     | 😪    | 😪      | 😪      | 😪      | 😪      | U+1F62A | \xF0\x9F\x98\xAA | SLEEPY FACE |
+| 😫     | 😫    | 😫      | 😫      | 😫      | 😫      | U+1F62B | \xF0\x9F\x98\xAB | TIRED FACE |
+| 😭     | 😭    | 😭      | 😭      | 😭      | 😭      | U+1F62D | \xF0\x9F\x98\xAD | LOUDLY CRYING FACE |
+| 😰     | 😰    | 😰      | 😰      | 😰      | 😰      | U+1F630 | \xF0\x9F\x98\xB0 | FACE WITH OPEN MOUTH AND COLD SWEAT |
+| 😱     | 😱    | 😱      | 😱      | 😱      | 😱      | U+1F631 | \xF0\x9F\x98\xB1 | FACE SCREAMING IN FEAR |
+| 😲     | 😲    | 😲      | 😲      | 😲      | 😲      | U+1F632 | \xF0\x9F\x98\xB2 | ASTONISHED FACE |
+| 😳     | 😳    | 😳      | 😳      | 😳      | 😳      | U+1F633 | \xF0\x9F\x98\xB3 | FLUSHED FACE |
+| 😵     | 😵    | 😵      | 😵      | 😵      | 😵      | U+1F635 | \xF0\x9F\x98\xB5 | DIZZY FACE |
+| 😷     | 😷    | 😷      | 😷      | 😷      | 😷      | U+1F637 | \xF0\x9F\x98\xB7 | FACE WITH MEDICAL MASK |
+| 😸     | 😸    | 😸      | 😸      | 😸      | 😸      | U+1F638 | \xF0\x9F\x98\xB8 | GRINNING CAT FACE WITH SMILING EYES |
+| 😹     | 😹    | 😹      | 😹      | 😹      | 😹      | U+1F639 | \xF0\x9F\x98\xB9 | CAT FACE WITH TEARS OF JOY |
+| 😺     | 😺    | 😺      | 😺      | 😺      | 😺      | U+1F63A | \xF0\x9F\x98\xBA | SMILING CAT FACE WITH OPEN MOUTH |
+| 😻     | 😻    | 😻      | 😻      | 😻      | 😻      | U+1F63B | \xF0\x9F\x98\xBB | SMILING CAT FACE WITH HEART-SHAPED EYES |
+| 😼     | 😼    | 😼      | 😼      | 😼      | 😼      | U+1F63C | \xF0\x9F\x98\xBC | CAT FACE WITH WRY SMILE |
+| 😽     | 😽    | 😽      | 😽      | 😽      | 😽      | U+1F63D | \xF0\x9F\x98\xBD | KISSING CAT FACE WITH CLOSED EYES |
+| 😾     | 😾    | 😾      | 😾      | 😾      | 😾      | U+1F63E | \xF0\x9F\x98\xBE | POUTING CAT FACE |
+| 😿     | 😿    | 😿      | 😿      | 😿      | 😿      | U+1F63F | \xF0\x9F\x98\xBF | CRYING CAT FACE |
+| 🙀     | 🙀    | 🙀      | 🙀      | 🙀      | 🙀      | U+1F640 | \xF0\x9F\x99\x80 | WEARY CAT FACE |
+| 🙅     | 🙅    | 🙅      | 🙅      | 🙅      | 🙅      | U+1F645 | \xF0\x9F\x99\x85 | FACE WITH NO GOOD GESTURE |
+| 🙆     | 🙆    | 🙆      | 🙆      | 🙆      | 🙆      | U+1F646 | \xF0\x9F\x99\x86 | FACE WITH OK GESTURE |
+| 🙇     | 🙇    | 🙇      | 🙇      | 🙇      | 🙇      | U+1F647 | \xF0\x9F\x99\x87 | PERSON BOWING DEEPLY |
+| 🙈     | 🙈    | 🙈      | 🙈      | 🙈      | 🙈      | U+1F648 | \xF0\x9F\x99\x88 | SEE-NO-EVIL MONKEY |
+| 🙉     | 🙉    | 🙉      | 🙉      | 🙉      | 🙉      | U+1F649 | \xF0\x9F\x99\x89 | HEAR-NO-EVIL MONKEY |
+| 🙊     | 🙊    | 🙊      | 🙊      | 🙊      | 🙊      | U+1F64A | \xF0\x9F\x99\x8A | SPEAK-NO-EVIL MONKEY |
+| 🙋     | 🙋    | 🙋      | 🙋      | 🙋      | 🙋      | U+1F64B | \xF0\x9F\x99\x8B | HAPPY PERSON RAISING ONE HAND |
+| 🙌     | 🙌    | 🙌      | 🙌      | 🙌      | 🙌      | U+1F64C | \xF0\x9F\x99\x8C | PERSON RAISING BOTH HANDS IN CELEBRATION |
+| 🙍     | 🙍    | 🙍      | 🙍      | 🙍      | 🙍      | U+1F64D | \xF0\x9F\x99\x8D | PERSON FROWNING |
+| 🙎     | 🙎    | 🙎      | 🙎      | 🙎      | 🙎      | U+1F64E | \xF0\x9F\x99\x8E | PERSON WITH POUTING FACE |
+| 🙏     | 🙏    | 🙏      | 🙏      | 🙏      | 🙏      | U+1F64F | \xF0\x9F\x99\x8F | PERSON WITH FOLDED HANDS |

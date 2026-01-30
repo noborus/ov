@@ -1,0 +1,12 @@
+
+
+StyleHeader:
+  Underline: true
+StyleSearchHighlight:
+  Reverse: true
+  Foreground: "yellow"
+
+General:
+  Style:
+    Header:
+      Underline: false
