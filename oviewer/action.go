@@ -134,36 +134,48 @@ func (root *Root) toggleStatusLine(context.Context) {
 	}
 }
 
+// toggleSidebar toggles the sidebar visibility.
 func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 	if root.sidebarVisible && root.sidebarMode == mode {
 		root.sidebarVisible = false
 		root.sidebarWidth = 0
 		root.setMessage("Sidebar hidden")
-	} else {
-		root.sidebarMode = mode
-		root.sidebarVisible = true
-		root.sidebarWidth = 20
-		switch mode {
-		case SidebarModeMark:
-			root.setMessage("Mark List visible")
-		case SidebarModeDocList:
-			root.setMessage("Doc List visible")
-		case SidebarModeHelp:
-			root.setMessage("Help visible")
-		}
+		root.ViewSync(ctx)
+		return
 	}
+	width, err := calculatePosition(root.Config.SidebarWidth, root.scr.vWidth)
+	if err != nil {
+		log.Println(err)
+		width = defaultSidebarWidth
+	}
+	width = min(max(minSidebarWidth, width), maxSidebarWidth)
+	root.sidebarMode = mode
+	root.sidebarVisible = true
+	root.sidebarWidth = int(width)
+	switch mode {
+	case SidebarModeMark:
+		root.setMessage("Mark List visible")
+	case SidebarModeDocList:
+		root.setMessage("Doc List visible")
+	case SidebarModeHelp:
+		root.setMessage("Help visible")
+	}
+
 	root.ViewSync(ctx)
 }
 
+// toggleSidebarHelp toggles the help sidebar visibility.
 func (root *Root) toggleSidebarHelp(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeHelp)
 }
 
-func (root *Root) toggleShowMarkList(ctx context.Context) {
+// toggleSidebarMarkList toggles the mark list sidebar visibility.
+func (root *Root) toggleSidebarMarkList(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeMark)
 }
 
-func (root *Root) toggleShowDocList(ctx context.Context) {
+// toggleSidebarDocList toggles the document list sidebar visibility.
+func (root *Root) toggleSidebarDocList(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeDocList)
 }
 
@@ -346,12 +358,7 @@ func (list MarkedList) contains(lineNumber int) bool {
 func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = root.Doc.marked.remove(lN)
-	lineC, ok := root.scr.lines[lN]
-	if !ok {
-		root.setMessagef("Cannot mark line %d", lN-root.Doc.firstLine()+1)
-		return
-	}
-
+	lineC := root.lineContent(lN)
 	mark := Mark{lineNum: lN, contents: lineC.lc}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1

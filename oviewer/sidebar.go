@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -39,8 +40,19 @@ func (s SidebarMode) String() string {
 	}
 }
 
+const (
+	minSidebarWidth     = 12
+	maxSidebarWidth     = 100
+	defaultSidebarWidth = 20
+)
+
+var defaultSidebarWidthString = strconv.Itoa(defaultSidebarWidth)
+
 // prepareSidebarItems creates the sidebarItems slice for display.
 func (root *Root) prepareSidebarItems() {
+	if root.sidebarWidth <= 0 {
+		return
+	}
 	var items []SidebarItem
 	switch root.sidebarMode {
 	case SidebarModeMark:
