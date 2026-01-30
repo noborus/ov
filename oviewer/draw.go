@@ -182,10 +182,14 @@ func (root *Root) drawRuler() {
 
 	style := applyStyle(defaultStyle, root.Doc.Style.Ruler)
 
-	startX := root.Doc.leftMargin - root.Doc.scrollX
+	startX := 0
 	offset := 0
 	if rulerType == RulerRelative {
-		log.Println("drawRuler:", startX)
+		scrollX := 0
+		if !root.Doc.WrapMode {
+			scrollX = root.Doc.scrollX
+		}
+		startX = root.Doc.bodyStartX - scrollX
 		if startX < 0 {
 			offset = -startX
 			startX = 0
@@ -278,7 +282,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		widthVH--
 	}
 
-	x := root.Doc.leftMargin
+	x := root.Doc.bodyStartX
 	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
