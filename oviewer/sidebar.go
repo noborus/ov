@@ -70,20 +70,11 @@ func (root *Root) prepareSidebarItems() {
 func (root *Root) sidebarItemsForMark() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
-	scrolls := root.sidebarScrolls[SidebarModeMark]
-	scrollX := scrolls.X
-	scrollY := scrolls.Y
-	if scrolls.CurrentY != root.Doc.markedPoint {
-		if root.Doc.markedPoint-scrollY < 0 {
-			scrollY = root.Doc.markedPoint
-		} else if root.Doc.markedPoint-scrollY >= root.scr.vHeight-4 {
-			scrollY = root.Doc.markedPoint - root.scr.vHeight + 4 + 1
-		}
-		root.sidebarScrolls[SidebarModeMark] = SidebarScroll{X: scrollX, Y: scrollY, CurrentY: root.Doc.markedPoint}
-	}
 	marks := root.Doc.marked
+	current := root.Doc.markedPoint
+	root.adjustSidebarScroll(SidebarModeMark, len(marks), current)
 	for i, mark := range marks {
-		isCurrent := (i == root.Doc.markedPoint)
+		isCurrent := (i == current)
 		lc := mark.contents.TrimLeft()
 		if len(lc) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(lc)), 0)
@@ -100,17 +91,8 @@ func (root *Root) sidebarItemsForMark() []SidebarItem {
 func (root *Root) sidebarItemsForDocList() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 5
-	scrolls := root.sidebarScrolls[SidebarModeDocList]
-	scrollX := scrolls.X
-	scrollY := scrolls.Y
-	if scrolls.CurrentY != root.CurrentDoc {
-		if root.CurrentDoc-scrollY < 0 {
-			scrollY = root.CurrentDoc
-		} else if root.CurrentDoc-scrollY >= root.scr.vHeight-4 {
-			scrollY = root.CurrentDoc - root.scr.vHeight - 4 + 1
-		}
-		root.sidebarScrolls[SidebarModeDocList] = SidebarScroll{X: scrollX, Y: scrollY, CurrentY: root.CurrentDoc}
-	}
+	current := root.CurrentDoc
+	root.adjustSidebarScroll(SidebarModeDocList, len(root.DocList), current)
 	for i, doc := range root.DocList {
 		displayName := StrToContents(doc.FileName, 0)
 		if len(displayName) < length {
@@ -120,7 +102,7 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 			displayName = displayName[len(displayName)-(length):]
 		}
 		text := fmt.Sprintf("%2d %-20s", i, displayName)
-		isCurrent := (i == root.CurrentDoc)
+		isCurrent := (i == current)
 		content := StrToContents(text, 0)
 		items = append(items, SidebarItem{Contents: content, IsCurrent: isCurrent})
 	}
@@ -188,4 +170,30 @@ func (root *Root) sidebarRight(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.X++
 	root.sidebarScrolls[root.sidebarMode] = scroll
+}
+
+// adjustSidebarScroll adjusts scrollY so that currentIndex is visible, only if currentIndex has changed.
+func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex int) {
+	if root.sidebarScrolls == nil {
+		return
+	}
+	scroll := root.sidebarScrolls[mode]
+	height := root.scr.vHeight - 5
+	scroll.Y = max(scroll.Y, 0)
+	scroll.Y = min(scroll.Y, max(itemsLen-height, 0))
+	if scroll.CurrentY == currentIndex {
+		root.sidebarScrolls[mode] = scroll
+		return
+	}
+
+	if currentIndex < scroll.Y {
+		scroll.Y = currentIndex
+	} else if currentIndex >= scroll.Y+height {
+		scroll.Y = currentIndex - height + 1
+	}
+	scroll.Y = max(scroll.Y, 0)
+	maxY := max(itemsLen-height, 0)
+	scroll.Y = min(scroll.Y, maxY)
+	scroll.CurrentY = currentIndex
+	root.sidebarScrolls[mode] = scroll
 }
