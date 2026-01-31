@@ -610,6 +610,7 @@ func (root *Root) drawSidebar() {
 	if !root.sidebarVisible {
 		return
 	}
+
 	sidebarWidth := root.sidebarWidth
 	sidebarStyle := tcell.StyleDefault
 	borderStyle := tcell.StyleDefault.Background(color.Gray)
@@ -631,15 +632,24 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
 	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
 	height := root.scr.vHeight
-	maxList := min(len(items), height-2)
-	for i := range maxList {
-		item := items[i]
+	scrollY := 0
+	scrollX := 0
+	if root.sidebarScrolls != nil {
+		scrollY = min(root.sidebarScrolls[root.sidebarMode].Y, len(items)-(height-4))
+		scrollY = max(scrollY, 0)
+		scrollX = root.sidebarScrolls[root.sidebarMode].X
+		scrollX = max(scrollX, 0)
+	}
+	maxList := min(len(items)-scrollY, height-2)
+	for i := 0; i < maxList; i++ {
+		item := items[i+scrollY]
 		style := sidebarStyle
 		if item.IsCurrent {
 			style = currentStyle
 		}
-		width := min(root.sidebarWidth-2, len(item.Contents))
-		out := item.Contents[:width].String()
+		scrollX = min(scrollX, len(item.Contents))
+		width := min(root.sidebarWidth-2, len(item.Contents)-scrollX)
+		out := item.Contents[scrollX : scrollX+width].String()
 		root.Screen.PutStrStyled(0, i+2, out, style)
 	}
 }
