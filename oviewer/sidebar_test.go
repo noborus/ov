@@ -211,8 +211,6 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 }
 
 func TestRoot_sidebarItemsForHelp(t *testing.T) {
-	type fields struct {
-	}
 	tests := []struct {
 		name string
 	}{

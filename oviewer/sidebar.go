@@ -94,17 +94,14 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 	current := root.CurrentDoc
 	root.adjustSidebarScroll(SidebarModeDocList, len(root.DocList), current)
 	for i, doc := range root.DocList {
-		displayName := StrToContents(doc.FileName, 0)
+		text := fmt.Sprintf("%2d %s", i, doc.FileName)
+		displayName := StrToContents(text, 0)
 		if len(displayName) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 			displayName = append(displayName, spaces...)
-		} else if len(displayName) > length {
-			displayName = displayName[len(displayName)-(length):]
 		}
-		text := fmt.Sprintf("%2d %-20s", i, displayName)
 		isCurrent := (i == current)
-		content := StrToContents(text, 0)
-		items = append(items, SidebarItem{Contents: content, IsCurrent: isCurrent})
+		items = append(items, SidebarItem{Contents: displayName, IsCurrent: isCurrent})
 	}
 	return items
 }
@@ -122,18 +119,14 @@ func (root *Root) sidebarItemsForHelp() []SidebarItem {
 	for _, desc := range descriptions {
 		line := "[" + desc[1] + "]"
 		content := StrToContents(line, 0)
-		if len(content) > length {
-			content = content[:length]
-		} else {
+		if len(content) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(content)), 0)
 			content = append(content, spaces...)
 		}
 		items = append(items, SidebarItem{Contents: content, IsCurrent: false})
 
 		contentDesc := StrToContents("  "+desc[0], 0)
-		if len(contentDesc) > length {
-			contentDesc = contentDesc[:length]
-		} else {
+		if len(contentDesc) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(contentDesc)), 0)
 			contentDesc = append(contentDesc, spaces...)
 		}
