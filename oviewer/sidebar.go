@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -69,6 +70,17 @@ func (root *Root) prepareSidebarItems() {
 func (root *Root) sidebarItemsForMark() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
+	scrolls := root.sidebarScrolls[SidebarModeMark]
+	scrollX := scrolls.X
+	scrollY := scrolls.Y
+	if scrolls.CurrentY != root.Doc.markedPoint {
+		if root.Doc.markedPoint-scrollY < 0 {
+			scrollY = root.Doc.markedPoint
+		} else if root.Doc.markedPoint-scrollY >= root.scr.vHeight-4 {
+			scrollY = root.Doc.markedPoint - root.scr.vHeight + 4 + 1
+		}
+		root.sidebarScrolls[SidebarModeMark] = SidebarScroll{X: scrollX, Y: scrollY, CurrentY: root.Doc.markedPoint}
+	}
 	marks := root.Doc.marked
 	for i, mark := range marks {
 		isCurrent := (i == root.Doc.markedPoint)
@@ -88,6 +100,17 @@ func (root *Root) sidebarItemsForMark() []SidebarItem {
 func (root *Root) sidebarItemsForDocList() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 5
+	scrolls := root.sidebarScrolls[SidebarModeDocList]
+	scrollX := scrolls.X
+	scrollY := scrolls.Y
+	if scrolls.CurrentY != root.CurrentDoc {
+		if root.CurrentDoc-scrollY < 0 {
+			scrollY = root.CurrentDoc
+		} else if root.CurrentDoc-scrollY >= root.scr.vHeight-4 {
+			scrollY = root.CurrentDoc - root.scr.vHeight - 4 + 1
+		}
+		root.sidebarScrolls[SidebarModeDocList] = SidebarScroll{X: scrollX, Y: scrollY, CurrentY: root.CurrentDoc}
+	}
 	for i, doc := range root.DocList {
 		displayName := StrToContents(doc.FileName, 0)
 		if len(displayName) < length {
@@ -109,23 +132,60 @@ func (root *Root) sidebarItemsForHelp() []SidebarItem {
 	if root.SidebarHelpItems != nil {
 		return root.SidebarHelpItems
 	}
+	root.sidebarScrolls[SidebarModeHelp] = SidebarScroll{X: 0, Y: 0, CurrentY: 0}
 	var items []SidebarItem
-	length := root.sidebarWidth - 2
+	length := 100
 	keyBinds := GetKeyBinds(root.Config)
-	descriptions := keyBinds.GetKeyBindDescriptions("")
+	descriptions := keyBinds.GetKeyBindDescriptions(GroupAll)
 	for _, desc := range descriptions {
 		line := "[" + desc[1] + "]"
 		content := StrToContents(line, 0)
 		if len(content) > length {
 			content = content[:length]
+		} else {
+			spaces := StrToContents(strings.Repeat(" ", length-len(content)), 0)
+			content = append(content, spaces...)
 		}
 		items = append(items, SidebarItem{Contents: content, IsCurrent: false})
+
 		contentDesc := StrToContents("  "+desc[0], 0)
 		if len(contentDesc) > length {
 			contentDesc = contentDesc[:length]
+		} else {
+			spaces := StrToContents(strings.Repeat(" ", length-len(contentDesc)), 0)
+			contentDesc = append(contentDesc, spaces...)
 		}
 		items = append(items, SidebarItem{Contents: contentDesc, IsCurrent: false})
 	}
 	root.SidebarHelpItems = items
 	return items
+}
+
+func (root *Root) sidebarUp(_ context.Context) {
+	scroll := root.sidebarScrolls[root.sidebarMode]
+	if scroll.Y > 0 {
+		scroll.Y--
+		root.sidebarScrolls[root.sidebarMode] = scroll
+	}
+}
+
+func (root *Root) sidebarDown(_ context.Context) {
+	scroll := root.sidebarScrolls[root.sidebarMode]
+	scroll.Y++
+	root.sidebarScrolls[root.sidebarMode] = scroll
+}
+
+func (root *Root) sidebarLeft(_ context.Context) {
+	scroll := root.sidebarScrolls[root.sidebarMode]
+	scroll.X--
+	if scroll.X < 0 {
+		scroll.X = 0
+	}
+	root.sidebarScrolls[root.sidebarMode] = scroll
+}
+
+func (root *Root) sidebarRight(_ context.Context) {
+	scroll := root.sidebarScrolls[root.sidebarMode]
+	scroll.X++
+	root.sidebarScrolls[root.sidebarMode] = scroll
 }

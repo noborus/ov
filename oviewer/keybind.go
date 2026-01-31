@@ -47,9 +47,6 @@ const (
 	actionToggleMouse    = "toggle_mouse"
 	actionHideOther      = "hide_other"
 	actionStatusLine     = "status_line"
-	actionSidebarHelp    = "sidebar_help"
-	actionMarkList       = "show_mark_list"
-	actionDocList        = "show_doc_list"
 	actionAlignFormat    = "align_format"
 	actionRawFormat      = "raw_format"
 	actionFixedColumn    = "fixed_column"
@@ -57,6 +54,15 @@ const (
 	actionRightAlign     = "right_align"
 	actionRuler          = "toggle_ruler"
 	actionWriteOriginal  = "write_original"
+
+	// Sidebar actions.
+	actionSidebarHelp  = "sidebar_help"
+	actionMarkList     = "show_mark_list"
+	actionDocList      = "show_doc_list"
+	actionSidebarUp    = "sidebar_up"
+	actionSidebarDown  = "sidebar_down"
+	actionSidebarLeft  = "sidebar_left"
+	actionSidebarRight = "sidebar_right"
 
 	// Move actions.
 	actionMoveDown       = "down"
@@ -151,9 +157,6 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionToggleMouse:    root.toggleMouse,
 		actionHideOther:      root.toggleHideOtherSection,
 		actionStatusLine:     root.toggleStatusLine,
-		actionSidebarHelp:    root.toggleSidebarHelp,
-		actionMarkList:       root.toggleSidebarMarkList,
-		actionDocList:        root.toggleSidebarDocList,
 		actionAlignFormat:    root.alignFormat,
 		actionRawFormat:      root.rawFormat,
 		actionFixedColumn:    root.toggleFixedColumn,
@@ -161,6 +164,15 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionRightAlign:     root.toggleRightAlign,
 		actionRuler:          root.toggleRuler,
 		actionWriteOriginal:  root.toggleWriteOriginal,
+
+		// Sidebar actions.
+		actionSidebarHelp:  root.toggleSidebarHelp,
+		actionMarkList:     root.toggleSidebarMarkList,
+		actionDocList:      root.toggleSidebarDocList,
+		actionSidebarUp:    root.sidebarUp,
+		actionSidebarDown:  root.sidebarDown,
+		actionSidebarLeft:  root.sidebarLeft,
+		actionSidebarRight: root.sidebarRight,
 
 		// Move actions.
 		actionMoveDown:       root.moveDownOne,
@@ -266,9 +278,6 @@ func defaultKeyBinds() KeyBind {
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
 		actionStatusLine:     {"ctrl+F10"},
-		actionSidebarHelp:    {"alt+h"},
-		actionMarkList:       {","},
-		actionDocList:        {"f"},
 
 		// Move actions.
 		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
@@ -292,6 +301,15 @@ func defaultKeyBinds() KeyBind {
 		actionPrevSection:    {"^"},
 		actionMoveMark:       {">"},
 		actionMovePrevMark:   {"<"},
+
+		// sidebar actions.
+		actionSidebarHelp:  {"alt+h"},
+		actionMarkList:     {","},
+		actionDocList:      {"f"},
+		actionSidebarUp:    {"shift+Up"},
+		actionSidebarDown:  {"shift+Down"},
+		actionSidebarLeft:  {"shift+Left"},
+		actionSidebarRight: {"shift+Right"},
 
 		// Actions that enter input mode.
 		actionConvertType:    {"alt+t"},
@@ -328,138 +346,195 @@ func defaultKeyBinds() KeyBind {
 	}
 }
 
+type Group int
+
+const (
+	GroupAll     Group = -1
+	GroupGeneral Group = iota
+	GroupMoving
+	GroupSidebar
+	GroupDocList
+	GroupMark
+	GroupSearch
+	GroupChange
+	GroupChangeInput
+	GroupColumn
+	GroupSection
+	GroupClose
+	GroupTyping
+)
+
+func (g Group) String() string {
+	switch g {
+	case GroupAll:
+		return "All"
+	case GroupGeneral:
+		return "General"
+	case GroupMoving:
+		return "Moving"
+	case GroupSidebar:
+		return "Sidebar"
+	case GroupDocList:
+		return "Move document"
+	case GroupMark:
+		return "Mark position"
+	case GroupSearch:
+		return "Search"
+	case GroupChange:
+		return "Change display"
+	case GroupChangeInput:
+		return "Change Display with Input"
+	case GroupColumn:
+		return "Column operation"
+	case GroupSection:
+		return "Section operation"
+	case GroupClose:
+		return "Close and reload"
+	case GroupTyping:
+		return "Key binding when typing"
+	default:
+		return ""
+	}
+}
+
 type KeyBindDescription struct {
-	Group       string
+	Group       Group
 	Action      string
 	Description string
 }
 
 var keyBindDescriptions = []KeyBindDescription{
 	// General
-	{Group: "", Action: actionExit, Description: "quit"},
-	{Group: "", Action: actionCancel, Description: "cancel"},
-	{Group: "", Action: actionWriteExit, Description: "output screen and quit"},
-	{Group: "", Action: actionWriteBA, Description: "set output screen and quit"},
-	{Group: "", Action: actionWriteOriginal, Description: "set output original screen and quit"},
-	{Group: "", Action: actionSuspend, Description: "suspend"},
-	{Group: "", Action: actionEdit, Description: "edit current document"},
-	{Group: "", Action: actionHelp, Description: "display help screen"},
-	{Group: "", Action: actionSidebarHelp, Description: "toggle sidebar help"},
-	{Group: "", Action: actionLogDoc, Description: "display log screen"},
-	{Group: "", Action: actionSync, Description: "screen sync"},
-	{Group: "", Action: actionFollow, Description: "follow mode toggle"},
-	{Group: "", Action: actionFollowAll, Description: "follow all mode toggle"},
-	{Group: "", Action: actionToggleMouse, Description: "enable/disable mouse"},
-	{Group: "", Action: actionSaveBuffer, Description: "save buffer to file"},
+	{Group: GroupGeneral, Action: actionExit, Description: "quit"},
+	{Group: GroupGeneral, Action: actionCancel, Description: "cancel"},
+	{Group: GroupGeneral, Action: actionWriteExit, Description: "output screen and quit"},
+	{Group: GroupGeneral, Action: actionWriteBA, Description: "set output screen and quit"},
+	{Group: GroupGeneral, Action: actionWriteOriginal, Description: "set output original screen and quit"},
+	{Group: GroupGeneral, Action: actionSuspend, Description: "suspend"},
+	{Group: GroupGeneral, Action: actionEdit, Description: "edit current document"},
+	{Group: GroupGeneral, Action: actionHelp, Description: "display help screen"},
+	{Group: GroupGeneral, Action: actionLogDoc, Description: "display log screen"},
+	{Group: GroupGeneral, Action: actionSync, Description: "screen sync"},
+	{Group: GroupGeneral, Action: actionFollow, Description: "follow mode toggle"},
+	{Group: GroupGeneral, Action: actionFollowAll, Description: "follow all mode toggle"},
+	{Group: GroupGeneral, Action: actionToggleMouse, Description: "enable/disable mouse"},
+	{Group: GroupGeneral, Action: actionSaveBuffer, Description: "save buffer to file"},
 
 	// Moving
-	{Group: "Moving", Action: actionMoveDown, Description: "forward by one line"},
-	{Group: "Moving", Action: actionMoveUp, Description: "backward by one line"},
-	{Group: "Moving", Action: actionMoveTop, Description: "go to top of document"},
-	{Group: "Moving", Action: actionMoveBottom, Description: "go to end of document"},
-	{Group: "Moving", Action: actionMovePgDn, Description: "forward by page"},
-	{Group: "Moving", Action: actionMovePgUp, Description: "backward by page"},
-	{Group: "Moving", Action: actionMoveHfDn, Description: "forward a half page"},
-	{Group: "Moving", Action: actionMoveHfUp, Description: "backward a half page"},
-	{Group: "Moving", Action: actionMoveLeft, Description: "scroll to left"},
-	{Group: "Moving", Action: actionMoveRight, Description: "scroll to right"},
-	{Group: "Moving", Action: actionMoveHfLeft, Description: "scroll left half screen"},
-	{Group: "Moving", Action: actionMoveHfRight, Description: "scroll right half screen"},
-	{Group: "Moving", Action: actionMoveWidthLeft, Description: "scroll left specified width"},
-	{Group: "Moving", Action: actionMoveWidthRight, Description: "scroll right specified width"},
-	{Group: "Moving", Action: actionMoveBeginLeft, Description: "go to beginning of line"},
-	{Group: "Moving", Action: actionMoveEndRight, Description: "go to end of line"},
-	{Group: "Moving", Action: actionGoLine, Description: "go to line(input number or `.n` or `n%` allowed)"},
+	{Group: GroupMoving, Action: actionMoveDown, Description: "forward by one line"},
+	{Group: GroupMoving, Action: actionMoveUp, Description: "backward by one line"},
+	{Group: GroupMoving, Action: actionMoveTop, Description: "go to top of document"},
+	{Group: GroupMoving, Action: actionMoveBottom, Description: "go to end of document"},
+	{Group: GroupMoving, Action: actionMovePgDn, Description: "forward by page"},
+	{Group: GroupMoving, Action: actionMovePgUp, Description: "backward by page"},
+	{Group: GroupMoving, Action: actionMoveHfDn, Description: "forward a half page"},
+	{Group: GroupMoving, Action: actionMoveHfUp, Description: "backward a half page"},
+	{Group: GroupMoving, Action: actionMoveLeft, Description: "scroll to left"},
+	{Group: GroupMoving, Action: actionMoveRight, Description: "scroll to right"},
+	{Group: GroupMoving, Action: actionMoveHfLeft, Description: "scroll left half screen"},
+	{Group: GroupMoving, Action: actionMoveHfRight, Description: "scroll right half screen"},
+	{Group: GroupMoving, Action: actionMoveWidthLeft, Description: "scroll left specified width"},
+	{Group: GroupMoving, Action: actionMoveWidthRight, Description: "scroll right specified width"},
+	{Group: GroupMoving, Action: actionMoveBeginLeft, Description: "go to beginning of line"},
+	{Group: GroupMoving, Action: actionMoveEndRight, Description: "go to end of line"},
+	{Group: GroupMoving, Action: actionGoLine, Description: "go to line(input number or `.n` or `n%` allowed)"},
+
+	// Sidebar
+	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "toggle sidebar help"},
+	{Group: GroupSidebar, Action: actionMarkList, Description: "show mark list sidebar"},
+	{Group: GroupSidebar, Action: actionDocList, Description: "show document list sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarUp, Description: "move sidebar up"},
+	{Group: GroupSidebar, Action: actionSidebarDown, Description: "move sidebar down"},
+	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "decrease sidebar width"},
+	{Group: GroupSidebar, Action: actionSidebarRight, Description: "increase sidebar width"},
 
 	// Move document
-	{Group: "Move document", Action: actionNextDoc, Description: "next document"},
-	{Group: "Move document", Action: actionPreviousDoc, Description: "previous document"},
-	{Group: "Move document", Action: actionCloseDoc, Description: "close current document"},
-	{Group: "Move document", Action: actionCloseAllFilter, Description: "close all filtered documents"},
-	{Group: "Move document", Action: actionDocList, Description: "show document list sidebar"},
+	{Group: GroupDocList, Action: actionNextDoc, Description: "next document"},
+	{Group: GroupDocList, Action: actionPreviousDoc, Description: "previous document"},
+	{Group: GroupDocList, Action: actionCloseDoc, Description: "close current document"},
+	{Group: GroupDocList, Action: actionCloseAllFilter, Description: "close all filtered documents"},
 
 	// Mark position
-	{Group: "Mark position", Action: actionMark, Description: "mark current position"},
-	{Group: "Mark position", Action: actionRemoveMark, Description: "remove mark current position"},
-	{Group: "Mark position", Action: actionRemoveAllMark, Description: "remove all mark"},
-	{Group: "Mark position", Action: actionMoveMark, Description: "move to next marked position"},
-	{Group: "Mark position", Action: actionMovePrevMark, Description: "move to previous marked position"},
-	{Group: "Mark position", Action: actionMarkList, Description: "show mark list sidebar"},
+	{Group: GroupMark, Action: actionMark, Description: "mark current position"},
+	{Group: GroupMark, Action: actionRemoveMark, Description: "remove mark current position"},
+	{Group: GroupMark, Action: actionRemoveAllMark, Description: "remove all mark"},
+	{Group: GroupMark, Action: actionMoveMark, Description: "move to next marked position"},
+	{Group: GroupMark, Action: actionMovePrevMark, Description: "move to previous marked position"},
 
 	// Search
-	{Group: "Search", Action: actionSearch, Description: "forward search mode"},
-	{Group: "Search", Action: actionBackSearch, Description: "backward search mode"},
-	{Group: "Search", Action: actionNextSearch, Description: "repeat forward search"},
-	{Group: "Search", Action: actionNextBackSearch, Description: "repeat backward search"},
-	{Group: "Search", Action: actionFilter, Description: "filter search mode"},
+	{Group: GroupSearch, Action: actionSearch, Description: "forward search mode"},
+	{Group: GroupSearch, Action: actionBackSearch, Description: "backward search mode"},
+	{Group: GroupSearch, Action: actionNextSearch, Description: "repeat forward search"},
+	{Group: GroupSearch, Action: actionNextBackSearch, Description: "repeat backward search"},
+	{Group: GroupSearch, Action: actionFilter, Description: "filter search mode"},
 
 	// Change display
-	{Group: "Change display", Action: actionWrap, Description: "wrap/nowrap toggle"},
-	{Group: "Change display", Action: actionColumnMode, Description: "column mode toggle"},
-	{Group: "Change display", Action: actionColumnWidth, Description: "column width toggle"},
-	{Group: "Change display", Action: actionRainbow, Description: "column rainbow toggle"},
-	{Group: "Change display", Action: actionAlternate, Description: "alternate rows of style toggle"},
-	{Group: "Change display", Action: actionLineNumMode, Description: "line number toggle"},
-	{Group: "Change display", Action: actionPlain, Description: "original decoration toggle(plain)"},
-	{Group: "Change display", Action: actionAlignFormat, Description: "align columns"},
-	{Group: "Change display", Action: actionRawFormat, Description: "raw output"},
-	{Group: "Change display", Action: actionRuler, Description: "ruler toggle"},
-	{Group: "Change display", Action: actionStatusLine, Description: "status line toggle"},
+	{Group: GroupChange, Action: actionWrap, Description: "wrap/nowrap toggle"},
+	{Group: GroupChange, Action: actionColumnMode, Description: "column mode toggle"},
+	{Group: GroupChange, Action: actionColumnWidth, Description: "column width toggle"},
+	{Group: GroupChange, Action: actionRainbow, Description: "column rainbow toggle"},
+	{Group: GroupChange, Action: actionAlternate, Description: "alternate rows of style toggle"},
+	{Group: GroupChange, Action: actionLineNumMode, Description: "line number toggle"},
+	{Group: GroupChange, Action: actionPlain, Description: "original decoration toggle(plain)"},
+	{Group: GroupChange, Action: actionAlignFormat, Description: "align columns"},
+	{Group: GroupChange, Action: actionRawFormat, Description: "raw output"},
+	{Group: GroupChange, Action: actionRuler, Description: "ruler toggle"},
+	{Group: GroupChange, Action: actionStatusLine, Description: "status line toggle"},
 
 	// Change Display with Input
-	{Group: "Change Display with Input", Action: actionViewMode, Description: "view mode selection"},
-	{Group: "Change Display with Input", Action: actionDelimiter, Description: "column delimiter string"},
-	{Group: "Change Display with Input", Action: actionHeader, Description: "number of header lines"},
-	{Group: "Change Display with Input", Action: actionSkipLines, Description: "number of skip lines"},
-	{Group: "Change Display with Input", Action: actionTabWidth, Description: "TAB width"},
-	{Group: "Change Display with Input", Action: actionMultiColor, Description: "multi color highlight"},
-	{Group: "Change Display with Input", Action: actionJumpTarget, Description: "jump target(`.n` or `n%` or `section` allowed)"},
-	{Group: "Change Display with Input", Action: actionConvertType, Description: "convert type selection"},
-	{Group: "Change Display with Input", Action: actionVerticalHeader, Description: "number of vertical header"},
-	{Group: "Change Display with Input", Action: actionHeaderColumn, Description: "number of header column"},
+	{Group: GroupChangeInput, Action: actionViewMode, Description: "view mode selection"},
+	{Group: GroupChangeInput, Action: actionDelimiter, Description: "column delimiter string"},
+	{Group: GroupChangeInput, Action: actionHeader, Description: "number of header lines"},
+	{Group: GroupChangeInput, Action: actionSkipLines, Description: "number of skip lines"},
+	{Group: GroupChangeInput, Action: actionTabWidth, Description: "TAB width"},
+	{Group: GroupChangeInput, Action: actionMultiColor, Description: "multi color highlight"},
+	{Group: GroupChangeInput, Action: actionJumpTarget, Description: "jump target(`.n` or `n%` or `section` allowed)"},
+	{Group: GroupChangeInput, Action: actionConvertType, Description: "convert type selection"},
+	{Group: GroupChangeInput, Action: actionVerticalHeader, Description: "number of vertical header"},
+	{Group: GroupChangeInput, Action: actionHeaderColumn, Description: "number of header column"},
 
 	// Column operation
-	{Group: "Column operation", Action: actionFixedColumn, Description: "header column fixed toggle"},
-	{Group: "Column operation", Action: actionShrinkColumn, Description: "shrink column toggle(align mode only)"},
-	{Group: "Column operation", Action: actionRightAlign, Description: "right align column toggle(align mode only)"},
+	{Group: GroupColumn, Action: actionFixedColumn, Description: "header column fixed toggle"},
+	{Group: GroupColumn, Action: actionShrinkColumn, Description: "shrink column toggle(align mode only)"},
+	{Group: GroupColumn, Action: actionRightAlign, Description: "right align column toggle(align mode only)"},
 
 	// Section operation
-	{Group: "Section operation", Action: actionSection, Description: "section delimiter regular expression"},
-	{Group: "Section operation", Action: actionSectionStart, Description: "section start position"},
-	{Group: "Section operation", Action: actionNextSection, Description: "next section"},
-	{Group: "Section operation", Action: actionPrevSection, Description: "previous section"},
-	{Group: "Section operation", Action: actionLastSection, Description: "last section"},
-	{Group: "Section operation", Action: actionFollowSection, Description: "follow section mode toggle"},
-	{Group: "Section operation", Action: actionSectionNum, Description: "number of section header lines"},
-	{Group: "Section operation", Action: actionHideOther, Description: `hide "other" section toggle`},
+	{Group: GroupSection, Action: actionSection, Description: "section delimiter regular expression"},
+	{Group: GroupSection, Action: actionSectionStart, Description: "section start position"},
+	{Group: GroupSection, Action: actionNextSection, Description: "next section"},
+	{Group: GroupSection, Action: actionPrevSection, Description: "previous section"},
+	{Group: GroupSection, Action: actionLastSection, Description: "last section"},
+	{Group: GroupSection, Action: actionFollowSection, Description: "follow section mode toggle"},
+	{Group: GroupSection, Action: actionSectionNum, Description: "number of section header lines"},
+	{Group: GroupSection, Action: actionHideOther, Description: `hide "other" section toggle`},
 
 	// Close and reload
-	{Group: "Close and reload", Action: actionCloseFile, Description: "close file"},
-	{Group: "Close and reload", Action: actionReload, Description: "reload file"},
-	{Group: "Close and reload", Action: actionWatch, Description: "watch mode"},
-	{Group: "Close and reload", Action: actionWatchInterval, Description: "set watch interval"},
+	{Group: GroupClose, Action: actionCloseFile, Description: "close file"},
+	{Group: GroupClose, Action: actionReload, Description: "reload file"},
+	{Group: GroupClose, Action: actionWatch, Description: "watch mode"},
+	{Group: GroupClose, Action: actionWatchInterval, Description: "set watch interval"},
 
 	// Key binding when typing
-	{Group: "Key binding when typing", Action: inputCaseSensitive, Description: "case-sensitive toggle"},
-	{Group: "Key binding when typing", Action: inputSmartCaseSensitive, Description: "smart case-sensitive toggle"},
-	{Group: "Key binding when typing", Action: inputRegexpSearch, Description: "regular expression search toggle"},
-	{Group: "Key binding when typing", Action: inputIncSearch, Description: "incremental search toggle"},
-	{Group: "Key binding when typing", Action: inputNonMatch, Description: "non-match toggle"},
-	{Group: "Key binding when typing", Action: inputPrevious, Description: "previous candidate"},
-	{Group: "Key binding when typing", Action: inputNext, Description: "next candidate"},
-	{Group: "Key binding when typing", Action: inputCopy, Description: "copy to clipboard"},
-	{Group: "Key binding when typing", Action: inputPaste, Description: "paste from clipboard"},
+	{Group: GroupTyping, Action: inputCaseSensitive, Description: "case-sensitive toggle"},
+	{Group: GroupTyping, Action: inputSmartCaseSensitive, Description: "smart case-sensitive toggle"},
+	{Group: GroupTyping, Action: inputRegexpSearch, Description: "regular expression search toggle"},
+	{Group: GroupTyping, Action: inputIncSearch, Description: "incremental search toggle"},
+	{Group: GroupTyping, Action: inputNonMatch, Description: "non-match toggle"},
+	{Group: GroupTyping, Action: inputPrevious, Description: "previous candidate"},
+	{Group: GroupTyping, Action: inputNext, Description: "next candidate"},
+	{Group: GroupTyping, Action: inputCopy, Description: "copy to clipboard"},
+	{Group: GroupTyping, Action: inputPaste, Description: "paste from clipboard"},
 }
 
 // String returns keybind as a string for help.
 func (k KeyBind) String() string {
 	var b strings.Builder
 	writeHeaderTh(&b)
-	group := "nogroup"
+	group := Group(-1)
 	for _, bind := range keyBindDescriptions {
 		if bind.Group != group {
 			group = bind.Group
-			writeHeader(&b, group)
+			writeHeader(&b, group.String())
 		}
 		keys := k[bind.Action]
 		b.WriteString(fmt.Sprintf(" %-30s * %s\n", "["+strings.Join(keys, "], [")+"]", bind.Description))
@@ -467,10 +542,10 @@ func (k KeyBind) String() string {
 	return b.String()
 }
 
-func (k KeyBind) GetKeyBindDescriptions(group string) [][]string {
+func (k KeyBind) GetKeyBindDescriptions(group Group) [][]string {
 	var descriptions [][]string
 
-	if group != "all" {
+	if group != -1 {
 		for _, bind := range keyBindDescriptions {
 			if bind.Group != group {
 				continue
@@ -492,10 +567,6 @@ func writeHeaderTh(w io.Writer) {
 
 func writeHeader(w io.Writer, header string) {
 	fmt.Fprintf(w, "\n\t%s\n", header)
-}
-
-func (k KeyBind) writeKeyBind(w io.Writer, action string, detail string) {
-	fmt.Fprintf(w, " %-30s * %s\n", "["+strings.Join(k[action], "], [")+"]", detail)
 }
 
 // GetKeyBinds returns the current key mapping based on the provided configuration.
