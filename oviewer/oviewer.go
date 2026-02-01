@@ -24,13 +24,6 @@ import (
 	"golang.org/x/term"
 )
 
-// SidebarScroll holds scroll positions for sidebar.
-type SidebarScroll struct {
-	X        int
-	Y        int
-	CurrentY int // CurrentY is the current Y position.
-}
-
 // Root is the root structure of the oviewer.
 type Root struct {
 	// tcell.Screen is the root screen.
@@ -116,7 +109,7 @@ type Root struct {
 	// sidebarWidth is the width of the sidebar.
 	sidebarWidth int
 	// sidebarScrolls holds scroll positions for each sidebarMode.
-	sidebarScrolls map[SidebarMode]SidebarScroll
+	sidebarScrolls map[SidebarMode]sidebarScroll
 }
 
 // MouseSelectState represents the state of mouse selection.
@@ -482,7 +475,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		keyConfig:      cbind.NewConfiguration(),
 		inputKeyConfig: cbind.NewConfiguration(),
 		input:          NewInput(),
-		sidebarScrolls: make(map[SidebarMode]SidebarScroll),
+		sidebarScrolls: make(map[SidebarMode]sidebarScroll),
 	}
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
