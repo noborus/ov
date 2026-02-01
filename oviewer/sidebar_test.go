@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"reflect"
 	"strings"
@@ -61,7 +60,7 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 				root.CurrentDoc = 1
 			},
 			wantItems: func(root *Root) []SidebarItem {
-				length := 15 // sidebarWidth - 5
+				length := 16 // sidebarWidth - 4
 				displayName1 := StrToContents("file1.txt", 0)
 				displayName2 := StrToContents("file2.txt", 0)
 				if len(displayName1) < length {
@@ -71,8 +70,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 					displayName2 = append(displayName2, StrToContents(strings.Repeat(" ", length-len(displayName2)), 0)...)
 				}
 				return []SidebarItem{
-					{Contents: StrToContents(fmt.Sprintf("%2d %-20s", 0, displayName1), 0), IsCurrent: false},
-					{Contents: StrToContents(fmt.Sprintf("%2d %-20s", 1, displayName2), 0), IsCurrent: true},
+					{Contents: StrToContents(" 0 file1.txt   ", 0), IsCurrent: false},
+					{Contents: StrToContents(" 1 file2.txt   ", 0), IsCurrent: true},
 				}
 			},
 		},
