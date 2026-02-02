@@ -49,6 +49,13 @@ const (
 
 var defaultSidebarWidthString = strconv.Itoa(defaultSidebarWidth)
 
+// sidebarScroll holds scroll positions for sidebar.
+type sidebarScroll struct {
+	x        int
+	y        int
+	currentY int // CurrentY is the current Y position.
+}
+
 // prepareSidebarItems creates the sidebarItems slice for display.
 func (root *Root) prepareSidebarItems() {
 	if root.sidebarWidth <= 0 {
@@ -111,7 +118,7 @@ func (root *Root) sidebarItemsForHelp() []SidebarItem {
 	if root.SidebarHelpItems != nil {
 		return root.SidebarHelpItems
 	}
-	root.sidebarScrolls[SidebarModeHelp] = SidebarScroll{X: 0, Y: 0, CurrentY: 0}
+	root.sidebarScrolls[SidebarModeHelp] = sidebarScroll{x: 0, y: 0, currentY: 0}
 	var items []SidebarItem
 	length := 100
 	keyBinds := GetKeyBinds(root.Config)
@@ -138,30 +145,30 @@ func (root *Root) sidebarItemsForHelp() []SidebarItem {
 
 func (root *Root) sidebarUp(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
-	if scroll.Y > 0 {
-		scroll.Y--
+	if scroll.y > 0 {
+		scroll.y--
 		root.sidebarScrolls[root.sidebarMode] = scroll
 	}
 }
 
 func (root *Root) sidebarDown(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
-	scroll.Y++
+	scroll.y++
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
 func (root *Root) sidebarLeft(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
-	scroll.X--
-	if scroll.X < 0 {
-		scroll.X = 0
+	scroll.x--
+	if scroll.x < 0 {
+		scroll.x = 0
 	}
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
 func (root *Root) sidebarRight(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
-	scroll.X++
+	scroll.x++
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
@@ -172,21 +179,21 @@ func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex i
 	}
 	scroll := root.sidebarScrolls[mode]
 	height := root.scr.vHeight - 5
-	scroll.Y = max(scroll.Y, 0)
-	scroll.Y = min(scroll.Y, max(itemsLen-height, 0))
-	if scroll.CurrentY == currentIndex {
+	scroll.y = max(scroll.y, 0)
+	scroll.y = min(scroll.y, max(itemsLen-height, 0))
+	if scroll.currentY == currentIndex {
 		root.sidebarScrolls[mode] = scroll
 		return
 	}
 
-	if currentIndex < scroll.Y {
-		scroll.Y = currentIndex
-	} else if currentIndex >= scroll.Y+height {
-		scroll.Y = currentIndex - height + 1
+	if currentIndex < scroll.y {
+		scroll.y = currentIndex
+	} else if currentIndex >= scroll.y+height {
+		scroll.y = currentIndex - height + 1
 	}
-	scroll.Y = max(scroll.Y, 0)
+	scroll.y = max(scroll.y, 0)
 	maxY := max(itemsLen-height, 0)
-	scroll.Y = min(scroll.Y, maxY)
-	scroll.CurrentY = currentIndex
+	scroll.y = min(scroll.y, maxY)
+	scroll.currentY = currentIndex
 	root.sidebarScrolls[mode] = scroll
 }

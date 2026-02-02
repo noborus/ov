@@ -635,21 +635,29 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	scrollY := 0
 	scrollX := 0
 	if root.sidebarScrolls != nil {
-		scrollY = min(root.sidebarScrolls[root.sidebarMode].Y, len(items)-(height-4))
+		scrollY = min(root.sidebarScrolls[root.sidebarMode].y, len(items)-(height-4))
 		scrollY = max(scrollY, 0)
-		scrollX = root.sidebarScrolls[root.sidebarMode].X
+		scrollX = root.sidebarScrolls[root.sidebarMode].x
+		scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
 		scrollX = max(scrollX, 0)
+		// Update scroll info.
+		root.sidebarScrolls[root.sidebarMode] = sidebarScroll{
+			x:        scrollX,
+			y:        scrollY,
+			currentY: root.sidebarScrolls[root.sidebarMode].currentY,
+		}
 	}
 	maxList := min(len(items)-scrollY, height-2)
-	for i := 0; i < maxList; i++ {
+	for i := range maxList {
 		item := items[i+scrollY]
 		style := sidebarStyle
 		if item.IsCurrent {
 			style = currentStyle
 		}
-		scrollX = min(scrollX, len(item.Contents))
-		width := min(root.sidebarWidth-2, len(item.Contents)-scrollX)
-		out := item.Contents[scrollX : scrollX+width].String()
+		left := min(scrollX, len(item.Contents))
+		width := max(min(root.sidebarWidth-2, len(item.Contents)-left), 0)
+		right := min(left+width, len(item.Contents))
+		out := item.Contents[left:right].String()
 		root.Screen.PutStrStyled(0, i+2, out, style)
 	}
 }
