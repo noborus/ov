@@ -441,6 +441,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMoving, Action: actionMoveBeginLeft, Description: "go to beginning of line"},
 	{Group: GroupMoving, Action: actionMoveEndRight, Description: "go to end of line"},
 	{Group: GroupMoving, Action: actionGoLine, Description: "go to line(input number or `.n` or `n%` allowed)"},
+	{Group: GroupMoving, Action: actionMarkNumber, Description: "go to mark number(input number allowed)"},
 
 	// Sidebar
 	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "toggle sidebar help"},

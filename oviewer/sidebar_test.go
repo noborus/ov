@@ -43,8 +43,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			},
 			wantItems: func(root *Root) []SidebarItem {
 				return []SidebarItem{
-					{Contents: StrToContents(" 0 First           ", 0), IsCurrent: true},
-					{Contents: StrToContents(" 1 Second          ", 0), IsCurrent: false},
+					{Contents: StrToContents(" 0 0 First           ", 0), IsCurrent: true},
+					{Contents: StrToContents(" 1 1 Second          ", 0), IsCurrent: false},
 				}
 			},
 		},
@@ -135,8 +135,8 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\nLine 11\nLine 12\nLine 13\nLine 14\nLine 15\nLine 16\nLine 17\nLine 18\nLine 19\nLine 20"),
 			marks: []int{0, 1},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 Line 1          ", 0), IsCurrent: true},
-				{Contents: StrToContents(" 1 Line 2          ", 0), IsCurrent: false},
+				{Contents: StrToContents(" 0 0 Line 1          ", 0), IsCurrent: true},
+				{Contents: StrToContents(" 1 1 Line 2          ", 0), IsCurrent: false},
 			},
 		},
 		{
@@ -144,7 +144,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("First\nSecond\nThird"),
 			marks: []int{0},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 First           ", 0), IsCurrent: true},
+				{Contents: StrToContents(" 0 0 First           ", 0), IsCurrent: true},
 			},
 		},
 		{
@@ -152,7 +152,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Alpha\nBeta\nGamma"),
 			marks: []int{2},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 2 Gamma           ", 0), IsCurrent: true},
+				{Contents: StrToContents(" 0 2 Gamma           ", 0), IsCurrent: true},
 			},
 		},
 		{
@@ -160,9 +160,9 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("A\nB\nC\nD"),
 			marks: []int{1, 2, 3},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 1 B               ", 0), IsCurrent: true},
-				{Contents: StrToContents(" 2 C               ", 0), IsCurrent: false},
-				{Contents: StrToContents(" 3 D               ", 0), IsCurrent: false},
+				{Contents: StrToContents(" 0 1 B               ", 0), IsCurrent: true},
+				{Contents: StrToContents(" 1 2 C               ", 0), IsCurrent: false},
+				{Contents: StrToContents(" 2 3 D               ", 0), IsCurrent: false},
 			},
 		},
 		{
@@ -170,7 +170,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Short\nThis is a very long line that should be truncated"),
 			marks: []int{1},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 1 This is a very long line that should be truncated", 0), IsCurrent: true},
+				{Contents: StrToContents(" 0 1 This is a very long line that should be truncated", 0), IsCurrent: true},
 			},
 		},
 		{
