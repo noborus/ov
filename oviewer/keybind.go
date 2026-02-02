@@ -108,6 +108,7 @@ const (
 	actionViewMode       = "set_view_mode"
 	actionWatchInterval  = "watch_interval"
 	actionWriteBA        = "set_write_exit"
+	actionMarkNumber     = "mark_number"
 
 	// input actions.
 	inputCaseSensitive      = "input_casesensitive"
@@ -218,6 +219,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionViewMode:       root.inputViewMode,
 		actionWatchInterval:  root.inputWatchInterval,
 		actionWriteBA:        root.inputWriteBA,
+		actionMarkNumber:     root.inputMarkNumber,
 
 		// input actions.
 		inputCaseSensitive:      root.toggleCaseSensitive,
@@ -304,8 +306,8 @@ func defaultKeyBinds() KeyBind {
 
 		// sidebar actions.
 		actionSidebarHelp:  {"alt+h"},
-		actionMarkList:     {","},
-		actionDocList:      {"f"},
+		actionMarkList:     {"alt+m"},
+		actionDocList:      {"alt+l"},
 		actionSidebarUp:    {"shift+Up"},
 		actionSidebarDown:  {"shift+Down"},
 		actionSidebarLeft:  {"shift+Left"},
@@ -332,6 +334,7 @@ func defaultKeyBinds() KeyBind {
 		actionViewMode:       {"p", "P"},
 		actionWatchInterval:  {"ctrl+w"},
 		actionWriteBA:        {"ctrl+q"},
+		actionMarkNumber:     {","},
 
 		// input actions.
 		inputCaseSensitive:      {"alt+c"},

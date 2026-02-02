@@ -136,13 +136,19 @@ func (root *Root) toggleStatusLine(context.Context) {
 
 // toggleSidebar toggles the sidebar visibility.
 func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
-	if root.sidebarVisible && root.sidebarMode == mode {
-		root.sidebarVisible = false
-		root.sidebarWidth = 0
-		root.setMessage("Sidebar hidden")
-		root.ViewSync(ctx)
+	if mode == SidebarModeNone {
+		root.closeSidebar(ctx)
 		return
 	}
+	if root.sidebarVisible && root.sidebarMode == mode {
+		root.closeSidebar(ctx)
+		return
+	}
+	root.openSidebar(ctx, mode)
+}
+
+// openSidebar opens the sidebar with the specified mode.
+func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	width, err := calculatePosition(root.Config.SidebarWidth, root.scr.vWidth)
 	if err != nil {
 		log.Println(err)
@@ -161,6 +167,14 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 		root.setMessage("Help visible")
 	}
 
+	root.ViewSync(ctx)
+}
+
+func (root *Root) closeSidebar(ctx context.Context) {
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+	root.sidebarWidth = 0
+	root.setMessage("Sidebar hidden")
 	root.ViewSync(ctx)
 }
 
@@ -306,6 +320,28 @@ func (root *Root) goLine(input string) {
 func (root *Root) goLineNumber(lN int) {
 	lN = root.Doc.moveLine(lN - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", lN+1)
+}
+
+// goMarkNumber moves to the specified mark number.
+func (root *Root) goMarkNumber(input string) {
+	if root.previousSidebarMode != SidebarModeMark {
+		log.Println("Previous sidebar mode is not mark mode", root.previousSidebarMode)
+		root.toggleSidebar(context.Background(), root.previousSidebarMode)
+	}
+	if len(input) == 0 {
+		return
+	}
+	num, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	if num < 0 || num >= len(root.Doc.marked) {
+		root.setMessage(ErrOutOfRange.Error())
+		return
+	}
+	root.Doc.markedPoint = num
+	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
 }
 
 // nextMark moves to the next mark.

@@ -58,6 +58,8 @@ const (
 	VerticalHeader
 	// HeaderColumn is for setting the number of vertical header columns.
 	HeaderColumn
+	// MarkNum is for setting the mark number.
+	MarkNum
 )
 
 // Input represents the status of various inputs.
@@ -92,6 +94,7 @@ func NewInput() *Input {
 	i.Candidate[JumpTarget] = jumpTargetCandidate()
 	i.Candidate[SaveBuffer] = blankCandidate()
 	i.Candidate[ConvertType] = converterCandidate()
+	i.Candidate[MarkNum] = blankCandidate()
 
 	i.Event = &eventNormal{}
 	return &i

@@ -87,7 +87,7 @@ func (root *Root) sidebarItemsForMark() []SidebarItem {
 			spaces := StrToContents(strings.Repeat(" ", length-len(lc)), 0)
 			lc = append(lc, spaces...)
 		}
-		numContents := StrToContents(fmt.Sprintf("%2d ", mark.lineNum), 0)
+		numContents := StrToContents(fmt.Sprintf("%2d %d ", i, mark.lineNum), 0)
 		lc = append(numContents, lc...)
 		items = append(items, SidebarItem{Contents: lc, IsCurrent: isCurrent})
 	}
