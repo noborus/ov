@@ -101,7 +101,8 @@ type Root struct {
 	// sidebarVisible is whether the sidebar is visible.
 	sidebarVisible bool
 	// sidebarMode is the mode of the sidebar.
-	sidebarMode SidebarMode
+	sidebarMode         SidebarMode
+	previousSidebarMode SidebarMode
 	// SidebarItems is the items to display in the sidebar.
 	SidebarItems []SidebarItem
 	// SidebarHelpItems is the help items to display in the sidebar.

@@ -81,6 +81,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.setDelimiter(ev.value)
 	case *eventGoto:
 		root.goLine(ev.value)
+	case *eventMarkGoto:
+		root.goMarkNumber(ev.value)
 	case *eventHeaderColumn:
 		root.setHeaderColumn(ev.value)
 	case *eventHeader:
