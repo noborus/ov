@@ -149,7 +149,7 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
-	width, err := calculatePosition(root.Config.SidebarWidth, root.scr.vWidth)
+	width, err := calcPosition(root.Config.SidebarWidth, root.scr.vWidth)
 	if err != nil {
 		log.Println(err)
 		width = defaultSidebarWidth
@@ -158,24 +158,16 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.sidebarMode = mode
 	root.sidebarVisible = true
 	root.sidebarWidth = int(width)
-	switch mode {
-	case SidebarModeMark:
-		root.setMessage("Mark List visible")
-	case SidebarModeDocList:
-		root.setMessage("Doc List visible")
-	case SidebarModeHelp:
-		root.setMessage("Help visible")
-	}
-
 	root.ViewSync(ctx)
+	root.setMessagef("Sidebar %s visible", mode.String())
 }
 
 func (root *Root) closeSidebar(ctx context.Context) {
 	root.sidebarVisible = false
 	root.sidebarMode = SidebarModeNone
 	root.sidebarWidth = 0
-	root.setMessage("Sidebar hidden")
 	root.ViewSync(ctx)
+	root.setMessage("Sidebar hidden")
 }
 
 // toggleSidebarHelp toggles the help sidebar visibility.
@@ -297,7 +289,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num, err := calculatePosition(input, root.Doc.BufEndNum())
+	num, err := calcPosition(input, root.Doc.BufEndNum())
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
@@ -322,26 +314,39 @@ func (root *Root) goLineNumber(lN int) {
 	root.setMessagef("Moved to line %d", lN+1)
 }
 
-// goMarkNumber moves to the specified mark number.
+// goMarkNumber moves to the specified mark number or relative position (+n/-n).
 func (root *Root) goMarkNumber(input string) {
 	if root.previousSidebarMode != SidebarModeMark {
-		log.Println("Previous sidebar mode is not mark mode", root.previousSidebarMode)
 		root.toggleSidebar(context.Background(), root.previousSidebarMode)
 	}
+	if len(root.Doc.marked) == 0 {
+		return
+	}
+	input = strings.TrimSpace(input)
 	if len(input) == 0 {
 		return
 	}
-	num, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessage(ErrInvalidNumber.Error())
-		return
-	}
-	if num < 0 || num >= len(root.Doc.marked) {
-		root.setMessage(ErrOutOfRange.Error())
-		return
-	}
-	root.Doc.markedPoint = num
+	idx := calcMarkIndex(input, root.Doc.markedPoint)
+	idx = min(max(0, idx), len(root.Doc.marked)-1)
+	root.Doc.markedPoint = idx
 	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
+}
+
+// calcMarkIndex calculates the mark index from the input string.
+// If the input is a relative position (+n/-n), it calculates the index accordingly.
+func calcMarkIndex(input string, current int) int {
+	if input[0] == '+' || input[0] == '-' {
+		n, err := strconv.Atoi(input)
+		if err != nil {
+			return current
+		}
+		return current + n
+	}
+	n, err := strconv.Atoi(input)
+	if err != nil {
+		return current
+	}
+	return n
 }
 
 // nextMark moves to the next mark.
@@ -813,7 +818,7 @@ func jumpPosition(str string, height int) (int, bool) {
 	if s[0] == 's' {
 		return 0, true
 	}
-	n, err := calculatePosition(s, height)
+	n, err := calcPosition(s, height)
 	if err != nil {
 		return 0, false
 	}
@@ -824,10 +829,10 @@ func jumpPosition(str string, height int) (int, bool) {
 	return num, false
 }
 
-// CalculatePosition returns the number from the length for positive
+// calcPosition returns the number from the length for positive
 // numbers (1), returns dot.number for percentages (.5) = 50%,
 // and returns the % after the number for percentages (50%). return.
-func calculatePosition(str string, length int) (float64, error) {
+func calcPosition(str string, length int) (float64, error) {
 	if len(str) == 0 || str == "0" {
 		return 0, nil
 	}
