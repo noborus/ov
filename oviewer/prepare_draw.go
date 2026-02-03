@@ -33,7 +33,7 @@ func (root *Root) prepareScreen() {
 	}
 	root.Doc.startY = root.scr.rulerHeight
 
-	n, err := calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)
+	n, err := calcPosition(root.Doc.HScrollWidth, root.scr.vWidth)
 	if err != nil {
 		root.setMessageLogf("Invalid HScrollWidth: %s", root.Doc.HScrollWidth)
 		n = 0
