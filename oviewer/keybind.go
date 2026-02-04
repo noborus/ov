@@ -56,13 +56,13 @@ const (
 	actionWriteOriginal  = "write_original"
 
 	// Sidebar actions.
-	actionSidebarHelp  = "sidebar_help"
-	actionMarkList     = "show_mark_list"
-	actionDocList      = "show_doc_list"
-	actionSidebarUp    = "sidebar_up"
-	actionSidebarDown  = "sidebar_down"
-	actionSidebarLeft  = "sidebar_left"
-	actionSidebarRight = "sidebar_right"
+	actionSidebarHelp     = "sidebar_help"
+	actionSidebarMarkList = "sidebar_mark_list"
+	actionSidebarDocList  = "sidebar_doc_list"
+	actionSidebarUp       = "sidebar_up"
+	actionSidebarDown     = "sidebar_down"
+	actionSidebarLeft     = "sidebar_left"
+	actionSidebarRight    = "sidebar_right"
 
 	// Move actions.
 	actionMoveDown       = "down"
@@ -168,13 +168,13 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionWriteOriginal:  root.toggleWriteOriginal,
 
 		// Sidebar actions.
-		actionSidebarHelp:  root.toggleSidebarHelp,
-		actionMarkList:     root.toggleSidebarMarkList,
-		actionDocList:      root.toggleSidebarDocList,
-		actionSidebarUp:    root.sidebarUp,
-		actionSidebarDown:  root.sidebarDown,
-		actionSidebarLeft:  root.sidebarLeft,
-		actionSidebarRight: root.sidebarRight,
+		actionSidebarHelp:     root.toggleSidebarHelp,
+		actionSidebarMarkList: root.toggleSidebarMarkList,
+		actionSidebarDocList:  root.toggleSidebarDocList,
+		actionSidebarUp:       root.sidebarUp,
+		actionSidebarDown:     root.sidebarDown,
+		actionSidebarLeft:     root.sidebarLeft,
+		actionSidebarRight:    root.sidebarRight,
 
 		// Move actions.
 		actionMoveDown:       root.moveDownOne,
@@ -307,13 +307,13 @@ func defaultKeyBinds() KeyBind {
 		actionMovePrevMark:   {"<"},
 
 		// sidebar actions.
-		actionSidebarHelp:  {"alt+h"},
-		actionMarkList:     {"alt+m"},
-		actionDocList:      {"alt+l"},
-		actionSidebarUp:    {"shift+Up"},
-		actionSidebarDown:  {"shift+Down"},
-		actionSidebarLeft:  {"shift+Left"},
-		actionSidebarRight: {"shift+Right"},
+		actionSidebarHelp:     {"alt+h"},
+		actionSidebarMarkList: {"alt+m"},
+		actionSidebarDocList:  {"alt+l"},
+		actionSidebarUp:       {"shift+Up"},
+		actionSidebarDown:     {"shift+Down"},
+		actionSidebarLeft:     {"shift+Left"},
+		actionSidebarRight:    {"shift+Right"},
 
 		// Actions that enter input mode.
 		actionConvertType:    {"alt+t"},
@@ -435,8 +435,8 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMoving, Action: actionMovePgUp, Description: "backward by page"},
 	{Group: GroupMoving, Action: actionMoveHfDn, Description: "forward a half page"},
 	{Group: GroupMoving, Action: actionMoveHfUp, Description: "backward a half page"},
-	{Group: GroupMoving, Action: actionMoveLeft, Description: "scroll to left"},
-	{Group: GroupMoving, Action: actionMoveRight, Description: "scroll to right"},
+	{Group: GroupMoving, Action: actionMoveLeft, Description: "scroll left"},
+	{Group: GroupMoving, Action: actionMoveRight, Description: "scroll right"},
 	{Group: GroupMoving, Action: actionMoveHfLeft, Description: "scroll left half screen"},
 	{Group: GroupMoving, Action: actionMoveHfRight, Description: "scroll right half screen"},
 	{Group: GroupMoving, Action: actionMoveWidthLeft, Description: "scroll left specified width"},
@@ -447,13 +447,13 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMoving, Action: actionMarkNumber, Description: "go to mark number(input number allowed)"},
 
 	// Sidebar
-	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "toggle sidebar help"},
-	{Group: GroupSidebar, Action: actionMarkList, Description: "show mark list sidebar"},
-	{Group: GroupSidebar, Action: actionDocList, Description: "show document list sidebar"},
-	{Group: GroupSidebar, Action: actionSidebarUp, Description: "move sidebar up"},
-	{Group: GroupSidebar, Action: actionSidebarDown, Description: "move sidebar down"},
-	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "decrease sidebar width"},
-	{Group: GroupSidebar, Action: actionSidebarRight, Description: "increase sidebar width"},
+	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "show/hide help in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarMarkList, Description: "show mark list in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarDocList, Description: "show document list in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarUp, Description: "scroll up in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarDown, Description: "scroll down in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "scroll left in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarRight, Description: "scroll right in sidebar"},
 
 	// Move document
 	{Group: GroupDocList, Action: actionNextDoc, Description: "next document"},
@@ -619,6 +619,12 @@ func (root *Root) setHandlers(ctx context.Context, keyBind KeyBind) error {
 			}
 			continue
 		}
+		// sidebar operations are enabled even while typing.
+		if strings.HasPrefix(name, "sidebar_") {
+			if err := setHandler(ctx, in, name, keys, handler); err != nil {
+				return err
+			}
+		}
 		if err := setHandler(ctx, c, name, keys, handler); err != nil {
 			return err
 		}
@@ -689,7 +695,7 @@ func normalizeKey(key string) (string, error) {
 	return encoded, nil
 }
 
-// normalizeKeyWithPrefix normalizes a key and adds input_ prefix if the action is an input action.
+// normalizeKeyWithPrefix normalizes a key and adds input_ or sidebar_ prefix if the action is an input action.
 func normalizeKeyWithPrefix(key, action string) (string, error) {
 	normalizedKey, err := normalizeKey(key)
 	if err != nil {
@@ -698,6 +704,9 @@ func normalizeKeyWithPrefix(key, action string) (string, error) {
 
 	if strings.HasPrefix(action, "input_") {
 		return "input_" + normalizedKey, nil
+	}
+	if strings.HasPrefix(action, "sidebar_") {
+		return "sidebar_" + normalizedKey, nil
 	}
 	return normalizedKey, nil
 }
