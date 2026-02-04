@@ -104,6 +104,7 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			root.sidebarMode = tt.sidebarMode
 			root.sidebarWidth = tt.sidebarWidth
 			tt.setup(root)
+			root.scr.vHeight = 10 // arbitrary value for testing
 			root.prepareSidebarItems()
 			want := tt.wantItems(root)
 			got := root.SidebarItems

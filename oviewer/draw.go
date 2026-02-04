@@ -635,7 +635,7 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	scrollY := 0
 	scrollX := 0
 	if root.sidebarScrolls != nil {
-		scrollY = min(root.sidebarScrolls[root.sidebarMode].y, len(items)-(height-4))
+		scrollY = root.sidebarScrolls[root.sidebarMode].y
 		scrollY = max(scrollY, 0)
 		scrollX = root.sidebarScrolls[root.sidebarMode].x
 		scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
@@ -647,9 +647,9 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 			currentY: root.sidebarScrolls[root.sidebarMode].currentY,
 		}
 	}
-	maxList := min(len(items)-scrollY, height-2)
+	maxList := min(len(items), height-2)
 	for i := range maxList {
-		item := items[i+scrollY]
+		item := items[i]
 		style := sidebarStyle
 		if item.IsCurrent {
 			style = currentStyle

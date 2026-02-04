@@ -52,8 +52,10 @@ func (root *Root) prepareScreen() {
 
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
+	if root.sidebarVisible {
+		root.sidebarWidth = calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+	}
 	m := root.Doc
-	m.bodyStartX = 0
 	m.leftMargin = root.sidebarWidth
 	m.rightMargin = 0
 	m.lineNumberWidth = 0
@@ -78,8 +80,8 @@ func (root *Root) updateDocumentSize() {
 // ViewSync redraws the whole thing.
 func (root *Root) ViewSync(context.Context) {
 	root.resetSelect()
-	root.prepareStartX()
 	root.prepareScreen()
+	root.prepareStartX()
 	root.Screen.Sync()
 	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.Doc.JumpTarget, root.scr.vHeight)
 }

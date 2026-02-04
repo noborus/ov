@@ -1157,6 +1157,29 @@ func TestRoot_Mark(t *testing.T) {
 			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MarkedList(nil))
 		}
 	})
+
+	t.Run("TestAddMarksNoDuplicate", func(t *testing.T) {
+		root.prepareScreen()
+		ctx := context.Background()
+		root.Doc.topLN = 1
+		root.draw(ctx)
+
+		root.Doc.marked = MarkedList{
+			{lineNum: 1, contents: root.Doc.getLineC(1).lc},
+		}
+		root.addMarks(ctx, MarkedList{
+			{lineNum: 1, contents: root.Doc.getLineC(1).lc}, // duplicate of existing
+			{lineNum: 2, contents: root.Doc.getLineC(2).lc},
+			{lineNum: 2, contents: root.Doc.getLineC(2).lc}, // duplicate in input
+		})
+		want := MarkedList{
+			{lineNum: 1, contents: root.Doc.getLineC(1).lc},
+			{lineNum: 2, contents: root.Doc.getLineC(2).lc},
+		}
+		if !reflect.DeepEqual(root.Doc.marked, want) {
+			t.Errorf("addMarks() = %#v, want %#v", root.Doc.marked, want)
+		}
+	})
 }
 
 func TestRoot_nextMark(t *testing.T) {
@@ -2687,6 +2710,3 @@ func TestRoot_toggleSidebarDocList(t *testing.T) {
 		t.Errorf("toggleSidebarDocList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeNone)
 	}
 }
-
-
-

@@ -80,7 +80,11 @@ func (root *Root) sidebarItemsForMark() []SidebarItem {
 	marks := root.Doc.marked
 	current := root.Doc.markedPoint
 	root.adjustSidebarScroll(SidebarModeMark, len(marks), current)
-	for i, mark := range marks {
+	scroll := root.sidebarScrolls[SidebarModeMark]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(marks))
+	for i := start; i < end; i++ {
+		mark := marks[i]
 		isCurrent := (i == current)
 		lc := mark.contents.TrimLeft()
 		if len(lc) < length {
@@ -160,9 +164,7 @@ func (root *Root) sidebarDown(_ context.Context) {
 func (root *Root) sidebarLeft(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.x--
-	if scroll.x < 0 {
-		scroll.x = 0
-	}
+	scroll.x = max(scroll.x, 0)
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
@@ -178,7 +180,7 @@ func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex i
 		return
 	}
 	scroll := root.sidebarScrolls[mode]
-	height := root.scr.vHeight - 5
+	height := root.scr.vHeight - 4
 	scroll.y = max(scroll.y, 0)
 	scroll.y = min(scroll.y, max(itemsLen-height, 0))
 	if scroll.currentY == currentIndex {

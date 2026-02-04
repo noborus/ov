@@ -66,6 +66,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.backSearch(ctx, ev.str, -1)
 	case *eventSearchMove:
 		root.searchGo(ctx, ev.ln, ev.searcher)
+	case *eventAddMarks:
+		root.addMarks(ctx, ev.marks)
 	case *eventReachEOF:
 		// Quit if small doc and config allows
 		if root.quitCheck() {
