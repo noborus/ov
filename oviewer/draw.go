@@ -635,9 +635,10 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	scrollY := 0
 	scrollX := 0
 	if root.sidebarScrolls != nil {
-		scrollY = root.sidebarScrolls[root.sidebarMode].y
+		scroll := root.sidebarScrolls[root.sidebarMode]
+		scrollY = scroll.y
+		scrollX = scroll.x
 		scrollY = max(scrollY, 0)
-		scrollX = root.sidebarScrolls[root.sidebarMode].x
 		scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
 		scrollX = max(scrollX, 0)
 		// Update scroll info.
@@ -654,10 +655,13 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 		if item.IsCurrent {
 			style = currentStyle
 		}
+		label := item.Label
+		labelLen := uniseg.StringWidth(label)
 		left := min(scrollX, len(item.Contents))
-		width := max(min(root.sidebarWidth-2, len(item.Contents)-left), 0)
+		width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
 		right := min(left+width, len(item.Contents))
 		out := item.Contents[left:right].String()
-		root.Screen.PutStrStyled(0, i+2, out, style)
+		root.Screen.PutStrStyled(labelLen, i+1, out, style)
+		root.Screen.PutStrStyled(0, i+1, label, style)
 	}
 }
