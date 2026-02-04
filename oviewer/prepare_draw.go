@@ -3,6 +3,7 @@ package oviewer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"regexp"
@@ -53,7 +54,12 @@ func (root *Root) prepareScreen() {
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
 	if root.sidebarVisible {
-		root.sidebarWidth = calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+		width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+		if err != nil {
+			root.debugMessage(fmt.Sprintf("Invalid SidebarWidth: %s", err.Error()))
+			width = minSidebarWidth
+		}
+		root.sidebarWidth = width
 	}
 	m := root.Doc
 	m.leftMargin = root.sidebarWidth

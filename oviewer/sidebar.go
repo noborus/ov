@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -45,10 +44,8 @@ func (s SidebarMode) String() string {
 const (
 	minSidebarWidth     = 12
 	maxSidebarWidth     = 100
-	defaultSidebarWidth = 20
+	defaultSidebarWidth = "20%"
 )
-
-var defaultSidebarWidthString = strconv.Itoa(defaultSidebarWidth)
 
 // sidebarScroll holds scroll positions for sidebar.
 type sidebarScroll struct {
@@ -131,28 +128,23 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 // sidebarItemsForHelp creates SidebarItems for the help sidebar.
 func (root *Root) sidebarItemsForHelp() []SidebarItem {
 	var items []SidebarItem
-	length := 100
 	keyBinds := GetKeyBinds(root.Config)
 	descriptions := keyBinds.GetKeyBindDescriptions(GroupAll)
+	totalLines := len(descriptions) * 2
+	root.adjustSidebarScroll(SidebarModeHelp, totalLines, 0)
 	scroll := root.sidebarScrolls[SidebarModeHelp]
 	start := scroll.y
-	end := min(start+root.scr.vHeight, len(descriptions))
-	for i := start; i < end; i++ {
+	end := min(start+root.scr.vHeight, totalLines)
+	for line := start; line < end; line++ {
+		i := line / 2
 		desc := descriptions[i]
-		line := "[" + desc[1] + "]"
-		content := StrToContents(line, 0)
-		if len(content) < length {
-			spaces := StrToContents(strings.Repeat(" ", length-len(content)), 0)
-			content = append(content, spaces...)
+		if line%2 == 0 {
+			content := StrToContents("["+desc[1]+"]", 0)
+			items = append(items, SidebarItem{Label: "", Contents: content, IsCurrent: false})
+		} else {
+			contentDesc := StrToContents("  "+desc[0], 0)
+			items = append(items, SidebarItem{Label: "", Contents: contentDesc, IsCurrent: false})
 		}
-		items = append(items, SidebarItem{Label: "", Contents: content, IsCurrent: false})
-
-		contentDesc := StrToContents("  "+desc[0], 0)
-		if len(contentDesc) < length {
-			spaces := StrToContents(strings.Repeat(" ", length-len(contentDesc)), 0)
-			contentDesc = append(contentDesc, spaces...)
-		}
-		items = append(items, SidebarItem{Label: "", Contents: contentDesc, IsCurrent: false})
 	}
 	root.SidebarHelpItems = items
 	return items

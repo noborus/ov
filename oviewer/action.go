@@ -149,7 +149,11 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
-	width := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+	if err != nil {
+		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
+		width, _ = calcSideWidth(defaultSidebarWidth, root.scr.vWidth)
+	}
 	root.sidebarMode = mode
 	root.sidebarVisible = true
 	root.sidebarWidth = width
@@ -157,14 +161,14 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.setMessagef("Sidebar %s visible", mode.String())
 }
 
-func calcSideWidth(sidewidth string, width int) int {
+// calcSideWidth calculates the sidebar width based on the configuration string.
+func calcSideWidth(sidewidth string, width int) (int, error) {
 	w, err := calcPosition(sidewidth, width)
 	if err != nil {
-		log.Println(err)
-		w = defaultSidebarWidth
+		return 0, err
 	}
 	w = min(max(minSidebarWidth, w), maxSidebarWidth)
-	return int(w)
+	return int(w), nil
 }
 
 func (root *Root) closeSidebar(ctx context.Context) {
