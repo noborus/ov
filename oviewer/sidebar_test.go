@@ -43,8 +43,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			},
 			wantItems: func(root *Root) []SidebarItem {
 				return []SidebarItem{
-					{Contents: StrToContents(" 0 0 First           ", 0), IsCurrent: true},
-					{Contents: StrToContents(" 1 1 Second          ", 0), IsCurrent: false},
+					{Contents: StrToContents("0 First         ", 0), IsCurrent: true},
+					{Contents: StrToContents("1 Second        ", 0), IsCurrent: false},
 				}
 			},
 		},
@@ -70,8 +70,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 					displayName2 = append(displayName2, StrToContents(strings.Repeat(" ", length-len(displayName2)), 0)...)
 				}
 				return []SidebarItem{
-					{Contents: StrToContents(" 0 file1.txt   ", 0), IsCurrent: false},
-					{Contents: StrToContents(" 1 file2.txt   ", 0), IsCurrent: true},
+					{Contents: StrToContents("file1.txt      ", 0), IsCurrent: false},
+					{Contents: StrToContents("file2.txt      ", 0), IsCurrent: true},
 				}
 			},
 		},
@@ -79,17 +79,19 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			name:         "SidebarModeHelp sets SidebarItems",
 			sidebarMode:  SidebarModeHelp,
 			sidebarWidth: 20,
-			setup: func(root *Root) {
-				// Simulate help items
-				root.SidebarHelpItems = []SidebarItem{
-					{Contents: StrToContents("[q]", 0), IsCurrent: false},
-					{Contents: StrToContents("  Quit", 0), IsCurrent: false},
-				}
-			},
+			setup:        func(root *Root) {},
 			wantItems: func(root *Root) []SidebarItem {
 				return []SidebarItem{
-					{Contents: StrToContents("[q]", 0), IsCurrent: false},
-					{Contents: StrToContents("  Quit", 0), IsCurrent: false},
+					{Contents: StrToContents("[Escape, q]", 0), IsCurrent: false},
+					{Contents: StrToContents("  quit", 0), IsCurrent: false},
+					{Contents: StrToContents("[ctrl+c]", 0), IsCurrent: false},
+					{Contents: StrToContents("  cancel", 0), IsCurrent: false},
+					{Contents: StrToContents("[Q]", 0), IsCurrent: false},
+					{Contents: StrToContents("  output screen and quit", 0), IsCurrent: false},
+					{Contents: StrToContents("[ctrl+q]", 0), IsCurrent: false},
+					{Contents: StrToContents("  set output screen and quit", 0), IsCurrent: false},
+					{Contents: StrToContents("[alt+shift+F8]", 0), IsCurrent: false},
+					{Contents: StrToContents("  set output original screen and quit", 0), IsCurrent: false},
 				}
 			},
 		},
@@ -104,6 +106,7 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			root.sidebarMode = tt.sidebarMode
 			root.sidebarWidth = tt.sidebarWidth
 			tt.setup(root)
+			root.scr.vHeight = 10 // arbitrary value for testing
 			root.prepareSidebarItems()
 			want := tt.wantItems(root)
 			got := root.SidebarItems
@@ -135,8 +138,8 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\nLine 11\nLine 12\nLine 13\nLine 14\nLine 15\nLine 16\nLine 17\nLine 18\nLine 19\nLine 20"),
 			marks: []int{0, 1},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 0 Line 1          ", 0), IsCurrent: true},
-				{Contents: StrToContents(" 1 1 Line 2          ", 0), IsCurrent: false},
+				{Contents: StrToContents("0 Line 1        ", 0), IsCurrent: true},
+				{Contents: StrToContents("1 Line 2        ", 0), IsCurrent: false},
 			},
 		},
 		{
@@ -144,7 +147,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("First\nSecond\nThird"),
 			marks: []int{0},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 0 First           ", 0), IsCurrent: true},
+				{Contents: StrToContents("0 First         ", 0), IsCurrent: true},
 			},
 		},
 		{
@@ -152,7 +155,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Alpha\nBeta\nGamma"),
 			marks: []int{2},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 2 Gamma           ", 0), IsCurrent: true},
+				{Contents: StrToContents("2 Gamma         ", 0), IsCurrent: true},
 			},
 		},
 		{
@@ -160,9 +163,9 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("A\nB\nC\nD"),
 			marks: []int{1, 2, 3},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 1 B               ", 0), IsCurrent: true},
-				{Contents: StrToContents(" 1 2 C               ", 0), IsCurrent: false},
-				{Contents: StrToContents(" 2 3 D               ", 0), IsCurrent: false},
+				{Contents: StrToContents("1 B             ", 0), IsCurrent: true},
+				{Contents: StrToContents("2 C             ", 0), IsCurrent: false},
+				{Contents: StrToContents("3 D             ", 0), IsCurrent: false},
 			},
 		},
 		{
@@ -170,7 +173,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			r:     bytes.NewBufferString("Short\nThis is a very long line that should be truncated"),
 			marks: []int{1},
 			want: []SidebarItem{
-				{Contents: StrToContents(" 0 1 This is a very long line that should be truncated", 0), IsCurrent: true},
+				{Contents: StrToContents("1 This is a very long line that should be truncated", 0), IsCurrent: true},
 			},
 		},
 		{
@@ -190,6 +193,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			if err != nil {
 				t.Fatalf("could not construct receiver type: %v", err)
 			}
+			root.scr.vHeight = 20 // arbitrary value for testing
 			root.sidebarWidth = 20
 			root.sidebarMode = SidebarModeMark
 			for _, c := range tt.marks {
@@ -197,6 +201,9 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 				root.Doc.marked = append(root.Doc.marked, Mark{lineNum: c, contents: root.lineContent(c).lc})
 			}
 			got := root.sidebarItemsForMark()
+			if len(got) != len(tt.want) {
+				t.Errorf("sidebarItemsForMark() length = %d, want %d", len(got), len(tt.want))
+			}
 			for i := range got {
 				if !reflect.DeepEqual(got[i].Contents, tt.want[i].Contents) {
 					t.Errorf("  got[%d]: %#v\n want[%d]: %#v", i, got[i].Contents.String(), i, tt.want[i].Contents.String())
@@ -220,6 +227,7 @@ func TestRoot_sidebarItemsForHelp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
+			root.scr.vHeight = 20
 			root.sidebarWidth = 20
 			root.sidebarMode = SidebarModeHelp
 			if len(root.sidebarItemsForHelp()) == 0 {

@@ -3,13 +3,13 @@ package oviewer
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 // SidebarItem represents an item to display in the sidebar.
 type SidebarItem struct {
-	Contents  contents
+	Label     string   // Always-visible label (e.g., index, description)
+	Contents  contents // Contents to display
 	IsCurrent bool
 }
 
@@ -44,10 +44,8 @@ func (s SidebarMode) String() string {
 const (
 	minSidebarWidth     = 12
 	maxSidebarWidth     = 100
-	defaultSidebarWidth = 20
+	defaultSidebarWidth = "20%"
 )
-
-var defaultSidebarWidthString = strconv.Itoa(defaultSidebarWidth)
 
 // sidebarScroll holds scroll positions for sidebar.
 type sidebarScroll struct {
@@ -80,16 +78,25 @@ func (root *Root) sidebarItemsForMark() []SidebarItem {
 	marks := root.Doc.marked
 	current := root.Doc.markedPoint
 	root.adjustSidebarScroll(SidebarModeMark, len(marks), current)
-	for i, mark := range marks {
+	scroll := root.sidebarScrolls[SidebarModeMark]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(marks))
+	for i := start; i < end; i++ {
+		mark := marks[i]
 		isCurrent := (i == current)
 		lc := mark.contents.TrimLeft()
+		numContents := StrToContents(fmt.Sprintf("%d ", mark.lineNum), 0)
+		lc = append(numContents, lc...)
 		if len(lc) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(lc)), 0)
 			lc = append(lc, spaces...)
 		}
-		numContents := StrToContents(fmt.Sprintf("%2d %d ", i, mark.lineNum), 0)
-		lc = append(numContents, lc...)
-		items = append(items, SidebarItem{Contents: lc, IsCurrent: isCurrent})
+		label := fmt.Sprintf("%2d ", i)
+		items = append(items, SidebarItem{
+			Label:     label,
+			Contents:  lc,
+			IsCurrent: isCurrent,
+		})
 	}
 	return items
 }
@@ -100,44 +107,46 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 	length := root.sidebarWidth - 5
 	current := root.CurrentDoc
 	root.adjustSidebarScroll(SidebarModeDocList, len(root.DocList), current)
-	for i, doc := range root.DocList {
-		text := fmt.Sprintf("%2d %s", i, doc.FileName)
-		displayName := StrToContents(text, 0)
+	scroll := root.sidebarScrolls[SidebarModeDocList]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(root.DocList))
+	for i := start; i < end; i++ {
+		doc := root.DocList[i]
+		displayName := StrToContents(doc.FileName, 0)
 		if len(displayName) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 			displayName = append(displayName, spaces...)
 		}
 		isCurrent := (i == current)
-		items = append(items, SidebarItem{Contents: displayName, IsCurrent: isCurrent})
+		label := fmt.Sprintf("%2d ", i)
+		items = append(items, SidebarItem{
+			Label:     label,
+			Contents:  displayName,
+			IsCurrent: isCurrent})
 	}
 	return items
 }
 
 // sidebarItemsForHelp creates SidebarItems for the help sidebar.
 func (root *Root) sidebarItemsForHelp() []SidebarItem {
-	if root.SidebarHelpItems != nil {
-		return root.SidebarHelpItems
-	}
-	root.sidebarScrolls[SidebarModeHelp] = sidebarScroll{x: 0, y: 0, currentY: 0}
 	var items []SidebarItem
-	length := 100
 	keyBinds := GetKeyBinds(root.Config)
 	descriptions := keyBinds.GetKeyBindDescriptions(GroupAll)
-	for _, desc := range descriptions {
-		line := "[" + desc[1] + "]"
-		content := StrToContents(line, 0)
-		if len(content) < length {
-			spaces := StrToContents(strings.Repeat(" ", length-len(content)), 0)
-			content = append(content, spaces...)
+	totalLines := len(descriptions) * 2
+	root.adjustSidebarScroll(SidebarModeHelp, totalLines, 0)
+	scroll := root.sidebarScrolls[SidebarModeHelp]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, totalLines)
+	for line := start; line < end; line++ {
+		i := line / 2
+		desc := descriptions[i]
+		if line%2 == 0 {
+			content := StrToContents("["+desc[1]+"]", 0)
+			items = append(items, SidebarItem{Label: "", Contents: content, IsCurrent: false})
+		} else {
+			contentDesc := StrToContents("  "+desc[0], 0)
+			items = append(items, SidebarItem{Label: "", Contents: contentDesc, IsCurrent: false})
 		}
-		items = append(items, SidebarItem{Contents: content, IsCurrent: false})
-
-		contentDesc := StrToContents("  "+desc[0], 0)
-		if len(contentDesc) < length {
-			spaces := StrToContents(strings.Repeat(" ", length-len(contentDesc)), 0)
-			contentDesc = append(contentDesc, spaces...)
-		}
-		items = append(items, SidebarItem{Contents: contentDesc, IsCurrent: false})
 	}
 	root.SidebarHelpItems = items
 	return items
@@ -160,9 +169,7 @@ func (root *Root) sidebarDown(_ context.Context) {
 func (root *Root) sidebarLeft(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.x--
-	if scroll.x < 0 {
-		scroll.x = 0
-	}
+	scroll.x = max(scroll.x, 0)
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
@@ -178,7 +185,7 @@ func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex i
 		return
 	}
 	scroll := root.sidebarScrolls[mode]
-	height := root.scr.vHeight - 5
+	height := root.scr.vHeight - 4
 	scroll.y = max(scroll.y, 0)
 	scroll.y = min(scroll.y, max(itemsLen-height, 0))
 	if scroll.currentY == currentIndex {

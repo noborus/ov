@@ -614,6 +614,8 @@ func (root *Root) firstSearch(ctx context.Context, t searchType) {
 		root.backSearch(ctx, root.input.value, 0)
 	case filter:
 		root.filter(ctx, root.input.value)
+	case markByPattern:
+		root.markByPattern(ctx, root.input.value)
 	}
 }
 

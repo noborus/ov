@@ -26,6 +26,8 @@ const (
 	Backsearch
 	// Filter is for filtering.
 	Filter
+	// MarkByPattern is for marking by pattern.
+	MarkByPattern
 	// Goline is for moving to a specific line.
 	Goline
 	// Header is for setting the number of headers.

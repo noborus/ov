@@ -109,6 +109,7 @@ const (
 	actionWatchInterval  = "watch_interval"
 	actionWriteBA        = "set_write_exit"
 	actionMarkNumber     = "mark_number"
+	actionMarkByPattern  = "mark_by_pattern"
 
 	// input actions.
 	inputCaseSensitive      = "input_casesensitive"
@@ -220,6 +221,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionWatchInterval:  root.inputWatchInterval,
 		actionWriteBA:        root.inputWriteBA,
 		actionMarkNumber:     root.inputMarkNumber,
+		actionMarkByPattern:  root.inputMarkByPattern,
 
 		// input actions.
 		inputCaseSensitive:      root.toggleCaseSensitive,
@@ -335,6 +337,7 @@ func defaultKeyBinds() KeyBind {
 		actionWatchInterval:  {"ctrl+w"},
 		actionWriteBA:        {"ctrl+q"},
 		actionMarkNumber:     {","},
+		actionMarkByPattern:  {"*"},
 
 		// input actions.
 		inputCaseSensitive:      {"alt+c"},
@@ -464,6 +467,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMark, Action: actionRemoveAllMark, Description: "remove all mark"},
 	{Group: GroupMark, Action: actionMoveMark, Description: "move to next marked position"},
 	{Group: GroupMark, Action: actionMovePrevMark, Description: "move to previous marked position"},
+	{Group: GroupMark, Action: actionMarkByPattern, Description: "mark by pattern mode"},
 
 	// Search
 	{Group: GroupSearch, Action: actionSearch, Description: "forward search mode"},

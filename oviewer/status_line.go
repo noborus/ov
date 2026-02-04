@@ -120,7 +120,7 @@ func (root *Root) inputPrompt() string {
 	mode := root.input.Event.Mode()
 	modePrompt := root.input.Event.Prompt()
 
-	if mode == Search || mode == Backsearch || mode == Filter {
+	if mode == Search || mode == Backsearch || mode == Filter || mode == MarkByPattern {
 		prompt.WriteString(root.searchOpt)
 	}
 	prompt.WriteString(modePrompt)

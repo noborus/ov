@@ -857,6 +857,12 @@ func (root *Root) prepareRun(ctx context.Context) error {
 
 	root.setCaption()
 
+	// Validate sidebar width.
+	if _, err = calcSideWidth(root.Config.SidebarWidth, 100); err != nil {
+		log.Printf("invalid sidebar width: %s, set to default %s\n", root.Config.SidebarWidth, defaultSidebarWidth)
+		root.Config.SidebarWidth = defaultSidebarWidth
+	}
+
 	root.setViewModeConfig()
 	root.prepareAllDocuments()
 	// follow mode or follow all disables quit if the output fits on one screen.

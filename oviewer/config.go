@@ -159,7 +159,7 @@ func NewConfig() Config {
 		MemoryLimit:     -1,
 		MemoryLimitFile: 100,
 		ReadWaitTime:    1000 * time.Millisecond,
-		SidebarWidth:    defaultSidebarWidthString,
+		SidebarWidth:    defaultSidebarWidth,
 	}
 }
 

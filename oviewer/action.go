@@ -149,17 +149,26 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
-	width, err := calcPosition(root.Config.SidebarWidth, root.scr.vWidth)
+	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
 	if err != nil {
-		log.Println(err)
-		width = defaultSidebarWidth
+		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
+		width, _ = calcSideWidth(defaultSidebarWidth, root.scr.vWidth)
 	}
-	width = min(max(minSidebarWidth, width), maxSidebarWidth)
 	root.sidebarMode = mode
 	root.sidebarVisible = true
-	root.sidebarWidth = int(width)
+	root.sidebarWidth = width
 	root.ViewSync(ctx)
 	root.setMessagef("Sidebar %s visible", mode.String())
+}
+
+// calcSideWidth calculates the sidebar width based on the configuration string.
+func calcSideWidth(sidewidth string, width int) (int, error) {
+	w, err := calcPosition(sidewidth, width)
+	if err != nil {
+		return 0, err
+	}
+	w = min(max(minSidebarWidth, w), maxSidebarWidth)
+	return int(w), nil
 }
 
 func (root *Root) closeSidebar(ctx context.Context) {
@@ -312,123 +321,6 @@ func (root *Root) goLine(input string) {
 func (root *Root) goLineNumber(lN int) {
 	lN = root.Doc.moveLine(lN - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", lN+1)
-}
-
-// goMarkNumber moves to the specified mark number or relative position (+n/-n).
-func (root *Root) goMarkNumber(input string) {
-	if root.previousSidebarMode != SidebarModeMark {
-		root.toggleSidebar(context.Background(), root.previousSidebarMode)
-	}
-	if len(root.Doc.marked) == 0 {
-		return
-	}
-	input = strings.TrimSpace(input)
-	if len(input) == 0 {
-		return
-	}
-	idx := calcMarkIndex(input, root.Doc.markedPoint)
-	idx = min(max(0, idx), len(root.Doc.marked)-1)
-	root.Doc.markedPoint = idx
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
-}
-
-// calcMarkIndex calculates the mark index from the input string.
-// If the input is a relative position (+n/-n), it calculates the index accordingly.
-func calcMarkIndex(input string, current int) int {
-	if input[0] == '+' || input[0] == '-' {
-		n, err := strconv.Atoi(input)
-		if err != nil {
-			return current
-		}
-		return current + n
-	}
-	n, err := strconv.Atoi(input)
-	if err != nil {
-		return current
-	}
-	return n
-}
-
-// nextMark moves to the next mark.
-func (root *Root) nextMark(context.Context) {
-	if len(root.Doc.marked) == 0 {
-		return
-	}
-
-	if len(root.Doc.marked) > root.Doc.markedPoint+1 {
-		root.Doc.markedPoint++
-	} else {
-		root.Doc.markedPoint = 0
-	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
-}
-
-// prevMark moves to the previous mark.
-func (root *Root) prevMark(context.Context) {
-	if len(root.Doc.marked) == 0 {
-		return
-	}
-
-	if root.Doc.markedPoint > 0 {
-		root.Doc.markedPoint--
-	} else {
-		root.Doc.markedPoint = len(root.Doc.marked) - 1
-	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
-}
-
-func (list MarkedList) remove(lineNumber int) MarkedList {
-	for i, m := range list {
-		if m.lineNum == lineNumber {
-			return append(list[:i], list[i+1:]...)
-		}
-	}
-	return list
-}
-
-func (list MarkedList) contains(lineNumber int) bool {
-	for _, m := range list {
-		if m.lineNum == lineNumber {
-			return true
-		}
-	}
-	return false
-}
-
-// addMark marks the current line number.
-func (root *Root) addMark(context.Context) {
-	lN := root.firstBodyLine()
-	root.Doc.marked = root.Doc.marked.remove(lN)
-	lineC := root.lineContent(lN)
-	mark := Mark{lineNum: lN, contents: lineC.lc}
-	root.Doc.marked = append(root.Doc.marked, mark)
-	root.Doc.markedPoint = len(root.Doc.marked) - 1
-	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
-}
-
-// removeMark removes the current line number from the mark.
-func (root *Root) removeMark(context.Context) {
-	lN := root.firstBodyLine()
-	marked := root.Doc.marked.remove(lN)
-	if len(root.Doc.marked) == len(marked) {
-		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
-		return
-	}
-	root.Doc.marked = marked
-	root.setMessagef("Remove the mark at line %d", lN-root.Doc.firstLine()+1)
-}
-
-// firstBodyLine returns the first line number of the body.
-func (root *Root) firstBodyLine() int {
-	ln := root.scr.lineNumber(root.Doc.headerHeight + root.Doc.sectionHeaderHeight)
-	return ln.number
-}
-
-// removeAllMark removes all marks.
-func (root *Root) removeAllMark(context.Context) {
-	root.Doc.marked = nil
-	root.Doc.markedPoint = 0
-	root.setMessage("Remove all marks")
 }
 
 // setHeader sets the number of lines in the header.
