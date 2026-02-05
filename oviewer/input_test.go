@@ -876,6 +876,7 @@ func Test_stringWidth(t *testing.T) {
 		})
 	}
 }
+
 func Test_splitAtWidth(t *testing.T) {
 	tests := []struct {
 		name        string

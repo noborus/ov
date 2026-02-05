@@ -102,7 +102,7 @@ func (root *Root) drawHeader() {
 	wrapNum := 0
 	lX := 0
 	lN := root.scr.headerLN
-	for y := root.Doc.startY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
+	for y := root.Doc.bodyStartY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			log.Panicf("line is not found %d", lN)
@@ -662,6 +662,6 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 		right := min(left+width, len(item.Contents))
 		out := item.Contents[left:right].String()
 		root.Screen.PutStrStyled(labelLen, i+1, out, style)
-		root.Screen.PutStrStyled(0, i+1, label, style)
+		root.Screen.PutStrStyled(0, i+1, label, style.Italic(true))
 	}
 }
