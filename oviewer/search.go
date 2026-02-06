@@ -755,11 +755,11 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 }
 
 // matchlinesByPattern returns lines matching the pattern.
-func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []MachedLine {
+func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []MatchedLine {
 	if searcher == nil {
 		return nil
 	}
-	var lines []MachedLine
+	var lines []MatchedLine
 	for ln := root.Doc.BufStartNum(); ln < root.Doc.BufEndNum(); ln++ {
 		select {
 		case <-ctx.Done():
@@ -768,7 +768,7 @@ func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []
 		}
 		lineC := root.lineContent(ln)
 		if searcher.MatchString(lineC.str) {
-			line := MachedLine{lineNum: ln, contents: lineC.lc}
+			line := MatchedLine{lineNum: ln, contents: lineC.lc}
 			lines = append(lines, line)
 		}
 	}

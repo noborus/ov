@@ -1153,6 +1153,7 @@ func Test_cancelKeys(t *testing.T) {
 		})
 	}
 }
+
 func TestRoot_matchlinesByPattern(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
@@ -1264,4 +1265,110 @@ func TestRoot_matchlinesByPattern_ContextCancel(t *testing.T) {
 			t.Errorf("Root.matchlinesByPattern() with canceled context should return nil, got %v", got)
 		}
 	})
+}
+
+func TestRoot_sendNextSearch(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+		searcher Searcher
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "testNilSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: nil,
+			},
+		},
+		{
+			name: "testWithSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+			},
+		},
+		{
+			name: "testWithCaseSensitiveSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("TEST", regexpCompile("TEST", true), true, false),
+			},
+		},
+		{
+			name: "testWithRegexpSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("t.", regexpCompile("t.", false), false, true),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			root.searcher = tt.fields.searcher
+			ctx := context.Background()
+			root.sendNextSearch(ctx)
+		})
+	}
+}
+
+func TestRoot_sendNextBackSearch(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+		searcher Searcher
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "testNilSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: nil,
+			},
+		},
+		{
+			name: "testWithSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+			},
+		},
+		{
+			name: "testWithCaseSensitiveSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("TEST", regexpCompile("TEST", true), true, false),
+			},
+		},
+		{
+			name: "testWithRegexpSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+				searcher: NewSearcher("t.", regexpCompile("t.", false), false, true),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			root.searcher = tt.fields.searcher
+			ctx := context.Background()
+			root.sendNextBackSearch(ctx)
+		})
+	}
 }
