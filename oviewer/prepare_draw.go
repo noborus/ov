@@ -32,7 +32,7 @@ func (root *Root) prepareScreen() {
 	if root.Doc.RulerType != RulerNone {
 		root.scr.rulerHeight = rulerHeight
 	}
-	root.Doc.startY = root.scr.rulerHeight
+	root.Doc.bodyStartY = root.scr.rulerHeight
 
 	n, err := calcPosition(root.Doc.HScrollWidth, root.scr.vWidth)
 	if err != nil {

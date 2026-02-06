@@ -344,6 +344,7 @@ func TestRoot_setKeyConfig(t *testing.T) {
 		})
 	}
 }
+
 func TestSetConfig_WithViewMode(t *testing.T) {
 	// prepare config with a view mode that sets FollowAll and TabWidth
 	cfg := NewConfig()
@@ -1478,6 +1479,7 @@ func TestRoot_outputOnExit(t *testing.T) {
 		})
 	}
 }
+
 func Test_openFiles_AllFail(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() { tcellNewScreen = tcell.NewScreen }()

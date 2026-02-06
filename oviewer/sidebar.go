@@ -122,7 +122,8 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 		items = append(items, SidebarItem{
 			Label:     label,
 			Contents:  displayName,
-			IsCurrent: isCurrent})
+			IsCurrent: isCurrent,
+		})
 	}
 	return items
 }
@@ -152,6 +153,7 @@ func (root *Root) sidebarItemsForHelp() []SidebarItem {
 	return items
 }
 
+// sidebarUp scrolls the sidebar up.
 func (root *Root) sidebarUp(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	if scroll.y > 0 {
@@ -160,12 +162,14 @@ func (root *Root) sidebarUp(_ context.Context) {
 	}
 }
 
+// sidebarDown scrolls the sidebar down.
 func (root *Root) sidebarDown(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.y++
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
+// sidebarLeft scrolls the sidebar left.
 func (root *Root) sidebarLeft(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.x--
@@ -173,6 +177,7 @@ func (root *Root) sidebarLeft(_ context.Context) {
 	root.sidebarScrolls[root.sidebarMode] = scroll
 }
 
+// sidebarRight scrolls the sidebar right.
 func (root *Root) sidebarRight(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
 	scroll.x++

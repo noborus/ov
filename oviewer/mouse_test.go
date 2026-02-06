@@ -290,19 +290,15 @@ func TestSCR_rectangleToString(t *testing.T) {
 
 func TestSCR_selectLine(t *testing.T) {
 	t.Parallel()
-	type fields struct {
-		startX int
-	}
 	type args struct {
 		line LineC
 		x1   int
 		x2   int
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
+		name string
+		args args
+		want string
 	}{
 		{
 			name: "test1",

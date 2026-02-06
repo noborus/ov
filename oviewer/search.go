@@ -215,14 +215,12 @@ func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	return re.FindAllStringIndex(s, -1)
 }
 
-// setSearcher is a wrapper for NewSearcher and returns a Searcher interface.
+// createSearcher creates a Searcher interface for the given word and case sensitivity, without side effects.
 // Returns nil if there is no search term.
-func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
+func (root *Root) createSearcher(word string, caseSensitive bool) Searcher {
 	if word == "" {
-		root.searcher = nil
 		return nil
 	}
-	root.input.value = word
 
 	if root.Config.SmartCaseSensitive {
 		for _, ch := range word {
@@ -234,6 +232,17 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	}
 	reg := regexpCompile(word, caseSensitive)
 	searcher := NewSearcher(word, reg, caseSensitive, root.Config.RegexpSearch)
+	return searcher
+}
+
+// setSearcher sets root.searcher using createSearcher and updates input.value.
+func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
+	if word == "" {
+		root.searcher = nil
+		return nil
+	}
+	root.input.value = word
+	searcher := root.createSearcher(word, caseSensitive)
 	root.searcher = searcher
 	return searcher
 }
@@ -743,4 +752,25 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 		}
 	}
 	return 0, ErrNotFound
+}
+
+// matchlinesByPattern returns lines matching the pattern.
+func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []MachedLine {
+	if searcher == nil {
+		return nil
+	}
+	var lines []MachedLine
+	for ln := root.Doc.BufStartNum(); ln < root.Doc.BufEndNum(); ln++ {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+		lineC := root.lineContent(ln)
+		if searcher.MatchString(lineC.str) {
+			line := MachedLine{lineNum: ln, contents: lineC.lc}
+			lines = append(lines, line)
+		}
+	}
+	return lines
 }

@@ -1153,3 +1153,115 @@ func Test_cancelKeys(t *testing.T) {
 		})
 	}
 }
+func TestRoot_matchlinesByPattern(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName string
+	}
+	type args struct {
+		searcher Searcher
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantLen int
+		wantErr bool
+	}{
+		{
+			name: "testMatchFound",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				searcher: NewSearcher("0000", regexpCompile("9999", false), false, false),
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name: "testMatchNotFound",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				searcher: NewSearcher("notexist", regexpCompile("notexist", false), false, false),
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name: "testMatchCaseSensitive",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				searcher: NewSearcher("TEST", regexpCompile("TEST", true), true, false),
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name: "testMatchRegexp",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				searcher: NewSearcher("^1$", regexpCompile("^1$", true), true, true),
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name: "testMatchNilSearcher",
+			fields: fields{
+				fileName: filepath.Join(testdata, "test3.txt"),
+			},
+			args: args{
+				searcher: nil,
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			root.prepareScreen()
+			ctx := context.Background()
+			root.everyUpdate(ctx)
+			root.draw(ctx)
+			got := root.matchlinesByPattern(ctx, tt.args.searcher)
+			if tt.args.searcher == nil {
+				if got != nil {
+					t.Errorf("Root.matchlinesByPattern() = %v, want nil", got)
+				}
+				return
+			}
+			if len(got) != tt.wantLen {
+				t.Errorf("Root.matchlinesByPattern() length = %v, want %v", len(got), tt.wantLen)
+			}
+		})
+	}
+}
+
+func TestRoot_matchlinesByPattern_ContextCancel(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	t.Run("testContextCanceled", func(t *testing.T) {
+		root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
+		root.prepareScreen()
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		searcher := NewSearcher("10", regexpCompile("10", false), false, false)
+		got := root.matchlinesByPattern(ctx, searcher)
+		if got != nil {
+			t.Errorf("Root.matchlinesByPattern() with canceled context should return nil, got %v", got)
+		}
+	})
+}

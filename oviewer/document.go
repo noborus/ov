@@ -92,7 +92,7 @@ type Document struct {
 	filepath string
 
 	// marked is a list of marked line numbers.
-	marked MarkedList
+	marked MachedLineList
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
@@ -133,10 +133,12 @@ type Document struct {
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
 
-	// startX is the start position of x.
-	startX int
-	// startY is the start position of y.
-	startY int
+	// bodyStartY is the start position of y.
+	bodyStartY int
+	// bodyStartX is the actual start position of the body (leftMargin + lineNumberWidth)
+	bodyStartX int
+	// bodyWidth is the width of the document body (excluding left/right margin and line number area).
+	bodyWidth int
 	// scrollX is the starting position of the current scrollX.
 	scrollX int
 	// columnCursor is the number of columns.
@@ -149,10 +151,6 @@ type Document struct {
 	rightMargin int
 	// lineNumberWidth is the width of the line number area (0 is not displayed).
 	lineNumberWidth int
-	// bodyStartX is the actual start position of the body (leftMargin + lineNumberWidth)
-	bodyStartX int
-	// bodyWidth is the width of the document body (excluding left/right margin and line number area).
-	bodyWidth int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int
@@ -263,12 +261,12 @@ type columnRange struct {
 	end   int
 }
 
-type Mark struct {
+type MachedLine struct {
 	lineNum  int
 	contents contents
 }
 
-type MarkedList []Mark
+type MachedLineList []MachedLine
 
 // NewDocument creates and initializes a new [Document] with default settings.
 // It returns a pointer to the Document and an error if the cache initialization fails.

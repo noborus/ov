@@ -13,7 +13,7 @@ func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = root.Doc.marked.remove(lN)
 	lineC := root.lineContent(lN)
-	mark := Mark{lineNum: lN, contents: lineC.lc}
+	mark := MachedLine{lineNum: lN, contents: lineC.lc}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
@@ -26,7 +26,7 @@ func (root *Root) firstBodyLine() int {
 }
 
 // addMarks adds multiple line numbers to the mark list at once.
-func (root *Root) addMarks(_ context.Context, marks MarkedList) {
+func (root *Root) addMarks(_ context.Context, marks MachedLineList) {
 	root.Doc.markedPoint = -1
 	if len(marks) == 0 {
 		root.setMessagef("Added %d marks", 0)
@@ -136,8 +136,8 @@ func (root *Root) prevMark(context.Context) {
 	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
 }
 
-func (list MarkedList) remove(lineNumber int) MarkedList {
-	newList := make(MarkedList, 0, len(list))
+func (list MachedLineList) remove(lineNumber int) MachedLineList {
+	newList := make(MachedLineList, 0, len(list))
 	for _, m := range list {
 		if m.lineNum != lineNumber {
 			newList = append(newList, m)
@@ -146,7 +146,7 @@ func (list MarkedList) remove(lineNumber int) MarkedList {
 	return newList
 }
 
-func (list MarkedList) contains(lineNumber int) bool {
+func (list MachedLineList) contains(lineNumber int) bool {
 	for _, mark := range list {
 		if mark.lineNum == lineNumber {
 			return true
@@ -158,40 +158,27 @@ func (list MarkedList) contains(lineNumber int) bool {
 // eventAddMarks represents an event to add multiple marks.
 type eventAddMarks struct {
 	tcell.EventTime
-	marks MarkedList
+	marks MachedLineList
 }
 
 // markByPattern marks lines matching the pattern.
 func (root *Root) markByPattern(ctx context.Context, pattern string) {
-	searcher := root.setSearcher(pattern, root.Config.CaseSensitive)
+	searcher := root.createSearcher(pattern, root.Config.CaseSensitive)
 	if searcher == nil {
 		return
 	}
-	go root.markByPatternImpl(ctx, pattern, searcher)
+	root.setMessagef("mark by pattern %v", pattern)
+	go root.markByPatternImpl(ctx, searcher)
 }
 
 // markByPatternImpl marks lines matching the pattern.
-func (root *Root) markByPatternImpl(ctx context.Context, pattern string, searcher Searcher) {
-	var marks MarkedList
-	root.setMessagef("mark by pattern %v", pattern)
-
-	for ln := root.Doc.BufStartNum(); ln < root.Doc.BufEndNum(); ln++ {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-		lineC := root.lineContent(ln)
-		if searcher.MatchString(lineC.str) {
-			mark := Mark{lineNum: ln, contents: lineC.lc}
-			marks = append(marks, mark)
-		}
-	}
-	root.sendAddMarks(marks)
+func (root *Root) markByPatternImpl(ctx context.Context, searcher Searcher) {
+	lines := root.matchlinesByPattern(ctx, searcher)
+	root.sendAddMarks(lines)
 }
 
 // sendAddMarks fires the eventAddMarks event.
-func (root *Root) sendAddMarks(marks MarkedList) {
+func (root *Root) sendAddMarks(marks MachedLineList) {
 	ev := &eventAddMarks{}
 	ev.marks = marks
 	ev.SetEventNow()
