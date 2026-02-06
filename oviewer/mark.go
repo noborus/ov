@@ -13,7 +13,7 @@ func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = root.Doc.marked.remove(lN)
 	lineC := root.lineContent(lN)
-	mark := MachedLine{lineNum: lN, contents: lineC.lc}
+	mark := MatchedLine{lineNum: lN, contents: lineC.lc}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
@@ -26,7 +26,7 @@ func (root *Root) firstBodyLine() int {
 }
 
 // addMarks adds multiple line numbers to the mark list at once.
-func (root *Root) addMarks(_ context.Context, marks MachedLineList) {
+func (root *Root) addMarks(_ context.Context, marks MatchedLineList) {
 	root.Doc.markedPoint = -1
 	if len(marks) == 0 {
 		root.setMessagef("Added %d marks", 0)
@@ -136,8 +136,8 @@ func (root *Root) prevMark(context.Context) {
 	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint].lineNum)
 }
 
-func (list MachedLineList) remove(lineNumber int) MachedLineList {
-	newList := make(MachedLineList, 0, len(list))
+func (list MatchedLineList) remove(lineNumber int) MatchedLineList {
+	newList := make(MatchedLineList, 0, len(list))
 	for _, m := range list {
 		if m.lineNum != lineNumber {
 			newList = append(newList, m)
@@ -146,7 +146,7 @@ func (list MachedLineList) remove(lineNumber int) MachedLineList {
 	return newList
 }
 
-func (list MachedLineList) contains(lineNumber int) bool {
+func (list MatchedLineList) contains(lineNumber int) bool {
 	for _, mark := range list {
 		if mark.lineNum == lineNumber {
 			return true
@@ -158,7 +158,7 @@ func (list MachedLineList) contains(lineNumber int) bool {
 // eventAddMarks represents an event to add multiple marks.
 type eventAddMarks struct {
 	tcell.EventTime
-	marks MachedLineList
+	marks MatchedLineList
 }
 
 // markByPattern marks lines matching the pattern.
@@ -178,7 +178,7 @@ func (root *Root) markByPatternImpl(ctx context.Context, searcher Searcher) {
 }
 
 // sendAddMarks fires the eventAddMarks event.
-func (root *Root) sendAddMarks(marks MachedLineList) {
+func (root *Root) sendAddMarks(marks MatchedLineList) {
 	ev := &eventAddMarks{}
 	ev.marks = marks
 	ev.SetEventNow()

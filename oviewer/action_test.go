@@ -2328,7 +2328,7 @@ func TestRoot_goMarkNumber(t *testing.T) {
 		tcellNewScreen = tcell.NewScreen
 	}()
 	root := rootHelper(t)
-	root.Doc.marked = MachedLineList{
+	root.Doc.marked = MatchedLineList{
 		{lineNum: 10, contents: StrToContents("a", 0)},
 		{lineNum: 20, contents: StrToContents("b", 0)},
 		{lineNum: 30, contents: StrToContents("c", 0)},
