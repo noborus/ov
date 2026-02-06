@@ -2,9 +2,11 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -162,5 +164,47 @@ func TestRoot_prevMark(t *testing.T) {
 				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
 			}
 		})
+	}
+}
+
+func TestRoot_markByPattern_event(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
+	root.prepareScreen()
+	ctx := context.Background()
+	pattern := "9999"
+	root.markByPattern(ctx, pattern)
+
+	timedOut := false
+	var ev tcell.Event
+	for i := 0; i < 10; i++ {
+		select {
+		case ev = <-root.Screen.EventQ():
+			if addMarksEv, ok := ev.(*eventAddMarks); ok {
+				if len(addMarksEv.marks) == 0 {
+					t.Errorf("eventAddMarks.marks is empty, want at least 1")
+				}
+				found := false
+				for _, m := range addMarksEv.marks {
+					if m.lineNum == 9998 {
+						found = true
+						break
+					}
+				}
+				if !found {
+					fmt.Println("marks:", addMarksEv.marks)
+					t.Errorf("eventAddMarks.marks does not contain expected lineNum 1")
+				}
+				return
+			}
+		default:
+			time.Sleep(10 * 1e6) // 10ms
+		}
+	}
+	if !timedOut {
+		t.Errorf("eventAddMarks event not received")
 	}
 }

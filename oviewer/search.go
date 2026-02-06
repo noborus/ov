@@ -756,6 +756,9 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 
 // matchlinesByPattern returns lines matching the pattern.
 func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []MachedLine {
+	if searcher == nil {
+		return nil
+	}
 	var lines []MachedLine
 	for ln := root.Doc.BufStartNum(); ln < root.Doc.BufEndNum(); ln++ {
 		select {
