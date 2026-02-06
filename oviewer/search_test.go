@@ -646,7 +646,7 @@ func Test_condRegexpCompile(t *testing.T) {
 			want: regexp.MustCompile(``),
 		},
 		{
-			name: "testunclosed bracket",
+			name: "testUnclosed bracket",
 			args: args{
 				in: `/[abc/`,
 			},
@@ -1154,7 +1154,7 @@ func Test_cancelKeys(t *testing.T) {
 	}
 }
 
-func TestRoot_matchlinesByPattern(t *testing.T) {
+func TestRoot_allMatchedLines(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -1235,21 +1235,21 @@ func TestRoot_matchlinesByPattern(t *testing.T) {
 			ctx := context.Background()
 			root.everyUpdate(ctx)
 			root.draw(ctx)
-			got := root.matchlinesByPattern(ctx, tt.args.searcher)
+			got := root.allMatchedLines(ctx, tt.args.searcher)
 			if tt.args.searcher == nil {
 				if got != nil {
-					t.Errorf("Root.matchlinesByPattern() = %v, want nil", got)
+					t.Errorf("Root.allMatchedLines() = %v, want nil", got)
 				}
 				return
 			}
 			if len(got) != tt.wantLen {
-				t.Errorf("Root.matchlinesByPattern() length = %v, want %v", len(got), tt.wantLen)
+				t.Errorf("Root.allMatchedLines() length = %v, want %v", len(got), tt.wantLen)
 			}
 		})
 	}
 }
 
-func TestRoot_matchlinesByPattern_ContextCancel(t *testing.T) {
+func TestRoot_allMatchedLines_ContextCancel(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -1260,9 +1260,9 @@ func TestRoot_matchlinesByPattern_ContextCancel(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		searcher := NewSearcher("10", regexpCompile("10", false), false, false)
-		got := root.matchlinesByPattern(ctx, searcher)
+		got := root.allMatchedLines(ctx, searcher)
 		if got != nil {
-			t.Errorf("Root.matchlinesByPattern() with canceled context should return nil, got %v", got)
+			t.Errorf("Root.allMatchedLines() with canceled context should return nil, got %v", got)
 		}
 	})
 }

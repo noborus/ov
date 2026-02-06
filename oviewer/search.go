@@ -754,8 +754,8 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	return 0, ErrNotFound
 }
 
-// matchlinesByPattern returns lines matching the pattern.
-func (root *Root) matchlinesByPattern(ctx context.Context, searcher Searcher) []MatchedLine {
+// allMatchedLines returns lines matching the pattern.
+func (root *Root) allMatchedLines(ctx context.Context, searcher Searcher) []MatchedLine {
 	if searcher == nil {
 		return nil
 	}
