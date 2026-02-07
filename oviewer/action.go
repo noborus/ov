@@ -866,6 +866,13 @@ func (root *Root) WriteQuit(ctx context.Context) {
 		// hide other section.
 		root.Config.AfterWriteOriginal = root.bottomSectionLN(ctx)
 	}
+
+	// Do not write if BeforeWriteOriginal is set (greater than 0).
+	if root.Config.BeforeWriteOriginal > 0 {
+		root.Quit(ctx)
+		return
+	}
+
 	root.OnExit = root.ScreenContent()
 
 	root.Quit(ctx)
