@@ -19,6 +19,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/noborus/tcellansi"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 // Root is the root structure of the oviewer.
@@ -1294,12 +1295,12 @@ func (root *Root) outputOnExit(output io.Writer) {
 func (root *Root) writeCurrentScreen(output io.Writer) {
 	strs := root.OnExit
 	if strs == nil {
-		height, err := root.dummyScreen()
+		start, end, err := root.dummyScreen()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, 0, height)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, start, end)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1311,10 +1312,20 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 }
 
 // dummyScreen creates a dummy screen.
-func (root *Root) dummyScreen() (int, error) {
+func (root *Root) dummyScreen() (int, int, error) {
+	col := 80
+	row := 25
+	fd := int(os.Stdout.Fd())
+	w, h, err := term.GetSize(fd)
+	if err == nil && w > 0 && h > 0 {
+		col = w
+		row = h
+	}
+	root.scr.vWidth = col
+	root.scr.vHeight = row
 	root.Screen = tcell.NewSimulationScreen("")
 	if err := root.Screen.Init(); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	height := root.scr.vHeight
 	if root.Config.BeforeWriteOriginal != 0 || root.Config.AfterWriteOriginal != 0 {
@@ -1333,26 +1344,40 @@ func (root *Root) dummyScreen() (int, error) {
 	root.prepareScreen()
 	root.prepareDraw(ctx)
 	root.draw(ctx)
-	height = realHeight(root.scr)
-	return height, nil
+	start, end := contentRange(root.scr)
+	return start, end, nil
 }
 
-func realHeight(scr SCR) int {
-	height := 0
-	for ; height < scr.vHeight-scr.statusLineHeight; height++ {
-		if !scr.lines[scr.numbers[height].number].valid {
+// contentRange returns the range of valid content on the screen.
+func contentRange(scr SCR) (int, int) {
+	start := 0
+	end := 0
+	valid := false
+	for y := 0; y < scr.vHeight-scr.statusLineHeight; y++ {
+		if y >= len(scr.numbers) {
 			break
 		}
+		if !scr.lines[scr.numbers[y].number].valid {
+			continue
+		}
+		if !valid {
+			start = y
+			valid = true
+		}
+		end = y + 1
 	}
-	return height
+	return start, end
 }
 
 // ScreenContent returns the screen content.
 func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
 	m := root.Doc
-	height := realHeight(root.scr)
-	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, 0, height)
+	start, end := contentRange(root.scr)
+	end += root.Config.AfterWriteOriginal
+	start -= root.Config.BeforeWriteOriginal
+	end = max(end, start)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, start, end)
 	strs = tcellansi.TrimRightSpaces(strs)
 	return strs
 }
