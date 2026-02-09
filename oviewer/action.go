@@ -184,9 +184,9 @@ func (root *Root) toggleSidebarHelp(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeHelp)
 }
 
-// toggleSidebarMarkList toggles the mark list sidebar visibility.
-func (root *Root) toggleSidebarMarkList(ctx context.Context) {
-	root.toggleSidebar(ctx, SidebarModeMark)
+// toggleSidebarMarks toggles the mark list sidebar visibility.
+func (root *Root) toggleSidebarMarks(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeMarks)
 }
 
 // toggleSidebarDocList toggles the document list sidebar visibility.

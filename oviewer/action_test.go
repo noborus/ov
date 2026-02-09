@@ -2293,9 +2293,9 @@ func TestRoot_toggleSidebar(t *testing.T) {
 			name:           "Switch Sidebar mode",
 			initialVisible: true,
 			initialMode:    SidebarModeHelp,
-			toggleMode:     SidebarModeMark,
+			toggleMode:     SidebarModeMarks,
 			wantVisible:    true,
-			wantMode:       SidebarModeMark,
+			wantMode:       SidebarModeMarks,
 		},
 		{
 			name:           "Close Sidebar with SidebarModeNone",
@@ -2514,16 +2514,16 @@ func TestRoot_toggleSidebarMarkList(t *testing.T) {
 	root.sidebarMode = SidebarModeNone
 
 	// Call toggleSidebarMarkList to open the mark list sidebar
-	root.toggleSidebarMarkList(ctx)
+	root.toggleSidebarMarks(ctx)
 	if !root.sidebarVisible {
 		t.Errorf("toggleSidebarMarkList() sidebarVisible = %v, want %v", root.sidebarVisible, true)
 	}
-	if root.sidebarMode != SidebarModeMark {
-		t.Errorf("toggleSidebarMarkList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeMark)
+	if root.sidebarMode != SidebarModeMarks {
+		t.Errorf("toggleSidebarMarkList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeMarks)
 	}
 
 	// Call again to close the sidebar
-	root.toggleSidebarMarkList(ctx)
+	root.toggleSidebarMarks(ctx)
 	if root.sidebarVisible {
 		t.Errorf("toggleSidebarMarkList() sidebarVisible = %v, want %v", root.sidebarVisible, false)
 	}

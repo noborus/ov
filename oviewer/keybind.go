@@ -56,13 +56,13 @@ const (
 	actionWriteOriginal  = "write_original"
 
 	// Sidebar actions.
-	actionSidebarHelp     = "sidebar_help"
-	actionSidebarMarkList = "sidebar_mark_list"
-	actionSidebarDocList  = "sidebar_doc_list"
-	actionSidebarUp       = "sidebar_up"
-	actionSidebarDown     = "sidebar_down"
-	actionSidebarLeft     = "sidebar_left"
-	actionSidebarRight    = "sidebar_right"
+	actionSidebarHelp    = "sidebar_help"
+	actionSidebarMarks   = "sidebar_marks"
+	actionSidebarDocList = "sidebar_doc_list"
+	actionSidebarUp      = "sidebar_up"
+	actionSidebarDown    = "sidebar_down"
+	actionSidebarLeft    = "sidebar_left"
+	actionSidebarRight   = "sidebar_right"
 
 	// Move actions.
 	actionMoveDown       = "down"
@@ -168,13 +168,13 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionWriteOriginal:  root.toggleWriteOriginal,
 
 		// Sidebar actions.
-		actionSidebarHelp:     root.toggleSidebarHelp,
-		actionSidebarMarkList: root.toggleSidebarMarkList,
-		actionSidebarDocList:  root.toggleSidebarDocList,
-		actionSidebarUp:       root.sidebarUp,
-		actionSidebarDown:     root.sidebarDown,
-		actionSidebarLeft:     root.sidebarLeft,
-		actionSidebarRight:    root.sidebarRight,
+		actionSidebarHelp:    root.toggleSidebarHelp,
+		actionSidebarMarks:   root.toggleSidebarMarks,
+		actionSidebarDocList: root.toggleSidebarDocList,
+		actionSidebarUp:      root.sidebarUp,
+		actionSidebarDown:    root.sidebarDown,
+		actionSidebarLeft:    root.sidebarLeft,
+		actionSidebarRight:   root.sidebarRight,
 
 		// Move actions.
 		actionMoveDown:       root.moveDownOne,
@@ -307,13 +307,13 @@ func defaultKeyBinds() KeyBind {
 		actionMovePrevMark:   {"<"},
 
 		// sidebar actions.
-		actionSidebarHelp:     {"alt+h"},
-		actionSidebarMarkList: {"alt+m"},
-		actionSidebarDocList:  {"alt+l"},
-		actionSidebarUp:       {"shift+Up"},
-		actionSidebarDown:     {"shift+Down"},
-		actionSidebarLeft:     {"shift+Left"},
-		actionSidebarRight:    {"shift+Right"},
+		actionSidebarHelp:    {"alt+1"},
+		actionSidebarMarks:   {"alt+2"},
+		actionSidebarDocList: {"alt+3"},
+		actionSidebarUp:      {"shift+Up"},
+		actionSidebarDown:    {"shift+Down"},
+		actionSidebarLeft:    {"shift+Left"},
+		actionSidebarRight:   {"shift+Right"},
 
 		// Actions that enter input mode.
 		actionConvertType:    {"alt+t"},
@@ -447,9 +447,9 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMoving, Action: actionMarkNumber, Description: "go to mark number(input number allowed)"},
 
 	// Sidebar
-	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "show/hide help in sidebar"},
-	{Group: GroupSidebar, Action: actionSidebarMarkList, Description: "show mark list in sidebar"},
-	{Group: GroupSidebar, Action: actionSidebarDocList, Description: "show document list in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "toggle help in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarMarks, Description: "toggle mark list in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarDocList, Description: "toggle document list in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarUp, Description: "scroll up in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarDown, Description: "scroll down in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "scroll left in sidebar"},
