@@ -19,23 +19,23 @@ type SidebarMode int
 const (
 	// SidebarModeNone is no sidebar.
 	SidebarModeNone SidebarMode = iota
-	// SidebarModeDocList is the document list sidebar.
-	SidebarModeDocList
-	// SidebarModeMark is the mark sidebar.
-	SidebarModeMark
 	// SidebarModeHelp is the help sidebar.
 	SidebarModeHelp
+	// SidebarModeMarks is the mark list sidebar.
+	SidebarModeMarks
+	// SidebarModeDocList is the document list sidebar.
+	SidebarModeDocList
 )
 
 // String returns the string representation of the SidebarMode.
 func (s SidebarMode) String() string {
 	switch s {
-	case SidebarModeDocList:
-		return "Files"
-	case SidebarModeMark:
-		return "Marks"
 	case SidebarModeHelp:
 		return "Help"
+	case SidebarModeMarks:
+		return "Marks"
+	case SidebarModeDocList:
+		return "Documents"
 	default:
 		return "none"
 	}
@@ -61,24 +61,49 @@ func (root *Root) prepareSidebarItems() {
 	}
 	var items []SidebarItem
 	switch root.sidebarMode {
-	case SidebarModeMark:
-		items = root.sidebarItemsForMark()
-	case SidebarModeDocList:
-		items = root.sidebarItemsForDocList()
 	case SidebarModeHelp:
 		items = root.sidebarItemsForHelp()
+	case SidebarModeMarks:
+		items = root.sidebarItemsForMarks()
+	case SidebarModeDocList:
+		items = root.sidebarItemsForDocList()
 	}
 	root.SidebarItems = items
 }
 
-// sidebarItemsForMark creates SidebarItems for the mark sidebar.
-func (root *Root) sidebarItemsForMark() []SidebarItem {
+// sidebarItemsForHelp creates SidebarItems for the help sidebar.
+func (root *Root) sidebarItemsForHelp() []SidebarItem {
+	var items []SidebarItem
+	keyBinds := GetKeyBinds(root.Config)
+	descriptions := keyBinds.GetKeyBindDescriptions(GroupAll)
+	totalLines := len(descriptions) * 2
+	root.adjustSidebarScroll(SidebarModeHelp, totalLines, 0)
+	scroll := root.sidebarScrolls[SidebarModeHelp]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, totalLines)
+	for line := start; line < end; line++ {
+		i := line / 2
+		desc := descriptions[i]
+		if line%2 == 0 {
+			content := StrToContents("["+desc[1]+"]", 0)
+			items = append(items, SidebarItem{Label: "", Contents: content, IsCurrent: false})
+		} else {
+			contentDesc := StrToContents("  "+desc[0], 0)
+			items = append(items, SidebarItem{Label: "", Contents: contentDesc, IsCurrent: false})
+		}
+	}
+	root.SidebarHelpItems = items
+	return items
+}
+
+// sidebarItemsForMarks creates SidebarItems for the mark sidebar.
+func (root *Root) sidebarItemsForMarks() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	marks := root.Doc.marked
 	current := root.Doc.markedPoint
-	root.adjustSidebarScroll(SidebarModeMark, len(marks), current)
-	scroll := root.sidebarScrolls[SidebarModeMark]
+	root.adjustSidebarScroll(SidebarModeMarks, len(marks), current)
+	scroll := root.sidebarScrolls[SidebarModeMarks]
 	start := scroll.y
 	end := min(start+root.scr.vHeight, len(marks))
 	for i := start; i < end; i++ {
@@ -125,31 +150,6 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 			IsCurrent: isCurrent,
 		})
 	}
-	return items
-}
-
-// sidebarItemsForHelp creates SidebarItems for the help sidebar.
-func (root *Root) sidebarItemsForHelp() []SidebarItem {
-	var items []SidebarItem
-	keyBinds := GetKeyBinds(root.Config)
-	descriptions := keyBinds.GetKeyBindDescriptions(GroupAll)
-	totalLines := len(descriptions) * 2
-	root.adjustSidebarScroll(SidebarModeHelp, totalLines, 0)
-	scroll := root.sidebarScrolls[SidebarModeHelp]
-	start := scroll.y
-	end := min(start+root.scr.vHeight, totalLines)
-	for line := start; line < end; line++ {
-		i := line / 2
-		desc := descriptions[i]
-		if line%2 == 0 {
-			content := StrToContents("["+desc[1]+"]", 0)
-			items = append(items, SidebarItem{Label: "", Contents: content, IsCurrent: false})
-		} else {
-			contentDesc := StrToContents("  "+desc[0], 0)
-			items = append(items, SidebarItem{Label: "", Contents: contentDesc, IsCurrent: false})
-		}
-	}
-	root.SidebarHelpItems = items
 	return items
 }
 

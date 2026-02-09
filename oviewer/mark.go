@@ -72,7 +72,7 @@ func (root *Root) removeAllMark(context.Context) {
 
 // goMarkNumber moves to the specified mark number or relative position (+n/-n).
 func (root *Root) goMarkNumber(input string) {
-	if root.previousSidebarMode != SidebarModeMark {
+	if root.previousSidebarMode != SidebarModeMarks {
 		root.toggleSidebar(context.Background(), root.previousSidebarMode)
 	}
 	if len(root.Doc.marked) == 0 {

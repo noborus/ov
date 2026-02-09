@@ -25,14 +25,14 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 	}{
 		{
 			name:         "sidebarWidth zero does nothing",
-			sidebarMode:  SidebarModeMark,
+			sidebarMode:  SidebarModeMarks,
 			sidebarWidth: 0,
 			setup:        func(root *Root) {},
 			wantItems:    func(root *Root) []SidebarItem { return nil },
 		},
 		{
 			name:         "SidebarModeMark sets SidebarItems",
-			sidebarMode:  SidebarModeMark,
+			sidebarMode:  SidebarModeMarks,
 			sidebarWidth: 20,
 			setup: func(root *Root) {
 				root.Doc.marked = []MatchedLine{
@@ -195,12 +195,12 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			}
 			root.scr.vHeight = 20 // arbitrary value for testing
 			root.sidebarWidth = 20
-			root.sidebarMode = SidebarModeMark
+			root.sidebarMode = SidebarModeMarks
 			for _, c := range tt.marks {
 				root.Doc.topLN = c
 				root.Doc.marked = append(root.Doc.marked, MatchedLine{lineNum: c, contents: root.lineContent(c).lc})
 			}
-			got := root.sidebarItemsForMark()
+			got := root.sidebarItemsForMarks()
 			if len(got) != len(tt.want) {
 				t.Errorf("sidebarItemsForMark() length = %d, want %d", len(got), len(tt.want))
 			}
