@@ -307,9 +307,9 @@ func defaultKeyBinds() KeyBind {
 		actionMovePrevMark:   {"<"},
 
 		// sidebar actions.
-		actionSidebarHelp:    {"alt+1"},
-		actionSidebarMarks:   {"alt+2"},
-		actionSidebarDocList: {"alt+3"},
+		actionSidebarHelp:    {"alt+h"},
+		actionSidebarMarks:   {"alt+m"},
+		actionSidebarDocList: {"alt+l"},
 		actionSidebarUp:      {"shift+Up"},
 		actionSidebarDown:    {"shift+Down"},
 		actionSidebarLeft:    {"shift+Left"},
