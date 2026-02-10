@@ -730,6 +730,12 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 			log.Println(err)
 			continue
 		}
+		// Resolve symlinks to ensure path matches fsnotify events.
+		// On macOS, /tmp is a symlink to /private/tmp, so fsnotify
+		// reports events with the real path.
+		if realPath, err := filepath.EvalSymlinks(fileName); err == nil {
+			fileName = realPath
+		}
 		doc.filepath = fileName
 
 		path := filepath.Dir(fileName)
