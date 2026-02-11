@@ -93,6 +93,8 @@ type Document struct {
 
 	// marked is a list of marked line numbers.
 	marked MatchedLineList
+	// sectionList is a list of section line numbers.
+	sectionList MatchedLineList
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 

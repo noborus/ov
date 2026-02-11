@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -192,6 +193,11 @@ func (root *Root) toggleSidebarMarks(ctx context.Context) {
 // toggleSidebarDocList toggles the document list sidebar visibility.
 func (root *Root) toggleSidebarDocList(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeDocList)
+}
+
+// toggleSidebarSections toggles the section list sidebar visibility.
+func (root *Root) toggleSidebarSections(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeSections)
 }
 
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
@@ -606,13 +612,14 @@ func rangeBA(str string) (int, int, error) {
 }
 
 // setSectionDelimiter sets the delimiter string.
-func (root *Root) setSectionDelimiter(input string) {
+func (root *Root) setSectionDelimiter(ctx context.Context, input string) {
 	root.Doc.setSectionDelimiter(input)
+	root.triggerUpdateSectionList(ctx)
 	root.setMessagef("Set section delimiter %s", input)
 }
 
 // setSectionStart sets the section start position.
-func (root *Root) setSectionStart(input string) {
+func (root *Root) setSectionStart(ctx context.Context, input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())
@@ -623,7 +630,48 @@ func (root *Root) setSectionStart(input string) {
 		return
 	}
 	root.Doc.SectionStartPosition = num
+	root.triggerUpdateSectionList(ctx)
 	root.setMessagef("Set section start position %s", input)
+}
+
+// triggerUpdateSectionList runs updateSectionList in a goroutine.
+func (root *Root) triggerUpdateSectionList(ctx context.Context) {
+	m := root.Doc
+	sectionDelimiter := m.SectionDelimiter
+	sectionDelimiterReg := m.SectionDelimiterReg
+	sectionStartPosition := m.SectionStartPosition
+	go root.updateSectionList(ctx, sectionDelimiter, sectionDelimiterReg, sectionStartPosition)
+}
+
+// updateSectionList rebuilds the list of sections based on SectionDelimiter.
+func (root *Root) updateSectionList(ctx context.Context, sectionDelimiter string, sectionDelimiterReg *regexp.Regexp, sectionStartPosition int) {
+	m := root.Doc
+	if sectionDelimiter == "" || sectionDelimiterReg == nil {
+		root.sendAddSections(nil)
+		return
+	}
+	searcher := NewSearcher(sectionDelimiter, sectionDelimiterReg, true, true)
+	var sections MatchedLineList
+	for ln := m.BufStartNum(); ln < m.BufEndNum(); ln++ {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		lineC := m.getLineC(ln)
+		if searcher.MatchString(lineC.str) {
+			pos := ln + sectionStartPosition
+			sections = append(sections, MatchedLine{lineNum: pos, contents: lineC.lc})
+		}
+	}
+	root.sendAddSections(sections)
+}
+
+func (root *Root) addSectionList(ctx context.Context, sections MatchedLineList) {
+	m := root.Doc
+	m.sectionList = sections
+	root.setMessageLogf("Added %d sections", len(sections))
+	root.ViewSync(ctx)
 }
 
 // setMultiColor set multiple strings to highlight with multiple colors.

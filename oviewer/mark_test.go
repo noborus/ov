@@ -178,11 +178,10 @@ func TestRoot_markByPattern_event(t *testing.T) {
 	pattern := "9999"
 	root.markByPattern(ctx, pattern)
 
-	timedOut := false
-	var ev tcell.Event
-	for i := 0; i < 10; i++ {
+	deadline := time.After(1 * time.Second)
+	for {
 		select {
-		case ev = <-root.Screen.EventQ():
+		case ev := <-root.Screen.EventQ():
 			if addMarksEv, ok := ev.(*eventAddMarks); ok {
 				if len(addMarksEv.marks) == 0 {
 					t.Errorf("eventAddMarks.marks is empty, want at least 1")
@@ -200,11 +199,8 @@ func TestRoot_markByPattern_event(t *testing.T) {
 				}
 				return
 			}
-		default:
-			time.Sleep(10 * 1e6) // 10ms
+		case <-deadline:
+			t.Fatalf("eventAddMarks event not received")
 		}
-	}
-	if !timedOut {
-		t.Errorf("eventAddMarks event not received")
 	}
 }
