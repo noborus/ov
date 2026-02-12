@@ -173,7 +173,7 @@ func (root *Root) markByPattern(ctx context.Context, pattern string) {
 
 // markByPatternImpl marks lines matching the pattern.
 func (root *Root) markByPatternImpl(ctx context.Context, searcher Searcher) {
-	lines := root.allMatchedLines(ctx, searcher)
+	lines := root.allMatchedLines(ctx, searcher, 0)
 	root.sendAddMarks(lines)
 }
 
