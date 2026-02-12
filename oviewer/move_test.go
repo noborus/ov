@@ -167,7 +167,7 @@ func TestRoot_moveSection(t *testing.T) {
 			ctx := context.Background()
 			root.everyUpdate(context.Background())
 			root.Doc.topLN = tt.fields.topLN
-			root.setSectionDelimiter(tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
 			root.nextSection(ctx)
 			if root.Doc.topLN != tt.want.nextSection {
 				t.Errorf("nextSection got %d, want %d", root.Doc.topLN, tt.want.nextSection)

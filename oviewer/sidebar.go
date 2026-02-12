@@ -25,6 +25,8 @@ const (
 	SidebarModeMarks
 	// SidebarModeDocList is the document list sidebar.
 	SidebarModeDocList
+	// SidebarModeSections is the section list sidebar.
+	SidebarModeSections
 )
 
 // String returns the string representation of the SidebarMode.
@@ -36,6 +38,8 @@ func (s SidebarMode) String() string {
 		return "Marks"
 	case SidebarModeDocList:
 		return "Documents"
+	case SidebarModeSections:
+		return "Sections"
 	default:
 		return "none"
 	}
@@ -67,6 +71,8 @@ func (root *Root) prepareSidebarItems() {
 		items = root.sidebarItemsForMarks()
 	case SidebarModeDocList:
 		items = root.sidebarItemsForDocList()
+	case SidebarModeSections:
+		items = root.sidebarItemsForSections()
 	}
 	root.SidebarItems = items
 }
@@ -148,6 +154,42 @@ func (root *Root) sidebarItemsForDocList() []SidebarItem {
 			Label:     label,
 			Contents:  displayName,
 			IsCurrent: isCurrent,
+		})
+	}
+	return items
+}
+
+// sidebarItemsForSections returns SidebarItems for sectionList.
+func (root *Root) sidebarItemsForSections() []SidebarItem {
+	var items []SidebarItem
+	length := root.sidebarWidth - 4
+	sections := root.Doc.sectionList
+	lN := root.Doc.topLN + root.Doc.firstLine()
+	current := -1
+	for i, section := range sections {
+		if section.lineNum >= lN {
+			current = i
+			break
+		}
+	}
+	root.adjustSidebarScroll(SidebarModeSections, len(sections), current)
+	scroll := root.sidebarScrolls[SidebarModeSections]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(sections))
+	for i := start; i < end; i++ {
+		section := sections[i]
+		lc := section.contents.TrimLeft()
+		numContents := StrToContents(fmt.Sprintf("%d ", section.lineNum), 0)
+		lc = append(numContents, lc...)
+		if len(lc) < length {
+			spaces := StrToContents(strings.Repeat(" ", length-len(lc)), 0)
+			lc = append(lc, spaces...)
+		}
+		label := fmt.Sprintf("%2d ", i)
+		items = append(items, SidebarItem{
+			Label:     label,
+			Contents:  lc,
+			IsCurrent: (i == current),
 		})
 	}
 	return items

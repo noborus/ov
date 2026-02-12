@@ -18,6 +18,9 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
 		atomic.StoreInt32(&root.Doc.watchRestart, 1)
 	}
+	if root.Doc.SectionDelimiter != "" {
+		root.triggerUpdateSectionList(ctx)
+	}
 	go root.updateInterval(ctx)
 	defer root.debugNumOfChunk()
 
@@ -69,6 +72,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.searchGo(ctx, ev.ln, ev.searcher)
 	case *eventAddMarks:
 		root.addMarks(ctx, ev.marks)
+	case *eventAddSections:
+		root.addSectionList(ctx, ev.sections)
 	case *eventReachEOF:
 		// Quit if small doc and config allows
 		if root.quitCheck() {
@@ -103,9 +108,9 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventTabWidth:
 		root.setTabWidth(ev.value)
 	case *eventSectionDelimiter:
-		root.setSectionDelimiter(ev.value)
+		root.setSectionDelimiter(ctx, ev.value)
 	case *eventSectionStart:
-		root.setSectionStart(ev.value)
+		root.setSectionStart(ctx, ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
 	case *eventVerticalHeader:
@@ -175,6 +180,20 @@ func (root *Root) MoveTop() {
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
+}
+
+// eventAddSections represents an event to add multiple sections.
+type eventAddSections struct {
+	tcell.EventTime
+	sections MatchedLineList
+}
+
+// sendAddSections fires the eventAddSections event.
+func (root *Root) sendAddSections(sections MatchedLineList) {
+	ev := &eventAddSections{}
+	ev.sections = sections
+	ev.SetEventNow()
+	root.postEvent(ev)
 }
 
 // everyUpdate is called every time before running the event.

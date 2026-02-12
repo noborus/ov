@@ -120,6 +120,9 @@ func (s *store) evictChunksMem(chunkNum int) {
 
 // unloadChunk unloads the chunk from memory.
 func (s *store) unloadChunk(chunkNum int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.loadedChunks.Remove(chunkNum)
 	s.chunks[chunkNum].lines = nil
 }
