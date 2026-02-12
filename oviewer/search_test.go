@@ -1235,7 +1235,7 @@ func TestRoot_allMatchedLines(t *testing.T) {
 			ctx := context.Background()
 			root.everyUpdate(ctx)
 			root.draw(ctx)
-			got := root.allMatchedLines(ctx, tt.args.searcher)
+			got := root.allMatchedLines(ctx, tt.args.searcher, 0)
 			if tt.args.searcher == nil {
 				if got != nil {
 					t.Errorf("Root.allMatchedLines() = %v, want nil", got)
@@ -1260,7 +1260,7 @@ func TestRoot_allMatchedLines_ContextCancel(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		searcher := NewSearcher("10", regexpCompile("10", false), false, false)
-		got := root.allMatchedLines(ctx, searcher)
+		got := root.allMatchedLines(ctx, searcher, 0)
 		if got != nil {
 			t.Errorf("Root.allMatchedLines() with canceled context should return nil, got %v", got)
 		}

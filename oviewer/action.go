@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -150,6 +149,9 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
+	if mode == SidebarModeSections && root.Doc.sectionList == nil {
+		root.generateSectionList()
+	}
 	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
 	if err != nil {
 		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
@@ -163,8 +165,8 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 }
 
 // calcSideWidth calculates the sidebar width based on the configuration string.
-func calcSideWidth(sidewidth string, width int) (int, error) {
-	w, err := calcPosition(sidewidth, width)
+func calcSideWidth(sideWidth string, width int) (int, error) {
+	w, err := calcPosition(sideWidth, width)
 	if err != nil {
 		return 0, err
 	}
@@ -612,14 +614,16 @@ func rangeBA(str string) (int, int, error) {
 }
 
 // setSectionDelimiter sets the delimiter string.
-func (root *Root) setSectionDelimiter(ctx context.Context, input string) {
+func (root *Root) setSectionDelimiter(input string) {
 	root.Doc.setSectionDelimiter(input)
-	root.triggerUpdateSectionList(ctx)
+	if root.sidebarMode == SidebarModeSections && root.Doc.sectionList == nil {
+		root.generateSectionList()
+	}
 	root.setMessagef("Set section delimiter %s", input)
 }
 
 // setSectionStart sets the section start position.
-func (root *Root) setSectionStart(ctx context.Context, input string) {
+func (root *Root) setSectionStart(input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())
@@ -630,47 +634,32 @@ func (root *Root) setSectionStart(ctx context.Context, input string) {
 		return
 	}
 	root.Doc.SectionStartPosition = num
-	root.triggerUpdateSectionList(ctx)
+	if root.sidebarMode == SidebarModeSections && root.Doc.sectionList == nil {
+		root.generateSectionList()
+	}
 	root.setMessagef("Set section start position %s", input)
 }
 
-// triggerUpdateSectionList runs updateSectionList in a goroutine.
-func (root *Root) triggerUpdateSectionList(ctx context.Context) {
+// generateSectionList runs generateSectionList in a goroutine.
+func (root *Root) generateSectionList() {
 	m := root.Doc
 	sectionDelimiter := m.SectionDelimiter
 	sectionDelimiterReg := m.SectionDelimiterReg
 	sectionStartPosition := m.SectionStartPosition
-	go root.updateSectionList(ctx, sectionDelimiter, sectionDelimiterReg, sectionStartPosition)
-}
-
-// updateSectionList rebuilds the list of sections based on SectionDelimiter.
-func (root *Root) updateSectionList(ctx context.Context, sectionDelimiter string, sectionDelimiterReg *regexp.Regexp, sectionStartPosition int) {
-	m := root.Doc
-	if sectionDelimiter == "" || sectionDelimiterReg == nil {
-		root.sendAddSections(nil)
-		return
-	}
 	searcher := NewSearcher(sectionDelimiter, sectionDelimiterReg, true, true)
-	var sections MatchedLineList
-	for ln := m.BufStartNum(); ln < m.BufEndNum(); ln++ {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-		lineC := m.getLineC(ln)
-		if searcher.MatchString(lineC.str) {
-			pos := ln + sectionStartPosition
-			sections = append(sections, MatchedLine{lineNum: pos, contents: lineC.lc})
-		}
-	}
-	root.sendAddSections(sections)
+	ctx := context.Background()
+	go func() {
+		sections := root.allMatchedLines(ctx, searcher, sectionStartPosition)
+		root.sendAddSections(sections)
+	}()
 }
 
-func (root *Root) addSectionList(ctx context.Context, sections MatchedLineList) {
+// updateSectionList updates the section list.
+// This function is called via the event channel.
+func (root *Root) updateSectionList(ctx context.Context, sections MatchedLineList) {
 	m := root.Doc
 	m.sectionList = sections
-	root.setMessageLogf("Added %d sections", len(sections))
+	root.setMessagef("Added %d sections", len(sections))
 	root.ViewSync(ctx)
 }
 

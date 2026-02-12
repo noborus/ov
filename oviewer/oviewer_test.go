@@ -453,8 +453,7 @@ func TestRoot_writeOriginal(t *testing.T) {
 			root := rootFileReadHelper(t, tt.args.fileNames...)
 			root.Doc.Header = tt.fields.header
 			root.Doc.topLN = tt.fields.topLN
-			ctx := context.Background()
-			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			if tt.fields.sectionNum > 0 {
 				root.Doc.SectionHeaderNum = tt.fields.sectionNum
 				root.Doc.SectionHeader = true

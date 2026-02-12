@@ -18,9 +18,6 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
 		atomic.StoreInt32(&root.Doc.watchRestart, 1)
 	}
-	if root.Doc.SectionDelimiter != "" {
-		root.triggerUpdateSectionList(ctx)
-	}
 	go root.updateInterval(ctx)
 	defer root.debugNumOfChunk()
 
@@ -73,7 +70,7 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventAddMarks:
 		root.addMarks(ctx, ev.marks)
 	case *eventAddSections:
-		root.addSectionList(ctx, ev.sections)
+		root.updateSectionList(ctx, ev.sections)
 	case *eventReachEOF:
 		// Quit if small doc and config allows
 		if root.quitCheck() {
@@ -108,9 +105,9 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventTabWidth:
 		root.setTabWidth(ev.value)
 	case *eventSectionDelimiter:
-		root.setSectionDelimiter(ctx, ev.value)
+		root.setSectionDelimiter(ev.value)
 	case *eventSectionStart:
-		root.setSectionStart(ctx, ev.value)
+		root.setSectionStart(ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
 	case *eventVerticalHeader:
