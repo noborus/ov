@@ -149,9 +149,6 @@ func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
 
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
-	if mode == SidebarModeSections && root.Doc.sectionList == nil {
-		root.generateSectionList()
-	}
 	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
 	if err != nil {
 		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
@@ -160,6 +157,7 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.sidebarMode = mode
 	root.sidebarVisible = true
 	root.sidebarWidth = width
+	root.generateSectionList()
 	root.ViewSync(ctx)
 	root.setMessagef("Sidebar %s visible", mode.String())
 }
@@ -616,9 +614,7 @@ func rangeBA(str string) (int, int, error) {
 // setSectionDelimiter sets the delimiter string.
 func (root *Root) setSectionDelimiter(input string) {
 	root.Doc.setSectionDelimiter(input)
-	if root.sidebarMode == SidebarModeSections && root.Doc.sectionList == nil {
-		root.generateSectionList()
-	}
+	root.generateSectionList()
 	root.setMessagef("Set section delimiter %s", input)
 }
 
@@ -634,23 +630,33 @@ func (root *Root) setSectionStart(input string) {
 		return
 	}
 	root.Doc.SectionStartPosition = num
-	if root.sidebarMode == SidebarModeSections && root.Doc.sectionList == nil {
-		root.generateSectionList()
-	}
+	root.generateSectionList()
 	root.setMessagef("Set section start position %s", input)
 }
 
 // generateSectionList runs generateSectionList in a goroutine.
 func (root *Root) generateSectionList() {
+	log.Println("generateSectionList start")
+	if root.sidebarMode != SidebarModeSections {
+		return
+	}
+
 	m := root.Doc
+	if m.SectionDelimiter == "" {
+		root.sendUpdateSections(nil)
+		return
+	}
 	sectionDelimiter := m.SectionDelimiter
 	sectionDelimiterReg := m.SectionDelimiterReg
 	sectionStartPosition := m.SectionStartPosition
 	searcher := NewSearcher(sectionDelimiter, sectionDelimiterReg, true, true)
+	if searcher == nil {
+		return
+	}
 	ctx := context.Background()
 	go func() {
 		sections := root.allMatchedLines(ctx, searcher, sectionStartPosition)
-		root.sendAddSections(sections)
+		root.sendUpdateSections(sections)
 	}()
 }
 

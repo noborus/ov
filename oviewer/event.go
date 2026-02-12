@@ -69,7 +69,7 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.searchGo(ctx, ev.ln, ev.searcher)
 	case *eventAddMarks:
 		root.addMarks(ctx, ev.marks)
-	case *eventAddSections:
+	case *eventUpdateSections:
 		root.updateSectionList(ctx, ev.sections)
 	case *eventReachEOF:
 		// Quit if small doc and config allows
@@ -179,15 +179,15 @@ func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
 }
 
-// eventAddSections represents an event to add multiple sections.
-type eventAddSections struct {
+// eventUpdateSections represents an event to update the section list.
+type eventUpdateSections struct {
 	tcell.EventTime
 	sections MatchedLineList
 }
 
-// sendAddSections fires the eventAddSections event.
-func (root *Root) sendAddSections(sections MatchedLineList) {
-	ev := &eventAddSections{}
+// sendUpdateSections fires the eventUpdateSections event.
+func (root *Root) sendUpdateSections(sections MatchedLineList) {
+	ev := &eventUpdateSections{}
 	ev.sections = sections
 	ev.SetEventNow()
 	root.postEvent(ev)
