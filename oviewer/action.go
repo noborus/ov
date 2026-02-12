@@ -614,7 +614,7 @@ func rangeBA(str string) (int, int, error) {
 }
 
 // setSectionDelimiter sets the delimiter string.
-func (root *Root) setSectionDelimiter(ctx context.Context, input string) {
+func (root *Root) setSectionDelimiter(input string) {
 	root.Doc.setSectionDelimiter(input)
 	if root.sidebarMode == SidebarModeSections && root.Doc.sectionList == nil {
 		root.generateSectionList()
@@ -623,7 +623,7 @@ func (root *Root) setSectionDelimiter(ctx context.Context, input string) {
 }
 
 // setSectionStart sets the section start position.
-func (root *Root) setSectionStart(ctx context.Context, input string) {
+func (root *Root) setSectionStart(input string) {
 	num, err := strconv.Atoi(input)
 	if err != nil {
 		root.setMessagef("Set section start position: %s", ErrInvalidNumber.Error())

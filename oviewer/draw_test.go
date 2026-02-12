@@ -428,7 +428,7 @@ func TestRoot_sectionLineHighlight(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.Doc.SectionHeader = true
 			ctx := context.Background()
-			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.Doc.SectionHeaderNum = tt.fields.sectionHeaderNum
 			root.prepareScreen()
 			root.ViewSync(ctx)

@@ -787,8 +787,7 @@ func TestRoot_setSectionStart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-			root.setSectionStart(ctx, tt.args.input)
+			root.setSectionStart(tt.args.input)
 			if root.Doc.SectionStartPosition != tt.want {
 				t.Errorf("setSectionStart() = %v, want %v", root.Doc.SectionStartPosition, tt.want)
 			}
@@ -866,7 +865,7 @@ func TestRoot_searchGo(t *testing.T) {
 			root.prepareDraw(ctx)
 			root.setSearcher(tt.fields.searchWord, false)
 			root.Doc.jumpTargetSection = tt.fields.jumpTargetSection
-			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.Doc.SectionHeader = true
 			root.searchGo(ctx, tt.args.lN, root.searcher)
 			if root.Doc.topLN != tt.want {
@@ -1383,7 +1382,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.prepareScreen()
 			ctx := context.Background()
-			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.prepareDraw(ctx)
 			root.Doc.HideOtherSection = tt.fields.HideOtherSection
 			root.WriteQuit(ctx)
@@ -1430,7 +1429,7 @@ func TestRoot_tailSection(t *testing.T) {
 			root := rootFileReadHelper(t, tt.fields.fileNames...)
 			root.prepareScreen()
 			ctx := context.Background()
-			root.setSectionDelimiter(ctx, tt.fields.sectionDelimiter)
+			root.setSectionDelimiter(tt.fields.sectionDelimiter)
 			root.tailSection(ctx)
 			if got := root.Doc.lastSectionPosNum; got != tt.want {
 				t.Errorf("tailSection() lastSectionPosNum = %v, want %v", got, tt.want)

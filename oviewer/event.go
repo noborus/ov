@@ -105,9 +105,9 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 	case *eventTabWidth:
 		root.setTabWidth(ev.value)
 	case *eventSectionDelimiter:
-		root.setSectionDelimiter(ctx, ev.value)
+		root.setSectionDelimiter(ev.value)
 	case *eventSectionStart:
-		root.setSectionStart(ctx, ev.value)
+		root.setSectionStart(ev.value)
 	case *eventSectionNum:
 		root.setSectionNum(ev.value)
 	case *eventVerticalHeader:
