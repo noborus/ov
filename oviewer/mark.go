@@ -48,6 +48,8 @@ func (root *Root) addMarks(_ context.Context, marks MatchedLineList) {
 		added++
 	}
 	root.setMessagef("Added %d marks", added)
+	root.debugMessage("update marks")
+
 }
 
 // removeMark removes the current line number from the mark list.
@@ -168,12 +170,13 @@ func (root *Root) markByPattern(ctx context.Context, pattern string) {
 		return
 	}
 	root.setMessagef("mark by pattern %v", pattern)
+	root.debugMessage("mark by pattern")
 	go root.markByPatternImpl(ctx, searcher)
 }
 
 // markByPatternImpl marks lines matching the pattern.
 func (root *Root) markByPatternImpl(ctx context.Context, searcher Searcher) {
-	lines := root.allMatchedLines(ctx, searcher, 0)
+	lines := root.Doc.allMatchedLines(ctx, searcher, 0)
 	root.sendAddMarks(lines)
 }
 

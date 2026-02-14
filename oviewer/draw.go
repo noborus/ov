@@ -662,6 +662,6 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 		right := min(left+width, len(item.Contents))
 		out := item.Contents[left:right].String()
 		root.Screen.PutStrStyled(labelLen, i+1, out, style)
-		root.Screen.PutStrStyled(0, i+1, label, style.Italic(true))
+		root.Screen.PutStrStyled(0, i+1, label, style)
 	}
 }

@@ -636,11 +636,9 @@ func (root *Root) setSectionStart(input string) {
 
 // generateSectionList runs generateSectionList in a goroutine.
 func (root *Root) generateSectionList() {
-	log.Println("generateSectionList start")
 	if root.sidebarMode != SidebarModeSections {
 		return
 	}
-
 	m := root.Doc
 	if m.SectionDelimiter == "" {
 		root.sendUpdateSections(nil)
@@ -651,11 +649,13 @@ func (root *Root) generateSectionList() {
 	sectionStartPosition := m.SectionStartPosition
 	searcher := NewSearcher(sectionDelimiter, sectionDelimiterReg, true, true)
 	if searcher == nil {
+		root.sendUpdateSections(nil)
 		return
 	}
+	root.debugMessage("generate sectionList")
 	ctx := context.Background()
 	go func() {
-		sections := root.allMatchedLines(ctx, searcher, sectionStartPosition)
+		sections := m.allMatchedLines(ctx, searcher, sectionStartPosition)
 		root.sendUpdateSections(sections)
 	}()
 }
@@ -666,6 +666,7 @@ func (root *Root) updateSectionList(ctx context.Context, sections MatchedLineLis
 	m := root.Doc
 	m.sectionList = sections
 	root.setMessagef("Added %d sections", len(sections))
+	root.debugMessage("update sectionList")
 	root.ViewSync(ctx)
 }
 
