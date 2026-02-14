@@ -75,9 +75,6 @@ type Document struct {
 	store *store
 	// followStore represents follow store management.
 	followStore *store
-
-	// conv is an interface that converts escape sequences, etc.
-	conv Converter
 	// alignConv is an interface that converts alignment.
 	alignConv *align
 
@@ -291,7 +288,6 @@ func NewDocument() (*Document, error) {
 		return nil, err
 	}
 	m.alignConv = newAlignConverter(m.ColumnWidth)
-	m.conv = m.converterType(m.Converter)
 
 	m.cond = sync.NewCond(&sync.Mutex{})
 	return m, nil
@@ -322,9 +318,12 @@ func (m *Document) converterType(name string) Converter {
 	case convEscaped:
 		return newESConverter()
 	case convAlign:
-		return m.alignConv
+		if m.alignConv == nil {
+			return newAlignConverter(m.ColumnWidth)
+		}
+		return m.alignConv.clone()
 	}
-	return defaultConverter
+	return newESConverter()
 }
 
 // OpenDocument opens a file specified by fileName and returns a Document.
@@ -565,7 +564,8 @@ func (m *Document) contents(lN int) (contents, error) {
 	}
 
 	str, err := m.LineStr(lN)
-	return parseString(m.conv, str, m.TabWidth), err
+	conv := m.converterType(m.Converter)
+	return parseString(conv, str, m.TabWidth), err
 }
 
 func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
@@ -574,7 +574,8 @@ func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
 	}
 
 	str, err := m.LineStr(lN)
-	lc, style := parseLine(m.conv, str, m.TabWidth)
+	conv := m.converterType(m.Converter)
+	lc, style := parseLine(conv, str, m.TabWidth)
 	return lc, style, err
 }
 

@@ -61,6 +61,31 @@ func newAlignConverter(widthF bool) *align {
 	}
 }
 
+func (a *align) clone() *align {
+	if a == nil {
+		return nil
+	}
+
+	clone := &align{
+		es:           newESConverter(),
+		WidthF:       a.WidthF,
+		delimiter:    a.delimiter,
+		delimiterReg: a.delimiterReg,
+		count:        0,
+	}
+	if len(a.orgWidths) > 0 {
+		clone.orgWidths = append([]int(nil), a.orgWidths...)
+	}
+	if len(a.maxWidths) > 0 {
+		clone.maxWidths = append([]int(nil), a.maxWidths...)
+	}
+	if len(a.columnAttrs) > 0 {
+		clone.columnAttrs = append([]columnAttribute(nil), a.columnAttrs...)
+	}
+
+	return clone
+}
+
 // convert aligns the columns.
 // convert also shrinks and right-aligns the columns.
 // (It only processes escape sequences until the end of the line is reached.)

@@ -61,7 +61,6 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	root.insertDocument(ctx, root.CurrentDoc, render)
 	render.RunTimeSettings = m.RunTimeSettings
 	render.regexpCompile()
-	render.conv = render.converterType(render.Converter)
 	filterDoc := &filterDocument{
 		Document: render,
 		w:        w,

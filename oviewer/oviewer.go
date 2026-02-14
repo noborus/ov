@@ -915,9 +915,6 @@ func (root *Root) prepareAllDocuments() {
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
 		}
-		if doc.Converter != "" {
-			doc.conv = doc.converterType(doc.Converter)
-		}
 		w := ""
 		if doc.WatchInterval > 0 {
 			doc.watchMode()
