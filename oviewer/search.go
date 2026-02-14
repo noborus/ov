@@ -755,28 +755,27 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 }
 
 // allMatchedLines returns lines matching the pattern.
-func (root *Root) allMatchedLines(ctx context.Context, searcher Searcher, offset int) []MatchedLine {
+func (m *Document) allMatchedLines(ctx context.Context, searcher Searcher, offset int) []MatchedLine {
 	if searcher == nil {
 		return nil
 	}
-	if !root.allMatchedLinesRunning.CompareAndSwap(false, true) {
-		root.debugMessage("allMatchedLines: already running")
+	if !m.allMatchedLinesRunning.CompareAndSwap(false, true) {
 		return nil
 	}
-	defer root.allMatchedLinesRunning.Store(false)
+	defer m.allMatchedLinesRunning.Store(false)
 
 	var lines []MatchedLine
-	for ln := root.Doc.BufStartNum(); ln < root.Doc.BufEndNum(); ln++ {
+	for ln := m.BufStartNum(); ln < m.BufEndNum(); ln++ {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
-		lineC := root.lineContent(ln)
+		lineC := m.getLineC(ln)
 		if searcher.MatchString(lineC.str) {
 			if offset != 0 {
 				ln = ln + offset
-				lineC = root.lineContent(ln)
+				lineC = m.getLineC(ln)
 			}
 			line := MatchedLine{lineNum: ln, contents: lineC.lc}
 			lines = append(lines, line)

@@ -90,8 +90,6 @@ type Root struct {
 	mu sync.RWMutex
 	// isClosed indicates whether it is closed.
 	isClosed atomic.Bool
-	// allMatchedLinesRunning guards concurrent allMatchedLines execution.
-	allMatchedLinesRunning atomic.Bool
 
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool

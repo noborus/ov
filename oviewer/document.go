@@ -91,6 +91,9 @@ type Document struct {
 	// filepath stores the absolute pathname for file watching.
 	filepath string
 
+	// allMatchedLinesRunning guards concurrent allMatchedLines execution.
+	allMatchedLinesRunning atomic.Bool
+
 	// marked is a list of marked line numbers.
 	marked MatchedLineList
 	// sectionList is a list of section line numbers.
