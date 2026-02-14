@@ -1478,9 +1478,23 @@ func TestRoot_setConverter(t *testing.T) {
 			root := rootHelper(t)
 			ctx := context.Background()
 			root.setConverter(ctx, tt.args.name)
-			got := root.Doc.conv
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setConverter() = %v, want %v", got, tt.want)
+			if root.Doc.Converter != tt.args.name {
+				t.Errorf("setConverter() name = %v, want %v", root.Doc.Converter, tt.args.name)
+			}
+			got := root.Doc.converterType(root.Doc.Converter)
+			switch tt.args.name {
+			case convEscaped:
+				if _, ok := got.(*escapeSequence); !ok {
+					t.Errorf("setConverter() type = %T, want *escapeSequence", got)
+				}
+			case convRaw:
+				if _, ok := got.(*rawConverter); !ok {
+					t.Errorf("setConverter() type = %T, want *rawConverter", got)
+				}
+			case convAlign:
+				if _, ok := got.(*align); !ok {
+					t.Errorf("setConverter() type = %T, want *align", got)
+				}
 			}
 		})
 	}

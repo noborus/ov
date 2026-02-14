@@ -79,8 +79,6 @@ type Converter interface {
 	convert(st *parseState) bool
 }
 
-var defaultConverter = newESConverter()
-
 // StrToContents converts a single-line string into a one line of contents.
 // Parse escape sequences, etc.
 // 1 Content matches the characters displayed on the screen.

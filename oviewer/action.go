@@ -462,7 +462,6 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	}
 	m := root.Doc
 	m.RunTimeSettings = settings
-	m.conv = m.converterType(m.Converter)
 	// Set caption.
 	if settings.Caption != "" {
 		m.Caption = settings.Caption
@@ -495,7 +494,6 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 		return
 	}
 	m.Converter = name
-	m.conv = m.converterType(name)
 	m.ClearCache()
 	root.ViewSync(ctx)
 	root.setMessagef("Set %s converter", name)
