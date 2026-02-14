@@ -95,6 +95,8 @@ type Document struct {
 	marked MatchedLineList
 	// sectionList is a list of section line numbers.
 	sectionList MatchedLineList
+	// sectionListDirty indicates if the section list is dirty and needs to be updated.
+	sectionListDirty bool
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
@@ -660,6 +662,7 @@ func (m *Document) setDelimiter(delm string) {
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm
 	m.SectionDelimiterReg = regexpCompile(delm, true)
+	m.sectionListDirty = true
 }
 
 // setMultiColorWords set multiple strings to highlight with multiple colors.
