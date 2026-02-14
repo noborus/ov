@@ -628,6 +628,7 @@ func (root *Root) setSectionStart(input string) {
 		return
 	}
 	root.Doc.SectionStartPosition = num
+	root.Doc.sectionListDirty = true
 	root.generateSectionList()
 	root.setMessagef("Set section start position %s", input)
 }
@@ -638,6 +639,9 @@ func (root *Root) generateSectionList() {
 		return
 	}
 	m := root.Doc
+	if !m.sectionListDirty {
+		return
+	}
 	if m.SectionDelimiter == "" {
 		root.sendUpdateSections(nil)
 		return
@@ -663,6 +667,7 @@ func (root *Root) generateSectionList() {
 func (root *Root) updateSectionList(ctx context.Context, sections MatchedLineList) {
 	m := root.Doc
 	m.sectionList = sections
+	m.sectionListDirty = false
 	root.setMessagef("Added %d sections", len(sections))
 	root.debugMessage("update sectionList")
 	root.ViewSync(ctx)

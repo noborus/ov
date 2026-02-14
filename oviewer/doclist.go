@@ -182,9 +182,7 @@ func (root *Root) setDocumentNum(ctx context.Context, docNum int) {
 // setDocument sets the Document.
 func (root *Root) setDocument(ctx context.Context, m *Document) {
 	root.Doc = m
-	if root.Doc.sectionList == nil && !m.allMatchedLinesRunning.Load() {
-		root.generateSectionList()
-	}
+	root.generateSectionList()
 	root.ViewSync(ctx)
 }
 
