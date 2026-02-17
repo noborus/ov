@@ -765,21 +765,30 @@ func (m *Document) allMatchedLines(ctx context.Context, searcher Searcher, offse
 	defer m.allMatchedLinesRunning.Store(false)
 
 	var lines []MatchedLine
-	for ln := m.BufStartNum(); ln < m.BufEndNum(); ln++ {
+	for lN := m.BufStartNum(); lN < m.BufEndNum(); lN++ {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
-		lineC := m.getLineC(ln)
-		if searcher.MatchString(lineC.str) {
-			if offset != 0 {
-				ln = ln + offset
-				lineC = m.getLineC(ln)
-			}
-			line := MatchedLine{lineNum: ln, contents: lineC.lc}
-			lines = append(lines, line)
+		lineNum, err := m.SearchLine(ctx, searcher, lN)
+		if err != nil {
+			// Not found
+			break
 		}
+		lN = lineNum
+		// Found
+		if offset != 0 {
+			lineNum = lineNum + offset
+		}
+		line, err := m.Line(lineNum)
+		if err != nil {
+			// deleted?
+			log.Printf("failed to get line %d: %v", lineNum, err)
+			break
+		}
+		match := MatchedLine{lineNum: lineNum, line: line}
+		lines = append(lines, match)
 	}
 	return lines
 }

@@ -89,7 +89,7 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 			return
 		default:
 		}
-		lineNum, err := m.searchLine(ctx, searcher, true, originLN)
+		lineNum, err := m.SearchLine(ctx, searcher, originLN)
 		if err != nil {
 			// Not found
 			break
@@ -98,7 +98,7 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 		line, err := m.Line(lineNum)
 		if err != nil {
 			// deleted?
-			log.Println(err)
+			log.Printf("failed to get line %d: %v", lineNum, err)
 			break
 		}
 		filterDoc.lineNumMap.Store(renderLN, lineNum)

@@ -321,7 +321,7 @@ func (lc contents) IsFullWidth(n int) bool {
 	return lc[n].width == 2
 }
 
-// writeRune writes a rune to strings.Builder.
+// writeString writes a string to strings.Builder.
 func writeString(w *strings.Builder, s string) int {
 	n, err := w.WriteString(s)
 	if err != nil {
@@ -342,7 +342,7 @@ func (pos widthPos) x(n int) int {
 	return pos[len(pos)-1]
 }
 
-// n return string position from content.
+// n returns string position from content.
 // x -> [n]byte.
 func (pos widthPos) n(x int) int {
 	if x < 0 {

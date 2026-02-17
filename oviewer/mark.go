@@ -12,8 +12,12 @@ import (
 func (root *Root) addMark(context.Context) {
 	lN := root.firstBodyLine()
 	root.Doc.marked = root.Doc.marked.remove(lN)
-	lineC := root.lineContent(lN)
-	mark := MatchedLine{lineNum: lN, contents: lineC.lc}
+	line, err := root.Doc.Line(lN)
+	if err != nil {
+		root.setMessagef("Failed to get line %d: %v", lN-root.Doc.firstLine()+1, err)
+		return
+	}
+	mark := MatchedLine{lineNum: lN, line: line}
 	root.Doc.marked = append(root.Doc.marked, mark)
 	root.Doc.markedPoint = len(root.Doc.marked) - 1
 	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)

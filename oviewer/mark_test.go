@@ -23,27 +23,27 @@ func TestRoot_Mark(t *testing.T) {
 		root.Doc.topLN = 1
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, contents: root.Doc.getLineC(1).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, contents: root.Doc.getLineC(1).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)}}))
 		}
 		root.Doc.topLN = 10
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, contents: root.Doc.getLineC(1).lc}, {lineNum: 10, contents: root.Doc.getLineC(10).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, contents: root.Doc.getLineC(1).lc}, {lineNum: 10, contents: root.Doc.getLineC(10).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)}, {lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)}, {lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}}))
 		}
 		root.Doc.topLN = 1
 		root.draw(ctx)
 		root.removeMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, contents: root.Doc.getLineC(10).lc}})) {
-			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, contents: root.Doc.getLineC(10).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}})) {
+			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}}))
 		}
 		root.removeMark(ctx)
 		root.Doc.topLN = 2
 		root.draw(ctx)
 		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, contents: root.Doc.getLineC(10).lc}, {lineNum: 2, contents: root.Doc.getLineC(2).lc}})) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, contents: root.Doc.getLineC(10).lc}, {lineNum: 2, contents: root.Doc.getLineC(2).lc}}))
+		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}, {lineNum: 2, line: []byte(root.Doc.getLineC(2).str)}})) {
+			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, MatchedLineList([]MatchedLine{{lineNum: 10, line: []byte(root.Doc.getLineC(10).str)}, {lineNum: 2, line: []byte(root.Doc.getLineC(2).str)}}))
 		}
 		root.removeAllMark(ctx)
 		if !reflect.DeepEqual(root.Doc.marked, MatchedLineList(nil)) {
@@ -58,16 +58,16 @@ func TestRoot_Mark(t *testing.T) {
 		root.draw(ctx)
 
 		root.Doc.marked = MatchedLineList{
-			{lineNum: 1, contents: root.Doc.getLineC(1).lc},
+			{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)},
 		}
 		root.addMarks(ctx, MatchedLineList{
-			{lineNum: 1, contents: root.Doc.getLineC(1).lc}, // duplicate of existing
-			{lineNum: 2, contents: root.Doc.getLineC(2).lc},
-			{lineNum: 2, contents: root.Doc.getLineC(2).lc}, // duplicate in input
+			{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)}, // duplicate of existing
+			{lineNum: 2, line: []byte(root.Doc.getLineC(2).str)},
+			{lineNum: 2, line: []byte(root.Doc.getLineC(2).str)}, // duplicate in input
 		})
 		want := MatchedLineList{
-			{lineNum: 1, contents: root.Doc.getLineC(1).lc},
-			{lineNum: 2, contents: root.Doc.getLineC(2).lc},
+			{lineNum: 1, line: []byte(root.Doc.getLineC(1).str)},
+			{lineNum: 2, line: []byte(root.Doc.getLineC(2).str)},
 		}
 		if !reflect.DeepEqual(root.Doc.marked, want) {
 			t.Errorf("addMarks() = %#v, want %#v", root.Doc.marked, want)
@@ -108,9 +108,9 @@ func TestRoot_nextMark(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root.nextMark(context.Background()) // no marked
 			root.Doc.marked = MatchedLineList{
-				MatchedLine{lineNum: 1, contents: StrToContents("a", 0)},
-				MatchedLine{lineNum: 3, contents: StrToContents("b", 0)},
-				MatchedLine{lineNum: 5, contents: StrToContents("c", 0)},
+				MatchedLine{lineNum: 1, line: []byte("a")},
+				MatchedLine{lineNum: 3, line: []byte("b")},
+				MatchedLine{lineNum: 5, line: []byte("c")},
 			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.nextMark(context.Background())
@@ -154,9 +154,9 @@ func TestRoot_prevMark(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root.prevMark(context.Background()) // no marked
 			root.Doc.marked = MatchedLineList{
-				MatchedLine{lineNum: 1, contents: StrToContents("a", 0)},
-				MatchedLine{lineNum: 3, contents: StrToContents("b", 0)},
-				MatchedLine{lineNum: 5, contents: StrToContents("c", 0)},
+				MatchedLine{lineNum: 1, line: []byte("a")},
+				MatchedLine{lineNum: 3, line: []byte("b")},
+				MatchedLine{lineNum: 5, line: []byte("c")},
 			}
 			root.Doc.markedPoint = tt.markedPoint
 			root.prevMark(context.Background())

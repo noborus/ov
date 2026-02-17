@@ -27,6 +27,9 @@ const (
 	SidebarModeDocList
 	// SidebarModeSections is the section list sidebar.
 	SidebarModeSections
+
+	// SidebarModeEnd is the end of sidebar modes.
+	SidebarModeEnd
 )
 
 // String returns the string representation of the SidebarMode.
@@ -115,7 +118,8 @@ func (root *Root) sidebarItemsForMarks() []SidebarItem {
 	for i := start; i < end; i++ {
 		mark := marks[i]
 		isCurrent := (i == current)
-		lc := mark.contents.TrimLeft()
+		contents := StrToContents(string(mark.line), 0)
+		lc := contents.TrimLeft()
 		numContents := StrToContents(fmt.Sprintf("%d ", mark.lineNum), 0)
 		lc = append(numContents, lc...)
 		if len(lc) < length {
@@ -178,7 +182,8 @@ func (root *Root) sidebarItemsForSections() []SidebarItem {
 	end := min(start+root.scr.vHeight, len(sections))
 	for i := start; i < end; i++ {
 		section := sections[i]
-		lc := section.contents.TrimLeft()
+		contents := StrToContents(string(section.line), 0)
+		lc := contents.TrimLeft()
 		numContents := StrToContents(fmt.Sprintf("%d ", section.lineNum), 0)
 		lc = append(numContents, lc...)
 		if len(lc) < length {

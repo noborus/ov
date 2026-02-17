@@ -1178,7 +1178,7 @@ func TestRoot_allMatchedLines(t *testing.T) {
 				fileName: filepath.Join(testdata, "test3.txt"),
 			},
 			args: args{
-				searcher: NewSearcher("0000", regexpCompile("9999", false), false, false),
+				searcher: NewSearcher("0000", regexpCompile("0000", false), false, false),
 			},
 			wantLen: 1,
 			wantErr: false,
