@@ -36,8 +36,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 			sidebarWidth: 20,
 			setup: func(root *Root) {
 				root.Doc.marked = []MatchedLine{
-					{lineNum: 0, contents: StrToContents("First", 0)},
-					{lineNum: 1, contents: StrToContents("Second", 0)},
+					{lineNum: 0, line: []byte("First")},
+					{lineNum: 1, line: []byte("Second")},
 				}
 				root.Doc.markedPoint = 0
 			},
@@ -198,7 +198,11 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			root.sidebarMode = SidebarModeMarks
 			for _, c := range tt.marks {
 				root.Doc.topLN = c
-				root.Doc.marked = append(root.Doc.marked, MatchedLine{lineNum: c, contents: root.lineContent(c).lc})
+				line, err := root.Doc.Line(c)
+				if err != nil {
+					t.Fatalf("could not get line %d: %v", c, err)
+				}
+				root.Doc.marked = append(root.Doc.marked, MatchedLine{lineNum: c, line: line})
 			}
 			got := root.sidebarItemsForMarks()
 			if len(got) != len(tt.want) {

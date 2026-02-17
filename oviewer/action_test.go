@@ -2343,9 +2343,9 @@ func TestRoot_goMarkNumber(t *testing.T) {
 	}()
 	root := rootHelper(t)
 	root.Doc.marked = MatchedLineList{
-		{lineNum: 10, contents: StrToContents("a", 0)},
-		{lineNum: 20, contents: StrToContents("b", 0)},
-		{lineNum: 30, contents: StrToContents("c", 0)},
+		{lineNum: 10, line: []byte("a")},
+		{lineNum: 20, line: []byte("b")},
+		{lineNum: 30, line: []byte("c")},
 	}
 	root.Doc.markedPoint = 1 // Start at index 1
 

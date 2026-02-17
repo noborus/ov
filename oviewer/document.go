@@ -266,8 +266,8 @@ type columnRange struct {
 }
 
 type MatchedLine struct {
-	lineNum  int
-	contents contents
+	lineNum int
+	line    []byte
 }
 
 type MatchedLineList []MatchedLine
