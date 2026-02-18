@@ -15,6 +15,7 @@ const (
 	forward searchType = iota
 	backward
 	filter
+	markByPattern
 )
 
 // inputForwardSearch sets the inputMode to Forwardsearch.
@@ -30,6 +31,11 @@ func (root *Root) inputBackSearch(context.Context) {
 // inputSearchFilter sets the inputMode to Filter.
 func (root *Root) inputSearchFilter(context.Context) {
 	root.setSearchMode(filter)
+}
+
+// inputMarkByPattern sets the inputMode to MarkByPattern.
+func (root *Root) inputMarkByPattern(context.Context) {
+	root.setSearchMode(markByPattern)
 }
 
 // setSearchMode sets the inputMode to Search.
@@ -51,19 +57,19 @@ func (root *Root) setSearchMode(searchType searchType) {
 func (root *Root) setPromptOpt() {
 	mode := root.input.Event.Mode()
 
-	if mode != Search && mode != Backsearch && mode != Filter {
+	if mode != Search && mode != Backsearch && mode != Filter && mode != MarkByPattern {
 		root.searchOpt = ""
 		return
 	}
 
 	var opt strings.Builder
-	if mode == Filter && root.Doc.nonMatch {
+	if (mode == Filter || mode == MarkByPattern) && root.Doc.nonMatch {
 		opt.WriteString("Non-match")
 	}
 	if root.Config.RegexpSearch {
 		opt.WriteString("(R)")
 	}
-	if mode != Filter && root.Config.Incsearch {
+	if mode != Filter && mode != MarkByPattern && root.Config.Incsearch {
 		opt.WriteString("(I)")
 	}
 	if root.Config.SmartCaseSensitive {
@@ -101,6 +107,8 @@ func (e *eventInputSearch) Mode() InputMode {
 		return Backsearch
 	case filter:
 		return Filter
+	case markByPattern:
+		return MarkByPattern
 	}
 	panic("invalid searchType")
 }
@@ -114,6 +122,8 @@ func (e *eventInputSearch) Prompt() string {
 		return "?"
 	case filter:
 		return "&"
+	case markByPattern:
+		return "*"
 	}
 	panic("invalid searchType")
 }

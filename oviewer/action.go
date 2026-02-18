@@ -28,7 +28,7 @@ func (root *Root) toggleWrapMode(context.Context) {
 		root.setMessageLog(err.Error())
 		return
 	}
-	m.x = x
+	m.scrollX = x
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
 }
 
@@ -132,6 +132,72 @@ func (root *Root) toggleStatusLine(context.Context) {
 	} else {
 		root.setMessage("Status Line hidden")
 	}
+}
+
+// toggleSidebar toggles the sidebar visibility.
+func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
+	if mode == SidebarModeNone {
+		root.closeSidebar(ctx)
+		return
+	}
+	if root.sidebarVisible && root.sidebarMode == mode {
+		root.closeSidebar(ctx)
+		return
+	}
+	root.openSidebar(ctx, mode)
+}
+
+// openSidebar opens the sidebar with the specified mode.
+func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
+	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+	if err != nil {
+		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
+		width, _ = calcSideWidth(defaultSidebarWidth, root.scr.vWidth)
+	}
+	root.sidebarMode = mode
+	root.sidebarVisible = true
+	root.sidebarWidth = width
+	root.generateSectionList()
+	root.ViewSync(ctx)
+	root.setMessagef("Sidebar %s visible", mode.String())
+}
+
+// calcSideWidth calculates the sidebar width based on the configuration string.
+func calcSideWidth(sideWidth string, width int) (int, error) {
+	w, err := calcPosition(sideWidth, width)
+	if err != nil {
+		return 0, err
+	}
+	w = min(max(minSidebarWidth, w), maxSidebarWidth)
+	return int(w), nil
+}
+
+func (root *Root) closeSidebar(ctx context.Context) {
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+	root.sidebarWidth = 0
+	root.ViewSync(ctx)
+	root.setMessage("Sidebar hidden")
+}
+
+// toggleSidebarHelp toggles the help sidebar visibility.
+func (root *Root) toggleSidebarHelp(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeHelp)
+}
+
+// toggleSidebarMarks toggles the mark list sidebar visibility.
+func (root *Root) toggleSidebarMarks(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeMarks)
+}
+
+// toggleSidebarDocList toggles the document list sidebar visibility.
+func (root *Root) toggleSidebarDocList(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeDocList)
+}
+
+// toggleSidebarSections toggles the section list sidebar visibility.
+func (root *Root) toggleSidebarSections(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeSections)
 }
 
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
@@ -238,7 +304,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
-	num, err := calculatePosition(input, root.Doc.BufEndNum())
+	num, err := calcPosition(input, root.Doc.BufEndNum())
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
 		return
@@ -261,68 +327,6 @@ func (root *Root) goLine(input string) {
 func (root *Root) goLineNumber(lN int) {
 	lN = root.Doc.moveLine(lN - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", lN+1)
-}
-
-// nextMark moves to the next mark.
-func (root *Root) nextMark(context.Context) {
-	if len(root.Doc.marked) == 0 {
-		return
-	}
-
-	if len(root.Doc.marked) > root.Doc.markedPoint+1 {
-		root.Doc.markedPoint++
-	} else {
-		root.Doc.markedPoint = 0
-	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
-}
-
-// prevMark moves to the previous mark.
-func (root *Root) prevMark(context.Context) {
-	if len(root.Doc.marked) == 0 {
-		return
-	}
-
-	if root.Doc.markedPoint > 0 {
-		root.Doc.markedPoint--
-	} else {
-		root.Doc.markedPoint = len(root.Doc.marked) - 1
-	}
-	root.goLineNumber(root.Doc.marked[root.Doc.markedPoint])
-}
-
-// addMark marks the current line number.
-func (root *Root) addMark(context.Context) {
-	lN := root.firstBodyLine()
-	root.Doc.marked = remove(root.Doc.marked, lN)
-	root.Doc.marked = append(root.Doc.marked, lN)
-	root.Doc.markedPoint = len(root.Doc.marked) - 1
-	root.setMessagef("Marked to line %d", lN-root.Doc.firstLine()+1)
-}
-
-// removeMark removes the current line number from the mark.
-func (root *Root) removeMark(context.Context) {
-	lN := root.firstBodyLine()
-	marked := remove(root.Doc.marked, lN)
-	if len(root.Doc.marked) == len(marked) {
-		root.setMessagef("Not marked line %d", lN-root.Doc.firstLine()+1)
-		return
-	}
-	root.Doc.marked = marked
-	root.setMessagef("Remove the mark at line %d", lN-root.Doc.firstLine()+1)
-}
-
-// firstBodyLine returns the first line number of the body.
-func (root *Root) firstBodyLine() int {
-	ln := root.scr.lineNumber(root.Doc.headerHeight + root.Doc.sectionHeaderHeight)
-	return ln.number
-}
-
-// removeAllMark removes all marks.
-func (root *Root) removeAllMark(context.Context) {
-	root.Doc.marked = nil
-	root.Doc.markedPoint = 0
-	root.setMessage("Remove all marks")
 }
 
 // setHeader sets the number of lines in the header.
@@ -458,7 +462,6 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 	}
 	m := root.Doc
 	m.RunTimeSettings = settings
-	m.conv = m.converterType(m.Converter)
 	// Set caption.
 	if settings.Caption != "" {
 		m.Caption = settings.Caption
@@ -491,7 +494,6 @@ func (root *Root) setConverter(ctx context.Context, name string) {
 		return
 	}
 	m.Converter = name
-	m.conv = m.converterType(name)
 	m.ClearCache()
 	root.ViewSync(ctx)
 	root.setMessagef("Set %s converter", name)
@@ -610,6 +612,7 @@ func rangeBA(str string) (int, int, error) {
 // setSectionDelimiter sets the delimiter string.
 func (root *Root) setSectionDelimiter(input string) {
 	root.Doc.setSectionDelimiter(input)
+	root.generateSectionList()
 	root.setMessagef("Set section delimiter %s", input)
 }
 
@@ -625,7 +628,49 @@ func (root *Root) setSectionStart(input string) {
 		return
 	}
 	root.Doc.SectionStartPosition = num
+	root.Doc.sectionListDirty = true
+	root.generateSectionList()
 	root.setMessagef("Set section start position %s", input)
+}
+
+// generateSectionList runs generateSectionList in a goroutine.
+func (root *Root) generateSectionList() {
+	if root.sidebarMode != SidebarModeSections {
+		return
+	}
+	m := root.Doc
+	if !m.sectionListDirty {
+		return
+	}
+	if m.SectionDelimiter == "" {
+		root.sendUpdateSections(nil)
+		return
+	}
+	sectionDelimiter := m.SectionDelimiter
+	sectionDelimiterReg := m.SectionDelimiterReg
+	sectionStartPosition := m.SectionStartPosition
+	searcher := NewSearcher(sectionDelimiter, sectionDelimiterReg, true, true)
+	if searcher == nil {
+		root.sendUpdateSections(nil)
+		return
+	}
+	root.debugMessage("generate sectionList")
+	ctx := context.Background()
+	go func() {
+		sections := m.allMatchedLines(ctx, searcher, sectionStartPosition)
+		root.sendUpdateSections(sections)
+	}()
+}
+
+// updateSectionList updates the section list.
+// This function is called via the event channel.
+func (root *Root) updateSectionList(ctx context.Context, sections MatchedLineList) {
+	m := root.Doc
+	m.sectionList = sections
+	m.sectionListDirty = false
+	root.setMessagef("Added %d sections", len(sections))
+	root.debugMessage("update sectionList")
+	root.ViewSync(ctx)
 }
 
 // setMultiColor set multiple strings to highlight with multiple colors.
@@ -712,7 +757,7 @@ func jumpPosition(str string, height int) (int, bool) {
 	if s[0] == 's' {
 		return 0, true
 	}
-	n, err := calculatePosition(s, height)
+	n, err := calcPosition(s, height)
 	if err != nil {
 		return 0, false
 	}
@@ -723,10 +768,10 @@ func jumpPosition(str string, height int) (int, bool) {
 	return num, false
 }
 
-// CalculatePosition returns the number from the length for positive
+// calcPosition returns the number from the length for positive
 // numbers (1), returns dot.number for percentages (.5) = 50%,
 // and returns the % after the number for percentages (50%). return.
-func calculatePosition(str string, length int) (float64, error) {
+func calcPosition(str string, length int) (float64, error) {
 	if len(str) == 0 || str == "0" {
 		return 0, nil
 	}

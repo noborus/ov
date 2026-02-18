@@ -75,9 +75,6 @@ type Document struct {
 	store *store
 	// followStore represents follow store management.
 	followStore *store
-
-	// conv is an interface that converts escape sequences, etc.
-	conv Converter
 	// alignConv is an interface that converts alignment.
 	alignConv *align
 
@@ -91,8 +88,15 @@ type Document struct {
 	// filepath stores the absolute pathname for file watching.
 	filepath string
 
+	// allMatchedLinesRunning guards concurrent allMatchedLines execution.
+	allMatchedLinesRunning atomic.Bool
+
 	// marked is a list of marked line numbers.
-	marked []int
+	marked MatchedLineList
+	// sectionList is a list of section line numbers.
+	sectionList MatchedLineList
+	// sectionListDirty indicates if the section list is dirty and needs to be updated.
+	sectionListDirty bool
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
@@ -133,12 +137,24 @@ type Document struct {
 	// bottomLX is the leftmost X position on the last line.
 	bottomLX int
 
-	// x is the starting position of the current x.
-	x int
+	// bodyStartY is the start position of y.
+	bodyStartY int
+	// bodyStartX is the actual start position of the body (leftMargin + lineNumberWidth)
+	bodyStartX int
+	// bodyWidth is the width of the document body (excluding left/right margin and line number area).
+	bodyWidth int
+	// scrollX is the starting position of the current scrollX.
+	scrollX int
 	// columnCursor is the number of columns.
 	columnCursor int
 	// columnStart is the starting position of the column.
 	columnStart int
+	// leftMargin is the left margin for body drawing.
+	leftMargin int
+	// rightMargin is the right margin for body drawing.
+	rightMargin int
+	// lineNumberWidth is the width of the line number area (0 is not displayed).
+	lineNumberWidth int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int
@@ -177,7 +193,7 @@ type Document struct {
 	nonMatch bool
 	// pauseFollow indicates if follow mode is paused.
 	pauseFollow bool
-	// pauseFollowNum is the line number where follow mode was paused.
+	// pauseLastNum is the line number where follow mode was paused.
 	pauseLastNum int
 	// General is the General settings.
 	General General
@@ -207,7 +223,7 @@ type store struct {
 	eof int32
 	// size is the number of bytes read.
 	size int64
-	// offset
+	// offset is the current byte offset in the file.
 	offset int64
 	// formfeedTime adds time on formfeed.
 	formfeedTime bool
@@ -249,6 +265,13 @@ type columnRange struct {
 	end   int
 }
 
+type MatchedLine struct {
+	lineNum int
+	line    []byte
+}
+
+type MatchedLineList []MatchedLine
+
 // NewDocument creates and initializes a new [Document] with default settings.
 // It returns a pointer to the Document and an error if the cache initialization fails.
 func NewDocument() (*Document, error) {
@@ -267,7 +290,6 @@ func NewDocument() (*Document, error) {
 		return nil, err
 	}
 	m.alignConv = newAlignConverter(m.ColumnWidth)
-	m.conv = m.converterType(m.Converter)
 
 	m.cond = sync.NewCond(&sync.Mutex{})
 	return m, nil
@@ -298,9 +320,12 @@ func (m *Document) converterType(name string) Converter {
 	case convEscaped:
 		return newESConverter()
 	case convAlign:
-		return m.alignConv
+		if m.alignConv == nil {
+			return newAlignConverter(m.ColumnWidth)
+		}
+		return m.alignConv.clone()
 	}
-	return defaultConverter
+	return newESConverter()
 }
 
 // OpenDocument opens a file specified by fileName and returns a Document.
@@ -428,18 +453,18 @@ func (m *Document) CurrentLN() int {
 
 // Export exports the document in the specified range.
 func (m *Document) Export(w io.Writer, start int, end int) error {
-	return m.export(w, start, end, m.store.export)
+	return m.exportRange(w, start, end, false)
 }
 
 // ExportPlain exports the document in the specified range without ANSI escape sequences.
 func (m *Document) ExportPlain(w io.Writer, start int, end int) error {
-	return m.export(w, start, end, m.store.exportPlain)
+	return m.exportRange(w, start, end, true)
 }
 
-// storeExportFunc is a function type for exporting lines from a chunk.
-type storeExportFunc func(w io.Writer, chunk *chunk, start int, end int) error
-
-func (m *Document) export(w io.Writer, start int, end int, exportFunc storeExportFunc) error {
+// exportRange exports the document in the specified range.
+// If plain is true, it writes plain text (no ANSI escapes), otherwise
+// it preserves ANSI escape sequences.
+func (m *Document) exportRange(w io.Writer, start int, end int, plain bool) error {
 	end = min(end, m.BufEndNum()-1)
 	startChunk, startCn := chunkLineNum(start)
 	endChunk, endCn := chunkLineNum(end)
@@ -451,7 +476,13 @@ func (m *Document) export(w io.Writer, start int, end int, exportFunc storeExpor
 			ecn = endCn + 1
 		}
 		chunk := m.store.chunks[chunkNum]
-		if err := exportFunc(w, chunk, scn, ecn); err != nil {
+		var err error
+		if plain {
+			err = m.store.exportPlain(w, chunk, scn, ecn)
+		} else {
+			err = m.store.export(w, chunk, scn, ecn)
+		}
+		if err != nil {
 			return err
 		}
 		scn = 0
@@ -472,7 +503,7 @@ func (m *Document) BufEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
 }
 
-// BufEndNum return last line number.
+// storeEndNum returns the last line number from the main store, ignoring follow mode.
 func (m *Document) storeEndNum() int {
 	return int(atomic.LoadInt32(&m.store.endNum))
 }
@@ -535,7 +566,8 @@ func (m *Document) contents(lN int) (contents, error) {
 	}
 
 	str, err := m.LineStr(lN)
-	return parseString(m.conv, str, m.TabWidth), err
+	conv := m.converterType(m.Converter)
+	return parseString(conv, str, m.TabWidth), err
 }
 
 func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
@@ -544,7 +576,8 @@ func (m *Document) contentsLine(lN int) (contents, tcell.Style, error) {
 	}
 
 	str, err := m.LineStr(lN)
-	lc, style := parseLine(m.conv, str, m.TabWidth)
+	conv := m.converterType(m.Converter)
+	lc, style := parseLine(conv, str, m.TabWidth)
 	return lc, style, err
 }
 
@@ -629,6 +662,7 @@ func (m *Document) setDelimiter(delm string) {
 func (m *Document) setSectionDelimiter(delm string) {
 	m.SectionDelimiter = delm
 	m.SectionDelimiterReg = regexpCompile(delm, true)
+	m.sectionListDirty = true
 }
 
 // setMultiColorWords set multiple strings to highlight with multiple colors.

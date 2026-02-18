@@ -12,7 +12,7 @@ import (
 func moveText(t *testing.T) *Document {
 	t.Helper()
 	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
-	m.width = 80
+	m.bodyWidth = 80
 	m.height = 23
 	return m
 }
@@ -172,7 +172,7 @@ func TestDocument_moveLineNth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := docFileReadHelper(t, tt.fields.fileName)
-			m.width = tt.fields.width
+			m.bodyWidth = tt.fields.width
 			m.WrapMode = tt.fields.wrap
 			got, got1 := m.moveLineNth(tt.args.lN, tt.args.nTh)
 			if got != tt.want {
@@ -224,7 +224,7 @@ func TestDocument_moveBottomFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := docFileReadHelper(t, tt.fields.fileName)
-			m.width = tt.fields.width
+			m.bodyWidth = tt.fields.width
 			m.height = tt.fields.height
 			m.WrapMode = tt.fields.wrap
 			m.moveBottom()
@@ -340,7 +340,7 @@ func TestDocument_moveYUp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := docFileReadHelper(t, tt.fields.fileName)
-			m.width = tt.fields.width
+			m.bodyWidth = tt.fields.width
 			m.height = tt.fields.height
 			m.WrapMode = tt.fields.wrap
 			m.topLN = tt.fields.lN

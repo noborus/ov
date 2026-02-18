@@ -234,12 +234,12 @@ func (m *Document) leftMostX(lN int) []int {
 	if err != nil {
 		return nil
 	}
-	return leftX(m.width, lc)
+	return leftX(m.bodyWidth, lc)
 }
 
 // leftX returns a list of left - most x positions when wrapping.
 func leftX(width int, lc contents) []int {
-	if width <= 0 {
+	if width <= 2 { // screen width is too small.
 		return []int{0}
 	}
 	if len(lc) == 0 {

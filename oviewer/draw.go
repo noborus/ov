@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 
@@ -33,6 +32,7 @@ func (root *Root) draw(ctx context.Context) {
 	}()
 
 	root.prepareDraw(ctx)
+	root.drawSidebar()
 	root.drawBody()
 
 	root.drawRuler()
@@ -53,7 +53,7 @@ func (root *Root) drawBody() {
 		lX = 0
 	}
 
-	markStyleWidth := min(root.scr.vWidth, root.Doc.MarkStyleWidth)
+	markStyleWidth := min(root.Doc.width, root.Doc.MarkStyleWidth)
 
 	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statusLineHeight; y++ {
@@ -101,7 +101,7 @@ func (root *Root) drawHeader() {
 	wrapNum := 0
 	lX := 0
 	lN := root.scr.headerLN
-	for y := root.scr.startY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
+	for y := root.Doc.bodyStartY; y < m.headerHeight && lN < root.scr.headerEnd; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
 			log.Panicf("line is not found %d", lN)
@@ -183,8 +183,12 @@ func (root *Root) drawRuler() {
 
 	startX := 0
 	offset := 0
-	if !root.Doc.WrapMode && rulerType == RulerRelative {
-		startX = root.scr.startX - root.Doc.x
+	if rulerType == RulerRelative {
+		scrollX := 0
+		if !root.Doc.WrapMode {
+			scrollX = root.Doc.scrollX
+		}
+		startX = root.Doc.bodyStartX - scrollX
 		if startX < 0 {
 			offset = -startX
 			startX = 0
@@ -204,7 +208,7 @@ func (root *Root) drawLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return root.drawWrapLine(y, lX, lN, lineC)
 	}
 
-	return root.drawNoWrapLine(y, root.Doc.x, lN, lineC)
+	return root.drawNoWrapLine(y, root.Doc.scrollX, lN, lineC)
 }
 
 // drawWrapLine wraps and draws the contents and returns the next drawing position.
@@ -214,7 +218,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		return 0, 0
 	}
 	for n := 0; ; n++ {
-		x := root.scr.startX + n
+		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -223,7 +227,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 			break
 		}
 		c := lineC.lc[lX+n]
-		if x+c.width > root.scr.vWidth {
+		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
 			lX += n
@@ -240,8 +244,8 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
 func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 	lX = max(lX, root.minStartX)
-	for n := 0; root.scr.startX+n < root.scr.vWidth; n++ {
-		x := root.scr.startX + n
+	for n := 0; n < root.Doc.bodyWidth; n++ {
+		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
 			// EOL
 			root.clearEOL(x, y, lineC.eolStyle)
@@ -277,7 +281,7 @@ func (root *Root) drawVerticalHeader(y int, wrapNum int, lineC LineC) {
 		widthVH--
 	}
 
-	x := root.scr.startX
+	x := root.Doc.bodyStartX
 	for n := 0; n < widthVH; n++ {
 		c := DefaultContent
 		if n < len(lineC.lc) {
@@ -323,10 +327,10 @@ func (root *Root) blankLineNumber(y int) {
 	if !root.Doc.LineNumMode {
 		return
 	}
-	if root.scr.startX <= 0 {
+	if root.Doc.lineNumberWidth <= 0 {
 		return
 	}
-	for x := range root.scr.startX {
+	for x := root.Doc.leftMargin; x < root.Doc.bodyStartX; x++ {
 		root.Screen.PutStr(x, y, " ")
 	}
 }
@@ -341,7 +345,7 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 		root.blankLineNumber(y)
 		return
 	}
-	if root.scr.startX <= 0 {
+	if root.Doc.lineNumberWidth <= 0 {
 		return
 	}
 
@@ -356,8 +360,8 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	number = number - m.firstLine() + 1
 
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
-	numC := fmt.Sprintf("%*d ", root.scr.startX-1, number)
-	root.Screen.PutStrStyled(0, y, numC, style)
+	numC := fmt.Sprintf("%*d ", root.Doc.lineNumberWidth-1, number)
+	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, style)
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.
@@ -412,16 +416,16 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
 func (root *Root) applyStyleToLine(y int, s OVStyle) {
-	root.applyStyleToRange(y, s, 0, root.scr.vWidth)
+	root.applyStyleToRange(y, s, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
 }
 
 // applyMarkStyle applies the style from the left edge to the specified width.
 func (root *Root) applyMarkStyle(lN int, y int, width int) {
 	m := root.Doc
-	if !slices.Contains(m.marked, lN) {
+	if !m.marked.contains(lN) {
 		return
 	}
-	root.applyStyleToRange(y, m.Style.MarkLine, 0, width)
+	root.applyStyleToRange(y, m.Style.MarkLine, root.Doc.bodyStartX, root.Doc.bodyStartX+width)
 }
 
 // applyStyleToRange applies the style from the start to the end of the physical line.
@@ -465,9 +469,9 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 // but if the rectangle flag is true, the rectangle will be the range.
 func (root *Root) drawSelect() {
 	sel := root.scr.mouseSelect
-	x1 := root.scr.x1
+	x1 := max(root.scr.x1, root.Doc.bodyStartX)
 	y1 := root.scr.y1
-	x2 := root.scr.x2
+	x2 := min(root.scr.x2, root.Doc.bodyStartX+root.Doc.bodyWidth-1)
 	y2 := root.scr.y2
 
 	if root.scr.hasAnchorPoint {
@@ -500,11 +504,11 @@ func (root *Root) drawSelect() {
 		return
 	}
 
-	root.applySelectionRange(y1, x1, root.scr.vWidth, sel)
+	root.applySelectionRange(y1, x1, root.Doc.bodyStartX+root.Doc.bodyWidth, sel)
 	for y := y1 + 1; y < y2; y++ {
-		root.applySelectionRange(y, 0, root.scr.vWidth, sel)
+		root.applySelectionRange(y, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.bodyWidth, sel)
 	}
-	root.applySelectionRange(y2, 0, x2+1, sel)
+	root.applySelectionRange(y2, root.Doc.bodyStartX, x2+1, sel)
 }
 
 // applySelectionRange applies selection style to the specified range.
@@ -534,7 +538,8 @@ func (root *Root) applySelectionRange(y int, start int, end int, selectState Mou
 }
 
 // execNotify notifies by beeping and flashing the screen the specified number of times.
-func (root *Root) execNotify(count int) {
+func (root *Root) execNotify(msg string, count int) {
+	root.setMessage(msg)
 	for range count {
 		_ = root.Screen.Beep()
 		root.flash()
@@ -596,4 +601,65 @@ func needsDisplaySync(str string) bool {
 		}
 	}
 	return false
+}
+
+// drawSidebar draws the sidebar.
+func (root *Root) drawSidebar() {
+	if !root.sidebarVisible {
+		return
+	}
+
+	sidebarWidth := root.sidebarWidth
+	sidebarStyle := tcell.StyleDefault
+	borderStyle := tcell.StyleDefault.Background(tcell.ColorGray)
+	height := root.scr.vHeight
+	// Sidebar background
+	for y := range height {
+		for x := 0; x < sidebarWidth-1; x++ {
+			root.Screen.Put(x, y, " ", sidebarStyle)
+		}
+		root.Screen.Put(sidebarWidth-1, y, " ", borderStyle)
+	}
+	// SidebarItems is prepared in prepareDraw.
+	root.drawSidebarList(root.SidebarItems)
+}
+
+// drawSidebarList displays a list of SidebarItem in the sidebar.
+func (root *Root) drawSidebarList(items []SidebarItem) {
+	sidebarStyle := tcell.StyleDefault
+	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
+	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
+	height := root.scr.vHeight
+	scrollY := 0
+	scrollX := 0
+	if root.sidebarScrolls != nil {
+		scroll := root.sidebarScrolls[root.sidebarMode]
+		scrollY = scroll.y
+		scrollX = scroll.x
+		scrollY = max(scrollY, 0)
+		scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
+		scrollX = max(scrollX, 0)
+		// Update scroll info.
+		root.sidebarScrolls[root.sidebarMode] = sidebarScroll{
+			x:        scrollX,
+			y:        scrollY,
+			currentY: root.sidebarScrolls[root.sidebarMode].currentY,
+		}
+	}
+	maxList := min(len(items), height-2)
+	for i := range maxList {
+		item := items[i]
+		style := sidebarStyle
+		if item.IsCurrent {
+			style = currentStyle
+		}
+		label := item.Label
+		labelLen := uniseg.StringWidth(label)
+		left := min(scrollX, len(item.Contents))
+		width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
+		right := min(left+width, len(item.Contents))
+		out := item.Contents[left:right].String()
+		root.Screen.PutStrStyled(labelLen, i+1, out, style)
+		root.Screen.PutStrStyled(0, i+1, label, style)
+	}
 }

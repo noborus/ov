@@ -61,7 +61,6 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	root.insertDocument(ctx, root.CurrentDoc, render)
 	render.RunTimeSettings = m.RunTimeSettings
 	render.regexpCompile()
-	render.conv = render.converterType(render.Converter)
 	filterDoc := &filterDocument{
 		Document: render,
 		w:        w,
@@ -90,7 +89,7 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 			return
 		default:
 		}
-		lineNum, err := m.searchLine(ctx, searcher, true, originLN)
+		lineNum, err := m.SearchLine(ctx, searcher, originLN)
 		if err != nil {
 			// Not found
 			break
@@ -99,7 +98,7 @@ func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN 
 		line, err := m.Line(lineNum)
 		if err != nil {
 			// deleted?
-			log.Println(err)
+			log.Printf("failed to get line %d: %v", lineNum, err)
 			break
 		}
 		filterDoc.lineNumMap.Store(renderLN, lineNum)

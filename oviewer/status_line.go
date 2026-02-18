@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/gdamore/tcell/v2"
+
 	"github.com/rivo/uniseg"
 )
 
@@ -38,19 +39,19 @@ func (root *Root) drawLeftStatus() {
 
 // normalLeftStatus returns the status of the left side of the normal mode.
 func (root *Root) normalLeftStatus() int {
-	color := tcell.ColorWhite
+	sColor := tcell.ColorWhite
 	numVisible := false
 	if root.DocumentLen() > 1 && root.Doc.documentType != DocHelp && root.Doc.documentType != DocLog {
 		numVisible = true
 		if root.CurrentDoc != 0 {
-			color = tcell.Color((root.CurrentDoc + 8) % 16)
+			sColor = tcell.Color((root.CurrentDoc + 8) % 16)
 		}
 	}
 
 	str := root.StrLeftStatus(numVisible)
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
 	if root.Doc.Normal.InvertColor {
-		style = style.Foreground(tcell.ColorValid + color).Reverse(true)
+		style = style.Foreground(tcell.ColorValid + sColor).Reverse(true)
 	}
 	root.Screen.PutStrStyled(0, root.Doc.statusPos, str, style)
 
@@ -119,7 +120,7 @@ func (root *Root) inputPrompt() string {
 	mode := root.input.Event.Mode()
 	modePrompt := root.input.Event.Prompt()
 
-	if mode == Search || mode == Backsearch || mode == Filter {
+	if mode == Search || mode == Backsearch || mode == Filter || mode == MarkByPattern {
 		prompt.WriteString(root.searchOpt)
 	}
 	prompt.WriteString(modePrompt)
@@ -132,11 +133,11 @@ func (root *Root) drawRightStatus() {
 	if !root.Doc.BufEOF() {
 		next = "..."
 	}
-	str := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
+	numStr := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
 	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
-		str = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
+		numStr = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
-	width := uniseg.StringWidth(str)
+	numWidth := uniseg.StringWidth(numStr)
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.RightStatus)
-	root.Screen.PutStrStyled(root.scr.vWidth-width, root.Doc.statusPos, str, style)
+	root.Screen.PutStrStyled(root.scr.vWidth-numWidth, root.Doc.statusPos, numStr, style)
 }

@@ -357,16 +357,16 @@ func (root *Root) updateClickState(x, y int, now time.Time) {
 
 // findColumnBoundaries selects the entire column at the given position.
 func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
-	contentX := root.Doc.x + (x - root.scr.startX) + root.scr.branchWidth(lineC.lc, ln.wrap)
+	contentX := root.Doc.scrollX + (x - root.Doc.bodyStartX) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
 	startCol, endCol, ok := findColumnRange(contentX, lineC.columnRanges)
 	if !ok {
 		return x, y, x, y
 	}
 	startX := x - (contentX - startCol)
 	startY := y
-	for startX < root.scr.startX {
+	for startX < root.Doc.bodyStartX {
 		startY--
-		startX = root.scr.vWidth - (root.scr.startX - startX)
+		startX = root.scr.vWidth - (root.Doc.bodyStartX - startX)
 	}
 	endX := x + (endCol - contentX) - 1
 	endY := y
@@ -381,7 +381,7 @@ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (in
 			endX++
 		}
 		endY++
-		endX = root.scr.startX + (endX - root.scr.vWidth)
+		endX = root.Doc.bodyStartX + (endX - root.scr.vWidth)
 		wrappedX += root.scr.vWidth
 	}
 	return startX, startY, endX, endY
@@ -389,22 +389,22 @@ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (in
 
 // findWordBoundariesInLine selects the word at the given position.
 func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
-	x = x - root.scr.startX
-	contentX := x + root.scr.branchWidth(lineC.lc, ln.wrap)
+	x = x - root.Doc.bodyStartX
+	contentX := x + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
 	if contentX < 0 || contentX >= len(lineC.lc) {
 		// Out of bounds: return clicked position only
-		return x + root.scr.startX, y, x + root.scr.startX, y
+		return x + root.Doc.bodyStartX, y, x + root.Doc.bodyStartX, y
 	}
 	charType := getCharTypeAt(lineC, contentX)
 	startX := x
 	startY := y
 	for ln.wrap >= 0 {
-		testContentX := (startX - 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
+		testContentX := (startX - 1) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
 		if getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		startX--
-		if startX < root.scr.startX {
+		if startX < root.Doc.bodyStartX {
 			ln.wrap--
 			startX = root.scr.vWidth
 			startY--
@@ -413,18 +413,18 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 	endX := startX
 	endY := startY
 	for endX < len(lineC.lc)-1 {
-		testContentX := (endX + 1) + root.scr.branchWidth(lineC.lc, ln.wrap)
+		testContentX := (endX + 1) + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
 		if getCharTypeAt(lineC, testContentX) != charType {
 			break
 		}
 		endX++
 		if root.Doc.WrapMode && endX >= root.scr.vWidth-1 {
-			endX = root.scr.startX
+			endX = root.Doc.bodyStartX
 			endY++
 			ln.wrap++
 		}
 	}
-	return startX + root.scr.startX, startY, endX + root.scr.startX, endY
+	return startX + root.Doc.bodyStartX, startY, endX + root.Doc.bodyStartX, endY
 }
 
 // findColumnRange returns the start and end of the column range containing contentX, or ok=false if not found.
@@ -473,12 +473,12 @@ func (root *Root) handleTripleClick(ctx context.Context, ev *tcell.EventMouse) {
 		root.scr.x1, root.scr.y1 = x, y
 		root.scr.x2, root.scr.y2 = x, y
 	} else {
-		root.scr.x1, root.scr.y1 = root.scr.startX, y
+		root.scr.x1, root.scr.y1 = root.Doc.bodyStartX, y
 		lastY := y
 		for endY := y; endY < len(root.scr.numbers) && root.scr.lineNumber(endY).number == ln.number; endY++ {
 			lastY = endY
 		}
-		root.scr.x2, root.scr.y2 = root.scr.startX+root.scr.vWidth-1, lastY
+		root.scr.x2, root.scr.y2 = root.Doc.bodyStartX+root.scr.vWidth-1, lastY
 	}
 	root.scr.mouseSelect = SelectCopied
 	root.scr.mousePressed = false
@@ -624,8 +624,7 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
 	if !ok || !lineC1.valid {
 		return "", ErrOutOfRange
 	}
-	wx1 := scr.branchWidth(lineC1.lc, l1.wrap)
-
+	wx1 := branchWidth(lineC1.lc, l1.wrap, scr.vWidth, m.bodyStartX)
 	var l2 LineNumber
 	for y := endY; ; y-- {
 		l := scr.lineNumber(y)
@@ -640,17 +639,16 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
 	if !ok || !lineC2.valid {
 		return "", ErrOutOfRange
 	}
-	wx2 := scr.branchWidth(lineC2.lc, l2.wrap)
-
+	wx2 := branchWidth(lineC2.lc, l2.wrap, scr.vWidth, m.bodyStartX)
 	if l1.number == l2.number {
-		x1 := m.x + startX + wx1
-		x2 := m.x + endX + wx2
-		return scr.selectLine(lineC1, x1, x2+1), nil
+		x1 := m.scrollX + startX + wx1
+		x2 := m.scrollX + endX + wx2
+		return selectLine(lineC1, m.bodyStartX, x1, x2+1), nil
 	}
 
 	var buff strings.Builder
 
-	first := scr.selectLine(lineC1, m.x+startX+wx1, -1)
+	first := selectLine(lineC1, m.bodyStartX, m.scrollX+startX+wx1, -1)
 	buff.WriteString(first)
 	buff.WriteByte('\n')
 
@@ -663,12 +661,12 @@ func (scr SCR) lineRangeToString(m *Document, startX, startY, endX, endY int) (s
 		if !ok || !lineC.valid {
 			break
 		}
-		str := scr.selectLine(lineC, 0, -1)
+		str := selectLine(lineC, m.bodyStartX, m.scrollX, -1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}
 
-	last := scr.selectLine(lineC2, 0, m.x+endX+wx2+1)
+	last := selectLine(lineC2, m.bodyStartX, 0, m.scrollX+endX+wx2+1)
 	buff.WriteString(last)
 	return buff.String(), nil
 }
@@ -686,8 +684,8 @@ func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (s
 		if !ok || !lineC.valid {
 			break
 		}
-		wx := scr.branchWidth(lineC.lc, ln.wrap)
-		str := scr.selectLine(lineC, m.x+startX+wx, m.x+endX+wx+1)
+		wx := branchWidth(lineC.lc, ln.wrap, scr.vWidth, m.bodyStartX)
+		str := selectLine(lineC, m.bodyStartX, m.scrollX+startX+wx, m.scrollX+endX+wx+1)
 		buff.WriteString(str)
 		buff.WriteByte('\n')
 	}
@@ -696,17 +694,16 @@ func (scr SCR) rectangleToString(m *Document, startX, startY, endX, endY int) (s
 
 // branchWidth returns the leftmost position of the number of wrapped line.
 // If the wide character is at the right end, it may wrap one character forward.
-func (scr SCR) branchWidth(lc contents, branch int) int {
-	i := 0
-	w := scr.startX
+func branchWidth(lc contents, branch int, width int, offset int) int {
+	branchCount := 0
+	w := offset
 	x := 0
-	for n := range lc {
-		c := lc[n]
-		if w+c.width > scr.vWidth {
-			i++
-			w = scr.startX
+	for _, c := range lc {
+		if w+c.width > width {
+			branchCount++
+			w = offset
 		}
-		if i >= branch {
+		if branchCount >= branch {
 			break
 		}
 		w += c.width
@@ -718,14 +715,14 @@ func (scr SCR) branchWidth(lc contents, branch int) int {
 // selectLine returns a string in the specified range on one line.
 // startX: start position (relative to the visible area), endX: end position (relative to the visible area, exclusive).
 // The arguments must be startX <= endX.
-func (scr SCR) selectLine(lineC LineC, startX int, endX int) string {
+func selectLine(lineC LineC, offset int, startX int, endX int) string {
 	maxX := len(lineC.lc)
 	// -1 is a special max value.
 	if endX == -1 {
 		endX = maxX
 	}
-	startX -= scr.startX
-	endX -= scr.startX
+	startX -= offset
+	endX -= offset
 	startX = max(0, startX)
 	endX = max(0, endX)
 	startX = min(startX, maxX)

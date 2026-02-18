@@ -21,6 +21,7 @@ func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	go root.updateInterval(ctx)
 	defer root.debugNumOfChunk()
 
+	root.prepareScreen()
 	for {
 		root.everyUpdate(ctx)
 		ev := root.Screen.PollEvent()
@@ -66,6 +67,10 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.backSearch(ctx, ev.str, -1)
 	case *eventSearchMove:
 		root.searchGo(ctx, ev.ln, ev.searcher)
+	case *eventAddMarks:
+		root.addMarks(ctx, ev.marks)
+	case *eventUpdateSections:
+		root.updateSectionList(ctx, ev.sections)
 	case *eventReachEOF:
 		// Quit if small doc and config allows
 		if root.quitCheck() {
@@ -81,6 +86,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.setDelimiter(ev.value)
 	case *eventGoto:
 		root.goLine(ev.value)
+	case *eventMarkGoto:
+		root.goMarkNumber(ev.value)
 	case *eventHeaderColumn:
 		root.setHeaderColumn(ev.value)
 	case *eventHeader:
@@ -145,8 +152,8 @@ func (root *Root) notifyEOFReached(m *Document) {
 	if root.Config.NotifyEOF == 0 {
 		return
 	}
-	root.setMessagef("EOF reached %s", m.FileName)
-	root.execNotify(root.Config.NotifyEOF)
+	msg := "EOF reached: " + m.FileName
+	root.execNotify(msg, root.Config.NotifyEOF)
 }
 
 // sendGoto fires an eventGoto event that moves to the specified line.
@@ -170,6 +177,20 @@ func (root *Root) MoveTop() {
 // MoveBottom fires the event of moving to bottom.
 func (root *Root) MoveBottom() {
 	root.MoveLine(root.Doc.BufEndNum())
+}
+
+// eventUpdateSections represents an event to update the section list.
+type eventUpdateSections struct {
+	tcell.EventTime
+	sections MatchedLineList
+}
+
+// sendUpdateSections fires the eventUpdateSections event.
+func (root *Root) sendUpdateSections(sections MatchedLineList) {
+	ev := &eventUpdateSections{}
+	ev.sections = sections
+	ev.SetEventNow()
+	root.postEvent(ev)
 }
 
 // everyUpdate is called every time before running the event.
@@ -392,7 +413,9 @@ func (root *Root) postEvent(ev tcell.Event) {
 	if root.Screen == nil {
 		return
 	}
-
+	if root.isClosed.Load() {
+		return
+	}
 	if err := root.Screen.PostEvent(ev); err != nil {
 		log.Printf("postEvent: %v\n", err)
 		root.releaseEventBuffer()

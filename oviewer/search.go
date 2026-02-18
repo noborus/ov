@@ -215,14 +215,12 @@ func searchPositionReg(s string, re *regexp.Regexp) [][]int {
 	return re.FindAllStringIndex(s, -1)
 }
 
-// setSearcher is a wrapper for NewSearcher and returns a Searcher interface.
+// createSearcher creates a Searcher interface for the given word and case sensitivity, without side effects.
 // Returns nil if there is no search term.
-func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
+func (root *Root) createSearcher(word string, caseSensitive bool) Searcher {
 	if word == "" {
-		root.searcher = nil
 		return nil
 	}
-	root.input.value = word
 
 	if root.Config.SmartCaseSensitive {
 		for _, ch := range word {
@@ -234,6 +232,17 @@ func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
 	}
 	reg := regexpCompile(word, caseSensitive)
 	searcher := NewSearcher(word, reg, caseSensitive, root.Config.RegexpSearch)
+	return searcher
+}
+
+// setSearcher sets root.searcher using createSearcher and updates input.value.
+func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
+	if word == "" {
+		root.searcher = nil
+		return nil
+	}
+	root.input.value = word
+	searcher := root.createSearcher(word, caseSensitive)
 	root.searcher = searcher
 	return searcher
 }
@@ -485,14 +494,9 @@ func (root *Root) cancelWait(cancel context.CancelFunc) error {
 // cancelKeys sets the cancel key.
 func cancelKeys(c *cbind.Configuration, cancelKeys []string, cancelApp func(_ *tcell.EventKey) *tcell.EventKey) (*cbind.Configuration, error) {
 	for _, k := range cancelKeys {
-		mod, key, ch, err := cbind.Decode(k)
+		err := c.Set(k, cancelApp)
 		if err != nil {
-			return c, fmt.Errorf("%w [%s] for cancel: %w", ErrFailedKeyBind, k, err)
-		}
-		if key == tcell.KeyRune {
-			c.SetRune(mod, ch, cancelApp)
-		} else {
-			c.SetKey(mod, key, cancelApp)
+			return nil, fmt.Errorf("cancelKeys: %w", err)
 		}
 	}
 	return c, nil
@@ -527,9 +531,6 @@ func (root *Root) sendSearchMove(lineNum int, searcher Searcher) {
 
 // incrementalSearch performs incremental search by setting and input mode.
 func (root *Root) incrementalSearch(ctx context.Context) {
-	if root.Screen.HasPendingEvent() {
-		return
-	}
 	if !root.Config.Incsearch {
 		return
 	}
@@ -622,6 +623,8 @@ func (root *Root) firstSearch(ctx context.Context, t searchType) {
 		root.backSearch(ctx, root.input.value, 0)
 	case filter:
 		root.filter(ctx, root.input.value)
+	case markByPattern:
+		root.markByPattern(ctx, root.input.value)
 	}
 }
 
@@ -749,4 +752,43 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 		}
 	}
 	return 0, ErrNotFound
+}
+
+// allMatchedLines returns lines matching the pattern.
+func (m *Document) allMatchedLines(ctx context.Context, searcher Searcher, offset int) []MatchedLine {
+	if searcher == nil {
+		return nil
+	}
+	if !m.allMatchedLinesRunning.CompareAndSwap(false, true) {
+		return nil
+	}
+	defer m.allMatchedLinesRunning.Store(false)
+
+	var lines []MatchedLine
+	for lN := m.BufStartNum(); lN < m.BufEndNum(); lN++ {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+		lineNum, err := m.SearchLine(ctx, searcher, lN)
+		if err != nil {
+			// Not found
+			break
+		}
+		lN = lineNum
+		// Found
+		if offset != 0 {
+			lineNum = lineNum + offset
+		}
+		line, err := m.Line(lineNum)
+		if err != nil {
+			// deleted?
+			log.Printf("failed to get line %d: %v", lineNum, err)
+			break
+		}
+		match := MatchedLine{lineNum: lineNum, line: line}
+		lines = append(lines, match)
+	}
+	return lines
 }

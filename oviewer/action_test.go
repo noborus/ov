@@ -239,7 +239,7 @@ func Test_position(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := calculatePosition(tt.args.str, tt.args.height)
+			got, err := calcPosition(tt.args.str, tt.args.height)
 			if got != tt.want {
 				t.Errorf("position() = %v, want %v", got, tt.want)
 			}
@@ -1017,14 +1017,14 @@ func TestRoot_ColumnDelimiterWrapMode(t *testing.T) {
 			root.setDelimiter(",")
 			root.Doc.ColumnMode = true
 			root.Doc.WrapMode = tt.fields.wrapMode
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.Doc.columnCursor = tt.fields.columnCursor
 			root.toggleWrapMode(ctx)
 			if root.Doc.WrapMode != tt.want.wrapMode {
 				t.Errorf("ColumnDelimiter WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
 			}
-			if root.Doc.x != tt.want.x {
-				t.Errorf("ColumnDelimiter WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			if root.Doc.scrollX != tt.want.x {
+				t.Errorf("ColumnDelimiter WrapMode() x = %v, want %v", root.Doc.scrollX, tt.want.x)
 			}
 			if root.Doc.columnCursor != tt.want.columnCursor {
 				t.Errorf("ColumnDelimiter WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)
@@ -1100,7 +1100,7 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 			ctx := context.Background()
 			root.Doc.ColumnWidth = true
 			root.Doc.WrapMode = tt.fields.wrapMode
-			root.Doc.x = tt.fields.x
+			root.Doc.scrollX = tt.fields.x
 			root.Doc.columnCursor = tt.fields.columnCursor
 			root.Doc.setColumnWidths()
 			root.prepareDraw(ctx)
@@ -1108,136 +1108,11 @@ func TestRoot_ColumnWidthWrapMode(t *testing.T) {
 			if root.Doc.WrapMode != tt.want.wrapMode {
 				t.Errorf("ColumnWidth WrapMode() mode = %v, want %v", root.Doc.WrapMode, tt.want.wrapMode)
 			}
-			if root.Doc.x != tt.want.x {
-				t.Errorf("ColumnWidth WrapMode() x = %v, want %v", root.Doc.x, tt.want.x)
+			if root.Doc.scrollX != tt.want.x {
+				t.Errorf("ColumnWidth WrapMode() x = %v, want %v", root.Doc.scrollX, tt.want.x)
 			}
 			if root.Doc.columnCursor != tt.want.columnCursor {
 				t.Errorf("ColumnWidth WrapMode() columnCursor = %v, want %v", root.Doc.columnCursor, tt.want.columnCursor)
-			}
-		})
-	}
-}
-
-func TestRoot_Mark(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
-	t.Run("TestMark", func(t *testing.T) {
-		root.prepareScreen()
-		ctx := context.Background()
-		root.Doc.topLN = 1
-		root.draw(ctx)
-		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, []int{1}) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1})
-		}
-		root.Doc.topLN = 10
-		root.draw(ctx)
-		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, []int{1, 10}) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{1, 10})
-		}
-		root.Doc.topLN = 1
-		root.draw(ctx)
-		root.removeMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, []int{10}) {
-			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int{10})
-		}
-		root.removeMark(ctx)
-		root.Doc.topLN = 2
-		root.draw(ctx)
-		root.addMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, []int{10, 2}) {
-			t.Errorf("addMark() = %#v, want %#v", root.Doc.marked, []int{10, 2})
-		}
-		root.removeAllMark(ctx)
-		if !reflect.DeepEqual(root.Doc.marked, []int(nil)) {
-			t.Errorf("removeAllMark() = %#v, want %#v", root.Doc.marked, []int(nil))
-		}
-	})
-}
-
-func TestRoot_nextMark(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
-	root.prepareScreen()
-	tests := []struct {
-		name        string
-		markedPoint int
-		wantLine    int
-	}{
-		{
-			name:        "testMarkNext1",
-			markedPoint: 0,
-			wantLine:    3,
-		},
-		{
-			name:        "testMarkNext2",
-			markedPoint: 1,
-			wantLine:    5,
-		},
-		{
-			name:        "testMarkNext3",
-			markedPoint: 2,
-			wantLine:    1,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			root.nextMark(context.Background()) // no marked
-			root.Doc.marked = []int{1, 3, 5}
-			root.Doc.markedPoint = tt.markedPoint
-			root.nextMark(context.Background())
-			if root.Doc.topLN != tt.wantLine {
-				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
-			}
-		})
-	}
-}
-
-func TestRoot_prevMark(t *testing.T) {
-	tcellNewScreen = fakeScreen
-	defer func() {
-		tcellNewScreen = tcell.NewScreen
-	}()
-	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
-	root.prepareScreen()
-	tests := []struct {
-		name        string
-		markedPoint int
-		wantLine    int
-	}{
-		{
-			name:        "testMarkPrev1",
-			markedPoint: 2,
-			wantLine:    3,
-		},
-		{
-			name:        "testMarkPrev2",
-			markedPoint: 1,
-			wantLine:    1,
-		},
-		{
-			name:        "testMarkPrev3",
-			markedPoint: 0,
-			wantLine:    5,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			root.prevMark(context.Background()) // no marked
-			root.Doc.marked = []int{1, 3, 5}
-			root.Doc.markedPoint = tt.markedPoint
-			root.prevMark(context.Background())
-			if root.Doc.topLN != tt.wantLine {
-				t.Errorf("got line %d, want line %d", root.Doc.topLN, tt.wantLine)
 			}
 		})
 	}
@@ -1508,7 +1383,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 			root.prepareScreen()
 			ctx := context.Background()
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
-			root.prepareDraw(context.Background())
+			root.prepareDraw(ctx)
 			root.Doc.HideOtherSection = tt.fields.HideOtherSection
 			root.WriteQuit(ctx)
 			if got := root.Config.AfterWriteOriginal; got != tt.want {
@@ -1603,9 +1478,23 @@ func TestRoot_setConverter(t *testing.T) {
 			root := rootHelper(t)
 			ctx := context.Background()
 			root.setConverter(ctx, tt.args.name)
-			got := root.Doc.conv
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setConverter() = %v, want %v", got, tt.want)
+			if root.Doc.Converter != tt.args.name {
+				t.Errorf("setConverter() name = %v, want %v", root.Doc.Converter, tt.args.name)
+			}
+			got := root.Doc.converterType(root.Doc.Converter)
+			switch tt.args.name {
+			case convEscaped:
+				if _, ok := got.(*escapeSequence); !ok {
+					t.Errorf("setConverter() type = %T, want *escapeSequence", got)
+				}
+			case convRaw:
+				if _, ok := got.(*rawConverter); !ok {
+					t.Errorf("setConverter() type = %T, want *rawConverter", got)
+				}
+			case convAlign:
+				if _, ok := got.(*align); !ok {
+					t.Errorf("setConverter() type = %T, want *align", got)
+				}
 			}
 		})
 	}
@@ -1782,6 +1671,7 @@ func TestDocument_specifiedAlign(t *testing.T) {
 		})
 	}
 }
+
 func TestDocument_closeFile(t *testing.T) {
 	t.Parallel()
 
@@ -2382,5 +2272,303 @@ func TestRoot_toggleStatusLine(t *testing.T) {
 	}
 	if root.message != "Status Line hidden" {
 		t.Errorf("toggleStatusLine() message = %v, want %v", root.message, "Status Line hidden")
+	}
+}
+
+func TestRoot_toggleSidebar(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	tests := []struct {
+		name           string
+		initialVisible bool
+		initialMode    SidebarMode
+		toggleMode     SidebarMode
+		wantVisible    bool
+		wantMode       SidebarMode
+	}{
+		{
+			name:           "Open Help Sidebar",
+			initialVisible: false,
+			initialMode:    SidebarModeNone,
+			toggleMode:     SidebarModeHelp,
+			wantVisible:    true,
+			wantMode:       SidebarModeHelp,
+		},
+		{
+			name:           "Close Sidebar when toggling same mode",
+			initialVisible: true,
+			initialMode:    SidebarModeHelp,
+			toggleMode:     SidebarModeHelp,
+			wantVisible:    false,
+			wantMode:       SidebarModeNone,
+		},
+		{
+			name:           "Switch Sidebar mode",
+			initialVisible: true,
+			initialMode:    SidebarModeHelp,
+			toggleMode:     SidebarModeMarks,
+			wantVisible:    true,
+			wantMode:       SidebarModeMarks,
+		},
+		{
+			name:           "Close Sidebar with SidebarModeNone",
+			initialVisible: true,
+			initialMode:    SidebarModeHelp,
+			toggleMode:     SidebarModeNone,
+			wantVisible:    false,
+			wantMode:       SidebarModeNone,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.sidebarVisible = tt.initialVisible
+			root.sidebarMode = tt.initialMode
+			root.toggleSidebar(ctx, tt.toggleMode)
+			if root.sidebarVisible != tt.wantVisible {
+				t.Errorf("toggleSidebar() sidebarVisible = %v, want %v", root.sidebarVisible, tt.wantVisible)
+			}
+			if root.sidebarMode != tt.wantMode {
+				t.Errorf("toggleSidebar() sidebarMode = %v, want %v", root.sidebarMode, tt.wantMode)
+			}
+		})
+	}
+}
+
+func TestRoot_goMarkNumber(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := rootHelper(t)
+	root.Doc.marked = MatchedLineList{
+		{lineNum: 10, line: []byte("a")},
+		{lineNum: 20, line: []byte("b")},
+		{lineNum: 30, line: []byte("c")},
+	}
+	root.Doc.markedPoint = 1 // Start at index 1
+
+	tests := []struct {
+		name        string
+		input       string
+		startPoint  int
+		wantPoint   int
+		wantLineNum int
+	}{
+		{
+			name:        "absolute index",
+			input:       "2",
+			startPoint:  0,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "relative positive index",
+			input:       "+1",
+			startPoint:  1,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "relative negative index",
+			input:       "-1",
+			startPoint:  2,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+		{
+			name:        "out of range high",
+			input:       "10",
+			startPoint:  0,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "out of range low",
+			input:       "-10",
+			startPoint:  2,
+			wantPoint:   0,
+			wantLineNum: 10,
+		},
+		{
+			name:        "invalid input",
+			input:       "abc",
+			startPoint:  1,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+		{
+			name:        "empty input",
+			input:       "",
+			startPoint:  1,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.markedPoint = tt.startPoint
+			root.goMarkNumber(tt.input)
+			if root.Doc.markedPoint != tt.wantPoint {
+				t.Errorf("goMarkNumber(%q) markedPoint = %d, want %d", tt.input, root.Doc.markedPoint, tt.wantPoint)
+			}
+			if len(root.Doc.marked) > 0 && root.Doc.markedPoint < len(root.Doc.marked) {
+				if root.Doc.marked[root.Doc.markedPoint].lineNum != tt.wantLineNum {
+					t.Errorf("goMarkNumber(%q) lineNum = %d, want %d", tt.input, root.Doc.marked[root.Doc.markedPoint].lineNum, tt.wantLineNum)
+				}
+			}
+		})
+	}
+}
+
+func Test_calcMarkIndex(t *testing.T) {
+	type args struct {
+		input   string
+		current int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "positive absolute index",
+			args: args{
+				input:   "5",
+				current: 2,
+			},
+			want: 5,
+		},
+		{
+			name: "negative relative index",
+			args: args{
+				input:   "-2",
+				current: 5,
+			},
+			want: 3,
+		},
+		{
+			name: "positive relative index",
+			args: args{
+				input:   "+3",
+				current: 4,
+			},
+			want: 7,
+		},
+		{
+			name: "invalid input",
+			args: args{
+				input:   "abc",
+				current: 10,
+			},
+			want: 10,
+		},
+		{
+			name: "invalid relative input",
+			args: args{
+				input:   "+abc",
+				current: 8,
+			},
+			want: 8,
+		},
+		{
+			name: "zero index",
+			args: args{
+				input:   "0",
+				current: 5,
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := calcMarkIndex(tt.args.input, tt.args.current)
+			if got != tt.want {
+				t.Errorf("calcMarkIndex(%q, %d) = %d, want %d", tt.args.input, tt.args.current, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_toggleSidebarHelp(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	// Initially sidebar should not be visible and mode should be SidebarModeNone
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+
+	// Call toggleSidebarHelp to open the help sidebar
+	root.toggleSidebarHelp(ctx)
+	if !root.sidebarVisible {
+		t.Errorf("toggleSidebarHelp() sidebarVisible = %v, want %v", root.sidebarVisible, true)
+	}
+	if root.sidebarMode != SidebarModeHelp {
+		t.Errorf("toggleSidebarHelp() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeHelp)
+	}
+
+	// Call again to close the sidebar
+	root.toggleSidebarHelp(ctx)
+	if root.sidebarVisible {
+		t.Errorf("toggleSidebarHelp() sidebarVisible = %v, want %v", root.sidebarVisible, false)
+	}
+	if root.sidebarMode != SidebarModeNone {
+		t.Errorf("toggleSidebarHelp() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeNone)
+	}
+}
+
+func TestRoot_toggleSidebarMarkList(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	// Initially sidebar should not be visible and mode should be SidebarModeNone
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+
+	// Call toggleSidebarMarkList to open the mark list sidebar
+	root.toggleSidebarMarks(ctx)
+	if !root.sidebarVisible {
+		t.Errorf("toggleSidebarMarkList() sidebarVisible = %v, want %v", root.sidebarVisible, true)
+	}
+	if root.sidebarMode != SidebarModeMarks {
+		t.Errorf("toggleSidebarMarkList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeMarks)
+	}
+
+	// Call again to close the sidebar
+	root.toggleSidebarMarks(ctx)
+	if root.sidebarVisible {
+		t.Errorf("toggleSidebarMarkList() sidebarVisible = %v, want %v", root.sidebarVisible, false)
+	}
+	if root.sidebarMode != SidebarModeNone {
+		t.Errorf("toggleSidebarMarkList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeNone)
+	}
+}
+
+func TestRoot_toggleSidebarDocList(t *testing.T) {
+	root := rootHelper(t)
+	ctx := context.Background()
+
+	// Initially sidebar should not be visible and mode should be SidebarModeNone
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+
+	// Call toggleSidebarDocList to open the doc list sidebar
+	root.toggleSidebarDocList(ctx)
+	if !root.sidebarVisible {
+		t.Errorf("toggleSidebarDocList() sidebarVisible = %v, want %v", root.sidebarVisible, true)
+	}
+	if root.sidebarMode != SidebarModeDocList {
+		t.Errorf("toggleSidebarDocList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeDocList)
+	}
+
+	// Call again to close the sidebar
+	root.toggleSidebarDocList(ctx)
+	if root.sidebarVisible {
+		t.Errorf("toggleSidebarDocList() sidebarVisible = %v, want %v", root.sidebarVisible, false)
+	}
+	if root.sidebarMode != SidebarModeNone {
+		t.Errorf("toggleSidebarDocList() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeNone)
 	}
 }

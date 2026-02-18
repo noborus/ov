@@ -78,8 +78,6 @@ type Converter interface {
 	convert(st *parseState) bool
 }
 
-var defaultConverter = newESConverter()
-
 // StrToContents converts a single-line string into a one line of contents.
 // Parse escape sequences, etc.
 // 1 Content matches the characters displayed on the screen.
@@ -299,6 +297,21 @@ func (lc contents) IsSpace(n int) bool {
 	return lc[n].str == " "
 }
 
+// TrimLeft trims leading spaces, tabs, and blank cells from contents.
+func (lc contents) TrimLeft() contents {
+	next := 0
+	for _, c := range lc {
+		if c.str == " " || c.str == "\t" || c.str == "" {
+			next++
+		} else {
+			break
+		}
+	}
+	lc = lc[next:]
+
+	return lc
+}
+
 // IsFullWidth returns true if the specified position is a full-width character.
 func (lc contents) IsFullWidth(n int) bool {
 	if n >= len(lc) {
@@ -307,7 +320,7 @@ func (lc contents) IsFullWidth(n int) bool {
 	return lc[n].width == 2
 }
 
-// writeRune writes a rune to strings.Builder.
+// writeString writes a string to strings.Builder.
 func writeString(w *strings.Builder, s string) int {
 	n, err := w.WriteString(s)
 	if err != nil {
@@ -328,7 +341,7 @@ func (pos widthPos) x(n int) int {
 	return pos[len(pos)-1]
 }
 
-// n return string position from content.
+// n returns string position from content.
 // x -> [n]byte.
 func (pos widthPos) n(x int) int {
 	if x < 0 {

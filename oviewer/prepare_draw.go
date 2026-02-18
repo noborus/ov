@@ -3,6 +3,7 @@ package oviewer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"regexp"
@@ -22,20 +23,18 @@ const (
 // prepareScreen prepares when the screen size is changed.
 func (root *Root) prepareScreen() {
 	root.scr.vWidth, root.scr.vHeight = root.Screen.Size()
-	// Do not allow size 0.
-	root.scr.vWidth = max(root.scr.vWidth, 1)
-	root.scr.vHeight = max(root.scr.vHeight, 1)
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
-	root.Doc.width = root.scr.vWidth - root.scr.startX
-	root.Doc.height = root.Doc.statusPos
+	// Do not allow very small screens.
+	root.scr.vWidth = max(root.scr.vWidth, 2)
+	root.scr.vHeight = max(root.scr.vHeight, 2)
+	root.updateDocumentSize()
 
 	root.scr.rulerHeight = 0
 	if root.Doc.RulerType != RulerNone {
 		root.scr.rulerHeight = rulerHeight
 	}
-	root.scr.startY = root.scr.rulerHeight
+	root.Doc.bodyStartY = root.scr.rulerHeight
 
-	n, err := calculatePosition(root.Doc.HScrollWidth, root.scr.vWidth)
+	n, err := calcPosition(root.Doc.HScrollWidth, root.scr.vWidth)
 	if err != nil {
 		root.setMessageLogf("Invalid HScrollWidth: %s", root.Doc.HScrollWidth)
 		n = 0
@@ -54,23 +53,41 @@ func (root *Root) prepareScreen() {
 
 // prepareStartX prepares the start position of the x.
 func (root *Root) prepareStartX() {
-	root.scr.startX = 0
+	if root.sidebarVisible {
+		width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+		if err != nil {
+			root.debugMessage(fmt.Sprintf("Invalid SidebarWidth: %s", err.Error()))
+			width = minSidebarWidth
+		}
+		root.sidebarWidth = width
+	}
 	m := root.Doc
-	if !m.LineNumMode {
-		return
+	m.leftMargin = root.sidebarWidth
+	m.rightMargin = 0
+	m.lineNumberWidth = 0
+	if m.LineNumMode {
+		if m.parent != nil {
+			m = m.parent
+		}
+		m.lineNumberWidth = len(strconv.Itoa(m.BufEndNum())) + 1
 	}
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth
+}
 
-	if m.parent != nil {
-		m = m.parent
-	}
-	root.scr.startX = len(strconv.Itoa(m.BufEndNum())) + 1
+// updateDocumentSize updates the document size.
+func (root *Root) updateDocumentSize() {
+	m := root.Doc
+	m.width = root.scr.vWidth - m.bodyStartX
+	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin)
+	m.height = root.scr.vHeight - root.scr.statusLineHeight
+	m.statusPos = m.height
 }
 
 // ViewSync redraws the whole thing.
 func (root *Root) ViewSync(context.Context) {
 	root.resetSelect()
-	root.prepareStartX()
 	root.prepareScreen()
+	root.prepareStartX()
 	root.Screen.Sync()
 	root.Doc.jumpTargetHeight, root.Doc.jumpTargetSection = jumpPosition(root.Doc.JumpTarget, root.scr.vHeight)
 }
@@ -93,8 +110,8 @@ func (root *Root) determineStatusLine() int {
 // prepareDraw prepares the screen for drawing.
 func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.statusLineHeight = root.determineStatusLine()
-	root.Doc.statusPos = root.scr.vHeight - root.scr.statusLineHeight
-	root.Doc.height = root.Doc.statusPos
+	root.updateDocumentSize()
+	root.prepareSidebarItems()
 	// Set the columnCursor at the first run.
 	if len(root.scr.lines) == 0 {
 		defer func() {

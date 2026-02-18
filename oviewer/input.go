@@ -26,6 +26,8 @@ const (
 	Backsearch
 	// Filter is for filtering.
 	Filter
+	// MarkByPattern is for marking by pattern.
+	MarkByPattern
 	// Goline is for moving to a specific line.
 	Goline
 	// Header is for setting the number of headers.
@@ -58,6 +60,8 @@ const (
 	VerticalHeader
 	// HeaderColumn is for setting the number of vertical header columns.
 	HeaderColumn
+	// MarkNum is for setting the mark number.
+	MarkNum
 )
 
 // Input represents the status of various inputs.
@@ -92,6 +96,7 @@ func NewInput() *Input {
 	i.Candidate[JumpTarget] = jumpTargetCandidate()
 	i.Candidate[SaveBuffer] = blankCandidate()
 	i.Candidate[ConvertType] = converterCandidate()
+	i.Candidate[MarkNum] = blankCandidate()
 
 	i.Event = &eventNormal{}
 	return &i
@@ -149,13 +154,12 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 
 	mod := evKey.Modifiers()
 	key := evKey.Key()
-	rune := evKey.Rune()
+	r := evKey.Rune()
 
 	if key == tcell.KeyRune {
-		r := string(rune)
 		left, right := splitAtWidth(input.value, input.cursorX)
-		input.value = left + r + right
-		input.cursorX += uniseg.StringWidth(r)
+		input.value = left + string(r) + right
+		input.cursorX += uniseg.StringWidth(string(r))
 		actualWidth := stringWidth(input.value)
 		if input.cursorX > actualWidth {
 			input.cursorX = actualWidth
@@ -163,7 +167,7 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		return false
 	}
 
-	keyStr, err := cbind.Encode(mod, key, rune)
+	keyStr, err := cbind.Encode(mod, key, r)
 	if err != nil {
 		log.Printf("Error encoding key event: %v", err)
 		return false

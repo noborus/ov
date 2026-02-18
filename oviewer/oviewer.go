@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"codeberg.org/tslocum/cbind"
@@ -86,6 +87,8 @@ type Root struct {
 
 	// mu controls the RWMutex.
 	mu sync.RWMutex
+	// isClosed indicates whether it is closed.
+	isClosed atomic.Bool
 
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool
@@ -93,6 +96,20 @@ type Root struct {
 	skipDraw bool
 	// clickState is the state of mouse click.
 	clickState ClickState
+
+	// sidebarVisible is whether the sidebar is visible.
+	sidebarVisible bool
+	// sidebarMode is the mode of the sidebar.
+	sidebarMode         SidebarMode
+	previousSidebarMode SidebarMode
+	// SidebarItems is the items to display in the sidebar.
+	SidebarItems []SidebarItem
+	// SidebarHelpItems is the help items to display in the sidebar.
+	SidebarHelpItems []SidebarItem
+	// sidebarWidth is the width of the sidebar.
+	sidebarWidth int
+	// sidebarScrolls holds scroll positions for each sidebarMode.
+	sidebarScrolls map[SidebarMode]sidebarScroll
 }
 
 // MouseSelectState represents the state of mouse selection.
@@ -115,10 +132,6 @@ type SCR struct {
 	vWidth int
 	// vHeight represents the screen height.
 	vHeight int
-	// startX is the start position of x.
-	startX int
-	// startY is the start position of y.
-	startY int
 	// statusLineHeight is the height of the status line.
 	statusLineHeight int
 
@@ -462,6 +475,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		keyConfig:      cbind.NewConfiguration(),
 		inputKeyConfig: cbind.NewConfiguration(),
 		input:          NewInput(),
+		sidebarScrolls: make(map[SidebarMode]sidebarScroll),
 	}
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
@@ -629,12 +643,10 @@ func openFiles(fileNames []string) (*Root, error) {
 		docList = append(docList, m)
 	}
 
-	if len(openErrs) > 1 {
-		openErrs = append([]error{ErrMissingFile}, openErrs...)
-	}
-	errs := errors.Join(openErrs...)
 	// If none of the documents are present, the program exits with an error.
 	if len(docList) == 0 {
+		openErrs = append([]error{ErrMissingFile}, openErrs...)
+		errs := errors.Join(openErrs...)
 		return nil, errs
 	}
 
@@ -643,9 +655,9 @@ func openFiles(fileNames []string) (*Root, error) {
 		return nil, err
 	}
 	// Errors that could not be OpenDocument are output to the log.
-	if errs, ok := errs.(interface{ Unwrap() []error }); ok {
-		for _, err := range errs.Unwrap() {
-			log.Println(err)
+	if len(openErrs) > 0 {
+		for _, e := range openErrs {
+			log.Println(e)
 		}
 	}
 
@@ -663,8 +675,8 @@ func (root *Root) SetConfig(config Config) {
 
 	// view mode.
 	if config.ViewMode != "" {
-		viewMode, overwrite := config.Mode[config.ViewMode]
-		if overwrite {
+		viewMode, ok := config.Mode[config.ViewMode]
+		if ok {
 			root.settings = updateRunTimeSettings(root.settings, viewMode)
 		} else {
 			root.setMessageLogf("view mode not found: %s", config.ViewMode)
@@ -788,7 +800,6 @@ func (root *Root) Run() error {
 	}
 	defer watcher.Close()
 	root.SetWatcher(watcher)
-
 	if err := root.prepareRun(ctx); err != nil {
 		return err
 	}
@@ -845,6 +856,12 @@ func (root *Root) prepareRun(ctx context.Context) error {
 
 	root.setCaption()
 
+	// Validate sidebar width.
+	if _, err = calcSideWidth(root.Config.SidebarWidth, 100); err != nil {
+		log.Printf("invalid sidebar width: %s, set to default %s\n", root.Config.SidebarWidth, defaultSidebarWidth)
+		root.Config.SidebarWidth = defaultSidebarWidth
+	}
+
 	root.setViewModeConfig()
 	root.prepareAllDocuments()
 	// follow mode or follow all disables quit if the output fits on one screen.
@@ -897,9 +914,6 @@ func (root *Root) prepareAllDocuments() {
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
 		}
-		if doc.Converter != "" {
-			doc.conv = doc.converterType(doc.Converter)
-		}
 		w := ""
 		if doc.WatchInterval > 0 {
 			doc.watchMode()
@@ -914,6 +928,7 @@ func (root *Root) prepareAllDocuments() {
 
 // Close closes the oviewer.
 func (root *Root) Close() {
+	root.isClosed.Store(true)
 	root.Screen.Fini()
 }
 
@@ -1300,7 +1315,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.width, start, end)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.bodyWidth, start, end)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -1377,7 +1392,7 @@ func (root *Root) ScreenContent() []string {
 	end += root.Config.AfterWriteOriginal
 	start -= root.Config.BeforeWriteOriginal
 	end = max(end, start)
-	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.width, start, end)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.bodyWidth, start, end)
 	strs = tcellansi.TrimRightSpaces(strs)
 	return strs
 }

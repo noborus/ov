@@ -120,6 +120,9 @@ func (s *store) evictChunksMem(chunkNum int) {
 
 // unloadChunk unloads the chunk from memory.
 func (s *store) unloadChunk(chunkNum int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.loadedChunks.Remove(chunkNum)
 	s.chunks[chunkNum].lines = nil
 }
@@ -360,6 +363,7 @@ func (s *store) appendFormFeed(chunk *chunk) {
 	}
 }
 
+// export exports the lines including ANSI escape sequences.
 func (s *store) export(w io.Writer, chunk *chunk, start int, end int) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
