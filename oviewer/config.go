@@ -20,6 +20,8 @@ type Config struct {
 	Prompt PromptConfig
 	// MinStartX is the minimum value of the start position.
 	MinStartX int
+	// SidebarMode represents the sidebar mode.
+	SidebarMode string
 	// SidebarWidth is the width of the sidebar as a string (e.g., "30%", "10").
 	SidebarWidth string
 	// StyleOverStrike is a style that applies to overstrike.

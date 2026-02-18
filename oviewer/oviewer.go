@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -680,6 +681,16 @@ func (root *Root) SetConfig(config Config) {
 			root.settings = updateRunTimeSettings(root.settings, viewMode)
 		} else {
 			root.setMessageLogf("view mode not found: %s", config.ViewMode)
+		}
+	}
+
+	if config.SidebarMode != "" {
+		for s := SidebarModeNone; s < SidebarModeEnd; s++ {
+			if strings.EqualFold(config.SidebarMode, s.String()) {
+				root.sidebarMode = s
+				root.sidebarVisible = true
+				break
+			}
 		}
 	}
 
