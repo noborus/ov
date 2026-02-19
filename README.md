@@ -462,6 +462,8 @@ ov --alternate-rows test.csv
 
 *Added in v0.51.0*
 
+![sidebar.png](docs/sidebar1.png)
+
 `ov` now supports a sidebar feature, allowing you to display additional information alongside the main content.
 
 The sidebar can show:
@@ -487,20 +489,14 @@ You can also specify the sidebar mode via CLI or config(`help`, `marks`, `docume
 ov --sidebar-mode=sections --section-delimiter "^#" README.md
 ```
 
-In the config file, you can set the sidebar width using `SidebarWidth`. This can be specified as a percentage (e.g., `20%`) or as a fixed width in columns (e.g., `30`).
+You can specify the initial sidebar mode via CLI with `--sidebar-mode=string` or by setting it in the config file.
+You can set the sidebar width using `SidebarWidth`. This can be specified as a percentage (e.g., `20%`) or as a fixed width in columns (e.g., `30`).
 
 Example:
 
 ```yaml
-# SidebarWidth: 20%   # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
-SidebarWidth: 30      # 30 columns
-SidebarMode: "mark"  # Initial sidebar mode (help, mark, document, section)
-```
-
-You can specify the initial sidebar mode with `--sidebar-mode=string` or by setting it in the config file.
-
-```yaml
-SidebarMode: "mark"
+SidebarMode: "marks"  # Initial sidebar mode (help, marks, documents, sections)
+SidebarWidth: 30      #  Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
 ```
 
 ###  4.11. <a name='section'></a>Section
