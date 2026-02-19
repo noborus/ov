@@ -42,43 +42,44 @@ ov is a terminal pager.
   * 4.7. [Column width](#column-width)
   * 4.8. [Wrap/NoWrap](#wrap/nowrap)
   * 4.9. [Alternate-Rows](#alternate-rows)
-  * 4.10. [Section](#section)
-    * 4.10.1. [section example](#section-example)
-    * 4.10.2. [hide other sections](#hide-other-sections)
-  * 4.11. [Multiple files](#multiple-files)
-  * 4.12. [Follow mode](#follow-mode)
-    * 4.12.1. [Follow name](#follow-name)
-    * 4.12.2. [Follow all mode](#follow-all-mode)
-    * 4.12.3. [Follow section mode](#follow-section-mode)
-    * 4.12.4. [Sticky Follow](#sticky-follow)
-  * 4.13. [Exec mode](#exec-mode)
-  * 4.14. [Search](#search)
-    * 4.14.1. [Pattern](#pattern)
-    * 4.14.2. [Filter](#filter)
-  * 4.15. [Caption](#caption)
-  * 4.16. [Mark](#mark)
-  * 4.17. [Watch](#watch)
-  * 4.18. [Mouse support](#mouse-support)
-    * 4.18.1. [Text Selection](#text-selection)
-    * 4.18.2. [Wheel scroll](#wheel-scroll)
-    * 4.18.3. [Scroll Amount Configuration](#scroll-amount-configuration)
-    * 4.18.4. [Anchor and Extend Selection](#anchor-and-extend-selection)
-  * 4.19. [Multi color highlight](#multi-color-highlight)
-  * 4.20. [Plain](#plain)
-  * 4.21. [Converter](#converter)
-  * 4.22. [Align](#align)
-    * 4.22.1. [Shrink](#shrink)
-    * 4.22.2. [Right Align](#right-align)
-  * 4.23. [Jump target](#jump-target)
-  * 4.24. [View mode](#view-mode)
-    * 4.24.1. [List View Modes](#list-view-modes)
-  * 4.25. [Output on exit](#output-on-exit)
-  * 4.26. [Quit if one screen](#quit-if-one-screen)
-  * 4.27. [Suspend](#suspend)
-  * 4.28. [Edit](#edit)
-  * 4.29. [Save](#save)
-  * 4.30. [Ruler](#ruler)
-  * 4.31. [Redirect Output](#redirect-output)
+  * 4.10. [Sidebar](#sidebar)
+  * 4.11. [Section](#section)
+    * 4.11.1. [section example](#section-example)
+    * 4.11.2. [hide other sections](#hide-other-sections)
+  * 4.12. [Multiple files](#multiple-files)
+  * 4.13. [Follow mode](#follow-mode)
+    * 4.13.1. [Follow name](#follow-name)
+    * 4.13.2. [Follow all mode](#follow-all-mode)
+    * 4.13.3. [Follow section mode](#follow-section-mode)
+    * 4.13.4. [Sticky Follow](#sticky-follow)
+  * 4.14. [Exec mode](#exec-mode)
+  * 4.15. [Search](#search)
+    * 4.15.1. [Pattern](#pattern)
+    * 4.15.2. [Filter](#filter)
+  * 4.16. [Caption](#caption)
+  * 4.17. [Mark](#mark)
+  * 4.18. [Watch](#watch)
+  * 4.19. [Mouse support](#mouse-support)
+    * 4.19.1. [Text Selection](#text-selection)
+    * 4.19.2. [Wheel scroll](#wheel-scroll)
+    * 4.19.3. [Scroll Amount Configuration](#scroll-amount-configuration)
+    * 4.19.4. [Anchor and Extend Selection](#anchor-and-extend-selection)
+  * 4.20. [Multi color highlight](#multi-color-highlight)
+  * 4.21. [Plain](#plain)
+  * 4.22. [Converter](#converter)
+  * 4.23. [Align](#align)
+    * 4.23.1. [Shrink](#shrink)
+    * 4.23.2. [Right Align](#right-align)
+  * 4.24. [Jump target](#jump-target)
+  * 4.25. [View mode](#view-mode)
+    * 4.25.1. [List View Modes](#list-view-modes)
+  * 4.26. [Output on exit](#output-on-exit)
+  * 4.27. [Quit if one screen](#quit-if-one-screen)
+  * 4.28. [Suspend](#suspend)
+  * 4.29. [Edit](#edit)
+  * 4.30. [Save](#save)
+  * 4.31. [Ruler](#ruler)
+  * 4.32. [Redirect Output](#redirect-output)
 * 5. [How to reduce memory usage](#how-to-reduce-memory-usage)
   * 5.1. [Regular file (seekable)](#regular-file-(seekable))
   * 5.2. [Other files, pipes(Non-seekable)](#other-files,-pipes(non-seekable))
@@ -457,7 +458,52 @@ ov --alternate-rows test.csv
 
 [Related styling](#style-customization): `Alternate`.
 
-###  4.10. <a name='section'></a>Section
+###  4.10. <a name='sidebar'></a>Sidebar
+
+*Added in v0.51.0*
+
+`ov` now supports a sidebar feature, allowing you to display additional information alongside the main content.
+
+The sidebar can show:
+
+* Help (default key `Alt + h`)
+* Mark list (default key `Alt + m`)
+* Document list (default key `Alt + l`)
+* Section list (default key `Alt + u`)
+
+You can toggle the sidebar and switch its mode using keyboard shortcuts or configuration options. The sidebar width is configurable, and its content updates dynamically according to the current mode.
+
+Sidebar scrolling is independent of the main content.
+Default keys are:
+
+* up(default key `shift+up`)
+* down(default key `shift+down`)
+* left(default key `shift+left`)
+* right(default key `shift+right`)
+
+You can also specify the sidebar mode via CLI or config(`help`, `marks`, `documents`, `sections`).
+
+```console
+ov --sidebar-mode=sections --section-delimiter "^#" README.md
+```
+
+In the config file, you can set the sidebar width using `SidebarWidth`. This can be specified as a percentage (e.g., `20%`) or as a fixed width in columns (e.g., `30`).
+
+Example:
+
+```yaml
+# SidebarWidth: 20%   # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
+SidebarWidth: 30      # 30 columns
+SidebarMode: "mark"  # Initial sidebar mode (help, mark, document, section)
+```
+
+You can specify the initial sidebar mode with `--sidebar-mode=string` or by setting it in the config file.
+
+```yaml
+SidebarMode: "mark"
+```
+
+###  4.11. <a name='section'></a>Section
 
 You can specify a section delimiter using `--section-delimiter` (default key `alt+d`).
 
@@ -478,7 +524,9 @@ you can move the diff for each file.
 The number of lines in section-header can be changed.
 You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
 
-####  4.10.1. <a name='section-example'></a>section example
+The specified section can be viewed in the section list in the [Sidebar](#sidebar)(default key `alt+u`).
+
+####  4.11.1. <a name='section-example'></a>section example
 
 This is an example of using the `git` pager.
 
@@ -490,7 +538,7 @@ This is an example of using the `git` pager.
 
 [Related styling](#style-customization): `SectionLine`.
 
-####  4.10.2. <a name='hide-other-sections'></a>hide other sections
+####  4.11.2. <a name='hide-other-sections'></a>hide other sections
 
 If you specify `--hide-other-section`(default key `alt+-`), only the current section is displayed.
 
@@ -500,7 +548,7 @@ ov --section-delimiter "^#" --hide-other-section README.md
 
 This is just hidden, so it will be displayed when you move to the next section.
 
-###  4.11. <a name='multiple-files'></a>Multiple files
+###  4.12. <a name='multiple-files'></a>Multiple files
 
 `ov` can also open multiple files.
 
@@ -510,9 +558,11 @@ ov file1 file2
 
 Multiple files are each opened as a document and can be navigated using the Next Document `]` key (default), Previous Document `[` key (default).
 
+Specified multiple files can also be displayed in the document list in the [Sidebar](#sidebar)(default key `alt + l`).
+
 Related Styling: [Customizing the bottom status line](#customizing-the-bottom-status-line).
 
-###  4.12. <a name='follow-mode'></a>Follow mode
+###  4.13. <a name='follow-mode'></a>Follow mode
 
 `--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
@@ -527,7 +577,7 @@ ov --follow-mode /var/log/syslog
 > [!NOTE]
 > Due to issue[issue #643](https://github.com/noborus/ov/issues/643), follow-mode does not work for files in the /tmp folder on macOS.
 
-####  4.12.1. <a name='follow-name'></a>Follow name
+####  4.13.1. <a name='follow-name'></a>Follow name
 
 > [!TIP]
 > Use `--follow-name` instead of `--follow-mode` when files might be rotated (like log files). This ensures you continue following the new file even if the original is moved or deleted.
@@ -539,7 +589,7 @@ Monitor file names instead of file descriptors.
 ov --follow-name /var/log/nginx/access.log
 ```
 
-####  4.12.2. <a name='follow-all-mode'></a>Follow all mode
+####  4.13.2. <a name='follow-all-mode'></a>Follow all mode
 
 `--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
@@ -547,7 +597,7 @@ ov --follow-name /var/log/nginx/access.log
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
 ```
 
-####  4.12.3. <a name='follow-section-mode'></a>Follow section mode
+####  4.13.3. <a name='follow-section-mode'></a>Follow section mode
 
 Use the `--follow-section`(default key `F2`) option to follow by section.
 Follow mode is line-by-line, while follow section mode is section-by-section.
@@ -561,7 +611,7 @@ ov --section-delimiter "^#" --follow-section README.md
 > [!NOTE]
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
-####  4.12.4. <a name='sticky-follow'></a>Sticky Follow
+####  4.13.4. <a name='sticky-follow'></a>Sticky Follow
 
 *Added in v0.44.0*
 
@@ -589,7 +639,7 @@ General:
 
 [Related styling](#style-customization): `PauseLine`.
 
-###  4.13. <a name='exec-mode'></a>Exec mode
+###  4.14. <a name='exec-mode'></a>Exec mode
 
 Exec mode captures the output of a command and displays it in `ov`.
 It works similarly to `watch`, but with advanced paging features.
@@ -617,14 +667,14 @@ Therefore, the command is likely to be printed in color.
 ov --exec -- eza -l
 ```
 
-It is useful to use the `--notify-eof` option together with exec mode to get notified when the command finishes,
-especially for long-running commands like make.
+It is useful to use the `--notify-eof` option together with exec mode to get notified when the command finishes.
+This is especially helpful for long-running commands like make.
 
 ```console
 ov --notify-eof --exec -- make
 ```
 
-###  4.14. <a name='search'></a>Search
+###  4.15. <a name='search'></a>Search
 
 Search by forward search `/` key(default) or the backward search `?` key(default).
 Search can be toggled between incremental search, regular expression search, and case sensitivity.
@@ -648,7 +698,7 @@ SmartCaseSensitive: true
 
 [Related styling](#style-customization): `SearchHighlight`
 
-####  4.14.1. <a name='pattern'></a>Pattern
+####  4.15.1. <a name='pattern'></a>Pattern
 
 The pattern option allows you to specify a search at startup.
 
@@ -656,7 +706,7 @@ The pattern option allows you to specify a search at startup.
 ov --pattern install README.md
 ```
 
-####  4.14.2. <a name='filter'></a>Filter
+####  4.15.2. <a name='filter'></a>Filter
 
 Filter input is possible using the `&` key(default).
 The filter input creates a new document only for the lines that match the filter.
@@ -703,7 +753,7 @@ postgres    1631  0.0  0.0 222420  8904 ?        Ss   Jul24   0:00 postgres: 14/
 noborus   193766  0.0  0.0 1603756 7552 pts/0    Rl+  10:37   0:00 ov -H1 -F --filter postgres
 ```
 
-###  4.15. <a name='caption'></a>Caption
+###  4.16. <a name='caption'></a>Caption
 
 You can specify a caption instead of the file name in status line to display it.
 
@@ -718,7 +768,7 @@ export OV_CAPTION="ls -alF"
 ls -alF|ov
 ```
 
-###  4.16. <a name='mark'></a>Mark
+###  4.17. <a name='mark'></a>Mark
 
 Mark the display position with the `m` key(default).
 The mark is decorated with `MarkLine` and `MarkStyleWidth`.
@@ -726,11 +776,25 @@ The mark is decorated with `MarkLine` and `MarkStyleWidth`.
 Marks can be erased individually with the `M` key(default).
 It is also possible to delete all marks with the `ctrl + delete` key(default).
 
-Use the `>`next and `<`previous (default) key to move to the marked position.
+The specified marks can be displayed in the mark list in the [Sidebar](#sidebar)(default key `alt + m`).
 
 [Related styling](#style-customization): `MarkLine`.
 
-###  4.17. <a name='watch'></a>Watch
+#### mark by pattern
+
+You can use mark by pattern to mark all lines that match the search(default key `*`).
+This will enter pattern input mode and, when you press `Enter`, mark all lines
+that match the pattern.
+
+#### Specifying a mark
+
+Use the `>`next and `<`previous (default) key to move to the marked position.
+You can also enter mark specify mode with `,` (default) and select a mark by
+number. There are two input styles: enter the number directly, or enter a
+relative offset like `+N`/`-N` from the current mark. When you press `,`, the
+mark list sidebar opens automatically along with number input mode.
+
+###  4.18. <a name='watch'></a>Watch
 
 `ov` has a watch mode that reads the file every N seconds and adds it to the end.
 When you reach EOF, add '\f' instead.
@@ -744,7 +808,7 @@ for example.
 ov --watch 1 /proc/meminfo
 ```
 
-###  4.18. <a name='mouse-support'></a>Mouse support
+###  4.19. <a name='mouse-support'></a>Mouse support
 
 The `ov` makes the mouse support its control.
 This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `ctrl+alt+r`).
@@ -773,7 +837,7 @@ Selecting the range with the mouse and then left-clicking will copy it to the cl
 Pasting in `ov` is done with the middle button.
 In other applications, it is pasted from the clipboard (often by pressing the right-click).
 
-####  4.18.1. <a name='text-selection'></a>Text Selection
+####  4.19.1. <a name='text-selection'></a>Text Selection
 
 *Added in v0.44.0*
 
@@ -785,18 +849,18 @@ The mouse supports intelligent text selection for improved productivity:
 
 These selection methods work seamlessly with the clipboard functionality. After making a selection with double or triple click, the selected text is automatically copied to the clipboard.
 
-####  4.18.2. <a name='wheel-scroll'></a>Wheel scroll
+####  4.19.2. <a name='wheel-scroll'></a>Wheel scroll
 
 When mouse support is enabled, you can use the mouse wheel for navigation:
 
 * **Vertical scrolling**: Use the mouse wheel to scroll up and down
 * **Horizontal scrolling**: Use `Shift + wheel` to scroll left and right
 
-####  4.18.3. <a name='scroll-amount-configuration'></a>Scroll Amount Configuration
+####  4.19.3. <a name='scroll-amount-configuration'></a>Scroll Amount Configuration
 
 You can customize the scroll amounts using command-line options or configuration file settings:
 
-####  4.18.4. <a name='anchor-and-extend-selection'></a>Anchor and Extend Selection
+####  4.19.4. <a name='anchor-and-extend-selection'></a>Anchor and Extend Selection
 
 *Added in v0.50.0*
 
@@ -833,7 +897,7 @@ General:
   HScrollWidth: "20"   # Specific number of columns
 ```
 
-###  4.19. <a name='multi-color-highlight'></a>Multi color highlight
+###  4.20. <a name='multi-color-highlight'></a>Multi color highlight
 
 This feature styles multiple words individually.
 `.`key(default) enters multi-word input mode.
@@ -871,12 +935,12 @@ Style:
 
 [Related styling](#style-customization): `MultiColorHighlight`.
 
-###  4.20. <a name='plain'></a>Plain
+###  4.21. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
 The option is `--plain` (or `-p`) (default key `ctrl+e`).
 
-###  4.21. <a name='converter'></a>Converter
+###  4.22. <a name='converter'></a>Converter
 
 Converter selects the engine to convert and display the text.
 Usually, the escape sequence is interpreted and displayed by `es` (default).
@@ -889,7 +953,7 @@ and you can also specify the `--raw`, `--align`([Align](#align)) option as a sho
 > `raw` also displays the character string of the escape sequence,
 > but be aware that [Plain](#plain) hides the decoration after interpreting the escape sequence.
 
-###  4.22. <a name='align'></a>Align
+###  4.23. <a name='align'></a>Align
 
 The `--align` option adjusts column widths to improve readability for **irregularly formatted tabular data**, such as CSV files with misaligned columns.
 
@@ -913,7 +977,7 @@ After applying --align:
 
 Align can also shrink column.
 
-####  4.22.1. <a name='shrink'></a>Shrink
+####  4.23.1. <a name='shrink'></a>Shrink
 
 Align allows columns to be shrunk and stretched by toggling with the (default key `s`).
 
@@ -925,11 +989,11 @@ To change the character displayed when columns are shrunk, set ShrinkChar in the
 ShrinkChar: '.'
 ```
 
-####  4.22.2. <a name='right-align'></a>Right Align
+####  4.23.2. <a name='right-align'></a>Right Align
 
 Columns displayed by alignment are left-justified. Columns can be right-aligned (default key alt+a).
 
-###  4.23. <a name='jump-target'></a>Jump target
+###  4.24. <a name='jump-target'></a>Jump target
 
 You can specify the lines to be displayed in the search results.
 This function is similar to `--jump-target` of `less`.
@@ -949,7 +1013,7 @@ ov --section-delimiter "^#" --jump-target section README.md
 
 [Related styling](#style-customization): `JumpTarget`.
 
-###  4.24. <a name='view-mode'></a>View mode
+###  4.25. <a name='view-mode'></a>View mode
 
 You can also use a combination of modes using the `--view-mode`(default key `p`) option.
 In that case, you can set it in advance and specify the combined mode at once.
@@ -988,7 +1052,7 @@ Mode:
     ColumnRainbow: true
 ```
 
-####  4.24.1. <a name='list-view-modes'></a>List View Modes
+####  4.25.1. <a name='list-view-modes'></a>List View Modes
 
 *Add in v0.40.0*
 
@@ -1009,7 +1073,7 @@ psql
 
 This is useful for checking predefined view modes and their configurations.
 
-###  4.25. <a name='output-on-exit'></a>Output on exit
+###  4.26. <a name='output-on-exit'></a>Output on exit
 
 `--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
@@ -1038,7 +1102,7 @@ You can change how much is written using `--exit-write-before` and `--exit-write
 
 `--exit-write-before 3 --exit-write-after 3` outputs 6 lines.
 
-###  4.26. <a name='quit-if-one-screen'></a>Quit if one screen
+###  4.27. <a name='quit-if-one-screen'></a>Quit if one screen
 
 The `--quit-if-one-screen`, `-F` option allows the program to exit immediately if the content fits within one screen.
 This can be useful when you only want to view small files or when you want to quickly check the content without scrolling.
@@ -1049,7 +1113,7 @@ If you want to enable this option by default, set `QuitSmall` to `true` in the c
 QuitSmall: true
 ```
 
-###  4.27. <a name='suspend'></a>Suspend
+###  4.28. <a name='suspend'></a>Suspend
 
 You can suspend ov with `ctrl+z`(default key).
 Normally, you can resume from suspend by typing `fg`.
@@ -1068,7 +1132,7 @@ suspended ov (use 'exit' to resume)
 > [!NOTE]
 > Until v0.36.0, it was a Subshell method.
 
-###  4.28. <a name='edit'></a>Edit
+###  4.29. <a name='edit'></a>Edit
 
 *Added in v0.42.0*
 
@@ -1091,7 +1155,7 @@ OVEDIT="vim +%d %f"
 
 This will open the current file in `vim` at the specified line number.
 
-###  4.29. <a name='save'></a>Save
+###  4.30. <a name='save'></a>Save
 
 If the file input is via a pipe, you can save it by pressing the `save buffer` (default `S`) key.
 
@@ -1108,7 +1172,7 @@ If the file name already exists, select `Overwrite`, `Append`, or `Cancel`.
 overwrite? (O)overwrite, (A)append, (N)cancel
 ```
 
-###  4.30. <a name='ruler'></a>Ruler
+###  4.31. <a name='ruler'></a>Ruler
 
 The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
 
@@ -1125,7 +1189,7 @@ ov --ruler=2 README.md
 
 [Related styling](#style-customization): `Ruler` .
 
-###  4.31. <a name='redirect-output'></a>Redirect Output
+###  4.32. <a name='redirect-output'></a>Redirect Output
 
 By default, `ov` does not show the screen when output is redirected.
 To force display, use the `--force-screen` option:
@@ -1245,6 +1309,7 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                     |
 |       | --section-start int                        | section start position                                         |
 |       | --set-terminal-title                       | set terminal title                                             |
+|       | --sidebar-mode string                      | apply predefined settings for sidebar mode                     |
 |       | --skip-extract                             | skip extracting compressed files                               |
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
@@ -1262,6 +1327,7 @@ It can also be changed after startup.
 
 |              Key              |                       Action                       |
 |-------------------------------|----------------------------------------------------|
+| **General**                   |                                                    |
 | [Escape], [q]                 | * quit                                             |
 | [ctrl+c]                      | * cancel                                           |
 | [Q]                           | * output screen and quit                           |
@@ -1285,8 +1351,8 @@ It can also be changed after startup.
 | [PageUp], [ctrl+b]            | * backward by page                                 |
 | [ctrl+d]                      | * forward a half page                              |
 | [ctrl+u]                      | * backward a half page                             |
-| [left]                        | * scroll to left                                   |
-| [right]                       | * scroll to right                                  |
+| [left]                        | * scroll left                                      |
+| [right]                       | * scroll right                                     |
 | [ctrl+left]                   | * scroll left half screen                          |
 | [ctrl+right]                  | * scroll right half screen                         |
 | [alt+left]                    | * scroll left specified width                      |
@@ -1294,6 +1360,16 @@ It can also be changed after startup.
 | [shift+Home]                  | * go to beginning of line                          |
 | [shift+End]                   | * go to end of line                                |
 | [g]                           | * go to line(input number or `.n` or `n%` allowed) |
+| [,]                           | * go to mark number(input number allowed)          |
+| **Sidebar**                   |                                                    |
+| [alt+h]                       | * toggle help in sidebar                           |
+| [alt+m]                       | * toggle mark list in sidebar                      |
+| [alt+l]                       | * toggle document list in sidebar                  |
+| [alt+u]                       | * toggle section list in sidebar                   |
+| [shift+Up]                    | * scroll up in sidebar                             |
+| [shift+Down]                  | * scroll down in sidebar                           |
+| [shift+Left]                  | * scroll left in sidebar                           |
+| [shift+Right]                 | * scroll right in sidebar                          |
 | **Move document**             |                                                    |
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
@@ -1305,6 +1381,7 @@ It can also be changed after startup.
 | [ctrl+delete]                 | * remove all mark                                  |
 | [>]                           | * move to next marked position                     |
 | [<]                           | * move to previous marked position                 |
+| [*]                           | * mark by pattern mode                             |
 | **Search**                    |                                                    |
 | [/]                           | * forward search mode                              |
 | [?]                           | * backward search mode                             |

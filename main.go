@@ -562,6 +562,12 @@ func init() {
 	rootCmd.PersistentFlags().StringP("view-mode", "m", "", "apply predefined settings for a specific mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
+	rootCmd.PersistentFlags().StringP("sidebar-mode", "", "", "apply predefined settings for sidebar mode")
+	_ = viper.BindPFlag("SidebarMode", rootCmd.PersistentFlags().Lookup("sidebar-mode"))
+	_ = rootCmd.RegisterFlagCompletionFunc("sidebar-mode", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"help", "marks", "documents", "sections"}, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	rootCmd.PersistentFlags().BoolP("set-terminal-title", "", false, "set terminal title")
 	_ = viper.BindPFlag("SetTerminalTitle", rootCmd.PersistentFlags().Lookup("set-terminal-title"))
 
