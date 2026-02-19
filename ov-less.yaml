@@ -24,6 +24,9 @@
 # For ClipboardMethod, specify “OSC52” to copy using OSC52 (if the terminal supports it).
 # ClipboardMethod: "default" # Clipboard method. Options: "OSC52" or other.
 #
+# SidebarWidth: 20% # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
+# SideBarMode: "none" # Sidebar mode. Options:  "help", "sections", "marks", "none".
+#
 # SetTerminalTitle: false # Set terminal title to display filename.
 #
 # Debug: false # Debug mode.
@@ -316,6 +319,22 @@ KeyBind:
         - "alt+k"
     close_all_filter:
         - "ctrl+alt+k"
+    sidebar_help:
+        - "alt+h"
+    sidebar_marks:
+        - "alt+m"
+    sidebar_doc_list:
+        - "alt+l"
+    sidebar_sections:
+        - "alt+u"
+    sidebar_up:
+        - "shift+up"
+    sidebar_down:
+        - "shift+down"
+    sidebar_left:
+        - "shift+left"
+    sidebar_right:
+        - "shift+right"
 
     input_casesensitive:
         - "alt+c"
