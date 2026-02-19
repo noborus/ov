@@ -1,6 +1,6 @@
 # ov - feature rich terminal pager
 
-<!-- markdownlint-disable MD019 MD029 MD033 MD036 -->
+<!-- markdownlint-disable MD019 MD029 MD033 MD036 MD060 -->
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
@@ -520,6 +520,8 @@ you can move the diff for each file.
 The number of lines in section-header can be changed.
 You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
 
+The specified section can be viewed in the section list in the [Sidebar](#sidebar)(default key `alt+u`).
+
 ####  4.11.1. <a name='section-example'></a>section example
 
 This is an example of using the `git` pager.
@@ -551,6 +553,8 @@ ov file1 file2
 ```
 
 Multiple files are each opened as a document and can be navigated using the Next Document `]` key (default), Previous Document `[` key (default).
+
+Specified multiple files can also be displayed in the document list in the [Sidebar](#sidebar)(default key `alt + l`).
 
 Related Styling: [Customizing the bottom status line](#customizing-the-bottom-status-line).
 
@@ -659,8 +663,8 @@ Therefore, the command is likely to be printed in color.
 ov --exec -- eza -l
 ```
 
-It is useful to use the `--notify-eof` option together with exec mode to get notified when the command finishes,
-especially for long-running commands like make.
+It is useful to use the `--notify-eof` option together with exec mode to get notified when the command finishes.
+This is especially helpful for long-running commands like make.
 
 ```console
 ov --notify-eof --exec -- make
@@ -768,9 +772,23 @@ The mark is decorated with `MarkLine` and `MarkStyleWidth`.
 Marks can be erased individually with the `M` key(default).
 It is also possible to delete all marks with the `ctrl + delete` key(default).
 
-Use the `>`next and `<`previous (default) key to move to the marked position.
+The specified marks can be displayed in the mark list in the [Sidebar](#sidebar)(default key `alt + m`).
 
 [Related styling](#style-customization): `MarkLine`.
+
+#### mark by pattern
+
+You can use mark by pattern to mark all lines that match the search(default key `*`).
+This will enter pattern input mode and, when you press `Enter`, mark all lines
+that match the pattern.
+
+#### Specifying a mark
+
+Use the `>`next and `<`previous (default) key to move to the marked position.
+You can also enter mark specify mode with `,` (default) and select a mark by
+number. There are two input styles: enter the number directly, or enter a
+relative offset like `+N`/`-N` from the current mark. When you press `,`, the
+mark list sidebar opens automatically along with number input mode.
 
 ###  4.18. <a name='watch'></a>Watch
 
@@ -864,8 +882,6 @@ General:
 ```
 
 **Horizontal Scroll Amount:**
-
-Horizontal Scroll Amount:
 
 Command-line: --hscroll-width (e.g., --hscroll-width "20%" or --hscroll-width "10")
 Config file: Set HScrollWidth in the General section
@@ -1289,6 +1305,7 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                     |
 |       | --section-start int                        | section start position                                         |
 |       | --set-terminal-title                       | set terminal title                                             |
+|       | --sidebar-mode string                      | apply predefined settings for sidebar mode                     |
 |       | --skip-extract                             | skip extracting compressed files                               |
 |       | --skip-lines int                           | skip the number of lines                                       |
 |       | --smart-case-sensitive                     | smart case-sensitive in search                                 |
@@ -1306,6 +1323,7 @@ It can also be changed after startup.
 
 |              Key              |                       Action                       |
 |-------------------------------|----------------------------------------------------|
+| **General**                   |                                                    |
 | [Escape], [q]                 | * quit                                             |
 | [ctrl+c]                      | * cancel                                           |
 | [Q]                           | * output screen and quit                           |
@@ -1329,8 +1347,8 @@ It can also be changed after startup.
 | [PageUp], [ctrl+b]            | * backward by page                                 |
 | [ctrl+d]                      | * forward a half page                              |
 | [ctrl+u]                      | * backward a half page                             |
-| [left]                        | * scroll to left                                   |
-| [right]                       | * scroll to right                                  |
+| [left]                        | * scroll left                                      |
+| [right]                       | * scroll right                                     |
 | [ctrl+left]                   | * scroll left half screen                          |
 | [ctrl+right]                  | * scroll right half screen                         |
 | [alt+left]                    | * scroll left specified width                      |
@@ -1338,6 +1356,16 @@ It can also be changed after startup.
 | [shift+Home]                  | * go to beginning of line                          |
 | [shift+End]                   | * go to end of line                                |
 | [g]                           | * go to line(input number or `.n` or `n%` allowed) |
+| [,]                           | * go to mark number(input number allowed)          |
+| **Sidebar**                   |                                                    |
+| [alt+h]                       | * toggle help in sidebar                           |
+| [alt+m]                       | * toggle mark list in sidebar                      |
+| [alt+l]                       | * toggle document list in sidebar                  |
+| [alt+u]                       | * toggle section list in sidebar                   |
+| [shift+Up]                    | * scroll up in sidebar                             |
+| [shift+Down]                  | * scroll down in sidebar                           |
+| [shift+Left]                  | * scroll left in sidebar                           |
+| [shift+Right]                 | * scroll right in sidebar                          |
 | **Move document**             |                                                    |
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
@@ -1349,6 +1377,7 @@ It can also be changed after startup.
 | [ctrl+delete]                 | * remove all mark                                  |
 | [>]                           | * move to next marked position                     |
 | [<]                           | * move to previous marked position                 |
+| [*]                           | * mark by pattern mode                             |
 | **Search**                    |                                                    |
 | [/]                           | * forward search mode                              |
 | [?]                           | * backward search mode                             |
@@ -1725,13 +1754,17 @@ You can customize key bindings.
     down:
         - "Enter"
         - "Down"
-        - "ctrl+N"
+        - "ctrl+n"
     up:
         - "Up"
         - "ctrl+p"
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
+
+> [!NOTE]
+> Some keys may not work depending on the terminal.
+> See also [Ctrl key and corresponding key pairs (commonly treated as the same in terminals)](#ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)).
 
 ###  8.6. <a name='general-configuration'></a>General configuration
 
