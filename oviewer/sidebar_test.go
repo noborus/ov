@@ -245,3 +245,128 @@ func TestRoot_sidebarItemsForHelp(t *testing.T) {
 		})
 	}
 }
+func TestRoot_sidebarItemsForSections(t *testing.T) {
+	tests := []struct {
+		name     string
+		r        io.Reader
+		sections []struct {
+			lineNum int
+			line    []byte
+		}
+		topLN    int
+		want     []SidebarItem
+		wantCurr int
+	}{
+		{
+			name: "no sections",
+			r:    bytes.NewBufferString("Line 1\nLine 2\nLine 3"),
+			sections: []struct {
+				lineNum int
+				line    []byte
+			}{},
+			topLN:    0,
+			want:     []SidebarItem{},
+			wantCurr: -1,
+		},
+		{
+			name: "single section at start",
+			r:    bytes.NewBufferString("Section1\nLine 2\nLine 3"),
+			sections: []struct {
+				lineNum int
+				line    []byte
+			}{
+				{lineNum: 0, line: []byte("Section1")},
+			},
+			topLN: 0,
+			want: []SidebarItem{
+				{Contents: StrToContents("0 Section1      ", 0), IsCurrent: true},
+			},
+			wantCurr: 0,
+		},
+		{
+			name: "multiple sections, current in middle",
+			r:    bytes.NewBufferString("Section1\nLine 2\nSection2\nLine 4\nSection3"),
+			sections: []struct {
+				lineNum int
+				line    []byte
+			}{
+				{lineNum: 0, line: []byte("Section1")},
+				{lineNum: 1, line: []byte("Section2")},
+				{lineNum: 2, line: []byte("Section3")},
+			},
+			topLN: 2,
+			want: []SidebarItem{
+				{Contents: StrToContents("0 Section1      ", 0), IsCurrent: false},
+				{Contents: StrToContents("1 Section2      ", 0), IsCurrent: false},
+				{Contents: StrToContents("2 Section3      ", 0), IsCurrent: true},
+			},
+			wantCurr: 1,
+		},
+		{
+			name: "section with long line",
+			r:    bytes.NewBufferString("This is a very long section header"),
+			sections: []struct {
+				lineNum int
+				line    []byte
+			}{
+				{lineNum: 0, line: []byte("This is a very long section header")},
+			},
+			topLN: 0,
+			want: []SidebarItem{
+				{Contents: StrToContents("0 This is a very long section header", 0), IsCurrent: true},
+			},
+			wantCurr: 0,
+		},
+		{
+			name: "section with leading whitespace",
+			r:    bytes.NewBufferString("  Section with indent"),
+			sections: []struct {
+				lineNum int
+				line    []byte
+			}{
+				{lineNum: 0, line: []byte("  Section with indent")},
+			},
+			topLN: 0,
+			want: []SidebarItem{
+				{Contents: StrToContents("0 Section with indent", 0), IsCurrent: true},
+			},
+			wantCurr: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tcellNewScreen = fakeScreen
+			defer func() {
+				tcellNewScreen = tcell.NewScreen
+			}()
+			root, err := NewRoot(tt.r)
+			if err != nil {
+				t.Fatalf("could not construct receiver type: %v", err)
+			}
+			root.mu.RLock()
+			for _, doc := range root.DocList {
+				doc.WaitEOF()
+			}
+			root.mu.RUnlock()
+			root.scr.vHeight = 20
+			root.sidebarWidth = 20
+			root.sidebarMode = SidebarModeSections
+			root.Doc.topLN = tt.topLN
+			for _, sec := range tt.sections {
+				root.Doc.sectionList = append(root.Doc.sectionList, MatchedLine{lineNum: sec.lineNum, line: sec.line})
+			}
+			got := root.sidebarItemsForSections()
+			if len(got) != len(tt.want) {
+				t.Errorf("sidebarItemsForSections() length = %d, want %d", len(got), len(tt.want))
+			}
+			for i := range got {
+				if !reflect.DeepEqual(got[i].Contents, tt.want[i].Contents) {
+					t.Errorf("got[%d].Contents = %q, want %q", i, got[i].Contents.String(), tt.want[i].Contents.String())
+				}
+				if got[i].IsCurrent != tt.want[i].IsCurrent {
+					t.Errorf("got[%d].IsCurrent = %v, want %v", i, got[i].IsCurrent, tt.want[i].IsCurrent)
+				}
+			}
+		})
+	}
+}

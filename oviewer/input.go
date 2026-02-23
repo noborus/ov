@@ -106,6 +106,7 @@ func NewInput() *Input {
 func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	// inputEvent returns input confirmed or not confirmed.
 	// Not confirmed or canceled.
+	defer root.afterInputEvent(ctx)
 	evKey := root.inputCapture(ev)
 	if ok := root.input.keyEvent(evKey); !ok {
 		root.incrementalSearch(ctx)
@@ -122,6 +123,19 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	nev := input.Event.Confirm(input.value)
 	root.postEvent(nev)
 	input.Event = normal()
+}
+
+// afterInputEvent is called after processing an input event.
+func (root *Root) afterInputEvent(ctx context.Context) {
+	// It checks if the input mode has returned to Normal
+	if root.input.Event.Mode() != Normal {
+		return
+	}
+	// if the previous sidebar mode was not Marks and is a valid,
+	// initialized mode, it toggles the sidebar back to the previous mode.
+	if root.previousSidebarMode != 0 && root.previousSidebarMode != SidebarModeMarks {
+		root.toggleSidebar(ctx, root.previousSidebarMode)
+	}
 }
 
 // inputCapture processes the given key event and returns the captured event.

@@ -22,7 +22,7 @@ type eventMarkGoto struct {
 	value string
 }
 
-// newrMarkGotoEvent returns rMarkGotoEvent.
+// newrMarkGotoEvent returns a new eventMarkGoto with the given candidate list.
 func newrMarkGotoEvent(clist *candidate) *eventMarkGoto {
 	return &eventMarkGoto{clist: clist}
 }
