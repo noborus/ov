@@ -33,7 +33,7 @@ func (root *Root) firstBodyLine() int {
 func (root *Root) addMarks(_ context.Context, marks MatchedLineList) {
 	root.Doc.markedPoint = -1
 	if len(marks) == 0 {
-		root.setMessagef("Added %d marks", 0)
+		root.setMessage("Added 0 marks")
 		return
 	}
 
@@ -53,7 +53,6 @@ func (root *Root) addMarks(_ context.Context, marks MatchedLineList) {
 	}
 	root.setMessagef("Added %d marks", added)
 	root.debugMessage("update marks")
-
 }
 
 // removeMark removes the current line number from the mark list.
@@ -78,9 +77,6 @@ func (root *Root) removeAllMark(context.Context) {
 
 // goMarkNumber moves to the specified mark number or relative position (+n/-n).
 func (root *Root) goMarkNumber(input string) {
-	if root.previousSidebarMode != SidebarModeMarks {
-		root.toggleSidebar(context.Background(), root.previousSidebarMode)
-	}
 	if len(root.Doc.marked) == 0 {
 		return
 	}
@@ -120,7 +116,7 @@ func (root *Root) nextMark(context.Context) {
 		return
 	}
 
-	if len(root.Doc.marked) > root.Doc.markedPoint+1 {
+	if root.Doc.markedPoint >= 0 && len(root.Doc.marked) > root.Doc.markedPoint+1 {
 		root.Doc.markedPoint++
 	} else {
 		root.Doc.markedPoint = 0
@@ -134,7 +130,7 @@ func (root *Root) prevMark(context.Context) {
 		return
 	}
 
-	if root.Doc.markedPoint > 0 {
+	if root.Doc.markedPoint > 0 && root.Doc.markedPoint < len(root.Doc.marked) {
 		root.Doc.markedPoint--
 	} else {
 		root.Doc.markedPoint = len(root.Doc.marked) - 1

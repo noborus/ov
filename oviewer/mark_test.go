@@ -167,6 +167,162 @@ func TestRoot_prevMark(t *testing.T) {
 	}
 }
 
+func TestRoot_goMarkNumber(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	root := rootHelper(t)
+	root.Doc.marked = MatchedLineList{
+		{lineNum: 10, line: []byte("a")},
+		{lineNum: 20, line: []byte("b")},
+		{lineNum: 30, line: []byte("c")},
+	}
+	root.Doc.markedPoint = 1 // Start at index 1
+
+	tests := []struct {
+		name        string
+		input       string
+		startPoint  int
+		wantPoint   int
+		wantLineNum int
+	}{
+		{
+			name:        "absolute index",
+			input:       "2",
+			startPoint:  0,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "relative positive index",
+			input:       "+1",
+			startPoint:  1,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "relative negative index",
+			input:       "-1",
+			startPoint:  2,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+		{
+			name:        "out of range high",
+			input:       "10",
+			startPoint:  0,
+			wantPoint:   2,
+			wantLineNum: 30,
+		},
+		{
+			name:        "out of range low",
+			input:       "-10",
+			startPoint:  2,
+			wantPoint:   0,
+			wantLineNum: 10,
+		},
+		{
+			name:        "invalid input",
+			input:       "abc",
+			startPoint:  1,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+		{
+			name:        "empty input",
+			input:       "",
+			startPoint:  1,
+			wantPoint:   1,
+			wantLineNum: 20,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root.Doc.markedPoint = tt.startPoint
+			root.goMarkNumber(tt.input)
+			if root.Doc.markedPoint != tt.wantPoint {
+				t.Errorf("goMarkNumber(%q) markedPoint = %d, want %d", tt.input, root.Doc.markedPoint, tt.wantPoint)
+			}
+			if len(root.Doc.marked) > 0 && root.Doc.markedPoint < len(root.Doc.marked) {
+				if root.Doc.marked[root.Doc.markedPoint].lineNum != tt.wantLineNum {
+					t.Errorf("goMarkNumber(%q) lineNum = %d, want %d", tt.input, root.Doc.marked[root.Doc.markedPoint].lineNum, tt.wantLineNum)
+				}
+			}
+		})
+	}
+}
+
+func Test_calcMarkIndex(t *testing.T) {
+	type args struct {
+		input   string
+		current int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "positive absolute index",
+			args: args{
+				input:   "5",
+				current: 2,
+			},
+			want: 5,
+		},
+		{
+			name: "negative relative index",
+			args: args{
+				input:   "-2",
+				current: 5,
+			},
+			want: 3,
+		},
+		{
+			name: "positive relative index",
+			args: args{
+				input:   "+3",
+				current: 4,
+			},
+			want: 7,
+		},
+		{
+			name: "invalid input",
+			args: args{
+				input:   "abc",
+				current: 10,
+			},
+			want: 10,
+		},
+		{
+			name: "invalid relative input",
+			args: args{
+				input:   "+abc",
+				current: 8,
+			},
+			want: 8,
+		},
+		{
+			name: "zero index",
+			args: args{
+				input:   "0",
+				current: 5,
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := calcMarkIndex(tt.args.input, tt.args.current)
+			if got != tt.want {
+				t.Errorf("calcMarkIndex(%q, %d) = %d, want %d", tt.args.input, tt.args.current, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRoot_markByPattern_event(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
