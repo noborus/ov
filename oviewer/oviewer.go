@@ -376,9 +376,10 @@ const MaxWriteLog int = 10
 
 // The name of the converter that can be specified.
 const (
-	convEscaped string = "es"    // convEscaped processes escape sequence(default).
-	convRaw     string = "raw"   // convRaw is displayed without processing escape sequences as they are.
-	convAlign   string = "align" // convAlign is aligned in each column.
+	convEscaped  string = "es"       // convEscaped processes escape sequence(default).
+	convRaw      string = "raw"      // convRaw is displayed without processing escape sequences as they are.
+	convAlign    string = "align"    // convAlign is aligned in each column.
+	convWordWrap string = "wordwrap" // convWordWrap is wrapped at word boundaries.
 )
 
 const (

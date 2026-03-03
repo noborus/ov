@@ -324,6 +324,8 @@ func (m *Document) converterType(name string) Converter {
 			return newAlignConverter(m.ColumnWidth)
 		}
 		return m.alignConv.clone()
+	case convWordWrap:
+		return newWordwrapConverter(m.bodyWidth)
 	}
 	return newESConverter()
 }

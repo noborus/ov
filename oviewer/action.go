@@ -745,6 +745,9 @@ func (root *Root) setHeaderColumn(input string) {
 
 // resize is a wrapper function that calls viewSync.
 func (root *Root) resize(ctx context.Context) {
+	if root.Doc.Converter == convWordWrap {
+		root.Doc.ClearCache()
+	}
 	root.ViewSync(ctx)
 }
 
