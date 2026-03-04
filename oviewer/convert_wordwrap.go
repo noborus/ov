@@ -4,6 +4,7 @@ import (
 	"unicode"
 )
 
+// wordwrapConverter is a converter that converts the contents to fit the screen width.
 type wordwrapConverter struct {
 	es          *escapeSequence
 	screenWidth int
@@ -11,6 +12,7 @@ type wordwrapConverter struct {
 	leadingFlag bool
 }
 
+// newWordwrapConverter creates a new wordwrapConverter.
 func newWordwrapConverter(width int) *wordwrapConverter {
 	return &wordwrapConverter{
 		es:          newESConverter(),
@@ -20,6 +22,7 @@ func newWordwrapConverter(width int) *wordwrapConverter {
 	}
 }
 
+// convert converts the contents to fit the screen width.
 func (c *wordwrapConverter) convert(st *parseState) bool {
 	if c.es.convert(st) {
 		return true
@@ -91,6 +94,7 @@ func isWrapTarget(str string) bool {
 	return true
 }
 
+// skipSpace returns the position of the first non-space, non-tab, non-empty cell in the contents.
 func skipSpace(src contents, pos int) int {
 	for pos < len(src) {
 		if src[pos].width != 0 && src[pos].str != " " && src[pos].str != "\t" && src[pos].str != "" {
