@@ -1,7 +1,10 @@
 package oviewer
 
 import (
-	"unicode"
+	"log"
+	"strings"
+
+	"github.com/rivo/uniseg"
 )
 
 // wordwrapConverter is a converter that converts the contents to fit the screen width.
@@ -41,66 +44,66 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	}
 
 	dst := make(contents, 0, len(src))
-	pos := 0
-	row := 1
-	for pos < len(src) {
-		word := contents{src[pos]}
-		w := 1
-		for pos+w < len(src) {
-			t := src[pos+w]
-			if isWrapTarget(t.str) {
-				break
-			}
-			w++
-			if t.width > 1 {
-				w += (t.width - 1)
-			}
+	c.row = 1
+	str, pos := ContentsToStr(src)
+	start := pos.x(0)
+	end := start
+	var current string
+	var buf strings.Builder
+	state := -1
+	var boundaries int
+	srcp := 0
+	for len(str) > 0 {
+		current, str, boundaries, state = uniseg.StepString(str, state)
+		if boundaries&uniseg.MaskWord != 0 {
+			buf.WriteString(current)
+		} else {
+			buf.WriteString(current)
+			continue
 		}
-		word = src[pos : pos+w]
-		if len(word) < c.screenWidth && len(dst)+len(word) > c.screenWidth*row {
-			left := c.screenWidth*row - len(dst)
-			for range left {
-				dst = append(dst, SpaceContent)
-			}
-			if len(dst) <= c.screenWidth*row {
-				// word skip space, tab, empty cell
-				wp := skipSpace(word, 0)
-				word = word[wp:]
-				pos += wp
-				// src skip space, tab, empty cell
-				pos = skipSpace(src, pos)
-			}
-			row++
+
+		wordLen := buf.Len()
+		srcp += wordLen
+		end = pos.x(srcp)
+		srcWord := src[start:end]
+		buf.Reset()
+
+		if len(dst)+len(srcWord) <= c.screenWidth*c.row {
+			dst = append(dst, srcWord...)
+			start = end
+			continue
 		}
-		dst = append(dst, word...)
-		pos += len(word)
+		if len(srcWord) > c.screenWidth {
+			// If the word is longer than the screen width, break it into multiple lines.
+			dst = append(dst, srcWord...)
+			c.row++
+			continue
+		}
+		addSpaces := c.screenWidth*c.row - len(dst)
+		if addSpaces > 0 {
+			dst = append(dst, StrToContents(strings.Repeat(" ", addSpaces), addSpaces)...)
+		}
+
+		// next line
+		c.row++
+		if skipSpace(srcWord) {
+			start = end
+			continue
+		}
+		log.Println("next word:", srcWord.String())
+		dst = append(dst, srcWord...)
+		start = end
 	}
 	return dst
 }
 
-// isWrapTarget returns true if the string is a wrap target.
-func isWrapTarget(str string) bool {
-	if len(str) == 0 {
-		return true
-	}
-	r := rune(str[0])
-	if unicode.IsLetter(r) || unicode.IsDigit(r) {
-		return false
-	}
-	switch str {
-	case ".", ",", ";", ":", "!", "?":
-		return false
-	}
-	return true
-}
-
 // skipSpace returns the position of the first non-space, non-tab, non-empty cell in the contents.
-func skipSpace(src contents, pos int) int {
-	for pos < len(src) {
+func skipSpace(src contents) bool {
+	for pos := 0; pos < len(src); pos++ {
 		if src[pos].width != 0 && src[pos].str != " " && src[pos].str != "\t" && src[pos].str != "" {
-			break
+			return false
 		}
 		pos++
 	}
-	return pos
+	return true
 }
