@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"log"
 	"strings"
 
 	"github.com/rivo/uniseg"
@@ -49,24 +48,22 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	start := pos.x(0)
 	end := start
 	var current string
-	var buf strings.Builder
+	var word strings.Builder
 	state := -1
 	var boundaries int
 	srcp := 0
 	for len(str) > 0 {
 		current, str, boundaries, state = uniseg.StepString(str, state)
-		if boundaries&uniseg.MaskWord != 0 {
-			buf.WriteString(current)
-		} else {
-			buf.WriteString(current)
+		word.WriteString(current)
+		if boundaries&uniseg.MaskWord == 0 {
 			continue
 		}
+		wordLen := word.Len()
 
-		wordLen := buf.Len()
 		srcp += wordLen
 		end = pos.x(srcp)
 		srcWord := src[start:end]
-		buf.Reset()
+		word.Reset()
 
 		if len(dst)+len(srcWord) <= c.screenWidth*c.row {
 			dst = append(dst, srcWord...)
@@ -90,7 +87,6 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 			start = end
 			continue
 		}
-		log.Println("next word:", srcWord.String())
 		dst = append(dst, srcWord...)
 		start = end
 	}

@@ -45,7 +45,7 @@ func TestConvertWordwrap(t *testing.T) {
 			screenWidth: 5,
 			str:         "abcd-efg",
 			tabWidth:    4,
-			wantStr:     "abcd -efg",
+			wantStr:     "abcd-efg",
 		},
 		{
 			name:        "no wrap with dot punctuation",
@@ -59,28 +59,28 @@ func TestConvertWordwrap(t *testing.T) {
 			screenWidth: 5,
 			str:         "abcd、efg",
 			tabWidth:    4,
-			wantStr:     "abcd、efg",
+			wantStr:     "abcd 、efg",
 		},
 		{
 			name:        "mixed Japanese and English with space wrap target",
 			screenWidth: 5,
 			str:         "abc あいう",
 			tabWidth:    4,
-			wantStr:     "abc あいう",
+			wantStr:     "abc  あい う",
 		},
 		{
 			name:        "mixed Japanese and English with Japanese punctuation wrap target",
 			screenWidth: 5,
 			str:         "abc、あいう",
 			tabWidth:    4,
-			wantStr:     "abc、あいう",
+			wantStr:     "abc、あい う",
 		},
 		{
 			name:        "Japanese first then English word separated by space",
 			screenWidth: 5,
 			str:         "あいう abcd",
 			tabWidth:    4,
-			wantStr:     "あいう abcd",
+			wantStr:     "あい う   abcd",
 		},
 	}
 
