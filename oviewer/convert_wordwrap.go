@@ -41,7 +41,7 @@ type wordWrapProcessor struct {
 	dst         contents
 	src         contents
 	pos         widthPos
-	word        strings.Builder
+	word        string
 	start       int
 	end         int
 	screenWidth int
@@ -66,22 +66,13 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	}
 
 	state := -1
-	charPos := 0 // accumulated character position in source string
+	charPos := 0 // accumulated character position in source string.
 	for len(str) > 0 {
-		segment, remainder, boundaries, newState := uniseg.StepString(str, state)
-		str = remainder
-		state = newState
-
-		proc.word.WriteString(segment)
-		charPos += len(segment)
-
-		if boundaries&uniseg.MaskWord == 0 {
-			continue
-		}
+		proc.word, str, state = uniseg.FirstWordInString(str, state)
+		charPos += len(proc.word)
 
 		proc.end = proc.pos.x(charPos)
 		srcWord := proc.src[proc.start:proc.end]
-		proc.word.Reset()
 		proc.processWord(srcWord)
 		proc.start = proc.end
 	}
@@ -90,25 +81,25 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 
 // processWord handles the placement of a word in the output.
 func (proc *wordWrapProcessor) processWord(srcWord contents) {
-	// Word is longer than screen width, add as-is and move to next line
+	// Word is longer than screen width, add as-is and move to next line.
 	if len(srcWord) > proc.screenWidth {
 		proc.dst = append(proc.dst, srcWord...)
 		proc.row++
 		return
 	}
 
-	// Word fits in current line
+	// Word fits in current line.
 	if len(proc.dst)+len(srcWord) <= proc.screenWidth*proc.row {
 		proc.dst = append(proc.dst, srcWord...)
 		return
 	}
 
-	// Finish current line with padding
+	// Finish current line with padding.
 	proc.finishLine()
 	proc.row++
 
-	// Skip space characters
-	if skipSpace(srcWord) {
+	// isOnlyWhitespace check is needed to avoid adding unnecessary spaces when the word is only whitespace.
+	if isOnlyWhitespace(srcWord) {
 		return
 	}
 
@@ -123,13 +114,12 @@ func (proc *wordWrapProcessor) finishLine() {
 	}
 }
 
-// skipSpace returns the position of the first non-space, non-tab, non-empty cell in the contents.
-func skipSpace(src contents) bool {
-	for pos := 0; pos < len(src); pos++ {
+// isOnlyWhitespace returns true if all cells are spaces, tabs, or empty; false otherwise.
+func isOnlyWhitespace(src contents) bool {
+	for pos := range src {
 		if src[pos].width != 0 && src[pos].str != " " && src[pos].str != "\t" && src[pos].str != "" {
 			return false
 		}
-		pos++
 	}
 	return true
 }
