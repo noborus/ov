@@ -36,61 +36,91 @@ func (c *wordwrapConverter) convert(st *parseState) bool {
 	return false
 }
 
+// wordWrapProcessor holds the state for word wrapping processing.
+type wordWrapProcessor struct {
+	dst         contents
+	src         contents
+	pos         widthPos
+	word        strings.Builder
+	start       int
+	end         int
+	screenWidth int
+	row         int
+}
+
 // convertWordWrap converts the contents to fit the screen width.
 func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	if c.screenWidth <= 0 {
 		return src
 	}
 
-	dst := make(contents, 0, len(src))
-	c.row = 1
 	str, pos := ContentsToStr(src)
-	start := pos.x(0)
-	end := start
-	var current string
-	var word strings.Builder
+
+	proc := &wordWrapProcessor{
+		dst:         make(contents, 0, len(src)),
+		src:         src,
+		pos:         pos,
+		screenWidth: c.screenWidth,
+		row:         1,
+		start:       pos.x(0),
+	}
+
 	state := -1
-	var boundaries int
-	srcp := 0
+	charPos := 0 // accumulated character position in source string
 	for len(str) > 0 {
-		current, str, boundaries, state = uniseg.StepString(str, state)
-		word.WriteString(current)
+		segment, remainder, boundaries, newState := uniseg.StepString(str, state)
+		str = remainder
+		state = newState
+
+		proc.word.WriteString(segment)
+		charPos += len(segment)
+
 		if boundaries&uniseg.MaskWord == 0 {
 			continue
 		}
-		wordLen := word.Len()
 
-		srcp += wordLen
-		end = pos.x(srcp)
-		srcWord := src[start:end]
-		word.Reset()
-
-		if len(dst)+len(srcWord) <= c.screenWidth*c.row {
-			dst = append(dst, srcWord...)
-			start = end
-			continue
-		}
-		if len(srcWord) > c.screenWidth {
-			// If the word is longer than the screen width, break it into multiple lines.
-			dst = append(dst, srcWord...)
-			c.row++
-			continue
-		}
-		addSpaces := c.screenWidth*c.row - len(dst)
-		if addSpaces > 0 {
-			dst = append(dst, StrToContents(strings.Repeat(" ", addSpaces), addSpaces)...)
-		}
-
-		// next line
-		c.row++
-		if skipSpace(srcWord) {
-			start = end
-			continue
-		}
-		dst = append(dst, srcWord...)
-		start = end
+		proc.end = proc.pos.x(charPos)
+		srcWord := proc.src[proc.start:proc.end]
+		proc.word.Reset()
+		proc.processWord(srcWord)
+		proc.start = proc.end
 	}
-	return dst
+	return proc.dst
+}
+
+// processWord handles the placement of a word in the output.
+func (proc *wordWrapProcessor) processWord(srcWord contents) {
+	// Word is longer than screen width, add as-is and move to next line
+	if len(srcWord) > proc.screenWidth {
+		proc.dst = append(proc.dst, srcWord...)
+		proc.row++
+		return
+	}
+
+	// Word fits in current line
+	if len(proc.dst)+len(srcWord) <= proc.screenWidth*proc.row {
+		proc.dst = append(proc.dst, srcWord...)
+		return
+	}
+
+	// Finish current line with padding
+	proc.finishLine()
+	proc.row++
+
+	// Skip space characters
+	if skipSpace(srcWord) {
+		return
+	}
+
+	proc.dst = append(proc.dst, srcWord...)
+}
+
+// finishLine pads the current line with spaces.
+func (proc *wordWrapProcessor) finishLine() {
+	addSpaces := proc.screenWidth*proc.row - len(proc.dst)
+	if addSpaces > 0 {
+		proc.dst = append(proc.dst, StrToContents(strings.Repeat(" ", addSpaces), addSpaces)...)
+	}
 }
 
 // skipSpace returns the position of the first non-space, non-tab, non-empty cell in the contents.
