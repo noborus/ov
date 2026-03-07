@@ -247,6 +247,8 @@ KeyBind:
     wrap_mode:
         - "w"
         - "W"
+    word_wrap_mode:
+        - "alt+w"
     column_mode:
         - "c"
     backsearch:

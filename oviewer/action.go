@@ -21,6 +21,10 @@ func (root *Root) toggleWrapMode(context.Context) {
 	m := root.Doc
 	m.WrapMode = !m.WrapMode
 	root.resetSelect()
+	if m.Converter == convWordWrap {
+		m.Converter = convEscaped
+		m.ClearCache()
+	}
 
 	// Move cursor to correct position
 	x, err := m.optimalX(root.scr, m.columnCursor)
@@ -30,6 +34,21 @@ func (root *Root) toggleWrapMode(context.Context) {
 	}
 	m.scrollX = x
 	root.setMessagef("Set WrapMode %t", m.WrapMode)
+}
+
+// toggleWordWrap toggles word wrap mode each time it is called.
+func (root *Root) toggleWordWrap(context.Context) {
+	m := root.Doc
+	m.ClearCache()
+	root.resetSelect()
+	if m.Converter != convWordWrap {
+		m.Converter = convWordWrap
+		m.WrapMode = true
+	} else {
+		m.Converter = convEscaped
+		m.WrapMode = false
+	}
+	root.setMessagef("Set WordWrap %t", m.Converter == convWordWrap)
 }
 
 // toggleColumnMode toggles ColumnMode each time it is called.

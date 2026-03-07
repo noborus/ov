@@ -443,7 +443,7 @@ ps aux|ov -H1 --column-width --column-rainbow
 
 This column-width feature is implemented using [guesswidth](https://github.com/noborus/guesswidth).
 
-###  4.8. <a name='wrap/nowrap'></a>Wrap/NoWrap
+###  4.8. <a name='wrap/nowrap'></a>Wrap
 
 Supports switching between wrapping and not wrapping lines.
 
@@ -451,6 +451,9 @@ The `-w` or `--wrap` option controls the wrap mode:
 
 * `-w` or `-w=char`(default): Wrap lines at screen width, breaking anywhere.
 * `-w=word`: Wrap lines at screen width, breaking at word boundaries.
+* `-w=none`: Disable line wrapping.
+
+*Added in v0.52.0* word and none options to control wrapping behavior.
 
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
@@ -613,8 +616,6 @@ ov --section-delimiter "^#" --follow-section README.md
 > [Watch](#watch) mode is a mode in which `--follow-section` and `--section-delimiter "^\f"` are automatically set.
 
 ####  4.13.4. <a name='sticky-follow'></a>Sticky Follow
-
-*Added in v0.44.0*
 
 Follow mode uses **Sticky follow** by default. In Sticky follow mode, when you move up from the bottom, follow mode temporarily pauses. Follow mode resumes automatically when you return to the bottom of the file.
 
@@ -840,8 +841,6 @@ In other applications, it is pasted from the clipboard (often by pressing the ri
 
 ####  4.19.1. <a name='text-selection'></a>Text Selection
 
-*Added in v0.44.0*
-
 The mouse supports intelligent text selection for improved productivity:
 
 * **Single click**: Place cursor and start text selection by dragging
@@ -875,8 +874,6 @@ You can now use "Anchor and Extend Selection" with the mouse:
 This feature enables flexible, editor-like selection and copy operations using the mouse.
 
 **Vertical Scroll Amount:**
-
-*Added in v0.44.0*
 
 * Command-line: Not directly configurable (uses system default)
 * Config file: Set `VScrollLines` in the `General` section
@@ -1033,7 +1030,7 @@ Mode:
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"
     ColumnRainbow: true
   m:
@@ -1041,14 +1038,14 @@ Mode:
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"
   csv:
     Header: 1
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: ","
     ColumnRainbow: true
 ```
@@ -1134,8 +1131,6 @@ suspended ov (use 'exit' to resume)
 > Until v0.36.0, it was a Subshell method.
 
 ###  4.29. <a name='edit'></a>Edit
-
-*Added in v0.42.0*
 
 You can edit the currently displayed file with your preferred editor by pressing the default key `alt+v`.
 
@@ -1270,7 +1265,7 @@ MemoryLimit: 1000
 |       | --column-width                             | column mode for width                                          |
 |       | --completion string                        | generate completion script [bash\|zsh\|fish\|powershell]       |
 |       | --config file                              | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)       |
-|       | --converter string                         | converter [es\|raw\|align] (default "es")                      |
+|       | --converter string                         | converter [es\|raw\|align\|wordwrap] (default "es")            |
 |       | --debug                                    | debug mode                                                     |
 |       | --disable-column-cycle                     | disable column cycling                                         |
 |       | --disable-mouse                            | disable mouse support                                          |
@@ -1320,7 +1315,7 @@ MemoryLimit: 1000
 | -y,   | --vertical-header int                      | number of characters to display as a vertical header           |
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                  |
 | -T,   | --watch seconds                            | watch mode interval(seconds)                                   |
-| -w,   | --wrap[=true\|false]                       | wrap mode (default true)                                       |
+| -w,   | --wrap string                              | wrap mode [char\|word]                                         |
 
 It can also be changed after startup.
 
@@ -1367,10 +1362,10 @@ It can also be changed after startup.
 | [alt+m]                       | * toggle mark list in sidebar                      |
 | [alt+l]                       | * toggle document list in sidebar                  |
 | [alt+u]                       | * toggle section list in sidebar                   |
-| [shift+Up]                    | * scroll up in sidebar                             |
-| [shift+Down]                  | * scroll down in sidebar                           |
-| [shift+Left]                  | * scroll left in sidebar                           |
-| [shift+Right]                 | * scroll right in sidebar                          |
+| [shift+up]                    | * scroll up in sidebar                             |
+| [shift+down]                  | * scroll down in sidebar                           |
+| [shift+left]                  | * scroll left in sidebar                           |
+| [shift+right]                 | * scroll right in sidebar                          |
 | **Move document**             |                                                    |
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
@@ -1390,7 +1385,8 @@ It can also be changed after startup.
 | [N]                           | * repeat backward search                           |
 | [&]                           | * filter search mode                               |
 | **Change display**            |                                                    |
-| [w], [W]                      | * wrap/nowrap toggle                               |
+| [w], [W]                      | * wrap toggle (character based)                    |
+| [alt+w]                       | * word wrap toggle                                 |
 | [c]                           | * column mode toggle                               |
 | [alt+o]                       | * column width toggle                              |
 | [ctrl+r]                      | * column rainbow toggle                            |
@@ -1464,7 +1460,7 @@ However, in terminals that support the Kitty keyboard protocol (see [Kitty Keybo
 
 You can customize the following items.
 
-*Changed in v0.40.0* The new style must be written in General:, Style:.
+The new style must be written in General:, Style:.
 
 It is now also possible to write it in the Mode: item.
 
@@ -1477,7 +1473,7 @@ General:
 Mode:
   markdown:
     SectionDelimiter: "^#"
-    WrapMode: true
+    Wrap: "character"
     Style:
       SectionLine:
         Background: "blue"
@@ -1605,8 +1601,6 @@ UnderlineStyle is specified by a number from 0 to 5. This corresponds to the esc
 
 ###  8.2. <a name='customizing-the-bottom-status-line'></a>Customizing the bottom status line
 
-*Added in v0.42.0*
-
 You can customize the bottom status line.
 
 The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.
@@ -1687,8 +1681,6 @@ General:
 
 ###  8.3. <a name='terminal-title'></a>Terminal Title
 
-*Added in v0.45.0*
-
 You can configure `ov` to set the terminal title to show the currently viewed file name or a custom title. This feature is useful for keeping track of what file you're viewing when using multiple terminal windows or tabs.
 
 The terminal title can be customized using the `--set-terminal-title` command line option or by configuring it in the `config.yaml` file.
@@ -1720,8 +1712,6 @@ This will display "My Custom Title" in the terminal title instead of the file na
 > This feature only works with terminal emulators that support ANSI escape sequences for title setting.
 
 ###  8.4. <a name='help-and-log-documentation-customization'></a>Help and Log Documentation customization
-
-*Added in v0.42.0*
 
 You can also customize the Help and Log documentation screens.
 By adding `HelpDoc` and `LogDoc` entries at the same level as `General` in your configuration file, you can apply the same types of customizations as for `General`.
@@ -1818,7 +1808,7 @@ Mode:
 | ColumnWidth         | Enable column width detection mode                        | `ColumnWidth: true`             |
 | ColumnRainbow       | Enable rainbow coloring for columns                       | `ColumnRainbow: true`           |
 | LineNumMode         | Display line numbers                                      | `LineNumMode: true`             |
-| WrapMode            | Enable line wrapping                                      | `WrapMode: true`                |
+| Wrap                | Line wrapping mode (character, word, none)                | `Wrap: "character"`             |
 | FollowMode          | Enable follow mode                                        | `FollowMode: true`              |
 | FollowAll           | Enable follow mode for all documents                      | `FollowAll: true`               |
 | FollowSection       | Enable section-based follow mode                          | `FollowSection: true`           |
