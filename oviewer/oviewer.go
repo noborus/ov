@@ -1174,6 +1174,20 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	if dst.Raw != nil && *dst.Raw {
 		src.Converter = convRaw
 	}
+	if dst.Wrap != nil {
+		log.Println("wrap mode:", *dst.Wrap)
+		// Normalize wrap mode: support short forms (c, w)
+		wrapMode := *dst.Wrap
+		switch wrapMode {
+		case "w", "word":
+			src.Converter = convWordWrap
+			src.WrapMode = true
+		case "f", "false", "no", "n", "0", "FALSE", "False":
+			src.WrapMode = false
+		default:
+			src.WrapMode = true // Default to true for any other value, including "c", "char", "true", "yes", etc.
+		}
+	}
 	src.OVPromptConfig = updatePromptConfig(src.OVPromptConfig, dst.Prompt)
 	src.Style = updateRuntimeStyle(src.Style, dst.Style)
 	return src

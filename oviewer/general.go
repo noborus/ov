@@ -8,6 +8,8 @@ type General struct {
 	Align *bool
 	// Raw is the raw setting.
 	Raw *bool
+	// Wrap is the wrap mode setting ("char" or "word").
+	Wrap *string
 	// Caption is an additional caption to display after the file name.
 	Caption *string
 	// ColumnDelimiter is a column delimiter.
@@ -224,6 +226,11 @@ func (g *General) SetLineNumMode(lineNum bool) {
 // SetWrapMode sets the wrap mode.
 func (g *General) SetWrapMode(wrap bool) {
 	g.WrapMode = &wrap
+}
+
+// SetWrap sets the wrap mode ("char" or "word").
+func (g *General) SetWrap(wrap string) {
+	g.Wrap = &wrap
 }
 
 // SetFollowAll sets the follow mode for all documents.

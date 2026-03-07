@@ -58,6 +58,8 @@ ov is a terminal pager.
     * 4.15.2. [Filter](#filter)
   * 4.16. [Caption](#caption)
   * 4.17. [Mark](#mark)
+    * 4.17.1. [mark by pattern](#mark-by-pattern)
+    * 4.17.2. [Specifying a mark](#specifying-a-mark)
   * 4.18. [Watch](#watch)
   * 4.19. [Mouse support](#mouse-support)
     * 4.19.1. [Text Selection](#text-selection)
@@ -445,7 +447,10 @@ This column-width feature is implemented using [guesswidth](https://github.com/n
 
 Supports switching between wrapping and not wrapping lines.
 
-The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
+The `-w` or `--wrap` option controls the wrap mode:
+
+* `-w` or `-w=char`(default): Wrap lines at screen width, breaking anywhere.
+* `-w=word`: Wrap lines at screen width, breaking at word boundaries.
 
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
@@ -776,13 +781,13 @@ The specified marks can be displayed in the mark list in the [Sidebar](#sidebar)
 
 [Related styling](#style-customization): `MarkLine`.
 
-#### mark by pattern
+####  4.17.1. <a name='mark-by-pattern'></a>mark by pattern
 
 You can use mark by pattern to mark all lines that match the search(default key `*`).
 This will enter pattern input mode and, when you press `Enter`, mark all lines
 that match the pattern.
 
-#### Specifying a mark
+####  4.17.2. <a name='specifying-a-mark'></a>Specifying a mark
 
 Use the `>`next and `<`previous (default) key to move to the marked position.
 You can also enter mark specify mode with `,` (default) and select a mark by
