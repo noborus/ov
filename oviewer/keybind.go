@@ -36,6 +36,7 @@ const (
 	actionAlternate      = "alter_rows_mode"
 	actionLineNumMode    = "line_number_mode"
 	actionWrap           = "wrap_mode"
+	actionWordWrap       = "word_wrap_mode"
 	actionColumnMode     = "column_mode"
 	actionColumnWidth    = "column_width"
 	actionNextSearch     = "next_search"
@@ -149,6 +150,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionAlternate:      root.toggleAlternateRows,
 		actionLineNumMode:    root.toggleLineNumMode,
 		actionWrap:           root.toggleWrapMode,
+		actionWordWrap:       root.toggleWordWrap,
 		actionColumnMode:     root.toggleColumnMode,
 		actionColumnWidth:    root.toggleColumnWidth,
 		actionNextSearch:     root.sendNextSearch,
@@ -266,6 +268,7 @@ func defaultKeyBinds() KeyBind {
 		actionAlternate:      {"C"},
 		actionLineNumMode:    {"G"},
 		actionWrap:           {"w", "W"},
+		actionWordWrap:       {"alt+w"},
 		actionColumnMode:     {"c"},
 		actionColumnWidth:    {"alt+o"},
 		actionNextSearch:     {"n"},
@@ -481,7 +484,8 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupSearch, Action: actionFilter, Description: "filter search mode"},
 
 	// Change display
-	{Group: GroupChange, Action: actionWrap, Description: "wrap/nowrap toggle"},
+	{Group: GroupChange, Action: actionWrap, Description: "wrap toggle (character based)"},
+	{Group: GroupChange, Action: actionWordWrap, Description: "word wrap toggle"},
 	{Group: GroupChange, Action: actionColumnMode, Description: "column mode toggle"},
 	{Group: GroupChange, Action: actionColumnWidth, Description: "column width toggle"},
 	{Group: GroupChange, Action: actionRainbow, Description: "column rainbow toggle"},

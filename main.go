@@ -398,10 +398,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
 
 	// Config.General
-	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align]")
+	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align|wordwrap]")
 	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths", "wordwrap\tWord Wrap"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	rootCmd.PersistentFlags().BoolP("align", "l", false, "align the output columns for better readability")
@@ -454,8 +454,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
-	rootCmd.PersistentFlags().BoolP("wrap", "w", true, "wrap mode")
-	_ = viper.BindPFlag("general.WrapMode", rootCmd.PersistentFlags().Lookup("wrap"))
+	rootCmd.PersistentFlags().StringP("wrap", "w", "", "wrap mode [char|word]")
+	rootCmd.PersistentFlags().Lookup("wrap").NoOptDefVal = "char"
+	_ = viper.BindPFlag("general.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
+	_ = rootCmd.RegisterFlagCompletionFunc("wrap", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"char\tWrap by character", "word\tWrap at word boundaries"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().BoolP("plain", "p", false, "disable original decoration")
 	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))

@@ -41,7 +41,7 @@ General:
   AlternateRows: false
   ColumnMode: false
   LineNumMode: false
-  WrapMode: true
+  Wrap: "character" # Wrap mode. Options: "character", "word", "none".
   ColumnDelimiter: ","
   MarkStyleWidth: 1
 # HScrollWidth: 10%
@@ -230,6 +230,8 @@ KeyBind:
     wrap_mode:
         - "w"
         - "W"
+    word_wrap_mode:
+        - "alt+w"
     column_mode:
         - "c"
     backsearch:
@@ -339,7 +341,7 @@ KeyBind:
 Mode:
   markdown:
     SectionDelimiter: "^#"
-    WrapMode: true
+    Wrap: "character"
     Style:
       SectionLine:
         Background: "blue"
@@ -348,12 +350,12 @@ Mode:
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"
   mysql:
     Header: 3
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"

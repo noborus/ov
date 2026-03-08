@@ -376,9 +376,10 @@ const MaxWriteLog int = 10
 
 // The name of the converter that can be specified.
 const (
-	convEscaped string = "es"    // convEscaped processes escape sequence(default).
-	convRaw     string = "raw"   // convRaw is displayed without processing escape sequences as they are.
-	convAlign   string = "align" // convAlign is aligned in each column.
+	convEscaped  string = "es"       // convEscaped processes escape sequence(default).
+	convRaw      string = "raw"      // convRaw is displayed without processing escape sequences as they are.
+	convAlign    string = "align"    // convAlign is aligned in each column.
+	convWordWrap string = "wordwrap" // convWordWrap is wrapped at word boundaries.
 )
 
 const (
@@ -1172,6 +1173,20 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 	}
 	if dst.Raw != nil && *dst.Raw {
 		src.Converter = convRaw
+	}
+	if dst.Wrap != nil {
+		log.Println("wrap mode:", *dst.Wrap)
+		// Normalize wrap mode: support short forms (c, w)
+		wrapMode := *dst.Wrap
+		switch wrapMode {
+		case "w", "word":
+			src.Converter = convWordWrap
+			src.WrapMode = true
+		case "f", "false", "no", "n", "0", "FALSE", "False":
+			src.WrapMode = false
+		default:
+			src.WrapMode = true // Default to true for any other value, including "c", "char", "true", "yes", etc.
+		}
 	}
 	src.OVPromptConfig = updatePromptConfig(src.OVPromptConfig, dst.Prompt)
 	src.Style = updateRuntimeStyle(src.Style, dst.Style)
