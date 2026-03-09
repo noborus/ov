@@ -1,8 +1,6 @@
 module github.com/noborus/ov
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
 	codeberg.org/tslocum/cbind v0.1.8
@@ -23,7 +21,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/ulikunitz/xz v0.5.15
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 	golang.org/x/sys v0.41.0
 	golang.org/x/term v0.40.0
 )
