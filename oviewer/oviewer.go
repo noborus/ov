@@ -821,6 +821,10 @@ func (root *Root) Run() error {
 		return err
 	}
 
+	if !root.Config.DisableMouse {
+		root.Screen.EnableMouse(MouseFlags)
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT)
 	sigSuspend := registerSIGTSTP()
@@ -860,10 +864,6 @@ func (root *Root) prepareRun(ctx context.Context) error {
 		return err
 	}
 	root.helpDoc = help
-
-	if !root.Config.DisableMouse {
-		root.Screen.EnableMouse(MouseFlags)
-	}
 
 	if root.Config.ShrinkChar != "" {
 		Shrink = root.Config.ShrinkChar
