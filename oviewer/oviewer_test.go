@@ -35,6 +35,7 @@ func rootHelper(t *testing.T) *Root {
 	if err != nil {
 		t.Fatal(err)
 	}
+	setFixedTestScreen(t, root)
 	return root
 }
 
@@ -44,12 +45,22 @@ func rootFileReadHelper(t *testing.T, fileNames ...string) *Root {
 	if err != nil {
 		t.Fatal(err)
 	}
+	setFixedTestScreen(t, root)
 	root.mu.RLock()
 	for _, doc := range root.DocList {
 		doc.WaitEOF()
 	}
 	root.mu.RUnlock()
 	return root
+}
+
+func setFixedTestScreen(t *testing.T, root *Root) {
+	t.Helper()
+	screen, err := virtualScreen(80, 25)
+	if err != nil {
+		t.Fatal(err)
+	}
+	root.Screen = screen
 }
 
 func intPtr(i int) *int {
