@@ -82,6 +82,13 @@ func TestConvertWordwrap(t *testing.T) {
 			tabWidth:    4,
 			wantStr:     "あい う   abcd",
 		},
+		{
+			name:        "just fit with space wrap target",
+			screenWidth: 10,
+			str:         "0123456789 0123456789",
+			tabWidth:    4,
+			wantStr:     "01234567890123456789",
+		},
 	}
 
 	for _, tt := range tests {
