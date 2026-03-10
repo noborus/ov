@@ -945,7 +945,17 @@ func (root *Root) prepareAllDocuments() {
 // Close closes the oviewer.
 func (root *Root) Close() {
 	root.isClosed.Store(true)
-	root.Screen.Fini()
+	root.screenClose()
+}
+
+// screenClose closes the screen.
+func (root *Root) screenClose() {
+	if root.Screen == nil {
+		return
+	}
+	screen := root.Screen
+	root.Screen = nil
+	screen.Fini()
 }
 
 // setMessagef displays a formatted message in status.
@@ -1291,7 +1301,12 @@ func (root *Root) docSmall() bool {
 	if m.BufEndNum() > bodyHeight {
 		return false
 	}
-	start, end, err := root.drawVirtualScreen(w, bodyHeight+1)
+	root.screenClose()
+	if err := root.createVirtualScreen(w, bodyHeight+1); err != nil {
+		log.Println(err)
+		return false
+	}
+	start, end, err := root.drawVirtualScreen()
 	if err != nil {
 		log.Println(err)
 		return false
@@ -1342,8 +1357,15 @@ func (root *Root) outputOnExit(output io.Writer) {
 func (root *Root) writeCurrentScreen(output io.Writer) {
 	strs := root.OnExit
 	if strs == nil {
-		w, h := root.Screen.Size()
-		start, end, err := root.drawVirtualScreen(w, h)
+		if root.Screen != nil {
+			root.screenClose()
+		}
+		w, h := terminalSize()
+		if err := root.createVirtualScreen(w, h); err != nil {
+			log.Println(err)
+			return
+		}
+		start, end, err := root.drawVirtualScreen()
 		if err != nil {
 			log.Println(err)
 			return
@@ -1425,23 +1447,27 @@ func virtualScreen(width int, height int) (tcell.Screen, error) {
 	return screen, nil
 }
 
-// drawVirtualScreen draws to the virtual screen and returns the valid lines.
-func (root *Root) drawVirtualScreen(width int, height int) (int, int, error) {
+// createVirtualScreen creates a virtual screen based on the configuration
+// for writing to the original terminal.
+func (root *Root) createVirtualScreen(width int, height int) error {
 	if root.Config.BeforeWriteOriginal != 0 || root.Config.AfterWriteOriginal != 0 {
 		root.Doc.topLN = max(root.Doc.topLN+root.Doc.firstLine()-root.Config.BeforeWriteOriginal, 0)
 		end := root.Doc.bottomLN
 		if root.Config.AfterWriteOriginal != 0 {
-			end = root.Doc.topLN + root.Config.AfterWriteOriginal
+			end = root.Doc.topLN + root.Config.AfterWriteOriginal + 1
 		}
 		height = max(end-root.Doc.topLN, 0)
 	}
-
 	screen, err := virtualScreen(width, height)
 	if err != nil {
-		return 0, 0, err
+		return err
 	}
 	root.Screen = screen
+	return nil
+}
 
+// drawVirtualScreen draws to the virtual screen and returns the valid lines.
+func (root *Root) drawVirtualScreen() (int, int, error) {
 	if root.Pattern != "" {
 		root.setSearcher(root.Pattern, root.Config.CaseSensitive)
 	}
