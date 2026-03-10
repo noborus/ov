@@ -945,17 +945,7 @@ func (root *Root) prepareAllDocuments() {
 // Close closes the oviewer.
 func (root *Root) Close() {
 	root.isClosed.Store(true)
-	root.screenClose()
-}
-
-// screenClose closes the screen.
-func (root *Root) screenClose() {
-	if root.Screen == nil {
-		return
-	}
-	screen := root.Screen
-	root.Screen = nil
-	screen.Fini()
+	root.Screen.Fini()
 }
 
 // setMessagef displays a formatted message in status.
@@ -1292,6 +1282,13 @@ func updateRuntimeStyle(src Style, dst StyleConfig) Style {
 
 // docSmall returns with bool whether the file to display fits on the screen.
 func (root *Root) docSmall() bool {
+	// The screen is switched to the virtual screen for writing to the original terminal,
+	// so save the original screen and restore it later.
+	screen := root.Screen
+	defer func() {
+		root.Screen = screen
+	}()
+
 	m := root.Doc
 	if !m.BufEOF() {
 		return false
@@ -1301,11 +1298,11 @@ func (root *Root) docSmall() bool {
 	if m.BufEndNum() > bodyHeight {
 		return false
 	}
-	root.screenClose()
 	if err := root.createVirtualScreen(w, bodyHeight+1); err != nil {
 		log.Println(err)
 		return false
 	}
+	defer root.Screen.Fini()
 	start, end, err := root.drawVirtualScreen()
 	if err != nil {
 		log.Println(err)
@@ -1357,9 +1354,7 @@ func (root *Root) outputOnExit(output io.Writer) {
 func (root *Root) writeCurrentScreen(output io.Writer) {
 	strs := root.OnExit
 	if strs == nil {
-		if root.Screen != nil {
-			root.screenClose()
-		}
+		root.Screen.Fini()
 		w, h := terminalSize()
 		if err := root.createVirtualScreen(w, h); err != nil {
 			log.Println(err)
