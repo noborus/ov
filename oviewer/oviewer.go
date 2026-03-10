@@ -1175,7 +1175,6 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 		src.Converter = convRaw
 	}
 	if dst.Wrap != nil {
-		log.Println("wrap mode:", *dst.Wrap)
 		// Normalize wrap mode: support short forms (c, w)
 		wrapMode := *dst.Wrap
 		switch wrapMode {
@@ -1436,14 +1435,12 @@ func (root *Root) drawVirtualScreen(width int, height int) (int, int, error) {
 		}
 		height = max(end-root.Doc.topLN, 0)
 	}
-	w, h := root.Screen.Size()
-	if width != w || height != h {
-		screen, err := virtualScreen(width, height)
-		if err != nil {
-			return 0, 0, err
-		}
-		root.Screen = screen
+
+	screen, err := virtualScreen(width, height)
+	if err != nil {
+		return 0, 0, err
 	}
+	root.Screen = screen
 
 	if root.Pattern != "" {
 		root.setSearcher(root.Pattern, root.Config.CaseSensitive)
