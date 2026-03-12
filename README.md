@@ -40,7 +40,7 @@ ov is a terminal pager.
   * 4.5. [Header Column](#header-column)
   * 4.6. [Column rainbow mode](#column-rainbow-mode)
   * 4.7. [Column width](#column-width)
-  * 4.8. [Wrap/NoWrap](#wrap/nowrap)
+  * 4.8. [Wrap](#wrap)
   * 4.9. [Alternate-Rows](#alternate-rows)
   * 4.10. [Sidebar](#sidebar)
   * 4.11. [Section](#section)
@@ -443,17 +443,21 @@ ps aux|ov -H1 --column-width --column-rainbow
 
 This column-width feature is implemented using [guesswidth](https://github.com/noborus/guesswidth).
 
-###  4.8. <a name='wrap/nowrap'></a>Wrap
+###  4.8. <a name='wrap'></a>Wrap
 
 Supports switching between wrapping and not wrapping lines.
 
-The `-w` or `--wrap` option controls the wrap mode:
+The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
+
+#### Added word wrap mode in v0.52.0
+
+Word wrap has been added and the method of specification has changed.
 
 * `-w` or `-w=char`(default): Wrap lines at screen width, breaking anywhere.
 * `-w=word`: Wrap lines at screen width, breaking at word boundaries.
 * `-w=none`: Disable line wrapping.
 
-*Added in v0.52.0* word and none options to control wrapping behavior.
+Toggle word wrap with default key `alt+w`.
 
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
