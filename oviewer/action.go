@@ -148,7 +148,7 @@ func (root *Root) toggleMouse(context.Context) {
 func (root *Root) toggleStatusLine(context.Context) {
 	root.Doc.StatusLine = !root.Doc.StatusLine
 	if root.Doc.StatusLine {
-		root.setMessage("Status Line visible")
+		root.setMessage("Status Line shown")
 	} else {
 		root.setMessage("Status Line hidden")
 	}
@@ -179,7 +179,7 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.sidebarWidth = width
 	root.generateSectionList()
 	root.ViewSync(ctx)
-	root.setMessagef("Sidebar %s visible", mode.String())
+	root.setMessagef("Sidebar (%s) shown", mode.String())
 }
 
 // calcSideWidth calculates the sidebar width based on the configuration string.

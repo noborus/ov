@@ -669,7 +669,7 @@ func (root *Root) keyCapture(ev *tcell.EventKey) bool {
 	return false
 }
 
-// formatKeyName formats the key name for better readability
+// formatKeyName formats the key name for better readability.
 func (root *Root) formatKeyName(ev *tcell.EventKey) string {
 	// For special keys, use the standard name
 	return ev.Name()
