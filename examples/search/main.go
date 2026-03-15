@@ -35,13 +35,11 @@ func main() {
 	}
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := ov.Run(); err != nil {
 			log.Fatal(err)
 		}
-	}()
+	})
 	time.Sleep(time.Second * 1)
 	ov.MoveBottom()
 	ov.BackSearch("main")

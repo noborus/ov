@@ -578,7 +578,7 @@ func (root *Root) put(x, y int, str string, style tcell.Style) {
 // - Combining characters (ZWJ sequences, variation selectors, skin tone modifiers)
 // - Ambiguous width characters (box drawing, mathematical symbols, etc.)
 // - Regional indicator symbols used in flag emojis (🇺🇸, 🇯🇵, etc.)
-// - Complex character sequences that may be rendered differently across terminals
+// - Complex character sequences that may be rendered differently across terminals.
 func needsDisplaySync(str string) bool {
 	gr := uniseg.NewGraphemes(str)
 	for gr.Next() {

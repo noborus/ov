@@ -135,6 +135,7 @@ func (root *Root) toggleHideOtherSection(context.Context) {
 func (root *Root) toggleMouse(context.Context) {
 	root.Config.DisableMouse = !root.Config.DisableMouse
 	if root.Config.DisableMouse {
+		root.resetSelect()
 		root.Screen.DisableMouse()
 		root.setMessage("Disable Mouse")
 	} else {
@@ -147,7 +148,7 @@ func (root *Root) toggleMouse(context.Context) {
 func (root *Root) toggleStatusLine(context.Context) {
 	root.Doc.StatusLine = !root.Doc.StatusLine
 	if root.Doc.StatusLine {
-		root.setMessage("Status Line visible")
+		root.setMessage("Status Line shown")
 	} else {
 		root.setMessage("Status Line hidden")
 	}
@@ -178,7 +179,7 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.sidebarWidth = width
 	root.generateSectionList()
 	root.ViewSync(ctx)
-	root.setMessagef("Sidebar %s visible", mode.String())
+	root.setMessagef("Sidebar (%s) shown", mode.String())
 }
 
 // calcSideWidth calculates the sidebar width based on the configuration string.
@@ -323,6 +324,7 @@ func (root *Root) goLine(input string) {
 	if len(input) == 0 {
 		return
 	}
+	root.resetSelect()
 	num, err := calcPosition(input, root.Doc.BufEndNum())
 	if err != nil {
 		root.setMessage(ErrInvalidNumber.Error())
@@ -344,6 +346,7 @@ func (root *Root) goLine(input string) {
 
 // goLineNumber moves to the specified line number.
 func (root *Root) goLineNumber(lN int) {
+	root.resetSelect()
 	lN = root.Doc.moveLine(lN - root.Doc.firstLine())
 	root.setMessagef("Moved to line %d", lN+1)
 }

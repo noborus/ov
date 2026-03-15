@@ -2261,8 +2261,8 @@ func TestRoot_toggleStatusLine(t *testing.T) {
 	if !root.Doc.StatusLine {
 		t.Errorf("toggleStatusLine() StatusLine = %v, want %v", root.Doc.StatusLine, true)
 	}
-	if root.message != "Status Line visible" {
-		t.Errorf("toggleStatusLine() message = %v, want %v", root.message, "Status Line visible")
+	if root.message != "Status Line shown" {
+		t.Errorf("toggleStatusLine() message = %v, want %v", root.message, "Status Line shown")
 	}
 
 	// Toggle again, should be false
