@@ -20,6 +20,13 @@ func TestConvertWordwrap(t *testing.T) {
 			wantStr:     "",
 		},
 		{
+			name:        "zero screen width ",
+			screenWidth: 0,
+			str:         "abcdefghij",
+			tabWidth:    4,
+			wantStr:     "abcdefghij",
+		},
+		{
 			name:        "count exceeds screen width",
 			screenWidth: 10,
 			str:         "abcdefghij",
@@ -88,6 +95,13 @@ func TestConvertWordwrap(t *testing.T) {
 			str:         "0123456789 0123456789",
 			tabWidth:    4,
 			wantStr:     "01234567890123456789",
+		},
+		{
+			name:        "escape sequence",
+			str:         "abc\x1b[31mdef\x1b[0mghi",
+			tabWidth:    4,
+			screenWidth: 5,
+			wantStr:     "abcdefghi",
 		},
 	}
 

@@ -206,6 +206,58 @@ func Test_escapeSequence_convert(t *testing.T) {
 	}
 }
 
+func Test_escapeSequence_parseCSI_EraseInLine(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		parameter string
+		wantBG    tcell.Color
+	}{
+		{
+			name:      "empty parameter keeps line background",
+			parameter: "",
+			wantBG:    color.Maroon,
+		},
+		{
+			name:      "0 parameter keeps line background",
+			parameter: "0",
+			wantBG:    color.Maroon,
+		},
+		{
+			name:      "non-zero parameter does not change line background",
+			parameter: "1",
+			wantBG:    color.Default,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			es := newESConverter()
+			es.state = ansiControlSequence
+			es.parameter.WriteString(tt.parameter)
+
+			st := &parseState{
+				style:    tcell.StyleDefault.Background(color.Maroon),
+				eolStyle: tcell.StyleDefault,
+			}
+
+			es.parseCSI(st, 'K')
+
+			if got := st.eolStyle.GetBackground(); got != tt.wantBG {
+				t.Errorf("parseCSI() eolStyle background = %v, want %v", got, tt.wantBG)
+			}
+
+			if es.state != ansiText {
+				t.Errorf("parseCSI() state = %v, want %v", es.state, ansiText)
+			}
+		})
+	}
+}
+
 func Test_sgrStyle(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -471,6 +523,15 @@ func Test_parseSGR2(t *testing.T) {
 			},
 			want: OVStyle{
 				Background: "#ff0000",
+			},
+		},
+		{
+			name: "testBackgroundColor",
+			args: args{
+				params: "41",
+			},
+			want: OVStyle{
+				Background: "maroon",
 			},
 		},
 		{
