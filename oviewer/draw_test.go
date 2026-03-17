@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 func getContents(t *testing.T, root *Root, y int, width int) string {
@@ -225,6 +226,52 @@ func TestRoot_draw2(t *testing.T) {
 				t.Errorf("Root.draw() sectionHeaderHeight = %v, want %v", got, tt.want.sectionHeaderHeight)
 			}
 		})
+	}
+}
+
+func TestRoot_drawSidebar_notVisible(t *testing.T) {
+	root := rootHelper(t)
+	root.scr.vHeight = 4
+	root.sidebarWidth = 8
+	root.sidebarVisible = false
+	root.Screen.Put(0, 0, "X", tcell.StyleDefault.Bold(true))
+
+	root.drawSidebar()
+
+	gotStr, gotStyle, _ := root.Screen.Get(0, 0)
+	if gotStr != "X" {
+		t.Errorf("drawSidebar() changed cell text when sidebar is hidden: got %q, want %q", gotStr, "X")
+	}
+	if gotStyle != tcell.StyleDefault.Bold(true) {
+		t.Errorf("drawSidebar() changed cell style when sidebar is hidden: got %v", gotStyle)
+	}
+}
+
+func TestRoot_drawSidebar_visible(t *testing.T) {
+	root := rootHelper(t)
+	root.scr.vHeight = 4
+	root.sidebarWidth = 12
+	root.sidebarVisible = true
+	root.sidebarMode = SidebarModeMarks
+	root.SidebarItems = []SidebarItem{
+		{Contents: StrToContents("item1", 0), IsCurrent: false},
+	}
+
+	root.drawSidebar()
+
+	mode := getContents(t, root, 0, 8)
+	if !strings.Contains(mode, "Marks") {
+		t.Errorf("drawSidebar() header = %q, want to contain %q", mode, "Marks")
+	}
+
+	item := getContents(t, root, 1, 6)
+	if !strings.Contains(item, "item1") {
+		t.Errorf("drawSidebar() item row = %q, want to contain %q", item, "item1")
+	}
+
+	_, borderStyle, _ := root.Screen.Get(root.sidebarWidth-1, 2)
+	if borderStyle.GetBackground() != color.Gray {
+		t.Errorf("drawSidebar() border background = %v, want %v", borderStyle.GetBackground(), color.Gray)
 	}
 }
 

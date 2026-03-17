@@ -1571,6 +1571,79 @@ func TestRoot_ShrinkColumn(t *testing.T) {
 	}
 }
 
+func TestRoot_toggleRightAlign(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+	type fields struct {
+		fileName    string
+		columnAttrs []columnAttribute
+		converter   string
+	}
+	type args struct {
+		cursor int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    specifiedAlign
+		wantErr bool
+	}{
+		{
+			name: "testToggleRightAlign",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convAlign,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    RightAlign,
+			wantErr: false,
+		},
+		{
+			name: "testToggleRightAlignFalse",
+			fields: fields{
+				fileName: filepath.Join(testdata, "MOCK_DATA.csv"),
+				columnAttrs: []columnAttribute{
+					{shrink: false, specifiedAlign: LeftAlign},
+					{shrink: false, specifiedAlign: LeftAlign},
+				},
+				converter: convEscaped,
+			},
+			args: args{
+				cursor: 0,
+			},
+			want:    Unspecified,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, tt.fields.fileName)
+			ctx := context.Background()
+			root.prepareScreen()
+			root.Doc.Converter = tt.fields.converter
+			root.Doc.alignConv.columnAttrs = tt.fields.columnAttrs
+			root.prepareDraw(ctx)
+			got, err := root.Doc.toggleRightAlign(tt.args.cursor)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Document.toggleRightAlign() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Document.toggleRightAlign() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDocument_specifiedAlign(t *testing.T) {
 	type fields struct {
 		fileName    string

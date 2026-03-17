@@ -628,26 +628,13 @@ func (root *Root) drawSidebar() {
 
 // drawSidebarList displays a list of SidebarItem in the sidebar.
 func (root *Root) drawSidebarList(items []SidebarItem) {
+	scroll := root.sidebarScroll()
+
 	sidebarStyle := tcell.StyleDefault
 	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
 	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
+
 	height := root.scr.vHeight
-	scrollY := 0
-	scrollX := 0
-	if root.sidebarScrolls != nil {
-		scroll := root.sidebarScrolls[root.sidebarMode]
-		scrollY = scroll.y
-		scrollX = scroll.x
-		scrollY = max(scrollY, 0)
-		scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
-		scrollX = max(scrollX, 0)
-		// Update scroll info.
-		root.sidebarScrolls[root.sidebarMode] = sidebarScroll{
-			x:        scrollX,
-			y:        scrollY,
-			currentY: root.sidebarScrolls[root.sidebarMode].currentY,
-		}
-	}
 	maxList := min(len(items), height-2)
 	for i := range maxList {
 		item := items[i]
@@ -655,13 +642,44 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 		if item.IsCurrent {
 			style = currentStyle
 		}
-		label := item.Label
-		labelLen := uniseg.StringWidth(label)
-		left := min(scrollX, len(item.Contents))
-		width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
-		right := min(left+width, len(item.Contents))
-		out := item.Contents[left:right].String()
-		root.Screen.PutStrStyled(labelLen, i+1, out, style)
-		root.Screen.PutStrStyled(0, i+1, label, style)
+		root.drawSidebarItem(item, style, scroll.x, i+1)
 	}
+}
+
+func (root *Root) drawSidebarItem(item SidebarItem, style tcell.Style, x int, y int) {
+	label := item.Label
+	labelLen := uniseg.StringWidth(label)
+	left := min(x, len(item.Contents))
+	width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
+	right := min(left+width, len(item.Contents))
+	out := item.Contents[left:right].String()
+	root.Screen.PutStrStyled(labelLen, y, out, style)
+	root.Screen.PutStrStyled(0, y, label, style)
+}
+
+// sidebarScroll returns the current scroll position of the sidebar and updates it if necessary.
+func (root *Root) sidebarScroll() sidebarScroll {
+	if root.sidebarScrolls == nil {
+		root.sidebarScrolls = make(map[SidebarMode]sidebarScroll)
+	}
+	scroll, ok := root.sidebarScrolls[root.sidebarMode]
+	if !ok {
+		scroll = sidebarScroll{
+			x:        0,
+			y:        0,
+			currentY: 0,
+		}
+	}
+	scrollX := scroll.x
+	scrollY := scroll.y
+	scrollX = min(scrollX, maxSidebarWidth+(root.sidebarWidth-1))
+	scrollX = max(scrollX, 0)
+	scrollY = max(scrollY, 0)
+	// Update scroll info.
+	root.sidebarScrolls[root.sidebarMode] = sidebarScroll{
+		x:        scrollX,
+		y:        scrollY,
+		currentY: scroll.currentY,
+	}
+	return scroll
 }
