@@ -131,10 +131,9 @@ func (root *Root) afterInputEvent(ctx context.Context) {
 	if root.input.Event.Mode() != Normal {
 		return
 	}
-	// if the previous sidebar mode was not Marks and is a valid,
-	// initialized mode, it toggles the sidebar back to the previous mode.
-	if root.previousSidebarMode != 0 && root.previousSidebarMode != SidebarModeMarks {
-		root.toggleSidebar(ctx, root.previousSidebarMode)
+	// restore the previous sidebar mode after input is confirmed or canceled.
+	if root.sidebarMode != root.previousSidebarMode {
+		root.setSidebar(ctx, root.previousSidebarMode)
 	}
 }
 

@@ -256,3 +256,78 @@ func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex i
 	scroll.currentY = currentIndex
 	root.sidebarScrolls[mode] = scroll
 }
+
+// toggleSidebar toggles the sidebar visibility.
+func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
+	if mode == SidebarModeNone {
+		root.closeSidebar(ctx)
+		return
+	}
+	if root.sidebarVisible && root.sidebarMode == mode {
+		root.closeSidebar(ctx)
+		return
+	}
+	root.openSidebar(ctx, mode)
+}
+
+// setSidebar sets the sidebar visibility and mode.
+func (root *Root) setSidebar(ctx context.Context, mode SidebarMode) {
+	if mode == SidebarModeNone {
+		root.closeSidebar(ctx)
+		return
+	}
+	root.openSidebar(ctx, mode)
+}
+
+// openSidebar opens the sidebar with the specified mode.
+func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
+	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
+	if err != nil {
+		root.setMessagef("Invalid sidebar width '%s': %s. Using default %s.", root.Config.SidebarWidth, err.Error(), defaultSidebarWidth)
+		width, _ = calcSideWidth(defaultSidebarWidth, root.scr.vWidth)
+	}
+	root.sidebarMode = mode
+	root.sidebarVisible = true
+	root.sidebarWidth = width
+	root.generateSectionList()
+	root.ViewSync(ctx)
+	root.setMessagef("Sidebar (%s) shown", mode.String())
+}
+
+// calcSideWidth calculates the sidebar width based on the configuration string.
+func calcSideWidth(sideWidth string, width int) (int, error) {
+	w, err := calcPosition(sideWidth, width)
+	if err != nil {
+		return 0, err
+	}
+	w = min(max(minSidebarWidth, w), maxSidebarWidth)
+	return int(w), nil
+}
+
+func (root *Root) closeSidebar(ctx context.Context) {
+	root.sidebarVisible = false
+	root.sidebarMode = SidebarModeNone
+	root.sidebarWidth = 0
+	root.ViewSync(ctx)
+	root.setMessage("Sidebar hidden")
+}
+
+// toggleSidebarHelp toggles the help sidebar visibility.
+func (root *Root) toggleSidebarHelp(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeHelp)
+}
+
+// toggleSidebarMarks toggles the mark list sidebar visibility.
+func (root *Root) toggleSidebarMarks(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeMarks)
+}
+
+// toggleSidebarDocList toggles the document list sidebar visibility.
+func (root *Root) toggleSidebarDocList(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeDocList)
+}
+
+// toggleSidebarSections toggles the section list sidebar visibility.
+func (root *Root) toggleSidebarSections(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeSections)
+}
