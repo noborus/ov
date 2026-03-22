@@ -582,9 +582,6 @@ ov --follow-mode /var/log/syslog
 (while :; do echo random-$RANDOM; sleep 0.1; done;)|./ov  --follow-mode
 ```
 
-> [!NOTE]
-> Due to issue[issue #643](https://github.com/noborus/ov/issues/643), follow-mode does not work for files in the /tmp folder on macOS.
-
 ####  4.13.1. <a name='follow-name'></a>Follow name
 
 > [!TIP]
