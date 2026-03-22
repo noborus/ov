@@ -259,6 +259,7 @@ func (root *Root) adjustSidebarScroll(mode SidebarMode, itemsLen, currentIndex i
 
 // toggleSidebar toggles the sidebar visibility.
 func (root *Root) toggleSidebar(ctx context.Context, mode SidebarMode) {
+	root.previousSidebarMode = mode
 	if mode == SidebarModeNone {
 		root.closeSidebar(ctx)
 		return
