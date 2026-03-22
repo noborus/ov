@@ -8,7 +8,6 @@ import (
 
 // inputMarkNumber sets the inputMode to Mark number.
 func (root *Root) inputMarkNumber(ctx context.Context) {
-	root.previousSidebarMode = root.sidebarMode
 	root.openSidebar(ctx, SidebarModeMarks)
 	input := root.input
 	input.reset()
