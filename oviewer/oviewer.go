@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1609,11 +1610,7 @@ func (root *Root) debugNumOfChunk() {
 
 // ListViewMode returns the list of view modes.
 func ListViewMode(config Config) []string {
-	list := make([]string, 0, len(config.Mode)+1)
-	list = append(list, nameGeneral)
-	for name := range config.Mode {
-		list = append(list, name)
-	}
-	sort.Strings(list)
+	list := slices.Sorted(maps.Keys(config.Mode))
+	list = append([]string{nameGeneral}, list...)
 	return list
 }

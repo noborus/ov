@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"math"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"time"
 )
@@ -491,11 +491,7 @@ func (root *Root) sectionNum(lines map[int]LineC) map[int]LineC {
 
 // lineNumbers returns the line numbers.
 func lineNumbers(lines map[int]LineC) []int {
-	result := make([]int, 0, len(lines))
-	for k := range lines {
-		result = append(result, k)
-	}
-	sort.Ints(result)
+	result := slices.Sorted(maps.Keys(lines))
 	return result
 }
 
