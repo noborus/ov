@@ -210,6 +210,8 @@ func (r RulerType) String() string {
 // RunTimeSettings structure contains the RunTimeSettings of the display.
 // RunTimeSettings contains values that determine the behavior of each document.
 type RunTimeSettings struct {
+	// Name is the name of the view mode.
+	Name string
 	// Converter is the converter name.
 	Converter string
 	// Caption is an additional caption to display after the file name.

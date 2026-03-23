@@ -27,6 +27,8 @@ const (
 	SidebarModeDocList
 	// SidebarModeSections is the section list sidebar.
 	SidebarModeSections
+	// SidebarModeViewMode is the view mode list sidebar.
+	SidebarModeViewMode
 
 	// SidebarModeEnd is the end of sidebar modes.
 	SidebarModeEnd
@@ -43,6 +45,8 @@ func (s SidebarMode) String() string {
 		return "Documents"
 	case SidebarModeSections:
 		return "Sections"
+	case SidebarModeViewMode:
+		return "View Modes"
 	default:
 		return "none"
 	}
@@ -76,6 +80,8 @@ func (root *Root) prepareSidebarItems() {
 		items = root.sidebarItemsForDocList()
 	case SidebarModeSections:
 		items = root.sidebarItemsForSections()
+	case SidebarModeViewMode:
+		items = root.sidebarItemsForViewMode()
 	}
 	root.SidebarItems = items
 }
@@ -195,6 +201,32 @@ func (root *Root) sidebarItemsForSections() []SidebarItem {
 			Label:     label,
 			Contents:  lc,
 			IsCurrent: (i == current),
+		})
+	}
+	return items
+}
+
+// sidebarItemsForViewMode returns SidebarItems for view modes.
+func (root *Root) sidebarItemsForViewMode() []SidebarItem {
+	var items []SidebarItem
+	length := root.sidebarWidth - 4
+	names := ListViewMode(root.Config)
+	root.adjustSidebarScroll(SidebarModeViewMode, len(names), 0)
+	scroll := root.sidebarScrolls[SidebarModeViewMode]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(names))
+	for i := start; i < end; i++ {
+		name := names[i]
+		displayName := StrToContents(name, 0)
+		if len(displayName) < length {
+			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
+			displayName = append(displayName, spaces...)
+		}
+		label := fmt.Sprintf("%2d ", i)
+		items = append(items, SidebarItem{
+			Label:     label,
+			Contents:  displayName,
+			IsCurrent: false,
 		})
 	}
 	return items

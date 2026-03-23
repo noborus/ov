@@ -7,7 +7,8 @@ import (
 )
 
 // setViewModeMode sets the inputMode to ViewMode.
-func (root *Root) inputViewMode(context.Context) {
+func (root *Root) inputViewMode(ctx context.Context) {
+	root.openSidebar(ctx, SidebarModeViewMode)
 	input := root.input
 	input.reset()
 	input.Event = newViewModeEvent(input.Candidate[ViewMode])

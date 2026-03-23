@@ -413,8 +413,13 @@ func (root *Root) setViewMode(ctx context.Context, modeName string) {
 
 	settings, err := root.modeConfig(modeName)
 	if err != nil {
-		root.setMessageLog(err.Error())
-		return
+		n, s, err := root.modeNumberConfig(modeName)
+		if err != nil {
+			root.setMessageLog(err.Error())
+			return
+		}
+		settings = s
+		modeName = n
 	}
 	m := root.Doc
 	m.RunTimeSettings = settings
@@ -441,6 +446,24 @@ func (root *Root) modeConfig(modeName string) (RunTimeSettings, error) {
 	}
 	settings := updateRunTimeSettings(root.Doc.RunTimeSettings, viewMode)
 	return settings, nil
+}
+
+// modeNumberConfig returns the configuration of the specified mode number.
+func (root *Root) modeNumberConfig(str string) (string, RunTimeSettings, error) {
+	n, err := strconv.Atoi(str)
+	if err != nil {
+		return "", RunTimeSettings{}, fmt.Errorf("%w: %s", ErrInvalidModeName, str)
+	}
+	list := ListViewMode(root.Config)
+	if n < 0 || n >= len(list) {
+		return "", RunTimeSettings{}, fmt.Errorf("%w: %s", ErrInvalidModeName, str)
+	}
+	name := list[n]
+	settings, err := root.modeConfig(name)
+	if err != nil {
+		return "", RunTimeSettings{}, err
+	}
+	return name, settings, nil
 }
 
 // setConverter sets the converter type.
