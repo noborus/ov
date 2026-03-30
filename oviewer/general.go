@@ -194,6 +194,7 @@ func (g *General) SetHScrollWidthNum(num int) {
 	g.HScrollWidthNum = &num
 }
 
+// SetVScrollLines sets the number of lines to scroll with the mouse wheel.
 func (g *General) SetVScrollLines(num int) {
 	g.VScrollLines = &num
 }

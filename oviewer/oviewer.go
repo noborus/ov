@@ -115,15 +115,6 @@ type Root struct {
 	sidebarScrolls map[SidebarMode]sidebarScroll
 }
 
-// MouseSelectState represents the state of mouse selection.
-type MouseSelectState int
-
-const (
-	SelectNone   MouseSelectState = iota // no selection
-	SelectActive                         // selecting
-	SelectCopied                         // selection copied
-)
-
 // SCR contains the screen information.
 type SCR struct {
 	// lines is the lines of the screen.
