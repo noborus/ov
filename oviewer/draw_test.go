@@ -600,6 +600,130 @@ func TestRoot_drawVerticalHeader(t *testing.T) {
 	}
 }
 
+func TestRoot_drawWrapLine_fullWidthAtRightEdge(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.bodyStartX = 0
+	root.Doc.bodyWidth = 4
+
+	lineC := LineC{
+		lc:       StrToContents("AB界C", 0),
+		valid:    true,
+		eolStyle: tcell.StyleDefault,
+	}
+
+	nextLX, nextLN := root.drawWrapLine(0, 0, 0, lineC)
+	if nextLX != 4 || nextLN != 0 {
+		t.Fatalf("Root.drawWrapLine() first wrap = (%d, %d), want (%d, %d)", nextLX, nextLN, 4, 0)
+	}
+	if got := getContents(t, root, 0, 4); got != "AB界 " {
+		t.Fatalf("Root.drawWrapLine() first row = %q, want %q", got, "AB界 ")
+	}
+
+	nextLX, nextLN = root.drawWrapLine(1, nextLX, nextLN, lineC)
+	if nextLX != 0 || nextLN != 1 {
+		t.Fatalf("Root.drawWrapLine() second wrap = (%d, %d), want (%d, %d)", nextLX, nextLN, 0, 1)
+	}
+	if got := getContents(t, root, 1, 1); got != "C" {
+		t.Fatalf("Root.drawWrapLine() second row = %q, want %q", got, "C")
+	}
+}
+
+func TestRoot_drawNoWrapLine_negativeStartX(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.bodyStartX = 0
+	root.Doc.bodyWidth = 5
+	root.minStartX = -2
+
+	lineC := LineC{
+		lc:       StrToContents("ABCDE", 0),
+		valid:    true,
+		eolStyle: tcell.StyleDefault,
+	}
+
+	nextLX, nextLN := root.drawNoWrapLine(0, -2, 0, lineC)
+	if nextLX != -2 || nextLN != 1 {
+		t.Fatalf("Root.drawNoWrapLine() = (%d, %d), want (%d, %d)", nextLX, nextLN, -2, 1)
+	}
+	if got := getContents(t, root, 0, 5); got != "  ABC" {
+		t.Fatalf("Root.drawNoWrapLine() row = %q, want %q", got, "  ABC")
+	}
+}
+
+func TestRoot_drawRuler_relativeOffset(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.RulerType = RulerRelative
+	root.Doc.WrapMode = false
+	root.Doc.bodyStartX = 3
+	root.Doc.scrollX = 5
+
+	root.drawRuler()
+
+	if got := getContents(t, root, 1, 10); got != "3456789012" {
+		t.Fatalf("Root.drawRuler() row 1 = %q, want %q", got, "3456789012")
+	}
+}
+
+func TestRoot_drawRuler_none(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.RulerType = RulerNone
+	root.Screen.Put(0, 0, "X", tcell.StyleDefault.Bold(true))
+
+	root.drawRuler()
+
+	gotStr, gotStyle, _ := root.Screen.Get(0, 0)
+	if gotStr != "X" {
+		t.Fatalf("Root.drawRuler() changed text: got %q, want %q", gotStr, "X")
+	}
+	if gotStyle != tcell.StyleDefault.Bold(true) {
+		t.Fatalf("Root.drawRuler() changed style: got %v", gotStyle)
+	}
+}
+
+func TestRoot_drawRuler_absolute(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.RulerType = RulerAbsolute
+
+	root.drawRuler()
+
+	if got := getContents(t, root, 1, 10); got != "1234567890" {
+		t.Fatalf("Root.drawRuler() absolute row 1 = %q, want %q", got, "1234567890")
+	}
+}
+
+func TestRoot_drawSectionHeader_underlinesSearchLine(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.bodyStartX = 0
+	root.Doc.width = 5
+	root.Doc.headerHeight = 0
+	root.Doc.sectionHeaderHeight = 1
+	root.Doc.lastSearchLN = 5
+	root.Doc.Style.SectionLine = OVStyle{Reverse: true}
+	root.scr.sectionHeaderLN = 5
+	root.scr.sectionHeaderEnd = 6
+	root.scr.lines[5] = LineC{
+		lc:       StrToContents("abc", 0),
+		valid:    true,
+		eolStyle: tcell.StyleDefault,
+	}
+
+	root.drawSectionHeader()
+
+	gotStr, gotStyle, _ := root.Screen.Get(0, 0)
+	if gotStr != "a" {
+		t.Fatalf("Root.drawSectionHeader() char = %q, want %q", gotStr, "a")
+	}
+	wantStyle := applyStyle(applyStyle(tcell.StyleDefault, root.Doc.Style.SectionLine), OVStyle{Underline: true})
+	if gotStyle != wantStyle {
+		t.Fatalf("Root.drawSectionHeader() style = %v, want %v", gotStyle, wantStyle)
+	}
+}
+
 func TestRoot_calculateVerticalHeader(t *testing.T) {
 	type fields struct {
 		verticalHeader int

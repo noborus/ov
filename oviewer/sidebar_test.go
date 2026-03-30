@@ -60,7 +60,7 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 				root.CurrentDoc = 1
 			},
 			wantItems: func(root *Root) []SidebarItem {
-				length := 16 // sidebarWidth - 4
+				length := 15
 				displayName1 := StrToContents("file1.txt", 0)
 				displayName2 := StrToContents("file2.txt", 0)
 				if len(displayName1) < length {
@@ -70,8 +70,8 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 					displayName2 = append(displayName2, StrToContents(strings.Repeat(" ", length-len(displayName2)), 0)...)
 				}
 				return []SidebarItem{
-					{Contents: StrToContents("file1.txt      ", 0), IsCurrent: false},
-					{Contents: StrToContents("file2.txt      ", 0), IsCurrent: true},
+					{Contents: displayName1, IsCurrent: false},
+					{Contents: displayName2, IsCurrent: true},
 				}
 			},
 		},

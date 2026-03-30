@@ -43,6 +43,15 @@ type ClickState struct {
 	clickCount    int
 }
 
+// MouseSelectState represents the state of mouse selection.
+type MouseSelectState int
+
+const (
+	SelectNone   MouseSelectState = iota // no selection
+	SelectActive                         // selecting
+	SelectCopied                         // selection copied
+)
+
 // mouseEvent handles mouse events.
 func (root *Root) mouseEvent(ctx context.Context, ev *tcell.EventMouse) {
 	button := ev.Buttons()
