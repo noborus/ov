@@ -348,11 +348,11 @@ func (s *store) joinLast(chunk *chunk, line []byte) bool {
 // appendFormFeed appends a formfeed to the chunk.
 func (s *store) appendFormFeed(chunk *chunk) {
 	line := ""
-	s.mu.Lock()
+	s.mu.RLock()
 	if len(chunk.lines) > 0 {
 		line = string(chunk.lines[len(chunk.lines)-1])
 	}
-	s.mu.Unlock()
+	s.mu.RUnlock()
 	// Do not add if the previous is FormFeed(always add for formfeedTime).
 	if line != FormFeed {
 		feed := FormFeed
