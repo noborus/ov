@@ -290,14 +290,13 @@ func (m *Document) searchLine(ctx context.Context, searcher Searcher, forward bo
 
 // Search searches for the search term and moves to the nearest matching line.
 func (m *Document) Search(ctx context.Context, searcher Searcher, chunkNum int, lineNum int) (int, error) {
-	if !m.seekable {
-		if chunkNum != 0 && m.store.lastChunkNum() <= chunkNum {
-			m.requestLoad(chunkNum)
-		}
+	if m.store.lastChunkNum() < chunkNum {
+		return 0, ErrOutOfChunk
+	}
+
+	if !m.seekable && chunkNum != 0 {
+		m.requestLoad(chunkNum)
 	} else {
-		if m.store.lastChunkNum() < chunkNum {
-			return 0, ErrOutOfChunk
-		}
 		if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.storageSearch(searcher, chunkNum) {
 			return 0, ErrNotFound
 		}

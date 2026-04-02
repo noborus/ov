@@ -745,8 +745,8 @@ func (root *Root) SetWatcher(watcher *fsnotify.Watcher) {
 
 // watchEvent sends a notification to the document.
 func (root *Root) watchEvent(event fsnotify.Event) {
-	root.mu.Lock()
-	defer root.mu.Unlock()
+	root.mu.RLock()
+	defer root.mu.RUnlock()
 
 	for _, m := range root.DocList {
 		if m.filepath == event.Name {

@@ -400,22 +400,21 @@ func (m *Document) Line(n int) ([]byte, error) {
 		return m.followStore.GetChunkLine(0, n)
 	}
 
-	s := m.store
 	if n < 0 || n >= m.BufEndNum() {
 		return nil, fmt.Errorf("%w %d>%d", ErrOutOfRange, n, m.BufEndNum())
 	}
 
 	chunkNum, cn := chunkLineNum(n)
-
-	if s.lastChunkNum() < chunkNum {
-		return nil, fmt.Errorf("%w %d<%d", ErrOutOfRange, s.lastChunkNum(), chunkNum)
+	store := m.store
+	if store.lastChunkNum() < chunkNum {
+		return nil, fmt.Errorf("%w %d<%d", ErrOutOfRange, store.lastChunkNum(), chunkNum)
 	}
 	if m.currentChunk != chunkNum {
 		m.currentChunk = chunkNum
 		m.requestLoad(chunkNum)
 	}
 
-	return s.GetChunkLine(chunkNum, cn)
+	return store.GetChunkLine(chunkNum, cn)
 }
 
 // GetChunkLine returns a specific line from a specified chunk.
@@ -426,8 +425,8 @@ func (m *Document) Line(n int) ([]byte, error) {
 // - A byte slice containing the line data.
 // - An error if the chunk or line number is out of range.
 func (s *store) GetChunkLine(chunkNum int, cn int) ([]byte, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if len(s.chunks) <= chunkNum {
 		return nil, fmt.Errorf("over chunk(%d) %w", chunkNum, ErrOutOfRange)
 	}
