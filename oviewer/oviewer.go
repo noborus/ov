@@ -103,7 +103,8 @@ type Root struct {
 	// sidebarVisible is whether the sidebar is visible.
 	sidebarVisible bool
 	// sidebarMode is the mode of the sidebar.
-	sidebarMode         SidebarMode
+	sidebarMode SidebarMode
+	// previousSidebarMode is the previous mode of the sidebar before it was hidden.
 	previousSidebarMode SidebarMode
 	// SidebarItems is the items to display in the sidebar.
 	SidebarItems []SidebarItem
@@ -818,6 +819,14 @@ func (root *Root) Run() error {
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
+	}
+	if root.Config.ClipboardMethod != "OSC52" && root.Config.ClipboardMethod != "system" {
+		if root.Screen.HasClipboard() {
+			root.Config.ClipboardMethod = "OSC52"
+		} else {
+			root.Config.ClipboardMethod = "system"
+		}
+		root.debugMessage("clipboard method: " + root.Config.ClipboardMethod)
 	}
 
 	sigs := make(chan os.Signal, 1)

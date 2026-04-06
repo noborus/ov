@@ -540,12 +540,13 @@ func (root *Root) copyToClipboard(_ context.Context) {
 
 // copyClipboard copies the string to the clipboard.
 // The method of copying to the clipboard is determined by the configuration.
-// The default method is to use the clipboard package.
-// "OSC52” can be specified (available only if the terminal supports it).
+// Supported methods: "OSC52" (terminal escape sequence), "system" (native clipboard).
 func (root *Root) copyClipboard(str string) {
 	switch root.Config.ClipboardMethod {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
+	case "system":
+		go root.copyToClipboardAsync(str)
 	default:
 		go root.copyToClipboardAsync(str)
 	}
