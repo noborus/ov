@@ -540,7 +540,7 @@ func NewStyle() Style {
 			{Foreground: "fuchsia"},
 			{Foreground: "lime"},
 			{Foreground: "blue"},
-			{Foreground: "grey"},
+			{Foreground: "gray"},
 		},
 		ColumnRainbow: []OVStyle{
 			{Foreground: "white"},
@@ -563,7 +563,7 @@ func NewStyle() Style {
 			Reverse: true,
 		},
 		SelectCopied: OVStyle{
-			Background: "slategrey",
+			Background: "slategray",
 		},
 		PauseLine: OVStyle{
 			Background: "#663333",
