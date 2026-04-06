@@ -105,7 +105,7 @@ func NewHelpStyle() Style {
 			{Foreground: "fuchsia"},
 			{Foreground: "lime"},
 			{Foreground: "blue"},
-			{Foreground: "grey"},
+			{Foreground: "gray"},
 		},
 		JumpTargetLine: OVStyle{
 			Underline: true,
