@@ -72,9 +72,9 @@ type Config struct {
 
 	// ClipboardMethod specifies the method to use for copying to the clipboard.
 	// Supported values:
+	// - "auto" (default): Automatically selects between "OSC52" and "system" based on terminal support.
 	// - "OSC52": Uses the OSC52 escape sequence for clipboard operations. This requires terminal support.
-	// - "default": Uses the default clipboard method provided by the system or application.
-	// In fact, all other settings are default except for OSC52. In the future, “auto” will be added.
+	// - "system": Uses the system's native clipboard method (e.g., xclip on Linux, pbcopy on macOS).
 	ClipboardMethod string
 
 	// Editor is the editor command to use for editing files.
