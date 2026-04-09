@@ -232,7 +232,6 @@ func Test_escapeSequence_parseCSI_EraseInLine(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -478,6 +477,23 @@ func Test_parseSGR(t *testing.T) {
 				Reset:     true,
 				Underline: true,
 			},
+		},
+		{
+			name: "test-reset_Underline2",
+			args: args{
+				params: ";4",
+			},
+			want: OVStyle{
+				Reset:     true,
+				Underline: true,
+			},
+		},
+		{
+			name: "test-colorInvalid",
+			args: args{
+				params: "38;5;999999999999999999999999",
+			},
+			want: OVStyle{},
 		},
 	}
 	for _, tt := range tests {
