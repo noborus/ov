@@ -695,6 +695,40 @@ func TestRoot_drawRuler_absolute(t *testing.T) {
 	}
 }
 
+func TestRoot_drawSelect_reversePointsDoesNotPanic(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.bodyStartX = 0
+	root.Doc.bodyWidth = 10
+	root.Doc.Style.SelectActive = OVStyle{Reverse: true}
+
+	for y := 0; y < 5; y++ {
+		for x := 0; x < root.Doc.bodyWidth; x++ {
+			root.Screen.Put(x, y, "x", tcell.StyleDefault)
+		}
+	}
+
+	root.scr.mouseSelect = SelectActive
+	root.scr.x1, root.scr.y1 = 8, 3
+	root.scr.x2, root.scr.y2 = 2, 1
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("Root.drawSelect() panicked with reversed points: %v", r)
+		}
+	}()
+
+	root.drawSelect()
+
+	wantStyle := applyStyle(tcell.StyleDefault, root.Doc.Style.SelectActive)
+	for _, pos := range []struct{ x, y int }{{2, 1}, {0, 2}, {8, 3}} {
+		_, gotStyle, _ := root.Screen.Get(pos.x, pos.y)
+		if gotStyle != wantStyle {
+			t.Fatalf("Root.drawSelect() style at (%d,%d) = %v, want %v", pos.x, pos.y, gotStyle, wantStyle)
+		}
+	}
+}
+
 func TestRoot_drawSectionHeader_underlinesSearchLine(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()
