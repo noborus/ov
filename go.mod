@@ -3,7 +3,7 @@ module github.com/noborus/ov
 go 1.25.0
 
 require (
-	codeberg.org/tslocum/cbind v0.1.8
+	codeberg.org/tslocum/cbind v0.1.9
 	github.com/atotto/clipboard v0.1.4
 	github.com/creack/pty v1.1.24
 	github.com/fsnotify/fsnotify v1.9.0
