@@ -552,10 +552,23 @@ func (k KeyBind) String() string {
 			group = bind.Group
 			writeHeader(&b, group.String())
 		}
-		keys := k[bind.Action]
+		keys := normalizeKeysForDisplay(k[bind.Action])
 		b.WriteString(fmt.Sprintf(" %-30s * %s\n", "["+strings.Join(keys, "], [")+"]", bind.Description))
 	}
 	return b.String()
+}
+
+func normalizeKeysForDisplay(keys []string) []string {
+	normalized := make([]string, 0, len(keys))
+	for _, key := range keys {
+		normalizedKey, err := normalizeKey(key)
+		if err != nil {
+			normalized = append(normalized, key)
+			continue
+		}
+		normalized = append(normalized, normalizedKey)
+	}
+	return normalized
 }
 
 func (k KeyBind) GetKeyBindDescriptions(group Group) [][]string {

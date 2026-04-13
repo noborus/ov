@@ -3,6 +3,7 @@ package oviewer
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -44,13 +45,21 @@ func TestKeyBind_String(t *testing.T) {
 	}{
 		{
 			name: "KeyBind String",
+			k:    defaultKeyBinds(),
+		},
+		{
+			name: "normalize modifier keys for display",
+			k: func() KeyBind {
+				kb := defaultKeyBinds()
+				kb[actionCancel] = []string{"CTRL+C", "alt+SHIFT+f8"}
+				return kb
+			}(),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			kb := defaultKeyBinds()
-			kbStr := kb.String()
+			kbStr := tt.k.String()
 			count := 0
 			s := bufio.NewScanner(bytes.NewBufferString(kbStr))
 			for s.Scan() {
@@ -58,8 +67,25 @@ func TestKeyBind_String(t *testing.T) {
 					count++
 				}
 			}
-			if count != len(kb)+1 {
-				t.Errorf("number of KeyBind String = %v, want %v", count, len(kb)+1)
+			if count != len(tt.k)+1 {
+				t.Errorf("number of KeyBind String = %v, want %v", count, len(tt.k)+1)
+			}
+
+			if tt.name != "normalize modifier keys for display" {
+				return
+			}
+
+			expectedCtrlC, err := normalizeKey("CTRL+C")
+			if err != nil {
+				t.Fatal(err)
+			}
+			expectedAltShiftF8, err := normalizeKey("alt+SHIFT+f8")
+			if err != nil {
+				t.Fatal(err)
+			}
+			expected := fmt.Sprintf("[%s], [%s]", expectedCtrlC, expectedAltShiftF8)
+			if !strings.Contains(kbStr, expected) {
+				t.Fatalf("KeyBind String() = %q, want to contain %q", kbStr, expected)
 			}
 		})
 	}
