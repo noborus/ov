@@ -714,25 +714,31 @@ func branchWidth(lc contents, branch int, width int, offset int) int {
 
 // selectLine returns a string in the specified range on one line.
 // startX: start position (relative to the visible area), endX: end position (relative to the visible area, exclusive).
-// The arguments must be startX <= endX.
+// If endX is -1, the substring from startX to the end of the line is returned.
+// If the normalized start position is greater than the normalized end position, an empty string is returned.
 func selectLine(lineC LineC, offset int, startX int, endX int) string {
 	maxX := len(lineC.lc)
+
+	startX -= offset
+	startX = min(max(0, startX), maxX)
+	start := lineC.pos.n(startX)
+	if start > len(lineC.str) {
+		log.Printf("selectLine:len(%d):start(%d)\n", len(lineC.str), start)
+		return ""
+	}
+
 	// -1 is a special max value.
 	if endX == -1 {
-		endX = maxX
+		return lineC.str[start:]
 	}
-	startX -= offset
-	endX -= offset
-	startX = max(0, startX)
-	endX = max(0, endX)
-	startX = min(startX, maxX)
-	endX = min(endX, maxX)
-	start := lineC.pos.n(startX)
-	end := lineC.pos.n(endX)
 
-	if start > len(lineC.str) || end > len(lineC.str) || start > end {
+	endX -= offset
+	endX = min(max(0, endX), maxX)
+	end := lineC.pos.n(endX)
+	if end > len(lineC.str) || start > end {
 		log.Printf("selectLine:len(%d):start(%d):end(%d)\n", len(lineC.str), start, end)
 		return ""
 	}
+
 	return lineC.str[start:end]
 }
