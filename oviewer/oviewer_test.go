@@ -244,12 +244,18 @@ func TestRoot_Run(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewOviewer error = %v", err)
 			}
+
+			done := make(chan error, 1)
 			go func() {
-				if err := root.Run(); (err != nil) != tt.wantErr {
-					t.Errorf("Root.Run() error = %v, wantErr %v", err, tt.wantErr)
-				}
+				done <- root.Run()
 			}()
+
 			root.Quit(context.Background())
+
+			runErr := <-done
+			if (runErr != nil) != tt.wantErr {
+				t.Errorf("Root.Run() error = %v, wantErr %v", runErr, tt.wantErr)
+			}
 		})
 	}
 }
