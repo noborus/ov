@@ -50,13 +50,13 @@ func (root *Root) drawBody() {
 	m := root.Doc
 	lX := m.topLX
 	lN := m.topLN + root.scr.headerEnd
+	wrapNum := 0
 	if !m.WrapMode { // If WrapMode is off, topLX is always 0.
 		lX = 0
+		wrapNum = m.numOfWrap(lX, lN)
 	}
 
 	markStyleWidth := min(root.Doc.width, root.Doc.MarkStyleWidth)
-
-	wrapNum := m.numOfWrap(lX, lN)
 	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statusLineHeight; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
@@ -80,9 +80,8 @@ func (root *Root) drawBody() {
 
 		root.applyMarkStyle(lN, y, markStyleWidth)
 
-		wrapNum++
-		if nextLX == 0 {
-			wrapNum = 0
+		if m.WrapMode && nextLX > 0 {
+			wrapNum++
 		}
 
 		lX = nextLX
@@ -115,9 +114,8 @@ func (root *Root) drawHeader() {
 		// header style.
 		root.applyStyleToLine(y, m.Style.Header)
 
-		wrapNum++
-		if lX == 0 {
-			wrapNum = 0
+		if m.WrapMode && lX > 0 {
+			wrapNum++
 		}
 	}
 	if root.scr.headerEnd > 0 {
@@ -156,9 +154,8 @@ func (root *Root) drawSectionHeader() {
 			root.applyStyleToLine(y, OVStyle{Underline: true})
 		}
 
-		wrapNum++
-		if nextLX == 0 {
-			wrapNum = 0
+		if m.WrapMode && nextLX > 0 {
+			wrapNum++
 		}
 
 		lX = nextLX
