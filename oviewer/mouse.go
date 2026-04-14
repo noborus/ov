@@ -398,7 +398,7 @@ func (root *Root) findColumnBoundaries(x, y int, lineC LineC, ln LineNumber) (in
 
 // findWordBoundariesInLine selects the word at the given position.
 func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber) (int, int, int, int) {
-	x = x - root.Doc.bodyStartX
+	x = root.Doc.scrollX + (x - root.Doc.bodyStartX)
 	contentX := x + branchWidth(lineC.lc, ln.wrap, root.scr.vWidth, root.Doc.bodyStartX)
 	if contentX < 0 || contentX >= len(lineC.lc) {
 		// Out of bounds: return clicked position only
@@ -433,7 +433,8 @@ func (root *Root) findWordBoundariesInLine(x, y int, lineC LineC, ln LineNumber)
 			ln.wrap++
 		}
 	}
-	return startX + root.Doc.bodyStartX, startY, endX + root.Doc.bodyStartX, endY
+	return (startX + root.Doc.bodyStartX) - root.Doc.scrollX, startY, (endX + root.Doc.bodyStartX) - root.Doc.scrollX, endY
+
 }
 
 // findColumnRange returns the start and end of the column range containing contentX, or ok=false if not found.
