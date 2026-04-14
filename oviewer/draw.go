@@ -82,6 +82,8 @@ func (root *Root) drawBody() {
 
 		if m.WrapMode && nextLX > 0 {
 			wrapNum++
+		} else {
+			wrapNum = 0
 		}
 
 		lX = nextLX
@@ -116,6 +118,8 @@ func (root *Root) drawHeader() {
 
 		if m.WrapMode && lX > 0 {
 			wrapNum++
+		} else {
+			wrapNum = 0
 		}
 	}
 	if root.scr.headerEnd > 0 {
@@ -156,6 +160,8 @@ func (root *Root) drawSectionHeader() {
 
 		if m.WrapMode && nextLX > 0 {
 			wrapNum++
+		} else {
+			wrapNum = 0
 		}
 
 		lX = nextLX
