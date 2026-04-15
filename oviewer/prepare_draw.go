@@ -204,6 +204,12 @@ func (root *Root) setAlignConverter() {
 		maxWidths, addRight = m.maxColumnWidths(maxWidths, addRight, ln)
 	}
 
+	// Apply shrink width to shrunk columns before comparing.
+	for i, attr := range m.alignConv.columnAttrs {
+		if i < len(maxWidths) && attr.shrink {
+			maxWidths[i] = ShrinkContent.width
+		}
+	}
 	if slices.Equal(m.alignConv.maxWidths, maxWidths) {
 		return
 	}

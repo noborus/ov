@@ -173,7 +173,6 @@ func (a *align) convertWidth(src contents) contents {
 		if a.isShrink(columnNum) {
 			dst = appendShrink(dst)
 			dst = append(dst, SpaceContent)
-			a.maxWidths[columnNum] = uniseg.StringWidth(string(Shrink))
 			start = end
 			continue
 		}
