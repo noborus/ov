@@ -599,8 +599,9 @@ func needsDisplaySync(str string) bool {
 		if runewidth.IsAmbiguousWidth(mainc) {
 			return true
 		}
-		// Regional indicator symbols and emoji range that commonly cause issues
-		// Check for regional indicator symbols (used in flag emojis).
+		// Emoji and symbol ranges that commonly cause display width issues.
+		// Covers regional indicators (🇦-🇿), misc symbols, pictographs, emoticons,
+		// transport symbols, and supplemental symbols (U+1F1E0..U+1F9FF).
 		if mainc >= 0x1F1E0 && mainc <= 0x1F9FF {
 			return true
 		}

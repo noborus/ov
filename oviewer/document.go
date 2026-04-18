@@ -100,7 +100,7 @@ type Document struct {
 	// columnWidths is a slice of column widths.
 	columnWidths []int
 
-	// RunTimeSettings contains RunTimeSettings settings.
+	// RunTimeSettings contains runtime configuration options for the document.
 	RunTimeSettings
 
 	// memoryLimit is the maximum chunk size.
@@ -638,7 +638,7 @@ func (m *Document) watchMode() {
 	m.FollowSection = true
 }
 
-// unwatchMode unwatch mode for the document.
+// unwatchMode disables watch mode for the document.
 func (m *Document) unwatchMode() {
 	m.WatchMode = false
 	m.FollowSection = false
