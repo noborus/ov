@@ -702,7 +702,7 @@ func TestRoot_drawSelect_reversePointsDoesNotPanic(t *testing.T) {
 	root.Doc.bodyWidth = 10
 	root.Doc.Style.SelectActive = OVStyle{Reverse: true}
 
-	for y := 0; y < 5; y++ {
+	for y := range 5 {
 		for x := 0; x < root.Doc.bodyWidth; x++ {
 			root.Screen.Put(x, y, "x", tcell.StyleDefault)
 		}

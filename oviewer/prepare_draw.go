@@ -408,10 +408,7 @@ func (m *Document) getHeight(startLN int, endLN int) int {
 
 // prepareLines returns the contents of the screen.
 func (root *Root) prepareLines(lines map[int]LineC) map[int]LineC {
-	// clear lines.
-	for k := range lines {
-		delete(lines, k)
-	}
+	clear(lines)
 	// Header.
 	lines = root.setLines(lines, root.scr.headerLN, root.scr.headerEnd)
 	// Section header.
@@ -673,7 +670,7 @@ func findColumnEnd(lc contents, indexes []int, n int, start int) int {
 	return rPos
 }
 
-// findPrevSpace returns the position just before the previous space.
+// findPrevSpace returns the position of the previous space.
 func findPrevSpace(lc contents, start int) int {
 	for p := start; p > 0; p-- {
 		if lc.IsSpace(p) {
