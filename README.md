@@ -41,6 +41,7 @@ ov is a terminal pager.
   * 4.6. [Column rainbow mode](#column-rainbow-mode)
   * 4.7. [Column width](#column-width)
   * 4.8. [Wrap](#wrap)
+    * 4.8.1. [word wrap mode](#word-wrap-mode)
   * 4.9. [Alternate-Rows](#alternate-rows)
   * 4.10. [Sidebar](#sidebar)
   * 4.11. [Section](#section)
@@ -74,7 +75,8 @@ ov is a terminal pager.
     * 4.23.2. [Right Align](#right-align)
   * 4.24. [Jump target](#jump-target)
   * 4.25. [View mode](#view-mode)
-    * 4.25.1. [List View Modes](#list-view-modes)
+    * 4.25.1. [View Mode Sidebar](#view-mode-sidebar)
+    * 4.25.2. [List View Modes](#list-view-modes)
   * 4.26. [Output on exit](#output-on-exit)
   * 4.27. [Quit if one screen](#quit-if-one-screen)
   * 4.28. [Suspend](#suspend)
@@ -339,7 +341,7 @@ ov --header 1 README.md
 
 ####  4.2.1. <a name='skip'></a>Skip
 
-When used with the `--skip-lines` (default key `ctrl+s`) option, it hides the number of lines specified by skip and then displays the header.
+When used with the `--skip-lines` (default key `Ctrl+s`) option, it hides the number of lines specified by skip and then displays the header.
 
 ```console
 ov --skip-lines 1 --header 1 README.md
@@ -392,7 +394,7 @@ When in column-mode, pressing `F` will switch to fixed display for the selected 
 ###  4.6. <a name='column-rainbow-mode'></a>Column rainbow mode
 
 You can also color each column individually in column mode.
-Specify `--column-rainbow`(default key is `ctrl+r`) in addition to the `--column-mode` option.
+Specify `--column-rainbow`(default key is `Ctrl+r`) in addition to the `--column-mode` option.
 
 Color customization is possible. Please specify 7 or more colors in `config.yaml`.
 
@@ -432,7 +434,7 @@ Style:
 
 ###  4.7. <a name='column-width'></a>Column width
 
-The `--column-width` option is designed for **command output with irregular spaces**, such as `ps aux`, `df`, etc.  (default key `alt+o`).
+The `--column-width` option is designed for **command output with irregular spaces**, such as `ps aux`, `df`, etc.  (default key `Alt+o`).
 It automatically **detects and separates columns** without needing a specific delimiter.
 
 ```console
@@ -449,7 +451,9 @@ Supports switching between wrapping and not wrapping lines.
 
 The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
 
-#### Added word wrap mode in v0.52.0
+####  4.8.1. <a name='word-wrap-mode'></a>word wrap mode
+
+**Added in v0.52.0**
 
 Word wrap has been added and the method of specification has changed.
 
@@ -457,7 +461,7 @@ Word wrap has been added and the method of specification has changed.
 * `-w=word`: Wrap lines at screen width, breaking at word boundaries.
 * `-w=none`: Disable line wrapping.
 
-Toggle word wrap with default key `alt+w`.
+Toggle word wrap with default key `Alt+w`.
 
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
@@ -513,13 +517,13 @@ SidebarWidth: 30      #  Width of the sidebar. Can be specified in percentage or
 
 ###  4.11. <a name='section'></a>Section
 
-You can specify a section delimiter using `--section-delimiter` (default key `alt+d`).
+You can specify a section delimiter using `--section-delimiter` (default key `Alt+d`).
 
 This allows you to move between sections (default keys `space` and `^`).
 
 The specified line will also be treated as a **section header** and will remain fixed at the specified position until the next section appears at the specified position.
 
-The start of the section can be adjusted with `--section-start`(default key `ctrl+F3`, `alt+s`).
+The start of the section can be adjusted with `--section-start`(default key `Ctrl+F3`, `Alt+s`).
 
 ![section.png](docs/section.png)
 
@@ -532,7 +536,7 @@ you can move the diff for each file.
 The number of lines in section-header can be changed.
 You can specify the number of lines using the `--section-header-num` option or key input(default key `F7`).
 
-The specified section can be viewed in the section list in the [Sidebar](#sidebar)(default key `alt+u`).
+The specified section can be viewed in the section list in the [Sidebar](#sidebar)(default key `Alt+u`).
 
 ####  4.11.1. <a name='section-example'></a>section example
 
@@ -548,7 +552,7 @@ This is an example of using the `git` pager.
 
 ####  4.11.2. <a name='hide-other-sections'></a>hide other sections
 
-If you specify `--hide-other-section`(default key `alt+-`), only the current section is displayed.
+If you specify `--hide-other-section`(default key `Alt+-`), only the current section is displayed.
 
 ```console
 ov --section-delimiter "^#" --hide-other-section README.md
@@ -572,7 +576,7 @@ Related Styling: [Customizing the bottom status line](#customizing-the-bottom-st
 
 ###  4.13. <a name='follow-mode'></a>Follow mode
 
-`--follow`(`-f`)(default key `ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
+`--follow`(`-f`)(default key `Ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
 ```console
 ov --follow-mode /var/log/syslog
@@ -596,7 +600,7 @@ ov --follow-name /var/log/nginx/access.log
 
 ####  4.13.2. <a name='follow-all-mode'></a>Follow all mode
 
-`--follow-all`(`-A`)(default key `ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
+`--follow-all`(`-A`)(default key `Ctrl+a`) is the same as follow mode, it switches to the last updated file if there are multiple files.
 
 ```console
 ov --follow-all /var/log/nginx/access.log /var/log/nginx/error.log
@@ -685,10 +689,10 @@ Displayed when the following are enabled in the search input prompt:
 
 |         Function          | display | (Default)key |     command option     |    config file     |
 |---------------------------|---------|--------------|------------------------|--------------------|
-| Incremental search        | (I)     | alt+i        | --incremental          | Incsearch          |
-| Regular expression search | (R)     | alt+r        | --regexp-search        | RegexpSearch       |
-| Case-sensitive            | (Aa)    | alt+c        | -i, --case-sensitive   | CaseSensitive      |
-| Smart case-sensitive      | (S)     | alt+s        | --smart-case-sensitive | SmartCaseSensitive |
+| Incremental search        | (I)     | Alt+i        | --incremental          | Incsearch          |
+| Regular expression search | (R)     | Alt+r        | --regexp-search        | RegexpSearch       |
+| Case-sensitive            | (Aa)    | Alt+c        | -i, --case-sensitive   | CaseSensitive      |
+| Smart case-sensitive      | (S)     | Alt+s        | --smart-case-sensitive | SmartCaseSensitive |
 
 Specify true/false in config file.
 
@@ -814,7 +818,7 @@ ov --watch 1 /proc/meminfo
 ###  4.19. <a name='mouse-support'></a>Mouse support
 
 The `ov` makes the mouse support its control.
-This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `ctrl+alt+r`).
+This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `Ctrl+Alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
@@ -937,7 +941,7 @@ Style:
 ###  4.21. <a name='plain'></a>Plain
 
 Supports disable decoration ANSI escape sequences.
-The option is `--plain` (or `-p`) (default key `ctrl+e`).
+The option is `--plain` (or `-p`) (default key `Ctrl+e`).
 
 ###  4.22. <a name='converter'></a>Converter
 
@@ -990,7 +994,7 @@ ShrinkChar: '.'
 
 ####  4.23.2. <a name='right-align'></a>Right Align
 
-Columns displayed by alignment are left-justified. Columns can be right-aligned (default key alt+a).
+Columns displayed by alignment are left-justified. Columns can be right-aligned (default key Alt+a).
 
 ###  4.24. <a name='jump-target'></a>Jump target
 
@@ -1051,7 +1055,15 @@ Mode:
     ColumnRainbow: true
 ```
 
-####  4.25.1. <a name='list-view-modes'></a>List View Modes
+####  4.25.1. <a name='view-mode-sidebar'></a>View Mode Sidebar
+
+**Added in v0.52.0**
+
+When you press `p` to enter view mode selection, a sidebar automatically opens and displays the list of available view modes with their index numbers. You can select a mode either by name or by its number.
+
+![view mode sidebar](docs/sidebar2.png)
+
+####  4.25.2. <a name='list-view-modes'></a>List View Modes
 
 *Add in v0.40.0*
 
@@ -1091,7 +1103,7 @@ If you want to revert to the previous behavior (outputting the original text wit
 IsWriteOriginal: true
 ```
 
-You can change how much is written using `--exit-write-before` and `--exit-write-after`(default key `ctrl+q`).
+You can change how much is written using `--exit-write-before` and `--exit-write-after`(default key `Ctrl+q`).
 `--exit-write-before`
 
 `--exit-write-before` specifies the number of lines before the current position(top of screen).
@@ -1114,7 +1126,7 @@ QuitSmall: true
 
 ###  4.28. <a name='suspend'></a>Suspend
 
-You can suspend ov with `ctrl+z`(default key).
+You can suspend ov with `Ctrl+z`(default key).
 Normally, you can resume from suspend by typing `fg`.
 
 ```console
@@ -1133,7 +1145,7 @@ suspended ov (use 'exit' to resume)
 
 ###  4.29. <a name='edit'></a>Edit
 
-You can edit the currently displayed file with your preferred editor by pressing the default key `alt+v`.
+You can edit the currently displayed file with your preferred editor by pressing the default key `Alt+v`.
 
 If the file is not a regular file (for example, when viewing input from a pipe or standard input), a temporary file is created and passed to the editor for editing. This ensures that you can still edit the content even if the original input is not seekable.
 
@@ -1171,7 +1183,7 @@ overwrite? (O)overwrite, (A)append, (N)cancel
 
 ###  4.31. <a name='ruler'></a>Ruler
 
-The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `alt+shift+F9`)
+The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `Alt+Shift+F9`)
 
 * `--ruler` or `--ruler=1`: Displays a relative ruler that moves with horizontal scrolling.
 * `--ruler=2`: Displays an absolute ruler that does not move with horizontal scrolling.
@@ -1326,56 +1338,56 @@ It can also be changed after startup.
 |-------------------------------|----------------------------------------------------|
 | **General**                   |                                                    |
 | [Escape], [q]                 | * quit                                             |
-| [ctrl+c]                      | * cancel                                           |
+| [Ctrl+c]                      | * cancel                                           |
 | [Q]                           | * output screen and quit                           |
-| [ctrl+q]                      | * set output screen and quit                       |
-| [alt+shift+F8]                | * set output original screen and quit              |
-| [ctrl+z]                      | * suspend                                          |
-| [alt+v]                       | * edit current document                            |
-| [h], [ctrl+alt+c], [ctrl+f1]  | * display help screen                              |
-| [ctrl+f2], [ctrl+alt+e]       | * display log screen                               |
-| [ctrl+l]                      | * screen sync                                      |
-| [ctrl+f]                      | * follow mode toggle                               |
-| [ctrl+a]                      | * follow all mode toggle                           |
-| [ctrl+F8], [ctrl+alt+r]       | * enable/disable mouse                             |
+| [Ctrl+q]                      | * set output screen and quit                       |
+| [Alt+Shift+F8]                | * set output original screen and quit              |
+| [Ctrl+z]                      | * suspend                                          |
+| [Alt+v]                       | * edit current document                            |
+| [h], [Ctrl+Alt+c], [Ctrl+F1]  | * display help screen                              |
+| [Ctrl+F2], [Ctrl+Alt+e]       | * display log screen                               |
+| [Ctrl+l]                      | * screen sync                                      |
+| [Ctrl+f]                      | * follow mode toggle                               |
+| [Ctrl+a]                      | * follow all mode toggle                           |
+| [Ctrl+F8], [Ctrl+Alt+r]       | * enable/disable mouse                             |
 | [S]                           | * save buffer to file                              |
 | **Moving**                    |                                                    |
-| [Enter], [Down], [ctrl+n]     | * forward by one line                              |
-| [Up], [ctrl+p]                | * backward by one line                             |
+| [Enter], [Down], [Ctrl+n]     | * forward by one line                              |
+| [Up], [Ctrl+p]                | * backward by one line                             |
 | [Home]                        | * go to top of document                            |
 | [End]                         | * go to end of document                            |
-| [PageDown], [ctrl+v]          | * forward by page                                  |
-| [PageUp], [ctrl+b]            | * backward by page                                 |
-| [ctrl+d]                      | * forward a half page                              |
-| [ctrl+u]                      | * backward a half page                             |
-| [left]                        | * scroll left                                      |
-| [right]                       | * scroll right                                     |
-| [ctrl+left]                   | * scroll left half screen                          |
-| [ctrl+right]                  | * scroll right half screen                         |
-| [alt+left]                    | * scroll left specified width                      |
-| [alt+right]                   | * scroll right specified width                     |
-| [shift+Home]                  | * go to beginning of line                          |
-| [shift+End]                   | * go to end of line                                |
+| [PageDown], [Ctrl+v]          | * forward by page                                  |
+| [PageUp], [Ctrl+b]            | * backward by page                                 |
+| [Ctrl+d]                      | * forward a half page                              |
+| [Ctrl+u]                      | * backward a half page                             |
+| [Left]                        | * scroll left                                      |
+| [Right]                       | * scroll right                                     |
+| [Ctrl+Left]                   | * scroll left half screen                          |
+| [Ctrl+Right]                  | * scroll right half screen                         |
+| [Alt+Left]                    | * scroll left specified width                      |
+| [Alt+Right]                   | * scroll right specified width                     |
+| [Shift+Home]                  | * go to beginning of line                          |
+| [Shift+End]                   | * go to end of line                                |
 | [g]                           | * go to line(input number or `.n` or `n%` allowed) |
 | [,]                           | * go to mark number(input number allowed)          |
 | **Sidebar**                   |                                                    |
-| [alt+h]                       | * toggle help in sidebar                           |
-| [alt+m]                       | * toggle mark list in sidebar                      |
-| [alt+l]                       | * toggle document list in sidebar                  |
-| [alt+u]                       | * toggle section list in sidebar                   |
-| [shift+up]                    | * scroll up in sidebar                             |
-| [shift+down]                  | * scroll down in sidebar                           |
-| [shift+left]                  | * scroll left in sidebar                           |
-| [shift+right]                 | * scroll right in sidebar                          |
+| [Alt+h]                       | * toggle help in sidebar                           |
+| [Alt+m]                       | * toggle mark list in sidebar                      |
+| [Alt+l]                       | * toggle document list in sidebar                  |
+| [Alt+u]                       | * toggle section list in sidebar                   |
+| [Shift+Up]                    | * scroll up in sidebar                             |
+| [Shift+Down]                  | * scroll down in sidebar                           |
+| [Shift+Left]                  | * scroll left in sidebar                           |
+| [Shift+Right]                 | * scroll right in sidebar                          |
 | **Move document**             |                                                    |
 | []]                           | * next document                                    |
 | [[]                           | * previous document                                |
-| [ctrl+k]                      | * close current document                           |
+| [Ctrl+k]                      | * close current document                           |
 | [K]                           | * close all filtered documents                     |
 | **Mark position**             |                                                    |
 | [m]                           | * mark current position                            |
 | [M]                           | * remove mark current position                     |
-| [ctrl+delete]                 | * remove all mark                                  |
+| [Ctrl+Delete]                 | * remove all mark                                  |
 | [>]                           | * move to next marked position                     |
 | [<]                           | * move to previous marked position                 |
 | [*]                           | * mark by pattern mode                             |
@@ -1387,56 +1399,56 @@ It can also be changed after startup.
 | [&]                           | * filter search mode                               |
 | **Change display**            |                                                    |
 | [w], [W]                      | * wrap toggle (character based)                    |
-| [alt+w]                       | * word wrap toggle                                 |
+| [Alt+w]                       | * word wrap toggle                                 |
 | [c]                           | * column mode toggle                               |
-| [alt+o]                       | * column width toggle                              |
-| [ctrl+r]                      | * column rainbow toggle                            |
+| [Alt+o]                       | * column width toggle                              |
+| [Ctrl+r]                      | * column rainbow toggle                            |
 | [C]                           | * alternate rows of style toggle                   |
 | [G]                           | * line number toggle                               |
-| [ctrl+e]                      | * original decoration toggle(plain)                |
-| [alt+f]                       | * align columns                                    |
-| [alt+r]                       | * raw output                                       |
-| [alt+shift+F9]                | * ruler toggle                                     |
-| [ctrl+F10]                    | * status line toggle                               |
+| [Ctrl+e]                      | * original decoration toggle(plain)                |
+| [Alt+f]                       | * align columns                                    |
+| [Alt+r]                       | * raw output                                       |
+| [Alt+Shift+F9]                | * ruler toggle                                     |
+| [Ctrl+F10]                    | * status line toggle                               |
 | **Change Display with Input** |                                                    |
 | [p], [P]                      | * view mode selection                              |
 | [d]                           | * column delimiter string                          |
 | [H]                           | * number of header lines                           |
-| [ctrl+s]                      | * number of skip lines                             |
+| [Ctrl+s]                      | * number of skip lines                             |
 | [t]                           | * TAB width                                        |
 | [.]                           | * multi color highlight                            |
 | [j]                           | * jump target(`.n` or `n%` or `section` allowed)   |
-| [alt+t]                       | * convert type selection                           |
+| [Alt+t]                       | * convert type selection                           |
 | [y]                           | * number of vertical header                        |
 | [Y]                           | * number of header column                          |
 | **Column operation**          |                                                    |
 | [F]                           | * header column fixed toggle                       |
 | [s]                           | * shrink column toggle(align mode only)            |
-| [alt+a]                       | * right align column toggle(align mode only)       |
+| [Alt+a]                       | * right align column toggle(align mode only)       |
 | **Section operation**         |                                                    |
-| [alt+d]                       | * section delimiter regular expression             |
-| [ctrl+F3], [alt+s]            | * section start position                           |
-| [space]                       | * next section                                     |
+| [Alt+d]                       | * section delimiter regular expression             |
+| [Ctrl+F3], [Alt+s]            | * section start position                           |
+| [Space]                       | * next section                                     |
 | [^]                           | * previous section                                 |
 | [9]                           | * last section                                     |
 | [F2]                          | * follow section mode toggle                       |
 | [F7]                          | * number of section header lines                   |
-| [alt+-]                       | * hide "other" section toggle                      |
+| [Alt+-]                       | * hide "other" section toggle                      |
 | **Close and reload**          |                                                    |
-| [ctrl+F9], [ctrl+alt+s]       | * close file                                       |
-| [ctrl+alt+l], [F5]            | * reload file                                      |
-| [ctrl+alt+w], [F4]            | * watch mode                                       |
-| [ctrl+w]                      | * set watch interval                               |
+| [Ctrl+F9], [Ctrl+Alt+s]       | * close file                                       |
+| [Ctrl+Alt+l], [F5]            | * reload file                                      |
+| [Ctrl+Alt+w], [F4]            | * watch mode                                       |
+| [Ctrl+w]                      | * set watch interval                               |
 | **Key binding when typing**   |                                                    |
-| [alt+c]                       | * case-sensitive toggle                            |
-| [alt+s]                       | * smart case-sensitive toggle                      |
-| [alt+r]                       | * regular expression search toggle                 |
-| [alt+i]                       | * incremental search toggle                        |
+| [Alt+c]                       | * case-sensitive toggle                            |
+| [Alt+s]                       | * smart case-sensitive toggle                      |
+| [Alt+r]                       | * regular expression search toggle                 |
+| [Alt+i]                       | * incremental search toggle                        |
 | [!]                           | * non-match toggle                                 |
 | [Up]                          | * previous candidate                               |
 | [Down]                        | * next candidate                                   |
-| [ctrl+c]                      | * copy to clipboard                                |
-| [ctrl+v]                      | * paste from clipboard                             |
+| [Ctrl+c]                      | * copy to clipboard                                |
+| [Ctrl+v]                      | * paste from clipboard                             |
 
 ###  7.1. <a name='ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)'></a>Ctrl key and corresponding key pairs (commonly treated as the same in terminals)
 
@@ -1607,7 +1619,7 @@ You can customize the bottom status line.
 The status line is displayed at the bottom of the screen and shows information such as the current file name, cursor position, and other details.
 You can enable or disable the status line with the `StatusLine` option in the configuration file.
 
-**You can also toggle the status line using the command-line option `--status-line=false` or by pressing the shortcut key (default `ctrl+F10`) during runtime.**
+**You can also toggle the status line using the command-line option `--status-line=false` or by pressing the shortcut key (default `Ctrl+F10`) during runtime.**
 
 ```yaml
 General:
@@ -1750,10 +1762,10 @@ You can customize key bindings.
     down:
         - "Enter"
         - "Down"
-        - "ctrl+n"
+        - "Ctrl+n"
     up:
         - "Up"
-        - "ctrl+p"
+        - "Ctrl+p"
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
