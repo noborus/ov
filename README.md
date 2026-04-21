@@ -1183,7 +1183,7 @@ overwrite? (O)overwrite, (A)append, (N)cancel
 
 ###  4.31. <a name='ruler'></a>Ruler
 
-The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `Alt+shift+F9`)
+The `--ruler` option displays a ruler at the top of the screen to help you see the column positions. (default key `Alt+Shift+F9`)
 
 * `--ruler` or `--ruler=1`: Displays a relative ruler that moves with horizontal scrolling.
 * `--ruler=2`: Displays an absolute ruler that does not move with horizontal scrolling.
