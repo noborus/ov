@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -174,7 +175,11 @@ func TestRoot_saveTempFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Stat() error = %v", err)
 	}
-	if info.Mode().Perm() != 0o400 {
-		t.Errorf("saveTempFile() mode = %#o, want %#o", info.Mode().Perm(), os.FileMode(0o400))
+	wantMode := os.FileMode(0o400)
+	if runtime.GOOS == "windows" {
+		wantMode = 0o444
+	}
+	if info.Mode().Perm() != wantMode {
+		t.Errorf("saveTempFile() mode = %#o, want %#o", info.Mode().Perm(), wantMode)
 	}
 }
