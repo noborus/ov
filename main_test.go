@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/noborus/ov/oviewer"
+	"golang.org/x/term"
 )
 
 func Test_initConfig(t *testing.T) {
@@ -80,6 +81,10 @@ func Test_initConfig(t *testing.T) {
 }
 
 func TestRunOviewer_QuitIfOneScreenWithFilter(t *testing.T) {
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		t.Skip("requires TTY")
+	}
+
 	tmp, err := os.CreateTemp(t.TempDir(), "ov-filter-*.txt")
 	if err != nil {
 		t.Fatalf("CreateTemp() error = %v", err)
