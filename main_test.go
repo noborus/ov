@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/noborus/ov/oviewer"
+	"golang.org/x/term"
 )
 
 func Test_initConfig(t *testing.T) {
@@ -73,5 +77,96 @@ func Test_initConfig(t *testing.T) {
 				t.Errorf("initConfig() error = %v, wantErr %v", capturedStderr, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestRunOviewer_QuitIfOneScreenWithFilter(t *testing.T) {
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		t.Skip("requires TTY")
+	}
+
+	tmp, err := os.CreateTemp(t.TempDir(), "ov-filter-*.txt")
+	if err != nil {
+		t.Fatalf("CreateTemp() error = %v", err)
+	}
+	defer tmp.Close()
+
+	if _, err := tmp.WriteString("ok\nng\n"); err != nil {
+		t.Fatalf("WriteString() error = %v", err)
+	}
+
+	origConfig := config
+	origFilter := filter
+	origNonMatchFilter := nonMatchFilter
+	origPattern := pattern
+	t.Cleanup(func() {
+		config = origConfig
+		filter = origFilter
+		nonMatchFilter = origNonMatchFilter
+		pattern = origPattern
+	})
+
+	config = oviewer.NewConfig()
+	config.QuitSmall = true
+	filter = "ok"
+	nonMatchFilter = ""
+	pattern = ""
+
+	origStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Pipe() error = %v", err)
+	}
+	os.Stdout = w
+	t.Cleanup(func() {
+		os.Stdout = origStdout
+	})
+
+	runErr := RunOviewer([]string{tmp.Name()})
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	if runErr != nil {
+		t.Fatalf("RunOviewer() error = %v", runErr)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		t.Fatalf("Copy() error = %v", err)
+	}
+
+	got := buf.String()
+	if !strings.Contains(got, "ok") {
+		t.Errorf("output = %q, want to contain %q", got, "ok")
+	}
+	if strings.Contains(got, "ng") {
+		t.Errorf("output = %q, want not to contain %q", got, "ng")
+	}
+}
+
+func TestRootCmd_FlagFAndFilter(t *testing.T) {
+	origConfig := config
+	origFilter := filter
+	origCfgFile := cfgFile
+	t.Cleanup(func() {
+		config = origConfig
+		filter = origFilter
+		cfgFile = origCfgFile
+	})
+
+	config = oviewer.NewConfig()
+	filter = ""
+	cfgFile = ""
+
+	rootCmd.SetArgs([]string{"-F", "--filter", "ok", "--version"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("rootCmd.Execute() error = %v", err)
+	}
+
+	if !config.QuitSmall {
+		t.Errorf("config.QuitSmall = %v, want true", config.QuitSmall)
+	}
+	if filter != "ok" {
+		t.Errorf("filter = %q, want %q", filter, "ok")
 	}
 }

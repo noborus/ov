@@ -1,7 +1,10 @@
 package oviewer
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -106,5 +109,77 @@ func TestReplaceEditorArgs(t *testing.T) {
 				t.Errorf("replaceEditorArgs() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
 			}
 		})
+	}
+}
+
+func TestRoot_identifyEditor(t *testing.T) {
+	tests := []struct {
+		name         string
+		ovedit       string
+		configEditor string
+		editor       string
+		want         string
+	}{
+		{
+			name:         "OVEDIT takes precedence",
+			ovedit:       "ovedit --wait",
+			configEditor: "config-editor",
+			editor:       "env-editor",
+			want:         "ovedit --wait",
+		},
+		{
+			name:         "config editor overrides EDITOR",
+			configEditor: "config-editor",
+			editor:       "env-editor",
+			want:         "config-editor",
+		},
+		{
+			name:   "EDITOR fallback",
+			editor: "env-editor",
+			want:   "env-editor",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("OVEDIT", tt.ovedit)
+			t.Setenv("EDITOR", tt.editor)
+			root := rootHelper(t)
+			root.Config.Editor = tt.configEditor
+
+			if got := root.identifyEditor(); got != tt.want {
+				t.Errorf("identifyEditor() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_saveTempFile(t *testing.T) {
+	root := rootFileReadHelper(t, filepath.Join(testdata, "test.txt"))
+
+	fileName, err := root.saveTempFile()
+	if err != nil {
+		t.Fatalf("saveTempFile() error = %v", err)
+	}
+	defer os.Remove(fileName)
+
+	got, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if string(got) != "test\n" {
+		t.Errorf("saveTempFile() content = %q, want %q", string(got), "test\n")
+	}
+
+	info, err := os.Stat(fileName)
+	if err != nil {
+		t.Fatalf("Stat() error = %v", err)
+	}
+	wantMode := os.FileMode(0o400)
+	if runtime.GOOS == "windows" {
+		wantMode = 0o444
+	}
+	if info.Mode().Perm() != wantMode {
+		t.Errorf("saveTempFile() mode = %#o, want %#o", info.Mode().Perm(), wantMode)
 	}
 }
