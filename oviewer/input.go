@@ -206,6 +206,10 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 		if newCursor != input.cursorX {
 			input.cursorX = newCursor
 		}
+	case "ctrl+a":
+		input.cursorX = 0
+	case "ctrl+e":
+		input.cursorX = stringWidth(input.value)
 	case "tab":
 		left, right := splitAtWidth(input.value, input.cursorX)
 		input.value = left + "\t" + right
