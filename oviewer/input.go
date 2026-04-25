@@ -215,7 +215,7 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 }
 
 // stringWidth returns the number of widths of the input.
-// Tab is 2 characters.
+// Tabs add 2 extra width units beyond the width.
 func stringWidth(str string) int {
 	tabCount := strings.Count(str, "\t")
 	return uniseg.StringWidth(str) + (tabCount * 2)
@@ -328,11 +328,13 @@ func (input *Input) reset() {
 	input.cursorX = 0
 }
 
+// previous updates the input value to the previous candidate and moves the cursor to the end of the new value.
 func (input *Input) previous() {
 	input.value = input.Event.Up(input.value)
 	input.cursorX = stringWidth(input.value)
 }
 
+// next updates the input value to the next candidate and moves the cursor to the end of the new value.
 func (input *Input) next() {
 	input.value = input.Event.Down(input.value)
 	input.cursorX = stringWidth(input.value)
@@ -397,7 +399,7 @@ type Eventer interface {
 	Down(i string) string
 }
 
-// candidate represents a input candidate list.
+// candidate represents an input candidate list.
 type candidate struct {
 	mux  sync.Mutex
 	list []string
