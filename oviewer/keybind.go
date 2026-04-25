@@ -558,6 +558,7 @@ func (k KeyBind) String() string {
 	return b.String()
 }
 
+// normalizeKeysForDisplay normalizes a slice of key strings for display purposes.
 func normalizeKeysForDisplay(keys []string) []string {
 	normalized := make([]string, 0, len(keys))
 	for _, key := range keys {
@@ -571,6 +572,7 @@ func normalizeKeysForDisplay(keys []string) []string {
 	return normalized
 }
 
+// GetKeyBindDescriptions returns a slice of key binding descriptions for the specified group.
 func (k KeyBind) GetKeyBindDescriptions(group Group) [][]string {
 	var descriptions [][]string
 
@@ -590,10 +592,12 @@ func (k KeyBind) GetKeyBindDescriptions(group Group) [][]string {
 	return descriptions
 }
 
+// writeHeaderTh writes the header for the key binding display to the provided writer.
 func writeHeaderTh(w io.Writer) {
 	fmt.Fprintf(w, " %-30s %s\n", "Key", "Action")
 }
 
+// writeHeader writes a section header for the key binding display to the provided writer.
 func writeHeader(w io.Writer, header string) {
 	fmt.Fprintf(w, "\n\t%s\n", header)
 }
