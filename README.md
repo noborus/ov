@@ -1082,8 +1082,6 @@ When you press `p` to enter view mode selection, a sidebar automatically opens a
 
 ####  4.25.2. <a name='list-view-modes'></a>List View Modes
 
-*Add in v0.40.0*
-
 The `--list-view-modes` option outputs a list of available view modes defined in the configuration file.
 
 ```sh
@@ -1105,8 +1103,6 @@ This is useful for checking predefined view modes and their configurations.
 
 `--exit-write`, `-X`(default key `Q`) option prints the current screen on exit.
 This looks like the display remains on the console after the ov is over.
-
-*Change in v0.40.0*
 
 By default, it outputs the amount of the displayed screen **with all decorations**, such as search highlights, as it appears on the screen.
 
@@ -1156,9 +1152,6 @@ The process actually starts a subshell without suspending.
 ```console
 suspended ov (use 'exit' to resume)
 ```
-
-> [!NOTE]
-> Until v0.36.0, it was a Subshell method.
 
 ###  4.29. <a name='edit'></a>Edit
 
@@ -1544,7 +1537,7 @@ Mode:
 * SelectCopied
 * PauseLine
 
-From `v0.40.0`, it is recommended to use the `Style:` format for configuration. For example:
+It is recommended to use the `Style:` format for configuration. For example:
 
 ```yaml
 General:
