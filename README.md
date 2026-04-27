@@ -275,7 +275,7 @@ ov --completion fish > ~/.config/fish/completions/ov.fish
 ####  2.12.4. <a name='powershell'></a>powershell
 
 ```console
-ov --completion powershell completion powershell | Out-String | Invoke-Expression
+ov --completion powershell | Out-String | Invoke-Expression
 ```
 
 ##  3. <a name='basic-usage'></a>Basic usage
@@ -288,6 +288,12 @@ ov filename
 
 ```console
 cat filename|ov
+```
+
+You can also explicitly specify standard input as `-`.
+
+```console
+cat filename | ov -
 ```
 
 Used by other commands by setting the environment variable **PAGER**.
@@ -568,6 +574,12 @@ This is just hidden, so it will be displayed when you move to the next section.
 ov file1 file2
 ```
 
+You can include standard input in the file list by specifying `-`.
+
+```console
+command | ov - file1 file2
+```
+
 Multiple files are each opened as a document and can be navigated using the Next Document `]` key (default), Previous Document `[` key (default).
 
 Specified multiple files can also be displayed in the document list in the [Sidebar](#sidebar)(default key `alt + l`).
@@ -822,13 +834,8 @@ This can be disabled with the option `--disable-mouse` (default keys for togglin
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
 
-Copying to the clipboard uses [atotto/clipboard](https://github.com/atotto/clipboard).
-For this reason, the 'xclip' or 'xsel' command is required in Linux/Unix environments.
-
-*Add in v0.40.0*
-
-Alternatively, you can use the `OSC52` escape sequence for clipboard operations by setting
-`ClipboardMethod` to `OSC52` in the configuration file (`config.yaml`):
+If your terminal supports `OSC52`, it is recommended to use `OSC52` for clipboard operations(default).
+Set `ClipboardMethod` to `OSC52` in the configuration file (`config.yaml`):
 
 > [!TIP]
 > Use `OSC52` method if you're working over SSH or in terminal multiplexers like tmux/screen where traditional clipboard tools might not work.
@@ -838,6 +845,16 @@ ClipboardMethod: "OSC52"
 ```
 
 This method is useful in environments where `OSC52` is supported by the terminal.
+
+If your terminal does not support `OSC52`, or if you do not want to use `OSC52`,
+set `ClipboardMethod` to `system` to use [atotto/clipboard](https://github.com/atotto/clipboard)
+for clipboard operations.
+
+In Linux/Unix environments, this requires the `xclip` or `xsel` command.
+
+```yaml
+ClipboardMethod: "system"
+```
 
 Selecting the range with the mouse and then left-clicking will copy it to the clipboard.
 
