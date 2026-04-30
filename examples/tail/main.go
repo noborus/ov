@@ -1,18 +1,24 @@
+//go:build !windows && !plan9
+
 package main
 
 import (
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/noborus/ov/oviewer"
 )
 
 func main() {
+	fileName := "/var/log/syslog"
+	if runtime.GOOS == "darwin" {
+		fileName = "/var/log/system.log"
+	}
 	doc, err := oviewer.NewDocument()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fileName := "/var/log/syslog"
 	f, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
