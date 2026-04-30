@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ov — Feature-Rich Terminal Pager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #21262d;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #58a6ff;
+      --accent2:   #3fb950;
+      --accent3:   #ff7b72;
+      --accent4:   #d2a8ff;
+      --accent5:   #ffa657;
+      --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --radius:    8px;
+      --radius-lg: 12px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre { font-family: var(--font-mono); }
+
+    /* ─── Utility ──────────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 80px 0; }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .section-subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 48px;
+      font-size: 1.05rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      color: var(--accent2);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── Navigation ───────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-cta {
+      background: var(--accent);
+      color: #0d1117 !important;
+      padding: 6px 16px;
+      border-radius: var(--radius);
+      font-weight: 600 !important;
+      transition: opacity 0.15s !important;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ─── Hero ──────────────────────────────────────────────────── */
+    #hero {
+      padding: 100px 0 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(88,166,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge { margin-bottom: 20px; }
+    .hero-title {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero-title .ov { color: var(--accent); font-family: var(--font-mono); }
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .install-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--accent2);
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .install-cmd .prompt { color: var(--muted); }
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      padding: 3px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+    .install-options { font-size: 0.85rem; color: var(--muted); }
+    .install-options a { color: var(--accent); }
+    .hero-screenshot {
+      margin-top: 56px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      overflow: hidden;
+      max-width: 880px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-screenshot img {
+      width: 100%;
+      display: block;
+    }
+    .window-bar {
+      background: var(--surface2);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    /* ─── Features ──────────────────────────────────────────────── */
+    #features { background: var(--surface); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .feature-icon { font-size: 2rem; margin-bottom: 12px; }
+    .feature-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+
+    /* ─── Demo ───────────────────────────────────────────────────── */
+    #demo { background: var(--bg); }
+    .demo-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--text); border-color: var(--muted); }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d1117;
+      font-weight: 600;
+    }
+    .demo-panel { display: none; }
+    .demo-panel.active { display: block; }
+    .demo-frame {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.5);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .demo-frame img {
+      width: 100%;
+      display: block;
+    }
+    .demo-caption {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 16px;
+    }
+
+    /* ─── Install ────────────────────────────────────────────────── */
+    #install { background: var(--surface); }
+    .install-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .install-panel { display: none; }
+    .install-panel.active { display: block; }
+    .install-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      max-width: 720px;
+      margin: 0 auto 20px;
+    }
+    .install-block-header {
+      background: var(--surface2);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+    }
+    .install-block pre {
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--accent2);
+    }
+    .install-block pre .comment { color: var(--muted); }
+    .install-block pre .cmd    { color: var(--accent2); }
+
+    /* ─── Quick Start ─────────────────────────────────────────────── */
+    #quickstart { background: var(--bg); }
+    .qs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 700px) { .qs-grid { grid-template-columns: 1fr; } }
+    .qs-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .qs-block-title {
+      background: var(--surface2);
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+    .qs-block pre {
+      padding: 18px 20px;
+      font-size: 0.88rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    .qs-block pre .prompt { color: var(--muted); user-select: none; }
+    .qs-block pre .cmd    { color: var(--accent2); }
+    .qs-block pre .flag   { color: var(--accent5); }
+    .qs-block pre .comment{ color: var(--muted); }
+    details.config-details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-top: 24px;
+      overflow: hidden;
+    }
+    details.config-details summary {
+      padding: 16px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      list-style: none;
+    }
+    details.config-details summary::-webkit-details-marker { display: none; }
+    details.config-details summary::before {
+      content: '▶';
+      font-size: 0.7em;
+      transition: transform 0.2s;
+      color: var(--muted);
+    }
+    details.config-details[open] summary::before { transform: rotate(90deg); }
+    details.config-details pre {
+      padding: 0 20px 20px;
+      font-size: 0.83rem;
+      line-height: 1.7;
+      color: var(--muted);
+      overflow-x: auto;
+      border-top: 1px solid var(--border);
+      margin-top: 0;
+      padding-top: 16px;
+    }
+    details.config-details pre .key   { color: var(--accent4); }
+    details.config-details pre .val   { color: var(--accent2); }
+    details.config-details pre .str   { color: var(--accent5); }
+
+    /* ─── Comparison ──────────────────────────────────────────────── */
+    #comparison { background: var(--surface); }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead tr {
+      background: var(--surface2);
+      border-bottom: 2px solid var(--border);
+    }
+    th {
+      padding: 14px 18px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    th:first-child { color: var(--muted); font-weight: 400; }
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.025); }
+    .col-ov { color: var(--text) !important; font-weight: 500; }
+    .check { color: var(--accent2); font-size: 1.1em; }
+    .cross { color: var(--border); }
+    .partial { color: var(--accent5); }
+
+    /* ─── Footer ──────────────────────────────────────────────────── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: space-between;
+    }
+    .footer-brand .brand-name {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .footer-brand .brand-name span { color: var(--accent); }
+    .footer-brand p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 8px;
+      max-width: 260px;
+    }
+    .footer-col h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 8px; }
+    .footer-col ul li a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+    .footer-col ul li a:hover { color: var(--text); text-decoration: none; }
+    .footer-bottom {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      padding: 20px 24px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-bottom p { color: var(--muted); font-size: 0.85rem; }
+    .gh-icon { vertical-align: -3px; }
+
+    /* ─── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero-title { font-size: 2rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; gap: 28px; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     Navigation
+══════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo"><span>ov</span></div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#quickstart">Quick Start</a></li>
+      <li><a href="#comparison">VS</a></li>
+      <li><a href="https://github.com/noborus/ov" class="nav-cta">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     Hero
+══════════════════════════════════════ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="badge">terminal pager</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="ov">ov</span> — A Feature-Rich<br>Terminal Pager
+    </h1>
+    <p class="hero-subtitle">
+      The modern replacement for <code>less</code> and <code>more</code>.
+      Handles large files instantly, columns, colors, search, and more — all fully customizable.
+    </p>
+    <div class="hero-ctas">
+      <a href="#install" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        Install
+      </a>
+      <a href="https://github.com/noborus/ov" class="btn btn-secondary">
+        <svg class="gh-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <span id="hero-cmd">brew install ov</span>
+        <button class="copy-btn" onclick="copyCmd('hero-cmd', this)">copy</button>
+      </div>
+      <div class="install-options">
+        More options:
+        <a href="#install">Linux</a> ·
+        <a href="#install">Windows</a> ·
+        <a href="#install">FreeBSD</a> ·
+        <a href="#install">go install</a>
+      </div>
+    </div>
+
+    <div class="hero-screenshot">
+      <div class="window-bar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <img src="ov-image.png" alt="ov terminal pager screenshot" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Features
+══════════════════════════════════════ -->
+<section id="features" class="section">
+  <div class="container">
+    <h2 class="section-title">Everything you need from a pager</h2>
+    <p class="section-subtitle">Powerful features that go far beyond <code>less</code> and <code>more</code>.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <div class="feature-title">Large File Support</div>
+        <div class="feature-desc">Opens files larger than available memory instantly. Memory usage stays bounded no matter the file size.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📌</div>
+        <div class="feature-title">Fixed Headers &amp; Columns</div>
+        <div class="feature-desc">Pin header rows and columns in place so they stay visible while you scroll through tabular data.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌈</div>
+        <div class="feature-title">Column Rainbow Mode</div>
+        <div class="feature-desc">Color each column individually for CSV, TSV, psql, mysql, and any delimiter-separated output.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">Advanced Search</div>
+        <div class="feature-desc">Incremental, case-sensitive, smart-case, regex search, and a filter mode to show only matching lines.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <div class="feature-title">Follow Mode</div>
+        <div class="feature-desc">Real-time file monitoring — like <code>tail&nbsp;-f</code> and <code>tail&nbsp;-F</code> — with sticky follow and per-section follow.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Multi-Color Highlight</div>
+        <div class="feature-desc">Highlight multiple words simultaneously, each in a distinct color, for effortless log analysis.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <div class="feature-title">Compressed File Support</div>
+        <div class="feature-desc">View gzip, bzip2, zstd, lz4, and xz files directly — no manual decompression needed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⌨️</div>
+        <div class="feature-title">Fully Customizable</div>
+        <div class="feature-desc">Every key binding, color, and style is configurable via a YAML file. View modes let you save presets.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Demo
+══════════════════════════════════════ -->
+<section id="demo" class="section">
+  <div class="container">
+    <h2 class="section-title">See it in action</h2>
+    <p class="section-subtitle">Click a tab to explore different display modes.</p>
+
+    <div class="demo-tabs" role="tablist">
+      <button class="tab-btn active" onclick="switchDemo(this, 'demo-default')" role="tab" aria-selected="true">Default view</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-column')" role="tab">Column mode</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-align')" role="tab">Align</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-psql')" role="tab">psql</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-sidebar1')" role="tab">Sidebar</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-section')" role="tab">Section</button>
+      <button class="tab-btn" onclick="switchDemo(this, 'demo-color')" role="tab">Multi-color</button>
+    </div>
+
+    <div id="demo-default" class="demo-panel active">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="ov-image.png" alt="ov default view" loading="lazy" />
+      </div>
+      <p class="demo-caption">Default view — open any file or pipe output from stdin.</p>
+    </div>
+
+    <div id="demo-column" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="ovcolumn.gif" alt="ov column rainbow mode" loading="lazy" />
+      </div>
+      <p class="demo-caption">Column rainbow mode — color-code columns in CSV/TSV and command output.</p>
+    </div>
+
+    <div id="demo-align" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="ov-align.png" alt="ov align mode" loading="lazy" />
+      </div>
+      <p class="demo-caption">Align mode — automatically align columns for clean tabular output.</p>
+    </div>
+
+    <div id="demo-psql" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="ov-psql.png" alt="ov with psql" loading="lazy" />
+      </div>
+      <p class="demo-caption">psql mode — built-in preset for PostgreSQL query output with fixed headers and column highlighting.</p>
+    </div>
+
+    <div id="demo-sidebar1" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="sidebar1.png" alt="ov sidebar" loading="lazy" />
+      </div>
+      <p class="demo-caption">Sidebar — show help, marks, sections, or the document list alongside the main content.</p>
+    </div>
+
+    <div id="demo-section" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="section.png" alt="ov section mode" loading="lazy" />
+      </div>
+      <p class="demo-caption">Section mode — split content into navigable sections using a delimiter pattern.</p>
+    </div>
+
+    <div id="demo-color" class="demo-panel">
+      <div class="demo-frame">
+        <div class="window-bar">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <img src="multi-color.png" alt="ov multi-color highlight" loading="lazy" />
+      </div>
+      <p class="demo-caption">Multi-color highlight — assign a unique color to each search term simultaneously.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Install
+══════════════════════════════════════ -->
+<section id="install" class="section">
+  <div class="container">
+    <h2 class="section-title">Install</h2>
+    <p class="section-subtitle">Available on every major platform.</p>
+
+    <div class="install-tabs demo-tabs" role="tablist">
+      <button class="tab-btn active" onclick="switchInstall(this, 'inst-mac')"  role="tab">macOS</button>
+      <button class="tab-btn" onclick="switchInstall(this, 'inst-linux')" role="tab">Linux</button>
+      <button class="tab-btn" onclick="switchInstall(this, 'inst-win')"   role="tab">Windows</button>
+      <button class="tab-btn" onclick="switchInstall(this, 'inst-bsd')"   role="tab">FreeBSD</button>
+      <button class="tab-btn" onclick="switchInstall(this, 'inst-go')"    role="tab">Go</button>
+    </div>
+
+    <div id="inst-mac" class="install-panel active">
+      <div class="install-block">
+        <div class="install-block-header"><span>Homebrew</span><span>macOS / Linux</span></div>
+        <pre><span class="cmd">brew install ov</span></pre>
+      </div>
+      <div class="install-block">
+        <div class="install-block-header"><span>MacPorts</span><span>macOS</span></div>
+        <pre><span class="cmd">sudo port install ov</span></pre>
+      </div>
+    </div>
+
+    <div id="inst-linux" class="install-panel">
+      <div class="install-block">
+        <div class="install-block-header"><span>Debian / Ubuntu (.deb)</span></div>
+        <pre><span class="comment"># Download from https://github.com/noborus/ov/releases</span>
+<span class="cmd">curl -L -O https://github.com/noborus/ov/releases/latest/download/ov_linux_amd64.deb
+sudo dpkg -i ov_linux_amd64.deb</span></pre>
+      </div>
+      <div class="install-block">
+        <div class="install-block-header"><span>RPM (Fedora / RHEL / openSUSE)</span></div>
+        <pre><span class="cmd">sudo rpm -ivh https://github.com/noborus/ov/releases/latest/download/ov_linux_amd64.rpm</span></pre>
+      </div>
+      <div class="install-block">
+        <div class="install-block-header"><span>Arch Linux (AUR)</span></div>
+        <pre><span class="comment"># Using yay or another AUR helper</span>
+<span class="cmd">yay -S ov        </span><span class="comment"># build from source</span>
+<span class="cmd">yay -S ov-bin    </span><span class="comment"># pre-built binary</span></pre>
+      </div>
+      <div class="install-block">
+        <div class="install-block-header"><span>Nix / NixOS</span></div>
+        <pre><span class="cmd">nix profile install nixpkgs#ov</span></pre>
+      </div>
+      <div class="install-block">
+        <div class="install-block-header"><span>Homebrew on Linux</span></div>
+        <pre><span class="cmd">brew install ov</span></pre>
+      </div>
+    </div>
+
+    <div id="inst-win" class="install-panel">
+      <div class="install-block">
+        <div class="install-block-header"><span>winget</span><span>Windows</span></div>
+        <pre><span class="cmd">winget install -e --id noborus.ov</span></pre>
+      </div>
+    </div>
+
+    <div id="inst-bsd" class="install-panel">
+      <div class="install-block">
+        <div class="install-block-header"><span>pkg</span><span>FreeBSD</span></div>
+        <pre><span class="cmd">pkg install ov</span></pre>
+      </div>
+    </div>
+
+    <div id="inst-go" class="install-panel">
+      <div class="install-block">
+        <div class="install-block-header"><span>go install</span><span>requires Go 1.21+</span></div>
+        <pre><span class="comment"># Latest release</span>
+<span class="cmd">go install github.com/noborus/ov@latest</span>
+
+<span class="comment"># Latest commit from master</span>
+<span class="cmd">go install github.com/noborus/ov@master</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Quick Start
+══════════════════════════════════════ -->
+<section id="quickstart" class="section">
+  <div class="container">
+    <h2 class="section-title">Quick Start</h2>
+    <p class="section-subtitle">Up and running in seconds.</p>
+
+    <div class="qs-grid">
+      <div class="qs-block">
+        <div class="qs-block-title"><span>Basic usage</span></div>
+        <pre><span class="prompt">$ </span><span class="cmd">ov</span> filename
+
+<span class="comment"># pipe from stdin</span>
+<span class="prompt">$ </span>cat filename <span class="cmd">| ov</span>
+
+<span class="comment"># use as default PAGER</span>
+<span class="prompt">$ </span><span class="flag">export</span> PAGER=ov</pre>
+      </div>
+
+      <div class="qs-block">
+        <div class="qs-block-title"><span>Header &amp; column mode</span></div>
+        <pre><span class="comment"># Fix 1 header row</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--header 1</span> data.csv
+
+<span class="comment"># Column rainbow for CSV</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--column-mode --column-delimiter "," --column-rainbow</span> data.csv
+
+<span class="comment"># Auto-detect columns (ps, df, etc.)</span>
+<span class="prompt">$ </span>ps aux <span class="cmd">| ov</span> <span class="flag">-H1 --column-width --column-rainbow</span></pre>
+      </div>
+
+      <div class="qs-block">
+        <div class="qs-block-title"><span>Follow &amp; watch</span></div>
+        <pre><span class="comment"># Follow mode (like tail -f)</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--follow-mode</span> app.log
+
+<span class="comment"># Watch a file for changes</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--watch 1</span> /proc/meminfo
+
+<span class="comment"># Execute a command and follow output</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--exec -- journalctl -f</span></pre>
+      </div>
+
+      <div class="qs-block">
+        <div class="qs-block-title"><span>Search &amp; filter</span></div>
+        <pre><span class="comment"># Start with regex search</span>
+<span class="prompt">$ </span><span class="cmd">ov</span> <span class="flag">--regexp-search</span> app.log
+
+<span class="comment"># Filter: show only matching lines</span>
+<span class="comment"># Press &amp; then type a pattern</span>
+
+<span class="comment"># Multi-color highlight</span>
+<span class="comment"># Press . then type words</span></pre>
+      </div>
+    </div>
+
+    <details class="config-details">
+      <summary>Sample configuration file (ov.yaml)</summary>
+      <pre><span class="key">General</span>:
+  <span class="key">TabWidth</span>: <span class="val">8</span>
+  <span class="key">Header</span>: <span class="val">0</span>
+  <span class="key">AlternateRows</span>: <span class="val">false</span>
+  <span class="key">ColumnMode</span>: <span class="val">false</span>
+  <span class="key">Wrap</span>: <span class="str">"character"</span>   <span class="comment"># "character" | "word" | "none"</span>
+  <span class="key">Style</span>:
+    <span class="key">Alternate</span>:
+      <span class="key">Background</span>: <span class="str">"gray"</span>
+    <span class="key">Header</span>:
+      <span class="key">Bold</span>: <span class="val">true</span>
+    <span class="key">SearchHighlight</span>:
+      <span class="key">Reverse</span>: <span class="val">true</span>
+    <span class="key">ColumnRainbow</span>:
+      - <span class="key">Foreground</span>: <span class="str">"white"</span>
+      - <span class="key">Foreground</span>: <span class="str">"crimson"</span>
+      - <span class="key">Foreground</span>: <span class="str">"aqua"</span>
+      - <span class="key">Foreground</span>: <span class="str">"lime"</span>
+      - <span class="key">Foreground</span>: <span class="str">"blue"</span>
+      - <span class="key">Foreground</span>: <span class="str">"yellowgreen"</span>
+
+<span class="key">Mode</span>:
+  <span class="key">psql</span>:
+    <span class="key">Header</span>: <span class="val">2</span>
+    <span class="key">AlternateRows</span>: <span class="val">true</span>
+    <span class="key">ColumnMode</span>: <span class="val">true</span>
+    <span class="key">ColumnDelimiter</span>: <span class="str">"|"</span>
+  <span class="key">mysql</span>:
+    <span class="key">Header</span>: <span class="val">3</span>
+    <span class="key">AlternateRows</span>: <span class="val">true</span>
+    <span class="key">ColumnMode</span>: <span class="val">true</span>
+    <span class="key">ColumnDelimiter</span>: <span class="str">"|"</span></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Comparison
+══════════════════════════════════════ -->
+<section id="comparison" class="section">
+  <div class="container">
+    <h2 class="section-title">ov vs other pagers</h2>
+    <p class="section-subtitle">How does <code>ov</code> compare to commonly used pagers?</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="col-ov">ov</th>
+            <th>less</th>
+            <th>more</th>
+            <th>bat</th>
+            <th>pspg</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Large file (low memory)</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="partial">△</span></td>
+            <td><span class="check">✔</span></td>
+          </tr>
+          <tr>
+            <td>Fixed header rows</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="check">✔</span></td>
+          </tr>
+          <tr>
+            <td>Fixed header columns</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="check">✔</span></td>
+          </tr>
+          <tr>
+            <td>Column rainbow colors</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="check">✔</span></td>
+          </tr>
+          <tr>
+            <td>Incremental / regex search</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="check">✔</span></td>
+            <td><span class="partial">△</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="check">✔</span></td>
+          </tr>
+          <tr>
+            <td>Multi-word highlight</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+          <tr>
+            <td>Follow mode (tail -f)</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+          <tr>
+            <td>Watch mode (periodic refresh)</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+          <tr>
+            <td>Compressed file support</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="partial">△</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+          <tr>
+            <td>Syntax highlighting</td>
+            <td class="col-ov"><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+          <tr>
+            <td>Customizable key bindings</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="partial">△</span></td>
+          </tr>
+          <tr>
+            <td>Sidebar</td>
+            <td class="col-ov"><span class="check">✔</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+            <td><span class="cross">✘</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center; color:var(--muted); font-size:0.82rem; margin-top:16px;">
+      ✔ supported &nbsp;·&nbsp; △ partial &nbsp;·&nbsp; ✘ not supported
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Footer
+══════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="brand-name"><span>ov</span></div>
+      <p>A feature-rich terminal pager written in Go. Open source, free forever.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Project</h4>
+      <ul>
+        <li><a href="https://github.com/noborus/ov">GitHub Repository</a></li>
+        <li><a href="https://github.com/noborus/ov/releases">Releases</a></li>
+        <li><a href="https://github.com/noborus/ov/issues">Issues</a></li>
+        <li><a href="https://github.com/noborus/ov/blob/master/CONTRIBUTING.md">Contributing</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Docs</h4>
+      <ul>
+        <li><a href="https://github.com/noborus/ov/blob/master/README.md">README</a></li>
+        <li><a href="https://pkg.go.dev/github.com/noborus/ov">pkg.go.dev</a></li>
+        <li><a href="https://github.com/noborus/ov/blob/master/ov.yaml">Example config</a></li>
+        <li><a href="https://github.com/noborus/ov/blob/master/ov-less.yaml">less-style config</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Install</h4>
+      <ul>
+        <li><a href="#install">macOS (Homebrew)</a></li>
+        <li><a href="#install">Linux (deb/rpm/AUR)</a></li>
+        <li><a href="#install">Windows (winget)</a></li>
+        <li><a href="#install">go install</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>
+      Released under the
+      <a href="https://github.com/noborus/ov/blob/master/LICENSE">MIT License</a>.
+      &copy; <a href="https://github.com/noborus">noborus</a>
+    </p>
+    <p>
+      <a href="https://github.com/noborus/ov">
+        <svg class="gh-icon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        noborus/ov
+      </a>
+    </p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════
+     JavaScript
+══════════════════════════════════════ -->
+<script>
+  /* Demo tab switcher */
+  function switchDemo(btn, panelId) {
+    document.querySelectorAll('#demo .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#demo .demo-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  /* Install tab switcher */
+  function switchInstall(btn, panelId) {
+    document.querySelectorAll('#install .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#install .install-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  /* Copy command helper */
+  function copyCmd(elemId, btn) {
+    const text = document.getElementById(elemId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'copied!';
+      btn.style.color = 'var(--accent2)';
+      btn.style.borderColor = 'var(--accent2)';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 1800);
+    }).catch(() => {
+      /* fallback: select text */
+      const el = document.getElementById(elemId);
+      const range = document.createRange();
+      range.selectNode(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    });
+  }
+</script>
+</body>
+</html>
