@@ -1,5 +1,152 @@
 package oviewer
 
+import "regexp"
+
+// RunTimeSettings structure contains the RunTimeSettings of the display.
+// RunTimeSettings contains values that determine the behavior of each document.
+type RunTimeSettings struct {
+	// Name is the name of the view mode.
+	Name string
+	// Converter is the converter name.
+	Converter string
+	// Caption is an additional caption to display after the file name.
+	Caption string
+	// ColumnDelimiterReg is a compiled regular expression of ColumnDelimiter.
+	ColumnDelimiterReg *regexp.Regexp
+	// ColumnDelimiter is a column delimiter.
+	ColumnDelimiter string
+	// SectionDelimiterReg is a section delimiter.
+	SectionDelimiterReg *regexp.Regexp
+	// SectionDelimiter is a section delimiter.
+	SectionDelimiter string
+	// Specified string for jumpTarget.
+	JumpTarget string
+	// MultiColorWords specifies words to color separated by spaces.
+	MultiColorWords []string
+
+	// TabWidth is tab stop num.
+	TabWidth int
+	// Header is number of header lines to be fixed.
+	Header int
+	// VerticalHeader is the number of vertical header lines.
+	VerticalHeader int
+	// HeaderColumn is the number of columns from the left to be fixed.
+	// If 0 is specified, no columns are fixed.
+	HeaderColumn int
+	// SkipLines is the rows to skip.
+	SkipLines int
+	// WatchInterval is the watch interval (seconds).
+	WatchInterval int
+	// MarkStyleWidth is width to apply the style of the marked line.
+	MarkStyleWidth int
+	// SectionStartPosition is a section start position.
+	SectionStartPosition int
+	// SectionHeaderNum is the number of lines in the section header.
+	SectionHeaderNum int
+	// HScrollWidth is the horizontal scroll width.
+	HScrollWidth string
+	// HScrollWidthNum is the horizontal scroll width.
+	HScrollWidthNum int
+	// VScrollLines is the number of lines to scroll with the mouse wheel.
+	VScrollLines int
+	// RulerType is the ruler type (0: none, 1: relative, 2: absolute).
+	RulerType RulerType
+	// AlternateRows alternately style rows.
+	AlternateRows bool
+	// ColumnMode is column mode.
+	ColumnMode bool
+	// ColumnWidth is column width mode.
+	ColumnWidth bool
+	// ColumnRainbow is column rainbow.
+	ColumnRainbow bool
+	// LineNumMode displays line numbers.
+	LineNumMode bool
+	// WrapMode is wrap mode.
+	WrapMode bool
+	// FollowMode is the follow mode.
+	FollowMode bool
+	// FollowAll is a follow mode for all documents.
+	FollowAll bool
+	// FollowSection is a follow mode that uses section instead of line.
+	FollowSection bool
+	// FollowName is the mode to follow files by name.
+	FollowName bool
+	// PlainMode is whether to enable the original character decoration.
+	PlainMode bool
+	// SectionHeader is whether to display the section header.
+	SectionHeader bool
+	// HideOtherSection is whether to hide other sections.
+	HideOtherSection bool
+	// StatusLine is whether to display the status line.
+	StatusLine bool
+
+	// PromptConfig is the prompt configuration.
+	OVPromptConfig
+	// Style is the style of the document.
+	Style Style
+}
+
+// Style structure contains the style settings of the display.
+type Style struct {
+	// ColumnRainbow is the style that applies to the column rainbow color highlight.
+	ColumnRainbow []OVStyle
+	// MultiColorHighlight is the style that applies to the multi color highlight.
+	MultiColorHighlight []OVStyle
+	// Header is the style that applies to the header.
+	Header OVStyle
+	// Body is the style that applies to the body.
+	Body OVStyle
+	// LineNumber is a style that applies line number.
+	LineNumber OVStyle
+	// SearchHighlight is the style that applies to the search highlight.
+	SearchHighlight OVStyle
+	// ColumnHighlight is the style that applies to the column highlight.
+	ColumnHighlight OVStyle
+	// MarkLine is a style that marked line.
+	MarkLine OVStyle
+	// SectionLine is a style that section delimiter line.
+	SectionLine OVStyle
+	// VerticalHeader is a style that applies to the vertical header.
+	VerticalHeader OVStyle
+	// JumpTargetLine is the line that displays the search results.
+	JumpTargetLine OVStyle
+	// Alternate is a style that applies line by line.
+	Alternate OVStyle
+	// Ruler is a style that applies to the ruler.
+	Ruler OVStyle
+	// HeaderBorder is the style that applies to the boundary line of the header.
+	// The boundary line of the header refers to the visual separator between the header and the rest of the content.
+	HeaderBorder OVStyle
+	// SectionHeaderBorder is the style that applies to the boundary line of the section header.
+	// The boundary line of the section header is the line that separates different sections in the header.
+	SectionHeaderBorder OVStyle
+	// VerticalHeaderBorder is the style that applies to the boundary character of the vertical header.
+	// The boundary character of the vertical header refers to the visual separator that delineates the vertical header from the rest of the content.
+	VerticalHeaderBorder OVStyle
+	// LeftStatus is the style that applies to the left status line.
+	LeftStatus OVStyle
+	// RightStatus is the style that applies to the right status line.
+	RightStatus OVStyle
+	// SelectActive is the style that applies to the text being selected (during mouse drag).
+	SelectActive OVStyle
+	// SelectCopied is the style that applies to the text that has been copied to clipboard.
+	SelectCopied OVStyle
+	// PauseLine is the style that applies to the line where follow mode is paused.
+	PauseLine OVStyle
+}
+
+// The name of the converter that can be specified.
+const (
+	convEscaped  string = "es"       // convEscaped processes escape sequence(default).
+	convRaw      string = "raw"      // convRaw is displayed without processing escape sequences as they are.
+	convAlign    string = "align"    // convAlign is aligned in each column.
+	convWordWrap string = "wordwrap" // convWordWrap is wrapped at word boundaries.
+)
+
+const (
+	nameGeneral string = "general"
+)
+
 // NewRunTimeSettings returns the structure of RunTimeSettings with default values.
 func NewRunTimeSettings() RunTimeSettings {
 	return RunTimeSettings{
@@ -149,107 +296,48 @@ func setOldPrompt(src RunTimeSettings, config Config) RunTimeSettings {
 	return src
 }
 
+// applyIfSet copies the dereferenced value of src into dst if src is non-nil.
+func applyIfSet[T any](dst *T, src *T) {
+	if src != nil {
+		*dst = *src
+	}
+}
+
 // updateRunTimeSettings updates the RunTimeSettings.
 func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
-	if dst.TabWidth != nil {
-		src.TabWidth = *dst.TabWidth
-	}
-	if dst.Header != nil {
-		src.Header = *dst.Header
-	}
-	if dst.VerticalHeader != nil {
-		src.VerticalHeader = *dst.VerticalHeader
-	}
-	if dst.HeaderColumn != nil {
-		src.HeaderColumn = *dst.HeaderColumn
-	}
-	if dst.SkipLines != nil {
-		src.SkipLines = *dst.SkipLines
-	}
-	if dst.WatchInterval != nil {
-		src.WatchInterval = *dst.WatchInterval
-	}
-	if dst.MarkStyleWidth != nil {
-		src.MarkStyleWidth = *dst.MarkStyleWidth
-	}
-	if dst.SectionStartPosition != nil {
-		src.SectionStartPosition = *dst.SectionStartPosition
-	}
-	if dst.SectionHeaderNum != nil {
-		src.SectionHeaderNum = *dst.SectionHeaderNum
-	}
-	if dst.HScrollWidth != nil {
-		src.HScrollWidth = *dst.HScrollWidth
-	}
-	if dst.HScrollWidthNum != nil {
-		src.HScrollWidthNum = *dst.HScrollWidthNum
-	}
-	if dst.VScrollLines != nil {
-		src.VScrollLines = *dst.VScrollLines
-	}
-	if dst.RulerType != nil {
-		src.RulerType = *dst.RulerType
-	}
-	if dst.AlternateRows != nil {
-		src.AlternateRows = *dst.AlternateRows
-	}
-	if dst.ColumnMode != nil {
-		src.ColumnMode = *dst.ColumnMode
-	}
-	if dst.ColumnWidth != nil {
-		src.ColumnWidth = *dst.ColumnWidth
-	}
-	if dst.ColumnRainbow != nil {
-		src.ColumnRainbow = *dst.ColumnRainbow
-	}
-	if dst.LineNumMode != nil {
-		src.LineNumMode = *dst.LineNumMode
-	}
-	if dst.WrapMode != nil {
-		src.WrapMode = *dst.WrapMode
-	}
-	if dst.FollowMode != nil {
-		src.FollowMode = *dst.FollowMode
-	}
-	if dst.FollowAll != nil {
-		src.FollowAll = *dst.FollowAll
-	}
-	if dst.FollowSection != nil {
-		src.FollowSection = *dst.FollowSection
-	}
-	if dst.FollowName != nil {
-		src.FollowName = *dst.FollowName
-	}
-	if dst.PlainMode != nil {
-		src.PlainMode = *dst.PlainMode
-	}
-	if dst.SectionHeader != nil {
-		src.SectionHeader = *dst.SectionHeader
-	}
-	if dst.HideOtherSection != nil {
-		src.HideOtherSection = *dst.HideOtherSection
-	}
-	if dst.StatusLine != nil {
-		src.StatusLine = *dst.StatusLine
-	}
-	if dst.ColumnDelimiter != nil {
-		src.ColumnDelimiter = *dst.ColumnDelimiter
-	}
-	if dst.SectionDelimiter != nil {
-		src.SectionDelimiter = *dst.SectionDelimiter
-	}
-	if dst.JumpTarget != nil {
-		src.JumpTarget = *dst.JumpTarget
-	}
-	if dst.MultiColorWords != nil {
-		src.MultiColorWords = *dst.MultiColorWords
-	}
-	if dst.Caption != nil {
-		src.Caption = *dst.Caption
-	}
-	if dst.Converter != nil {
-		src.Converter = *dst.Converter
-	}
+	applyIfSet(&src.TabWidth, dst.TabWidth)
+	applyIfSet(&src.Header, dst.Header)
+	applyIfSet(&src.VerticalHeader, dst.VerticalHeader)
+	applyIfSet(&src.HeaderColumn, dst.HeaderColumn)
+	applyIfSet(&src.SkipLines, dst.SkipLines)
+	applyIfSet(&src.WatchInterval, dst.WatchInterval)
+	applyIfSet(&src.MarkStyleWidth, dst.MarkStyleWidth)
+	applyIfSet(&src.SectionStartPosition, dst.SectionStartPosition)
+	applyIfSet(&src.SectionHeaderNum, dst.SectionHeaderNum)
+	applyIfSet(&src.HScrollWidth, dst.HScrollWidth)
+	applyIfSet(&src.HScrollWidthNum, dst.HScrollWidthNum)
+	applyIfSet(&src.VScrollLines, dst.VScrollLines)
+	applyIfSet(&src.RulerType, dst.RulerType)
+	applyIfSet(&src.AlternateRows, dst.AlternateRows)
+	applyIfSet(&src.ColumnMode, dst.ColumnMode)
+	applyIfSet(&src.ColumnWidth, dst.ColumnWidth)
+	applyIfSet(&src.ColumnRainbow, dst.ColumnRainbow)
+	applyIfSet(&src.LineNumMode, dst.LineNumMode)
+	applyIfSet(&src.WrapMode, dst.WrapMode)
+	applyIfSet(&src.FollowMode, dst.FollowMode)
+	applyIfSet(&src.FollowAll, dst.FollowAll)
+	applyIfSet(&src.FollowSection, dst.FollowSection)
+	applyIfSet(&src.FollowName, dst.FollowName)
+	applyIfSet(&src.PlainMode, dst.PlainMode)
+	applyIfSet(&src.SectionHeader, dst.SectionHeader)
+	applyIfSet(&src.HideOtherSection, dst.HideOtherSection)
+	applyIfSet(&src.StatusLine, dst.StatusLine)
+	applyIfSet(&src.ColumnDelimiter, dst.ColumnDelimiter)
+	applyIfSet(&src.SectionDelimiter, dst.SectionDelimiter)
+	applyIfSet(&src.JumpTarget, dst.JumpTarget)
+	applyIfSet(&src.MultiColorWords, dst.MultiColorWords)
+	applyIfSet(&src.Caption, dst.Caption)
+	applyIfSet(&src.Converter, dst.Converter)
 	if dst.Align != nil && *dst.Align {
 		src.Converter = convAlign
 	}
@@ -276,88 +364,36 @@ func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
 
 // updatePromptConfig updates the prompt configuration.
 func updatePromptConfig(src OVPromptConfig, dst PromptConfig) OVPromptConfig {
-	if dst.Normal.InvertColor != nil {
-		src.Normal.InvertColor = *dst.Normal.InvertColor
-	}
-	if dst.Normal.ShowFilename != nil {
-		src.Normal.ShowFilename = *dst.Normal.ShowFilename
-	}
-	if dst.Normal.ProcessOfCount != nil {
-		src.Normal.ProcessOfCount = *dst.Normal.ProcessOfCount
-	}
-	if dst.Normal.CursorType != nil {
-		src.Normal.CursorType = *dst.Normal.CursorType
-	}
-	if dst.Input.CursorType != nil {
-		src.Input.CursorType = *dst.Input.CursorType
-	}
+	applyIfSet(&src.Normal.InvertColor, dst.Normal.InvertColor)
+	applyIfSet(&src.Normal.ShowFilename, dst.Normal.ShowFilename)
+	applyIfSet(&src.Normal.ProcessOfCount, dst.Normal.ProcessOfCount)
+	applyIfSet(&src.Normal.CursorType, dst.Normal.CursorType)
+	applyIfSet(&src.Input.CursorType, dst.Input.CursorType)
 	return src
 }
 
 // updateRuntimeStyle updates the style.
 func updateRuntimeStyle(src Style, dst StyleConfig) Style {
-	if dst.ColumnRainbow != nil {
-		src.ColumnRainbow = *dst.ColumnRainbow
-	}
-	if dst.MultiColorHighlight != nil {
-		src.MultiColorHighlight = *dst.MultiColorHighlight
-	}
-	if dst.Header != nil {
-		src.Header = *dst.Header
-	}
-	if dst.Body != nil {
-		src.Body = *dst.Body
-	}
-	if dst.LineNumber != nil {
-		src.LineNumber = *dst.LineNumber
-	}
-	if dst.SearchHighlight != nil {
-		src.SearchHighlight = *dst.SearchHighlight
-	}
-	if dst.ColumnHighlight != nil {
-		src.ColumnHighlight = *dst.ColumnHighlight
-	}
-	if dst.MarkLine != nil {
-		src.MarkLine = *dst.MarkLine
-	}
-	if dst.SectionLine != nil {
-		src.SectionLine = *dst.SectionLine
-	}
-	if dst.VerticalHeader != nil {
-		src.VerticalHeader = *dst.VerticalHeader
-	}
-	if dst.JumpTargetLine != nil {
-		src.JumpTargetLine = *dst.JumpTargetLine
-	}
-	if dst.Alternate != nil {
-		src.Alternate = *dst.Alternate
-	}
-	if dst.Ruler != nil {
-		src.Ruler = *dst.Ruler
-	}
-	if dst.HeaderBorder != nil {
-		src.HeaderBorder = *dst.HeaderBorder
-	}
-	if dst.SectionHeaderBorder != nil {
-		src.SectionHeaderBorder = *dst.SectionHeaderBorder
-	}
-	if dst.VerticalHeaderBorder != nil {
-		src.VerticalHeaderBorder = *dst.VerticalHeaderBorder
-	}
-	if dst.LeftStatus != nil {
-		src.LeftStatus = *dst.LeftStatus
-	}
-	if dst.RightStatus != nil {
-		src.RightStatus = *dst.RightStatus
-	}
-	if dst.SelectActive != nil {
-		src.SelectActive = *dst.SelectActive
-	}
-	if dst.SelectCopied != nil {
-		src.SelectCopied = *dst.SelectCopied
-	}
-	if dst.PauseLine != nil {
-		src.PauseLine = *dst.PauseLine
-	}
+	applyIfSet(&src.ColumnRainbow, dst.ColumnRainbow)
+	applyIfSet(&src.MultiColorHighlight, dst.MultiColorHighlight)
+	applyIfSet(&src.Header, dst.Header)
+	applyIfSet(&src.Body, dst.Body)
+	applyIfSet(&src.LineNumber, dst.LineNumber)
+	applyIfSet(&src.SearchHighlight, dst.SearchHighlight)
+	applyIfSet(&src.ColumnHighlight, dst.ColumnHighlight)
+	applyIfSet(&src.MarkLine, dst.MarkLine)
+	applyIfSet(&src.SectionLine, dst.SectionLine)
+	applyIfSet(&src.VerticalHeader, dst.VerticalHeader)
+	applyIfSet(&src.JumpTargetLine, dst.JumpTargetLine)
+	applyIfSet(&src.Alternate, dst.Alternate)
+	applyIfSet(&src.Ruler, dst.Ruler)
+	applyIfSet(&src.HeaderBorder, dst.HeaderBorder)
+	applyIfSet(&src.SectionHeaderBorder, dst.SectionHeaderBorder)
+	applyIfSet(&src.VerticalHeaderBorder, dst.VerticalHeaderBorder)
+	applyIfSet(&src.LeftStatus, dst.LeftStatus)
+	applyIfSet(&src.RightStatus, dst.RightStatus)
+	applyIfSet(&src.SelectActive, dst.SelectActive)
+	applyIfSet(&src.SelectCopied, dst.SelectCopied)
+	applyIfSet(&src.PauseLine, dst.PauseLine)
 	return src
 }
