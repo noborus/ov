@@ -293,6 +293,37 @@ func Test_updateRuntimeSettings(t *testing.T) {
 				SectionStartPosition: 5,
 			},
 		},
+		{
+			name: "test11",
+			args: args{
+				runtime: RunTimeSettings{
+					Caption: "test caption",
+				},
+				configGeneral: General{
+					Wrap: strPtr("word"),
+				},
+			},
+			want: RunTimeSettings{
+				Caption:   "test caption",
+				Converter: convWordWrap,
+				WrapMode:  true,
+			},
+		},
+		{
+			name: "test12",
+			args: args{
+				runtime: RunTimeSettings{
+					Caption: "test caption",
+				},
+				configGeneral: General{
+					Wrap: strPtr("false"),
+				},
+			},
+			want: RunTimeSettings{
+				Caption:  "test caption",
+				WrapMode: false,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -547,8 +578,8 @@ func Test_updateRuntimeStyle(t *testing.T) {
 	newMultiColorStyles := []OVStyle{{Foreground: "white"}, {Foreground: "black"}}
 
 	type args struct {
-		src Style
-		dst StyleConfig
+		base Style
+		dst  StyleConfig
 	}
 	tests := []struct {
 		name string
@@ -558,143 +589,143 @@ func Test_updateRuntimeStyle(t *testing.T) {
 		{
 			name: "empty update",
 			args: args{
-				src: NewStyle(),
-				dst: StyleConfig{},
+				base: NewStyle(),
+				dst:  StyleConfig{},
 			},
 			want: NewStyle(),
 		},
 		{
 			name: "update column rainbow",
 			args: args{
-				src: Style{ColumnRainbow: rainbowStyles},
-				dst: StyleConfig{ColumnRainbow: &newRainbowStyles},
+				base: Style{ColumnRainbow: rainbowStyles},
+				dst:  StyleConfig{ColumnRainbow: &newRainbowStyles},
 			},
 			want: Style{ColumnRainbow: newRainbowStyles},
 		},
 		{
 			name: "update multi color highlight",
 			args: args{
-				src: Style{MultiColorHighlight: multiColorStyles},
-				dst: StyleConfig{MultiColorHighlight: &newMultiColorStyles},
+				base: Style{MultiColorHighlight: multiColorStyles},
+				dst:  StyleConfig{MultiColorHighlight: &newMultiColorStyles},
 			},
 			want: Style{MultiColorHighlight: newMultiColorStyles},
 		},
 		{
 			name: "update header",
 			args: args{
-				src: Style{Header: redStyle},
-				dst: StyleConfig{Header: &blueStyle},
+				base: Style{Header: redStyle},
+				dst:  StyleConfig{Header: &blueStyle},
 			},
 			want: Style{Header: blueStyle},
 		},
 		{
 			name: "update body",
 			args: args{
-				src: Style{Body: redStyle},
-				dst: StyleConfig{Body: &blueStyle},
+				base: Style{Body: redStyle},
+				dst:  StyleConfig{Body: &blueStyle},
 			},
 			want: Style{Body: blueStyle},
 		},
 		{
 			name: "update line number",
 			args: args{
-				src: Style{LineNumber: redStyle},
-				dst: StyleConfig{LineNumber: &blueStyle},
+				base: Style{LineNumber: redStyle},
+				dst:  StyleConfig{LineNumber: &blueStyle},
 			},
 			want: Style{LineNumber: blueStyle},
 		},
 		{
 			name: "update search highlight",
 			args: args{
-				src: Style{SearchHighlight: redStyle},
-				dst: StyleConfig{SearchHighlight: &blueStyle},
+				base: Style{SearchHighlight: redStyle},
+				dst:  StyleConfig{SearchHighlight: &blueStyle},
 			},
 			want: Style{SearchHighlight: blueStyle},
 		},
 		{
 			name: "update column highlight",
 			args: args{
-				src: Style{ColumnHighlight: redStyle},
-				dst: StyleConfig{ColumnHighlight: &blueStyle},
+				base: Style{ColumnHighlight: redStyle},
+				dst:  StyleConfig{ColumnHighlight: &blueStyle},
 			},
 			want: Style{ColumnHighlight: blueStyle},
 		},
 		{
 			name: "update mark line",
 			args: args{
-				src: Style{MarkLine: redStyle},
-				dst: StyleConfig{MarkLine: &blueStyle},
+				base: Style{MarkLine: redStyle},
+				dst:  StyleConfig{MarkLine: &blueStyle},
 			},
 			want: Style{MarkLine: blueStyle},
 		},
 		{
 			name: "update section line",
 			args: args{
-				src: Style{SectionLine: redStyle},
-				dst: StyleConfig{SectionLine: &blueStyle},
+				base: Style{SectionLine: redStyle},
+				dst:  StyleConfig{SectionLine: &blueStyle},
 			},
 			want: Style{SectionLine: blueStyle},
 		},
 		{
 			name: "update vertical header",
 			args: args{
-				src: Style{VerticalHeader: redStyle},
-				dst: StyleConfig{VerticalHeader: &blueStyle},
+				base: Style{VerticalHeader: redStyle},
+				dst:  StyleConfig{VerticalHeader: &blueStyle},
 			},
 			want: Style{VerticalHeader: blueStyle},
 		},
 		{
 			name: "update jump target line",
 			args: args{
-				src: Style{JumpTargetLine: redStyle},
-				dst: StyleConfig{JumpTargetLine: &blueStyle},
+				base: Style{JumpTargetLine: redStyle},
+				dst:  StyleConfig{JumpTargetLine: &blueStyle},
 			},
 			want: Style{JumpTargetLine: blueStyle},
 		},
 		{
 			name: "update alternate",
 			args: args{
-				src: Style{Alternate: redStyle},
-				dst: StyleConfig{Alternate: &blueStyle},
+				base: Style{Alternate: redStyle},
+				dst:  StyleConfig{Alternate: &blueStyle},
 			},
 			want: Style{Alternate: blueStyle},
 		},
 		{
 			name: "update ruler",
 			args: args{
-				src: Style{Ruler: redStyle},
-				dst: StyleConfig{Ruler: &boldStyle},
+				base: Style{Ruler: redStyle},
+				dst:  StyleConfig{Ruler: &boldStyle},
 			},
 			want: Style{Ruler: boldStyle},
 		},
 		{
 			name: "update header border",
 			args: args{
-				src: Style{HeaderBorder: redStyle},
-				dst: StyleConfig{HeaderBorder: &blueStyle},
+				base: Style{HeaderBorder: redStyle},
+				dst:  StyleConfig{HeaderBorder: &blueStyle},
 			},
 			want: Style{HeaderBorder: blueStyle},
 		},
 		{
 			name: "update section header border",
 			args: args{
-				src: Style{SectionHeaderBorder: redStyle},
-				dst: StyleConfig{SectionHeaderBorder: &blueStyle},
+				base: Style{SectionHeaderBorder: redStyle},
+				dst:  StyleConfig{SectionHeaderBorder: &blueStyle},
 			},
 			want: Style{SectionHeaderBorder: blueStyle},
 		},
 		{
 			name: "update vertical header border",
 			args: args{
-				src: Style{VerticalHeaderBorder: redStyle},
-				dst: StyleConfig{VerticalHeaderBorder: &blueStyle},
+				base: Style{VerticalHeaderBorder: redStyle},
+				dst:  StyleConfig{VerticalHeaderBorder: &blueStyle},
 			},
 			want: Style{VerticalHeaderBorder: blueStyle},
 		},
 		{
 			name: "update multiple fields",
 			args: args{
-				src: Style{
+				base: Style{
 					Header:       redStyle,
 					Body:         redStyle,
 					LineNumber:   redStyle,
@@ -723,7 +754,7 @@ func Test_updateRuntimeStyle(t *testing.T) {
 		{
 			name: "complete style update",
 			args: args{
-				src: NewStyle(), // Starting with default style
+				base: NewStyle(), // Starting with default style
 				dst: StyleConfig{
 					ColumnRainbow:        &newRainbowStyles,
 					MultiColorHighlight:  &newMultiColorStyles,
@@ -771,7 +802,7 @@ func Test_updateRuntimeStyle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := updateRuntimeStyle(tt.args.src, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
+			if got := updateRuntimeStyle(tt.args.base, tt.args.dst); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("updateRuntimeStyle() = %v, want %v", got, tt.want)
 			}
 		})
