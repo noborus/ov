@@ -360,6 +360,53 @@ func DefaultKeyBinds() KeyBind {
 	}
 }
 
+// LessKeyBinds are keybindings preset for less-like operations.
+func LessKeyBinds() KeyBind {
+	keyBind := DefaultKeyBinds()
+
+	maps.Copy(keyBind, KeyBind{
+		actionEdit:           {"v"},
+		actionSync:           {"r", "ctrl+l"},
+		actionReload:         {"R", "ctrl+r"},
+		actionWatch:          {"T", "ctrl+alt+w"},
+		actionFollow:         {"F"},
+		actionHelp:           {"h", "ctrl+alt+c"},
+		actionLogDoc:         {"ctrl+alt+e"},
+		actionLineNumMode:    {"alt+n"},
+		actionAlignFormat:    {"ctrl+alt+f"},
+		actionRawFormat:      {"ctrl+alt+g"},
+		actionFixedColumn:    {"alt+f"},
+		actionShrinkColumn:   {"alt+x"},
+		actionPlain:          {"ctrl+F7"},
+		actionRainbow:        {"ctrl+F4"},
+		actionCloseDoc:       {"alt+k"},
+		actionCloseAllFilter: {"ctrl+alt+k"},
+
+		// Move actions.
+		actionMoveDown:     {"e", "ctrl+e", "j", "J", "ctrl+j", "Enter", "Down"},
+		actionMoveUp:       {"y", "Y", "ctrl+y", "k", "K", "ctrl+k", "Up"},
+		actionMoveTop:      {"Home", "g", "<"},
+		actionMoveBottom:   {"End", ">", "G"},
+		actionMovePgUp:     {"PageUp", "b", "alt+v"},
+		actionMovePgDn:     {"PageDown", "ctrl+v", "alt+space", "f", "z"},
+		actionMoveHfUp:     {"u", "ctrl+u"},
+		actionMoveHfDn:     {"d", "ctrl+d"},
+		actionMoveMark:     {"alt+>"},
+		actionMovePrevMark: {"alt+<"},
+
+		// Actions that enter input mode.
+		actionDelimiter:      {"F8"},
+		actionGoLine:         {":"},
+		actionHeaderColumn:   {"ctrl+alt+d"},
+		actionJumpTarget:     {"alt+j"},
+		actionSaveBuffer:     {"s"},
+		actionConvertType:    {"ctrl+alt+t"},
+		actionVerticalHeader: {"ctrl+alt+b"},
+	})
+
+	return keyBind
+}
+
 type Group int
 
 const (
@@ -618,7 +665,12 @@ func writeHeader(w io.Writer, header string) {
 func GetKeyBinds(config Config) KeyBind {
 	keyBind := make(map[string][]string)
 
-	if strings.ToLower(config.DefaultKeyBind) != "disable" {
+	switch strings.ToLower(config.DefaultKeyBind) {
+	case "disable":
+		// no default keybindings
+	case "less":
+		keyBind = LessKeyBinds()
+	default:
 		keyBind = DefaultKeyBinds()
 	}
 

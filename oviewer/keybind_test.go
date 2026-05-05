@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -86,6 +87,72 @@ func TestKeyBind_String(t *testing.T) {
 			expected := fmt.Sprintf("[%s], [%s]", expectedCtrlC, expectedAltShiftF8)
 			if !strings.Contains(kbStr, expected) {
 				t.Fatalf("KeyBind String() = %q, want to contain %q", kbStr, expected)
+			}
+		})
+	}
+}
+
+func TestLessKeyBinds(t *testing.T) {
+	t.Parallel()
+
+	less := LessKeyBinds()
+
+	tests := []struct {
+		action string
+		want   []string
+	}{
+		{action: actionEdit, want: []string{"v"}},
+		{action: actionGoLine, want: []string{":"}},
+		{action: actionMovePgDn, want: []string{"PageDown", "ctrl+v", "alt+space", "f", "z"}},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.action, func(t *testing.T) {
+			t.Parallel()
+			if !slices.Equal(less[tt.action], tt.want) {
+				t.Fatalf("LessKeyBinds()[%s] = %v, want %v", tt.action, less[tt.action], tt.want)
+			}
+		})
+	}
+}
+
+func TestGetKeyBindsDefaultPreset(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		config Config
+		action string
+		want   []string
+	}{
+		{
+			name:   "default",
+			config: Config{},
+			action: actionEdit,
+			want:   []string{"alt+v"},
+		},
+		{
+			name:   "less",
+			config: Config{DefaultKeyBind: "less"},
+			action: actionEdit,
+			want:   []string{"v"},
+		},
+		{
+			name:   "disable",
+			config: Config{DefaultKeyBind: "disable", Keybind: map[string][]string{actionEdit: []string{"x"}}},
+			action: actionEdit,
+			want:   []string{"x"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := GetKeyBinds(tt.config)
+			if !slices.Equal(got[tt.action], tt.want) {
+				t.Fatalf("GetKeyBinds(%s)[%s] = %v, want %v", tt.name, tt.action, got[tt.action], tt.want)
 			}
 		})
 	}
