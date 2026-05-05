@@ -243,8 +243,10 @@ func (root *Root) handlers() map[string]func(context.Context) {
 // KeyBind represents a mapping from action names to their associated key sequences.
 type KeyBind map[string][]string
 
-// defaultKeyBinds are the default keybindings.
-func defaultKeyBinds() KeyBind {
+//go:generate go run ../tools/gen-keybind
+
+// DefaultKeyBinds are the default keybindings.
+func DefaultKeyBinds() KeyBind {
 	return map[string][]string{
 		actionExit:           {"Escape", "q"},
 		actionCancel:         {"ctrl+c"},
@@ -617,7 +619,7 @@ func GetKeyBinds(config Config) KeyBind {
 	keyBind := make(map[string][]string)
 
 	if strings.ToLower(config.DefaultKeyBind) != "disable" {
-		keyBind = defaultKeyBinds()
+		keyBind = DefaultKeyBinds()
 	}
 
 	// Overwrite with config file.

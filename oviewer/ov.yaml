@@ -1,0 +1,366 @@
+# This is the ov config file.
+# Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
+#
+# QuitSmall: false # Quit if the file size is smaller than the terminal size.
+# IsWriteOriginal: false # Write the original content when exiting.
+# BeforeWriteOriginal: 0 # Write the number of lines before the current location when exiting.
+# AfterWriteOriginal: 0 # Write the number of lines after the current location when exiting.
+#
+# CaseSensitive: false # Case sensitive search.
+# SmartCaseSensitive: false # Case sensitive search if the search string contains uppercase characters.
+# RegexpSearch: false # Regular expression search.
+# Incsearch: true # Incremental search.
+#
+# MemoryLimit: -1 # The maximum number of lines that can be loaded into memory.
+# MemoryLimitFile: 100 # The maximum number of lines that can be loaded into memory when opening a file.
+#
+# DisableMouse: false # Disable mouse support.
+# DisableColumnCycle: false # Disable cycling when moving columns.
+# DisableStickyFollow: false # Disable sticky follow mode.
+#
+# ViewMode: markdown # Default view mode.
+#
+# For ClipboardMethod, specify “OSC52” to copy using OSC52 (if the terminal supports it).
+# ClipboardMethod: "default" # Clipboard method. Options: "OSC52" or other.
+#
+# SidebarWidth: 20% # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
+# SideBarMode: "none" # Sidebar mode. Options:  "help", "sections", "marks", "none".
+#
+# SetTerminalTitle: false # Set terminal title to display filename.
+#
+# Debug: false # Debug mode.
+#
+
+# ShrinkChar: '…' # Characters displayed when the column is shrinking.
+
+# ReadWaitTime: 1s # Time to wait for a search while reading. 1s is the default.
+
+General:
+  TabWidth: 8
+  Header: 0
+  AlternateRows: false
+  ColumnMode: false
+  LineNumMode: false
+  Wrap: "character" # Wrap mode. Options: "character", "word", "none".
+  ColumnDelimiter: ","
+  MarkStyleWidth: 1
+# HScrollWidth: 10%
+# VScrollLines: 2
+  Prompt:
+    Normal:
+#      ShowFilename: true # Show the filename.
+#      InvertColor: true # Invert the color of the prompt.
+#      ProcessOfCount: true # Show the process of count.
+#      CursorType: 0 # Cursor type for the normal prompt.
+    Input:
+#      CursorType: 1 # Cursor type for the input prompt.
+
+#  SectionDelimiter: "^#"
+  # Style
+  # String of the color name: Foreground, Background, UnderlineColor
+  # Boolean: Bold, Blink, Dim, Italic, Underline
+  # Number: UnderlineStyle
+  Style:
+    Alternate:
+      Background: "gray"
+    Header:
+      Bold: true
+    Body:
+      # Add appropriate styles here
+    LineNumber:
+      Bold: true
+    SearchHighlight:
+      Reverse: true
+    ColumnHighlight:
+      Reverse: true
+    MarkLine:
+      Background: "darkgoldenrod"
+    SectionLine:
+      Background: "slateblue"
+    VerticalHeader:
+      # Add appropriate styles here
+    Ruler:
+      Background: "#333333"
+      Foreground: "#CCCCCC"
+      Bold: true
+    HeaderBorder:
+      # Add appropriate styles here
+    SectionHeaderBorder:
+      # Add appropriate styles here
+    VerticalHeaderBorder:
+      Background: "#c0c0c0"
+    MultiColorHighlight:
+      - Foreground: "red"
+      - Foreground: "aqua"
+      - Foreground: "yellow"
+      - Foreground: "fuchsia"
+      - Foreground: "lime"
+      - Foreground: "blue"
+      - Foreground: "gray"
+    ColumnRainbow:
+      - Foreground: "white"
+      - Foreground: "crimson"
+      - Foreground: "aqua"
+      - Foreground: "lightsalmon"
+      - Foreground: "lime"
+      - Foreground: "blue"
+      - Foreground: "yellowgreen"
+    JumpTargetLine:
+      Underline: true
+
+StyleOverStrike:
+  Bold: true
+StyleOverLine:
+  Underline: true
+
+# Keybind
+# Special key
+#   "Enter","Backspace","Tab","Backtab","Esc",
+#   "Delete", "Insert",
+#   "Up", "Down", "Left", "Right", "Home", "End",
+#   "F1...F64"
+# Modifier key
+#   "ctrl", "alt", "meta", "shift"
+# Connect with modifier key + key
+#   "ctrl+c"
+KeyBind:
+    align_format:
+        - "alt+f"
+    alter_rows_mode:
+        - "C"
+    backsearch:
+        - "?"
+    begin_left:
+        - "shift+Home"
+    bottom:
+        - "End"
+    cancel:
+        - "ctrl+c"
+    close_all_filter:
+        - "K"
+    close_doc:
+        - "ctrl+k"
+    close_file:
+        - "ctrl+F9"
+        - "ctrl+alt+s"
+    column_mode:
+        - "c"
+    column_width:
+        - "alt+o"
+    convert_type:
+        - "alt+t"
+    delimiter:
+        - "d"
+    down:
+        - "Enter"
+        - "Down"
+        - "ctrl+n"
+    edit:
+        - "alt+v"
+    end_right:
+        - "shift+End"
+    exit:
+        - "Escape"
+        - "q"
+    filter:
+        - "&"
+    fixed_column:
+        - "F"
+    follow_all:
+        - "ctrl+a"
+    follow_mode:
+        - "ctrl+f"
+    follow_section:
+        - "F2"
+    goto:
+        - "g"
+    half_left:
+        - "ctrl+left"
+    half_right:
+        - "ctrl+right"
+    header:
+        - "H"
+    header_column:
+        - "Y"
+    help:
+        - "h"
+        - "ctrl+F1"
+        - "ctrl+alt+c"
+    hide_other:
+        - "alt+-"
+    input_casesensitive:
+        - "alt+c"
+    input_copy:
+        - "ctrl+c"
+    input_incsearch:
+        - "alt+i"
+    input_next:
+        - "Down"
+    input_non_match:
+        - "!"
+    input_paste:
+        - "ctrl+v"
+    input_previous:
+        - "Up"
+    input_regexp_search:
+        - "alt+r"
+    input_smart_casesensitive:
+        - "alt+s"
+    jump_target:
+        - "j"
+    last_section:
+        - "9"
+    left:
+        - "left"
+    line_number_mode:
+        - "G"
+    logdoc:
+        - "ctrl+F2"
+        - "ctrl+alt+e"
+    mark:
+        - "m"
+    mark_by_pattern:
+        - "*"
+    mark_number:
+        - ","
+    multi_color:
+        - "."
+    next_backsearch:
+        - "N"
+    next_doc:
+        - "]"
+    next_mark:
+        - ">"
+    next_search:
+        - "n"
+    next_section:
+        - "space"
+    page_down:
+        - "PageDown"
+        - "ctrl+v"
+    page_half_down:
+        - "ctrl+d"
+    page_half_up:
+        - "ctrl+u"
+    page_up:
+        - "PageUp"
+        - "ctrl+b"
+    plain_mode:
+        - "ctrl+e"
+    previous_doc:
+        - "["
+    previous_mark:
+        - "<"
+    previous_section:
+        - "^"
+    rainbow_mode:
+        - "ctrl+r"
+    raw_format:
+        - "alt+r"
+    reload:
+        - "F5"
+        - "ctrl+alt+l"
+    remove_all_mark:
+        - "ctrl+delete"
+    remove_mark:
+        - "M"
+    right:
+        - "right"
+    right_align:
+        - "alt+a"
+    save_buffer:
+        - "S"
+    search:
+        - "/"
+    section_delimiter:
+        - "alt+d"
+    section_header_num:
+        - "F7"
+    section_start:
+        - "ctrl+F3"
+        - "alt+s"
+    set_view_mode:
+        - "p"
+        - "P"
+    set_write_exit:
+        - "ctrl+q"
+    shrink_column:
+        - "s"
+    sidebar_doc_list:
+        - "alt+l"
+    sidebar_down:
+        - "shift+Down"
+    sidebar_help:
+        - "alt+h"
+    sidebar_left:
+        - "shift+Left"
+    sidebar_marks:
+        - "alt+m"
+    sidebar_right:
+        - "shift+Right"
+    sidebar_sections:
+        - "alt+u"
+    sidebar_up:
+        - "shift+Up"
+    skip_lines:
+        - "ctrl+s"
+    status_line:
+        - "ctrl+F10"
+    suspend:
+        - "ctrl+z"
+    sync:
+        - "ctrl+l"
+    tabwidth:
+        - "t"
+    toggle_mouse:
+        - "ctrl+F8"
+        - "ctrl+alt+r"
+    toggle_ruler:
+        - "alt+shift+F9"
+    top:
+        - "Home"
+    up:
+        - "Up"
+        - "ctrl+p"
+    vertical_header:
+        - "y"
+    watch:
+        - "F4"
+        - "ctrl+alt+w"
+    watch_interval:
+        - "ctrl+w"
+    width_left:
+        - "alt+left"
+    width_right:
+        - "alt+right"
+    word_wrap_mode:
+        - "alt+w"
+    wrap_mode:
+        - "w"
+        - "W"
+    write_exit:
+        - "Q"
+    write_original:
+        - "alt+shift+F8"
+
+Mode:
+  markdown:
+    SectionDelimiter: "^#"
+    Wrap: "character"
+    Style:
+      SectionLine:
+        Background: "blue"
+  psql:
+    Header: 2
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    Wrap: "character"
+    ColumnDelimiter: "|"
+  mysql:
+    Header: 3
+    AlternateRows: true
+    ColumnMode: true
+    LineNumMode: false
+    Wrap: "character"
+    ColumnDelimiter: "|"

@@ -29,7 +29,7 @@ func Test_defaultKeyBinds(t *testing.T) {
 				t.Fatal("NewRoot failed: ", err)
 			}
 			hm := root.handlers()
-			kb := defaultKeyBinds()
+			kb := DefaultKeyBinds()
 			if len(hm) != len(kb) {
 				t.Errorf("number of KeyBind = %v, want %v", len(hm), len(kb))
 			}
@@ -45,12 +45,12 @@ func TestKeyBind_String(t *testing.T) {
 	}{
 		{
 			name: "KeyBind String",
-			k:    defaultKeyBinds(),
+			k:    DefaultKeyBinds(),
 		},
 		{
 			name: "normalize modifier keys for display",
 			k: func() KeyBind {
-				kb := defaultKeyBinds()
+				kb := DefaultKeyBinds()
 				kb[actionCancel] = []string{"CTRL+C", "alt+SHIFT+f8"}
 				return kb
 			}(),
