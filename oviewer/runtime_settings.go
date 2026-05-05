@@ -231,169 +231,169 @@ func NewStyle() Style {
 // Deprecated: This function is planned to be removed in future versions.
 // It reads and applies old style settings to maintain compatibility with older configurations.
 // Use the new style configuration methods instead.
-func setOldStyle(src RunTimeSettings, config Config) RunTimeSettings {
+func setOldStyle(base RunTimeSettings, config Config) RunTimeSettings {
 	blank := OVStyle{}
 	if config.StyleBody != blank {
-		src.Style.Body = config.StyleBody
+		base.Style.Body = config.StyleBody
 	}
 	if config.StyleHeader != blank {
-		src.Style.Header = config.StyleHeader
+		base.Style.Header = config.StyleHeader
 	}
 	if config.StyleLineNumber != blank {
-		src.Style.LineNumber = config.StyleLineNumber
+		base.Style.LineNumber = config.StyleLineNumber
 	}
 	if config.StyleSearchHighlight != blank {
-		src.Style.SearchHighlight = config.StyleSearchHighlight
+		base.Style.SearchHighlight = config.StyleSearchHighlight
 	}
 	if config.StyleColumnHighlight != blank {
-		src.Style.ColumnHighlight = config.StyleColumnHighlight
+		base.Style.ColumnHighlight = config.StyleColumnHighlight
 	}
 	if config.StyleMarkLine != blank {
-		src.Style.MarkLine = config.StyleMarkLine
+		base.Style.MarkLine = config.StyleMarkLine
 	}
 	if config.StyleSectionLine != blank {
-		src.Style.SectionLine = config.StyleSectionLine
+		base.Style.SectionLine = config.StyleSectionLine
 	}
 	if config.StyleVerticalHeader != blank {
-		src.Style.VerticalHeader = config.StyleVerticalHeader
+		base.Style.VerticalHeader = config.StyleVerticalHeader
 	}
 	if config.StyleJumpTargetLine != blank {
-		src.Style.JumpTargetLine = config.StyleJumpTargetLine
+		base.Style.JumpTargetLine = config.StyleJumpTargetLine
 	}
 	if config.StyleAlternate != blank {
-		src.Style.Alternate = config.StyleAlternate
+		base.Style.Alternate = config.StyleAlternate
 	}
 	if config.StyleRuler != blank {
-		src.Style.Ruler = config.StyleRuler
+		base.Style.Ruler = config.StyleRuler
 	}
 	if config.StyleHeaderBorder != blank {
-		src.Style.HeaderBorder = config.StyleHeaderBorder
+		base.Style.HeaderBorder = config.StyleHeaderBorder
 	}
 	if config.StyleSectionHeaderBorder != blank {
-		src.Style.SectionHeaderBorder = config.StyleSectionHeaderBorder
+		base.Style.SectionHeaderBorder = config.StyleSectionHeaderBorder
 	}
 	if config.StyleVerticalHeaderBorder != blank {
-		src.Style.VerticalHeaderBorder = config.StyleVerticalHeaderBorder
+		base.Style.VerticalHeaderBorder = config.StyleVerticalHeaderBorder
 	}
-	return src
+	return base
 }
 
 // setOldPrompt applies deprecated prompt settings for backward compatibility.
 //
 // Deprecated: This function is planned to be removed in future versions.
-func setOldPrompt(src RunTimeSettings, config Config) RunTimeSettings {
+func setOldPrompt(base RunTimeSettings, config Config) RunTimeSettings {
 	prompt := config.Prompt
 	// Old PromptConfig settings are loaded with lower priority.
 	if prompt.Normal.ShowFilename != nil {
-		src.OVPromptConfig.Normal.ShowFilename = *prompt.Normal.ShowFilename
+		base.OVPromptConfig.Normal.ShowFilename = *prompt.Normal.ShowFilename
 	}
 	if prompt.Normal.InvertColor != nil {
-		src.OVPromptConfig.Normal.InvertColor = *prompt.Normal.InvertColor
+		base.OVPromptConfig.Normal.InvertColor = *prompt.Normal.InvertColor
 	}
 	if prompt.Normal.ProcessOfCount != nil {
-		src.OVPromptConfig.Normal.ProcessOfCount = *prompt.Normal.ProcessOfCount
+		base.OVPromptConfig.Normal.ProcessOfCount = *prompt.Normal.ProcessOfCount
 	}
-	return src
+	return base
 }
 
-// applyIfSet copies the dereferenced value of src into dst if src is non-nil.
-func applyIfSet[T any](dst *T, src *T) {
-	if src != nil {
-		*dst = *src
+// applyIfSet copies the dereferenced value of override into base if override is non-nil.
+func applyIfSet[T any](base *T, override *T) {
+	if override != nil {
+		*base = *override
 	}
 }
 
 // updateRunTimeSettings updates the RunTimeSettings.
-func updateRunTimeSettings(src RunTimeSettings, dst General) RunTimeSettings {
-	applyIfSet(&src.TabWidth, dst.TabWidth)
-	applyIfSet(&src.Header, dst.Header)
-	applyIfSet(&src.VerticalHeader, dst.VerticalHeader)
-	applyIfSet(&src.HeaderColumn, dst.HeaderColumn)
-	applyIfSet(&src.SkipLines, dst.SkipLines)
-	applyIfSet(&src.WatchInterval, dst.WatchInterval)
-	applyIfSet(&src.MarkStyleWidth, dst.MarkStyleWidth)
-	applyIfSet(&src.SectionStartPosition, dst.SectionStartPosition)
-	applyIfSet(&src.SectionHeaderNum, dst.SectionHeaderNum)
-	applyIfSet(&src.HScrollWidth, dst.HScrollWidth)
-	applyIfSet(&src.HScrollWidthNum, dst.HScrollWidthNum)
-	applyIfSet(&src.VScrollLines, dst.VScrollLines)
-	applyIfSet(&src.RulerType, dst.RulerType)
-	applyIfSet(&src.AlternateRows, dst.AlternateRows)
-	applyIfSet(&src.ColumnMode, dst.ColumnMode)
-	applyIfSet(&src.ColumnWidth, dst.ColumnWidth)
-	applyIfSet(&src.ColumnRainbow, dst.ColumnRainbow)
-	applyIfSet(&src.LineNumMode, dst.LineNumMode)
-	applyIfSet(&src.WrapMode, dst.WrapMode)
-	applyIfSet(&src.FollowMode, dst.FollowMode)
-	applyIfSet(&src.FollowAll, dst.FollowAll)
-	applyIfSet(&src.FollowSection, dst.FollowSection)
-	applyIfSet(&src.FollowName, dst.FollowName)
-	applyIfSet(&src.PlainMode, dst.PlainMode)
-	applyIfSet(&src.SectionHeader, dst.SectionHeader)
-	applyIfSet(&src.HideOtherSection, dst.HideOtherSection)
-	applyIfSet(&src.StatusLine, dst.StatusLine)
-	applyIfSet(&src.ColumnDelimiter, dst.ColumnDelimiter)
-	applyIfSet(&src.SectionDelimiter, dst.SectionDelimiter)
-	applyIfSet(&src.JumpTarget, dst.JumpTarget)
-	applyIfSet(&src.MultiColorWords, dst.MultiColorWords)
-	applyIfSet(&src.Caption, dst.Caption)
-	applyIfSet(&src.Converter, dst.Converter)
-	if dst.Align != nil && *dst.Align {
-		src.Converter = convAlign
+func updateRunTimeSettings(base RunTimeSettings, override General) RunTimeSettings {
+	applyIfSet(&base.TabWidth, override.TabWidth)
+	applyIfSet(&base.Header, override.Header)
+	applyIfSet(&base.VerticalHeader, override.VerticalHeader)
+	applyIfSet(&base.HeaderColumn, override.HeaderColumn)
+	applyIfSet(&base.SkipLines, override.SkipLines)
+	applyIfSet(&base.WatchInterval, override.WatchInterval)
+	applyIfSet(&base.MarkStyleWidth, override.MarkStyleWidth)
+	applyIfSet(&base.SectionStartPosition, override.SectionStartPosition)
+	applyIfSet(&base.SectionHeaderNum, override.SectionHeaderNum)
+	applyIfSet(&base.HScrollWidth, override.HScrollWidth)
+	applyIfSet(&base.HScrollWidthNum, override.HScrollWidthNum)
+	applyIfSet(&base.VScrollLines, override.VScrollLines)
+	applyIfSet(&base.RulerType, override.RulerType)
+	applyIfSet(&base.AlternateRows, override.AlternateRows)
+	applyIfSet(&base.ColumnMode, override.ColumnMode)
+	applyIfSet(&base.ColumnWidth, override.ColumnWidth)
+	applyIfSet(&base.ColumnRainbow, override.ColumnRainbow)
+	applyIfSet(&base.LineNumMode, override.LineNumMode)
+	applyIfSet(&base.WrapMode, override.WrapMode)
+	applyIfSet(&base.FollowMode, override.FollowMode)
+	applyIfSet(&base.FollowAll, override.FollowAll)
+	applyIfSet(&base.FollowSection, override.FollowSection)
+	applyIfSet(&base.FollowName, override.FollowName)
+	applyIfSet(&base.PlainMode, override.PlainMode)
+	applyIfSet(&base.SectionHeader, override.SectionHeader)
+	applyIfSet(&base.HideOtherSection, override.HideOtherSection)
+	applyIfSet(&base.StatusLine, override.StatusLine)
+	applyIfSet(&base.ColumnDelimiter, override.ColumnDelimiter)
+	applyIfSet(&base.SectionDelimiter, override.SectionDelimiter)
+	applyIfSet(&base.JumpTarget, override.JumpTarget)
+	applyIfSet(&base.MultiColorWords, override.MultiColorWords)
+	applyIfSet(&base.Caption, override.Caption)
+	applyIfSet(&base.Converter, override.Converter)
+	if override.Align != nil && *override.Align {
+		base.Converter = convAlign
 	}
-	if dst.Raw != nil && *dst.Raw {
-		src.Converter = convRaw
+	if override.Raw != nil && *override.Raw {
+		base.Converter = convRaw
 	}
-	if dst.Wrap != nil {
+	if override.Wrap != nil {
 		// Normalize wrap mode: support short forms (c, w)
-		wrapMode := *dst.Wrap
+		wrapMode := *override.Wrap
 		switch wrapMode {
 		case "w", "word":
-			src.Converter = convWordWrap
-			src.WrapMode = true
+			base.Converter = convWordWrap
+			base.WrapMode = true
 		case "f", "false", "no", "n", "0", "FALSE", "False":
-			src.WrapMode = false
+			base.WrapMode = false
 		default:
-			src.WrapMode = true // Default to true for any other value, including "c", "char", "true", "yes", etc.
+			base.WrapMode = true // Default to true for any other value, including "c", "char", "true", "yes", etc.
 		}
 	}
-	src.OVPromptConfig = updatePromptConfig(src.OVPromptConfig, dst.Prompt)
-	src.Style = updateRuntimeStyle(src.Style, dst.Style)
-	return src
+	base.OVPromptConfig = updatePromptConfig(base.OVPromptConfig, override.Prompt)
+	base.Style = updateRuntimeStyle(base.Style, override.Style)
+	return base
 }
 
 // updatePromptConfig updates the prompt configuration.
-func updatePromptConfig(src OVPromptConfig, dst PromptConfig) OVPromptConfig {
-	applyIfSet(&src.Normal.InvertColor, dst.Normal.InvertColor)
-	applyIfSet(&src.Normal.ShowFilename, dst.Normal.ShowFilename)
-	applyIfSet(&src.Normal.ProcessOfCount, dst.Normal.ProcessOfCount)
-	applyIfSet(&src.Normal.CursorType, dst.Normal.CursorType)
-	applyIfSet(&src.Input.CursorType, dst.Input.CursorType)
-	return src
+func updatePromptConfig(base OVPromptConfig, override PromptConfig) OVPromptConfig {
+	applyIfSet(&base.Normal.InvertColor, override.Normal.InvertColor)
+	applyIfSet(&base.Normal.ShowFilename, override.Normal.ShowFilename)
+	applyIfSet(&base.Normal.ProcessOfCount, override.Normal.ProcessOfCount)
+	applyIfSet(&base.Normal.CursorType, override.Normal.CursorType)
+	applyIfSet(&base.Input.CursorType, override.Input.CursorType)
+	return base
 }
 
 // updateRuntimeStyle updates the style.
-func updateRuntimeStyle(src Style, dst StyleConfig) Style {
-	applyIfSet(&src.ColumnRainbow, dst.ColumnRainbow)
-	applyIfSet(&src.MultiColorHighlight, dst.MultiColorHighlight)
-	applyIfSet(&src.Header, dst.Header)
-	applyIfSet(&src.Body, dst.Body)
-	applyIfSet(&src.LineNumber, dst.LineNumber)
-	applyIfSet(&src.SearchHighlight, dst.SearchHighlight)
-	applyIfSet(&src.ColumnHighlight, dst.ColumnHighlight)
-	applyIfSet(&src.MarkLine, dst.MarkLine)
-	applyIfSet(&src.SectionLine, dst.SectionLine)
-	applyIfSet(&src.VerticalHeader, dst.VerticalHeader)
-	applyIfSet(&src.JumpTargetLine, dst.JumpTargetLine)
-	applyIfSet(&src.Alternate, dst.Alternate)
-	applyIfSet(&src.Ruler, dst.Ruler)
-	applyIfSet(&src.HeaderBorder, dst.HeaderBorder)
-	applyIfSet(&src.SectionHeaderBorder, dst.SectionHeaderBorder)
-	applyIfSet(&src.VerticalHeaderBorder, dst.VerticalHeaderBorder)
-	applyIfSet(&src.LeftStatus, dst.LeftStatus)
-	applyIfSet(&src.RightStatus, dst.RightStatus)
-	applyIfSet(&src.SelectActive, dst.SelectActive)
-	applyIfSet(&src.SelectCopied, dst.SelectCopied)
-	applyIfSet(&src.PauseLine, dst.PauseLine)
-	return src
+func updateRuntimeStyle(base Style, override StyleConfig) Style {
+	applyIfSet(&base.ColumnRainbow, override.ColumnRainbow)
+	applyIfSet(&base.MultiColorHighlight, override.MultiColorHighlight)
+	applyIfSet(&base.Header, override.Header)
+	applyIfSet(&base.Body, override.Body)
+	applyIfSet(&base.LineNumber, override.LineNumber)
+	applyIfSet(&base.SearchHighlight, override.SearchHighlight)
+	applyIfSet(&base.ColumnHighlight, override.ColumnHighlight)
+	applyIfSet(&base.MarkLine, override.MarkLine)
+	applyIfSet(&base.SectionLine, override.SectionLine)
+	applyIfSet(&base.VerticalHeader, override.VerticalHeader)
+	applyIfSet(&base.JumpTargetLine, override.JumpTargetLine)
+	applyIfSet(&base.Alternate, override.Alternate)
+	applyIfSet(&base.Ruler, override.Ruler)
+	applyIfSet(&base.HeaderBorder, override.HeaderBorder)
+	applyIfSet(&base.SectionHeaderBorder, override.SectionHeaderBorder)
+	applyIfSet(&base.VerticalHeaderBorder, override.VerticalHeaderBorder)
+	applyIfSet(&base.LeftStatus, override.LeftStatus)
+	applyIfSet(&base.RightStatus, override.RightStatus)
+	applyIfSet(&base.SelectActive, override.SelectActive)
+	applyIfSet(&base.SelectCopied, override.SelectCopied)
+	applyIfSet(&base.PauseLine, override.PauseLine)
+	return base
 }
