@@ -124,6 +124,9 @@ StyleOverLine:
 # Connect with modifier key + key
 #   "ctrl+c"
 {{KEYBIND}}
+
+# View mode specific settings
+# The "General" setting can be overridden in view mode.
 Mode:
   markdown:
     SectionDelimiter: "^#"
@@ -145,3 +148,9 @@ Mode:
     LineNumMode: false
     Wrap: "character"
     ColumnDelimiter: "|"
+  ps:
+    Header: 1
+    ColumnMode: true
+    ColumnRainbow: true
+    ColumnWidth: true
+    Wrap: "none"
