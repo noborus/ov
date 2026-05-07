@@ -5,6 +5,9 @@ LDFLAGS := "-X main.Version=$(shell git describe --tags --abbrev=0 --always) -X 
 
 all: build
 
+generate:
+	go generate ./oviewer/...
+
 test: deps $(SRCS)
 	go test ./...
 
@@ -25,4 +28,4 @@ sys-install: build
 clean:
 	rm -f $(BINARY_NAME)
 
-.PHONY: all test deps build install clean
+.PHONY: all generate test deps build install clean

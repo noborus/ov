@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"slices"
 	"strings"
 
 	"codeberg.org/tslocum/cbind"
@@ -242,121 +243,6 @@ func (root *Root) handlers() map[string]func(context.Context) {
 
 // KeyBind represents a mapping from action names to their associated key sequences.
 type KeyBind map[string][]string
-
-// defaultKeyBinds are the default keybindings.
-func defaultKeyBinds() KeyBind {
-	return map[string][]string{
-		actionExit:           {"Escape", "q"},
-		actionCancel:         {"ctrl+c"},
-		actionWriteExit:      {"Q"},
-		actionSuspend:        {"ctrl+z"},
-		actionEdit:           {"alt+v"},
-		actionSync:           {"ctrl+l"},
-		actionFollow:         {"ctrl+f"},
-		actionFollowAll:      {"ctrl+a"},
-		actionFollowSection:  {"F2"},
-		actionPlain:          {"ctrl+e"},
-		actionRainbow:        {"ctrl+r"},
-		actionCloseFile:      {"ctrl+F9", "ctrl+alt+s"},
-		actionReload:         {"F5", "ctrl+alt+l"},
-		actionWatch:          {"F4", "ctrl+alt+w"},
-		actionHelp:           {"h", "ctrl+F1", "ctrl+alt+c"},
-		actionLogDoc:         {"ctrl+F2", "ctrl+alt+e"},
-		actionMark:           {"m"},
-		actionRemoveMark:     {"M"},
-		actionRemoveAllMark:  {"ctrl+delete"},
-		actionAlternate:      {"C"},
-		actionLineNumMode:    {"G"},
-		actionWrap:           {"w", "W"},
-		actionWordWrap:       {"alt+w"},
-		actionColumnMode:     {"c"},
-		actionColumnWidth:    {"alt+o"},
-		actionNextSearch:     {"n"},
-		actionNextBackSearch: {"N"},
-		actionNextDoc:        {"]"},
-		actionPreviousDoc:    {"["},
-		actionCloseDoc:       {"ctrl+k"},
-		actionCloseAllFilter: {"K"},
-		actionToggleMouse:    {"ctrl+F8", "ctrl+alt+r"},
-		actionHideOther:      {"alt+-"},
-		actionAlignFormat:    {"alt+f"},
-		actionRawFormat:      {"alt+r"},
-		actionFixedColumn:    {"F"},
-		actionShrinkColumn:   {"s"},
-		actionRightAlign:     {"alt+a"},
-		actionRuler:          {"alt+shift+F9"},
-		actionWriteOriginal:  {"alt+shift+F8"},
-		actionStatusLine:     {"ctrl+F10"},
-
-		// Move actions.
-		actionMoveDown:       {"Enter", "Down", "ctrl+n"},
-		actionMoveUp:         {"Up", "ctrl+p"},
-		actionMoveTop:        {"Home"},
-		actionMoveWidthLeft:  {"alt+left"},
-		actionMoveWidthRight: {"alt+right"},
-		actionMoveLeft:       {"left"},
-		actionMoveRight:      {"right"},
-		actionMoveHfLeft:     {"ctrl+left"},
-		actionMoveHfRight:    {"ctrl+right"},
-		actionMoveBeginLeft:  {"shift+Home"},
-		actionMoveEndRight:   {"shift+End"},
-		actionMoveBottom:     {"End"},
-		actionMovePgUp:       {"PageUp", "ctrl+b"},
-		actionMovePgDn:       {"PageDown", "ctrl+v"},
-		actionMoveHfUp:       {"ctrl+u"},
-		actionMoveHfDn:       {"ctrl+d"},
-		actionNextSection:    {"space"},
-		actionLastSection:    {"9"},
-		actionPrevSection:    {"^"},
-		actionMoveMark:       {">"},
-		actionMovePrevMark:   {"<"},
-
-		// sidebar actions.
-		actionSidebarHelp:     {"alt+h"},
-		actionSidebarMarks:    {"alt+m"},
-		actionSidebarDocList:  {"alt+l"},
-		actionSidebarSections: {"alt+u"},
-		actionSidebarUp:       {"shift+Up"},
-		actionSidebarDown:     {"shift+Down"},
-		actionSidebarLeft:     {"shift+Left"},
-		actionSidebarRight:    {"shift+Right"},
-
-		// Actions that enter input mode.
-		actionConvertType:    {"alt+t"},
-		actionDelimiter:      {"d"},
-		actionGoLine:         {"g"},
-		actionHeaderColumn:   {"Y"},
-		actionHeader:         {"H"},
-		actionJumpTarget:     {"j"},
-		actionMultiColor:     {"."},
-		actionSaveBuffer:     {"S"},
-		actionSearch:         {"/"},
-		actionBackSearch:     {"?"},
-		actionFilter:         {"&"},
-		actionSection:        {"alt+d"},
-		actionSectionNum:     {"F7"},
-		actionSectionStart:   {"ctrl+F3", "alt+s"},
-		actionSkipLines:      {"ctrl+s"},
-		actionTabWidth:       {"t"},
-		actionVerticalHeader: {"y"},
-		actionViewMode:       {"p", "P"},
-		actionWatchInterval:  {"ctrl+w"},
-		actionWriteBA:        {"ctrl+q"},
-		actionMarkNumber:     {","},
-		actionMarkByPattern:  {"*"},
-
-		// input actions.
-		inputCaseSensitive:      {"alt+c"},
-		inputSmartCaseSensitive: {"alt+s"},
-		inputIncSearch:          {"alt+i"},
-		inputRegexpSearch:       {"alt+r"},
-		inputNonMatch:           {"!"},
-		inputPrevious:           {"Up"},
-		inputNext:               {"Down"},
-		inputCopy:               {"ctrl+c"},
-		inputPaste:              {"ctrl+v"},
-	}
-}
 
 type Group int
 
@@ -616,8 +502,13 @@ func writeHeader(w io.Writer, header string) {
 func GetKeyBinds(config Config) KeyBind {
 	keyBind := make(map[string][]string)
 
-	if strings.ToLower(config.DefaultKeyBind) != "disable" {
-		keyBind = defaultKeyBinds()
+	switch strings.ToLower(config.DefaultKeyBind) {
+	case "disable":
+		// no default keybindings
+	case "less":
+		keyBind = LessKeyBinds()
+	default:
+		keyBind = DefaultKeyBinds()
 	}
 
 	// Overwrite with config file.
@@ -768,8 +659,10 @@ func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
 
 	// Return only keys with multiple actions (duplicates)
 	duplicates := make([]keyActionMapping, 0, len(keyActions))
-	for _, mapping := range keyActions {
+	for _, k := range slices.Sorted(maps.Keys(keyActions)) {
+		mapping := keyActions[k]
 		if len(mapping.action) > 1 {
+			slices.Sort(mapping.action)
 			duplicates = append(duplicates, mapping)
 		}
 	}
