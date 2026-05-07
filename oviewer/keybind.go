@@ -662,6 +662,7 @@ func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
 	for _, k := range slices.Sorted(maps.Keys(keyActions)) {
 		mapping := keyActions[k]
 		if len(mapping.action) > 1 {
+			slices.Sort(mapping.action)
 			duplicates = append(duplicates, mapping)
 		}
 	}

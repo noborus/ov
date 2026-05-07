@@ -29,7 +29,7 @@ func TestDuplicateKeyBind(t *testing.T) {
 				actionExit:   {"Escape", "q"},
 				actionCancel: {"q"},
 			},
-			want: "\n\tDuplicate key bindings:\nDuplicate key [q] for exit, cancel\n",
+			want: "\n\tDuplicate key bindings:\nDuplicate key [q] for cancel, exit\n",
 		},
 		{
 			name: "DefaultKeyBind",
