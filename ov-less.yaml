@@ -1,6 +1,5 @@
-# This is a file with less key bindings set.
+# This is the ov config file.
 # Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
-# Thanks to hupfdule (Marco Herrn) for the less keybinding information.
 #
 # QuitSmall: false # Quit if the file size is smaller than the terminal size.
 # IsWriteOriginal: false # Write the original content when exiting.
@@ -37,12 +36,12 @@
 # ReadWaitTime: 1s # Time to wait for a search while reading. 1s is the default.
 
 General:
-  TabWidth: 4
+  TabWidth: 8
   Header: 0
   AlternateRows: false
   ColumnMode: false
   LineNumMode: false
-  WrapMode: true
+  Wrap: "character" # Wrap mode. Options: "character", "word", "none".
   ColumnDelimiter: ","
   MarkStyleWidth: 1
 # HScrollWidth: 10%
@@ -56,61 +55,63 @@ General:
     Input:
 #      CursorType: 1 # Cursor type for the input prompt.
 
+#  SectionDelimiter: "^#"
   # Style
   # String of the color name: Foreground, Background, UnderlineColor
   # Boolean: Bold, Blink, Dim, Italic, Underline
   # Number: UnderlineStyle
   Style:
     Alternate:
-        Background: "gray"
+      Background: "gray"
     Header:
-        Bold: true
+      Bold: true
     Body:
-        # Add appropriate styles here
-    OverStrike:
-        Bold: true
-    OverLine:
-        Underline: true
+      # Add appropriate styles here
     LineNumber:
-        Bold: true
+      Bold: true
     SearchHighlight:
-        Reverse: true
+      Reverse: true
     ColumnHighlight:
-        Reverse: true
+      Reverse: true
     MarkLine:
-        Background: "darkgoldenrod"
+      Background: "darkgoldenrod"
     SectionLine:
-        Background: "slateblue"
+      Background: "slateblue"
     VerticalHeader:
-        # Add appropriate styles here
+      # Add appropriate styles here
     Ruler:
-        Background: "#333333"
-        Foreground: "#CCCCCC"
-        Bold: true
+      Background: "#333333"
+      Foreground: "#CCCCCC"
+      Bold: true
     HeaderBorder:
-        # Add appropriate styles here
+      # Add appropriate styles here
     SectionHeaderBorder:
-        # Add appropriate styles here
+      # Add appropriate styles here
     VerticalHeaderBorder:
-        Background: "#c0c0c0"
+      Background: "#c0c0c0"
     MultiColorHighlight:
-        - Foreground: "red"
-        - Foreground: "aqua"
-        - Foreground: "yellow"
-        - Foreground: "fuchsia"
-        - Foreground: "lime"
-        - Foreground: "blue"
-        - Foreground: "gray"
+      - Foreground: "red"
+      - Foreground: "aqua"
+      - Foreground: "yellow"
+      - Foreground: "fuchsia"
+      - Foreground: "lime"
+      - Foreground: "blue"
+      - Foreground: "gray"
     ColumnRainbow:
-        - Foreground: "white"
-        - Foreground: "crimson"
-        - Foreground: "aqua"
-        - Foreground: "lightsalmon"
-        - Foreground: "lime"
-        - Foreground: "blue"
-        - Foreground: "yellowgreen"
+      - Foreground: "white"
+      - Foreground: "crimson"
+      - Foreground: "aqua"
+      - Foreground: "lightsalmon"
+      - Foreground: "lime"
+      - Foreground: "blue"
+      - Foreground: "yellowgreen"
     JumpTargetLine:
-        Underline: true
+      Underline: true
+
+StyleOverStrike:
+  Bold: true
+StyleOverLine:
+  Underline: true
 
 # Keybind
 # Special key
@@ -123,45 +124,35 @@ General:
 # Connect with modifier key + key
 #   "ctrl+c"
 KeyBind:
-    exit:
-        - "Escape"
-        - "q"
+    align_format:
+        - "ctrl+alt+f"
+    alter_rows_mode:
+        - "C"
+    backsearch:
+        - "?"
+    begin_left:
+        - "shift+Home"
+    bottom:
+        - "End"
+        - ">"
+        - "G"
     cancel:
         - "ctrl+c"
-    write_exit:
-        - "Q"
-    set_write_exit:
-        - "ctrl+q"
-    write_original:
-        - "alt+shift+F8"
-    suspend:
-        - "ctrl+z"
-    edit:
-        - "v"
-    status_line:
-        - "ctrl+F10"
-    sync:
-        - "r"
-        - "ctrl+l"
-    reload:
-        - "R"
-        - "ctrl+r"
-    watch:
-        - "T"
-        - "ctrl+alt+w"
-    watch_interval:
-        - "ctrl+w"
-    follow_mode:
-        - "F"
-    follow_all:
-        - "ctrl+a"
-    follow_section:
-        - "F2"
-    help:
-        - "h"
-        - "ctrl+alt+c"
-    logdoc:
-        - "ctrl+alt+e"
+    close_all_filter:
+        - "ctrl+alt+k"
+    close_doc:
+        - "alt+k"
+    close_file:
+        - "ctrl+F9"
+        - "ctrl+alt+s"
+    column_mode:
+        - "c"
+    column_width:
+        - "alt+o"
+    convert_type:
+        - "ctrl+alt+t"
+    delimiter:
+        - "F8"
     down:
         - "e"
         - "ctrl+e"
@@ -170,6 +161,177 @@ KeyBind:
         - "ctrl+j"
         - "Enter"
         - "Down"
+    edit:
+        - "v"
+    end_right:
+        - "shift+End"
+    exit:
+        - "Escape"
+        - "q"
+    filter:
+        - "&"
+    fixed_column:
+        - "alt+f"
+    follow_all:
+        - "ctrl+a"
+    follow_mode:
+        - "F"
+    follow_section:
+        - "F2"
+    goto:
+        - ":"
+    half_left:
+        - "ctrl+left"
+    half_right:
+        - "ctrl+right"
+    header:
+        - "H"
+    header_column:
+        - "ctrl+alt+d"
+    help:
+        - "h"
+        - "ctrl+alt+c"
+    hide_other:
+        - "alt+-"
+    input_casesensitive:
+        - "alt+c"
+    input_copy:
+        - "ctrl+c"
+    input_incsearch:
+        - "alt+i"
+    input_next:
+        - "Down"
+    input_non_match:
+        - "!"
+    input_paste:
+        - "ctrl+v"
+    input_previous:
+        - "Up"
+    input_regexp_search:
+        - "alt+r"
+    input_smart_casesensitive:
+        - "alt+s"
+    jump_target:
+        - "alt+j"
+    last_section:
+        - "9"
+    left:
+        - "left"
+    line_number_mode:
+        - "alt+n"
+    logdoc:
+        - "ctrl+alt+e"
+    mark:
+        - "m"
+    mark_by_pattern:
+        - "*"
+    mark_number:
+        - ","
+    multi_color:
+        - "."
+    next_backsearch:
+        - "N"
+    next_doc:
+        - "]"
+    next_mark:
+        - "alt+>"
+    next_search:
+        - "n"
+    next_section:
+        - "space"
+    page_down:
+        - "PageDown"
+        - "ctrl+v"
+        - "alt+space"
+        - "f"
+        - "z"
+    page_half_down:
+        - "d"
+        - "ctrl+d"
+    page_half_up:
+        - "u"
+        - "ctrl+u"
+    page_up:
+        - "PageUp"
+        - "b"
+        - "alt+v"
+    plain_mode:
+        - "ctrl+F7"
+    previous_doc:
+        - "["
+    previous_mark:
+        - "alt+<"
+    previous_section:
+        - "^"
+    rainbow_mode:
+        - "ctrl+F4"
+    raw_format:
+        - "ctrl+alt+g"
+    reload:
+        - "R"
+        - "ctrl+r"
+    remove_all_mark:
+        - "ctrl+delete"
+    remove_mark:
+        - "M"
+    right:
+        - "right"
+    right_align:
+        - "alt+a"
+    save_buffer:
+        - "s"
+    search:
+        - "/"
+    section_delimiter:
+        - "alt+d"
+    section_header_num:
+        - "F7"
+    section_start:
+        - "ctrl+F3"
+        - "alt+s"
+    set_view_mode:
+        - "p"
+        - "P"
+    set_write_exit:
+        - "ctrl+q"
+    shrink_column:
+        - "alt+x"
+    sidebar_doc_list:
+        - "alt+l"
+    sidebar_down:
+        - "shift+Down"
+    sidebar_help:
+        - "alt+h"
+    sidebar_left:
+        - "shift+Left"
+    sidebar_marks:
+        - "alt+m"
+    sidebar_right:
+        - "shift+Right"
+    sidebar_sections:
+        - "alt+u"
+    sidebar_up:
+        - "shift+Up"
+    skip_lines:
+        - "ctrl+s"
+    status_line:
+        - "ctrl+F10"
+    suspend:
+        - "ctrl+z"
+    sync:
+        - "r"
+        - "ctrl+l"
+    tabwidth:
+        - "t"
+    toggle_mouse:
+        - "ctrl+F8"
+        - "ctrl+alt+r"
+    toggle_ruler:
+        - "alt+shift+F9"
+    top:
+        - "Home"
+        - "g"
+        - "<"
     up:
         - "y"
         - "Y"
@@ -178,189 +340,31 @@ KeyBind:
         - "K"
         - "ctrl+k"
         - "Up"
-    top:
-        - "Home"
-        - "g"
-        - "<"
-    bottom:
-        - "End"
-        - ">"
-        - "G"
-    left:
-        - "left"
-    right:
-        - "right"
-    half_left:
-        - "ctrl+left"
-    half_right:
-        - "ctrl+right"
-    page_up:
-        - "PageUp"
-        - "b"
-        - "alt+v"
-    page_down:
-        - "PageDown"
-        - "ctrl+v"
-        - "alt+space"
-        - "f"
-        - "z"
-    page_half_up:
-        - "u"
-        - "ctrl+u"
-    page_half_down:
-        - "d"
-        - "ctrl+d"
-    section_delimiter:
-        - "alt+d"
-    section_start:
-        - "ctrl+F3"
-        - "alt+s"
-    section_header_num:
-        - "F7"
-    hide_other:
-        - "alt+-"
-    next_section:
-        - "space"
-    last_section:
-        - "9"
-    previous_section:
-        - "^"
-    mark:
-        - "m"
-    remove_mark:
-        - "M"
-    remove_all_mark:
-        - "ctrl+delete"
-    next_mark:
-        - "alt+>"
-    previous_mark:
-        - "alt+<"
-    set_view_mode:
-        - "p"
-        - "P"
-    alter_rows_mode:
-        - "C"
-    line_number_mode:
-        - "alt+n"
-    search:
-        - "/"
-    wrap_mode:
-        - "w"
-        - "W"
-    word_wrap_mode:
-        - "alt+w"
-    column_mode:
-        - "c"
-    backsearch:
-        - "?"
-    delimiter:
-        - "F8"
-    header:
-        - "H"
-    skip_lines:
-        - "ctrl+s"
-    tabwidth:
-        - "t"
-    goto:
-        - ":"
-    next_search:
-        - "n"
-    next_backsearch:
-        - "N"
-    next_doc:
-        - "]"
-    previous_doc:
-        - "["
-    toggle_mouse:
-        - "ctrl+F8"
-        - "ctrl+alt+r"
-    multi_color:
-        - "."
-    jump_target:
-        - "alt+j"
-    save_buffer:
-        - "s"
-    convert_type:
-        - "ctrl+alt+t"
-    align_format:
-        - "ctrl+alt+f"
-    raw_format:
-        - "ctrl+alt+g"
     vertical_header:
         - "ctrl+alt+b"
-    header_column:
-        - "ctrl+alt+d"
-    fixed_column:
-        - "alt+f"
-    shrink_column:
-        - "alt+x"
-    right_align:
-        - "alt+a"
-    toggle_ruler:
-        - "alt+shift+F9"
-    plain_mode:
-        - "ctrl+F7"
-    rainbow_mode:
-        - "ctrl+F4"
-    close_file:
-        - "ctrl+F9"
-        - "ctrl+alt+s"
+    watch:
+        - "T"
+        - "ctrl+alt+w"
+    watch_interval:
+        - "ctrl+w"
     width_left:
         - "alt+left"
     width_right:
         - "alt+right"
-    begin_left:
-        - "shift+Home"
-    end_right:
-        - "shift+End"
-    column_width:
-        - "alt+o"
-    filter:
-        - "&"
-    close_doc:
-        - "alt+k"
-    close_all_filter:
-        - "ctrl+alt+k"
-    sidebar_help:
-        - "alt+h"
-    sidebar_marks:
-        - "alt+m"
-    sidebar_doc_list:
-        - "alt+l"
-    sidebar_sections:
-        - "alt+u"
-    sidebar_up:
-        - "shift+up"
-    sidebar_down:
-        - "shift+down"
-    sidebar_left:
-        - "shift+left"
-    sidebar_right:
-        - "shift+right"
-
-    input_casesensitive:
-        - "alt+c"
-    input_smart_casesensitive:
-        - "alt+s"
-    input_incsearch:
-        - "alt+i"
-    input_regexp_search:
-        - "alt+r"
-    input_non_match:
-        - "!"
-    input_previous:
-        - "Up"
-    input_next:
-        - "Down"
-    input_copy:
-        - "ctrl+c"
-    input_paste:
-        - "ctrl+v"
+    word_wrap_mode:
+        - "alt+w"
+    wrap_mode:
+        - "w"
+        - "W"
+    write_exit:
+        - "Q"
+    write_original:
+        - "alt+shift+F8"
 
 Mode:
   markdown:
     SectionDelimiter: "^#"
-    WrapMode: true
+    Wrap: "character"
     Style:
       SectionLine:
         Background: "blue"
@@ -369,12 +373,12 @@ Mode:
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"
   mysql:
     Header: 3
     AlternateRows: true
     ColumnMode: true
     LineNumMode: false
-    WrapMode: true
+    Wrap: "character"
     ColumnDelimiter: "|"
