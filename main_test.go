@@ -217,23 +217,29 @@ func TestRootCmd_GenerateConfigStdout(t *testing.T) {
 
 	cfgFile = ""
 	ver = false
-	r, w, err := os.Pipe()
+	
+	// Create a temporary file to capture stdout
+	tmpFile, err := os.CreateTemp("", "test-stdout-*.txt")
 	if err != nil {
-		t.Fatalf("Pipe() error = %v", err)
+		t.Fatalf("CreateTemp() error = %v", err)
 	}
-	os.Stdout = w
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+	
+	os.Stdout = tmpFile
 
 	rootCmd.SetArgs([]string{"--generate-config", "default"})
 	if err := rootCmd.Execute(); err != nil {
 		t.Fatalf("rootCmd.Execute() error = %v", err)
 	}
 
-	if err := w.Close(); err != nil {
-		t.Fatalf("Close() error = %v", err)
+	// Seek back to the beginning to read the content
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		t.Fatalf("Seek() error = %v", err)
 	}
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, r); err != nil {
+	if _, err := io.Copy(&buf, tmpFile); err != nil {
 		t.Fatalf("Copy() error = %v", err)
 	}
 
