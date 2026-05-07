@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"slices"
 	"strings"
 
 	"codeberg.org/tslocum/cbind"
@@ -658,7 +659,8 @@ func findDuplicateKeyBind(keyBind KeyBind) ([]keyActionMapping, []error) {
 
 	// Return only keys with multiple actions (duplicates)
 	duplicates := make([]keyActionMapping, 0, len(keyActions))
-	for _, mapping := range keyActions {
+	for _, k := range slices.Sorted(maps.Keys(keyActions)) {
+		mapping := keyActions[k]
 		if len(mapping.action) > 1 {
 			duplicates = append(duplicates, mapping)
 		}
