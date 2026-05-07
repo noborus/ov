@@ -351,7 +351,7 @@ func updateRunTimeSettings(base RunTimeSettings, override General) RunTimeSettin
 		case "w", "word":
 			base.Converter = convWordWrap
 			base.WrapMode = true
-		case "f", "false", "no", "n", "0", "FALSE", "False":
+		case "f", "false", "none", "no", "n", "0", "FALSE", "False":
 			base.WrapMode = false
 		default:
 			base.WrapMode = true // Default to true for any other value, including "c", "char", "true", "yes", etc.
