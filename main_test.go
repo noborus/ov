@@ -148,10 +148,12 @@ func TestRootCmd_FlagFAndFilter(t *testing.T) {
 	origConfig := config
 	origFilter := filter
 	origCfgFile := cfgFile
+	origGenerateConfig := generateConfig
 	t.Cleanup(func() {
 		config = origConfig
 		filter = origFilter
 		cfgFile = origCfgFile
+		generateConfig = origGenerateConfig
 	})
 
 	config = oviewer.NewConfig()
@@ -168,5 +170,78 @@ func TestRootCmd_FlagFAndFilter(t *testing.T) {
 	}
 	if filter != "ok" {
 		t.Errorf("filter = %q, want %q", filter, "ok")
+	}
+}
+
+func TestRenderConfigTemplate(t *testing.T) {
+	content, err := renderConfigTemplate("default")
+	if err != nil {
+		t.Fatalf("renderConfigTemplate() error = %v", err)
+	}
+
+	if strings.Contains(content, keybindTag) {
+		t.Fatalf("rendered content contains unresolved tag %q", keybindTag)
+	}
+	if !strings.Contains(content, "KeyBind:\n") {
+		t.Fatalf("rendered content does not contain KeyBind section")
+	}
+}
+
+func TestRenderConfigTemplate_Mode(t *testing.T) {
+	defaultContent, err := renderConfigTemplate("default")
+	if err != nil {
+		t.Fatalf("renderConfigTemplate(default) error = %v", err)
+	}
+
+	lessContent, err := renderConfigTemplate("less")
+	if err != nil {
+		t.Fatalf("renderConfigTemplate(less) error = %v", err)
+	}
+
+	if defaultContent == lessContent {
+		t.Fatalf("rendered content for default and less should be different")
+	}
+}
+
+func TestRootCmd_GenerateConfigStdout(t *testing.T) {
+	origGenerateConfig := generateConfig
+	origVer := ver
+	origStdout := os.Stdout
+	origCfgFile := cfgFile
+	t.Cleanup(func() {
+		generateConfig = origGenerateConfig
+		ver = origVer
+		os.Stdout = origStdout
+		cfgFile = origCfgFile
+	})
+
+	cfgFile = ""
+	ver = false
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Pipe() error = %v", err)
+	}
+	os.Stdout = w
+
+	rootCmd.SetArgs([]string{"--generate-config", "default"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("rootCmd.Execute() error = %v", err)
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		t.Fatalf("Copy() error = %v", err)
+	}
+
+	got := buf.String()
+	if strings.Contains(got, keybindTag) {
+		t.Fatalf("generated output contains unresolved tag %q", keybindTag)
+	}
+	if !strings.Contains(got, "KeyBind:\n") {
+		t.Fatalf("generated output does not contain KeyBind section")
 	}
 }
