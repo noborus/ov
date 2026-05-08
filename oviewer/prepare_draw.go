@@ -66,10 +66,11 @@ func (root *Root) prepareStartX() {
 	m.rightMargin = 0
 	m.lineNumberWidth = 0
 	if m.LineNumMode {
+		target := m
 		if m.parent != nil {
-			m = m.parent
+			target = m.parent
 		}
-		m.lineNumberWidth = len(strconv.Itoa(m.BufEndNum())) + 1
+		m.lineNumberWidth = len(strconv.Itoa(target.BufEndNum())) + 1
 	}
 	m.bodyStartX = m.leftMargin + m.lineNumberWidth
 }
