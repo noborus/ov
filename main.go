@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/noborus/ov/oviewer"
@@ -46,6 +48,8 @@ var (
 	listViewMode bool
 	// completion is the generation of shell completion.
 	completion string
+	// generateConfig is the generation of configuration file content.
+	generateConfig string
 	// execCommand targets the output of executing the command.
 	execCommand bool
 
@@ -61,6 +65,11 @@ var (
 	// ErrMissingFile indicates that the file is missing.
 	ErrMissingFile = errors.New("missing file")
 )
+
+const keybindTag = "{{KEYBIND}}"
+
+//go:embed ov.yaml.template
+var configTemplate string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -96,6 +105,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		if completion != "" {
 			return Completion(cmd, completion)
 		}
+
+		if generateConfig != "" {
+			return GenerateConfig(generateConfig)
+		}
 		// Set a global variable to convert to a style before opening the file.
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
@@ -112,6 +125,53 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 		return RunOviewer(args)
 	},
+}
+
+// GenerateConfig writes generated config to stdout.
+// mode supports "default" and "less".
+func GenerateConfig(mode string) error {
+	content, err := renderConfigTemplate(mode)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprint(os.Stdout, content)
+	return err
+}
+
+func renderConfigTemplate(mode string) (string, error) {
+	var keyBind oviewer.KeyBind
+	switch mode {
+	case "less":
+		keyBind = oviewer.LessKeyBinds()
+	default:
+		keyBind = oviewer.DefaultKeyBinds()
+	}
+
+	generated := generateKeyBindSection(keyBind)
+	if !strings.Contains(configTemplate, keybindTag) {
+		return "", fmt.Errorf("template tag %q not found", keybindTag)
+	}
+
+	return strings.Replace(configTemplate, keybindTag, generated, 1), nil
+}
+
+func generateKeyBindSection(keyBind oviewer.KeyBind) string {
+	keys := make([]string, 0, len(keyBind))
+	for k := range keyBind {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+
+	var sb strings.Builder
+	sb.WriteString("KeyBind:\n")
+	for _, action := range keys {
+		vals := keyBind[action]
+		fmt.Fprintf(&sb, "    %s:\n", action)
+		for _, v := range vals {
+			fmt.Fprintf(&sb, "        - %q\n", v)
+		}
+	}
+	return sb.String()
 }
 
 // HelpKey displays key bindings and exits.
@@ -391,6 +451,10 @@ func init() {
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
+	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "generate configuration [default|less]")
+	_ = rootCmd.RegisterFlagCompletionFunc("generate-config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"default", "less"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
@@ -581,6 +645,10 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	if generateConfig != "" {
+		return
+	}
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
