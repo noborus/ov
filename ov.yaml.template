@@ -20,11 +20,16 @@
 #
 # ViewMode: markdown # Default view mode.
 #
-# For ClipboardMethod, specify “OSC52” to copy using OSC52 (if the terminal supports it).
-# ClipboardMethod: "default" # Clipboard method. Options: "OSC52" or other.
+# For ClipboardMethod.
+# specify "auto" (default) is "OSC52" if the terminal supports it, otherwise it falls back to "system".
+# specify "OSC52" to copy using OSC52.
+# Specify "system" to copy using the system clipboard.
+# ClipboardMethod: "default" # Clipboard method. Options: "auto", "OSC52", "system".
 #
 # SidebarWidth: 20% # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
-# SideBarMode: "none" # Sidebar mode. Options:  "help", "sections", "marks", "none".
+# SidebarMode: "none" # Sidebar mode. Options:  "help", "sections", "marks", "none".
+
+# Editor: "vim +%d %f" # Editor command. %d is line number, %f is file name.
 #
 # SetTerminalTitle: false # Set terminal title to display filename.
 #
@@ -130,7 +135,7 @@ StyleOverLine:
 Mode:
   markdown:
     SectionDelimiter: "^#"
-    Wrap: "character"
+    Wrap: "word"
     Style:
       SectionLine:
         Background: "blue"

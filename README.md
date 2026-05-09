@@ -1159,7 +1159,7 @@ You can edit the currently displayed file with your preferred editor by pressing
 
 If the file is not a regular file (for example, when viewing input from a pipe or standard input), a temporary file is created and passed to the editor for editing. This ensures that you can still edit the content even if the original input is not seekable.
 
-The editor command is determined by the `OVEDIT` or `EDITOR` environment variable.
+The editor command is determined by the `OVEDIT` or `EDITOR` environment variable, or by the `Editor` setting in the configuration file.
 
 You can use `%f` and `%d` as arguments in the editor command:
 
@@ -1783,6 +1783,13 @@ See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more inform
 > [!NOTE]
 > Some keys may not work depending on the terminal.
 > See also [Ctrl key and corresponding key pairs (commonly treated as the same in terminals)](#ctrl-key-and-corresponding-key-pairs-(commonly-treated-as-the-same-in-terminals)).
+
+If the same key is assigned to different actions, the end of the key bindings shown by Help or `--help-key` includes the duplicate warning.
+
+```help
+Duplicate key bindings:
+    Duplicate key [q] for exit, suspend
+```
 
 ###  8.6. <a name='general-configuration'></a>General configuration
 
