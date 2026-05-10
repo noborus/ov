@@ -107,7 +107,6 @@ func TestLessKeyBinds(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.action, func(t *testing.T) {
 			t.Parallel()
 			if !slices.Equal(less[tt.action], tt.want) {
@@ -140,14 +139,13 @@ func TestGetKeyBindsDefaultPreset(t *testing.T) {
 		},
 		{
 			name:   "disable",
-			config: Config{DefaultKeyBind: "disable", Keybind: map[string][]string{actionEdit: []string{"x"}}},
+			config: Config{DefaultKeyBind: "disable", Keybind: map[string][]string{actionEdit: {"x"}}},
 			action: actionEdit,
 			want:   []string{"x"},
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := GetKeyBinds(tt.config)
