@@ -96,9 +96,9 @@ func generateKeyBindSection(keyBind oviewer.KeyBind) string {
 	sb.WriteString("KeyBind:\n")
 	for _, action := range keys {
 		vals := keyBind[action]
-		sb.WriteString(fmt.Sprintf("    %s:\n", action))
+		fmt.Fprintf(&sb, "    %s:\n", action)
 		for _, v := range vals {
-			sb.WriteString(fmt.Sprintf("        - %q\n", v))
+			fmt.Fprintf(&sb, "        - %q\n", v)
 		}
 	}
 	return sb.String()
