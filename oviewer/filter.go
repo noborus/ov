@@ -15,16 +15,16 @@ type filterDocument struct {
 
 // Filter fires the filter event.
 func (root *Root) Filter(str string, nonMatch bool) {
+	root.Doc.nonMatch = nonMatch
+	root.input.value = str
 	go func() {
 		root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
-		root.sendFilter(str, nonMatch)
+		root.sendFilter(str)
 	}()
 }
 
 // sendFilter sends the filter event to the document.
-func (root *Root) sendFilter(str string, nonMatch bool) {
-	root.Doc.nonMatch = nonMatch
-	root.input.value = str
+func (root *Root) sendFilter(str string) {
 	ev := &eventInputSearch{
 		searchType: filter,
 		value:      str,
@@ -48,6 +48,8 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	r, w := io.Pipe()
 	render, err := renderDoc(m, r)
 	if err != nil {
+		r.Close()
+		w.Close()
 		log.Printf("failed to filter document: %v\n", err)
 		return
 	}
