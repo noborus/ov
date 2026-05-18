@@ -310,7 +310,7 @@ var tcellNewScreen = tcell.NewScreen
 // SetTcellNewScreen sets the function to create a new tcell screen.
 // This is used for testing purposes to replace the tcell.NewScreen function.
 // It allows for mocking the screen creation in tests.
-func SetTcellNewScreen(f func() (tcell.Screen, error)) {
+func SetTcellNewScreen(f func(opts ...tcell.TerminfoScreenOption) (tcell.Screen, error)) {
 	tcellNewScreen = f
 }
 
