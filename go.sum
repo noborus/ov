@@ -17,8 +17,8 @@ github.com/fsnotify/fsnotify v1.10.1 h1:b0/UzAf9yR5rhf3RPm9gf3ehBPpf0oZKIjtpKrx5
 github.com/fsnotify/fsnotify v1.10.1/go.mod h1:TLheqan6HD6GBK6PrDWyDPBaEV8LspOxvPSjC+bVfgo=
 github.com/gdamore/encoding v1.0.1 h1:YzKZckdBL6jVt2Gc+5p82qhrGiqMdG/eNs6Wy0u3Uhw=
 github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeeklsSDPivEo=
-github.com/gdamore/tcell/v3 v3.3.0 h1:lGo3VwiV8iYMH4TdwBDwEOoDctnOLns6QfrXvZkKNe8=
-github.com/gdamore/tcell/v3 v3.3.0/go.mod h1:8CJpEjUiAlFIrs7jUhzobiZsSLBAtXo8Dq9mCTrVnqo=
+github.com/gdamore/tcell/v3 v3.4.0 h1:VUym1HQZiYodA5PGQrqLxF7QwqQndcAUwQD7G7XUy5E=
+github.com/gdamore/tcell/v3 v3.4.0/go.mod h1:fjKxNiIFwbzTxDU+i+AAMz+xPOgXVaZq5tbShsKseHc=
 github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=
 github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
