@@ -193,6 +193,7 @@ func TestRoot_sidebarItemsForMark(t *testing.T) {
 			if err != nil {
 				t.Fatalf("could not construct receiver type: %v", err)
 			}
+			root.Doc.WaitEOF()
 			root.scr.vHeight = 20 // arbitrary value for testing
 			root.sidebarWidth = 20
 			root.sidebarMode = SidebarModeMarks
