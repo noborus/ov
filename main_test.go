@@ -217,7 +217,7 @@ func TestRootCmd_GenerateConfigStdout(t *testing.T) {
 
 	cfgFile = ""
 	ver = false
-	
+
 	// Create a temporary file to capture stdout
 	tmpFile, err := os.CreateTemp("", "test-stdout-*.txt")
 	if err != nil {
@@ -225,10 +225,10 @@ func TestRootCmd_GenerateConfigStdout(t *testing.T) {
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
-	
+
 	os.Stdout = tmpFile
 
-	rootCmd.SetArgs([]string{"--generate-config", "default"})
+	rootCmd.SetArgs([]string{"--generate-config=default"})
 	if err := rootCmd.Execute(); err != nil {
 		t.Fatalf("rootCmd.Execute() error = %v", err)
 	}

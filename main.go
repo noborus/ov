@@ -64,6 +64,8 @@ var (
 	ErrNoArgument = errors.New("no arguments to execute")
 	// ErrMissingFile indicates that the file is missing.
 	ErrMissingFile = errors.New("missing file")
+	// ErrGenerateConfigArg suggests using '=' style for generate-config mode.
+	ErrGenerateConfigArg = errors.New("requires an argument; use --generate-config=default or --generate-config=less")
 )
 
 const keybindTag = "{{KEYBIND}}"
@@ -107,7 +109,7 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		}
 
 		if generateConfig != "" {
-			return GenerateConfig(generateConfig)
+			return GenerateConfig(generateConfig, args)
 		}
 		// Set a global variable to convert to a style before opening the file.
 		oviewer.OverStrikeStyle = oviewer.ToTcellStyle(config.StyleOverStrike)
@@ -129,7 +131,10 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 
 // GenerateConfig writes generated config to stdout.
 // mode supports "default" and "less".
-func GenerateConfig(mode string) error {
+func GenerateConfig(mode string, args []string) error {
+	if mode == "default" && len(args) > 0 { // Prevent `--generate-config less`
+		return ErrGenerateConfigArg
+	}
 	content, err := renderConfigTemplate(mode)
 	if err != nil {
 		return err
@@ -141,10 +146,12 @@ func GenerateConfig(mode string) error {
 func renderConfigTemplate(mode string) (string, error) {
 	var keyBind oviewer.KeyBind
 	switch mode {
+	case "default":
+		keyBind = oviewer.DefaultKeyBinds()
 	case "less":
 		keyBind = oviewer.LessKeyBinds()
 	default:
-		keyBind = oviewer.DefaultKeyBinds()
+		return "", fmt.Errorf("unsupported: %q; %s", mode, ErrGenerateConfigArg)
 	}
 
 	generated := generateKeyBindSection(keyBind)
@@ -452,6 +459,7 @@ func init() {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "generate configuration [default|less]")
+	rootCmd.PersistentFlags().Lookup("generate-config").NoOptDefVal = "default"
 	_ = rootCmd.RegisterFlagCompletionFunc("generate-config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"default", "less"}, cobra.ShellCompDirectiveNoFileComp
 	})
