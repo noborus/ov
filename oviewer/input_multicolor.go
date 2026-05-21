@@ -18,7 +18,7 @@ func (root *Root) inputMultiColor(context.Context) {
 	input.Candidate[MultiColor].toLast(formatMultiColorWords(searches))
 	old := root.Doc.MultiColorWords
 	input.Candidate[MultiColor].toLast(formatMultiColorWords(old))
-	input.Event = newMultiColorEvent(input.Candidate[MultiColor], old)
+	input.Event = newMultiColorEvent(input.Candidate[MultiColor])
 }
 
 // multiColorCandidate returns the candidate to set to default.
@@ -34,18 +34,13 @@ func multiColorCandidate() *candidate {
 // eventMultiColor represents the multi color input mode.
 type eventMultiColor struct {
 	tcell.EventTime
-	clist         *candidate
-	value         string
-	originalWords []string
+	clist *candidate
+	value string
 }
 
 // newMultiColorEvent returns multiColorEvent.
-func newMultiColorEvent(clist *candidate, originalWords ...[]string) *eventMultiColor {
-	e := &eventMultiColor{clist: clist}
-	if len(originalWords) > 0 {
-		e.originalWords = append([]string(nil), originalWords[0]...)
-	}
-	return e
+func newMultiColorEvent(clist *candidate) *eventMultiColor {
+	return &eventMultiColor{clist: clist}
 }
 
 // Mode returns InputMode.
