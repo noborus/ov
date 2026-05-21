@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"strings"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -16,10 +15,10 @@ func (root *Root) inputMultiColor(context.Context) {
 	input.reset()
 
 	searches := root.input.searchCandidates(searchCandidateListLen)
-	input.Candidate[MultiColor].toLast(strings.Join(searches, " "))
+	input.Candidate[MultiColor].toLast(formatMultiColorWords(searches))
 	old := root.Doc.MultiColorWords
-	input.Candidate[MultiColor].toLast(strings.Join(old, " "))
-	input.Event = newMultiColorEvent(input.Candidate[MultiColor])
+	input.Candidate[MultiColor].toLast(formatMultiColorWords(old))
+	input.Event = newMultiColorEvent(input.Candidate[MultiColor], old)
 }
 
 // multiColorCandidate returns the candidate to set to default.
@@ -35,13 +34,18 @@ func multiColorCandidate() *candidate {
 // eventMultiColor represents the multi color input mode.
 type eventMultiColor struct {
 	tcell.EventTime
-	clist *candidate
-	value string
+	clist         *candidate
+	value         string
+	originalWords []string
 }
 
 // newMultiColorEvent returns multiColorEvent.
-func newMultiColorEvent(clist *candidate) *eventMultiColor {
-	return &eventMultiColor{clist: clist}
+func newMultiColorEvent(clist *candidate, originalWords ...[]string) *eventMultiColor {
+	e := &eventMultiColor{clist: clist}
+	if len(originalWords) > 0 {
+		e.originalWords = append([]string(nil), originalWords[0]...)
+	}
+	return e
 }
 
 // Mode returns InputMode.

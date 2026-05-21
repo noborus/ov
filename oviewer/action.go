@@ -654,16 +654,37 @@ func (root *Root) updateSectionList(ctx context.Context, sections MatchedLineLis
 
 // setMultiColor set multiple strings to highlight with multiple colors.
 func (root *Root) setMultiColor(input string) {
+	root.Doc.setMultiColorWords(parseMultiColorWords(input))
+	root.setMessagef("Set multicolor strings [%s]", input)
+}
+
+// parseMultiColorWords parses multi color words from input while preserving quoted groups.
+func parseMultiColorWords(input string) []string {
 	quoted := false
-	f := strings.FieldsFunc(input, func(r rune) bool {
+	fields := strings.FieldsFunc(input, func(r rune) bool {
 		if r == '"' {
 			quoted = !quoted
 		}
 		return !quoted && r == ' '
 	})
+	for i, v := range fields {
+		fields[i] = strings.Trim(v, "\"")
+	}
+	return fields
+}
 
-	root.Doc.setMultiColorWords(f)
-	root.setMessagef("Set multicolor strings [%s]", input)
+// formatMultiColorWords formats words for the multicolor input field.
+// Words containing spaces are wrapped in double quotes so they round-trip through parseMultiColorWords.
+func formatMultiColorWords(words []string) string {
+	formatted := make([]string, len(words))
+	for i, word := range words {
+		if strings.ContainsRune(word, ' ') {
+			formatted[i] = "\"" + word + "\""
+			continue
+		}
+		formatted[i] = word
+	}
+	return strings.Join(formatted, " ")
 }
 
 // setJumpTarget sets the position of the search result.
