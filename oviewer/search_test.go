@@ -1084,7 +1084,6 @@ func TestRoot_incSearch(t *testing.T) {
 	}
 	type args struct {
 		forward bool
-		lineNum int
 	}
 	tests := []struct {
 		name   string
@@ -1100,7 +1099,6 @@ func TestRoot_incSearch(t *testing.T) {
 			},
 			args: args{
 				forward: true,
-				lineNum: 0,
 			},
 		},
 	}
@@ -1111,7 +1109,7 @@ func TestRoot_incSearch(t *testing.T) {
 			root.input.value = tt.fields.word
 			root.prepareScreen()
 			ctx := context.Background()
-			root.incSearch(ctx, tt.args.forward, tt.args.lineNum)
+			root.incSearch(ctx, tt.args.forward)
 			root.returnStartPosition()
 			if got := root.Doc.topLN; got != tt.fields.topLN {
 				t.Errorf("Root.returnStartPosition() = %v, want %v", got, tt.fields.topLN)

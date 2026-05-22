@@ -237,11 +237,11 @@ func (root *Root) createSearcher(word string, caseSensitive bool) Searcher {
 
 // setSearcher sets root.searcher using createSearcher and updates input.value.
 func (root *Root) setSearcher(word string, caseSensitive bool) Searcher {
+	root.input.value = word
 	if word == "" {
 		root.searcher = nil
 		return nil
 	}
-	root.input.value = word
 	searcher := root.createSearcher(word, caseSensitive)
 	root.searcher = searcher
 	return searcher
@@ -529,29 +529,18 @@ func (root *Root) sendSearchMove(lineNum int, searcher Searcher) {
 	root.postEvent(ev)
 }
 
-// incrementalSearch performs incremental search by setting and input mode.
-func (root *Root) incrementalSearch(ctx context.Context) {
-	if !root.Config.Incsearch {
-		return
-	}
-
-	switch root.input.Event.Mode() {
-	case Search:
-		root.incSearch(ctx, true, root.startSearchLN())
-	case Backsearch:
-		root.incSearch(ctx, false, root.startSearchLN())
-	}
-}
-
 // incSearch implements incremental forward/back search.
-func (root *Root) incSearch(ctx context.Context, forward bool, lineNum int) {
+func (root *Root) incSearch(ctx context.Context, forward bool) {
 	root.Doc.topLN = root.returnStartPosition()
-
 	searcher := root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	if searcher == nil {
 		return
 	}
+	if !root.Config.Incsearch {
+		return
+	}
 
+	lineNum := root.startSearchLN()
 	ctx = root.cancelRestart(ctx)
 	go func() {
 		n, err := root.Doc.searchLine(ctx, searcher, forward, lineNum)

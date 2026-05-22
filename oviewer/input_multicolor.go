@@ -2,7 +2,6 @@ package oviewer
 
 import (
 	"context"
-	"strings"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -16,9 +15,9 @@ func (root *Root) inputMultiColor(context.Context) {
 	input.reset()
 
 	searches := root.input.searchCandidates(searchCandidateListLen)
-	input.Candidate[MultiColor].toLast(strings.Join(searches, " "))
+	input.Candidate[MultiColor].toLast(formatMultiColorWords(searches))
 	old := root.Doc.MultiColorWords
-	input.Candidate[MultiColor].toLast(strings.Join(old, " "))
+	input.Candidate[MultiColor].toLast(formatMultiColorWords(old))
 	input.Event = newMultiColorEvent(input.Candidate[MultiColor])
 }
 

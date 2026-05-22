@@ -109,7 +109,7 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	defer root.afterInputEvent(ctx)
 	evKey := root.inputCapture(ev)
 	if ok := root.input.keyEvent(evKey); !ok {
-		root.incrementalSearch(ctx)
+		root.incrementalInput(ctx)
 		return
 	}
 
@@ -123,6 +123,24 @@ func (root *Root) inputEvent(ctx context.Context, ev *tcell.EventKey) {
 	nev := input.Event.Confirm(input.value)
 	root.postEvent(nev)
 	input.Event = normal()
+}
+
+// incrementalInput performs incremental processing while editing input.
+// Search keeps existing incremental behavior, and MultiColor updates highlights in real time.
+// Filter updates search highlight only without performing actual filtering.
+func (root *Root) incrementalInput(ctx context.Context) {
+	mode := root.input.Event.Mode()
+
+	switch mode {
+	case Search:
+		root.incSearch(ctx, true)
+	case Backsearch:
+		root.incSearch(ctx, false)
+	case Filter:
+		root.setSearcher(root.input.value, root.Config.CaseSensitive)
+	case MultiColor:
+		root.Doc.setMultiColorWords(parseMultiColorWords(root.input.value))
+	}
 }
 
 // afterInputEvent is called after processing an input event.
