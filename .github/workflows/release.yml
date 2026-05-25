@@ -1,10 +1,13 @@
 name: release
+
 permissions:
   contents: write
+
 on:
   push:
     tags:
     - "*"
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -13,7 +16,7 @@ jobs:
         uses: actions/create-github-app-token@v3.2.0
         id: app-token
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: winget-pkgs
