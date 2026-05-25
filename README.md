@@ -330,10 +330,26 @@ On Windows:
 
 Create a `config.yaml` file in one of the above directories. If the file is in the user home directory, it should be named `.ov.yaml`.
 
-Please refer to the sample [ov.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov.yaml) configuration file.
+**v0.53.0 and later**
+
+You can generate a default configuration with:
+
+```console
+ov --generate-config > ~/.config/ov/config.yaml
+```
+
+On Windows (PowerShell):
+
+```powershell
+ov --generate-config > $env:USERPROFILE/.config/ov/config.yaml
+```
 
 > [!NOTE]
-> If you like `less` key bindings, copy  [ov-less.yaml](https://raw.githubusercontent.com/noborus/ov/master/ov-less.yaml) and use it.
+> If you like `less` key bindings, generate it with `--generate-config=less`.
+
+```console
+ov --generate-config=less > ~/.config/ov/config.yaml
+```
 
 ###  4.2. <a name='header'></a>Header
 
@@ -1302,6 +1318,7 @@ MemoryLimit: 1000
 |       | --follow-name                              | follow mode to monitor by file name                            |
 |       | --follow-section                           | section-by-section follow mode                                 |
 |       | --force-screen                             | display screen even when redirecting output                    |
+|       | --generate-config string                   | generate configuration [default\|less]                         |
 | -H,   | --header int                               | number of header lines to be displayed constantly              |
 | -Y,   | --header-column int                        | number of columns to display as a vertical header              |
 | -h,   | --help                                     | help for ov                                                    |
