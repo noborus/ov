@@ -649,6 +649,7 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	}
 }
 
+// drawSidebarItem draws a single SidebarItem in the sidebar with the specified style and scroll position.
 func (root *Root) drawSidebarItem(item SidebarItem, style tcell.Style, x int, y int) {
 	label := item.Label
 	labelLen := uniseg.StringWidth(label)
@@ -656,7 +657,12 @@ func (root *Root) drawSidebarItem(item SidebarItem, style tcell.Style, x int, y 
 	width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
 	right := min(left+width, len(item.Contents))
 	out := item.Contents[left:right].String()
-	root.Screen.PutStrStyled(labelLen, y, out, style)
+	if item.ContentStyle != nil {
+		log.Println("content style", item.ContentStyle)
+		root.Screen.PutStrStyled(labelLen, y, out, *item.ContentStyle)
+	} else {
+		root.Screen.PutStrStyled(labelLen, y, out, style)
+	}
 	root.Screen.PutStrStyled(0, y, label, style)
 }
 

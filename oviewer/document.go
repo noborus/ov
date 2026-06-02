@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/elliotchance/orderedmap/v3"
 	"github.com/gdamore/tcell/v3"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/jwalton/gchalk"
@@ -61,6 +62,9 @@ type Document struct {
 	parent *Document
 	// lineNumMap maps line numbers.
 	lineNumMap *biomap.Map[int, int]
+
+	// styles is a set of tcell styles used in the document.
+	styles orderedmap.OrderedMap[tcell.Style, bool]
 
 	// ticker is used for periodic updates.
 	ticker *time.Ticker
@@ -284,6 +288,7 @@ func NewDocument() (*Document, error) {
 		seekable:        true,
 		reopenable:      true,
 		store:           NewStore(),
+		styles:          *orderedmap.NewOrderedMap[tcell.Style, bool](),
 		lastSearchLN:    -1,
 	}
 	if err := m.NewCache(); err != nil {
@@ -594,6 +599,7 @@ func (m *Document) getLineC(lN int) LineC {
 	}
 
 	org, style, err := m.contentsLine(lN)
+	m.addLineStyle(org, style)
 	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
@@ -620,6 +626,18 @@ func (m *Document) getLineC(lN int) LineC {
 	lineC.lc = lc
 	lineC.valid = true
 	return lineC
+}
+
+// addLineStyle adds the specified style to the line contents and updates the document's styles.
+func (m *Document) addLineStyle(lc contents, style tcell.Style) {
+	if style != tcell.StyleDefault {
+		m.styles.Set(style, true)
+	}
+	for _, c := range lc {
+		if c.style != tcell.StyleDefault {
+			m.styles.Set(c.style, true)
+		}
+	}
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.

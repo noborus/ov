@@ -62,6 +62,8 @@ const (
 	HeaderColumn
 	// MarkNum is for setting the mark number.
 	MarkNum
+	// StyleToggle is for toggling style highlight suppression.
+	StyleToggle
 )
 
 // Input represents the status of various inputs.
@@ -97,6 +99,7 @@ func NewInput() *Input {
 	i.Candidate[SaveBuffer] = blankCandidate()
 	i.Candidate[ConvertType] = converterCandidate()
 	i.Candidate[MarkNum] = blankCandidate()
+	i.Candidate[StyleToggle] = blankCandidate()
 
 	i.Event = &eventNormal{}
 	return &i

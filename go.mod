@@ -6,6 +6,7 @@ require (
 	codeberg.org/tslocum/cbind v0.1.9
 	github.com/atotto/clipboard v0.1.4
 	github.com/creack/pty v1.1.24
+	github.com/elliotchance/orderedmap/v3 v3.1.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gdamore/tcell/v3 v3.4.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
