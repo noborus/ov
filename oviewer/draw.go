@@ -658,7 +658,6 @@ func (root *Root) drawSidebarItem(item SidebarItem, style tcell.Style, x int, y 
 	right := min(left+width, len(item.Contents))
 	out := item.Contents[left:right].String()
 	if item.ContentStyle != nil {
-		log.Println("content style", item.ContentStyle)
 		root.Screen.PutStrStyled(labelLen, y, out, *item.ContentStyle)
 	} else {
 		root.Screen.PutStrStyled(labelLen, y, out, style)

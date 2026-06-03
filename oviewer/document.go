@@ -13,12 +13,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/elliotchance/orderedmap/v3"
 	"github.com/gdamore/tcell/v3"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
 	"github.com/noborus/ov/biomap"
+	"github.com/noborus/ov/indexmap"
 )
 
 // document type.
@@ -64,7 +64,7 @@ type Document struct {
 	lineNumMap *biomap.Map[int, int]
 
 	// styles is a set of tcell styles used in the document.
-	styles orderedmap.OrderedMap[tcell.Style, bool]
+	styles *indexmap.IndexMap[tcell.Style, bool]
 
 	// ticker is used for periodic updates.
 	ticker *time.Ticker
@@ -288,7 +288,7 @@ func NewDocument() (*Document, error) {
 		seekable:        true,
 		reopenable:      true,
 		store:           NewStore(),
-		styles:          *orderedmap.NewOrderedMap[tcell.Style, bool](),
+		styles:          indexmap.NewIndexMap[tcell.Style, bool](),
 		lastSearchLN:    -1,
 	}
 	if err := m.NewCache(); err != nil {

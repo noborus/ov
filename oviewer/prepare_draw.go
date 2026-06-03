@@ -503,6 +503,13 @@ func lineNumbers(lines map[int]LineC) []int {
 func (root *Root) styleContent(lineC LineC) {
 	if root.Doc.PlainMode {
 		root.plainStyle(lineC.lc)
+	} else {
+		for x, lc := range lineC.lc {
+			e, ok := root.Doc.styles.Get(lc.style)
+			if ok && !e {
+				lineC.lc[x].style = defaultStyle
+			}
+		}
 	}
 	if root.Doc.ColumnMode {
 		root.columnHighlight(lineC)

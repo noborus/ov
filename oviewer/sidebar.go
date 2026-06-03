@@ -246,7 +246,7 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	styleNames := make([]tcell.Style, 0, root.Doc.styles.Len())
-	for style := range root.Doc.styles.AllFromFront() {
+	for style := range root.Doc.styles.Keys() {
 		styleNames = append(styleNames, style)
 	}
 	root.adjustSidebarScroll(SidebarModeStyles, len(styleNames), 0)
@@ -254,8 +254,15 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	start := scroll.y
 	end := min(start+root.scr.vHeight, len(styleNames))
 	for i := start; i < end; i++ {
-		style := styleNames[i]
-		displayName := StrToContents(styleString(style), 0)
+		style, enabled, ok := root.Doc.styles.Index(i)
+		if !ok {
+			break
+		}
+		repr := "[o] "
+		if !enabled {
+			repr = "[ ] "
+		}
+		displayName := StrToContents(repr+styleString(style), 0)
 		if len(displayName) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 			displayName = append(displayName, spaces...)
