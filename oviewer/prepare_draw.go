@@ -501,16 +501,7 @@ func lineNumbers(lines map[int]LineC) []int {
 
 // styleContent applies the style of the content.
 func (root *Root) styleContent(lineC LineC) {
-	if root.Doc.PlainMode {
-		root.plainStyle(lineC.lc)
-	} else {
-		for x, lc := range lineC.lc {
-			e, ok := root.Doc.styles.Get(lc.style)
-			if ok && !e {
-				lineC.lc[x].style = defaultStyle
-			}
-		}
-	}
+	root.suppressStyle(lineC.lc)
 	if root.Doc.ColumnMode {
 		root.columnHighlight(lineC)
 	}
@@ -518,10 +509,21 @@ func (root *Root) styleContent(lineC LineC) {
 	root.searchHighlight(lineC)
 }
 
-// plainStyle defaults to the original style.
-func (*Root) plainStyle(lc contents) {
-	for x := range lc {
-		lc[x].style = defaultStyle
+// suppressStyle suppresses the style of the content if PlainMode is enabled or the style is disabled.
+func (root *Root) suppressStyle(lc contents) {
+	if root.Doc.PlainMode {
+		for x := range lc {
+			lc[x].style = defaultStyle
+		}
+		return
+	}
+
+	// Suppress the style of the content if the style is disabled.
+	for x, c := range lc {
+		e, ok := root.Doc.styles.Get(c.style)
+		if ok && !e {
+			lc[x].style = defaultStyle
+		}
 	}
 }
 
