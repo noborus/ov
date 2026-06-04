@@ -65,6 +65,8 @@ type Document struct {
 
 	// styles is a set of tcell styles used in the document.
 	styles *indexmap.IndexMap[tcell.Style, bool]
+	// isStylesEnabled indicates whether styles are enabled or disabled.
+	isStylesEnabled bool
 
 	// ticker is used for periodic updates.
 	ticker *time.Ticker
@@ -289,6 +291,7 @@ func NewDocument() (*Document, error) {
 		reopenable:      true,
 		store:           NewStore(),
 		styles:          indexmap.NewIndexMap[tcell.Style, bool](),
+		isStylesEnabled: true,
 		lastSearchLN:    -1,
 	}
 	if err := m.NewCache(); err != nil {
@@ -599,7 +602,7 @@ func (m *Document) getLineC(lN int) LineC {
 	}
 
 	org, style, err := m.contentsLine(lN)
-	m.addLineStyle(org, style)
+	m.addLineStyleList(org, style)
 	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
@@ -628,15 +631,21 @@ func (m *Document) getLineC(lN int) LineC {
 	return lineC
 }
 
-// addLineStyle adds the specified style to the line contents and updates the document's styles.
-func (m *Document) addLineStyle(lc contents, style tcell.Style) {
-	if style != tcell.StyleDefault {
-		m.styles.Set(style, true)
-	}
+// addLineStyleList adds the styles from the line contents and the line style to the document's style list.
+func (m *Document) addLineStyleList(lc contents, style tcell.Style) {
+	m.addStyleList(style)
 	for _, c := range lc {
-		if c.style != tcell.StyleDefault {
-			m.styles.Set(c.style, true)
-		}
+		m.addStyleList(c.style)
+	}
+}
+
+// addStyleList adds a style to the document's style list if it is not already present.
+func (m *Document) addStyleList(style tcell.Style) {
+	if style == tcell.StyleDefault {
+		return
+	}
+	if _, ok := m.styles.Get(style); !ok {
+		m.styles.Set(style, m.isStylesEnabled) // Set to the current state of enabledStyles.
 	}
 }
 

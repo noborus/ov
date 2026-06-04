@@ -143,6 +143,8 @@ func (root *Root) incrementalInput(ctx context.Context) {
 		root.setSearcher(root.input.value, root.Config.CaseSensitive)
 	case MultiColor:
 		root.Doc.setMultiColorWords(parseMultiColorWords(root.input.value))
+	case StyleToggle:
+		root.toggleStyle(root.input.value)
 	}
 }
 

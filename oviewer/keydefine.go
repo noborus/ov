@@ -106,7 +106,7 @@ func DefaultKeyBinds() KeyBind {
 		actionWriteBA:        {"ctrl+q"},
 		actionMarkNumber:     {","},
 		actionMarkByPattern:  {"*"},
-		actionStyleToggle:    {"0"},
+		actionStyleToggle:    {"o"},
 
 		// input actions.
 		inputCaseSensitive:      {"alt+c"},
