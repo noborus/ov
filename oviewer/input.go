@@ -144,7 +144,7 @@ func (root *Root) incrementalInput(ctx context.Context) {
 	case MultiColor:
 		root.Doc.setMultiColorWords(parseMultiColorWords(root.input.value))
 	case StyleToggle:
-		root.toggleStyle(root.input.value)
+		root.Doc.applyStyleSelection(root.input.value)
 	}
 }
 

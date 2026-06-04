@@ -5,24 +5,29 @@ import (
 	"strings"
 )
 
-// toggleStyle toggles the style based on the provided value.
-func (root *Root) toggleStyle(input string) {
-	stylesLen := root.Doc.styles.Len()
+// validateStyle is a placeholder function for confirming the style input.
+func (root *Root) validateStyle(input string) {
+	// This function is currently a placeholder and does not perform any validation.
+}
+
+// applyStyleSelection toggles the style based on the provided value.
+func (m *Document) applyStyleSelection(input string) {
+	stylesLen := m.styles.Len()
 	if stylesLen == 0 {
 		return
 	}
 
-	tokens, ok := parseInputTokens(input)
+	tokens, ok := parseInputStyles(input)
 	if !ok {
 		return
 	}
 	for _, token := range tokens {
-		root.Doc.processingToken(token, stylesLen)
+		m.applyStyleToken(token, stylesLen)
 	}
 }
 
-// parseInputTokens splits the input string by commas and trims whitespace from each token.
-func parseInputTokens(input string) ([]string, bool) {
+// parseInputStyles splits the input string by commas and trims whitespace from each token.
+func parseInputStyles(input string) ([]string, bool) {
 	tokens := strings.Split(input, ",")
 	if len(tokens) == 0 {
 		return nil, false
@@ -33,8 +38,8 @@ func parseInputTokens(input string) ([]string, bool) {
 	return tokens, true
 }
 
-// processingToken processes a single token to toggle styles based on the defined rules.
-func (m *Document) processingToken(token string, stylesLen int) {
+// applyStyleToken processes a single token to toggle styles based on the defined rules.
+func (m *Document) applyStyleToken(token string, stylesLen int) {
 	switch token {
 	case "a":
 		m.enableAllStyles()
@@ -61,9 +66,9 @@ func (m *Document) processingToken(token string, stylesLen int) {
 		if len(parts) != 2 {
 			return
 		}
-		startIdx, ok1 := calcStyleIndex(parts[0])
-		endIdx, ok2 := calcStyleIndex(parts[1])
-		if !ok1 || !ok2 || startIdx < 0 || endIdx < 0 || startIdx >= stylesLen {
+		startIdx, err1 := strconv.Atoi(parts[0])
+		endIdx, err2 := strconv.Atoi(parts[1])
+		if err1 != nil || err2 != nil || startIdx < 0 || endIdx < 0 || startIdx >= stylesLen {
 			return
 		}
 		endIdx = min(endIdx, stylesLen-1)
@@ -73,8 +78,8 @@ func (m *Document) processingToken(token string, stylesLen int) {
 		return
 	}
 
-	styleIndex, ok := calcStyleIndex(token)
-	if !ok {
+	styleIndex, err := strconv.Atoi(token)
+	if err != nil {
 		return
 	}
 	if styleIndex < 0 || styleIndex >= stylesLen {
@@ -122,16 +127,4 @@ func (m *Document) toggleStyleIdx(idx int) {
 		return
 	}
 	m.styles.Set(k, !v)
-}
-
-// calcStyleIndex converts a token to an integer index, returning the index and a boolean indicating success.
-func calcStyleIndex(token string) (int, bool) {
-	if len(token) == 0 {
-		return 0, false
-	}
-	n, err := strconv.Atoi(token)
-	if err != nil {
-		return 0, false
-	}
-	return n, true
 }
