@@ -563,7 +563,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "section-by-section follow mode")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
-	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow mode to monitor by file name")
+	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow by file name mode; survives log rotation")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
