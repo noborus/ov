@@ -44,8 +44,8 @@ github.com/lucasb-eyer/go-colorful v1.4.0 h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW
 github.com/lucasb-eyer/go-colorful v1.4.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/mattn/go-runewidth v0.0.24 h1:cpokDiIn0MGnhdHwuWnJBITySJ20QyNGnY2kR/ay2DU=
 github.com/mattn/go-runewidth v0.0.24/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
-github.com/noborus/guesswidth v0.4.0 h1:+PPh+Z+GM4mKmVrhYR4lpjeyBuLMSVo2arM+VErdHIc=
-github.com/noborus/guesswidth v0.4.0/go.mod h1:ghA6uh9RcK+uSmaDDmBMj/tRZ3BSpspDP6DMF5Xk3bc=
+github.com/noborus/guesswidth v0.5.0 h1:Hjy0Eb/8YrqyTT9PdA8hUcfJ054IKO+d4Or0PBQSkVc=
+github.com/noborus/guesswidth v0.5.0/go.mod h1:o1bPqsYL/HOX9haPUcmQGJ07mHfOCLIgAsMOQsE3Hbo=
 github.com/noborus/tcellansi v0.4.1 h1:Z7rliNUCtXNek/TjRugLNr15DxbQt4jgg4cDBzjJ+oQ=
 github.com/noborus/tcellansi v0.4.1/go.mod h1:V1q4ffVGQ5t9BopMAdAh9UuTMqnhEd88XA1Ilsb5+qg=
 github.com/pelletier/go-toml/v2 v2.3.1 h1:MYEvvGnQjeNkRF1qUuGolNtNExTDwct51yp7olPtrEc=
