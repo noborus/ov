@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/gdamore/tcell/v3"
 )
 
 // SidebarItem represents an item to display in the sidebar.
 type SidebarItem struct {
-	Label     string   // Always-visible label (e.g., index, description)
-	Contents  contents // Contents to display
-	IsCurrent bool
+	Label        string   // Always-visible label (e.g., index, description)
+	Contents     contents // Contents to display
+	IsCurrent    bool
+	ContentStyle *tcell.Style // Style for the contents
 }
 
 type SidebarMode int
@@ -29,6 +32,8 @@ const (
 	SidebarModeSections
 	// SidebarModeViewMode is the view mode list sidebar.
 	SidebarModeViewMode
+	// SidebarModeStyles is the style list sidebar.
+	SidebarModeStyles
 
 	// SidebarModeEnd is the end of sidebar modes.
 	SidebarModeEnd
@@ -47,6 +52,8 @@ func (s SidebarMode) String() string {
 		return "Sections"
 	case SidebarModeViewMode:
 		return "View Modes"
+	case SidebarModeStyles:
+		return "Styles"
 	default:
 		return "none"
 	}
@@ -82,6 +89,8 @@ func (root *Root) prepareSidebarItems() {
 		items = root.sidebarItemsForSections()
 	case SidebarModeViewMode:
 		items = root.sidebarItemsForViewMode()
+	case SidebarModeStyles:
+		items = root.sidebarItemsForStyles()
 	}
 	root.SidebarItems = items
 }
@@ -232,6 +241,77 @@ func (root *Root) sidebarItemsForViewMode() []SidebarItem {
 	return items
 }
 
+// sidebarItemsForStyles returns SidebarItems for styles.
+func (root *Root) sidebarItemsForStyles() []SidebarItem {
+	var items []SidebarItem
+	length := root.sidebarWidth - 4
+	styleNames := make([]tcell.Style, 0, root.Doc.styles.Len())
+	for style := range root.Doc.styles.Keys() {
+		styleNames = append(styleNames, style)
+	}
+	root.adjustSidebarScroll(SidebarModeStyles, len(styleNames), 0)
+	scroll := root.sidebarScrolls[SidebarModeStyles]
+	start := scroll.y
+	end := min(start+root.scr.vHeight, len(styleNames))
+	for i := start; i < end; i++ {
+		style, enabled, ok := root.Doc.styles.Index(i)
+		if !ok {
+			break
+		}
+		repr := "[o] "
+		if !enabled {
+			repr = "[ ] "
+		}
+		displayName := StrToContents(repr+styleString(style), 0)
+		if len(displayName) < length {
+			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
+			displayName = append(displayName, spaces...)
+		}
+		label := fmt.Sprintf("%2d ", i)
+		items = append(items, SidebarItem{
+			Label:        label,
+			Contents:     displayName,
+			IsCurrent:    false,
+			ContentStyle: &style,
+		})
+	}
+	return items
+}
+
+func styleString(style tcell.Style) string {
+	fg := style.GetForeground()
+	bg := style.GetBackground()
+	attrs := style.GetAttributes()
+	defaultFG := tcell.StyleDefault.GetForeground()
+	defaultBG := tcell.StyleDefault.GetBackground()
+	defaultAttrs := tcell.StyleDefault.GetAttributes()
+
+	fgDiff := fg != defaultFG
+	bgDiff := bg != defaultBG
+	attrsDiff := attrs != defaultAttrs
+
+	switch {
+	case !fgDiff && !bgDiff && !attrsDiff:
+		return "Default"
+	case fgDiff && !bgDiff && !attrsDiff:
+		return fmt.Sprintf("FG=%v", fg.String())
+	case !fgDiff && bgDiff && !attrsDiff:
+		return fmt.Sprintf("BG=%v", bg.String())
+	default:
+		parts := make([]string, 0, 3)
+		if fgDiff {
+			parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
+		}
+		if bgDiff {
+			parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
+		}
+		if attrsDiff {
+			parts = append(parts, fmt.Sprintf("ATTRS=0x%x", int64(attrs)))
+		}
+		return strings.Join(parts, ", ")
+	}
+}
+
 // sidebarUp scrolls the sidebar up.
 func (root *Root) sidebarUp(_ context.Context) {
 	scroll := root.sidebarScrolls[root.sidebarMode]
@@ -365,4 +445,8 @@ func (root *Root) toggleSidebarDocList(ctx context.Context) {
 // toggleSidebarSections toggles the section list sidebar visibility.
 func (root *Root) toggleSidebarSections(ctx context.Context) {
 	root.toggleSidebar(ctx, SidebarModeSections)
+}
+
+func (root *Root) toggleSidebarStyles(ctx context.Context) {
+	root.toggleSidebar(ctx, SidebarModeStyles)
 }
