@@ -77,6 +77,7 @@ func DefaultKeyBinds() KeyBind {
 		actionSidebarMarks:    {"alt+m"},
 		actionSidebarDocList:  {"alt+l"},
 		actionSidebarSections: {"alt+u"},
+		actionSidebarStyles:   {"alt+i"},
 		actionSidebarUp:       {"shift+Up"},
 		actionSidebarDown:     {"shift+Down"},
 		actionSidebarLeft:     {"shift+Left"},
@@ -105,6 +106,7 @@ func DefaultKeyBinds() KeyBind {
 		actionWriteBA:        {"ctrl+q"},
 		actionMarkNumber:     {","},
 		actionMarkByPattern:  {"*"},
+		actionStyleToggle:    {"o"},
 
 		// input actions.
 		inputCaseSensitive:      {"alt+c"},

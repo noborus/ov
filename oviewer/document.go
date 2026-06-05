@@ -18,6 +18,7 @@ import (
 	"github.com/jwalton/gchalk"
 	"github.com/noborus/guesswidth"
 	"github.com/noborus/ov/biomap"
+	"github.com/noborus/ov/indexmap"
 )
 
 // document type.
@@ -61,6 +62,11 @@ type Document struct {
 	parent *Document
 	// lineNumMap maps line numbers.
 	lineNumMap *biomap.Map[int, int]
+
+	// styles is a set of tcell styles used in the document.
+	styles *indexmap.IndexMap[tcell.Style, bool]
+	// isStylesEnabled indicates whether styles are enabled or disabled.
+	isStylesEnabled bool
 
 	// ticker is used for periodic updates.
 	ticker *time.Ticker
@@ -284,6 +290,8 @@ func NewDocument() (*Document, error) {
 		seekable:        true,
 		reopenable:      true,
 		store:           NewStore(),
+		styles:          indexmap.NewIndexMap[tcell.Style, bool](),
+		isStylesEnabled: true,
 		lastSearchLN:    -1,
 	}
 	if err := m.NewCache(); err != nil {
@@ -594,6 +602,7 @@ func (m *Document) getLineC(lN int) LineC {
 	}
 
 	org, style, err := m.contentsLine(lN)
+	m.addLineStyleList(org, style)
 	if err != nil && errors.Is(err, ErrOutOfRange) {
 		lc := make(contents, 1)
 		lc[0] = EOFContent
@@ -620,6 +629,24 @@ func (m *Document) getLineC(lN int) LineC {
 	lineC.lc = lc
 	lineC.valid = true
 	return lineC
+}
+
+// addLineStyleList adds the styles from the line contents and the line style to the document's style list.
+func (m *Document) addLineStyleList(lc contents, style tcell.Style) {
+	m.addStyleList(style)
+	for _, c := range lc {
+		m.addStyleList(c.style)
+	}
+}
+
+// addStyleList adds a style to the document's style list if it is not already present.
+func (m *Document) addStyleList(style tcell.Style) {
+	if style == tcell.StyleDefault {
+		return
+	}
+	if _, ok := m.styles.Get(style); !ok {
+		m.styles.Set(style, m.isStylesEnabled) // Set to the current state of enabledStyles.
+	}
 }
 
 // firstLine is the first line that excludes the SkipLines and Header.

@@ -5,6 +5,7 @@ import (
 )
 
 func TestDuplicateKeyBind(t *testing.T) {
+	t.Setenv("NO_COLOR", "1")
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.

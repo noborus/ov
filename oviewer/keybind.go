@@ -50,12 +50,14 @@ const (
 	actionMoveEndRight   = "end_right"
 	actionGoLine         = "goto"
 	actionMarkNumber     = "mark_number"
+	actionStyleToggle    = "style_toggle"
 
 	// Sidebar
 	actionSidebarHelp     = "sidebar_help"
 	actionSidebarMarks    = "sidebar_marks"
 	actionSidebarDocList  = "sidebar_doc_list"
 	actionSidebarSections = "sidebar_sections"
+	actionSidebarStyles   = "sidebar_styles"
 	actionSidebarUp       = "sidebar_up"
 	actionSidebarDown     = "sidebar_down"
 	actionSidebarLeft     = "sidebar_left"
@@ -179,12 +181,14 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionMoveEndRight:   root.moveEndRight,
 		actionGoLine:         root.inputGoLine,
 		actionMarkNumber:     root.inputMarkNumber,
+		actionStyleToggle:    root.inputStyleToggle,
 
 		// Sidebar
 		actionSidebarHelp:     root.toggleSidebarHelp,
 		actionSidebarMarks:    root.toggleSidebarMarks,
 		actionSidebarDocList:  root.toggleSidebarDocList,
 		actionSidebarSections: root.toggleSidebarSections,
+		actionSidebarStyles:   root.toggleSidebarStyles,
 		actionSidebarUp:       root.sidebarUp,
 		actionSidebarDown:     root.sidebarDown,
 		actionSidebarLeft:     root.sidebarLeft,
@@ -373,6 +377,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupSidebar, Action: actionSidebarMarks, Description: "toggle mark list in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarDocList, Description: "toggle document list in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarSections, Description: "toggle section list in sidebar"},
+	{Group: GroupSidebar, Action: actionSidebarStyles, Description: "toggle style usage list in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarUp, Description: "scroll up in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarDown, Description: "scroll down in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "scroll left in sidebar"},
@@ -412,6 +417,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupChange, Action: actionRawFormat, Description: "raw output"},
 	{Group: GroupChange, Action: actionRuler, Description: "ruler toggle"},
 	{Group: GroupChange, Action: actionStatusLine, Description: "status line toggle"},
+	{Group: GroupChange, Action: actionStyleToggle, Description: "suppress style highlight by number"},
 
 	// Change Display with Input
 	{Group: GroupChangeInput, Action: actionViewMode, Description: "view mode selection"},
