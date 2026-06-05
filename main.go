@@ -581,7 +581,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
 	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
-	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
+	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide all sections except the current one")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
 	rootCmd.PersistentFlags().BoolP("status-line", "", true, "status line")
