@@ -548,7 +548,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("section-start", "", 0, "section start position")
 	_ = viper.BindPFlag("general.SectionStartPosition", rootCmd.PersistentFlags().Lookup("section-start"))
 
-	rootCmd.PersistentFlags().BoolP("section-header", "", false, "enable section-delimiter line as Header")
+	rootCmd.PersistentFlags().BoolP("section-header", "", false, "pin the section delimiter line as a fixed header")
 	_ = viper.BindPFlag("general.SectionHeader", rootCmd.PersistentFlags().Lookup("section-header"))
 
 	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of section header lines")
