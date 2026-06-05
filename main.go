@@ -467,7 +467,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
-	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "read compressed files as raw bytes without decompressing")
 
 	// Config.General
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align|wordwrap]")
