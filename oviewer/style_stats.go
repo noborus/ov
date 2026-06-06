@@ -5,13 +5,14 @@ import (
 	"strings"
 )
 
-// validateStyle is a placeholder function for confirming the style input.
+// validateStyle confirms the style input and applies the selection.
 func (root *Root) validateStyle(input string) {
-	// This function is currently a placeholder and does not perform any validation.
+	root.Doc.applyStyleSelection(input)
 }
 
 // applyStyleSelection toggles the style based on the provided value.
 func (m *Document) applyStyleSelection(input string) {
+	m.styles.SetValues(m.backupStyleFlags) // Restore backup flags before applying new selection.
 	stylesLen := m.styles.Len()
 	if stylesLen == 0 {
 		return
@@ -40,23 +41,18 @@ func parseInputStyles(input string) ([]string, bool) {
 
 // applyStyleToken processes a single token to toggle styles based on the defined rules.
 func (m *Document) applyStyleToken(token string, stylesLen int) {
-	switch token {
-	case "a":
-		m.enableAllStyles()
-		return
-	case "n":
-		m.disableAllStyles()
-		return
-	case "i":
-		m.toggleAllStyles()
+	if token == "" {
 		return
 	}
-
-	if strings.HasPrefix(token, "o") {
+	firstChar := token[:1]
+	switch firstChar {
+	case "i":
+		token = token[1:]
+		m.toggleAllStyles()
+	case "o":
 		token = token[1:]
 		m.disableAllStyles()
-	}
-	if strings.HasPrefix(token, "t") {
+	case "a":
 		token = token[1:]
 		m.enableAllStyles()
 	}

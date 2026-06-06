@@ -247,10 +247,10 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	helpLines := []string{
-		"number or token (separated by ,):",
-		"n: disable all, a: enable all, i: invert all",
-		"1-3: toggle 1 to 3",
-		"o1: disable all then toggle 1",
+		"number or command to select style:",
+		"o: disable all (e.g. o1)",
+		"a: enable all (e.g. a1-2)",
+		"i: invert all (e.g. i1,3)",
 	}
 	helpStyle := tcell.StyleDefault.Foreground(color.Green)
 	totalLines := root.Doc.styles.Len() + len(helpLines)
