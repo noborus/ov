@@ -450,7 +450,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
 	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes defined in the configuration file")
 
-	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "command execution result instead of file")
+	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "run command and display its output; use `--` to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`)")
 
 	rootCmd.PersistentFlags().BoolVarP(&forceScreen, "force-screen", "", false, "display screen even when redirecting output")
 
@@ -467,7 +467,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
 	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
-	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "skip extracting compressed files")
+	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "read compressed files as raw bytes without decompressing")
 
 	// Config.General
 	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align|wordwrap]")
@@ -520,7 +520,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column mode for width")
 	_ = viper.BindPFlag("general.ColumnWidth", rootCmd.PersistentFlags().Lookup("column-width"))
 
-	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "column mode to rainbow")
+	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "colorize each column with a distinct color")
 	_ = viper.BindPFlag("general.ColumnRainbow", rootCmd.PersistentFlags().Lookup("column-rainbow"))
 
 	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
@@ -548,7 +548,7 @@ func init() {
 	rootCmd.PersistentFlags().IntP("section-start", "", 0, "section start position")
 	_ = viper.BindPFlag("general.SectionStartPosition", rootCmd.PersistentFlags().Lookup("section-start"))
 
-	rootCmd.PersistentFlags().BoolP("section-header", "", false, "enable section-delimiter line as Header")
+	rootCmd.PersistentFlags().BoolP("section-header", "", false, "pin the section delimiter line as a fixed header")
 	_ = viper.BindPFlag("general.SectionHeader", rootCmd.PersistentFlags().Lookup("section-header"))
 
 	rootCmd.PersistentFlags().IntP("section-header-num", "", 1, "number of section header lines")
@@ -563,7 +563,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "section-by-section follow mode")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
-	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow mode to monitor by file name")
+	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow by file name mode; survives log rotation")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
 	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
@@ -581,7 +581,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
 	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
-	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide other section")
+	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide all sections except the current one")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
 	rootCmd.PersistentFlags().BoolP("status-line", "", true, "status line")
