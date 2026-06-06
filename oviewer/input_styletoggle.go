@@ -11,7 +11,23 @@ func (root *Root) inputStyleToggle(ctx context.Context) {
 	root.openSidebar(ctx, SidebarModeStyles)
 	input := root.input
 	input.reset()
+	root.backupStyleFlags()
 	input.Event = newStyleToggleEvent(input.Candidate[StyleToggle])
+}
+
+// backupStyleFlags backs up the current style flags.
+func (root *Root) backupStyleFlags() {
+	if root.Doc.styles.Len() == 0 {
+		return
+	}
+	root.Doc.backupStyleFlags = make([]bool, root.Doc.styles.Len())
+	for i := 0; i < root.Doc.styles.Len(); i++ {
+		_, b, ok := root.Doc.styles.Index(i)
+		if !ok {
+			continue
+		}
+		root.Doc.backupStyleFlags[i] = b
+	}
 }
 
 // eventStyleToggle represents the style highlight suppression input mode.

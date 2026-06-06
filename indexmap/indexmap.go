@@ -12,6 +12,7 @@ type IndexMap[k comparable, v comparable] struct {
 	values map[k]v
 }
 
+// NewIndexMap creates and returns a new IndexMap instance.
 func NewIndexMap[k comparable, v comparable]() *IndexMap[k, v] {
 	return &IndexMap[k, v]{}
 }
@@ -121,6 +122,28 @@ func (m *IndexMap[k, v]) Values() iter.Seq[v] {
 				return
 			}
 		}
+	}
+}
+
+// SetValues sets values for keys in insertion order.
+// If there are more values than keys, the extra values are ignored.
+// If there are fewer values than keys, the remaining keys are set to the zero value of v.
+func (m *IndexMap[k, v]) SetValues(slice []v) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.values == nil {
+		m.values = make(map[k]v)
+	}
+	for i, v := range slice {
+		var zeroK k
+		if i < len(m.keys) {
+			zeroK = m.keys[i]
+		} else {
+			zeroK = *new(k)
+			m.keys = append(m.keys, zeroK)
+		}
+		m.values[zeroK] = v
 	}
 }
 
