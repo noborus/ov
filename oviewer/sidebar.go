@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 // SidebarItem represents an item to display in the sidebar.
@@ -245,16 +246,36 @@ func (root *Root) sidebarItemsForViewMode() []SidebarItem {
 func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
-	styleNames := make([]tcell.Style, 0, root.Doc.styles.Len())
-	for style := range root.Doc.styles.Keys() {
-		styleNames = append(styleNames, style)
+	helpLines := []string{
+		"number or token (separated by ,):",
+		"n: disable all, a: enable all, i: invert all",
+		"1-3: toggle 1 to 3",
+		"o1: disable all then toggle 1",
 	}
-	root.adjustSidebarScroll(SidebarModeStyles, len(styleNames), 0)
+	helpStyle := tcell.StyleDefault.Foreground(color.Green)
+	totalLines := root.Doc.styles.Len() + len(helpLines)
+	root.adjustSidebarScroll(SidebarModeStyles, totalLines, 0)
 	scroll := root.sidebarScrolls[SidebarModeStyles]
 	start := scroll.y
-	end := min(start+root.scr.vHeight, len(styleNames))
+	end := min(start+root.scr.vHeight, totalLines)
 	for i := start; i < end; i++ {
-		style, enabled, ok := root.Doc.styles.Index(i)
+		if i < len(helpLines) {
+			displayName := StrToContents(helpLines[i], 0)
+			if len(displayName) < length {
+				spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
+				displayName = append(displayName, spaces...)
+			}
+			items = append(items, SidebarItem{
+				Label:        "",
+				Contents:     displayName,
+				IsCurrent:    false,
+				ContentStyle: &helpStyle,
+			})
+			continue
+		}
+
+		styleIndex := i - len(helpLines)
+		style, enabled, ok := root.Doc.styles.Index(styleIndex)
 		if !ok {
 			break
 		}
@@ -267,7 +288,7 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 			displayName = append(displayName, spaces...)
 		}
-		label := fmt.Sprintf("%2d ", i)
+		label := fmt.Sprintf("%2d ", styleIndex)
 		items = append(items, SidebarItem{
 			Label:        label,
 			Contents:     displayName,
@@ -286,30 +307,17 @@ func styleString(style tcell.Style) string {
 	defaultBG := tcell.StyleDefault.GetBackground()
 	defaultAttrs := tcell.StyleDefault.GetAttributes()
 
-	fgDiff := fg != defaultFG
-	bgDiff := bg != defaultBG
-	attrsDiff := attrs != defaultAttrs
-
-	switch {
-	case !fgDiff && !bgDiff && !attrsDiff:
-		return "Default"
-	case fgDiff && !bgDiff && !attrsDiff:
-		return fmt.Sprintf("FG=%v", fg.String())
-	case !fgDiff && bgDiff && !attrsDiff:
-		return fmt.Sprintf("BG=%v", bg.String())
-	default:
-		parts := make([]string, 0, 3)
-		if fgDiff {
-			parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
-		}
-		if bgDiff {
-			parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
-		}
-		if attrsDiff {
-			parts = append(parts, fmt.Sprintf("ATTRS=0x%x", int64(attrs)))
-		}
-		return strings.Join(parts, ", ")
+	parts := make([]string, 0, 3)
+	if fg != defaultFG {
+		parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
 	}
+	if bg != defaultBG {
+		parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
+	}
+	if attrs != defaultAttrs {
+		parts = append(parts, fmt.Sprintf("ATTRS=0x%x", int64(attrs)))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // sidebarUp scrolls the sidebar up.
