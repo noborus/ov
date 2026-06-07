@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -12,7 +13,7 @@ func (root *Root) validateStyle(input string) {
 
 // applyStyleSelection toggles the style based on the provided value.
 func (m *Document) applyStyleSelection(input string) {
-	m.styles.SetValues(m.backupStyleFlags) // Restore backup flags before applying new selection.
+	m.restoreStyleFlags()
 	stylesLen := m.styles.Len()
 	if stylesLen == 0 {
 		return
@@ -23,6 +24,7 @@ func (m *Document) applyStyleSelection(input string) {
 		return
 	}
 	for _, token := range tokens {
+		fmt.Println("token:", token)
 		m.applyStyleToken(token, stylesLen)
 	}
 }
