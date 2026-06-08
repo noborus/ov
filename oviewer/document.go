@@ -65,8 +65,8 @@ type Document struct {
 
 	// styles is a set of tcell styles used in the document.
 	styles *indexmap.IndexMap[tcell.Style, bool]
-	// backupStyleFlags is a backup of the style flags for toggling styles.
-	backupStyleFlags []bool
+	// styleFlags is a backup of the style flags for toggling styles.
+	styleFlags []bool
 	// isStylesEnabled indicates whether styles are enabled or disabled.
 	isStylesEnabled bool
 
