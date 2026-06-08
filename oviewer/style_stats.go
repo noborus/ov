@@ -1,7 +1,6 @@
 package oviewer
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -19,26 +18,18 @@ func (m *Document) applyStyleSelection(input string) {
 		return
 	}
 
-	tokens, ok := parseInputStyles(input)
-	if !ok {
-		return
-	}
-	for _, token := range tokens {
-		fmt.Println("token:", token)
+	for _, token := range parseInputStyles(input) {
 		m.applyStyleToken(token, stylesLen)
 	}
 }
 
 // parseInputStyles splits the input string by commas and trims whitespace from each token.
-func parseInputStyles(input string) ([]string, bool) {
+func parseInputStyles(input string) []string {
 	tokens := strings.Split(input, ",")
-	if len(tokens) == 0 {
-		return nil, false
-	}
 	for i := range tokens {
 		tokens[i] = strings.TrimSpace(tokens[i])
 	}
-	return tokens, true
+	return tokens
 }
 
 // applyStyleToken processes a single token to toggle styles based on the defined rules.
@@ -61,9 +52,6 @@ func (m *Document) applyStyleToken(token string, stylesLen int) {
 
 	if strings.Contains(token, "-") {
 		parts := strings.SplitN(token, "-", 2)
-		if len(parts) != 2 {
-			return
-		}
 		startIdx, err1 := strconv.Atoi(parts[0])
 		endIdx, err2 := strconv.Atoi(parts[1])
 		if err1 != nil || err2 != nil || startIdx < 0 || endIdx < 0 || startIdx >= stylesLen {
@@ -89,7 +77,7 @@ func (m *Document) applyStyleToken(token string, stylesLen int) {
 
 // enableAllStyles sets all styles to true.
 func (m *Document) enableAllStyles() {
-	for i := 0; i < m.styles.Len(); i++ {
+	for i := range m.styles.Len() {
 		k, _, ok := m.styles.Index(i)
 		if !ok {
 			continue
@@ -101,7 +89,7 @@ func (m *Document) enableAllStyles() {
 
 // disableAllStyles sets all styles to false.
 func (m *Document) disableAllStyles() {
-	for i := 0; i < m.styles.Len(); i++ {
+	for i := range m.styles.Len() {
 		k, _, ok := m.styles.Index(i)
 		if !ok {
 			continue
@@ -113,7 +101,7 @@ func (m *Document) disableAllStyles() {
 
 // toggleAllStyles toggles all styles by inverting their current state.
 func (m *Document) toggleAllStyles() {
-	for i := 0; i < m.styles.Len(); i++ {
+	for i := range m.styles.Len() {
 		m.toggleStyleIdx(i)
 	}
 }

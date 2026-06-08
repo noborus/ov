@@ -42,22 +42,88 @@ func styleStates(m *Document) []bool {
 	return states
 }
 
-func TestToggleStyleCommaSeparated(t *testing.T) {
-	root := newStyleTestRoot([]bool{false, false, false})
-
-	root.Doc.applyStyleSelection("0, 2")
-
-	_, got0, ok := root.Doc.styles.Index(0)
-	if !ok || !got0 {
-		t.Fatalf("style 0 = %v, ok=%v; want true", got0, ok)
+func TestDocument_applyStyleSelection(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		args  []bool
+		want  []bool
+	}{
+		{
+			name:  "no styles does nothing",
+			input: "0",
+			args:  []bool{},
+			want:  []bool{},
+		},
+		{
+			name:  "invalid input does nothing",
+			input: ",,,",
+			args:  []bool{false, false, false},
+			want:  []bool{false, false, false},
+		},
+		{
+			name:  "empty input does nothing",
+			input: "",
+			args:  []bool{false, false, false},
+			want:  []bool{false, false, false},
+		},
+		{
+			name:  "invalid token does nothing",
+			input: "x",
+			args:  []bool{false, false, false},
+			want:  []bool{false, false, false},
+		},
+		{
+			name:  "single index toggles style",
+			input: "1",
+			args:  []bool{false, false, false},
+			want:  []bool{false, true, false},
+		},
+		{
+			name:  "comma-separated indices toggle styles",
+			input: "0,2",
+			args:  []bool{false, false, false},
+			want:  []bool{true, false, true},
+		},
+		{
+			name:  "range toggles styles",
+			input: "0-1",
+			args:  []bool{false, false, false},
+			want:  []bool{true, true, false},
+		},
+		{
+			name:  "invalid range does nothing",
+			input: "1-",
+			args:  []bool{false, false, false},
+			want:  []bool{false, false, false},
+		},
+		{
+			name:  "invalid range format",
+			input: "1-2-3",
+			args:  []bool{false, false, false},
+			want:  []bool{false, false, false},
+		},
 	}
-	_, got1, ok := root.Doc.styles.Index(1)
-	if !ok || got1 {
-		t.Fatalf("style 1 = %v, ok=%v; want false", got1, ok)
-	}
-	_, got2, ok := root.Doc.styles.Index(2)
-	if !ok || !got2 {
-		t.Fatalf("style 2 = %v, ok=%v; want true", got2, ok)
+	for _, tt := range tests {
+		root := newStyleTestRoot(tt.args)
+		t.Run(tt.name, func(t *testing.T) {
+			m := root.Doc
+			m.applyStyleSelection(tt.input)
+			got := styleStates(root.Doc)
+			for i := range tt.want {
+				if got[i] != tt.want[i] {
+					t.Fatalf("input=%q index=%d got=%v want=%v", tt.input, i, got[i], tt.want[i])
+				}
+			}
+			if len(tt.want) == 0 {
+				for i := 0; i < m.styles.Len(); i++ {
+					_, v, ok := m.styles.Index(i)
+					if !ok || v {
+						t.Fatalf("input=%q index=%d got=%v, ok=%v; want false", tt.input, i, v, ok)
+					}
+				}
+			}
+		})
 	}
 }
 
@@ -121,7 +187,6 @@ func TestProcessingToken(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
