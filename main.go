@@ -706,6 +706,8 @@ func initConfig() {
 		}
 	}
 
+	oviewer.RegisterCompatAliases(viper.GetViper())
+
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return

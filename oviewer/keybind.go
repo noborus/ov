@@ -145,7 +145,7 @@ const (
 
 // handlers returns a map of the action's handlers.
 func (root *Root) handlers() map[string]func(context.Context) {
-	return map[string]func(context.Context){
+	h := map[string]func(context.Context){
 		// General
 		actionExit:          root.Quit,
 		actionCancel:        root.Cancel,
@@ -273,6 +273,8 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		inputCopy:               root.CopySelect,
 		inputPaste:              root.Paste,
 	}
+	addCompatActionAliases(h)
+	return h
 }
 
 // KeyBind represents a mapping from action names to their associated key sequences.

@@ -31,8 +31,13 @@ func Test_defaultKeyBinds(t *testing.T) {
 			}
 			hm := root.handlers()
 			kb := DefaultKeyBinds()
-			if len(hm) != len(kb) {
-				t.Errorf("number of KeyBind = %v, want %v", len(hm), len(kb))
+			// handlers() may contain more entries than DefaultKeyBinds (e.g., compat
+			// aliases have handlers but no default key assignment), so only check that
+			// every default binding has a corresponding handler.
+			for action := range kb {
+				if _, ok := hm[action]; !ok {
+					t.Errorf("action %q in DefaultKeyBinds has no handler", action)
+				}
 			}
 		})
 	}
