@@ -22,6 +22,7 @@ import (
 	"github.com/gdamore/tcell/v3/vt"
 	"github.com/noborus/tcellansi"
 	"github.com/spf13/viper"
+	"golang.design/x/clipboard"
 	"golang.org/x/term"
 )
 
@@ -602,6 +603,12 @@ func (root *Root) Run() error {
 			root.Config.ClipboardMethod = "system"
 		}
 		root.debugMessage("clipboard method: " + root.Config.ClipboardMethod)
+	}
+	if root.Config.ClipboardMethod == "system" {
+		err := clipboard.Init()
+		if err != nil {
+			log.Printf("failed to initialize clipboard: %v\n", err)
+		}
 	}
 
 	sigs := make(chan os.Signal, 1)

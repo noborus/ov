@@ -7,8 +7,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v3"
+	"golang.design/x/clipboard"
 )
 
 // clipboardTimeout is the timeout duration for clipboard operations.
@@ -557,19 +557,7 @@ func (root *Root) copyClipboard(str string) {
 
 // copyToClipboardAsync copies to clipboard with timeout to prevent blocking.
 func (root *Root) copyToClipboardAsync(str string) {
-	done := make(chan error, 1)
-	go func() {
-		done <- clipboard.WriteAll(str)
-	}()
-
-	select {
-	case err := <-done:
-		if err != nil {
-			log.Printf("copyToClipboard failed: %v\n", err)
-		}
-	case <-time.After(clipboardTimeout):
-		log.Printf("copyToClipboard: timeout (clipboard command may be hanging)\n")
-	}
+	clipboard.Write(clipboard.FmtText, []byte(str))
 }
 
 type eventPaste struct {
@@ -594,12 +582,8 @@ func (root *Root) pasteFromClipboard(context.Context) {
 		return
 	}
 
-	str, err := clipboard.ReadAll()
-	if err != nil {
-		log.Printf("pasteFromClipboard: %v\n", err)
-		return
-	}
-
+	buf := clipboard.Read(clipboard.FmtText)
+	str := string(buf)
 	left, right := splitAtWidth(input.value, input.cursorX)
 	input.value = left + str + right
 	input.cursorX += stringWidth(str)
