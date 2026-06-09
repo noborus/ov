@@ -549,15 +549,10 @@ func (root *Root) copyClipboard(str string) {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
 	case "system":
-		go root.copyToClipboardAsync(str)
+		clipboard.Write(clipboard.FmtText, []byte(str))
 	default:
-		go root.copyToClipboardAsync(str)
+		clipboard.Write(clipboard.FmtText, []byte(str))
 	}
-}
-
-// copyToClipboardAsync copies to clipboard with timeout to prevent blocking.
-func (root *Root) copyToClipboardAsync(str string) {
-	clipboard.Write(clipboard.FmtText, []byte(str))
 }
 
 type eventPaste struct {
