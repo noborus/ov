@@ -11,9 +11,6 @@ import (
 	"golang.design/x/clipboard"
 )
 
-// clipboardTimeout is the timeout duration for clipboard operations.
-const clipboardTimeout = 2 * time.Second
-
 // ClickType represents the type of mouse click.
 type ClickType int
 
