@@ -89,9 +89,9 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 					{Contents: StrToContents("[Q]", 0), IsCurrent: false},
 					{Contents: StrToContents("  output screen and quit", 0), IsCurrent: false},
 					{Contents: StrToContents("[ctrl+q]", 0), IsCurrent: false},
-					{Contents: StrToContents("  set before/after range to output to terminal on exit", 0), IsCurrent: false},
+					{Contents: StrToContents("  set before/after range for output and quit", 0), IsCurrent: false},
 					{Contents: StrToContents("[alt+shift+F8]", 0), IsCurrent: false},
-					{Contents: StrToContents("  toggle outputting current view to terminal on exit", 0), IsCurrent: false},
+					{Contents: StrToContents("  toggle writing original content (instead of current screen) on exit", 0), IsCurrent: false},
 				}
 			},
 		},
