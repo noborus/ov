@@ -247,10 +247,10 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	helpLines := []string{
-		"number or command to select style:",
-		"o: disable all (e.g. o1)",
-		"a: enable all (e.g. a1-2)",
-		"i: invert all (e.g. i1,3)",
+		"Toggle styles with the following commands:",
+		"o: disable all (e.g., o1)",
+		"a: enable all (e.g., a1-2)",
+		"i: invert all (e.g., i1,3)",
 	}
 	helpStyle := tcell.StyleDefault.Foreground(color.Green)
 	totalLines := root.Doc.styles.Len() + len(helpLines)
@@ -297,27 +297,6 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 		})
 	}
 	return items
-}
-
-func styleString(style tcell.Style) string {
-	fg := style.GetForeground()
-	bg := style.GetBackground()
-	attrs := style.GetAttributes()
-	defaultFG := tcell.StyleDefault.GetForeground()
-	defaultBG := tcell.StyleDefault.GetBackground()
-	defaultAttrs := tcell.StyleDefault.GetAttributes()
-
-	parts := make([]string, 0, 3)
-	if fg != defaultFG {
-		parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
-	}
-	if bg != defaultBG {
-		parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
-	}
-	if attrs != defaultAttrs {
-		parts = append(parts, fmt.Sprintf("ATTRS=0x%x", int64(attrs)))
-	}
-	return strings.Join(parts, ", ")
 }
 
 // sidebarUp scrolls the sidebar up.

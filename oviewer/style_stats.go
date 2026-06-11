@@ -1,8 +1,11 @@
 package oviewer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/gdamore/tcell/v3"
 )
 
 // validateStyle confirms the style input and applies the selection.
@@ -113,4 +116,73 @@ func (m *Document) toggleStyleIdx(idx int) {
 		return
 	}
 	m.styles.Set(k, !v)
+}
+
+func styleString(style tcell.Style) string {
+	fg := style.GetForeground()
+	bg := style.GetBackground()
+	attrs := style.GetAttributes()
+	uStyle := style.GetUnderlineStyle()
+	uColor := style.GetUnderlineColor()
+	defaultFG := tcell.StyleDefault.GetForeground()
+	defaultBG := tcell.StyleDefault.GetBackground()
+	defaultAttrs := tcell.StyleDefault.GetAttributes()
+
+	parts := make([]string, 0, 3)
+	if fg != defaultFG {
+		parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
+	}
+	if bg != defaultBG {
+		parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
+	}
+	if attrs != defaultAttrs {
+		parts = append(parts, fmt.Sprintf("%v", attrString(attrs)))
+	}
+	if uStyle != tcell.UnderlineStyleNone {
+		parts = append(parts, fmt.Sprintf("%v", ustyleString(uStyle)))
+	}
+	if uColor != defaultFG {
+		parts = append(parts, fmt.Sprintf("UnderlineColor=%v", uColor.String()))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func attrString(attrs tcell.AttrMask) string {
+	var parts []string
+	if attrs&tcell.AttrBold != 0 {
+		parts = append(parts, "Bold")
+	}
+	if attrs&tcell.AttrBlink != 0 {
+		parts = append(parts, "Blink")
+	}
+	if attrs&tcell.AttrReverse != 0 {
+		parts = append(parts, "Reverse")
+	}
+	if attrs&tcell.AttrDim != 0 {
+		parts = append(parts, "Dim")
+	}
+	if attrs&tcell.AttrItalic != 0 {
+		parts = append(parts, "Italic")
+	}
+	if attrs&tcell.AttrStrikeThrough != 0 {
+		parts = append(parts, "StrikeThrough")
+	}
+	return strings.Join(parts, ", ")
+}
+
+func ustyleString(uStyle tcell.UnderlineStyle) string {
+	switch uStyle {
+	case tcell.UnderlineStyleSolid:
+		return "Underline"
+	case tcell.UnderlineStyleDouble:
+		return "Underline=Double"
+	case tcell.UnderlineStyleCurly:
+		return "Underline=Curly"
+	case tcell.UnderlineStyleDotted:
+		return "Underline=Dotted"
+	case tcell.UnderlineStyleDashed:
+		return "Underline=Dashed"
+	default:
+		return "Underline=None"
+	}
 }
