@@ -447,7 +447,7 @@ func init() {
 		return []string{"yaml"}, cobra.ShellCompDirectiveFilterFileExt
 	})
 	rootCmd.PersistentFlags().BoolVarP(&ver, "version", "v", false, "display version information")
-	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "display key bind information")
+	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "list all key bindings")
 	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes defined in the configuration file")
 
 	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "run command and display its output; use `--` to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`)")
@@ -458,19 +458,19 @@ func init() {
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "generate configuration [default|less]")
+	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "print a sample config file to stdout [default|less]")
 	rootCmd.PersistentFlags().Lookup("generate-config").NoOptDefVal = "default"
 	_ = rootCmd.RegisterFlagCompletionFunc("generate-config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"default", "less"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "search pattern")
-	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "filter search pattern")
-	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "filter non match search pattern")
+	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "initial search pattern applied on startup")
+	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "show only lines matching this pattern")
+	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "hide lines matching this pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "read compressed files as raw bytes without decompressing")
 
 	// Config.General
-	rootCmd.PersistentFlags().StringP("converter", "", "es", "converter [es|raw|align|wordwrap]")
+	rootCmd.PersistentFlags().StringP("converter", "", "es", "content processing mode [es|raw|align|wordwrap]")
 	_ = viper.BindPFlag("general.Converter", rootCmd.PersistentFlags().Lookup("converter"))
 	_ = rootCmd.RegisterFlagCompletionFunc("converter", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"es\tEscape Sequence", "raw\tRaw output of escape sequences", "align\tAlign Column Widths", "wordwrap\tWord Wrap"}, cobra.ShellCompDirectiveNoFileComp
@@ -478,7 +478,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("align", "l", false, "align the output columns for better readability")
 	_ = viper.BindPFlag("general.Align", rootCmd.PersistentFlags().Lookup("align"))
-	rootCmd.PersistentFlags().BoolP("raw", "r", false, "raw escape sequences without processing")
+	rootCmd.PersistentFlags().BoolP("raw", "r", false, "show escape sequences as literal text")
 	_ = viper.BindPFlag("general.Raw", rootCmd.PersistentFlags().Lookup("raw"))
 
 	rootCmd.PersistentFlags().IntP("tab-width", "x", 8, "tab stop width")
@@ -487,7 +487,7 @@ func init() {
 		return []string{"3\ttab width", "2\ttab width", "4\ttab width", "8\ttab width"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of header lines to be displayed constantly")
+	rootCmd.PersistentFlags().IntP("header", "H", 0, "number of lines to pin as a fixed header")
 	_ = viper.BindPFlag("general.Header", rootCmd.PersistentFlags().Lookup("header"))
 	_ = rootCmd.RegisterFlagCompletionFunc("header", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
@@ -505,35 +505,35 @@ func init() {
 	})
 	rootCmd.MarkFlagsMutuallyExclusive("vertical-header", "header-column")
 
-	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "skip the number of lines")
+	rootCmd.PersistentFlags().IntP("skip-lines", "", 0, "number of lines to skip at the top of each file")
 	_ = viper.BindPFlag("general.SkipLines", rootCmd.PersistentFlags().Lookup("skip-lines"))
 	_ = rootCmd.RegisterFlagCompletionFunc("skip-lines", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "alternately change the line color")
+	rootCmd.PersistentFlags().BoolP("alternate-rows", "C", false, "highlight even and odd rows in alternating colors")
 	_ = viper.BindPFlag("general.AlternateRows", rootCmd.PersistentFlags().Lookup("alternate-rows"))
 
-	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "column mode")
+	rootCmd.PersistentFlags().BoolP("column-mode", "c", false, "split content into columns at the delimiter")
 	_ = viper.BindPFlag("general.ColumnMode", rootCmd.PersistentFlags().Lookup("column-mode"))
 
-	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column mode for width")
+	rootCmd.PersistentFlags().BoolP("column-width", "", false, "column mode using fixed-width fields instead of a delimiter")
 	_ = viper.BindPFlag("general.ColumnWidth", rootCmd.PersistentFlags().Lookup("column-width"))
 
 	rootCmd.PersistentFlags().BoolP("column-rainbow", "", false, "colorize each column with a distinct color")
 	_ = viper.BindPFlag("general.ColumnRainbow", rootCmd.PersistentFlags().Lookup("column-rainbow"))
 
-	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "line number mode")
+	rootCmd.PersistentFlags().BoolP("line-number", "n", false, "show line numbers")
 	_ = viper.BindPFlag("general.LineNumMode", rootCmd.PersistentFlags().Lookup("line-number"))
 
-	rootCmd.PersistentFlags().StringP("wrap", "w", "", "wrap mode [char|word]")
+	rootCmd.PersistentFlags().StringP("wrap", "w", "", "wrap long lines [char|word]")
 	rootCmd.PersistentFlags().Lookup("wrap").NoOptDefVal = "char"
 	_ = viper.BindPFlag("general.Wrap", rootCmd.PersistentFlags().Lookup("wrap"))
 	_ = rootCmd.RegisterFlagCompletionFunc("wrap", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"char\tWrap by character", "word\tWrap at word boundaries"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().BoolP("plain", "p", false, "disable original decoration")
+	rootCmd.PersistentFlags().BoolP("plain", "p", false, "strip ANSI colors and styles from the content")
 	_ = viper.BindPFlag("general.PlainMode", rootCmd.PersistentFlags().Lookup("plain"))
 
 	rootCmd.PersistentFlags().StringP("column-delimiter", "d", ",", "column delimiter `character`")
@@ -542,10 +542,10 @@ func init() {
 		return []string{",\tcomma", "|\tvertical line", "\\\\t\ttab", "│\tbox"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().StringP("section-delimiter", "", "", "`regexp` for section delimiter .e.g. \"^#\"")
+	rootCmd.PersistentFlags().StringP("section-delimiter", "", "", "`regexp` marking section boundaries (e.g., \"^#\")")
 	_ = viper.BindPFlag("general.SectionDelimiter", rootCmd.PersistentFlags().Lookup("section-delimiter"))
 
-	rootCmd.PersistentFlags().IntP("section-start", "", 0, "section start position")
+	rootCmd.PersistentFlags().IntP("section-start", "", 0, "line offset from the section delimiter where content begins")
 	_ = viper.BindPFlag("general.SectionStartPosition", rootCmd.PersistentFlags().Lookup("section-start"))
 
 	rootCmd.PersistentFlags().BoolP("section-header", "", false, "pin the section delimiter line as a fixed header")
@@ -560,16 +560,16 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("follow-all", "A", false, "follow multiple files and show the most recently updated one")
 	_ = viper.BindPFlag("general.FollowAll", rootCmd.PersistentFlags().Lookup("follow-all"))
 
-	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "section-by-section follow mode")
+	rootCmd.PersistentFlags().BoolP("follow-section", "", false, "follow mode: jump to the most recently updated section")
 	_ = viper.BindPFlag("general.FollowSection", rootCmd.PersistentFlags().Lookup("follow-section"))
 
 	rootCmd.PersistentFlags().BoolP("follow-name", "", false, "follow by file name mode; survives log rotation")
 	_ = viper.BindPFlag("general.FollowName", rootCmd.PersistentFlags().Lookup("follow-name"))
 
-	rootCmd.PersistentFlags().IntP("watch", "T", 0, "watch mode interval(`seconds`)")
+	rootCmd.PersistentFlags().IntP("watch", "T", 0, "re-read and refresh the view every N `seconds`")
 	_ = viper.BindPFlag("general.WatchInterval", rootCmd.PersistentFlags().Lookup("watch"))
 
-	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "comma separated words(regexp) to color .e.g. \"ERROR,WARNING\"")
+	rootCmd.PersistentFlags().StringSliceP("multi-color", "M", nil, "highlight words or patterns in distinct colors (e.g., \"ERROR,WARNING\")")
 	_ = viper.BindPFlag("general.MultiColorWords", rootCmd.PersistentFlags().Lookup("multi-color"))
 
 	rootCmd.PersistentFlags().StringP("jump-target", "j", "", "jump target `[int|int%|.int|'section']`")
@@ -578,13 +578,13 @@ func init() {
 	rootCmd.PersistentFlags().StringP("hscroll-width", "", "10%", "width to scroll horizontally `[int|int%|.int]`")
 	_ = viper.BindPFlag("general.HScrollWidth", rootCmd.PersistentFlags().Lookup("hscroll-width"))
 
-	rootCmd.PersistentFlags().StringP("caption", "", "", "custom caption")
+	rootCmd.PersistentFlags().StringP("caption", "", "", "override the status line file name with a custom label")
 	_ = viper.BindPFlag("general.Caption", rootCmd.PersistentFlags().Lookup("caption"))
 
 	rootCmd.PersistentFlags().BoolP("hide-other-section", "", false, "hide all sections except the current one")
 	_ = viper.BindPFlag("general.HideOtherSection", rootCmd.PersistentFlags().Lookup("hide-other-section"))
 
-	rootCmd.PersistentFlags().BoolP("status-line", "", true, "status line")
+	rootCmd.PersistentFlags().BoolP("status-line", "", true, "show the status line at the bottom")
 	_ = viper.BindPFlag("general.StatusLine", rootCmd.PersistentFlags().Lookup("status-line"))
 
 	rootCmd.PersistentFlags().IntP("ruler", "", 0, "display ruler (=0: none, =1: relative, =2: absolute)")
@@ -605,46 +605,46 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("exit-write", "X", false, "output the current screen when exiting")
 	_ = viper.BindPFlag("IsWriteOnExit", rootCmd.PersistentFlags().Lookup("exit-write"))
 
-	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "number before the current lines when exiting")
+	rootCmd.PersistentFlags().IntP("exit-write-before", "b", 0, "extra lines above the current view to output on exit")
 	_ = viper.BindPFlag("BeforeWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-before"))
 
-	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "number after the current lines when exiting")
+	rootCmd.PersistentFlags().IntP("exit-write-after", "a", 0, "extra lines below the current view to output on exit")
 	_ = viper.BindPFlag("AfterWriteOriginal", rootCmd.PersistentFlags().Lookup("exit-write-after"))
 
 	rootCmd.PersistentFlags().BoolP("case-sensitive", "i", false, "case-sensitive in search")
 	_ = viper.BindPFlag("CaseSensitive", rootCmd.PersistentFlags().Lookup("case-sensitive"))
 
-	rootCmd.PersistentFlags().BoolP("smart-case-sensitive", "", false, "smart case-sensitive in search")
+	rootCmd.PersistentFlags().BoolP("smart-case-sensitive", "", false, "case-insensitive unless the pattern contains uppercase letters")
 	_ = viper.BindPFlag("SmartCaseSensitive", rootCmd.PersistentFlags().Lookup("smart-case-sensitive"))
 
-	rootCmd.PersistentFlags().BoolP("regexp-search", "", false, "regular expression search")
+	rootCmd.PersistentFlags().BoolP("regexp-search", "", false, "treat search patterns as regular expressions")
 	_ = viper.BindPFlag("RegexpSearch", rootCmd.PersistentFlags().Lookup("regexp-search"))
 
 	rootCmd.PersistentFlags().BoolP("incsearch", "", true, "incremental search")
 	_ = viper.BindPFlag("Incsearch", rootCmd.PersistentFlags().Lookup("incsearch"))
 
-	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "number of chunks to limit in memory")
+	rootCmd.PersistentFlags().IntP("memory-limit", "", -1, "maximum chunks to keep in memory (-1 for unlimited)")
 	_ = viper.BindPFlag("MemoryLimit", rootCmd.PersistentFlags().Lookup("memory-limit"))
 
-	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "number of chunks to limit in memory for the file")
+	rootCmd.PersistentFlags().IntP("memory-limit-file", "", 100, "maximum chunks to keep in memory per file")
 	_ = viper.BindPFlag("MemoryLimitFile", rootCmd.PersistentFlags().Lookup("memory-limit-file"))
 
 	rootCmd.PersistentFlags().BoolP("disable-mouse", "", false, "disable mouse support")
 	_ = viper.BindPFlag("DisableMouse", rootCmd.PersistentFlags().Lookup("disable-mouse"))
 
-	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "disable column cycling")
+	rootCmd.PersistentFlags().BoolP("disable-column-cycle", "", false, "keep column cursor from wrapping to the first column")
 	_ = viper.BindPFlag("DisableColumnCycle", rootCmd.PersistentFlags().Lookup("disable-column-cycle"))
 
 	rootCmd.PersistentFlags().StringP("view-mode", "m", "", "apply predefined settings for a specific mode")
 	_ = viper.BindPFlag("ViewMode", rootCmd.PersistentFlags().Lookup("view-mode"))
 
-	rootCmd.PersistentFlags().StringP("sidebar-mode", "", "", "apply predefined settings for sidebar mode")
+	rootCmd.PersistentFlags().StringP("sidebar-mode", "", "", "open sidebar with this content [help|marks|documents|sections]")
 	_ = viper.BindPFlag("SidebarMode", rootCmd.PersistentFlags().Lookup("sidebar-mode"))
 	_ = rootCmd.RegisterFlagCompletionFunc("sidebar-mode", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"help", "marks", "documents", "sections"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	rootCmd.PersistentFlags().BoolP("set-terminal-title", "", false, "set terminal title")
+	rootCmd.PersistentFlags().BoolP("set-terminal-title", "", false, "update the terminal title bar with the current file name")
 	_ = viper.BindPFlag("SetTerminalTitle", rootCmd.PersistentFlags().Lookup("set-terminal-title"))
 
 	rootCmd.PersistentFlags().BoolP("debug", "", false, "debug mode")
