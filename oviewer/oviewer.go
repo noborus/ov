@@ -22,6 +22,7 @@ import (
 	"github.com/gdamore/tcell/v3/vt"
 	"github.com/noborus/tcellansi"
 	"github.com/spf13/viper"
+	"golang.design/x/clipboard"
 	"golang.org/x/term"
 )
 
@@ -595,6 +596,8 @@ func (root *Root) Run() error {
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
 	}
+
+	// Determine the clipboard method (write) if not set in the configuration.
 	if root.Config.ClipboardMethod != "OSC52" && root.Config.ClipboardMethod != "system" {
 		if root.Screen.HasClipboard() {
 			root.Config.ClipboardMethod = "OSC52"
@@ -602,6 +605,11 @@ func (root *Root) Run() error {
 			root.Config.ClipboardMethod = "system"
 		}
 		root.debugMessage("clipboard method: " + root.Config.ClipboardMethod)
+	}
+
+	// Initialize the clipboard. This is necessary for read/write to the clipboard.
+	if err := clipboard.Init(); err != nil {
+		log.Printf("failed to initialize clipboard: %v\n", err)
 	}
 
 	sigs := make(chan os.Signal, 1)
