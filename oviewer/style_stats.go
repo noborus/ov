@@ -118,71 +118,70 @@ func (m *Document) toggleStyleIdx(idx int) {
 	m.styles.Set(k, !v)
 }
 
+// styleString returns a string representation of the given tcell.Style, including its foreground color, background color, attributes, and underline style.
 func styleString(style tcell.Style) string {
-	fg := style.GetForeground()
-	bg := style.GetBackground()
-	attrs := style.GetAttributes()
-	uStyle := style.GetUnderlineStyle()
-	uColor := style.GetUnderlineColor()
-	defaultFG := tcell.StyleDefault.GetForeground()
-	defaultBG := tcell.StyleDefault.GetBackground()
-	defaultAttrs := tcell.StyleDefault.GetAttributes()
-
 	parts := make([]string, 0, 3)
-	if fg != defaultFG {
-		parts = append(parts, fmt.Sprintf("FG=%v", fg.String()))
+
+	fg := style.GetForeground()
+	if fg != tcell.ColorDefault {
+		parts = append(parts, fmt.Sprintf("FG=%v", fg))
 	}
-	if bg != defaultBG {
-		parts = append(parts, fmt.Sprintf("BG=%v", bg.String()))
+
+	bg := style.GetBackground()
+	if bg != tcell.ColorDefault {
+		parts = append(parts, fmt.Sprintf("BG=%v", bg))
 	}
-	if attrs != defaultAttrs {
-		parts = append(parts, fmt.Sprintf("%v", attrString(attrs)))
+
+	if style.HasBold() {
+		parts = append(parts, "Bold")
 	}
-	if uStyle != tcell.UnderlineStyleNone {
-		parts = append(parts, fmt.Sprintf("%v", ustyleString(uStyle)))
+	if style.HasBlink() {
+		parts = append(parts, "Blink")
 	}
-	if uColor != defaultFG {
-		parts = append(parts, fmt.Sprintf("UnderlineColor=%v", uColor.String()))
+	if style.HasReverse() {
+		parts = append(parts, "Reverse")
+	}
+	if style.HasDim() {
+		parts = append(parts, "Dim")
+	}
+	if style.HasItalic() {
+		parts = append(parts, "Italic")
+	}
+	if style.HasStrikeThrough() {
+		parts = append(parts, "StrikeThrough")
+	}
+	if style.HasUnderline() {
+		parts = append(parts, underlineString(style))
 	}
 	return strings.Join(parts, ", ")
 }
 
-func attrString(attrs tcell.AttrMask) string {
-	var parts []string
-	if attrs&tcell.AttrBold != 0 {
-		parts = append(parts, "Bold")
+func underlineString(style tcell.Style) string {
+	uStyle := style.GetUnderlineStyle()
+	if uStyle != tcell.UnderlineStyleNone {
+		uline := "Underline" + ustyleString(uStyle)
+		uColor := style.GetUnderlineColor()
+		if uColor != tcell.ColorDefault {
+			uline += fmt.Sprintf("(%v)", uColor)
+		}
+		return uline
 	}
-	if attrs&tcell.AttrBlink != 0 {
-		parts = append(parts, "Blink")
-	}
-	if attrs&tcell.AttrReverse != 0 {
-		parts = append(parts, "Reverse")
-	}
-	if attrs&tcell.AttrDim != 0 {
-		parts = append(parts, "Dim")
-	}
-	if attrs&tcell.AttrItalic != 0 {
-		parts = append(parts, "Italic")
-	}
-	if attrs&tcell.AttrStrikeThrough != 0 {
-		parts = append(parts, "StrikeThrough")
-	}
-	return strings.Join(parts, ", ")
+	return ""
 }
 
 func ustyleString(uStyle tcell.UnderlineStyle) string {
 	switch uStyle {
 	case tcell.UnderlineStyleSolid:
-		return "Underline"
+		return ""
 	case tcell.UnderlineStyleDouble:
-		return "Underline=Double"
+		return "=Double"
 	case tcell.UnderlineStyleCurly:
-		return "Underline=Curly"
+		return "=Curly"
 	case tcell.UnderlineStyleDotted:
-		return "Underline=Dotted"
+		return "=Dotted"
 	case tcell.UnderlineStyleDashed:
-		return "Underline=Dashed"
+		return "=Dashed"
 	default:
-		return "Underline=None"
+		return "=None"
 	}
 }
