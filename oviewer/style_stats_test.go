@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
@@ -200,5 +201,35 @@ func TestProcessingToken(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestStyleStats_FromAnsiSample40Patterns(t *testing.T) {
+	root := rootFileReadHelper(t, filepath.Join(testdata, "ansiescape_style_stats_screen.txt"))
+	m := root.Doc
+
+	for i := 0; i < m.BufEndNum(); i++ {
+		_ = m.getLineC(i)
+	}
+
+	const wantPatterns = 40
+	if got := m.styles.Len(); got != wantPatterns {
+		t.Fatalf("styles.Len()=%d want=%d", got, wantPatterns)
+	}
+
+	seen := make(map[string]struct{}, wantPatterns)
+	for i := 0; i < m.styles.Len(); i++ {
+		style, _, ok := m.styles.Index(i)
+		if !ok {
+			t.Fatalf("styles.Index(%d) not found", i)
+		}
+		s := styleString(style)
+		if s == "" {
+			t.Fatalf("styleString() is empty at index=%d", i)
+		}
+		if _, dup := seen[s]; dup {
+			t.Fatalf("duplicate styleString=%q", s)
+		}
+		seen[s] = struct{}{}
 	}
 }

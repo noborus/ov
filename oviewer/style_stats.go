@@ -1,8 +1,11 @@
 package oviewer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/gdamore/tcell/v3"
 )
 
 // validateStyle confirms the style input and applies the selection.
@@ -113,4 +116,72 @@ func (m *Document) toggleStyleIdx(idx int) {
 		return
 	}
 	m.styles.Set(k, !v)
+}
+
+// styleString returns a string representation of the given tcell.Style, including its foreground color, background color, attributes, and underline style.
+func styleString(style tcell.Style) string {
+	parts := make([]string, 0, 3)
+
+	fg := style.GetForeground()
+	if fg != tcell.ColorDefault {
+		parts = append(parts, fmt.Sprintf("FG=%v", fg))
+	}
+
+	bg := style.GetBackground()
+	if bg != tcell.ColorDefault {
+		parts = append(parts, fmt.Sprintf("BG=%v", bg))
+	}
+
+	if style.HasBold() {
+		parts = append(parts, "Bold")
+	}
+	if style.HasBlink() {
+		parts = append(parts, "Blink")
+	}
+	if style.HasReverse() {
+		parts = append(parts, "Reverse")
+	}
+	if style.HasDim() {
+		parts = append(parts, "Dim")
+	}
+	if style.HasItalic() {
+		parts = append(parts, "Italic")
+	}
+	if style.HasStrikeThrough() {
+		parts = append(parts, "StrikeThrough")
+	}
+	if style.HasUnderline() {
+		parts = append(parts, underlineString(style))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func underlineString(style tcell.Style) string {
+	uStyle := style.GetUnderlineStyle()
+	if uStyle != tcell.UnderlineStyleNone {
+		uline := "Underline" + ustyleString(uStyle)
+		uColor := style.GetUnderlineColor()
+		if uColor != tcell.ColorDefault {
+			uline += fmt.Sprintf("(%v)", uColor)
+		}
+		return uline
+	}
+	return ""
+}
+
+func ustyleString(uStyle tcell.UnderlineStyle) string {
+	switch uStyle {
+	case tcell.UnderlineStyleSolid:
+		return ""
+	case tcell.UnderlineStyleDouble:
+		return "=Double"
+	case tcell.UnderlineStyleCurly:
+		return "=Curly"
+	case tcell.UnderlineStyleDotted:
+		return "=Dotted"
+	case tcell.UnderlineStyleDashed:
+		return "=Dashed"
+	default:
+		return "=None"
+	}
 }

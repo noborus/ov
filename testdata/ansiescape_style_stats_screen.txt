@@ -1,0 +1,42 @@
+styleString coverage sample (40 patterns)
+-----------------------------------------
+00 [30mFG black[0m
+01 [31mFG red[0m
+02 [32mFG green[0m
+03 [33mFG yellow[0m
+04 [34mFG blue[0m
+05 [35mFG magenta[0m
+06 [36mFG cyan[0m
+07 [37mFG white[0m
+08 [90mFG bright black[0m
+09 [91mFG bright red[0m
+10 [92mFG bright green[0m
+11 [93mFG bright yellow[0m
+12 [94mFG bright blue[0m
+13 [95mFG bright magenta[0m
+14 [96mFG bright cyan[0m
+15 [97mFG bright white[0m
+16 [40mBG black[0m
+17 [41mBG red[0m
+18 [42mBG green[0m
+19 [43mBG yellow[0m
+20 [44mBG blue[0m
+21 [45mBG magenta[0m
+22 [46mBG cyan[0m
+23 [47mBG white[0m
+24 [1mBold[0m
+25 [2mDim[0m
+26 [3mItalic[0m
+27 [5mBlink[0m
+28 [7mReverse[0m
+29 [9mStrike[0m
+30 [4:1mUnderline solid[0m
+31 [4:2mUnderline double[0m
+32 [4:3mUnderline curly[0m
+33 [4:4mUnderline dotted[0m
+34 [4:5mUnderline dashed[0m
+35 [4:1;58;5;196mUnderline color red[0m
+36 [4:1;58;5;46mUnderline color green[0m
+37 [4:1;58;2;70;130;255mUnderline color 24bit[0m
+38 [1;31;47mBold+FG+BG[0m
+39 [1;4:2;58;5;226;38;5;21mBold+ULdouble+ULcolor+FG256[0m
