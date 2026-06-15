@@ -645,24 +645,30 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 		if item.IsCurrent {
 			style = currentStyle
 		}
-		root.drawSidebarItem(item, style, scroll.x, i+1)
+		root.drawSidebarItem(scroll.x, i+1, item, style)
 	}
 }
 
 // drawSidebarItem draws a single SidebarItem in the sidebar with the specified style and scroll position.
-func (root *Root) drawSidebarItem(item SidebarItem, style tcell.Style, x int, y int) {
+func (root *Root) drawSidebarItem(x int, y int, item SidebarItem, style tcell.Style) {
 	label := item.Label
 	labelLen := uniseg.StringWidth(label)
 	left := min(x, len(item.Contents))
 	width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
 	right := min(left+width, len(item.Contents))
-	out := item.Contents[left:right].String()
-	if item.ContentStyle != nil {
-		root.Screen.PutStrStyled(labelLen, y, out, *item.ContentStyle)
-	} else {
-		root.Screen.PutStrStyled(labelLen, y, out, style)
-	}
+	root.putContents(labelLen, y, item.Contents[left:right], style)
 	root.Screen.PutStrStyled(0, y, label, style)
+}
+
+// putContents puts the contents in the sidebar with the specified style.
+func (root *Root) putContents(x int, y int, contents contents, style tcell.Style) {
+	for i, c := range contents {
+		if c.style != defaultStyle {
+			root.Screen.Put(x+i, y, c.str, c.style)
+		} else {
+			root.Screen.Put(x+i, y, c.str, style)
+		}
+	}
 }
 
 // sidebarScroll returns the current scroll position of the sidebar and updates it if necessary.
