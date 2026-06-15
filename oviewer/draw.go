@@ -552,10 +552,10 @@ func (root *Root) execNotify(msg string, count int) {
 
 // flash flashes the screen.
 func (root *Root) flash() {
-	root.Screen.Fill(' ', tcell.StyleDefault.Background(color.White))
+	root.Screen.Fill(' ', defaultStyle.Background(color.White))
 	root.Screen.Sync()
 	time.Sleep(50 * time.Millisecond)
-	root.Screen.Fill(' ', tcell.StyleDefault.Background(color.Black))
+	root.Screen.Fill(' ', defaultStyle.Background(color.Black))
 	root.Screen.Sync()
 	time.Sleep(50 * time.Millisecond)
 	root.draw(context.Background())
@@ -615,8 +615,8 @@ func (root *Root) drawSidebar() {
 	}
 
 	sidebarWidth := root.sidebarWidth
-	sidebarStyle := tcell.StyleDefault
-	borderStyle := tcell.StyleDefault.Background(color.Gray)
+	sidebarStyle := defaultStyle
+	borderStyle := defaultStyle.Background(color.Gray)
 	height := root.scr.vHeight
 	// Sidebar background
 	for y := range height {
@@ -633,9 +633,9 @@ func (root *Root) drawSidebar() {
 func (root *Root) drawSidebarList(items []SidebarItem) {
 	scroll := root.sidebarScroll()
 
-	sidebarStyle := tcell.StyleDefault
+	sidebarStyle := defaultStyle
 	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
-	currentStyle := tcell.StyleDefault.Bold(true).Reverse(true)
+	currentStyle := defaultStyle.Bold(true).Reverse(true)
 
 	height := root.scr.vHeight
 	maxList := min(len(items), height-2)
