@@ -11,10 +11,9 @@ import (
 
 // SidebarItem represents an item to display in the sidebar.
 type SidebarItem struct {
-	Label        string   // Always-visible label (e.g., index, description)
-	Contents     contents // Contents to display
-	IsCurrent    bool
-	ContentStyle *tcell.Style // Style for the contents
+	Label     string   // Always-visible label (e.g., index, description)
+	Contents  contents // Contents to display
+	IsCurrent bool
 }
 
 type SidebarMode int
@@ -247,7 +246,6 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	helpLines := []string{
-		"Toggle styles with the following commands:",
 		"o: disable all (e.g., o1)",
 		"a: enable all (e.g., a1-2)",
 		"i: invert all (e.g., i1,3)",
@@ -265,11 +263,13 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 				spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 				displayName = append(displayName, spaces...)
 			}
+			for j := range displayName {
+				displayName[j].style = helpStyle
+			}
 			items = append(items, SidebarItem{
-				Label:        "",
-				Contents:     displayName,
-				IsCurrent:    false,
-				ContentStyle: &helpStyle,
+				Label:     "",
+				Contents:  displayName,
+				IsCurrent: false,
 			})
 			continue
 		}
@@ -284,16 +284,18 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 			repr = "[ ] "
 		}
 		displayName := StrToContents(repr+styleString(style), 0)
+		for j := 4; j < len(displayName); j++ {
+			displayName[j].style = style
+		}
 		if len(displayName) < length {
 			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
 			displayName = append(displayName, spaces...)
 		}
 		label := fmt.Sprintf("%2d ", styleIndex)
 		items = append(items, SidebarItem{
-			Label:        label,
-			Contents:     displayName,
-			IsCurrent:    false,
-			ContentStyle: &style,
+			Label:     label,
+			Contents:  displayName,
+			IsCurrent: false,
 		})
 	}
 	return items

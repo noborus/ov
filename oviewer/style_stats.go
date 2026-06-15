@@ -156,20 +156,19 @@ func styleString(style tcell.Style) string {
 	return strings.Join(parts, ", ")
 }
 
+// underlineString constructs a string representation of the underline style and color for a given tcell.Style.
 func underlineString(style tcell.Style) string {
 	uStyle := style.GetUnderlineStyle()
-	if uStyle != tcell.UnderlineStyleNone {
-		uline := "Underline" + ustyleString(uStyle)
-		uColor := style.GetUnderlineColor()
-		if uColor != tcell.ColorDefault {
-			uline += fmt.Sprintf("(%v)", uColor)
-		}
-		return uline
+	uline := "Underline" + underlineStyleString(uStyle)
+	uColor := style.GetUnderlineColor()
+	if uColor != tcell.ColorDefault {
+		uline += fmt.Sprintf("(%v)", uColor)
 	}
-	return ""
+	return uline
 }
 
-func ustyleString(uStyle tcell.UnderlineStyle) string {
+// underlineStyleString converts a tcell.UnderlineStyle to its string representation, returning a specific string based on the style type.
+func underlineStyleString(uStyle tcell.UnderlineStyle) string {
 	switch uStyle {
 	case tcell.UnderlineStyleSolid:
 		return ""
