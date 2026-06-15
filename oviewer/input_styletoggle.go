@@ -58,7 +58,7 @@ func (*eventStyleToggle) Mode() InputMode {
 
 // Prompt returns the prompt string in the input field.
 func (*eventStyleToggle) Prompt() string {
-	return "Style number(suppress highlight):"
+	return "Toggle styles:"
 }
 
 // Confirm returns the event when the input is confirmed.
