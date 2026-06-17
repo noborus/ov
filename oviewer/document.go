@@ -29,6 +29,9 @@ const (
 	DocFilter
 )
 
+// DocumentCacheSize is the maximum number of lines to cache in the LRU cache for each document.
+const DocumentCacheSize = 10000
+
 // documentType represents the type of document (e.g., normal, help, log, filter).
 type documentType int
 
@@ -308,7 +311,7 @@ func NewDocument() (*Document, error) {
 // NewCache initializes a new LRU cache for the Document.
 // It returns an error if the cache cannot be created.
 func (m *Document) NewCache() error {
-	cache, err := lru.New[int, LineC](1024)
+	cache, err := lru.New[int, LineC](DocumentCacheSize)
 	if err != nil {
 		return fmt.Errorf("new cache %w", err)
 	}
