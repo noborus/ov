@@ -101,6 +101,8 @@ type Document struct {
 
 	// allMatchedLinesRunning guards concurrent allMatchedLines execution.
 	allMatchedLinesRunning atomic.Bool
+	// stylesScanRunning guards concurrent style scanning execution.
+	stylesScanRunning atomic.Bool
 
 	// marked is a list of marked line numbers.
 	marked MatchedLineList
@@ -634,6 +636,24 @@ func (m *Document) getLineC(lN int) LineC {
 	lineC.lc = lc
 	lineC.valid = true
 	return lineC
+}
+
+// EnsureStylesLoaded scans the document for styles and loads them into the style list if they are not already loaded.
+// This method is designed to be called when the document is first loaded or when new lines are added,
+// to ensure that all styles used in the document are recognized and can be toggled on or off by the user.
+func (m *Document) EnsureStylesLoaded() {
+	if !m.stylesScanRunning.CompareAndSwap(false, true) {
+		return
+	}
+	defer m.stylesScanRunning.Store(false)
+	lines := m.cache.Len()
+	if lines >= DocumentCacheSize || lines >= m.BufEndNum() {
+		return
+	}
+	total := min(m.BufEndNum(), DocumentCacheSize)
+	for i := range total {
+		m.getLineC(i)
+	}
 }
 
 // addLineStyleList adds the styles from the line contents and the line style to the document's style list.

@@ -245,6 +245,7 @@ func (root *Root) sidebarItemsForViewMode() []SidebarItem {
 func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
+	root.Doc.EnsureStylesLoaded()
 	helpLines := []string{
 		"o: disable all, then enable (e.g., o1)",
 		"a: enable all (e.g., a1-2)",
