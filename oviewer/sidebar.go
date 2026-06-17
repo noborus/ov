@@ -246,7 +246,7 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	helpLines := []string{
-		"o: disable all (e.g., o1)",
+		"o: disable all, then enable (e.g., o1)",
 		"a: enable all (e.g., a1-2)",
 		"i: invert all (e.g., i1,3)",
 	}
@@ -279,7 +279,7 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 		if !ok {
 			break
 		}
-		repr := "[o] "
+		repr := "[*] "
 		if !enabled {
 			repr = "[ ] "
 		}
