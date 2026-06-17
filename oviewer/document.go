@@ -638,9 +638,9 @@ func (m *Document) getLineC(lN int) LineC {
 	return lineC
 }
 
-// EnsureStylesLoaded scans the document for styles and loads them into the style list if they are not already loaded.
-// This method is designed to be called when the document is first loaded or when new lines are added,
-// to ensure that all styles used in the document are recognized and can be toggled on or off by the user.
+// EnsureStylesLoaded scans up to the first min(BufEndNum(), DocumentCacheSize) lines to populate m.styles.
+// This discovers styles that haven't yet been displayed so they can be toggled in the Styles sidebar.
+// Styles beyond DocumentCacheSize may still be discovered later as lines are rendered/scanned.
 func (m *Document) EnsureStylesLoaded() {
 	if !m.stylesScanRunning.CompareAndSwap(false, true) {
 		return
