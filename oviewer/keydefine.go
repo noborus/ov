@@ -167,3 +167,30 @@ func LessKeyBinds() KeyBind {
 
 	return keyBind
 }
+
+// EmacsKeyBinds are keybindings preset for Emacs-like operations.
+func EmacsKeyBinds() KeyBind {
+	keyBind := DefaultKeyBinds()
+
+	maps.Copy(keyBind, KeyBind{
+		actionCancel:    {"ctrl+c", "ctrl+g"},
+		actionEdit:      {"v"},
+		actionFollow:    {"alt+ctrl+f"},
+		actionFollowAll: {"alt+ctrl+a"},
+
+		// Move actions.
+		actionMoveLeft:    {"left", "ctrl+b"},
+		actionMoveRight:   {"right", "ctrl+f"},
+		actionMovePgUp:    {"PageUp", "alt+v"},
+		actionMovePgDn:    {"PageDown", "ctrl+v", "space"},
+		actionMoveTop:     {"Home", "alt+shift+,"}, // '>' with Alt must be written as 'shift+,'.
+		actionMoveBottom:  {"End", "alt+shift+."},  // '<' with Alt must be written as 'shift+.'.
+		actionNextSection: {"ctrl+F6"},
+
+		// Actions that enter input mode.
+		actionSearch:    {"/", "ctrl+s"},
+		actionSkipLines: {"ctrl+F5"},
+	})
+
+	return keyBind
+}
