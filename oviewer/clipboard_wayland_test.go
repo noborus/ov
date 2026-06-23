@@ -5,6 +5,7 @@ package oviewer
 import (
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -31,28 +32,49 @@ func withFakeWaylandTools(t *testing.T) {
 	t.Setenv("WAYLAND_DISPLAY", "wayland-0")
 }
 
-func Test_waylandClipboardAvailable(t *testing.T) {
+// checkWaylandClipboardAvailable holds the actual detection logic;
+// waylandClipboardAvailable just memoizes it for the process lifetime, which
+// would make these env/PATH-toggling subtests order-dependent if they called
+// the memoized wrapper instead.
+func Test_checkWaylandClipboardAvailable(t *testing.T) {
 	t.Run("no WAYLAND_DISPLAY", func(t *testing.T) {
 		t.Setenv("WAYLAND_DISPLAY", "")
-		if waylandClipboardAvailable() {
-			t.Error("waylandClipboardAvailable() = true, want false without WAYLAND_DISPLAY")
+		if checkWaylandClipboardAvailable() {
+			t.Error("checkWaylandClipboardAvailable() = true, want false without WAYLAND_DISPLAY")
 		}
 	})
 
 	t.Run("WAYLAND_DISPLAY set but wl-clipboard missing", func(t *testing.T) {
 		t.Setenv("WAYLAND_DISPLAY", "wayland-0")
 		t.Setenv("PATH", t.TempDir())
-		if waylandClipboardAvailable() {
-			t.Error("waylandClipboardAvailable() = true, want false without wl-copy/wl-paste in PATH")
+		if checkWaylandClipboardAvailable() {
+			t.Error("checkWaylandClipboardAvailable() = true, want false without wl-copy/wl-paste in PATH")
 		}
 	})
 
 	t.Run("WAYLAND_DISPLAY set and wl-clipboard installed", func(t *testing.T) {
 		withFakeWaylandTools(t)
-		if !waylandClipboardAvailable() {
-			t.Error("waylandClipboardAvailable() = false, want true with WAYLAND_DISPLAY and wl-copy/wl-paste in PATH")
+		if !checkWaylandClipboardAvailable() {
+			t.Error("checkWaylandClipboardAvailable() = false, want true with WAYLAND_DISPLAY and wl-copy/wl-paste in PATH")
 		}
 	})
+}
+
+func Test_waylandClipboardAvailable_caches(t *testing.T) {
+	withFakeWaylandTools(t)
+	waylandAvailableOnce = sync.Once{}
+	t.Cleanup(func() { waylandAvailableOnce = sync.Once{} })
+
+	if !waylandClipboardAvailable() {
+		t.Fatal("waylandClipboardAvailable() = false, want true with WAYLAND_DISPLAY and wl-copy/wl-paste in PATH")
+	}
+
+	// Even after the environment no longer satisfies checkWaylandClipboardAvailable,
+	// the memoized result from the first call should stick for the process lifetime.
+	t.Setenv("WAYLAND_DISPLAY", "")
+	if !waylandClipboardAvailable() {
+		t.Error("waylandClipboardAvailable() = false, want cached true despite WAYLAND_DISPLAY being unset afterward")
+	}
 }
 
 func Test_waylandClipboard_writeRead(t *testing.T) {

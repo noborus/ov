@@ -546,17 +546,19 @@ func (root *Root) copyClipboard(str string) {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
 	default:
-		writeSystemClipboard(str)
+		root.writeSystemClipboard(str)
 	}
 }
 
 // writeSystemClipboard writes str to the system clipboard, preferring the
 // Wayland clipboard when available (see waylandClipboardAvailable).
-func writeSystemClipboard(str string) {
+func (root *Root) writeSystemClipboard(str string) {
 	if waylandClipboardAvailable() {
-		if err := writeWaylandClipboard(str); err == nil {
+		err := writeWaylandClipboard(str)
+		if err == nil {
 			return
 		}
+		root.debugMessage("writeSystemClipboard: wl-copy failed: " + err.Error())
 	}
 	clipboard.Write(clipboard.FmtText, []byte(str))
 }
@@ -583,7 +585,7 @@ func (root *Root) pasteFromClipboard(context.Context) {
 		return
 	}
 
-	str := readSystemClipboard()
+	str := root.readSystemClipboard()
 	left, right := splitAtWidth(input.value, input.cursorX)
 	input.value = left + str + right
 	input.cursorX += stringWidth(str)
@@ -591,11 +593,13 @@ func (root *Root) pasteFromClipboard(context.Context) {
 
 // readSystemClipboard reads from the system clipboard, preferring the
 // Wayland clipboard when available (see waylandClipboardAvailable).
-func readSystemClipboard() string {
+func (root *Root) readSystemClipboard() string {
 	if waylandClipboardAvailable() {
-		if str, err := readWaylandClipboard(); err == nil {
+		str, err := readWaylandClipboard()
+		if err == nil {
 			return str
 		}
+		root.debugMessage("readSystemClipboard: wl-paste failed: " + err.Error())
 	}
 	return string(clipboard.Read(clipboard.FmtText))
 }
