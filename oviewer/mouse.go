@@ -545,11 +545,20 @@ func (root *Root) copyClipboard(str string) {
 	switch root.Config.ClipboardMethod {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
-	case "system":
-		clipboard.Write(clipboard.FmtText, []byte(str))
 	default:
-		clipboard.Write(clipboard.FmtText, []byte(str))
+		writeSystemClipboard(str)
 	}
+}
+
+// writeSystemClipboard writes str to the system clipboard, preferring the
+// Wayland clipboard when available (see waylandClipboardAvailable).
+func writeSystemClipboard(str string) {
+	if waylandClipboardAvailable() {
+		if err := writeWaylandClipboard(str); err == nil {
+			return
+		}
+	}
+	clipboard.Write(clipboard.FmtText, []byte(str))
 }
 
 type eventPaste struct {
@@ -574,11 +583,21 @@ func (root *Root) pasteFromClipboard(context.Context) {
 		return
 	}
 
-	buf := clipboard.Read(clipboard.FmtText)
-	str := string(buf)
+	str := readSystemClipboard()
 	left, right := splitAtWidth(input.value, input.cursorX)
 	input.value = left + str + right
 	input.cursorX += stringWidth(str)
+}
+
+// readSystemClipboard reads from the system clipboard, preferring the
+// Wayland clipboard when available (see waylandClipboardAvailable).
+func readSystemClipboard() string {
+	if waylandClipboardAvailable() {
+		if str, err := readWaylandClipboard(); err == nil {
+			return str
+		}
+	}
+	return string(clipboard.Read(clipboard.FmtText))
 }
 
 func (root *Root) rangeToString(startX, startY, endX, endY int) (string, error) {
