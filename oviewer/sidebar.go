@@ -72,6 +72,9 @@ type sidebarScroll struct {
 	currentY int // CurrentY is the current Y position.
 }
 
+// helpStyle is the style for help sidebar items.
+var helpStyle = tcell.StyleDefault.Foreground(color.Green)
+
 // prepareSidebarItems creates the sidebarItems slice for display.
 func (root *Root) prepareSidebarItems() {
 	if root.sidebarWidth <= 0 {
@@ -251,55 +254,69 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 		"a: enable all (e.g., a1-2)",
 		"i: invert all (e.g., i1,3)",
 	}
-	helpStyle := tcell.StyleDefault.Foreground(color.Green)
 	totalLines := root.Doc.styles.Len() + len(helpLines)
 	root.adjustSidebarScroll(SidebarModeStyles, totalLines, 0)
 	scroll := root.sidebarScrolls[SidebarModeStyles]
 	start := scroll.y
 	end := min(start+root.scr.vHeight, totalLines)
-	for i := start; i < end; i++ {
-		if i < len(helpLines) {
-			displayName := StrToContents(helpLines[i], 0)
-			if len(displayName) < length {
-				spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
-				displayName = append(displayName, spaces...)
-			}
-			for j := range displayName {
-				displayName[j].style = helpStyle
-			}
-			items = append(items, SidebarItem{
-				Label:     "",
-				Contents:  displayName,
-				IsCurrent: false,
-			})
-			continue
-		}
+	helpEnd := min(end, len(helpLines))
+	for i := start; i < helpEnd; i++ {
+		items = append(items, root.sidebarItemForStyleHelp(helpLines[i], length))
+	}
 
-		styleIndex := i - len(helpLines)
-		style, enabled, ok := root.Doc.styles.Index(styleIndex)
+	styleStart := max(start-len(helpLines), 0)
+	styleEnd := end - len(helpLines)
+	for styleIndex := styleStart; styleIndex < styleEnd; styleIndex++ {
+		item, ok := root.sidebarItemForStyle(styleIndex, length)
 		if !ok {
 			break
 		}
-		repr := "[*] "
-		if !enabled {
-			repr = "[ ] "
-		}
-		displayName := StrToContents(repr+styleString(style), 0)
-		for j := 4; j < len(displayName); j++ {
-			displayName[j].style = style
-		}
-		if len(displayName) < length {
-			spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
-			displayName = append(displayName, spaces...)
-		}
-		label := fmt.Sprintf("%2d ", styleIndex)
-		items = append(items, SidebarItem{
-			Label:     label,
-			Contents:  displayName,
-			IsCurrent: false,
-		})
+		items = append(items, item)
 	}
 	return items
+}
+
+// sidebarItemForStyleHelp creates a SidebarItem for a help line in the styles sidebar.
+func (root *Root) sidebarItemForStyleHelp(helpLine string, length int) SidebarItem {
+	displayName := StrToContents(helpLine, 0)
+	if len(displayName) < length {
+		spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
+		displayName = append(displayName, spaces...)
+	}
+	for j := range displayName {
+		displayName[j].style = helpStyle
+	}
+	return SidebarItem{
+		Label:     "",
+		Contents:  displayName,
+		IsCurrent: false,
+	}
+}
+
+// sidebarItemForStyle creates a SidebarItem for a style in the styles sidebar.
+func (root *Root) sidebarItemForStyle(styleIndex, length int) (SidebarItem, bool) {
+	style, enabled, ok := root.Doc.styles.Index(styleIndex)
+	if !ok {
+		return SidebarItem{}, false
+	}
+	repr := "[*] "
+	if !enabled {
+		repr = "[ ] "
+	}
+	displayName := StrToContents(repr+styleString(style), 0)
+	for j := 4; j < len(displayName); j++ {
+		displayName[j].style = style
+	}
+	if len(displayName) < length {
+		spaces := StrToContents(strings.Repeat(" ", length-len(displayName)), 0)
+		displayName = append(displayName, spaces...)
+	}
+	label := fmt.Sprintf("%2d ", styleIndex)
+	return SidebarItem{
+		Label:     label,
+		Contents:  displayName,
+		IsCurrent: false,
+	}, true
 }
 
 // sidebarUp scrolls the sidebar up.
