@@ -53,7 +53,8 @@ func (root *Root) normalLeftStatus() int {
 	if root.Doc.Normal.InvertColor {
 		style = style.Foreground(color.IsValid + sColor).Reverse(true)
 	}
-	root.Screen.PutStrStyled(0, root.Doc.statusPos, str, style)
+	contents := StrToContents(str, -1)
+	root.putContents(0, root.Doc.statusPos, contents, style)
 
 	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
@@ -107,7 +108,8 @@ func (root *Root) inputLeftStatus() int {
 	prompt := root.inputPrompt()
 
 	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
-	root.Screen.PutStrStyled(0, root.Doc.statusPos, prompt+input.value, style)
+	contents := StrToContents(prompt+input.value, -1)
+	root.putContents(0, root.Doc.statusPos, contents, style)
 	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
 
