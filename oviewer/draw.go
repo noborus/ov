@@ -635,17 +635,16 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 
 	sidebarStyle := defaultStyle
 	root.Screen.PutStrStyled(3, 0, root.sidebarMode.String(), sidebarStyle.Bold(true))
-	currentStyle := defaultStyle.Bold(true).Reverse(true)
+	currentStyle := OVStyle{Bold: true, Reverse: true}
 
 	height := root.scr.vHeight
 	maxList := min(len(items), height-2)
 	for i := range maxList {
 		item := items[i]
-		style := sidebarStyle
+		root.drawSidebarItem(scroll.x, i+1, item, sidebarStyle)
 		if item.IsCurrent {
-			style = currentStyle
+			root.applyStyleToRange(i+1, currentStyle, 0, root.sidebarWidth-1)
 		}
-		root.drawSidebarItem(scroll.x, i+1, item, style)
 	}
 }
 
