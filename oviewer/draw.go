@@ -562,6 +562,18 @@ func (root *Root) flash() {
 	time.Sleep(100 * time.Millisecond)
 }
 
+// putContents puts the contents on the screen at the specified position with the given style.
+// If the content has its own style, it will be used instead of the provided style.
+func (root *Root) putContents(x int, y int, contents contents, style tcell.Style) {
+	for i, c := range contents {
+		if c.style != defaultStyle {
+			root.put(x+i, y, c.str, c.style)
+		} else {
+			root.put(x+i, y, c.str, style)
+		}
+	}
+}
+
 // put calls Screen.Put and checks if display sync is needed.
 func (root *Root) put(x, y int, str string, style tcell.Style) {
 	root.Screen.Put(x, y, str, style)
@@ -650,24 +662,17 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 
 // drawSidebarItem draws a single SidebarItem in the sidebar with the specified style and scroll position.
 func (root *Root) drawSidebarItem(x int, y int, item SidebarItem, style tcell.Style) {
-	label := item.Label
-	labelLen := uniseg.StringWidth(label)
-	left := min(x, len(item.Contents))
-	width := max(min(root.sidebarWidth-(labelLen+2), len(item.Contents)-left), 0)
-	right := min(left+width, len(item.Contents))
-	root.putContents(labelLen, y, item.Contents[left:right], style)
-	root.Screen.PutStrStyled(0, y, label, style)
-}
-
-// putContents puts the contents in the sidebar with the specified style.
-func (root *Root) putContents(x int, y int, contents contents, style tcell.Style) {
-	for i, c := range contents {
-		if c.style != defaultStyle {
-			root.Screen.Put(x+i, y, c.str, c.style)
-		} else {
-			root.Screen.Put(x+i, y, c.str, style)
-		}
+	label := StrToContents(item.Label, -1)
+	labelLen := len(label)
+	if labelLen > root.sidebarWidth-2 {
+		label = label[:root.sidebarWidth-2]
 	}
+	root.putContents(0, y, label, style)
+
+	left := min(x, len(item.Contents))
+	width := max(min(root.sidebarWidth-(len(label)+2), len(item.Contents)-left), 0)
+	right := min(left+width, len(item.Contents))
+	root.putContents(len(label), y, item.Contents[left:right], style)
 }
 
 // sidebarScroll returns the current scroll position of the sidebar and updates it if necessary.
