@@ -711,8 +711,8 @@ func alignColumnEnd(lc contents, widths []int, n int, start int) int {
 
 // RangeStyle applies the style to the specified range.
 // Apply style to contents.
-func RangeStyle(lc contents, start int, end int, s OVStyle) {
+func RangeStyle(lc contents, start int, end int, ovs OVStyle) {
 	for x := start; x < end; x++ {
-		lc[x].style = applyStyle(lc[x].style, s)
+		lc[x].style = applyStyle(lc[x].style, ovs)
 	}
 }
