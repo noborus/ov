@@ -592,6 +592,7 @@ func (root *Root) Run() error {
 	if err := root.switchToRealScreen(); err != nil {
 		return err
 	}
+	root.debugMessage("Keyboard protocol: " + keyProtocolName(root.Screen.KeyboardProtocol()))
 
 	if !root.Config.DisableMouse {
 		root.Screen.EnableMouse(MouseFlags)
@@ -782,6 +783,19 @@ func (root *Root) debugMessage(msg string) {
 		return
 	}
 	log.Printf("%s:%s\n", root.Doc.FileName, msg)
+}
+
+func keyProtocolName(p tcell.KeyProtocol) string {
+	switch p {
+	case tcell.KittyKeyboard:
+		return "kitty"
+	case tcell.Win32Keyboard:
+		return "win32"
+	case tcell.XTermKeyboard:
+		return "xterm"
+	default:
+		return "legacy"
+	}
 }
 
 // docSmall returns with bool whether the file to display fits on the screen.
