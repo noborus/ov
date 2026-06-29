@@ -183,8 +183,8 @@ func EmacsKeyBinds() KeyBind {
 		actionMoveRight:   {"right", "ctrl+f"},
 		actionMovePgUp:    {"PageUp", "alt+v"},
 		actionMovePgDn:    {"PageDown", "ctrl+v", "space"},
-		actionMoveTop:     {"Home", "alt+shift+,"}, // '>' with Alt must be written as 'shift+,'.
-		actionMoveBottom:  {"End", "alt+shift+."},  // '<' with Alt must be written as 'shift+.'.
+		actionMoveTop:     {"Home", "alt+shift+,", "alt+<"},
+		actionMoveBottom:  {"End", "alt+shift+.", "alt+>"},
 		actionNextSection: {"ctrl+F6"},
 
 		// Actions that enter input mode.
