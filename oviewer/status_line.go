@@ -47,14 +47,18 @@ func (root *Root) normalLeftStatus() int {
 			sColor = color.Color((root.CurrentDoc + 8) % 16)
 		}
 	}
+	sColorName := (color.IsValid + sColor).String()
+	s := root.Doc.Style.LeftStatus
+	if root.Doc.Normal.InvertColor {
+		s = OVStyle{
+			Foreground: sColorName,
+			Reverse:    true,
+		}
+	}
 
 	str := root.StrLeftStatus(numVisible)
-	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
-	if root.Doc.Normal.InvertColor {
-		style = style.Foreground(color.IsValid + sColor).Reverse(true)
-	}
 	contents := StrToContents(str, -1)
-	root.putContents(0, root.Doc.statusPos, contents, style)
+	root.putContents(0, root.Doc.statusPos, contents, s)
 
 	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Normal.CursorType), cursorColor)
@@ -107,9 +111,8 @@ func (root *Root) inputLeftStatus() int {
 	input := root.input
 	prompt := root.inputPrompt()
 
-	style := applyStyle(tcell.StyleDefault, root.Doc.Style.LeftStatus)
 	contents := StrToContents(prompt+input.value, -1)
-	root.putContents(0, root.Doc.statusPos, contents, style)
+	root.putContents(0, root.Doc.statusPos, contents, root.Doc.Style.LeftStatus)
 	cursorColor := color.GetColor(root.Doc.Style.LeftStatus.Foreground)
 	root.Screen.SetCursorStyle(tcell.CursorStyle(root.Doc.Input.CursorType), cursorColor)
 

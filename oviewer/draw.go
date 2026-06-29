@@ -419,8 +419,8 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
-func (root *Root) applyStyleToLine(y int, s OVStyle) {
-	root.applyStyleToRange(y, s, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
+func (root *Root) applyStyleToLine(y int, ovs OVStyle) {
+	root.applyStyleToRange(y, ovs, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
 }
 
 // applyMarkStyle applies the style from the left edge to the specified width.
@@ -433,10 +433,10 @@ func (root *Root) applyMarkStyle(lN int, y int, width int) {
 }
 
 // applyStyleToRange applies the style from the start to the end of the physical line.
-func (root *Root) applyStyleToRange(y int, s OVStyle, start int, end int) {
+func (root *Root) applyStyleToRange(y int, ovs OVStyle, start int, end int) {
 	for x := start; x < end; x++ {
 		str, style, width := root.Screen.Get(x, y)
-		newStyle := applyStyle(style, s)
+		newStyle := applyStyle(style, ovs)
 		if style != newStyle {
 			root.Screen.Put(x, y, str, newStyle)
 		}
@@ -564,13 +564,10 @@ func (root *Root) flash() {
 
 // putContents puts the contents on the screen at the specified position with the given style.
 // If the content has its own style, it will be used instead of the provided style.
-func (root *Root) putContents(x int, y int, contents contents, style tcell.Style) {
+func (root *Root) putContents(x int, y int, contents contents, ovs OVStyle) {
 	for i, c := range contents {
-		if c.style != defaultStyle {
-			root.put(x+i, y, c.str, c.style)
-		} else {
-			root.put(x+i, y, c.str, style)
-		}
+		style := applyStyle(c.style, ovs)
+		root.put(x+i, y, c.str, style)
 	}
 }
 
@@ -653,7 +650,7 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 	maxList := min(len(items), height-2)
 	for i := range maxList {
 		item := items[i]
-		root.drawSidebarItem(scroll.x, i+1, item, sidebarStyle)
+		root.drawSidebarItem(scroll.x, i+1, item, OVStyle{})
 		if item.IsCurrent {
 			root.applyStyleToRange(i+1, currentStyle, 0, root.sidebarWidth-1)
 		}
@@ -661,18 +658,18 @@ func (root *Root) drawSidebarList(items []SidebarItem) {
 }
 
 // drawSidebarItem draws a single SidebarItem in the sidebar with the specified style and scroll position.
-func (root *Root) drawSidebarItem(x int, y int, item SidebarItem, style tcell.Style) {
+func (root *Root) drawSidebarItem(x int, y int, item SidebarItem, ovs OVStyle) {
 	label := StrToContents(item.Label, -1)
 	labelLen := len(label)
 	if labelLen > root.sidebarWidth-2 {
 		label = label[:root.sidebarWidth-2]
 	}
-	root.putContents(0, y, label, style)
+	root.putContents(0, y, label, ovs)
 
 	left := min(x, len(item.Contents))
 	width := max(min(root.sidebarWidth-(len(label)+2), len(item.Contents)-left), 0)
 	right := min(left+width, len(item.Contents))
-	root.putContents(len(label), y, item.Contents[left:right], style)
+	root.putContents(len(label), y, item.Contents[left:right], ovs)
 }
 
 // sidebarScroll returns the current scroll position of the sidebar and updates it if necessary.
