@@ -242,6 +242,28 @@ func TestRoot_sidebarItemsForHelp(t *testing.T) {
 	}
 }
 
+func TestRoot_sidebarItemsForStyles_NoANSIStyles(t *testing.T) {
+	root := rootHelper(t)
+	root.scr.vHeight = 20
+	root.sidebarWidth = 30
+	root.sidebarMode = SidebarModeStyles
+
+	items := root.sidebarItemsForStyles()
+	if len(items) != 1 {
+		t.Fatalf("sidebarItemsForStyles() items = %d, want %d", len(items), 1)
+	}
+
+	want := []string{
+		"No ANSI escape sequences found.",
+	}
+	for i, item := range items {
+		got := strings.TrimRight(item.Contents.String(), " ")
+		if got != want[i] {
+			t.Errorf("sidebarItemsForStyles()[%d] = %q, want %q", i, got, want[i])
+		}
+	}
+}
+
 func TestRoot_sidebarItemsForSections(t *testing.T) {
 	tests := []struct {
 		name     string

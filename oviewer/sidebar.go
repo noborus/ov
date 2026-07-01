@@ -249,12 +249,18 @@ func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
 	root.Doc.EnsureStylesLoaded()
+	stylesLen := root.Doc.styles.Len()
 	helpLines := []string{
 		"o: disable all, then enable (e.g., o1)",
 		"a: enable all (e.g., a1-2)",
 		"i: invert all (e.g., i1,3)",
 	}
-	totalLines := root.Doc.styles.Len() + len(helpLines)
+	if stylesLen == 0 {
+		helpLines = []string{
+			"No ANSI escape sequences found.",
+		}
+	}
+	totalLines := stylesLen + len(helpLines)
 	root.adjustSidebarScroll(SidebarModeStyles, totalLines, 0)
 	scroll := root.sidebarScrolls[SidebarModeStyles]
 	start := scroll.y
