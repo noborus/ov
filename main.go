@@ -150,6 +150,8 @@ func renderConfigTemplate(mode string) (string, error) {
 		keyBind = oviewer.DefaultKeyBinds()
 	case "less":
 		keyBind = oviewer.LessKeyBinds()
+	case "emacs":
+		keyBind = oviewer.EmacsKeyBinds()
 	default:
 		return "", fmt.Errorf("unsupported: %q; %s", mode, ErrGenerateConfigArg)
 	}
@@ -458,10 +460,10 @@ func init() {
 	_ = rootCmd.RegisterFlagCompletionFunc("completion", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"bash", "zsh", "fish", "powershell"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "print a sample config file to stdout [default|less]")
+	rootCmd.PersistentFlags().StringVar(&generateConfig, "generate-config", "", "print a sample config file to stdout [default|less|emacs]")
 	rootCmd.PersistentFlags().Lookup("generate-config").NoOptDefVal = "default"
 	_ = rootCmd.RegisterFlagCompletionFunc("generate-config", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"default", "less"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"default", "less", "emacs"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "initial search pattern applied on startup")
