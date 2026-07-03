@@ -77,7 +77,7 @@ func DefaultKeyBinds() KeyBind {
 		actionSidebarMarks:    {"alt+m"},
 		actionSidebarDocList:  {"alt+l"},
 		actionSidebarSections: {"alt+u"},
-		actionSidebarStyles:   {"alt+i"},
+		actionSidebarStyles:   {"alt+y"},
 		actionSidebarUp:       {"shift+Up"},
 		actionSidebarDown:     {"shift+Down"},
 		actionSidebarLeft:     {"shift+Left"},
