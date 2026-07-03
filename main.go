@@ -641,7 +641,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("sidebar-mode", "", "", "open sidebar with this content [help|marks|documents|sections]")
 	_ = viper.BindPFlag("SidebarMode", rootCmd.PersistentFlags().Lookup("sidebar-mode"))
 	_ = rootCmd.RegisterFlagCompletionFunc("sidebar-mode", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"help", "marks", "documents", "sections"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"help", "marks", "documents", "sections", "styles"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	rootCmd.PersistentFlags().BoolP("set-terminal-title", "", false, "update the terminal title bar with the current file name")
