@@ -3,19 +3,19 @@
 #
 # QuitSmall: false # Quit if the file size is smaller than the terminal size.
 # IsWriteOriginal: false # Write the original content when exiting.
-# BeforeWriteOriginal: 0 # Write the number of lines before the current location when exiting.
-# AfterWriteOriginal: 0 # Write the number of lines after the current location when exiting.
+# BeforeWriteOriginal: 0 # Extra lines above the current view to output on exit.
+# AfterWriteOriginal: 0 # Extra lines below the current view to output on exit.
 #
 # CaseSensitive: false # Case sensitive search.
-# SmartCaseSensitive: false # Case sensitive search if the search string contains uppercase characters.
-# RegexpSearch: false # Regular expression search.
+# SmartCaseSensitive: false # Case-insensitive unless the search pattern contains uppercase letters.
+# RegexpSearch: false # Treat search patterns as regular expressions.
 # Incsearch: true # Incremental search.
 #
-# MemoryLimit: -1 # The maximum number of lines that can be loaded into memory.
-# MemoryLimitFile: 100 # The maximum number of lines that can be loaded into memory when opening a file.
+# MemoryLimit: -1 # Maximum chunks to keep in memory (-1 for unlimited).
+# MemoryLimitFile: 100 # Maximum chunks to keep in memory per file.
 #
 # DisableMouse: false # Disable mouse support.
-# DisableColumnCycle: false # Disable cycling when moving columns.
+# DisableColumnCycle: false # Keep column cursor from wrapping to the first column.
 # DisableStickyFollow: false # Disable sticky follow mode.
 #
 # ViewMode: markdown # Default view mode.
@@ -27,11 +27,11 @@
 # ClipboardMethod: "default" # Clipboard method. Options: "auto", "OSC52", "system".
 #
 # SidebarWidth: 20% # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
-# SidebarMode: "none" # Sidebar mode. Options:  "help", "sections", "marks", "none".
+# SidebarMode: "none" # Open sidebar with this content. Options: "help", "marks", "documents", "sections", "styles", "none".
 
 # Editor: "vim +%d %f" # Editor command. %d is line number, %f is file name.
 #
-# SetTerminalTitle: false # Set terminal title to display filename.
+# SetTerminalTitle: false # Update the terminal title bar with the current file name.
 #
 # Debug: false # Debug mode.
 #
@@ -305,12 +305,16 @@ KeyBind:
         - "shift+Right"
     sidebar_sections:
         - "alt+u"
+    sidebar_styles:
+        - "alt+y"
     sidebar_up:
         - "shift+Up"
     skip_lines:
         - "ctrl+s"
     status_line:
         - "ctrl+F10"
+    style_toggle:
+        - "o"
     suspend:
         - "ctrl+z"
     sync:
