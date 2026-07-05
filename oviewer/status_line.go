@@ -91,16 +91,16 @@ func (root *Root) statusMode() string {
 		// Watch mode doubles as FollowSection mode.
 		return "(Watch)"
 	}
-	if root.Doc.FollowSection {
+	if root.Doc.followSectionEnabled() {
 		return "(Follow Section)"
 	}
-	if root.FollowAll {
+	if root.followAllEnabled() {
 		return "(Follow All)"
 	}
-	if root.Doc.FollowMode && root.Doc.FollowName {
+	if root.Doc.followModeEnabled() && root.Doc.FollowName {
 		return "(Follow Name)"
 	}
-	if root.Doc.FollowMode {
+	if root.Doc.followModeEnabled() {
 		return "(Follow Mode)"
 	}
 	return ""

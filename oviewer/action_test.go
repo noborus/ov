@@ -1312,7 +1312,7 @@ func TestRoot_followAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.args.fileNames...)
-			root.FollowAll = true
+			root.setFollowAll(true)
 			root.Doc.WrapMode = tt.fields.wrapMode
 			ctx := context.Background()
 			root.prepareScreen()
