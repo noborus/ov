@@ -19,7 +19,7 @@ func NewLogDoc() (*LogDocument, error) {
 		return nil, err
 	}
 	m.documentType = DocLog
-	m.FollowMode = true
+	m.setFollowMode(true)
 	m.Caption = "Log"
 	m.seekable = false
 	m.Style = NewLogStyle()

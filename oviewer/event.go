@@ -206,11 +206,11 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	}
 
 	switch {
-	case root.FollowAll:
+	case root.followAllEnabled():
 		root.followAll(ctx)
-	case root.Doc.FollowMode:
+	case root.Doc.followModeEnabled():
 		root.follow(ctx)
-	case root.Doc.FollowSection:
+	case root.Doc.followSectionEnabled():
 		root.followSection(ctx)
 	}
 

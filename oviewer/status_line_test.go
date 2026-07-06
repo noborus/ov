@@ -59,10 +59,10 @@ func TestRoot_statusMode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootHelper(t)
 			root.Doc.WatchMode = tt.fields.WatchMode
-			root.Doc.FollowSection = tt.fields.FollowSection
-			root.FollowAll = tt.fields.FollowAll
+			root.Doc.setFollowSection(tt.fields.FollowSection)
+			root.setFollowAll(tt.fields.FollowAll)
 			root.Doc.FollowName = tt.fields.FollowName
-			root.Doc.FollowMode = tt.fields.FollowMode
+			root.Doc.setFollowMode(tt.fields.FollowMode)
 			root.Doc.pauseFollow = tt.fields.pauseFollow
 			if got := root.statusMode(); got != tt.want {
 				t.Errorf("Root.statusDisplay() = %v, want %v", got, tt.want)

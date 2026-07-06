@@ -92,6 +92,8 @@ type Root struct {
 	mu sync.RWMutex
 	// isClosed indicates whether it is closed.
 	isClosed atomic.Bool
+	// followAllState is the runtime follow-all flag used across goroutines.
+	followAllState atomic.Bool
 
 	// FollowAll is a follow mode for all documents.
 	FollowAll bool
@@ -466,7 +468,7 @@ func (root *Root) SetConfig(config Config) {
 	}
 
 	// Set the follow mode for all documents.
-	root.FollowAll = root.settings.FollowAll
+	root.setFollowAll(root.settings.FollowAll)
 	// Set the minimum start position of x.
 	root.minStartX = config.MinStartX
 	// Set the caption from the environment variable.
@@ -484,6 +486,32 @@ func (root *Root) SetConfig(config Config) {
 		root.settings.SectionHeader = true
 	}
 	root.Config = config
+}
+
+// followAllEnabled returns whether the follow-all mode is enabled.
+func (root *Root) followAllEnabled() bool {
+	return root.followAllState.Load()
+}
+
+// setFollowAll sets the follow-all mode for all documents.
+func (root *Root) setFollowAll(enabled bool) {
+	root.FollowAll = enabled
+	root.followAllState.Store(enabled)
+	root.mu.Lock()
+	defer root.mu.Unlock()
+	for _, doc := range root.DocList {
+		doc.setFollowAll(enabled)
+	}
+}
+
+// syncRuntimeFollowStates synchronizes the runtime follow-all flag across goroutines.
+func (root *Root) syncRuntimeFollowStates() {
+	root.followAllState.Store(root.FollowAll)
+	root.mu.Lock()
+	defer root.mu.Unlock()
+	for _, doc := range root.DocList {
+		doc.syncRuntimeFollowStates()
+	}
 }
 
 // SetWatcher sets file monitoring.
@@ -668,8 +696,9 @@ func (root *Root) prepareRun(ctx context.Context) error {
 
 	root.setViewModeConfig()
 	root.prepareAllDocuments()
+	root.syncRuntimeFollowStates()
 	// follow mode or follow all disables quit if the output fits on one screen.
-	if root.Doc.FollowMode || root.FollowAll {
+	if root.Doc.followModeEnabled() || root.followAllEnabled() {
 		root.Config.QuitSmall = false
 		root.Config.QuitSmallFilter = false
 	}
@@ -713,7 +742,10 @@ func (root *Root) prepareAllDocuments() {
 		doc.regexpCompile()
 
 		if doc.FollowName {
-			doc.FollowMode = true
+			doc.setFollowMode(true)
+		}
+		if root.FollowAll {
+			doc.setFollowAll(true)
 		}
 		if doc.ColumnWidth {
 			doc.ColumnMode = true
@@ -723,11 +755,14 @@ func (root *Root) prepareAllDocuments() {
 			doc.watchMode()
 			w = "(watch)"
 		}
+		doc.syncRuntimeFollowStates()
 		log.Printf("open [%d]%s%s\n", n, doc.FileName, w)
 	}
 
 	root.helpDoc.RunTimeSettings = updateRunTimeSettings(root.helpDoc.RunTimeSettings, root.Config.HelpDoc)
+	root.helpDoc.syncRuntimeFollowStates()
 	root.logDoc.RunTimeSettings = updateRunTimeSettings(root.logDoc.RunTimeSettings, root.Config.LogDoc)
+	root.logDoc.syncRuntimeFollowStates()
 }
 
 // Close closes the oviewer.

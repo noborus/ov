@@ -103,6 +103,12 @@ type Document struct {
 	allMatchedLinesRunning atomic.Bool
 	// stylesScanRunning guards concurrent style scanning execution.
 	stylesScanRunning atomic.Bool
+	// followModeState is the runtime follow-mode flag used across goroutines.
+	followModeState atomic.Bool
+	// followAllState is the runtime follow-all flag used across goroutines.
+	followAllState atomic.Bool
+	// followSectionState is the runtime follow-section flag used across goroutines.
+	followSectionState atomic.Bool
 
 	// marked is a list of marked line numbers.
 	marked MatchedLineList
@@ -679,6 +685,46 @@ func (m *Document) firstLine() int {
 	return m.SkipLines + m.Header
 }
 
+// syncRuntimeFollowStates synchronizes the runtime follow states with the document's follow settings.
+func (m *Document) syncRuntimeFollowStates() {
+	m.followModeState.Store(m.FollowMode)
+	m.followAllState.Store(m.FollowAll)
+	m.followSectionState.Store(m.FollowSection)
+}
+
+// followModeEnabled returns true if follow mode is enabled.
+func (m *Document) followModeEnabled() bool {
+	return m.followModeState.Load()
+}
+
+// setFollowMode sets the follow mode state and updates the runtime follow-mode flag.
+func (m *Document) setFollowMode(enabled bool) {
+	m.FollowMode = enabled
+	m.followModeState.Store(enabled)
+}
+
+// followAllEnabled returns true if follow-all mode is enabled.
+func (m *Document) followAllEnabled() bool {
+	return m.followAllState.Load()
+}
+
+// setFollowAll sets the follow-all mode state and updates the runtime follow-all flag.
+func (m *Document) setFollowAll(enabled bool) {
+	m.FollowAll = enabled
+	m.followAllState.Store(enabled)
+}
+
+// followSectionEnabled returns true if follow-section mode is enabled.
+func (m *Document) followSectionEnabled() bool {
+	return m.followSectionState.Load()
+}
+
+// setFollowSection sets the follow-section mode state and updates the runtime follow-section flag.
+func (m *Document) setFollowSection(enabled bool) {
+	m.FollowSection = enabled
+	m.followSectionState.Store(enabled)
+}
+
 // watchMode sets the document to watch mode and configures section settings.
 func (m *Document) watchMode() {
 	m.WatchMode = true
@@ -687,13 +733,13 @@ func (m *Document) watchMode() {
 	}
 	m.SectionHeader = false
 	m.SectionStartPosition = 1
-	m.FollowSection = true
+	m.setFollowSection(true)
 }
 
 // unwatchMode disables watch mode for the document.
 func (m *Document) unwatchMode() {
 	m.WatchMode = false
-	m.FollowSection = false
+	m.setFollowSection(false)
 }
 
 // regexpCompile compiles the new document's regular expressions.

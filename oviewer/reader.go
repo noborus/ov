@@ -93,7 +93,7 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.checkClose() {
 		return reader, nil
 	}
-	if !m.FollowMode && !m.FollowAll {
+	if !m.followModeEnabled() && !m.followAllEnabled() {
 		return reader, nil
 	}
 

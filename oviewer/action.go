@@ -103,13 +103,13 @@ func (root *Root) toggleRainbow(context.Context) {
 
 // toggleFollowMode toggles follow mode.
 func (root *Root) toggleFollowMode(context.Context) {
-	root.Doc.FollowMode = !root.Doc.FollowMode
+	root.Doc.setFollowMode(!root.Doc.followModeEnabled())
 	root.Doc.pauseFollow = false
 }
 
 // toggleFollowAll toggles follow all mode.
 func (root *Root) toggleFollowAll(context.Context) {
-	root.FollowAll = !root.FollowAll
+	root.setFollowAll(!root.followAllEnabled())
 	root.Doc.pauseFollow = false
 	root.mu.Lock()
 	for _, doc := range root.DocList {
@@ -121,7 +121,7 @@ func (root *Root) toggleFollowAll(context.Context) {
 // toggleFollowSection toggles follow section mode.
 func (root *Root) toggleFollowSection(context.Context) {
 	root.Doc.pauseFollow = false
-	root.Doc.FollowSection = !root.Doc.FollowSection
+	root.Doc.setFollowSection(!root.Doc.followSectionEnabled())
 }
 
 // toggleHideOtherSection toggles hide other section mode.
@@ -891,8 +891,8 @@ func (root *Root) followSection(ctx context.Context) {
 
 // Cancel follow mode and follow all mode.
 func (root *Root) Cancel(context.Context) {
-	root.FollowAll = false
-	root.Doc.FollowMode = false
+	root.setFollowAll(false)
+	root.Doc.setFollowMode(false)
 }
 
 // toggleWriteOriginal toggles the write flag.
@@ -1035,7 +1035,7 @@ func (root *Root) setPauseFollow() {
 	if root.Doc.pauseFollow {
 		return
 	}
-	if root.FollowAll || root.Doc.FollowMode || root.Doc.FollowSection {
+	if root.followAllEnabled() || root.Doc.followModeEnabled() || root.Doc.followSectionEnabled() {
 		root.Doc.pauseFollow = true
 		root.Doc.pauseLastNum = max(root.Doc.BufEndNum()-1, 0)
 	}

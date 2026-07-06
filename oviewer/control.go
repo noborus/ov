@@ -37,6 +37,7 @@ const (
 func (m *Document) ControlFile(file *os.File) error {
 	m.memoryLimit = loadChunksCapacity(m.seekable)
 	m.store.setNewLoadChunks(m.memoryLimit)
+	m.syncRuntimeFollowStates()
 	atomic.StoreInt32(&m.closed, 0)
 	r, err := m.fileReader(file)
 	if err != nil {
@@ -131,7 +132,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		if !m.store.isContinueRead(m.memoryLimit) {
 			return reader, nil
 		}
-		if m.seekable && atomic.LoadInt32(&m.tmpFollow) == 0 && (m.FollowMode || m.FollowAll) {
+		if m.seekable && atomic.LoadInt32(&m.tmpFollow) == 0 && (m.followModeEnabled() || m.followAllEnabled()) {
 			go func() {
 				m.requestBottom()
 			}()
