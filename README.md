@@ -1243,8 +1243,8 @@ Syntax highlighting and other styles (including those represented by escape sequ
 This is especially useful when `ov` is used as a pager from syntax-highlighting tools such as `bat`.
 
 After startup, press `o` (default key) to enter `Toggle styles:` input mode.
-In this mode, the sidebar shows a numbered list of available styles.
-Specify styles by their numbers.
+In this mode, the sidebar shows a numbered list of available styles (indices start at 0).
+Specify styles by the numbers shown in the sidebar labels.
 
 * Use commas to select multiple items: `1,3,5`
 * Use hyphens for ranges: `4-9`
@@ -1339,7 +1339,7 @@ MemoryLimit: 1000
 |       | --debug                                    | debug mode                                                                                                          |
 |       | --disable-column-cycle                     | keep column cursor from wrapping to the first column                                                                |
 |       | --disable-mouse                            | disable mouse support                                                                                               |
-| -e,   | --exec --                                  | run command and display its output; use -- to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`) |
+| -e,   | --exec                                     | run command and display its output; use -- to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`) |
 | -X,   | --exit-write                               | output the current screen when exiting                                                                              |
 | -a,   | --exit-write-after int                     | extra lines below the current view to output on exit                                                                |
 | -b,   | --exit-write-before int                    | extra lines above the current view to output on exit                                                                |
@@ -1376,7 +1376,7 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                                                                          |
 |       | --section-start int                        | line offset from the section delimiter where content begins                                                         |
 |       | --set-terminal-title                       | update the terminal title bar with the current file name                                                            |
-|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections]                                                   |
+|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections\|styles]                                                   |
 |       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                            |
 |       | --skip-lines int                           | number of lines to skip at the top of each file                                                                     |
 |       | --smart-case-sensitive                     | case-insensitive unless the pattern contains uppercase letters                                                      |
@@ -1433,7 +1433,7 @@ It can also be changed after startup.
 | [Alt+m]                       | * toggle mark list in sidebar                                         |
 | [Alt+l]                       | * toggle document list in sidebar                                     |
 | [Alt+u]                       | * toggle section list in sidebar                                      |
-| [Alt+i]                       | * toggle style usage list in sidebar                                  |
+| [Alt+y]                       | * toggle style usage list in sidebar                                  |
 | [Shift+Up]                    | * scroll up in sidebar                                                |
 | [Shift+Down]                  | * scroll down in sidebar                                              |
 | [Shift+Left]                  | * scroll left in sidebar                                              |
