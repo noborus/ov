@@ -1323,70 +1323,70 @@ MemoryLimit: 1000
 
 ##  6. <a name='command-option'></a>Command option
 
-| Short |                    Long                    |                                                       Purpose                                                       |
-|-------|--------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| -l,   | --align                                    | align the output columns for better readability                                                                     |
-| -C,   | --alternate-rows                           | highlight even and odd rows in alternating colors                                                                   |
-|       | --caption string                           | override the status line file name with a custom label                                                              |
-| -i,   | --case-sensitive                           | case-sensitive in search                                                                                            |
-| -d,   | --column-delimiter character               | column delimiter character (default ",")                                                                            |
-| -c,   | --column-mode                              | split content into columns at the delimiter                                                                         |
-|       | --column-rainbow                           | colorize each column with a distinct color                                                                          |
-|       | --column-width                             | column mode using fixed-width fields instead of a delimiter                                                         |
-|       | --completion string                        | generate completion script [bash\|zsh\|fish\|powershell]                                                            |
-|       | --config file                              | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)                                                            |
-|       | --converter string                         | content processing mode [es\|raw\|align\|wordwrap] (default "es")                                                   |
-|       | --debug                                    | debug mode                                                                                                          |
-|       | --disable-column-cycle                     | keep column cursor from wrapping to the first column                                                                |
-|       | --disable-mouse                            | disable mouse support                                                                                               |
-| -e,   | --exec                                     | run command and display its output; use -- to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`) |
-| -X,   | --exit-write                               | output the current screen when exiting                                                                              |
-| -a,   | --exit-write-after int                     | extra lines below the current view to output on exit                                                                |
-| -b,   | --exit-write-before int                    | extra lines above the current view to output on exit                                                                |
-|       | --filter string                            | show only lines matching this pattern                                                                               |
-| -A,   | --follow-all                               | follow multiple files and show the most recently updated one                                                        |
-| -f,   | --follow-mode                              | monitor file and display new content as it is written                                                               |
-|       | --follow-name                              | follow by file name mode; survives log rotation                                                                     |
-|       | --follow-section                           | follow mode: jump to the most recently updated section                                                              |
-|       | --force-screen                             | display screen even when redirecting output                                                                         |
-|       | --generate-config string                   | print a sample config file to stdout [default\|less]                                                                |
-| -H,   | --header int                               | number of lines to pin as a fixed header                                                                            |
-| -Y,   | --header-column int                        | number of columns to display as a vertical header                                                                   |
-| -h,   | --help                                     | help for ov                                                                                                         |
-|       | --help-key                                 | list all key bindings                                                                                               |
-|       | --hide-other-section                       | hide all sections except the current one                                                                            |
-|       | --hscroll-width [int\|int%\|.int]          | width to scroll horizontally [int\|int%\|.int] (default "10%")                                                      |
-|       | --incsearch[=true\|false]                  | incremental search (default true)                                                                                   |
-| -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                                                                            |
-| -n,   | --line-number                              | show line numbers                                                                                                   |
-|       | --list-view-modes                          | list available view modes defined in the configuration file                                                         |
-|       | --memory-limit int                         | maximum chunks to keep in memory (-1 for unlimited) (default -1)                                                    |
-|       | --memory-limit-file int                    | maximum chunks to keep in memory per file (default 100)                                                             |
-| -M,   | --multi-color strings                      | highlight words or patterns in distinct colors (e.g., "ERROR,WARNING")                                              |
-|       | --non-match-filter string                  | hide lines matching this pattern                                                                                    |
-|       | --notify-eof int                           | notify at the end of the file                                                                                       |
-|       | --pattern string                           | initial search pattern applied on startup                                                                           |
-| -p,   | --plain                                    | strip ANSI colors and styles from the content                                                                       |
-| -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                                                                               |
-| -r,   | --raw                                      | show escape sequences as literal text                                                                               |
-|       | --regexp-search                            | treat search patterns as regular expressions                                                                        |
-|       | --ruler int                                | display ruler (=0: none, =1: relative, =2: absolute)                                                                |
-|       | --section-delimiter regexp                 | regexp marking section boundaries (e.g., "^#")                                                                      |
-|       | --section-header                           | pin the section delimiter line as a fixed header                                                                    |
-|       | --section-header-num int                   | number of section header lines (default 1)                                                                          |
-|       | --section-start int                        | line offset from the section delimiter where content begins                                                         |
-|       | --set-terminal-title                       | update the terminal title bar with the current file name                                                            |
-|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections\|styles]                                                   |
-|       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                            |
-|       | --skip-lines int                           | number of lines to skip at the top of each file                                                                     |
-|       | --smart-case-sensitive                     | case-insensitive unless the pattern contains uppercase letters                                                      |
-|       | --status-line[=true\|false]                | show the status line at the bottom (default true)                                                                   |
-| -x,   | --tab-width int                            | tab stop width (default 8)                                                                                          |
-| -v,   | --version                                  | display version information                                                                                         |
-| -y,   | --vertical-header int                      | number of characters to display as a vertical header                                                                |
-| -m,   | --view-mode string                         | apply predefined settings for a specific mode                                                                       |
-| -T,   | --watch seconds                            | re-read and refresh the view every N seconds                                                                        |
-| -w,   | --wrap string                              | wrap long lines [char\|word]                                                                                        |
+| Short |                    Long                    |                                                        Purpose                                                        |
+|-------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| -l,   | --align                                    | align the output columns for better readability                                                                       |
+| -C,   | --alternate-rows                           | highlight even and odd rows in alternating colors                                                                     |
+|       | --caption string                           | override the status line file name with a custom label                                                                |
+| -i,   | --case-sensitive                           | case-sensitive in search                                                                                              |
+| -d,   | --column-delimiter character               | column delimiter character (default ",")                                                                              |
+| -c,   | --column-mode                              | split content into columns at the delimiter                                                                           |
+|       | --column-rainbow                           | colorize each column with a distinct color                                                                            |
+|       | --column-width                             | column mode using fixed-width fields instead of a delimiter                                                           |
+|       | --completion string                        | generate completion script [bash\|zsh\|fish\|powershell]                                                              |
+|       | --config file                              | config file (default is $XDG_CONFIG_HOME/ov/config.yaml)                                                              |
+|       | --converter string                         | content processing mode [es\|raw\|align\|wordwrap] (default "es")                                                     |
+|       | --debug                                    | debug mode                                                                                                            |
+|       | --disable-column-cycle                     | keep column cursor from wrapping to the first column                                                                  |
+|       | --disable-mouse                            | disable mouse support                                                                                                 |
+| -e,   | --exec                                     | run command and display its output; use '--' to separate ov flags from command arguments (e.g., 'ov --exec -- ls -l') |
+| -X,   | --exit-write                               | output the current screen when exiting                                                                                |
+| -a,   | --exit-write-after int                     | extra lines below the current view to output on exit                                                                  |
+| -b,   | --exit-write-before int                    | extra lines above the current view to output on exit                                                                  |
+|       | --filter string                            | show only lines matching this pattern                                                                                 |
+| -A,   | --follow-all                               | follow multiple files and show the most recently updated one                                                          |
+| -f,   | --follow-mode                              | monitor file and display new content as it is written                                                                 |
+|       | --follow-name                              | follow by file name mode; survives log rotation                                                                       |
+|       | --follow-section                           | follow mode: jump to the most recently updated section                                                                |
+|       | --force-screen                             | display screen even when redirecting output                                                                           |
+|       | --generate-config string                   | print a sample config file to stdout [default\|less]                                                                  |
+| -H,   | --header int                               | number of lines to pin as a fixed header                                                                              |
+| -Y,   | --header-column int                        | number of columns to display as a vertical header                                                                     |
+| -h,   | --help                                     | help for ov                                                                                                           |
+|       | --help-key                                 | list all key bindings                                                                                                 |
+|       | --hide-other-section                       | hide all sections except the current one                                                                              |
+|       | --hscroll-width [int\|int%\|.int]          | width to scroll horizontally [int\|int%\|.int] (default "10%")                                                        |
+|       | --incsearch[=true\|false]                  | incremental search (default true)                                                                                     |
+| -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                                                                              |
+| -n,   | --line-number                              | show line numbers                                                                                                     |
+|       | --list-view-modes                          | list available view modes defined in the configuration file                                                           |
+|       | --memory-limit int                         | maximum chunks to keep in memory (-1 for unlimited) (default -1)                                                      |
+|       | --memory-limit-file int                    | maximum chunks to keep in memory per file (default 100)                                                               |
+| -M,   | --multi-color strings                      | highlight words or patterns in distinct colors (e.g., "ERROR,WARNING")                                                |
+|       | --non-match-filter string                  | hide lines matching this pattern                                                                                      |
+|       | --notify-eof int                           | notify at the end of the file                                                                                         |
+|       | --pattern string                           | initial search pattern applied on startup                                                                             |
+| -p,   | --plain                                    | strip ANSI colors and styles from the content                                                                         |
+| -F,   | --quit-if-one-screen                       | quit if the output fits on one screen                                                                                 |
+| -r,   | --raw                                      | show escape sequences as literal text                                                                                 |
+|       | --regexp-search                            | treat search patterns as regular expressions                                                                          |
+|       | --ruler int                                | display ruler (=0: none, =1: relative, =2: absolute)                                                                  |
+|       | --section-delimiter regexp                 | regexp marking section boundaries (e.g., "^#")                                                                        |
+|       | --section-header                           | pin the section delimiter line as a fixed header                                                                      |
+|       | --section-header-num int                   | number of section header lines (default 1)                                                                            |
+|       | --section-start int                        | line offset from the section delimiter where content begins                                                           |
+|       | --set-terminal-title                       | update the terminal title bar with the current file name                                                              |
+|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections]                                                     |
+|       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                              |
+|       | --skip-lines int                           | number of lines to skip at the top of each file                                                                       |
+|       | --smart-case-sensitive                     | case-insensitive unless the pattern contains uppercase letters                                                        |
+|       | --status-line[=true\|false]                | show the status line at the bottom (default true)                                                                     |
+| -x,   | --tab-width int                            | tab stop width (default 8)                                                                                            |
+| -v,   | --version                                  | display version information                                                                                           |
+| -y,   | --vertical-header int                      | number of characters to display as a vertical header                                                                  |
+| -m,   | --view-mode string                         | apply predefined settings for a specific mode                                                                         |
+| -T,   | --watch seconds                            | re-read and refresh the view every N seconds                                                                          |
+| -w,   | --wrap string                              | wrap long lines [char\|word]                                                                                          |
 
 It can also be changed after startup.
 
