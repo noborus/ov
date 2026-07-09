@@ -2,11 +2,9 @@ package oviewer
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -323,7 +321,7 @@ func Test_calcMarkIndex(t *testing.T) {
 	}
 }
 
-func TestRoot_markByPattern_event(t *testing.T) {
+func TestRoot_markByPattern(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -331,32 +329,19 @@ func TestRoot_markByPattern_event(t *testing.T) {
 	root := rootFileReadHelper(t, filepath.Join(testdata, "test3.txt"))
 	root.prepareScreen()
 	ctx := context.Background()
-	pattern := "9999"
-	root.markByPattern(ctx, pattern)
-
-	deadline := time.After(1 * time.Second)
-	for {
-		select {
-		case ev := <-root.Screen.EventQ():
-			if addMarksEv, ok := ev.(*eventAddMarks); ok {
-				if len(addMarksEv.marks) == 0 {
-					t.Errorf("eventAddMarks.marks is empty, want at least 1")
-				}
-				found := false
-				for _, m := range addMarksEv.marks {
-					if m.lineNum == 9998 {
-						found = true
-						break
-					}
-				}
-				if !found {
-					fmt.Println("marks:", addMarksEv.marks)
-					t.Errorf("eventAddMarks.marks does not contain expected lineNum 1")
-				}
-				return
-			}
-		case <-deadline:
-			t.Fatalf("eventAddMarks event not received")
+	searcher := NewSearcher("9999", regexpCompile("9999", false), false, false)
+	marks := root.Doc.allMatchedLines(ctx, searcher, 0)
+	if len(marks) == 0 {
+		t.Fatalf("allMatchedLines() returned no marks")
+	}
+	found := false
+	for _, m := range marks {
+		if m.lineNum == 9998 {
+			found = true
+			break
 		}
+	}
+	if !found {
+		t.Fatalf("allMatchedLines() does not contain expected lineNum 9998: %#v", marks)
 	}
 }

@@ -415,12 +415,42 @@ func (root *Root) postEvent(ev tcell.Event) {
 	if root == nil {
 		return
 	}
-	if root.Screen == nil {
+	switch root.screenState.Load() {
+	case ScreenStateNotReady:
+		root.pushEventQueue(ev)
+	case ScreenStateTransition:
+		root.loadEventQueue(ev)
+	case ScreenStateReady:
+		root.postEventNormal(ev)
+	case ScreenStateTerminated:
+	}
+}
+
+func (root *Root) pushEventQueue(ev tcell.Event) {
+	root.eventMu.Lock()
+	defer root.eventMu.Unlock()
+	root.eventQueue = append(root.eventQueue, ev)
+}
+
+func (root *Root) loadEventQueue(ev tcell.Event) {
+	root.eventMu.Lock()
+	if root.screenState.Load() != int32(ScreenStateTransition) {
+		root.eventMu.Unlock()
+		root.postEventNormal(ev)
 		return
 	}
-	if root.isClosed.Load() {
-		return
+	queue := root.eventQueue
+	root.eventQueue = nil
+	root.screenState.Store(int32(ScreenStateReady))
+	root.eventMu.Unlock()
+
+	for _, e := range queue {
+		root.postEventNormal(e)
 	}
+	root.postEventNormal(ev)
+}
+
+func (root *Root) postEventNormal(ev tcell.Event) {
 	select {
 	case root.Screen.EventQ() <- ev:
 		return

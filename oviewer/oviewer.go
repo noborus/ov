@@ -31,6 +31,13 @@ type Root struct {
 	// tcell.Screen is the root screen.
 	Screen tcell.Screen
 
+	// screenState is the state of the screen.
+	// screenState values:
+	// ScreenStateNotReady, ScreenStateTransition, ScreenStateReady, ScreenStateTerminated
+	screenState atomic.Int32
+	eventMu     sync.Mutex
+	eventQueue  []tcell.Event
+
 	// settings contains the runtime settings template.
 	// These settings serve as the base configuration for each document.
 	// Individual documents can override these settings as needed.
@@ -117,6 +124,17 @@ type Root struct {
 	// sidebarScrolls holds scroll positions for each sidebarMode.
 	sidebarScrolls map[SidebarMode]sidebarScroll
 }
+
+const (
+	// ScreenStateNotReady indicates that the screen is not ready.
+	ScreenStateNotReady = iota
+	// ScreenStateTransition indicates that the screen is transitioning.
+	ScreenStateTransition
+	// ScreenStateReady indicates that the screen is ready.
+	ScreenStateReady
+	// ScreenStateTerminated indicates that the screen is terminated.
+	ScreenStateTerminated
+)
 
 // SCR contains the screen information.
 type SCR struct {
@@ -332,6 +350,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		input:          NewInput(),
 		sidebarScrolls: make(map[SidebarMode]sidebarScroll),
 	}
+	root.screenState.Store(int32(ScreenStateNotReady))
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	w, h := terminalSize()
@@ -937,6 +956,7 @@ func (root *Root) switchToRealScreen() error {
 		return err
 	}
 	root.Screen = real
+	root.screenState.Store(int32(ScreenStateTransition))
 
 Loop:
 	for {

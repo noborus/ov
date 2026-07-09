@@ -172,7 +172,6 @@ func TestRoot_saveBuffer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, filepath.Join(testdata, "test.txt"))
-			root.Doc.seekable = false
 			fileName := filepath.Join(t.TempDir(), "saved.txt")
 			if tt.initial != "" {
 				if err := os.WriteFile(fileName, []byte(tt.initial), 0o600); err != nil {
