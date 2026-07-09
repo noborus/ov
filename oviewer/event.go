@@ -423,25 +423,28 @@ func (root *Root) postEvent(ev tcell.Event) {
 	case ScreenStateReady:
 		root.postEventNormal(ev)
 	case ScreenStateTerminated:
+		// Do nothing if the screen is terminated.
 	}
 }
 
+// pushEventQueue adds an event to the event queue.
 func (root *Root) pushEventQueue(ev tcell.Event) {
 	root.eventMu.Lock()
 	defer root.eventMu.Unlock()
 	root.eventQueue = append(root.eventQueue, ev)
 }
 
+// loadEventQueue processes the event queue when the screen is ready.
 func (root *Root) loadEventQueue(ev tcell.Event) {
 	root.eventMu.Lock()
-	if root.screenState.Load() != int32(ScreenStateTransition) {
+	if root.screenState.Load() != ScreenStateTransition {
 		root.eventMu.Unlock()
 		root.postEventNormal(ev)
 		return
 	}
 	queue := root.eventQueue
 	root.eventQueue = nil
-	root.screenState.Store(int32(ScreenStateReady))
+	root.screenState.Store(ScreenStateReady)
 	root.eventMu.Unlock()
 
 	for _, e := range queue {

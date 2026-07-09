@@ -97,8 +97,6 @@ type Root struct {
 
 	// mu controls the RWMutex.
 	mu sync.RWMutex
-	// isClosed indicates whether it is closed.
-	isClosed atomic.Bool
 	// followAllState is the runtime follow-all flag used across goroutines.
 	followAllState atomic.Bool
 
@@ -350,7 +348,7 @@ func NewOviewer(docs ...*Document) (*Root, error) {
 		input:          NewInput(),
 		sidebarScrolls: make(map[SidebarMode]sidebarScroll),
 	}
-	root.screenState.Store(int32(ScreenStateNotReady))
+	root.screenState.Store(ScreenStateNotReady)
 	root.DocList = append(root.DocList, docs...)
 	root.Doc = root.DocList[0]
 	w, h := terminalSize()
@@ -786,7 +784,7 @@ func (root *Root) prepareAllDocuments() {
 
 // Close closes the oviewer.
 func (root *Root) Close() {
-	root.isClosed.Store(true)
+	root.screenState.Store(ScreenStateTerminated)
 	root.Screen.Fini()
 }
 
@@ -956,7 +954,7 @@ func (root *Root) switchToRealScreen() error {
 		return err
 	}
 	root.Screen = real
-	root.screenState.Store(int32(ScreenStateTransition))
+	root.screenState.Store(ScreenStateTransition)
 
 Loop:
 	for {
