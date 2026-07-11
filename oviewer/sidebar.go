@@ -248,7 +248,6 @@ func (root *Root) sidebarItemsForViewMode() []SidebarItem {
 func (root *Root) sidebarItemsForStyles() []SidebarItem {
 	var items []SidebarItem
 	length := root.sidebarWidth - 4
-	root.Doc.EnsureStylesLoaded()
 	stylesLen := root.Doc.styles.Len()
 	helpLines := []string{
 		"o: disable all, then enable (e.g., o1)",
@@ -407,6 +406,16 @@ func (root *Root) setSidebar(ctx context.Context, mode SidebarMode) {
 	root.openSidebar(ctx, mode)
 }
 
+// prepareSidebarByMode prepares mode-specific sidebar data before first render.
+func (root *Root) prepareSidebarByMode(mode SidebarMode) {
+	switch mode {
+	case SidebarModeStyles:
+		root.Doc.EnsureStylesLoaded()
+	case SidebarModeSections:
+		root.generateSectionList()
+	}
+}
+
 // openSidebar opens the sidebar with the specified mode.
 func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	width, err := calcSideWidth(root.Config.SidebarWidth, root.scr.vWidth)
@@ -417,7 +426,7 @@ func (root *Root) openSidebar(ctx context.Context, mode SidebarMode) {
 	root.sidebarMode = mode
 	root.sidebarVisible = true
 	root.sidebarWidth = width
-	root.generateSectionList()
+	root.prepareSidebarByMode(mode)
 	root.ViewSync(ctx)
 	root.setMessagef("Sidebar (%s) shown", mode.String())
 }
