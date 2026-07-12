@@ -450,7 +450,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&helpKey, "help-key", "", false, "list all key bindings")
 	rootCmd.PersistentFlags().BoolVarP(&listViewMode, "list-view-modes", "", false, "list available view modes defined in the configuration file")
 
-	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "run command and display its output; use `--` to separate ov flags from command arguments (e.g., `ov --exec -- ls -l`)")
+	rootCmd.PersistentFlags().BoolVarP(&execCommand, "exec", "e", false, "run command and display its output; use '--' to separate ov flags from command arguments (e.g., 'ov --exec -- ls -l')")
 
 	rootCmd.PersistentFlags().BoolVarP(&forceScreen, "force-screen", "", false, "display screen even when redirecting output")
 
