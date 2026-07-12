@@ -976,6 +976,7 @@ Style:
 ###  4.21. <a name='plain'></a>Plain
 
 Disables the decoration of the text, such as color and style, and displays it in plain text.
+Use Plain when you want to remove all decorations at once. If you only want to disable specific styles, use [Suppress styles](#suppress-styles) instead.
 The option is `--plain` (or `-p`) (default key `Ctrl+e`).
 
 ###  4.22. <a name='converter'></a>Converter
@@ -1241,6 +1242,7 @@ ov --force-screen filename > output.txt
 
 Syntax highlighting and other styles (including those represented by escape sequences) can be enabled or disabled individually.
 This is especially useful when `ov` is used as a pager from syntax-highlighting tools such as `bat`.
+Unlike [Plain](#plain), this feature does not remove all decoration at once; it lets you selectively suppress only the styles you do not want.
 
 After startup, press `o` (default key) to enter `Toggle styles:` input mode.
 In this mode, the sidebar shows a numbered list of available styles (indices start at 0).
