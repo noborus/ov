@@ -472,7 +472,7 @@ This column-width feature is implemented using [guesswidth](https://github.com/n
 
 Supports switching between wrapping and not wrapping lines.
 
-The option is `--wrap`, specify `--wrap=false` (default key `w`, `W`) if you do not want to wrap.
+The option is `--wrap=char`, specify `--wrap=none` (default key `w`, `W`) if you do not want to wrap.
 
 ####  4.8.1. <a name='word-wrap-mode'></a>word wrap mode
 
@@ -523,7 +523,7 @@ Default keys are:
 * left(default key `shift+left`)
 * right(default key `shift+right`)
 
-You can also specify the sidebar mode via CLI or config(`help`, `marks`, `documents`, `sections`).
+You can also specify the sidebar mode via CLI or config(`help`, `marks`, `documents`, `sections`, `styles`).
 
 ```console
 ov --sidebar-mode=sections --section-delimiter "^#" README.md
@@ -535,8 +535,8 @@ You can set the sidebar width using `SidebarWidth`. This can be specified as a p
 Example:
 
 ```yaml
-SidebarMode: "marks"  # Initial sidebar mode (help, marks, documents, sections)
-SidebarWidth: 30      #  Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
+SidebarMode: "marks"  # Open sidebar with this content. Options: "help", "marks", "documents", "sections", "styles", "none".
+SidebarWidth: 30      # Width of the sidebar. Can be specified in percentage or fixed width (e.g., "30" for 30 columns).
 ```
 
 ###  4.11. <a name='section'></a>Section
@@ -606,7 +606,7 @@ Related Styling: [Customizing the bottom status line](#customizing-the-bottom-st
 
 ###  4.13. <a name='follow-mode'></a>Follow mode
 
-`--follow`(`-f`)(default key `Ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
+`--follow-mode`(`-f`)(default key `Ctrl+f`) prints appended data and moves to the bottom line (like `tail -f`).
 
 ```console
 ov --follow-mode /var/log/syslog
@@ -719,7 +719,7 @@ Displayed when the following are enabled in the search input prompt:
 
 |         Function          | display | (Default)key |     command option     |    config file     |
 |---------------------------|---------|--------------|------------------------|--------------------|
-| Incremental search        | (I)     | Alt+i        | --incremental          | Incsearch          |
+| Incremental search        | (I)     | Alt+i        | --incsearch            | Incsearch          |
 | Regular expression search | (R)     | Alt+r        | --regexp-search        | RegexpSearch       |
 | Case-sensitive            | (Aa)    | Alt+c        | -i, --case-sensitive   | CaseSensitive      |
 | Smart case-sensitive      | (S)     | Alt+s        | --smart-case-sensitive | SmartCaseSensitive |
@@ -837,7 +837,7 @@ mark list sidebar opens automatically along with number input mode.
 When you reach EOF, add '\f' instead.
 Use the `--watch`(`-T`) option.
 Go further to the last section.
-The default is'section-delimiter', so the last loaded content is displayed.
+The default is 'section-delimiter', so the last loaded content is displayed.
 
 for example.
 
@@ -847,7 +847,7 @@ ov --watch 1 /proc/meminfo
 
 ###  4.19. <a name='mouse-support'></a>Mouse support
 
-The `ov` makes the mouse support its control.
+The `ov` supports mouse input for text selection, scrolling, and other interactions.
 This can be disabled with the option `--disable-mouse` (default keys for toggling mouse support are `Ctrl+Alt+r`).
 
 If mouse support is enabled, tabs and line breaks will be interpreted correctly when copying.
@@ -975,7 +975,7 @@ Style:
 
 ###  4.21. <a name='plain'></a>Plain
 
-Supports disable decoration ANSI escape sequences.
+Disables the decoration of the text, such as color and style, and displays it in plain text.
 The option is `--plain` (or `-p`) (default key `Ctrl+e`).
 
 ###  4.22. <a name='converter'></a>Converter
@@ -1049,7 +1049,7 @@ and the jump-target will be changed.
 ov --section-delimiter "^#" --jump-target section README.md
 ```
 
-[Related styling](#style-customization): `JumpTarget`.
+[Related styling](#style-customization): `JumpTargetLine`.
 
 ###  4.25. <a name='view-mode'></a>View mode
 
@@ -1376,7 +1376,7 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                                                                            |
 |       | --section-start int                        | line offset from the section delimiter where content begins                                                           |
 |       | --set-terminal-title                       | update the terminal title bar with the current file name                                                              |
-|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections]                                                     |
+|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections\|styles]                                             |
 |       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                              |
 |       | --skip-lines int                           | number of lines to skip at the top of each file                                                                       |
 |       | --smart-case-sensitive                     | case-insensitive unless the pattern contains uppercase letters                                                        |
@@ -1573,11 +1573,6 @@ Mode:
 * MultiColorHighlight
 * ColumnRainbow
 * JumpTargetLine
-* VerticalHeader
-* VerticalHeaderBorder
-* Ruler
-* HeaderBorder
-* SectionBorder
 * VerticalHeader
 * VerticalHeaderBorder
 * Ruler
@@ -1920,7 +1915,7 @@ The following software can be used instead. If you are not satisfied with `ov`, 
 
 ##  10. <a name='work-together'></a>Work together
 
-The following are not actually pagers and do not conflict. can work together.
+The following are not actually pagers and do not conflict and can work together.
 
 * [bat](https://github.com/sharkdp/bat)
   * `bat` is an alternative to cat. It supports a lot of highlighting and automatically calls the pager.
