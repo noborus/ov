@@ -9,7 +9,7 @@ import (
 )
 
 // content represents one character on the terminal.
-// content is a value that can be set in Put() of tcell.
+// 1 Content matches the characters displayed on the screen.
 type content struct {
 	style tcell.Style
 	str   string
@@ -19,7 +19,8 @@ type content struct {
 // contents represents one line of contents.
 type contents []content
 
-// DefaultContent is a blank Content.
+// DefaultContent is a default content.
+// It is used for padding and empty cells.
 var DefaultContent = content{
 	str:   "",
 	width: 0,
@@ -325,7 +326,7 @@ func (lc contents) IsFullWidth(n int) bool {
 func writeString(w *strings.Builder, s string) int {
 	n, err := w.WriteString(s)
 	if err != nil {
-		panic(err)
+		panic(err) // strings.Builder.WriteString never returns an error.
 	}
 	return n
 }

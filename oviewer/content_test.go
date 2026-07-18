@@ -120,6 +120,69 @@ func Test_StrToContentsNormal(t *testing.T) {
 	}
 }
 
+func Test_RawStrToContents(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		line     string
+		tabWidth int
+	}
+	tests := []struct {
+		name string
+		args args
+		want contents
+	}{
+		{
+			name: "plain",
+			args: args{line: "test", tabWidth: 8},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault, str: "t"},
+				{width: 1, style: tcell.StyleDefault, str: "e"},
+				{width: 1, style: tcell.StyleDefault, str: "s"},
+				{width: 1, style: tcell.StyleDefault, str: "t"},
+			},
+		},
+		{
+			name: "tab",
+			args: args{line: "a\tb", tabWidth: 4},
+			want: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 1, style: tcell.StyleDefault, str: "\t"},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+				{width: 1, style: tcell.StyleDefault, str: "b"},
+			},
+		},
+		{
+			name: "escape sequence is not interpreted",
+			args: args{line: "\x1B[31mred\x1B[m", tabWidth: 8},
+			want: contents{
+				{width: 0, style: tcell.StyleDefault, str: "^"},
+				{width: 0, style: tcell.StyleDefault, str: "["},
+				{width: 1, style: tcell.StyleDefault, str: "["},
+				{width: 1, style: tcell.StyleDefault, str: "3"},
+				{width: 1, style: tcell.StyleDefault, str: "1"},
+				{width: 1, style: tcell.StyleDefault, str: "m"},
+				{width: 1, style: tcell.StyleDefault, str: "r"},
+				{width: 1, style: tcell.StyleDefault, str: "e"},
+				{width: 1, style: tcell.StyleDefault, str: "d"},
+				{width: 0, style: tcell.StyleDefault, str: "^"},
+				{width: 0, style: tcell.StyleDefault, str: "["},
+				{width: 1, style: tcell.StyleDefault, str: "["},
+				{width: 1, style: tcell.StyleDefault, str: "m"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := RawStrToContents(tt.args.line, tt.args.tabWidth)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RawStrToContents() got = \n%#v, want \n%#v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_StrToContentsOverlapping(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -192,6 +255,158 @@ func Test_StrToContentsOverlapping(t *testing.T) {
 			got := StrToContents(tt.args.line, tt.args.tabWidth)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseString() got = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseState_zeroWidthHandle(t *testing.T) {
+	t.Parallel()
+	type fields struct {
+		lc       contents
+		style    tcell.Style
+		tabWidth int
+		tabx     int
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		r             rune
+		wantLC        contents
+		wantTabX      int
+		wantBsFlag    bool
+		wantBsContent content
+	}{
+		{
+			name: "tab",
+			fields: fields{
+				lc:       contents{{width: 1, style: tcell.StyleDefault, str: "a"}},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     1,
+			},
+			r: '\t',
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 1, style: tcell.StyleDefault, str: "\t"},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+				{width: 1, style: tcell.StyleDefault, str: ""},
+			},
+			wantTabX:      4,
+			wantBsFlag:    false,
+			wantBsContent: DefaultContent,
+		},
+		{
+			name: "backspace",
+			fields: fields{
+				lc: contents{
+					{width: 1, style: tcell.StyleDefault, str: "a"},
+					{width: 1, style: tcell.StyleDefault, str: "b"},
+				},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     2,
+			},
+			r: '\b',
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+			},
+			wantTabX:      2,
+			wantBsFlag:    true,
+			wantBsContent: content{width: 1, style: tcell.StyleDefault, str: "b"},
+		},
+		{
+			name: "carriage return",
+			fields: fields{
+				lc:       contents{{width: 1, style: tcell.StyleDefault, str: "a"}},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     1,
+			},
+			r: '\r',
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+			},
+			wantTabX:      1,
+			wantBsFlag:    false,
+			wantBsContent: DefaultContent,
+		},
+		{
+			name: "control char",
+			fields: fields{
+				lc:       contents{{width: 1, style: tcell.StyleDefault, str: "a"}},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     1,
+			},
+			r: '\f',
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 0, style: tcell.StyleDefault, str: "\f"},
+			},
+			wantTabX:      1,
+			wantBsFlag:    false,
+			wantBsContent: DefaultContent,
+		},
+		{
+			name: "del",
+			fields: fields{
+				lc:       contents{{width: 1, style: tcell.StyleDefault, str: "a"}},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     1,
+			},
+			r: 0x7f,
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+				{width: 0, style: tcell.StyleDefault, str: "\x7f"},
+			},
+			wantTabX:      1,
+			wantBsFlag:    false,
+			wantBsContent: DefaultContent,
+		},
+		{
+			name: "default zero width rune",
+			fields: fields{
+				lc:       contents{{width: 1, style: tcell.StyleDefault, str: "a"}},
+				style:    tcell.StyleDefault,
+				tabWidth: 4,
+				tabx:     1,
+			},
+			r: '\u0301',
+			wantLC: contents{
+				{width: 1, style: tcell.StyleDefault, str: "a"},
+			},
+			wantTabX:      1,
+			wantBsFlag:    false,
+			wantBsContent: DefaultContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			st := &parseState{
+				lc:        tt.fields.lc,
+				style:     tt.fields.style,
+				tabWidth:  tt.fields.tabWidth,
+				tabx:      tt.fields.tabx,
+				bsContent: DefaultContent,
+			}
+
+			st.zeroWidthHandle(tt.r)
+
+			if !reflect.DeepEqual(st.lc, tt.wantLC) {
+				t.Errorf("zeroWidthHandle() lc = %#v, want %#v", st.lc, tt.wantLC)
+			}
+			if st.tabx != tt.wantTabX {
+				t.Errorf("zeroWidthHandle() tabx = %v, want %v", st.tabx, tt.wantTabX)
+			}
+			if st.bsFlag != tt.wantBsFlag {
+				t.Errorf("zeroWidthHandle() bsFlag = %v, want %v", st.bsFlag, tt.wantBsFlag)
+			}
+			if !reflect.DeepEqual(st.bsContent, tt.wantBsContent) {
+				t.Errorf("zeroWidthHandle() bsContent = %#v, want %#v", st.bsContent, tt.wantBsContent)
 			}
 		})
 	}
