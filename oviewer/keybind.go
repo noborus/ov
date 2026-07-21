@@ -543,6 +543,8 @@ func GetKeyBinds(config Config) KeyBind {
 		// no default keybindings
 	case "less":
 		keyBind = LessKeyBinds()
+	case "emacs":
+		keyBind = EmacsKeyBinds()
 	default:
 		keyBind = DefaultKeyBinds()
 	}
