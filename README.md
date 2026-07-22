@@ -1,14 +1,14 @@
-# ov - feature rich terminal pager
+<p align="center">
+  <img src="docs//ov-logo.svg" alt="Project logo" width="120">
+</p>
 
+<p align="center">
+  Feature-rich terminal pager for logs, CSV, JSON, and more.
+</p>
 <!-- markdownlint-disable MD019 MD029 MD033 MD036 MD060 -->
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
 [![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
-
-ov is a terminal pager.
-
-![ov-image.png](./docs/ov-image.png)
 
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)
