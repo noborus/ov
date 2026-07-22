@@ -1,10 +1,10 @@
-<p align="center">
-  <img src="docs//ov-logo.svg" alt="Project logo" width="120">
-</p>
+<div align="center">
+  <img src="docs//ov-logo.svg" alt="Project logo" width="240">
+</div>
 
-<p align="center">
-  Feature-rich terminal pager for logs, CSV, JSON, and more.
-</p>
+<div align="center">
+  Feature-rich terminal pager.
+</div>
 <!-- markdownlint-disable MD019 MD029 MD033 MD036 MD060 -->
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
