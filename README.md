@@ -1,14 +1,13 @@
-# ov - feature rich terminal pager
-
 <!-- markdownlint-disable MD019 MD029 MD033 MD036 MD060 -->
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
-[![Actions Status](https://github.com/noborus/ov/workflows/Go/badge.svg)](https://github.com/noborus/ov/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/noborus/ov)](https://goreportcard.com/report/github.com/noborus/ov)
+<div align="center">
+  <img src="docs/ov-logo.svg" alt="Project logo" width="360">
+</div>
 
-ov is a terminal pager.
+# Feature-rich terminal pager ov
 
-![ov-image.png](./docs/ov-image.png)
+[![Go Reference](https://pkg.go.dev/badge/github.com/noborus/ov)](https://pkg.go.dev/github.com/noborus/ov)
+[![Go](https://github.com/noborus/ov/actions/workflows/build.yml/badge.svg)](https://github.com/noborus/ov/actions/workflows/build.yml)
 
 <!-- vscode-markdown-toc -->
 * 1. [Feature](#feature)

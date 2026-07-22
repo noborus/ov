@@ -1,0 +1,28 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" rx="36" fill="#0F1117"/>
+  <!-- Inner panel -->
+  <rect x="28" y="28" width="1144" height="574" rx="24" fill="#171A23" stroke="#2B3142" stroke-width="4"/>
+  <!-- Title bar -->
+  <path d="M52 28 H1148 Q1172 28 1172 52 V104 H28 V52 Q28 28 52 28 Z" fill="#1C2030"/>
+  <line x1="28" y1="104" x2="1172" y2="104" stroke="#2B3142" stroke-width="2"/>
+  <!-- Traffic lights -->
+  <circle cx="80" cy="66" r="11" fill="#FF6060"/>
+  <circle cx="116" cy="66" r="11" fill="#FFCA3A"/>
+  <circle cx="152" cy="66" r="11" fill="#6BCB77"/>
+
+  <!-- Left decorative box with prompt symbols -->
+  <rect x="70" y="178" width="238" height="278" rx="20" fill="#121722" stroke="#2B3142" stroke-width="3"/>
+  <!-- < symbol -->
+  <polyline points="182,218 108,315 182,412" fill="none" stroke="#8AD4FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- - symbol -->
+  <line x1="200" y1="390" x2="278" y2="390" stroke="#79E29B" stroke-width="24" stroke-linecap="round"/>
+
+  <!-- "o" — clean ring, visual diameter 290px -->
+  <circle cx="600" cy="335" r="120" fill="none" stroke="#8AD4FF" stroke-width="50"/>
+
+  <!-- "v" — proper V, same visual height as O (top/bottom matching O's extents) -->
+  <polyline points="762,215 880,455 998,215"
+            fill="none" stroke="#79E29B" stroke-width="50"
+            stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
