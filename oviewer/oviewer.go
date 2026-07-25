@@ -625,7 +625,11 @@ func (root *Root) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
 	}
-	defer watcher.Close()
+	defer func() {
+		if err := watcher.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
 	root.SetWatcher(watcher)
 	if err := root.prepareRun(ctx); err != nil {
 		return err

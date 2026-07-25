@@ -48,8 +48,8 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 	r, w := io.Pipe()
 	render, err := renderDoc(m, r)
 	if err != nil {
-		r.Close()
-		w.Close()
+		closeFile(r)
+		closeFile(w)
 		log.Printf("failed to filter document: %v\n", err)
 		return
 	}
@@ -84,7 +84,7 @@ func (root *Root) filterDocument(ctx context.Context, searcher Searcher) {
 
 // filterWriter searches and writes to filterDoc.
 func (m *Document) filterWriter(ctx context.Context, searcher Searcher, startLN int, filterDoc *filterDocument) {
-	defer filterDoc.w.Close()
+	defer closeFile(filterDoc.w)
 	for originLN, renderLN := startLN, startLN; ; {
 		select {
 		case <-ctx.Done():

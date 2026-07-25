@@ -381,6 +381,7 @@ func (root *Root) suspend(context.Context) {
 	}
 }
 
+// subShell starts a subshell and returns when it exits.
 func (root *Root) subShell(shell string) error {
 	if shell == "" {
 		shell = getShell()
@@ -391,7 +392,7 @@ func (root *Root) subShell(shell string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get stdin: %w", err)
 		}
-		defer tty.Close()
+		defer closeFile(tty)
 		stdin = tty
 	}
 	c := exec.Command(shell, "-l")

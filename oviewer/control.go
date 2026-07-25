@@ -152,8 +152,8 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		m.requestStart()
 		return reader, err
 	case requestClose:
-		err = m.close()
-		return reader, err
+		m.close()
+		return reader, nil
 	default:
 		panic(fmt.Sprintf("unexpected %s", sc.request))
 	}

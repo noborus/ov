@@ -385,24 +385,3 @@ func (m *Document) reset() {
 	atomic.StoreInt32(&m.store.changed, 1)
 	m.ClearCache()
 }
-
-// checkClose returns if the file is closed.
-func (m *Document) checkClose() bool {
-	return atomic.LoadInt32(&m.closed) == 1
-}
-
-// Close closes the File.
-// Record the last read position.
-func (m *Document) close() error {
-	if m.checkClose() {
-		return nil
-	}
-
-	if err := m.file.Close(); err != nil {
-		return fmt.Errorf("close: %w", err)
-	}
-	atomic.StoreInt32(&m.store.eof, 1)
-	atomic.StoreInt32(&m.closed, 1)
-	atomic.StoreInt32(&m.store.changed, 1)
-	return nil
-}
