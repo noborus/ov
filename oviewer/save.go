@@ -36,7 +36,7 @@ func (root *Root) saveBuffer(input string) {
 		root.setMessageLogf("cannot save: %s:%s", fileName, err)
 		return
 	}
-	defer file.Close()
+	defer closeFile(file)
 
 	if err := root.Doc.Export(file, root.Doc.BufStartNum(), root.Doc.BufEndNum()); err != nil {
 		root.setMessageLogf("cannot save: %s:%s", fileName, err)

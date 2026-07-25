@@ -284,11 +284,13 @@ type columnRange struct {
 	end   int
 }
 
+// MatchedLine represents a line that matches a search or filter criteria, containing the line number and the line content.
 type MatchedLine struct {
 	lineNum int
 	line    []byte
 }
 
+// MatchedLineList is a slice of MatchedLine, representing a list of matched lines.
 type MatchedLineList []MatchedLine
 
 // NewDocument creates and initializes a new [Document] with default settings.
@@ -821,4 +823,32 @@ func (m *Document) GetLine(n int) string {
 func (m *Document) LineString(n int) string {
 	str, _ := m.LineStr(n)
 	return str
+}
+
+// checkClose returns if the file is closed.
+func (m *Document) checkClose() bool {
+	return atomic.LoadInt32(&m.closed) == 1
+}
+
+// Close closes the File.
+// Record the last read position.
+func (m *Document) close() {
+	if m.checkClose() {
+		return
+	}
+
+	closeFile(m.file)
+	atomic.StoreInt32(&m.store.eof, 1)
+	atomic.StoreInt32(&m.closed, 1)
+	atomic.StoreInt32(&m.store.changed, 1)
+}
+
+// closeFile closes the given file and logs any errors encountered during the close operation.
+func closeFile(f io.Closer) {
+	if f == nil {
+		return
+	}
+	if err := f.Close(); err != nil {
+		log.Printf("close: %v", err)
+	}
 }

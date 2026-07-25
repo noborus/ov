@@ -245,8 +245,8 @@ func ptyOutput(cmd *exec.Cmd) (io.Reader, io.Reader, error) {
 			log.Printf("pty wait: %v\n", err)
 		}
 		time.Sleep(100 * time.Millisecond)
-		stdout.Close()
-		stderr.Close()
+		closeFile(stdout)
+		closeFile(stderr)
 	}()
 
 	return so, se, nil

@@ -56,7 +56,7 @@ func (root *Root) edit(context.Context) {
 			root.setMessageLog(err.Error())
 			return
 		}
-		defer tty.Close()
+		defer closeFile(tty)
 		stdin = tty
 	}
 
@@ -104,7 +104,7 @@ func (root *Root) saveTempFile() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer tempFile.Close()
+	defer closeFile(tempFile)
 
 	if err := root.tempExport(tempFile); err != nil {
 		log.Printf("Failed to export document to temporary file: %v", err)

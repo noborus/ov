@@ -336,7 +336,7 @@ type KeyBindDescription struct {
 }
 
 var keyBindDescriptions = []KeyBindDescription{
-	// General
+	// Genaral.
 	{Group: GroupGeneral, Action: actionExit, Description: "quit"},
 	{Group: GroupGeneral, Action: actionCancel, Description: "cancel"},
 	{Group: GroupGeneral, Action: actionWriteExit, Description: "output screen and quit"},
@@ -352,7 +352,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupGeneral, Action: actionToggleMouse, Description: "enable/disable mouse"},
 	{Group: GroupGeneral, Action: actionSaveBuffer, Description: "save buffer to file"},
 
-	// Moving
+	// Moving.
 	{Group: GroupMoving, Action: actionMoveDown, Description: "forward by one line"},
 	{Group: GroupMoving, Action: actionMoveUp, Description: "backward by one line"},
 	{Group: GroupMoving, Action: actionMoveTop, Description: "go to top of document"},
@@ -372,7 +372,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMoving, Action: actionGoLine, Description: "go to line (number, `.n`, or `n%`)"},
 	{Group: GroupMoving, Action: actionMarkNumber, Description: "go to mark number"},
 
-	// Sidebar
+	// Sidebar.
 	{Group: GroupSidebar, Action: actionSidebarHelp, Description: "toggle help in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarMarks, Description: "toggle mark list in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarDocList, Description: "toggle document list in sidebar"},
@@ -383,13 +383,13 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupSidebar, Action: actionSidebarLeft, Description: "scroll left in sidebar"},
 	{Group: GroupSidebar, Action: actionSidebarRight, Description: "scroll right in sidebar"},
 
-	// Move document
+	// Move document.
 	{Group: GroupDocList, Action: actionNextDoc, Description: "next document"},
 	{Group: GroupDocList, Action: actionPreviousDoc, Description: "previous document"},
 	{Group: GroupDocList, Action: actionCloseDoc, Description: "close current document"},
 	{Group: GroupDocList, Action: actionCloseAllFilter, Description: "close all filtered documents"},
 
-	// Mark position
+	// Mark position.
 	{Group: GroupMark, Action: actionMark, Description: "mark current position"},
 	{Group: GroupMark, Action: actionRemoveMark, Description: "remove mark at current position"},
 	{Group: GroupMark, Action: actionRemoveAllMark, Description: "remove all marks"},
@@ -397,14 +397,14 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupMark, Action: actionMovePrevMark, Description: "move to previous marked position"},
 	{Group: GroupMark, Action: actionMarkByPattern, Description: "mark all lines matching a pattern"},
 
-	// Search
+	// Search.
 	{Group: GroupSearch, Action: actionSearch, Description: "forward search mode"},
 	{Group: GroupSearch, Action: actionBackSearch, Description: "backward search mode"},
 	{Group: GroupSearch, Action: actionNextSearch, Description: "repeat forward search"},
 	{Group: GroupSearch, Action: actionNextBackSearch, Description: "repeat backward search"},
 	{Group: GroupSearch, Action: actionFilter, Description: "filter lines by pattern"},
 
-	// Change display
+	// Change display.
 	{Group: GroupChange, Action: actionWrap, Description: "wrap toggle (character based)"},
 	{Group: GroupChange, Action: actionWordWrap, Description: "word wrap toggle"},
 	{Group: GroupChange, Action: actionColumnMode, Description: "column mode toggle"},
@@ -419,7 +419,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupChange, Action: actionStatusLine, Description: "status line toggle"},
 	{Group: GroupChange, Action: actionStyleToggle, Description: "suppress style highlight by number"},
 
-	// Change Display with Input
+	// Change display with input.
 	{Group: GroupChangeInput, Action: actionViewMode, Description: "view mode selection"},
 	{Group: GroupChangeInput, Action: actionDelimiter, Description: "column delimiter string"},
 	{Group: GroupChangeInput, Action: actionHeader, Description: "number of header lines"},
@@ -431,12 +431,12 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupChangeInput, Action: actionVerticalHeader, Description: "number of vertical header characters"},
 	{Group: GroupChangeInput, Action: actionHeaderColumn, Description: "number of header columns"},
 
-	// Column operation
+	// Column operation.
 	{Group: GroupColumn, Action: actionFixedColumn, Description: "toggle fixed header column"},
 	{Group: GroupColumn, Action: actionShrinkColumn, Description: "shrink column toggle (align mode only)"},
 	{Group: GroupColumn, Action: actionRightAlign, Description: "right align column toggle (align mode only)"},
 
-	// Section operation
+	// Section operation.
 	{Group: GroupSection, Action: actionSection, Description: "section delimiter regular expression"},
 	{Group: GroupSection, Action: actionSectionStart, Description: "section start position"},
 	{Group: GroupSection, Action: actionNextSection, Description: "next section"},
@@ -446,13 +446,13 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupSection, Action: actionSectionNum, Description: "number of section header lines"},
 	{Group: GroupSection, Action: actionHideOther, Description: `hide "other" section toggle`},
 
-	// Close and reload
+	// Close and reload.
 	{Group: GroupClose, Action: actionCloseFile, Description: "close file"},
 	{Group: GroupClose, Action: actionReload, Description: "reload file"},
 	{Group: GroupClose, Action: actionWatch, Description: "toggle watch mode"},
 	{Group: GroupClose, Action: actionWatchInterval, Description: "set watch interval"},
 
-	// Key binding when typing
+	// Key binding when typing.
 	{Group: GroupTyping, Action: inputCaseSensitive, Description: "case-sensitive toggle"},
 	{Group: GroupTyping, Action: inputSmartCaseSensitive, Description: "smart case-sensitive toggle"},
 	{Group: GroupTyping, Action: inputRegexpSearch, Description: "regular expression search toggle"},

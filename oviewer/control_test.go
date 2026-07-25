@@ -249,13 +249,13 @@ func CopyToTempFile(t *testing.T, fileName string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer orig.Close()
+	defer closeFile(orig)
 
 	dst, err := os.Create(fname)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dst.Close()
+	defer closeFile(dst)
 	if _, err := io.Copy(dst, orig); err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +296,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}
-			defer f.Close()
+			defer closeFile(f)
 			m.FollowMode = true
 			if err := m.ControlFile(f); err != nil {
 				t.Fatalf("Document.ControlFile() fatal = %v, wantErr %v", err, tt.wantErr)
@@ -306,7 +306,7 @@ func TestDocument_requestFollow(t *testing.T) {
 			if err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}
-			defer af.Close()
+			defer closeFile(af)
 			if _, err := af.Write(tt.fields.appendBytes); err != nil {
 				t.Fatal("open error", tt.fields.FileName)
 			}
