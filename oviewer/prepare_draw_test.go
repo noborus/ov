@@ -1006,7 +1006,7 @@ func TestRoot_sectionHeaderTimeOut(t *testing.T) {
 	root.prepareDraw(ctx)
 	root.Doc.setSectionDelimiter("^-")
 	root.Doc.SectionHeader = true
-	lx, ln := root.sectionHeader(ctx, 0, sectionTimeOut)
+	lx, ln := root.sectionHeader(ctx, 0, sectionTimeout)
 	if lx != 0 || ln != 0 {
 		t.Errorf("lx: %d, ln: %d", lx, ln)
 	}
@@ -1023,7 +1023,7 @@ func TestRoot_sectionHeader(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		lN      int
-		timeOut time.Duration
+		timeout time.Duration
 	}
 	tests := []struct {
 		name      string
@@ -1041,7 +1041,7 @@ func TestRoot_sectionHeader(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				lN:      4,
-				timeOut: 1000,
+				timeout: 1 * time.Second,
 			},
 			wants:     1,
 			wante:     1,
@@ -1055,7 +1055,7 @@ func TestRoot_sectionHeader(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				lN:      4,
-				timeOut: 1000,
+				timeout: 1 * time.Second,
 			},
 			wants:     0,
 			wante:     0,
@@ -1069,7 +1069,7 @@ func TestRoot_sectionHeader(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				lN:      4,
-				timeOut: 0,
+				timeout: 0,
 			},
 			wants:     0,
 			wante:     0,
@@ -1083,7 +1083,7 @@ func TestRoot_sectionHeader(t *testing.T) {
 			m := root.Doc
 			m.SectionHeader = true
 			m.setSectionDelimiter(tt.fields.sectionDelimiter)
-			got1, got2 := root.sectionHeader(tt.args.ctx, tt.args.lN, tt.args.timeOut)
+			got1, got2 := root.sectionHeader(tt.args.ctx, tt.args.lN, tt.args.timeout)
 			if got1 != tt.wants {
 				t.Errorf("Root.sectionHeader() = %v, want %v", got1, tt.wants)
 			}

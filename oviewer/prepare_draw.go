@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// sectionTimeOut is the section header search timeout(in milliseconds) period.
-	sectionTimeOut time.Duration = 1000
+	// sectionTimeout is the timeout for searching the section header.
+	sectionTimeout time.Duration = 1 * time.Second
 	// rulerHeight is the height of the ruler.
 	rulerHeight = 2
 )
@@ -131,7 +131,7 @@ func (root *Root) prepareDraw(ctx context.Context) {
 	root.scr.sectionHeaderEnd = 0
 	root.Doc.sectionHeaderHeight = 0
 	if root.Doc.SectionHeader {
-		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition, sectionTimeOut)
+		root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd = root.sectionHeader(ctx, root.Doc.topLN+root.scr.headerEnd-root.Doc.SectionStartPosition, sectionTimeout)
 		// Set the section header height.
 		root.Doc.sectionHeaderHeight = min(root.scr.vHeight, root.Doc.getHeight(root.scr.sectionHeaderLN, root.scr.sectionHeaderEnd))
 	}
@@ -318,17 +318,21 @@ func trimWidth(lc contents) (int, int) {
 
 // trimmedIndices returns the start and end of the trimmed contents.
 func trimmedIndices(lc contents) (int, int) {
-	ts := 0
-	for i := range lc {
-		if !lc.IsSpace(i) {
-			ts = i
-			break
-		}
-	}
 	te := len(lc)
 	for i := len(lc) - 1; i >= 0; i-- {
 		if !lc.IsSpace(i) {
 			te = i + 1
+			break
+		}
+	}
+	if te == 0 {
+		return 0, 0
+	}
+
+	ts := 0
+	for i := range lc {
+		if !lc.IsSpace(i) {
+			ts = i
 			break
 		}
 	}
@@ -357,12 +361,12 @@ func (m *Document) shiftBody(lX int, lN int, shStart int, shEnd int) (int, int) 
 }
 
 // sectionHeader returns the start and end of the section header.
-func (root *Root) sectionHeader(ctx context.Context, topLN int, timeOut time.Duration) (int, int) {
+func (root *Root) sectionHeader(ctx context.Context, topLN int, timeout time.Duration) (int, int) {
 	m := root.Doc
 
 	// SectionHeader.
 	shNum := min(m.SectionHeaderNum, root.scr.vHeight)
-	shStart, err := m.searchSectionHeader(ctx, topLN+1, timeOut)
+	shStart, err := m.searchSectionHeader(ctx, topLN+1, timeout)
 	if err != nil {
 		if errors.Is(err, ErrCancel) {
 			root.setMessageLogf("Section header search timed out")
@@ -375,12 +379,12 @@ func (root *Root) sectionHeader(ctx context.Context, topLN int, timeOut time.Dur
 }
 
 // searchSectionHeader searches for the section header.
-func (m *Document) searchSectionHeader(ctx context.Context, lN int, timeOut time.Duration) (int, error) {
+func (m *Document) searchSectionHeader(ctx context.Context, lN int, timeout time.Duration) (int, error) {
 	if !m.SectionHeader || m.SectionDelimiter == "" {
 		return 0, ErrNoDelimiter
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeOut*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	sLN, err := m.prevSection(ctx, lN)
 	if err != nil {
@@ -536,6 +540,9 @@ func (root *Root) columnHighlight(lineC LineC) {
 // The style of the first specified word takes precedence.
 func (root *Root) multiColorHighlight(lineC LineC) {
 	numC := len(root.Doc.Style.MultiColorHighlight)
+	if numC == 0 {
+		return
+	}
 	for i := len(root.Doc.multiColorRegexps) - 1; i >= 0; i-- {
 		indexes := searchPositionReg(lineC.str, root.Doc.multiColorRegexps[i])
 		for _, idx := range indexes {
@@ -620,7 +627,7 @@ func (root *Root) applyColumnStyles(lineC LineC) {
 	numC := len(m.Style.ColumnRainbow)
 
 	for c, colRange := range lineC.columnRanges {
-		if m.ColumnRainbow {
+		if m.ColumnRainbow && numC > 0 {
 			RangeStyle(lineC.lc, colRange.start, colRange.end, m.Style.ColumnRainbow[c%numC])
 		}
 		if c == m.columnCursor {
