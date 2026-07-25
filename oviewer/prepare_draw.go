@@ -318,21 +318,17 @@ func trimWidth(lc contents) (int, int) {
 
 // trimmedIndices returns the start and end of the trimmed contents.
 func trimmedIndices(lc contents) (int, int) {
-	te := len(lc)
-	for i := len(lc) - 1; i >= 0; i-- {
-		if !lc.IsSpace(i) {
-			te = i + 1
-			break
-		}
-	}
-	if te == 0 {
-		return 0, 0
-	}
-
 	ts := 0
 	for i := range lc {
 		if !lc.IsSpace(i) {
 			ts = i
+			break
+		}
+	}
+	te := len(lc)
+	for i := len(lc) - 1; i >= 0; i-- {
+		if !lc.IsSpace(i) {
+			te = i + 1
 			break
 		}
 	}
