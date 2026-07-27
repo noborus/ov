@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
 	github.com/klauspost/compress v1.19.1
-	github.com/mattn/go-runewidth v0.0.24
+	github.com/mattn/go-runewidth v0.0.27
 	github.com/noborus/guesswidth v0.5.0
 	github.com/noborus/tcellansi v0.4.1
 	github.com/pierrec/lz4/v4 v4.1.27
