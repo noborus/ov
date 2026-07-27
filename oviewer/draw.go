@@ -9,7 +9,6 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
-	"github.com/mattn/go-runewidth"
 	"github.com/rivo/uniseg"
 )
 
@@ -603,8 +602,8 @@ func needsDisplaySync(str string) bool {
 		}
 
 		mainc := runes[0]
-		// Check for ambiguous width characters using runewidth library
-		if runewidth.IsAmbiguousWidth(mainc) {
+		// Treat broad symbol ranges as ambiguous-width enough for sync.
+		if isLikelyAmbiguousWidth(mainc) {
 			return true
 		}
 		// Emoji and symbol ranges that commonly cause display width issues.
@@ -615,6 +614,45 @@ func needsDisplaySync(str string) bool {
 		}
 	}
 	return false
+}
+
+// isLikelyAmbiguousWidth checks if the rune is likely to be ambiguous width.
+// This is a heuristic based on Unicode ranges that are often treated as ambiguous width in terminals.
+func isLikelyAmbiguousWidth(mainc rune) bool {
+	switch {
+	case mainc >= 0x00A1 && mainc <= 0x00A4:
+		return true
+	case mainc >= 0x00A7 && mainc <= 0x00A8:
+		return true
+	case mainc >= 0x00AA && mainc <= 0x00AA:
+		return true
+	case mainc >= 0x00B0 && mainc <= 0x00BA:
+		return true
+	case mainc >= 0x00BC && mainc <= 0x00BF:
+		return true
+	case mainc >= 0x00E0 && mainc <= 0x00E1:
+		return true
+	case mainc >= 0x00E9 && mainc <= 0x00E9:
+		return true
+	case mainc >= 0x2190 && mainc <= 0x23FF:
+		return true
+	case mainc >= 0x2460 && mainc <= 0x24FF:
+		return true
+	case mainc >= 0x2500 && mainc <= 0x27FF:
+		return true
+	case mainc >= 0x2B00 && mainc <= 0x2BFF:
+		return true
+	case mainc >= 0xFE10 && mainc <= 0xFE6F:
+		return true
+	case mainc >= 0xFF01 && mainc <= 0xFF60:
+		return true
+	case mainc >= 0xFFE0 && mainc <= 0xFFE6:
+		return true
+	case mainc >= 0x1F300 && mainc <= 0x1F9FF:
+		return true
+	default:
+		return false
+	}
 }
 
 // drawSidebar draws the sidebar.
