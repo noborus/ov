@@ -116,7 +116,9 @@ It supports various compressed files(gzip, bzip2, zstd, lz4, and xz).
 		oviewer.OverLineStyle = oviewer.ToTcellStyle(config.StyleOverLine)
 		oviewer.MemoryLimit = config.MemoryLimit
 		oviewer.MemoryLimitFile = config.MemoryLimitFile
-		SetRedirect()
+		if !forceScreen {
+			SetRedirect()
+		}
 		// Do not display the screen if redirected (unless forceScreen is specified).
 		if oviewer.STDOUTPIPE != nil && !forceScreen {
 			return copyOutput(args)
