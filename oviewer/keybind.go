@@ -278,21 +278,35 @@ func (root *Root) handlers() map[string]func(context.Context) {
 // KeyBind represents a mapping from action names to their associated key sequences.
 type KeyBind map[string][]string
 
+// Group represents a category of key binding actions.
 type Group int
 
 const (
-	GroupAll     Group = -1
+	// GroupAll includes all key binding groups.
+	GroupAll Group = -1
+	// GroupGeneral contains general actions such as exit and help.
 	GroupGeneral Group = iota
+	// GroupMoving contains cursor and scroll movement actions.
 	GroupMoving
+	// GroupSidebar contains sidebar toggle and navigation actions.
 	GroupSidebar
+	// GroupDocList contains document list navigation actions.
 	GroupDocList
+	// GroupMark contains mark set and jump actions.
 	GroupMark
+	// GroupSearch contains search and search navigation actions.
 	GroupSearch
+	// GroupChange contains display option toggle actions.
 	GroupChange
+	// GroupChangeInput contains display option changes that require input.
 	GroupChangeInput
+	// GroupColumn contains column-related operations.
 	GroupColumn
+	// GroupSection contains section-related operations.
 	GroupSection
+	// GroupClose contains close and reload actions.
 	GroupClose
+	// GroupTyping contains key bindings used while typing in input mode.
 	GroupTyping
 )
 
@@ -329,6 +343,7 @@ func (g Group) String() string {
 	}
 }
 
+// KeyBindDescription describes one key binding action and its group.
 type KeyBindDescription struct {
 	Group       Group
 	Action      string
@@ -336,7 +351,7 @@ type KeyBindDescription struct {
 }
 
 var keyBindDescriptions = []KeyBindDescription{
-	// Genaral.
+	// General.
 	{Group: GroupGeneral, Action: actionExit, Description: "quit"},
 	{Group: GroupGeneral, Action: actionCancel, Description: "cancel"},
 	{Group: GroupGeneral, Action: actionWriteExit, Description: "output screen and quit"},

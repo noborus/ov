@@ -16,21 +16,21 @@ type General struct {
 	ColumnDelimiter *string
 	// SectionDelimiter is a section delimiter.
 	SectionDelimiter *string
-	// Specified string for jumpTarget.
+	// JumpTarget is the configured jump target string.
 	JumpTarget *string
 	// MultiColorWords specifies words to color separated by spaces.
 	MultiColorWords *[]string
 
-	// TabWidth is tab stop num.
+	// TabWidth is the tab stop width.
 	TabWidth *int
-	// Header is number of header lines to be fixed.
+	// Header is the number of header lines to pin.
 	Header *int
 	// VerticalHeader is the number of vertical header lines.
 	VerticalHeader *int
 	// HeaderColumn is the number of columns from the left to be fixed.
 	// If 0 is specified, no columns are fixed.
 	HeaderColumn *int
-	// SkipLines is the rows to skip.
+	// SkipLines is the number of rows to skip.
 	SkipLines *int
 	// WatchInterval is the watch interval (seconds).
 	WatchInterval *int
@@ -58,7 +58,7 @@ type General struct {
 	ColumnRainbow *bool
 	// LineNumMode displays line numbers.
 	LineNumMode *bool
-	// Wrap is Wrap mode.
+	// WrapMode indicates whether wrapping is enabled.
 	WrapMode *bool
 	// FollowMode is the follow mode.
 	FollowMode *bool

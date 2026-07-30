@@ -93,7 +93,7 @@ func allStringIndex(s string, substr string) [][]int {
 
 // writeLine writes a line to w.
 // It adds a newline to the end of the line.
-// It panics if there is an error.
+// It logs write errors.
 func writeLine(w io.Writer, line []byte) {
 	if _, err := w.Write(line); err != nil {
 		log.Printf("%s:%s", line, err)

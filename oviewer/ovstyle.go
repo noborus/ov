@@ -13,9 +13,9 @@ type OVStyle struct {
 	Background string
 	// Foreground is a color name string.
 	Foreground string
-	// UnderlineColor is a underline color name string.
+	// UnderlineColor is an underline color name string.
 	UnderlineColor string
-	// UnderlineStyle is a underline style.
+	// UnderlineStyle is an underline style.
 	UnderlineStyle string
 	// VerticalAlignType is a vertical align type.
 	VerticalAlignType int

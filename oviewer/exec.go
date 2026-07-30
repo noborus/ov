@@ -32,14 +32,14 @@ type Command struct {
 	args   []string
 }
 
-// NewCommand return the structure of Command.
+// NewCommand returns a Command.
 func NewCommand(args ...string) *Command {
 	return &Command{
 		args: args,
 	}
 }
 
-// Exec return the structure of oviewer.
+// Exec executes the command and returns an oviewer Root.
 func (command *Command) Exec() (*Root, error) {
 	docout, docerr, err := newOutErrDocument()
 	if err != nil {
@@ -76,7 +76,7 @@ func (command *Command) Exec() (*Root, error) {
 }
 
 // Wait waits for the command to exit.
-// Wait does not actually `wait` because it is Waiting in the goroutine at the start.
+// Wait does not block for process completion because waiting is handled in a goroutine.
 func (command *Command) Wait() {
 	if command.cmd == nil || command.cmd.Process == nil {
 		return
