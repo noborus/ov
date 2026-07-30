@@ -886,7 +886,7 @@ func (root *Root) docSmall() bool {
 		return false
 	}
 
-	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.bodyWidth, start, end)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, root.scr.vWidth, start, end)
 	strs = tcellansi.TrimRightSpaces(strs)
 	root.OnExit = strs
 	return true
@@ -939,7 +939,7 @@ func (root *Root) writeCurrentScreen(output io.Writer) {
 			log.Println(err)
 			return
 		}
-		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, root.Doc.bodyWidth, start, end)
+		strs = tcellansi.ScreenContentToStrings(root.Screen, 0, w, start, end)
 		strs = tcellansi.TrimRightSpaces(strs)
 	}
 	for _, str := range strs {
@@ -995,13 +995,33 @@ func realScreen() (tcell.Screen, error) {
 func terminalSize() (int, int) {
 	width := 80
 	height := 25
-	fd := int(os.Stdout.Fd())
+	fd := terminalFd()
+	if fd < 0 {
+		return width, height
+	}
 	w, h, err := term.GetSize(fd)
 	if err == nil && w > 0 && h > 0 {
 		width = w
 		height = h
 	}
 	return width, height
+}
+
+// terminalFd returns the file descriptor of the terminal.
+func terminalFd() int {
+	fd := int(os.Stdout.Fd())
+	if term.IsTerminal(fd) {
+		return fd
+	}
+	fd = int(os.Stdin.Fd())
+	if term.IsTerminal(fd) {
+		return fd
+	}
+	fd = int(os.Stderr.Fd())
+	if term.IsTerminal(fd) {
+		return fd
+	}
+	return -1
 }
 
 // virtualScreen creates a virtual screen for drawing without affecting the actual terminal.
@@ -1073,12 +1093,11 @@ func contentRange(scr SCR) (int, int) {
 // ScreenContent returns the screen content.
 func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
-	m := root.Doc
 	start, end := contentRange(root.scr)
 	end += root.Config.AfterWriteOriginal
 	start -= root.Config.BeforeWriteOriginal
 	end = max(end, start)
-	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, m.bodyWidth, start, end)
+	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, root.scr.vWidth, start, end)
 	strs = tcellansi.TrimRightSpaces(strs)
 	return strs
 }
