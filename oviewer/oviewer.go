@@ -65,10 +65,10 @@ type Root struct {
 
 	// Pattern is the search pattern.
 	Pattern string
-	// OnExit is output on exit.
+	// OnExit stores lines to output on exit.
 	OnExit []string
 
-	// Original string.
+	// OriginStr stores the original search string.
 	OriginStr string
 
 	// searchOpt is the search option.
@@ -82,9 +82,9 @@ type Root struct {
 	DocList []*Document
 	// scr contains the screen information.
 	scr SCR
-	// Config is the configuration of ov.
+	// Config is the runtime configuration for ov.
 	Config Config
-	// Original position at the start of search.
+	// OriginPos is the position at the start of search.
 	OriginPos int
 
 	// CurrentDoc is the index of the current document.
@@ -168,13 +168,13 @@ type SCR struct {
 	y1 int
 	x2 int
 	y2 int
-	// mouseSelect is a flag with mouse selection.
+	// mouseSelect indicates the mouse selection state.
 	mouseSelect MouseSelectState
 	// mousePressed is a flag when the mouse selection button is pressed.
 	mousePressed bool
 	// mouseRectangle is a flag for rectangle selection.
 	mouseRectangle bool
-	// hasAnchorPoint is a flag whether anchor point exists.
+	// hasAnchorPoint indicates whether an anchor point exists.
 	hasAnchorPoint bool
 	// forceDisplaySync forces synchronous display.
 	forceDisplaySync bool

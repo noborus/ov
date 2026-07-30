@@ -15,10 +15,14 @@ import (
 type ClickType int
 
 const (
+	// ClickSingle represents a single click.
 	ClickSingle ClickType = iota
+	// ClickDouble represents a double click.
 	ClickDouble
+	// ClickTriple represents a triple click.
 	ClickTriple
-	ClickExpired // Time expired, should reset state
+	// ClickExpired indicates the click sequence timed out and state should reset.
+	ClickExpired
 )
 
 const (
@@ -28,8 +32,10 @@ const (
 )
 
 var (
-	ClickInterval = 500 * time.Millisecond // Double/triple click detection time
-	ClickDistance = 2                      // Maximum allowed movement distance (in screen coordinates/cells) for double/triple click detection
+	// ClickInterval is the threshold used for multi-click detection.
+	ClickInterval = 500 * time.Millisecond
+	// ClickDistance is the max movement allowed between clicks for multi-click detection.
+	ClickDistance = 2
 )
 
 // ClickState holds the state for click detection.
@@ -44,9 +50,12 @@ type ClickState struct {
 type MouseSelectState int
 
 const (
-	SelectNone   MouseSelectState = iota // no selection
-	SelectActive                         // selecting
-	SelectCopied                         // selection copied
+	// SelectNone means there is no active selection.
+	SelectNone MouseSelectState = iota
+	// SelectActive means selection is currently in progress.
+	SelectActive
+	// SelectCopied means the last selection has been copied.
+	SelectCopied
 )
 
 // mouseEvent handles mouse events.

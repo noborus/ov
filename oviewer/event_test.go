@@ -176,7 +176,7 @@ drained:
 	wg.Wait()
 
 	got := make(map[string]bool)
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		select {
 		case ev := <-root.Screen.EventQ():
 			key, ok := ev.(*tcell.EventKey)

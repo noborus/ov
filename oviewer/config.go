@@ -83,7 +83,7 @@ type Config struct {
 	ShrinkChar string
 	// DisableColumnCycle indicates whether to disable column cycling.
 	DisableColumnCycle bool
-	// DisableStickYFollow indicates whether to disable sticky follow mode.
+	// DisableStickyFollow indicates whether to disable sticky follow mode.
 	DisableStickyFollow bool
 	// SetTerminalTitle indicates whether to set the terminal title to display filename.
 	SetTerminalTitle bool

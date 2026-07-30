@@ -24,7 +24,7 @@ const tailSize = 10000
 // The default delimiter that separates single output from watch.
 const FormFeed = "\f"
 
-// firstRead first reads the file.
+// firstRead reads the first chunk of the file and fills it into the store.
 // Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	atomic.StoreInt32(&m.store.noNewlineEOF, 0)
@@ -41,14 +41,14 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	return reader, nil
 }
 
-// tmpRead read tail to temporary store.
-// It is executed only once if EOF has not been reached after follow-mode is set.
+// tmpRead is executed only once if EOF has not been reached after follow-mode is set.
+// It reads the last chunk of the file into a temporary store.
 func (m *Document) tmpRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	m.followStore = NewStore()
 	atomic.StoreInt32(&m.tmpFollow, 1)
 
 	if _, err := m.file.Seek(tailSize*-1, io.SeekEnd); err != nil {
-		return reader, fmt.Errorf("tmpFollowRead seek: %w", err)
+		return reader, fmt.Errorf("tmpRead seek: %w", err)
 	}
 	reader.Reset(m.file)
 	chunk := m.followStore.chunks[0]

@@ -16,9 +16,10 @@ type SidebarItem struct {
 	IsCurrent bool
 }
 
+// SidebarMode represents the display mode of the sidebar.
 type SidebarMode int
 
-// sidebarMode represents the mode of the sidebar.
+// SidebarMode values.
 const (
 	// SidebarModeNone is no sidebar.
 	SidebarModeNone SidebarMode = iota
@@ -35,7 +36,7 @@ const (
 	// SidebarModeStyles is the style list sidebar.
 	SidebarModeStyles
 
-	// SidebarModeEnd is the end of sidebar modes.
+	// SidebarModeEnd marks the end of sidebar modes.
 	SidebarModeEnd
 )
 
@@ -65,7 +66,7 @@ const (
 	defaultSidebarWidth = "20%"
 )
 
-// sidebarScroll holds scroll positions for sidebar.
+// sidebarScroll holds scroll positions for each sidebar mode.
 type sidebarScroll struct {
 	x        int
 	y        int
