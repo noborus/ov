@@ -464,7 +464,7 @@ func (root *Root) hideOtherSection(y int, line LineC) {
 	if line.section <= 1 { // 1 is the first section.
 		return
 	}
-	root.clearEOL(root.Doc.bodyStartX, y, defaultStyle)
+	root.clearEOL(root.Doc.leftMargin, y, defaultStyle)
 }
 
 // drawSelect highlights the mouse selection.
