@@ -911,10 +911,6 @@ func (root *Root) WriteQuit(ctx context.Context) {
 	}
 
 	root.Config.IsWriteOnExit = true
-	if root.Doc.HideOtherSection && root.Config.AfterWriteOriginal == 0 {
-		// hide other section.
-		root.Config.AfterWriteOriginal = root.bottomSectionLN(ctx)
-	}
 
 	// Do not write if BeforeWriteOriginal is set (greater than 0).
 	if root.Config.BeforeWriteOriginal > 0 {
@@ -925,18 +921,6 @@ func (root *Root) WriteQuit(ctx context.Context) {
 	root.OnExit = root.ScreenContent()
 
 	root.Quit(ctx)
-}
-
-// bottomSectionLN returns the number of lines to write.
-func (root *Root) bottomSectionLN(ctx context.Context) int {
-	if root.Doc.SectionDelimiter == "" {
-		return root.Config.AfterWriteOriginal
-	}
-	lN, err := root.Doc.nextSection(ctx, root.Doc.topLN+root.Doc.firstLine()-root.Doc.SectionStartPosition)
-	if err != nil {
-		return root.Config.AfterWriteOriginal
-	}
-	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
 }
 
 // toggleFixedColumn toggles the fixed column.
