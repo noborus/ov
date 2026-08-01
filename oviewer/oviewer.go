@@ -1065,12 +1065,12 @@ func (root *Root) drawVirtualScreen() (int, int, error) {
 	root.prepareScreen()
 	root.prepareDraw(ctx)
 	root.draw(ctx)
-	start, end := contentRange(root.scr)
+	start, end := contentRange(root.scr, root.Doc.HideOtherSection)
 	return start, end, nil
 }
 
 // contentRange returns the range of valid content on the screen.
-func contentRange(scr SCR) (int, int) {
+func contentRange(scr SCR, isHide bool) (int, int) {
 	start := 0
 	end := 0
 	valid := false
@@ -1078,7 +1078,11 @@ func contentRange(scr SCR) (int, int) {
 		if y >= len(scr.numbers) {
 			break
 		}
-		if !scr.lines[scr.numbers[y].number].valid {
+		lineC := scr.lines[scr.numbers[y].number]
+		if !lineC.valid {
+			continue
+		}
+		if isHide && lineC.section >= 2 {
 			continue
 		}
 		if !valid {
@@ -1093,7 +1097,7 @@ func contentRange(scr SCR) (int, int) {
 // ScreenContent returns the screen content.
 func (root *Root) ScreenContent() []string {
 	root.Screen.Sync()
-	start, end := contentRange(root.scr)
+	start, end := contentRange(root.scr, root.Doc.HideOtherSection)
 	end += root.Config.AfterWriteOriginal
 	start -= root.Config.BeforeWriteOriginal
 	end = max(end, start)

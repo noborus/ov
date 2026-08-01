@@ -911,10 +911,6 @@ func (root *Root) WriteQuit(ctx context.Context) {
 	}
 
 	root.Config.IsWriteOnExit = true
-	if root.Doc.HideOtherSection && root.Config.AfterWriteOriginal == 0 {
-		// hide other section.
-		root.Config.AfterWriteOriginal = root.bottomSectionLN(ctx)
-	}
 
 	// Do not write if BeforeWriteOriginal is set (greater than 0).
 	if root.Config.BeforeWriteOriginal > 0 {
