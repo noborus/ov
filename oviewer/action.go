@@ -923,18 +923,6 @@ func (root *Root) WriteQuit(ctx context.Context) {
 	root.Quit(ctx)
 }
 
-// bottomSectionLN returns the number of lines to write.
-func (root *Root) bottomSectionLN(ctx context.Context) int {
-	if root.Doc.SectionDelimiter == "" {
-		return root.Config.AfterWriteOriginal
-	}
-	lN, err := root.Doc.nextSection(ctx, root.Doc.topLN+root.Doc.firstLine()-root.Doc.SectionStartPosition)
-	if err != nil {
-		return root.Config.AfterWriteOriginal
-	}
-	return lN - (root.Doc.topLN + root.Doc.firstLine() - root.Doc.SectionStartPosition)
-}
-
 // toggleFixedColumn toggles the fixed column.
 func (root *Root) toggleFixedColumn(context.Context) {
 	cursor := root.Doc.columnCursor - root.Doc.columnStart + 1

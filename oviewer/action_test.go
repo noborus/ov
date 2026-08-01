@@ -1347,7 +1347,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 				sectionDelimiter: "",
 				HideOtherSection: false,
 			},
-			want: 0,
+			want: 10,
 		},
 		{
 			name: "testWriteQuit2",
@@ -1356,7 +1356,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 				sectionDelimiter: "",
 				HideOtherSection: true,
 			},
-			want: 0,
+			want: 10,
 		},
 		{
 			name: "testWriteQuit3",
@@ -1374,7 +1374,7 @@ func TestRoot_WriteQuit(t *testing.T) {
 				sectionDelimiter: "^notfound",
 				HideOtherSection: true,
 			},
-			want: 0,
+			want: 10,
 		},
 	}
 	for _, tt := range tests {
@@ -1383,11 +1383,13 @@ func TestRoot_WriteQuit(t *testing.T) {
 			root.prepareScreen()
 			ctx := context.Background()
 			root.setSectionDelimiter(tt.fields.sectionDelimiter)
-			root.prepareDraw(ctx)
+			root.Doc.SectionHeader = true
 			root.Doc.HideOtherSection = tt.fields.HideOtherSection
+			root.prepareDraw(ctx)
+			root.draw(ctx)
 			root.WriteQuit(ctx)
-			if got := root.Config.AfterWriteOriginal; got != tt.want {
-				t.Errorf("WriteQuit() AfterWriteOriginal = %v, want %v", got, tt.want)
+			if got := len(root.OnExit); got != tt.want {
+				t.Errorf("WriteQuit() OnExit = %v, want %v", got, tt.want)
 			}
 		})
 	}
