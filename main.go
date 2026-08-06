@@ -36,9 +36,11 @@ var (
 
 	// filter is filter pattern.
 	filter string
-
 	// non match filter pattern.
 	nonMatchFilter string
+
+	// markByPattern is mark by pattern.
+	markByPattern string
 
 	// ver is version information.
 	ver bool
@@ -257,6 +259,9 @@ func RunOviewer(args []string) error {
 	if nonMatchFilter != "" {
 		ov.Filter(nonMatchFilter, true)
 	}
+	if markByPattern != "" {
+		ov.MarkByPattern(markByPattern)
+	}
 
 	if ov.Config.QuitSmall && (filter != "" || nonMatchFilter != "") {
 		ov.Config.QuitSmallFilter = true
@@ -469,6 +474,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&pattern, "pattern", "", "", "initial search pattern applied on startup")
 	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "", "", "show only lines matching this pattern")
 	rootCmd.PersistentFlags().StringVarP(&nonMatchFilter, "non-match-filter", "", "", "hide lines matching this pattern")
+	rootCmd.PersistentFlags().StringVarP(&markByPattern, "mark-by-pattern", "", "", "mark lines matching this pattern")
 	rootCmd.PersistentFlags().BoolVarP(&oviewer.SkipExtract, "skip-extract", "", false, "read compressed files as raw bytes without decompressing")
 
 	// Config.General

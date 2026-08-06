@@ -157,6 +157,24 @@ func (list MatchedLineList) contains(lineNumber int) bool {
 	return false
 }
 
+// MarkByPattern marks lines matching the pattern.
+func (root *Root) MarkByPattern(str string) {
+	root.input.value = str
+	go func() {
+		root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
+		root.sendMarkByPattern(str)
+	}()
+}
+
+// sendMarkByPattern sends the mark by pattern event to the document.
+func (root *Root) sendMarkByPattern(str string) {
+	ev := &eventInputSearch{
+		searchType: markByPattern,
+		value:      str,
+	}
+	root.postEvent(ev)
+}
+
 // eventAddMarks represents an event to add multiple marks.
 type eventAddMarks struct {
 	tcell.EventTime
