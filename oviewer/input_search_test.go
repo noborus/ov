@@ -59,11 +59,12 @@ func Test_eventInputSearch_Confirm(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &eventInputSearch{
-				EventTime: tt.fields.EventTime,
-				clist:     tt.fields.clist,
-				value:     tt.fields.value,
+				EventTime:  tt.fields.EventTime,
+				clist:      tt.fields.clist,
+				value:      tt.fields.value,
+				searchType: forward,
 			}
-			if got := e.Confirm(tt.args.str); got.(*eventInputSearch).value != tt.want {
+			if got := e.Confirm(tt.args.str); got.(*eventFirstSearch).value != tt.want {
 				t.Errorf("eventInputSearch.Confirm() = %v, want %v", got, tt.want)
 			}
 		})

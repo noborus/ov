@@ -16,20 +16,10 @@ type filterDocument struct {
 // Filter fires the filter event.
 func (root *Root) Filter(str string, nonMatch bool) {
 	root.Doc.nonMatch = nonMatch
-	root.input.value = str
 	go func() {
 		root.Doc.WaitEOFWithTimeout(root.Config.ReadWaitTime)
-		root.sendFilter(str)
+		root.sendFirstSearch(str, filter)
 	}()
-}
-
-// sendFilter sends the filter event to the document.
-func (root *Root) sendFilter(str string) {
-	ev := &eventInputSearch{
-		searchType: filter,
-		value:      str,
-	}
-	root.postEvent(ev)
 }
 
 // filter filters the document by the input value.
