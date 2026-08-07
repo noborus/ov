@@ -99,8 +99,8 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.setMultiColor(ev.value)
 	case *eventSaveBuffer:
 		root.saveBuffer(ev.value)
-	case *eventInputSearch:
-		root.firstSearch(ctx, ev.searchType)
+	case *eventFirstSearch:
+		root.firstSearch(ctx, ev.value, ev.searchType)
 	case *eventSkipLines:
 		root.setSkipLines(ev.value)
 	case *eventTabWidth:

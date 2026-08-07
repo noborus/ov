@@ -604,17 +604,34 @@ func (root *Root) startSearchLN() int {
 }
 
 // firstSearch performs the first search immediately after the input.
-func (root *Root) firstSearch(ctx context.Context, t searchType) {
+func (root *Root) firstSearch(ctx context.Context, value string, t searchType) {
 	switch t {
 	case forward:
-		root.forwardSearch(ctx, root.input.value, 0)
+		root.forwardSearch(ctx, value, 0)
 	case backward:
-		root.backSearch(ctx, root.input.value, 0)
+		root.backSearch(ctx, value, 0)
 	case filter:
-		root.filter(ctx, root.input.value)
+		root.filter(ctx, value)
 	case markByPattern:
-		root.markByPattern(ctx, root.input.value)
+		root.markByPattern(ctx, value)
 	}
+}
+
+// eventFirstSearch represents a first search execution event.
+// It is used by both confirmed input and non-interactive API calls.
+type eventFirstSearch struct {
+	tcell.EventTime
+	value      string
+	searchType searchType
+}
+
+// sendFirstSearch fires the eventFirstSearch event.
+func (root *Root) sendFirstSearch(value string, t searchType) {
+	ev := &eventFirstSearch{}
+	ev.value = value
+	ev.searchType = t
+	ev.SetEventNow()
+	root.postEvent(ev)
 }
 
 // forwardSearch performs the forward search.

@@ -81,6 +81,10 @@ func (root *Root) setPromptOpt() {
 }
 
 // eventInputSearch represents the search input mode.
+//
+// Historically this type worked as a tcell event, but now it is used only
+// as input-mode state and behavior holder. The event-style name is kept for
+// compatibility with existing code and terminology.
 type eventInputSearch struct {
 	tcell.EventTime
 	clist      *candidate
@@ -129,11 +133,18 @@ func (e *eventInputSearch) Prompt() string {
 }
 
 // Confirm returns the event when the input is confirmed.
+// It returns eventFirstSearch instead of eventInputSearch to avoid re-entering
+// the input mode.
 func (e *eventInputSearch) Confirm(str string) tcell.Event {
 	e.value = stripBackSlash(str)
 	e.clist.toLast(str)
-	e.SetEventNow()
-	return e
+
+	// Return eventFirstSearch instead of eventInputSearch to avoid re-entering the input mode.
+	ev := &eventFirstSearch{}
+	ev.value = e.value
+	ev.searchType = e.searchType
+	ev.SetEventNow()
+	return ev
 }
 
 // Up returns strings when the up key is pressed during input.
