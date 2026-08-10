@@ -13,7 +13,7 @@ require (
 	github.com/klauspost/compress v1.19.1
 	github.com/noborus/guesswidth v0.5.0
 	github.com/noborus/tcellansi v0.4.1
-	github.com/pierrec/lz4/v4 v4.1.27
+	github.com/pierrec/lz4/v4 v4.1.28
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
