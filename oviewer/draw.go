@@ -47,15 +47,15 @@ func (root *Root) draw(ctx context.Context) {
 // drawBody sets bottomLN and bottomLX of the document.
 func (root *Root) drawBody() {
 	m := root.Doc
-	lX := m.topLX
+	markStyleWidth := min(m.width, m.MarkStyleWidth)
 	lN := m.topLN + root.scr.headerEnd
+	lX := 0
 	wrapNum := 0
-	if !m.WrapMode { // If WrapMode is off, topLX is always 0.
-		lX = 0
+	if m.WrapMode {
+		lX = m.topLX
 		wrapNum = m.numOfWrap(lX, lN)
 	}
 
-	markStyleWidth := min(root.Doc.width, root.Doc.MarkStyleWidth)
 	for y := m.headerHeight; y < root.scr.vHeight-root.scr.statusLineHeight; y++ {
 		lineC, ok := root.scr.lines[lN]
 		if !ok {
