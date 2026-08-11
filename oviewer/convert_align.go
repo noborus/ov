@@ -6,6 +6,9 @@ import (
 	"github.com/rivo/uniseg"
 )
 
+// convert_align aligns the widths of the columns.
+// It also handles left-alignment, right-alignment, and shrink for each column.
+
 // align is a converter that aligns columns.
 // It is used to align columns when the delimiter is reached or to align columns by adding spaces to the end of the line.
 type align struct {
@@ -51,6 +54,7 @@ type columnAttribute struct {
 	rightAlign     bool           // Right align column.
 }
 
+// newAlignConverter creates a new align converter.
 func newAlignConverter(widthF bool) *align {
 	return &align{
 		es:          newESConverter(),
@@ -61,6 +65,7 @@ func newAlignConverter(widthF bool) *align {
 	}
 }
 
+// clone creates a deep copy of the align converter.
 func (a *align) clone() *align {
 	if a == nil {
 		return nil
@@ -259,12 +264,14 @@ func (a *align) isRightAlign(col int) bool {
 	return a.columnAttrs[col].rightAlign
 }
 
+// findStartWithTrim finds the start index of the column content, trimming leading spaces.
 func findStartWithTrim(lc contents, s int) int {
 	for ; s < len(lc) && lc[s].str == " "; s++ {
 	}
 	return s
 }
 
+// findEndWidthTrim finds the end index of the column content, trimming trailing spaces.
 func findEndWidthTrim(lc contents, e int) int {
 	for ; e > 0 && lc[e-1].str == " "; e-- {
 	}
