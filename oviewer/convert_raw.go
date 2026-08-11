@@ -2,6 +2,7 @@ package oviewer
 
 type rawConverter struct{}
 
+// newRawConverter creates a new rawConverter.
 func newRawConverter() *rawConverter {
 	return &rawConverter{}
 }

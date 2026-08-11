@@ -6,12 +6,13 @@ import (
 	"github.com/rivo/uniseg"
 )
 
+// convert_wordwrap performs word wrapping while avoiding breaking words in the middle and ensuring that the
+// content fits within the specified screen width. It also handles escape sequences and newlines appropriately.
+
 // wordwrapConverter is a converter that converts the contents to fit the screen width.
 type wordwrapConverter struct {
 	es          *escapeSequence
 	screenWidth int
-	row         int
-	leadingFlag bool
 }
 
 // newWordwrapConverter creates a new wordwrapConverter.
@@ -19,8 +20,6 @@ func newWordwrapConverter(width int) *wordwrapConverter {
 	return &wordwrapConverter{
 		es:          newESConverter(),
 		screenWidth: width,
-		row:         1,
-		leadingFlag: false,
 	}
 }
 
@@ -48,7 +47,7 @@ type wordWrapProcessor struct {
 	row         int
 }
 
-// convertWordWrap converts the contents to fit the screen width.
+// convertWordWrap converts the contents to fit the screen width by wrapping words appropriately.
 func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	if c.screenWidth <= 0 {
 		return src
