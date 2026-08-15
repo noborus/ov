@@ -782,6 +782,10 @@ func (m *Document) setColumnWidths() {
 	header := m.Header - 1
 	header = max(header, 0)
 	tl := min(1000, len(m.store.chunks[0].lines))
+	// Stop guessing if the skipped lines exceed the lines to guess from.
+	if m.SkipLines >= tl {
+		return
+	}
 	lines := m.store.chunks[0].lines[m.SkipLines:tl]
 	buf := make([]string, len(lines))
 	for n, line := range lines {
