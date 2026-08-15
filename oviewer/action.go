@@ -782,12 +782,13 @@ func calcPosition(str string, length int) (float64, error) {
 
 	var p float64 = 0
 	if strings.HasPrefix(str, ".") {
-		str = strings.TrimLeft(str, ".")
+		// ".25" is the fraction 0.25, so parse it whole rather than
+		// stripping the dot and dividing by a fixed 10.
 		i, err := strconv.ParseFloat(str, 64)
 		if err != nil {
 			return 0, err
 		}
-		p = i / 10
+		p = i
 	}
 	if strings.HasSuffix(str, "%") {
 		str = strings.TrimRight(str, "%")

@@ -220,6 +220,22 @@ func Test_position(t *testing.T) {
 			want: 15,
 		},
 		{
+			name: "test.25",
+			args: args{
+				str:    ".25",
+				height: 40,
+			},
+			want: 10,
+		},
+		{
+			name: "test.05",
+			args: args{
+				str:    ".05",
+				height: 40,
+			},
+			want: 2,
+		},
+		{
 			name: "test20%",
 			args: args{
 				str:    "20%",
