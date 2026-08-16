@@ -97,6 +97,20 @@ func TestConvertWordwrap(t *testing.T) {
 			wantStr:     "01234567890123456789",
 		},
 		{
+			name:        "long word spanning multiple rows followed by a word",
+			screenWidth: 5,
+			str:         "abcdefghijklmn op",
+			tabWidth:    4,
+			wantStr:     "abcdefghijklmn op",
+		},
+		{
+			name:        "long word spanning multiple rows then wrap to a new row",
+			screenWidth: 10,
+			str:         "aa bbbbbbbbbbbbbbbbbbbbbbbbb cc",
+			tabWidth:    4,
+			wantStr:     "aa bbbbbbbbbbbbbbbbbbbbbbbbb  cc",
+		},
+		{
 			name:        "escape sequence",
 			str:         "abc\x1b[31mdef\x1b[0mghi",
 			tabWidth:    4,
