@@ -601,6 +601,50 @@ func TestRoot_styleContent(t *testing.T) {
 	}
 }
 
+func TestDocument_setColumnWidthsSkipLines(t *testing.T) {
+	type fields struct {
+		SkipLines int
+	}
+	type want struct {
+		columnWidths int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   want
+	}{
+		{
+			name: "Test setColumnWidthsSkipLinesWithin",
+			fields: fields{
+				SkipLines: 1,
+			},
+			want: want{
+				columnWidths: 2,
+			},
+		},
+		{
+			name: "Test setColumnWidthsSkipLinesOverBuffer",
+			fields: fields{
+				SkipLines: 10,
+			},
+			want: want{
+				columnWidths: 0,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := docHelper(t, "a b c\nd e f\ng h i\n")
+			m.ColumnWidth = true
+			m.SkipLines = tt.fields.SkipLines
+			m.setColumnWidths()
+			if len(m.columnWidths) != tt.want.columnWidths {
+				t.Errorf("columnWidths len got: %d, want: %d", len(m.columnWidths), tt.want.columnWidths)
+			}
+		})
+	}
+}
+
 func TestRoot_searchHighlight(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	searchHighlight := tcell.StyleDefault.Reverse(true)
