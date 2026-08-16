@@ -502,6 +502,46 @@ func Test_allStringIndex(t *testing.T) {
 				{9, 10},
 			},
 		},
+		{
+			name: "testLeadingDoubleQuote",
+			args: args{
+				s:      `"a,b",c,d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{5, 6},
+				{7, 8},
+			},
+		},
+		{
+			name: "testLeadingDoubleQuoteOnly",
+			args: args{
+				s:      `"a,b"`,
+				substr: ",",
+			},
+			want: nil,
+		},
+		{
+			name: "testLeadingEmptyDoubleQuote",
+			args: args{
+				s:      `"",a,b`,
+				substr: ",",
+			},
+			want: [][]int{
+				{2, 3},
+				{4, 5},
+			},
+		},
+		{
+			name: "testLeadingUnclosedDoubleQuote",
+			args: args{
+				s:      `"a,b`,
+				substr: ",",
+			},
+			want: [][]int{
+				{2, 3},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

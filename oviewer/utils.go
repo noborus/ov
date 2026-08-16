@@ -69,26 +69,36 @@ func allIndex(s string, substr string, reg *regexp.Regexp) [][]int {
 }
 
 // allStringIndex returns all matching string positions.
+// Delimiters inside a double-quoted field are not treated as delimiters.
 func allStringIndex(s string, substr string) [][]int {
 	if len(substr) == 0 {
 		return nil
 	}
 	var result [][]int
 	width := len(substr)
-	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
+	offSet := 0
+	// The first field may also be quoted, so skip it before the first search.
+	if len(s) > 0 && s[0] == '"' {
+		s, offSet = skipQuoted(s, offSet)
+	}
+	for pos := strings.Index(s, substr); pos != -1; pos = strings.Index(s, substr) {
 		s = s[pos+width:]
 		result = append(result, []int{pos + offSet, pos + offSet + width})
 		offSet += pos + width
 
 		if len(s) > 0 && s[0] == '"' {
-			qpos := strings.Index(s[1:], `"`)
-			s = s[qpos+2:]
-			offSet += qpos + 2
+			s, offSet = skipQuoted(s, offSet)
 		}
-
-		pos = strings.Index(s, substr)
 	}
 	return result
+}
+
+// skipQuoted skips the double-quoted field at the beginning of s.
+// It returns the remainder of s and the updated offset.
+// If the quote is not closed, only the opening quote is skipped.
+func skipQuoted(s string, offSet int) (string, int) {
+	qpos := strings.Index(s[1:], `"`)
+	return s[qpos+2:], offSet + qpos + 2
 }
 
 // writeLine writes a line to w.
