@@ -3,7 +3,6 @@ package oviewer
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -2543,18 +2542,9 @@ func TestRoot_goLineNth(t *testing.T) {
 		tcellNewScreen = tcell.NewScreen
 	}()
 
-	// Each line is long enough to wrap into 10 lines on an 80 column screen.
-	fileName := filepath.Join(t.TempDir(), "wrap.txt")
-	var sb strings.Builder
-	for i := range 5 {
-		sb.WriteString(strings.Repeat(string(rune('a'+i)), 800))
-		sb.WriteString("\n")
-	}
-	if err := os.WriteFile(fileName, []byte(sb.String()), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	root := rootFileReadHelper(t, fileName)
+	// Each line in wrap5.txt is 800 characters, so it wraps into 10 lines on an
+	// 80 column screen.
+	root := rootFileReadHelper(t, filepath.Join(testdata, "wrap5.txt"))
 	root.Doc.WrapMode = true
 	root.prepareScreen()
 
