@@ -267,7 +267,10 @@ func (root *Root) goLine(input string) {
 
 	integerPart, fractionalPart := math.Modf(num)
 	lN := int(integerPart)
-	nTh := int(fractionalPart * 10)
+	// The fractional part is a single digit (the nTh wrapping line).
+	// Round instead of truncate, because float64 cannot represent values
+	// like 3.4 exactly (3.4 - 3 = 0.39999...), which would truncate to 3.
+	nTh := min(int(math.Round(fractionalPart*10)), 9)
 	if nTh == 0 {
 		lN = root.Doc.moveLine(lN - 1)
 		root.Doc.showGotoF = true
