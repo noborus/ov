@@ -502,6 +502,66 @@ func Test_allStringIndex(t *testing.T) {
 				{9, 10},
 			},
 		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := allStringIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("allIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_allDelimiterIndex(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		s      string
+		substr string
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:      "a,b,c",
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testNone",
+			args: args{
+				s:      "a,b,c",
+				substr: "@",
+			},
+			want: nil,
+		},
+		{
+			name: "testNoSubstr",
+			args: args{
+				s:      "a,b,c",
+				substr: "",
+			},
+			want: nil,
+		},
+		{
+			name: "testDoubleQuote",
+			args: args{
+				s:      `a,"b,c",d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{7, 8},
+			},
+		},
 		{
 			name: "testLeadingDoubleQuote",
 			args: args{
@@ -546,8 +606,8 @@ func Test_allStringIndex(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := allStringIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("allIndex() = %v, want %v", got, tt.want)
+			if got := allDelimiterIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("allDelimiterIndex() = %v, want %v", got, tt.want)
 			}
 		})
 	}

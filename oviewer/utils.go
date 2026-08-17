@@ -65,20 +65,20 @@ func allIndex(s string, substr string, reg *regexp.Regexp) [][]int {
 	if reg != nil {
 		return reg.FindAllStringIndex(s, -1)
 	}
-	return allStringIndex(s, substr)
+	return allDelimiterIndex(s, substr)
 }
 
-// allStringIndex returns all matching string positions.
-// Delimiters inside a double-quoted field are not treated as delimiters.
-func allStringIndex(s string, substr string) [][]int {
+// allDelimiterIndex returns all delimiter positions.
+// A delimiter inside a double-quoted field is part of the field, not a
+// delimiter, including when the quoted field is the first one on the line.
+func allDelimiterIndex(s string, substr string) [][]int {
 	if len(substr) == 0 {
 		return nil
 	}
 	var result [][]int
 	width := len(substr)
 	offSet := 0
-	// The first field may also be quoted, so skip it before the first search.
-	if len(s) > 0 && s[0] == '"' {
+	if strings.HasPrefix(s, `"`) {
 		s, offSet = skipQuoted(s, offSet)
 	}
 	for pos := strings.Index(s, substr); pos != -1; pos = strings.Index(s, substr) {
@@ -86,19 +86,42 @@ func allStringIndex(s string, substr string) [][]int {
 		result = append(result, []int{pos + offSet, pos + offSet + width})
 		offSet += pos + width
 
-		if len(s) > 0 && s[0] == '"' {
+		if strings.HasPrefix(s, `"`) {
 			s, offSet = skipQuoted(s, offSet)
 		}
 	}
 	return result
 }
 
-// skipQuoted skips the double-quoted field at the beginning of s.
-// It returns the remainder of s and the updated offset.
-// If the quote is not closed, only the opening quote is skipped.
+// skipQuoted skips the double-quoted field at the beginning of s and returns
+// the remainder with the updated offset. An unclosed quote skips only the
+// opening quote, which is what the delimiter search did before.
 func skipQuoted(s string, offSet int) (string, int) {
 	qpos := strings.Index(s[1:], `"`)
 	return s[qpos+2:], offSet + qpos + 2
+}
+
+// allStringIndex returns all matching string positions.
+func allStringIndex(s string, substr string) [][]int {
+	if len(substr) == 0 {
+		return nil
+	}
+	var result [][]int
+	width := len(substr)
+	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
+		s = s[pos+width:]
+		result = append(result, []int{pos + offSet, pos + offSet + width})
+		offSet += pos + width
+
+		if len(s) > 0 && s[0] == '"' {
+			qpos := strings.Index(s[1:], `"`)
+			s = s[qpos+2:]
+			offSet += qpos + 2
+		}
+
+		pos = strings.Index(s, substr)
+	}
+	return result
 }
 
 // writeLine writes a line to w.
