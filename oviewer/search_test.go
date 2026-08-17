@@ -827,12 +827,54 @@ func Test_sensitive_FindAll(t *testing.T) {
 			},
 			want: [][]int{{0, 1}, {2, 3}, {4, 5}},
 		},
+		{
+			// "İ" is 2 bytes but lowercases to the 1 byte "i",
+			// so the match position must still refer to the original string.
+			name: "testShrinkOnLower",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "İİ error here",
+			},
+			want: [][]int{{5, 10}},
+		},
+		{
+			// "Ⱥ" is 2 bytes but lowercases to the 3 byte "ⱥ".
+			name: "testGrowOnLower",
+			fields: fields{
+				searchWord:    "error",
+				searchReg:     regexpCompile("error", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: "Ⱥ error here",
+			},
+			want: [][]int{{3, 8}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			substr := NewSearcher(tt.fields.searchWord, tt.fields.searchReg, tt.fields.caseSensitive, tt.fields.regexpSearch)
-			if got := substr.FindAll(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+			got := substr.FindAll(tt.args.s)
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("sensitiveWord.FindAll() = %v, want %v", got, tt.want)
+			}
+			for _, idx := range got {
+				if tt.fields.regexpSearch {
+					break
+				}
+				if idx[1] > len(tt.args.s) {
+					t.Errorf("sensitiveWord.FindAll() index %v out of range of %q", idx, tt.args.s)
+					continue
+				}
+				if matched := tt.args.s[idx[0]:idx[1]]; !strings.EqualFold(matched, tt.fields.searchWord) {
+					t.Errorf("sensitiveWord.FindAll() matched %q, want %q", matched, tt.fields.searchWord)
+				}
 			}
 		})
 	}

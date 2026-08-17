@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"unicode"
+	"unicode/utf8"
 
 	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v3"
@@ -50,9 +51,51 @@ func (substr searchWord) MatchString(target string) bool {
 }
 
 // searchWord FindAll searches for strings and returns the index of the match.
+// The returned indexes are positions in target, not in its lowercased form,
+// because lowercasing can change the byte length of a rune (İ, K, ẞ...).
 func (substr searchWord) FindAll(target string) [][]int {
-	target = strings.ToLower(target)
-	return allStringIndex(target, substr.word)
+	lower, offsets := toLowerWithOffsets(target)
+	indexes := allStringIndex(lower, substr.word)
+	if offsets == nil {
+		return indexes
+	}
+	for _, idx := range indexes {
+		idx[0] = offsets[idx[0]]
+		idx[1] = offsets[idx[1]]
+	}
+	return indexes
+}
+
+// toLowerWithOffsets lowercases s the same way [strings.ToLower] does and also
+// returns a table that maps every byte offset of the result back to a byte
+// offset of s. The table is nil when s is ASCII only, since the offsets are
+// then identical and no mapping is needed.
+func toLowerWithOffsets(s string) (string, []int) {
+	if isASCII(s) {
+		return strings.ToLower(s), nil
+	}
+
+	lower := make([]byte, 0, len(s))
+	offsets := make([]int, 0, len(s)+1)
+	for i, r := range s {
+		n := len(lower)
+		lower = utf8.AppendRune(lower, unicode.ToLower(r))
+		for range len(lower) - n {
+			offsets = append(offsets, i)
+		}
+	}
+	offsets = append(offsets, len(s))
+	return string(lower), offsets
+}
+
+// isASCII returns true if s consists of ASCII bytes only.
+func isASCII(s string) bool {
+	for i := range len(s) {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
+	}
+	return true
 }
 
 // searchWord String returns the search word.
