@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -2532,5 +2533,31 @@ func TestRoot_toggleSidebarSections(t *testing.T) {
 	}
 	if root.sidebarMode != SidebarModeNone {
 		t.Errorf("toggleSidebarSections() sidebarMode = %v, want %v", root.sidebarMode, SidebarModeNone)
+	}
+}
+
+func TestRoot_goLineNth(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+
+	// Each line in wrap5.txt is 800 characters, so it wraps into 10 lines on an
+	// 80 column screen.
+	root := rootFileReadHelper(t, filepath.Join(testdata, "wrap5.txt"))
+	root.Doc.WrapMode = true
+	root.prepareScreen()
+
+	// "3.n" moves to line 3 and the nTh wrapping line of it.
+	for nTh := 1; nTh < 10; nTh++ {
+		input := fmt.Sprintf("3.%d", nTh)
+		root.goLine(input)
+		want := fmt.Sprintf("Moved to line 3.%d", nTh)
+		if root.message != want {
+			t.Errorf("goLine(%q) message = %q, want %q", input, root.message, want)
+		}
+		if wantX := nTh * 80; root.Doc.topLX != wantX {
+			t.Errorf("goLine(%q) topLX = %d, want %d", input, root.Doc.topLX, wantX)
+		}
 	}
 }
