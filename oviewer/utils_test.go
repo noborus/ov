@@ -513,6 +513,106 @@ func Test_allStringIndex(t *testing.T) {
 	}
 }
 
+func Test_allDelimiterIndex(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		s      string
+		substr string
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:      "a,b,c",
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+		},
+		{
+			name: "testNone",
+			args: args{
+				s:      "a,b,c",
+				substr: "@",
+			},
+			want: nil,
+		},
+		{
+			name: "testNoSubstr",
+			args: args{
+				s:      "a,b,c",
+				substr: "",
+			},
+			want: nil,
+		},
+		{
+			name: "testDoubleQuote",
+			args: args{
+				s:      `a,"b,c",d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{1, 2},
+				{7, 8},
+			},
+		},
+		{
+			name: "testLeadingDoubleQuote",
+			args: args{
+				s:      `"a,b",c,d`,
+				substr: ",",
+			},
+			want: [][]int{
+				{5, 6},
+				{7, 8},
+			},
+		},
+		{
+			name: "testLeadingDoubleQuoteOnly",
+			args: args{
+				s:      `"a,b"`,
+				substr: ",",
+			},
+			want: nil,
+		},
+		{
+			name: "testLeadingEmptyDoubleQuote",
+			args: args{
+				s:      `"",a,b`,
+				substr: ",",
+			},
+			want: [][]int{
+				{2, 3},
+				{4, 5},
+			},
+		},
+		{
+			name: "testLeadingUnclosedDoubleQuote",
+			args: args{
+				s:      `"a,b`,
+				substr: ",",
+			},
+			want: [][]int{
+				{2, 3},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := allDelimiterIndex(tt.args.s, tt.args.substr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("allDelimiterIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_abs(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

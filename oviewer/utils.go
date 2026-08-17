@@ -65,7 +65,40 @@ func allIndex(s string, substr string, reg *regexp.Regexp) [][]int {
 	if reg != nil {
 		return reg.FindAllStringIndex(s, -1)
 	}
-	return allStringIndex(s, substr)
+	return allDelimiterIndex(s, substr)
+}
+
+// allDelimiterIndex returns all delimiter positions.
+// A delimiter inside a double-quoted field is part of the field, not a
+// delimiter, including when the quoted field is the first one on the line.
+func allDelimiterIndex(s string, substr string) [][]int {
+	if len(substr) == 0 {
+		return nil
+	}
+	var result [][]int
+	width := len(substr)
+	offSet := 0
+	if strings.HasPrefix(s, `"`) {
+		s, offSet = skipQuoted(s, offSet)
+	}
+	for pos := strings.Index(s, substr); pos != -1; pos = strings.Index(s, substr) {
+		s = s[pos+width:]
+		result = append(result, []int{pos + offSet, pos + offSet + width})
+		offSet += pos + width
+
+		if strings.HasPrefix(s, `"`) {
+			s, offSet = skipQuoted(s, offSet)
+		}
+	}
+	return result
+}
+
+// skipQuoted skips the double-quoted field at the beginning of s and returns
+// the remainder with the updated offset. An unclosed quote skips only the
+// opening quote, which is what the delimiter search did before.
+func skipQuoted(s string, offSet int) (string, int) {
+	qpos := strings.Index(s[1:], `"`)
+	return s[qpos+2:], offSet + qpos + 2
 }
 
 // allStringIndex returns all matching string positions.
