@@ -80,10 +80,12 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 
 // processWord handles the placement of a word in the output.
 func (proc *wordWrapProcessor) processWord(srcWord contents) {
-	// Word is longer than screen width, add as-is and move to next line.
+	// Word is longer than screen width, add as-is and move to the row it ends on.
+	// The word can span several rows, so the row is recalculated from the output length
+	// instead of being incremented by one.
 	if len(srcWord) > proc.screenWidth {
 		proc.dst = append(proc.dst, srcWord...)
-		proc.row++
+		proc.row = (len(proc.dst) / proc.screenWidth) + 1
 		return
 	}
 
