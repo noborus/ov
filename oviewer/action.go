@@ -733,10 +733,16 @@ func (root *Root) setVerticalHeader(input string) {
 
 // setHeaderColumn sets the vertical header column position.
 func (root *Root) setHeaderColumn(input string) {
-	num, err := strconv.Atoi(input)
-	if err != nil {
-		root.setMessagef("Set vertical header column: %s", ErrInvalidNumber)
-		return
+	// Confirming the prompt with no input defaults to the first column,
+	// which is the value wanted in the vast majority of cases.
+	num := 1
+	if input != "" {
+		var err error
+		num, err = strconv.Atoi(input)
+		if err != nil {
+			root.setMessagef("Set vertical header column: %s", ErrInvalidNumber)
+			return
+		}
 	}
 	root.Doc.VerticalHeader = 0
 	if root.Doc.HeaderColumn == num {
