@@ -102,24 +102,18 @@ func skipQuoted(s string, offSet int) (string, int) {
 }
 
 // allStringIndex returns all matching string positions.
+// It is used by the plain text search, where a double quote is an ordinary
+// character, so every occurrence is reported.
 func allStringIndex(s string, substr string) [][]int {
 	if len(substr) == 0 {
 		return nil
 	}
 	var result [][]int
 	width := len(substr)
-	for pos, offSet := strings.Index(s, substr), 0; pos != -1; {
+	for pos, offSet := strings.Index(s, substr), 0; pos != -1; pos = strings.Index(s, substr) {
 		s = s[pos+width:]
 		result = append(result, []int{pos + offSet, pos + offSet + width})
 		offSet += pos + width
-
-		if len(s) > 0 && s[0] == '"' {
-			qpos := strings.Index(s[1:], `"`)
-			s = s[qpos+2:]
-			offSet += qpos + 2
-		}
-
-		pos = strings.Index(s, substr)
 	}
 	return result
 }

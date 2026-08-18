@@ -481,6 +481,8 @@ func Test_allStringIndex(t *testing.T) {
 			want: nil,
 		},
 		{
+			// A double quote has no special meaning here, so the delimiter
+			// inside the quoted field is reported as well.
 			name: "testDoubleQuote",
 			args: args{
 				s:      `a,"b,c",d`,
@@ -488,6 +490,7 @@ func Test_allStringIndex(t *testing.T) {
 			},
 			want: [][]int{
 				{1, 2},
+				{4, 5},
 				{7, 8},
 			},
 		},
@@ -500,6 +503,32 @@ func Test_allStringIndex(t *testing.T) {
 			want: [][]int{
 				{1, 2},
 				{9, 10},
+			},
+		},
+		{
+			// A match immediately followed by a double quote must not hide the
+			// matches inside the quoted section.
+			name: "testMatchBeforeQuote",
+			args: args{
+				s:      `msg="a=b" level=info`,
+				substr: "=",
+			},
+			want: [][]int{
+				{3, 4},
+				{6, 7},
+				{15, 16},
+			},
+		},
+		{
+			name: "testMatchInsideQuote",
+			args: args{
+				s:      `a"a"a`,
+				substr: "a",
+			},
+			want: [][]int{
+				{0, 1},
+				{2, 3},
+				{4, 5},
 			},
 		},
 	}

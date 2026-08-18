@@ -798,6 +798,35 @@ func Test_sensitive_FindAll(t *testing.T) {
 			},
 			want: [][]int{{0, 3}},
 		},
+		{
+			// A double quote is an ordinary character in a plain text search,
+			// so a match immediately before one must not hide the matches
+			// inside the quoted section.
+			name: "testQuoted",
+			fields: fields{
+				searchWord:    "=",
+				searchReg:     regexpCompile("=", true),
+				caseSensitive: true,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: `msg="a=b" level=info`,
+			},
+			want: [][]int{{3, 4}, {6, 7}, {15, 16}},
+		},
+		{
+			name: "testQuotedInsensitive",
+			fields: fields{
+				searchWord:    "A",
+				searchReg:     regexpCompile("A", false),
+				caseSensitive: false,
+				regexpSearch:  false,
+			},
+			args: args{
+				s: `a"a"a`,
+			},
+			want: [][]int{{0, 1}, {2, 3}, {4, 5}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
