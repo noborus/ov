@@ -40,18 +40,18 @@ type searchWord struct {
 // searchWord Match is a case-insensitive search for bytes.
 func (substr searchWord) Match(target []byte) bool {
 	target = stripEscapeSequenceBytes(target)
-	return bytes.Contains(bytes.ToLower(target), []byte(substr.word))
+	return bytes.Contains(lowercase(target), []byte(substr.word))
 }
 
 // searchWord MatchString is a case-insensitive search for string.
 func (substr searchWord) MatchString(target string) bool {
 	target = stripEscapeSequenceString(target)
-	return strings.Contains(strings.ToLower(target), substr.word)
+	return strings.Contains(lowercaseString(target), substr.word)
 }
 
 // searchWord FindAll searches for strings and returns the index of the match.
 func (substr searchWord) FindAll(target string) [][]int {
-	target = strings.ToLower(target)
+	target = lowercaseString(target)
 	return allStringIndex(target, substr.word)
 }
 

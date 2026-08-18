@@ -181,3 +181,19 @@ func firstRune(s string) rune {
 	}
 	return []rune(s)[0]
 }
+
+func lowercaseString(input string) string {
+	lower := lowercase([]byte(input))
+	return string(lower)
+}
+
+func lowercase(input []byte) []byte {
+	lower := make([]byte, len(input))
+	for i, c := range input {
+		if 'A' <= c && c <= 'Z' {
+			c += 32
+		}
+		lower[i] = c
+	}
+	return lower
+}
