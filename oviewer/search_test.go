@@ -278,6 +278,27 @@ func Test_regexpWord_Match(t *testing.T) {
 	}
 }
 
+func Test_needsCaseInsensitiveSearch(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name string
+		word string
+		want bool
+	}{
+		{name: "digits only", word: "123", want: false},
+		{name: "lowercase ascii", word: "abc", want: true},
+		{name: "uppercase ascii", word: "ABC", want: true},
+		{name: "mixed ascii", word: "A-1", want: true},
+		{name: "non ascii letter", word: "é", want: false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := needsCaseInsensitiveSearch(tt.word); got != tt.want {
+				t.Fatalf("needsCaseInsensitiveSearch(%q) = %v, want %v", tt.word, got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_getSearchMatch(t *testing.T) {
 	t.Parallel()
 	type args struct {

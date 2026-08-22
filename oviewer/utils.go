@@ -197,3 +197,13 @@ func lowercase(input []byte) []byte {
 	}
 	return lower
 }
+
+// needsCaseInsensitiveSearch checks if the word contains any alphabetic characters (A-Z or a-z).
+func needsCaseInsensitiveSearch(word string) bool {
+	for _, c := range word {
+		if ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') {
+			return true
+		}
+	}
+	return false
+}

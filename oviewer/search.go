@@ -21,6 +21,10 @@ import (
 
 // Searcher interface provides a match method that determines
 // if the search word matches the argument string.
+//
+// MatchString is kept for API symmetry and test coverage, but the runtime
+// search path uses Match on []byte because it avoids string allocation and is
+// the hot path used during chunk/line scanning.
 type Searcher interface {
 	// Match searches for bytes.
 	Match(target []byte) bool
@@ -128,14 +132,13 @@ func NewSearcher(word string, searchReg *regexp.Regexp, caseSensitive bool, rege
 			word: word,
 		}
 	}
-	// Use sensitiveWord when not needed.
-	if strings.ToLower(word) == strings.ToUpper(word) {
-		return sensitiveWord{
-			word: word,
+	if needsCaseInsensitiveSearch(word) {
+		return searchWord{
+			word: lowercaseString(word),
 		}
 	}
-	return searchWord{
-		word: strings.ToLower(word),
+	return sensitiveWord{
+		word: word,
 	}
 }
 
