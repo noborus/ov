@@ -533,7 +533,7 @@ func (root *Root) sendCopySelect() {
 }
 
 // copyToClipboard writes the selection to the clipboard.
-func (root *Root) copyToClipboard(_ context.Context) {
+func (root *Root) copyToClipboard(ctx context.Context) {
 	str, err := root.rangeToString(root.scr.x1, root.scr.y1, root.scr.x2, root.scr.y2)
 	if err != nil {
 		root.debugMessage("copyToClipboard: " + err.Error())
@@ -543,21 +543,22 @@ func (root *Root) copyToClipboard(_ context.Context) {
 		return
 	}
 
-	root.copyClipboard(str)
+	root.copyClipboard(ctx, str)
 	root.setMessage("Copy")
 }
 
 // copyClipboard copies the string to the clipboard.
 // The method of copying to the clipboard is determined by the configuration.
 // Supported methods: "OSC52" (terminal escape sequence), "system" (native clipboard).
-func (root *Root) copyClipboard(str string) {
+func (root *Root) copyClipboard(ctx context.Context, str string) {
 	switch root.Config.ClipboardMethod {
 	case "OSC52":
 		root.Screen.SetClipboard([]byte(str))
-	case "system":
-		clipboard.Write(clipboard.FmtText, []byte(str))
-	default:
-		clipboard.Write(clipboard.FmtText, []byte(str))
+	default: // "system" (use system clipboard)
+		_, err := clipboard.Write(ctx, clipboard.FmtText, []byte(str))
+		if err != nil {
+			root.debugMessage("copyClipboard: " + err.Error())
+		}
 	}
 }
 
@@ -577,13 +578,17 @@ func (root *Root) sendPaste() {
 }
 
 // pasteFromClipboard writes a string from the clipboard.
-func (root *Root) pasteFromClipboard(context.Context) {
+func (root *Root) pasteFromClipboard(ctx context.Context) {
 	input := root.input
 	if input.Event.Mode() == Normal {
 		return
 	}
 
-	buf := clipboard.Read(clipboard.FmtText)
+	buf, err := clipboard.Read(ctx, clipboard.FmtText)
+	if err != nil {
+		root.debugMessage("pasteFromClipboard: " + err.Error())
+		return
+	}
 	str := string(buf)
 	left, right := splitAtWidth(input.value, input.cursorX)
 	input.value = left + str + right
