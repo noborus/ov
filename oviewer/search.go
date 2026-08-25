@@ -732,13 +732,12 @@ func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
 	// Read the chunk line by line.
 	reader := bufio.NewReader(m.file)
 	var line bytes.Buffer
-	var isPrefix bool
 	num := 0
 	for num < ChunkSize {
 		// Read a line.
 		buf, err := reader.ReadSlice('\n')
-		if errors.Is(err, bufio.ErrBufferFull) {
-			isPrefix = true
+		isPrefix := errors.Is(err, bufio.ErrBufferFull)
+		if isPrefix {
 			err = nil
 		}
 		line.Write(buf)
