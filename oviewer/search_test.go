@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -11,6 +12,25 @@ import (
 	"codeberg.org/tslocum/cbind"
 	"github.com/gdamore/tcell/v3"
 )
+
+func TestDocument_searchChunk_LongLine(t *testing.T) {
+	fileName := filepath.Join(t.TempDir(), "long-line.txt")
+	const needle = "match-at-the-end"
+	contents := strings.Repeat("x", 8192) + needle + "\n"
+	if err := os.WriteFile(fileName, []byte(contents), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	root := rootFileReadHelper(t, fileName)
+	searcher := NewSearcher(needle, regexpCompile(needle, false), false, false)
+	got, err := root.Doc.searchChunk(0, searcher)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 0 {
+		t.Errorf("searchChunk() = %d, want 0", got)
+	}
+}
 
 func TestRoot_Search(t *testing.T) {
 	tcellNewScreen = fakeScreen
