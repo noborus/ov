@@ -22,6 +22,7 @@ func TestDocument_searchChunk_LongLine(t *testing.T) {
 	}
 
 	root := rootFileReadHelper(t, fileName)
+	defer root.Doc.close()
 	searcher := NewSearcher(needle, regexpCompile(needle, false), false, false)
 	got, err := root.Doc.searchChunk(0, searcher)
 	if err != nil {
