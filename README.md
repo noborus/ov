@@ -1812,6 +1812,11 @@ For example, you can set different colors or styles for the Help and Log screens
 
 You can customize key bindings.
 
+The keys specified for an action replace its default keys; they are not added to
+the defaults. Other actions keep their default keys. If a key is assigned to
+more than one action, the key has an ambiguous action. The duplicate is
+reported in the Help screen and by `--help-key`.
+
 [Example]
 
 ```yaml
@@ -1822,6 +1827,30 @@ You can customize key bindings.
     up:
         - "Up"
         - "Ctrl+p"
+```
+
+For example, to use `j` and `k` for moving down and up, also remove the default
+`j` binding for the jump target action:
+
+```yaml
+KeyBind:
+  down:
+    - "Down"
+    - "j"
+  up:
+    - "Up"
+    - "k"
+  jump_target: []
+```
+
+To disable all default key bindings and enable only the bindings specified in
+the configuration file, set `DefaultKeyBind` to `disable`:
+
+```yaml
+DefaultKeyBind: "disable"
+KeyBind:
+  exit:
+    - "q"
 ```
 
 See [ov.yaml](https://github.com/noborus/ov/blob/master/ov.yaml) for more information.
