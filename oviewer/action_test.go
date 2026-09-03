@@ -1975,18 +1975,18 @@ func TestRoot_setHeaderColumn(t *testing.T) {
 		want int
 	}{
 		{
-			name: "testSetHeaderColumnNil",
-			args: args{
-				input: "",
-			},
-			want: 0,
-		},
-		{
 			name: "testSetHeaderColumnInvalid",
 			args: args{
 				input: "invalid",
 			},
 			want: 0,
+		},
+		{
+			name: "testSetHeaderColumnEmptyDefaultsToOne",
+			args: args{
+				input: "",
+			},
+			want: 1,
 		},
 		{
 			name: "testSetHeaderColumn1",
