@@ -47,6 +47,7 @@ func DefaultKeyBinds() KeyBind {
 		actionRightAlign:     {"alt+a"},
 		actionRuler:          {"alt+shift+F9"},
 		actionWriteOriginal:  {"alt+shift+F8"},
+		actionUnHighlight:    {"ctrl+alt+u"},
 		actionStatusLine:     {"ctrl+F10"},
 
 		// Move actions.

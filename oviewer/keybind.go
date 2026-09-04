@@ -96,6 +96,7 @@ const (
 	actionAlignFormat = "align_format"
 	actionRawFormat   = "raw_format"
 	actionRuler       = "toggle_ruler"
+	actionUnHighlight = "un_highlight"
 	actionStatusLine  = "status_line"
 
 	// Change Display with Input
@@ -227,6 +228,7 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionAlignFormat: root.alignFormat,
 		actionRawFormat:   root.rawFormat,
 		actionRuler:       root.toggleRuler,
+		actionUnHighlight: root.unHighlight,
 		actionStatusLine:  root.toggleStatusLine,
 
 		// Change Display with Input
@@ -431,6 +433,7 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupChange, Action: actionAlignFormat, Description: "align columns"},
 	{Group: GroupChange, Action: actionRawFormat, Description: "toggle raw output mode"},
 	{Group: GroupChange, Action: actionRuler, Description: "ruler toggle"},
+	{Group: GroupChange, Action: actionUnHighlight, Description: "unhighlight search results until the next search"},
 	{Group: GroupChange, Action: actionStatusLine, Description: "status line toggle"},
 	{Group: GroupChange, Action: actionStyleToggle, Description: "suppress style highlight by number"},
 

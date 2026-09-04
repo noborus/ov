@@ -73,6 +73,8 @@ type Root struct {
 
 	// searchOpt is the search option.
 	searchOpt string
+	// undoHighlight indicates whether highlighting should be undone until the next search.
+	undoHighlight bool
 
 	// message is the message to display.
 	message string
