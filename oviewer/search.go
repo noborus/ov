@@ -583,6 +583,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 		return
 	}
 
+	root.undoHighlight = false
 	lineNum := root.startSearchLN()
 	ctx = root.cancelRestart(ctx)
 	go func() {
