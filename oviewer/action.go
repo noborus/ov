@@ -154,6 +154,11 @@ func (root *Root) toggleStatusLine(context.Context) {
 	}
 }
 
+// unHighlight disables highlighting until the next search.
+func (root *Root) unHighlight(context.Context) {
+	root.undoHighlight = true
+}
+
 // toggleRuler cycles through the ruler types (None, Relative, Absolute) each time it is called.
 func (root *Root) toggleRuler(ctx context.Context) {
 	switch root.Doc.RulerType {

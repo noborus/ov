@@ -583,6 +583,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 		return
 	}
 
+	root.undoHighlight = false
 	lineNum := root.startSearchLN()
 	ctx = root.cancelRestart(ctx)
 	go func() {
@@ -679,12 +680,14 @@ func (root *Root) sendFirstSearch(value string, t searchType) {
 
 // forwardSearch performs the forward search.
 func (root *Root) forwardSearch(ctx context.Context, str string, next int) {
+	root.undoHighlight = false
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
 	root.searchMove(ctx, true, root.startSearchLN()+next, searcher)
 }
 
 // backSearch performs the back search.
 func (root *Root) backSearch(ctx context.Context, str string, next int) {
+	root.undoHighlight = false
 	searcher := root.setSearcher(str, root.Config.CaseSensitive)
 	root.searchMove(ctx, false, root.startSearchLN()+next, searcher)
 }

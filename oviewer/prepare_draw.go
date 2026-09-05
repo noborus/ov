@@ -550,6 +550,9 @@ func (root *Root) multiColorHighlight(lineC LineC) {
 // searchHighlight applies the style of the search highlight.
 // Apply style to contents.
 func (root *Root) searchHighlight(lineC LineC) {
+	if root.undoHighlight {
+		return
+	}
 	if root.searcher == nil || root.searcher.String() == "" {
 		return
 	}
