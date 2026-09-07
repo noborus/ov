@@ -1,6 +1,6 @@
 module github.com/noborus/ov
 
-go 1.25.0
+go 1.26.0
 
 require (
 	codeberg.org/tslocum/cbind v0.1.9
@@ -10,7 +10,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jwalton/gchalk v1.3.0
-	github.com/klauspost/compress v1.19.2
+	github.com/klauspost/compress v1.20.0
 	github.com/noborus/guesswidth v0.5.0
 	github.com/noborus/tcellansi v0.4.1
 	github.com/pierrec/lz4/v4 v4.1.29
