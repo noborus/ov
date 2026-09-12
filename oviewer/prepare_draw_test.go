@@ -645,6 +645,52 @@ func TestDocument_setColumnWidthsSkipLines(t *testing.T) {
 	}
 }
 
+func TestDocument_setColumnWidthsEscapeSequence(t *testing.T) {
+	// The column widths are used against the parsed contents,
+	// so escape sequences must not shift the guessed boundaries.
+	plain := "NAME    AGE   CITY\n" +
+		"alice   30    paris\n" +
+		"bob     25    tokyo\n" +
+		"carol   41    lima\n"
+	pm := docHelper(t, plain)
+	pm.ColumnWidth = true
+	pm.setColumnWidths()
+	want := pm.columnWidths
+	if len(want) == 0 {
+		t.Fatal("plain columnWidths is empty")
+	}
+
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{
+			name: "sgr",
+			content: "NAME    \x1b[31mAGE\x1b[0m   CITY\n" +
+				"alice   \x1b[31m30\x1b[0m    paris\n" +
+				"bob     \x1b[31m25\x1b[0m    tokyo\n" +
+				"carol   \x1b[31m41\x1b[0m    lima\n",
+		},
+		{
+			name: "overstrike",
+			content: "NAME    AGE   CITY\n" +
+				"a\bal\bli\bic\bce\be   30    paris\n" +
+				"b\bbo\bob\bb     25    tokyo\n" +
+				"c\bca\bar\bro\bol\bl   41    lima\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := docHelper(t, tt.content)
+			m.ColumnWidth = true
+			m.setColumnWidths()
+			if !reflect.DeepEqual(m.columnWidths, want) {
+				t.Errorf("columnWidths got: %v, want: %v", m.columnWidths, want)
+			}
+		})
+	}
+}
+
 func TestRoot_searchHighlight(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	searchHighlight := tcell.StyleDefault.Reverse(true)

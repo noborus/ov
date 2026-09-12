@@ -789,7 +789,8 @@ func (m *Document) setColumnWidths() {
 	lines := m.store.chunks[0].lines[m.SkipLines:tl]
 	buf := make([]string, len(lines))
 	for n, line := range lines {
-		buf[n] = string(line)
+		// Strip escape sequences because the guessed widths are used against the parsed contents.
+		buf[n] = string(stripEscapeSequenceBytes(line))
 	}
 	// Stop guessing if valid row count is not reached.
 	if !m.BufEOF() && len(buf) < 20 {
