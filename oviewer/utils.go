@@ -148,7 +148,7 @@ func writeLine(w io.Writer, line []byte) {
 var stripRegexpES = regexp.MustCompile("(\x1b\\[[\\d;*]*m)|.\\x08")
 
 func stripEscapeSequenceString(src string) string {
-	if !strings.ContainsAny(src, "\x1b\\x08") {
+	if !strings.ContainsAny(src, "\x1b\x08") {
 		return src
 	}
 	// Remove EscapeSequence.

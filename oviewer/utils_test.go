@@ -706,3 +706,71 @@ func Test_abs(t *testing.T) {
 		})
 	}
 }
+
+func Test_stripEscapeSequenceString(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		src string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "testEmpty",
+			args: args{
+				src: "",
+			},
+			want: "",
+		},
+		{
+			name: "testPlain",
+			args: args{
+				src: "plain text",
+			},
+			want: "plain text",
+		},
+		{
+			name: "testSGR",
+			args: args{
+				src: "\x1b[31mred\x1b[m",
+			},
+			want: "red",
+		},
+		{
+			name: "testBackspace",
+			args: args{
+				src: "ab\bc",
+			},
+			want: "ac",
+		},
+		{
+			name: "testOverstrikeUnderline",
+			args: args{
+				src: "_\bp_\ba_\bg",
+			},
+			want: "pag",
+		},
+		{
+			name: "testOverstrikeBold",
+			args: args{
+				src: "p\bpa\bag\bg",
+			},
+			want: "pag",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := stripEscapeSequenceString(tt.args.src)
+			if got != tt.want {
+				t.Errorf("stripEscapeSequenceString() = %q, want %q", got, tt.want)
+			}
+			// The string and byte versions must agree on every input.
+			if gotBytes := string(stripEscapeSequenceBytes([]byte(tt.args.src))); gotBytes != got {
+				t.Errorf("stripEscapeSequenceBytes() = %q, want %q", gotBytes, got)
+			}
+		})
+	}
+}
