@@ -361,6 +361,62 @@ func Test_align_convertWidth(t *testing.T) {
 			want: "a   b   c   d   e   f",
 		},
 		{
+			name: "convertAlignWidthBlank1",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b     d  e  f", 8),
+			},
+			want: "a   b       d   e   f",
+		},
+		{
+			name: "convertAlignWidthBlank2",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("   b  c  d  e  f", 8),
+			},
+			want: "    b   c   d   e   f",
+		},
+		{
+			name: "convertAlignWidthShortRow",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b", 8),
+			},
+			want: "a   b   ",
+		},
+		{
+			name: "convertAlignWidthEmptyLine",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{3, 3, 3, 3, 3},
+				orgWidths: []int{2, 5, 8, 11, 14},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("", 8),
+			},
+			want: "",
+		},
+		{
 			name: "convertAlignWidthShrink1",
 			fields: fields{
 				es:        newESConverter(),

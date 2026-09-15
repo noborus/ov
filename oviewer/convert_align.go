@@ -185,10 +185,14 @@ func (a *align) convertWidth(src contents) contents {
 		// content column.
 		tStart := findStartWithTrim(src, start)
 		tEnd := findEndWidthTrim(src, end)
-		// If the column width is 0, skip.
 		if tStart >= tEnd {
-			start = end
-			continue
+			if start >= end {
+				// The line ends before this column, so there is nothing to pad.
+				start = end
+				continue
+			}
+			// Blank column. Emit only the padding so the columns after it are not shifted.
+			tStart, tEnd = start, start
 		}
 		dst = a.appendColumn(dst, columnNum, src[tStart:tEnd])
 		dst = append(dst, SpaceContent)
