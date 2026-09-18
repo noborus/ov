@@ -21,14 +21,15 @@
   * 2.6. [pkg (FreeBSD)](#pkg-(freebsd))
   * 2.7. [Arch Linux](#arch-linux)
   * 2.8. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
-  * 2.9. [Binary](#binary)
-  * 2.10. [go install](#go-install)
-  * 2.11. [Build from source](#build-from-source)
-  * 2.12. [Completion](#completion)
-    * 2.12.1. [bash](#bash)
-    * 2.12.2. [zsh](#zsh)
-    * 2.12.3. [fish](#fish)
-    * 2.12.4. [powershell](#powershell)
+  * 2.9. [conda-forge (Linux, windows, or macOS)](#conda-forge-(linux,-windows,-or-macos))
+  * 2.10. [Binary](#binary)
+  * 2.11. [go install](#go-install)
+  * 2.12. [Build from source](#build-from-source)
+  * 2.13. [Completion](#completion)
+    * 2.13.1. [bash](#bash)
+    * 2.13.2. [zsh](#zsh)
+    * 2.13.3. [fish](#fish)
+    * 2.13.4. [powershell](#powershell)
 * 3. [Basic usage](#basic-usage)
 * 4. [Usage](#usage)
   * 4.1. [Config](#config)
@@ -197,7 +198,21 @@ if you use flakes, or using nix-env otherwise:
 nix-env -iA nixpkgs.ov
 ```
 
-###  2.9. <a name='binary'></a>Binary
+###  2.9. <a name='conda-forge-(linux,-windows,-or-macos)'></a>conda-forge (Linux, windows, or macOS)
+
+ov is available as a conda-forge package. You can install it with
+
+```console
+conda install ov -c conda-forge
+```
+or
+
+```console
+pixi global install ov
+```
+
+
+###  2.10. <a name='binary'></a>Binary
 
 You can download the binary from [releases](https://github.com/noborus/ov/releases).
 
@@ -207,7 +222,7 @@ unzip ov_x.x.x_linux_amd64.zip
 sudo install ov /usr/local/bin
 ```
 
-###  2.10. <a name='go-install'></a>go install
+###  2.11. <a name='go-install'></a>go install
 
 It will be installed in $GOPATH/bin by the following command.
 
@@ -221,7 +236,7 @@ Or to install the latest commit from master:
 go install github.com/noborus/ov@master
 ```
 
-###  2.11. <a name='build-from-source'></a>Build from source
+###  2.12. <a name='build-from-source'></a>Build from source
 
 First of all, clone this repo with either `git clone` or `gh repo clone`, then `cd` to the directory, for example:
 
@@ -244,17 +259,17 @@ make
 sudo install ov /usr/local/bin
 ```
 
-###  2.12. <a name='completion'></a>Completion
+###  2.13. <a name='completion'></a>Completion
 
 You can generate completion scripts for bash, zsh, fish, and powershell.
 
-####  2.12.1. <a name='bash'></a>bash
+####  2.13.1. <a name='bash'></a>bash
 
 ```console
 ov --completion bash > /etc/bash_completion.d/ov
 ```
 
-####  2.12.2. <a name='zsh'></a>zsh
+####  2.13.2. <a name='zsh'></a>zsh
 
 ```console
 ov --completion zsh > /usr/share/zsh/site-functions/_ov
@@ -266,13 +281,13 @@ For zinit users.
 zinit load 'https://github.com/noborus/ov/blob/master/ov.plugin.zsh'
 ```
 
-####  2.12.3. <a name='fish'></a>fish
+####  2.13.3. <a name='fish'></a>fish
 
 ```console
 ov --completion fish > ~/.config/fish/completions/ov.fish
 ```
 
-####  2.12.4. <a name='powershell'></a>powershell
+####  2.13.4. <a name='powershell'></a>powershell
 
 ```console
 ov --completion powershell | Out-String | Invoke-Expression
