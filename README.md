@@ -21,15 +21,15 @@
   * 2.6. [pkg (FreeBSD)](#pkg-(freebsd))
   * 2.7. [Arch Linux](#arch-linux)
   * 2.8. [nix (nixOS, Linux, or macOS)](#nix-(nixos,-linux,-or-macos))
-  * 2.9. [conda-forge (Linux, macOS or windows)](#conda-forge)
-  * 2.9. [Binary](#binary)
-  * 2.10. [go install](#go-install)
-  * 2.11. [Build from source](#build-from-source)
-  * 2.12. [Completion](#completion)
-    * 2.12.1. [bash](#bash)
-    * 2.12.2. [zsh](#zsh)
-    * 2.12.3. [fish](#fish)
-    * 2.12.4. [powershell](#powershell)
+  * 2.9. [conda-forge (Linux, windows, or macOS)](#conda-forge-(linux,-windows,-or-macos))
+  * 2.10. [Binary](#binary)
+  * 2.11. [go install](#go-install)
+  * 2.12. [Build from source](#build-from-source)
+  * 2.13. [Completion](#completion)
+    * 2.13.1. [bash](#bash)
+    * 2.13.2. [zsh](#zsh)
+    * 2.13.3. [fish](#fish)
+    * 2.13.4. [powershell](#powershell)
 * 3. [Basic usage](#basic-usage)
 * 4. [Usage](#usage)
   * 4.1. [Config](#config)
@@ -198,7 +198,7 @@ if you use flakes, or using nix-env otherwise:
 nix-env -iA nixpkgs.ov
 ```
 
-###  2.9. <a name='conda-forge'></a>conda-forge (Linux, windows, or macOS)
+###  2.9. <a name='conda-forge-(linux,-windows,-or-macos)'></a>conda-forge (Linux, windows, or macOS)
 
 ov is available as a conda-forge package. You can install it with
 
