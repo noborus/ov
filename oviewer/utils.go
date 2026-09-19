@@ -11,13 +11,6 @@ import (
 	"strings"
 )
 
-// remove removes all occurrences of the specified value from slice.
-func remove[T comparable](list []T, s T) []T {
-	return slices.DeleteFunc(list, func(v T) bool {
-		return v == s
-	})
-}
-
 // abs returns the absolute value of an integer.
 func abs(n int) int {
 	if n < 0 {
