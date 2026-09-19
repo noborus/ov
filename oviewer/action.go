@@ -241,7 +241,7 @@ func (root *Root) searchGo(ctx context.Context, lN int, searcher Searcher) {
 	root.setPauseFollow()
 	root.resetSelect()
 	root.Doc.lastSearchLN = lN
-	start, end := root.searchXPos(lN, searcher)
+	start, end := root.searchXPos(searcher, lN)
 	if root.Doc.jumpTargetSection {
 		root.Doc.searchGoSection(ctx, lN, start, end)
 		return

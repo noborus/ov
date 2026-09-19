@@ -234,7 +234,7 @@ func TestDocument_requestSearch(t *testing.T) {
 				t.Errorf("Document.ControlFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			m.WaitEOF()
-			if got := m.requestSearch(tt.fields.chunkNum, searcher); got != tt.want {
+			if got := m.requestSearch(searcher, tt.fields.chunkNum); got != tt.want {
 				t.Errorf("Document.requestSearch() = %v, want %v", got, tt.want)
 			}
 		})

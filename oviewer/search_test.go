@@ -24,7 +24,7 @@ func TestDocument_searchChunk_LongLine(t *testing.T) {
 	root := rootFileReadHelper(t, fileName)
 	defer root.Doc.close()
 	searcher := NewSearcher(needle, regexpCompile(needle, false), false, false)
-	got, err := root.Doc.searchChunk(0, searcher)
+	got, err := root.Doc.searchChunk(searcher, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -687,8 +687,8 @@ func Test_condRegexpCompile(t *testing.T) {
 func TestDocument_searchChunk(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		chunkNum int
 		searcher Searcher
+		chunkNum int
 	}
 	tests := []struct {
 		name     string
@@ -701,8 +701,8 @@ func TestDocument_searchChunk(t *testing.T) {
 			name:     "testNotFound",
 			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
-				chunkNum: 0,
 				searcher: NewSearcher("test", regexpCompile("test", false), false, false),
+				chunkNum: 0,
 			},
 			want:    0,
 			wantErr: true,
@@ -711,8 +711,8 @@ func TestDocument_searchChunk(t *testing.T) {
 			name:     "testFound",
 			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
-				chunkNum: 0,
 				searcher: NewSearcher("error", regexpCompile("error", false), true, false),
+				chunkNum: 0,
 			},
 			want:    3,
 			wantErr: false,
@@ -721,8 +721,8 @@ func TestDocument_searchChunk(t *testing.T) {
 			name:     "testCaseSensitive",
 			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
-				chunkNum: 0,
 				searcher: NewSearcher("EXCEPTION", regexpCompile("EXCEPTION", false), true, false),
+				chunkNum: 0,
 			},
 			want:    0,
 			wantErr: true,
@@ -731,8 +731,8 @@ func TestDocument_searchChunk(t *testing.T) {
 			name:     "testRegexp",
 			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
-				chunkNum: 0,
 				searcher: NewSearcher("error", regexpCompile("error", true), true, true),
+				chunkNum: 0,
 			},
 			want:    3,
 			wantErr: false,
@@ -741,8 +741,8 @@ func TestDocument_searchChunk(t *testing.T) {
 			name:     "testEnd",
 			fileName: filepath.Join(testdata, "ct.log"),
 			args: args{
-				chunkNum: 0,
 				searcher: NewSearcher("\\.$", regexpCompile("\\.$", true), true, true),
+				chunkNum: 0,
 			},
 			want:    0,
 			wantErr: false,
@@ -752,7 +752,7 @@ func TestDocument_searchChunk(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			m := docFileReadHelper(t, tt.fileName)
-			got, err := m.searchChunk(tt.args.chunkNum, tt.args.searcher)
+			got, err := m.searchChunk(tt.args.searcher, tt.args.chunkNum)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Document.searchChunk() error = %v, wantErr %v", err, tt.wantErr)
 				return
