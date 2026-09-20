@@ -26,6 +26,8 @@ type RunTimeSettings struct {
 
 	// TabWidth is tab stop num.
 	TabWidth int
+	// WrapIndent is the indent of the lines a long line is wrapped onto.
+	WrapIndent int
 	// Header is number of header lines to be fixed.
 	Header int
 	// VerticalHeader is the number of vertical header lines.
@@ -306,6 +308,7 @@ func applyIfSet[T any](base *T, override *T) {
 // updateRunTimeSettings updates the RunTimeSettings.
 func updateRunTimeSettings(base RunTimeSettings, override General) RunTimeSettings {
 	applyIfSet(&base.TabWidth, override.TabWidth)
+	applyIfSet(&base.WrapIndent, override.WrapIndent)
 	applyIfSet(&base.Header, override.Header)
 	applyIfSet(&base.VerticalHeader, override.VerticalHeader)
 	applyIfSet(&base.HeaderColumn, override.HeaderColumn)

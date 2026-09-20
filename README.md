@@ -500,6 +500,22 @@ Word wrap has been added and the method of specification has changed.
 
 Toggle word wrap with default key `Alt+w`.
 
+Wrapped lines can be indented so that they are easier to tell apart from the
+lines that follow them. `--wrap-indent` takes the number of columns to indent
+by and defaults to `0`.
+
+```console
+ov --wrap=word --wrap-indent=4 test.txt
+```
+
+The same value can be set in the configuration file.
+
+```yaml
+General:
+  Wrap: "word"
+  WrapIndent: 4
+```
+
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) (default key `C`) option
@@ -1403,6 +1419,7 @@ MemoryLimit: 1000
 | -m,   | --view-mode string                         | apply predefined settings for a specific mode                                                                         |
 | -T,   | --watch seconds                            | re-read and refresh the view every N seconds                                                                          |
 | -w,   | --wrap string                              | wrap long lines [char\|word]                                                                                          |
+|       | --wrap-indent int                          | number of columns to indent wrapped lines                                                                             |
 
 It can also be changed after startup.
 
@@ -1911,6 +1928,7 @@ Mode:
 | JumpTarget          | Specify jump target line or position                      | `JumpTarget: "10"`              |
 | MultiColorWords     | Words to highlight (array)                                | `MultiColorWords: ["ERROR", "WARN"]` |
 | TabWidth            | Tab stop width                                            | `TabWidth: 4`                   |
+| WrapIndent          | Columns to indent wrapped lines                           | `WrapIndent: 4`                 |
 | Header              | Number of header lines to fix                             | `Header: 1`                     |
 | VerticalHeader      | Number of characters to fix as vertical header            | `VerticalHeader: 4`             |
 | HeaderColumn        | Number of columns to fix from the left                    | `HeaderColumn: 2`               |

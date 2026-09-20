@@ -13,13 +13,27 @@ import (
 type wordwrapConverter struct {
 	es          *escapeSequence
 	screenWidth int
+	indentWidth int
 }
 
 // newWordwrapConverter creates a new wordwrapConverter.
 func newWordwrapConverter(width int) *wordwrapConverter {
+	return newWordwrapConverterIndent(width, 0)
+}
+
+// newWordwrapConverterIndent creates a wordwrapConverter that indents continuation rows by indent cells.
+func newWordwrapConverterIndent(width int, indent int) *wordwrapConverter {
+	if indent < 0 {
+		indent = 0
+	}
+	// An indent that leaves no room for the text would wrap forever.
+	if indent > width-2 {
+		indent = 0
+	}
 	return &wordwrapConverter{
 		es:          newESConverter(),
 		screenWidth: width,
+		indentWidth: indent,
 	}
 }
 
@@ -44,6 +58,7 @@ type wordWrapProcessor struct {
 	start       int
 	end         int
 	screenWidth int
+	indentWidth int
 	row         int
 }
 
@@ -60,9 +75,11 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 		src:         src,
 		pos:         pos,
 		screenWidth: c.screenWidth,
+		indentWidth: c.indentWidth,
 		row:         1,
 		start:       pos.x(0),
 	}
+	proc.writeIndent()
 
 	state := -1
 	charPos := 0 // accumulated character position in source string.
@@ -75,22 +92,29 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 		proc.processWord(srcWord)
 		proc.start = proc.end
 	}
+	// The last row is padded to the row end so that the following rows line up.
+	// It is trimmed again when the text did not reach the row end by itself.
+	lastRow := proc.rowOf(len(proc.dst))
+	if lastRow == 1 || proc.indent(proc.row) > proc.indent(lastRow) {
+		if pad := proc.padding(); len(pad) < len(proc.dst) {
+			proc.dst = proc.dst[:len(proc.dst)-len(pad)]
+		}
+	}
 	return proc.dst
 }
 
 // processWord handles the placement of a word in the output.
 func (proc *wordWrapProcessor) processWord(srcWord contents) {
-	// Word is longer than screen width, add as-is and move to the row it ends on.
-	// The word can span several rows, so the row is recalculated from the output length
-	// instead of being incremented by one.
-	if len(srcWord) > proc.screenWidth {
-		proc.dst = append(proc.dst, srcWord...)
-		proc.row = (len(proc.dst) / proc.screenWidth) + 1
+	// Word is longer than the room left on the row, so it is split over the
+	// following rows. The row is recalculated from the output length instead of
+	// being incremented by one.
+	if len(srcWord) > proc.screenWidth-proc.indent(proc.row) {
+		proc.appendLongWord(srcWord)
 		return
 	}
 
 	// Word fits in current line.
-	if len(proc.dst)+len(srcWord) <= proc.screenWidth*proc.row {
+	if len(proc.dst)+len(srcWord) <= proc.lineEnd(proc.row) {
 		proc.dst = append(proc.dst, srcWord...)
 		return
 	}
@@ -104,14 +128,79 @@ func (proc *wordWrapProcessor) processWord(srcWord contents) {
 		return
 	}
 
+	proc.writeIndent()
 	proc.dst = append(proc.dst, srcWord...)
 }
 
 // finishLine pads the current line with spaces.
 func (proc *wordWrapProcessor) finishLine() {
-	addSpaces := proc.screenWidth*proc.row - len(proc.dst)
-	if addSpaces > 0 {
-		proc.dst = append(proc.dst, StrToContents(strings.Repeat(" ", addSpaces), addSpaces)...)
+	proc.dst = append(proc.dst, proc.padding()...)
+}
+
+// appendLongWord adds a word that is wider than a whole row, breaking it over
+// the rows it spans and indenting the rows it continues onto.
+func (proc *wordWrapProcessor) appendLongWord(srcWord contents) {
+	for len(srcWord) > 0 {
+		room := proc.lineEnd(proc.row) - len(proc.dst)
+		if room <= 0 {
+			proc.row++
+			proc.writeIndent()
+			continue
+		}
+		n := min(room, len(srcWord))
+		proc.dst = append(proc.dst, srcWord[:n]...)
+		srcWord = srcWord[n:]
+		// Pad the row before starting the next one, otherwise the indent of the
+		// continuation row lands in the middle of this row.
+		if len(srcWord) > 0 {
+			proc.finishLine()
+			proc.row++
+			proc.writeIndent()
+		}
+	}
+}
+
+// padding returns the spaces needed to fill the rest of the current row.
+func (proc *wordWrapProcessor) padding() contents {
+	// The row can already be full when the last word ended on the row boundary.
+	if addSpaces := proc.lineEnd(proc.row) - len(proc.dst); addSpaces > 0 {
+		return StrToContents(strings.Repeat(" ", addSpaces), addSpaces)
+	}
+	return nil
+}
+
+// indent returns the indent applied to the given row. The first row keeps the
+// original line start, only rows the text was wrapped onto are indented.
+func (proc *wordWrapProcessor) indent(row int) int {
+	if row <= 1 {
+		return 0
+	}
+	return proc.indentWidth
+}
+
+// lineEnd returns the destination length at the end of the given row.
+func (proc *wordWrapProcessor) lineEnd(row int) int {
+	return proc.screenWidth*row + proc.indentWidth*(row-1)
+}
+
+// rowOf returns the row a destination length ends on.
+func (proc *wordWrapProcessor) rowOf(length int) int {
+	if proc.indentWidth == 0 {
+		return (length / proc.screenWidth) + 1
+	}
+	// Needed cells to reach row n are screenWidth*n + indentWidth*(n-1) for n padding
+	// and screenWidth*n + indentWidth*(n-2) for n-1 padding.
+	row := 1
+	for length > proc.lineEnd(row) {
+		row++
+	}
+	return row
+}
+
+// writeIndent appends the indent of the current row.
+func (proc *wordWrapProcessor) writeIndent() {
+	if indent := proc.indent(proc.row); indent > 0 {
+		proc.dst = append(proc.dst, StrToContents(strings.Repeat(" ", indent), indent)...)
 	}
 }
 

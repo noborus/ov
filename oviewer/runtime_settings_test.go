@@ -544,6 +544,33 @@ func Test_updateRuntimeSettings_AllFields(t *testing.T) {
 				Converter: convRaw,
 			},
 		},
+		{
+			name: "wrap indent is applied",
+			args: args{
+				runtime: RunTimeSettings{},
+				configGeneral: General{
+					Wrap:       new("word"),
+					WrapIndent: new(4),
+				},
+			},
+			want: RunTimeSettings{
+				Converter:  convWordWrap,
+				WrapMode:   true,
+				WrapIndent: 4,
+			},
+		},
+		{
+			name: "wrap indent is kept when the config does not set it",
+			args: args{
+				runtime: RunTimeSettings{
+					WrapIndent: 2,
+				},
+				configGeneral: General{},
+			},
+			want: RunTimeSettings{
+				WrapIndent: 2,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -551,6 +578,31 @@ func Test_updateRuntimeSettings_AllFields(t *testing.T) {
 				t.Errorf("updateRuntimeSettings() = %#v, want %#v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDocumentWrapIndent(t *testing.T) {
+	doc, err := NewDocument()
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc.bodyWidth = 10
+
+	conv, ok := doc.converterType(convWordWrap).(*wordwrapConverter)
+	if !ok {
+		t.Fatalf("expected a wordwrapConverter, got %T", doc.converterType(convWordWrap))
+	}
+	if conv.indentWidth != 0 {
+		t.Errorf("expected no indent by default, got %d", conv.indentWidth)
+	}
+
+	doc.WrapIndent = 3
+	conv, ok = doc.converterType(convWordWrap).(*wordwrapConverter)
+	if !ok {
+		t.Fatalf("expected a wordwrapConverter, got %T", doc.converterType(convWordWrap))
+	}
+	if conv.indentWidth != 3 {
+		t.Errorf("expected indent 3, got %d", conv.indentWidth)
 	}
 }
 

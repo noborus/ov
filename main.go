@@ -501,6 +501,12 @@ func init() {
 		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	rootCmd.PersistentFlags().Int("wrap-indent", 0, "number of columns to indent wrapped lines")
+	_ = viper.BindPFlag("general.WrapIndent", rootCmd.PersistentFlags().Lookup("wrap-indent"))
+	_ = rootCmd.RegisterFlagCompletionFunc("wrap-indent", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"2	indent width", "4	indent width", "8	indent width"}, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	rootCmd.PersistentFlags().IntP("vertical-header", "y", 0, "number of characters to display as a vertical header")
 	_ = viper.BindPFlag("general.VerticalHeader", rootCmd.PersistentFlags().Lookup("vertical-header"))
 	_ = rootCmd.RegisterFlagCompletionFunc("vertical-header", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {

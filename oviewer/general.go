@@ -10,6 +10,8 @@ type General struct {
 	Raw *bool
 	// Wrap is the wrap mode setting ("char" or "word").
 	Wrap *string
+	// WrapIndent is the number of columns a wrapped line is indented by.
+	WrapIndent *int
 	// Caption is an additional caption to display after the file name.
 	Caption *string
 	// ColumnDelimiter is a column delimiter.
@@ -90,6 +92,11 @@ func (g *General) SetHeader(header int) {
 // SetTabWidth sets the tab stop number.
 func (g *General) SetTabWidth(tabWidth int) {
 	g.TabWidth = &tabWidth
+}
+
+// SetWrapIndent sets the indent for wrapped lines.
+func (g *General) SetWrapIndent(wrapIndent int) {
+	g.WrapIndent = &wrapIndent
 }
 
 // SetFollowMode sets the follow mode.

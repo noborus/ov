@@ -348,7 +348,7 @@ func (m *Document) converterType(name string) Converter {
 		}
 		return m.alignConv.clone()
 	case convWordWrap:
-		return newWordwrapConverter(m.bodyWidth)
+		return newWordwrapConverterIndent(m.bodyWidth, m.WrapIndent)
 	}
 	return newESConverter()
 }

@@ -1,6 +1,8 @@
 package oviewer
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -128,5 +130,122 @@ func TestConvertWordwrap(t *testing.T) {
 				t.Errorf("expected string %q, got %q", tt.wantStr, result.String())
 			}
 		})
+	}
+}
+
+// rowStrings splits the converted contents into one string per terminal row.
+// The first row is as wide as the screen, the rows it wraps onto are narrower
+// by the indent they start with.
+func rowStrings(lc contents, screenWidth, indent int) []string {
+	rows := []string{}
+	row := 1
+	for len(lc) > 0 {
+		width := screenWidth
+		if row > 1 {
+			width += indent
+		}
+		if width > len(lc) {
+			width = len(lc)
+		}
+		var sb strings.Builder
+		for _, c := range lc[:width] {
+			sb.WriteString(c.str)
+		}
+		rows = append(rows, sb.String())
+		lc = lc[width:]
+		row++
+	}
+	return rows
+}
+
+func TestConvertWordwrapIndent(t *testing.T) {
+	tests := []struct {
+		name        string
+		screenWidth int
+		indent      int
+		str         string
+		wantRows    []string
+	}{
+		{
+			name:        "wrapped line is indented",
+			screenWidth: 10,
+			indent:      2,
+			str:         "abcdef ghijkl mnd",
+			wantRows:    []string{"abcdef    ", "  ghijkl mnd"},
+		},
+		{
+			name:        "word longer than the screen is indented on the rows it spans",
+			screenWidth: 10,
+			indent:      2,
+			str:         "abcdefghijklmno",
+			wantRows:    []string{"abcdefghij", "  klmno"},
+		},
+		{
+			name:        "long word followed by a word",
+			screenWidth: 10,
+			indent:      2,
+			str:         "aa bbbbbbbbbbbbbbbbbbbbbbbbb cc",
+			wantRows:    []string{"aa bbbbbbb", "  bbbbbbbbbb", "  bbbbbbbb  ", "  cc"},
+		},
+		{
+			name:        "line shorter than the screen keeps no indent",
+			screenWidth: 10,
+			indent:      2,
+			str:         "short",
+			wantRows:    []string{"short"},
+		},
+		{
+			name:        "indent larger than the screen falls back to no indent",
+			screenWidth: 10,
+			indent:      12,
+			str:         "abcdef ghijkl mnd",
+			wantRows:    []string{"abcdef    ", "ghijkl mnd"},
+		},
+		{
+			name:        "japanese text is indented by the same cell count",
+			screenWidth: 5,
+			indent:      2,
+			str:         "abc あいう",
+			wantRows:    []string{"abc  ", "  あい ", "  う"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			converter := newWordwrapConverterIndent(tt.screenWidth, tt.indent)
+			result, _ := parseLine(converter, tt.str, 4)
+
+			rows := rowStrings(result, tt.screenWidth, tt.indent)
+			if !reflect.DeepEqual(rows, tt.wantRows) {
+				t.Errorf("expected rows %q, got %q (full %q)", tt.wantRows, rows, result.String())
+			}
+		})
+	}
+}
+
+// The wrapped rows only add leading spaces, so removing the spaces from the
+// result must give back the input with the spaces removed.
+func TestConvertWordwrapIndentKeepsContent(t *testing.T) {
+	tests := []struct {
+		screenWidth int
+		indent      int
+		str         string
+	}{
+		{10, 2, "abcdef ghijkl mnd"},
+		{10, 2, "abcdefghijklmno"},
+		{10, 2, "aa bbbbbbbbbbbbbbbbbbbbbbbbb cc"},
+		{5, 2, "abc あいう"},
+		{5, 1, "abcdefghijklmn op"},
+	}
+
+	for _, tt := range tests {
+		converter := newWordwrapConverterIndent(tt.screenWidth, tt.indent)
+		result, _ := parseLine(converter, tt.str, 4)
+
+		got := strings.ReplaceAll(result.String(), " ", "")
+		want := strings.ReplaceAll(tt.str, " ", "")
+		if got != want {
+			t.Errorf("screenWidth %d indent %d, expected %q, got %q", tt.screenWidth, tt.indent, want, got)
+		}
 	}
 }

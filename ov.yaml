@@ -47,6 +47,7 @@ General:
   ColumnMode: false
   LineNumMode: false
   Wrap: "character" # Wrap mode. Options: "character", "word", "none".
+  WrapIndent: 0 # Columns to indent the lines a long line is wrapped onto.
   ColumnDelimiter: ","
   MarkStyleWidth: 1
 # HScrollWidth: 10%
