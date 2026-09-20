@@ -240,7 +240,7 @@ func (root *Root) searchPosition(str string) [][]int {
 }
 
 // searchXPos returns the x position of the first match.
-func (root *Root) searchXPos(lineNum int, searcher Searcher) (int, int) {
+func (root *Root) searchXPos(searcher Searcher, lineNum int) (int, int) {
 	line := root.Doc.getLineC(lineNum)
 	indexes := searcher.FindAll(line.str)
 	if len(indexes) == 0 {
@@ -311,7 +311,7 @@ func (root *Root) searchMove(ctx context.Context, forward bool, lineNum int, sea
 		if err != nil {
 			return fmt.Errorf("search:%w:%v", err, word)
 		}
-		root.sendSearchMove(n, searcher)
+		root.sendSearchMove(searcher, n)
 		return nil
 	})
 
@@ -442,7 +442,7 @@ func (m *Document) BackSearchChunkNonMatch(ctx context.Context, searcher Searche
 // storageSearch searches for line not in memory(storage).
 func (m *Document) storageSearch(searcher Searcher, chunkNum int) bool {
 	if !m.store.isLoadedChunk(chunkNum, m.seekable) && atomic.LoadInt32(&m.closed) == 0 {
-		if m.requestSearch(chunkNum, searcher) {
+		if m.requestSearch(searcher, chunkNum) {
 			return true
 		}
 	}
@@ -564,7 +564,7 @@ type eventSearchMove struct {
 	searcher Searcher
 }
 
-func (root *Root) sendSearchMove(lineNum int, searcher Searcher) {
+func (root *Root) sendSearchMove(searcher Searcher, lineNum int) {
 	ev := &eventSearchMove{}
 	ev.SetEventNow()
 	ev.ln = lineNum
@@ -592,7 +592,7 @@ func (root *Root) incSearch(ctx context.Context, forward bool) {
 			root.debugMessage(fmt.Sprintf("incSearch: %s", err))
 			return
 		}
-		root.sendSearchMove(n, searcher)
+		root.sendSearchMove(searcher, n)
 	}()
 }
 
@@ -768,7 +768,7 @@ func (root *Root) sendBackSearch(str string) {
 }
 
 // searchChunk searches in a Chunk without loading it into memory.
-func (m *Document) searchChunk(chunkNum int, searcher Searcher) (int, error) {
+func (m *Document) searchChunk(searcher Searcher, chunkNum int) (int, error) {
 	// Seek to the start of the chunk.
 	chunk := m.store.chunks[chunkNum]
 	if _, err := m.file.Seek(chunk.start, io.SeekStart); err != nil {

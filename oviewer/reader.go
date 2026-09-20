@@ -177,8 +177,8 @@ func (m *Document) seekChunk(reader *bufio.Reader, start int64) error {
 }
 
 // searchRead searches chunks and loads chunks if found.
-func (m *Document) searchRead(reader *bufio.Reader, chunkNum int, searcher Searcher) (*bufio.Reader, error) {
-	if _, err := m.searchChunk(chunkNum, searcher); err != nil {
+func (m *Document) searchRead(reader *bufio.Reader, searcher Searcher, chunkNum int) (*bufio.Reader, error) {
+	if _, err := m.searchChunk(searcher, chunkNum); err != nil {
 		return reader, err
 	}
 	return m.loadReadFile(reader, chunkNum)

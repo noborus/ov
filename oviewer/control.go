@@ -146,7 +146,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestLoad:
 		return m.loadRead(reader, sc.chunkNum)
 	case requestSearch:
-		return m.searchRead(reader, sc.chunkNum, sc.searcher)
+		return m.searchRead(reader, sc.searcher, sc.chunkNum)
 	case requestReload:
 		reader, err = m.reloadRead(reader)
 		m.requestStart()
@@ -252,7 +252,7 @@ func (m *Document) requestLoadSync(chunkNum int) bool {
 }
 
 // requestSearch sends instructions to load chunks into memory.
-func (m *Document) requestSearch(chunkNum int, searcher Searcher) bool {
+func (m *Document) requestSearch(searcher Searcher, chunkNum int) bool {
 	sc := controlSpecifier{
 		request:  requestSearch,
 		searcher: searcher,
