@@ -10,6 +10,8 @@ type General struct {
 	Raw *bool
 	// Wrap is the wrap mode setting ("char" or "word").
 	Wrap *string
+	// WrapIndent is the indentation width applied to subsequent wrapped lines.
+	WrapIndent *int
 	// Caption is an additional caption to display after the file name.
 	Caption *string
 	// ColumnDelimiter is a column delimiter.
@@ -232,6 +234,11 @@ func (g *General) SetWrapMode(wrap bool) {
 // SetWrap sets the wrap mode ("char" or "word").
 func (g *General) SetWrap(wrap string) {
 	g.Wrap = &wrap
+}
+
+// SetWrapIndent sets the indent width used for wrapped lines.
+func (g *General) SetWrapIndent(indent int) {
+	g.WrapIndent = &indent
 }
 
 // SetFollowAll sets the follow mode for all documents.

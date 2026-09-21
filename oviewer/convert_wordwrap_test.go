@@ -121,12 +121,33 @@ func TestConvertWordwrap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			converter := newWordwrapConverter(tt.screenWidth)
+			converter := newWordwrapConverter(tt.screenWidth, 0)
 			result, _ := parseLine(converter, tt.str, tt.tabWidth)
 
 			if result.String() != tt.wantStr {
 				t.Errorf("expected string %q, got %q", tt.wantStr, result.String())
 			}
 		})
+	}
+}
+
+func TestNewWordwrapConverterDisablesIndentThatDoesNotFit(t *testing.T) {
+	converter := newWordwrapConverter(4, 4)
+
+	if converter.indentWidth != 0 {
+		t.Errorf("indentWidth = %d, want 0", converter.indentWidth)
+	}
+}
+
+func TestConvertWordwrapIndentAcrossMultipleRows(t *testing.T) {
+	converter := newWordwrapConverter(10, 2)
+	result, _ := parseLine(converter, "aaa bbb ccc ddd eee fff ggg", 4)
+
+	const want = "aaa bbb   " +
+		"  ccc ddd   " +
+		"  eee fff   " +
+		"  ggg"
+	if result.String() != want {
+		t.Errorf("expected string %q, got %q", want, result.String())
 	}
 }
