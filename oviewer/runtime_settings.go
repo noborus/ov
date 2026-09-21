@@ -155,7 +155,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		TabWidth:       8,
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
-		WrapIndent:     1,
+		WrapIndent:     0,
 		OVPromptConfig: NewOVPromptConfig(),
 		Style:          NewStyle(),
 		StatusLine:     true,
