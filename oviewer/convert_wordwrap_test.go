@@ -144,8 +144,8 @@ func TestConvertWordwrapIndentAcrossMultipleRows(t *testing.T) {
 	result, _ := parseLine(converter, "aaa bbb ccc ddd eee fff ggg", 4)
 
 	const want = "aaa bbb   " +
-		"  ccc ddd   " +
-		"  eee fff   " +
+		"  ccc ddd " +
+		"  eee fff " +
 		"  ggg"
 	if result.String() != want {
 		t.Errorf("expected string %q, got %q", want, result.String())
