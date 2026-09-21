@@ -104,14 +104,16 @@ func (proc *wordWrapProcessor) processWord(srcWord contents) {
 
 	// Finish current line with padding.
 	proc.finishLine()
+	isFit := len(proc.dst) == proc.screenWidth*proc.row
+
+	// wrap to the next line.
+	proc.row++
 	// Apply indentation for the new line.
-	if proc.indentWidth > 0 {
+	if isFit && proc.indentWidth > 0 {
 		proc.dst = append(proc.dst, spaceContents(proc.indentWidth)...)
 	}
-	proc.row++
-
 	// isOnlyWhitespace check is needed to avoid adding unnecessary spaces when the word is only whitespace.
-	if isOnlyWhitespace(srcWord) {
+	if isFit && isOnlyWhitespace(srcWord) {
 		return
 	}
 
