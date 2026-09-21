@@ -84,6 +84,9 @@ func (root *Root) toggleAlternateRows(context.Context) {
 // toggleLineNumMode toggles LineNumMode every time it is called.
 func (root *Root) toggleLineNumMode(ctx context.Context) {
 	root.Doc.LineNumMode = !root.Doc.LineNumMode
+	if root.Doc.Converter == convWordWrap {
+		root.Doc.ClearCache()
+	}
 	root.ViewSync(ctx)
 	root.setMessagef("Set LineNumMode %t", root.Doc.LineNumMode)
 }
