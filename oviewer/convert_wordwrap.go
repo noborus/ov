@@ -13,13 +13,18 @@ import (
 type wordwrapConverter struct {
 	es          *escapeSequence
 	screenWidth int
+	indentWidth int
 }
 
 // newWordwrapConverter creates a new wordwrapConverter.
-func newWordwrapConverter(width int) *wordwrapConverter {
+func newWordwrapConverter(width int, indent int) *wordwrapConverter {
+	if indent <= 0 || indent >= width {
+		indent = 0
+	}
 	return &wordwrapConverter{
 		es:          newESConverter(),
 		screenWidth: width,
+		indentWidth: indent,
 	}
 }
 
@@ -44,6 +49,7 @@ type wordWrapProcessor struct {
 	start       int
 	end         int
 	screenWidth int
+	indentWidth int
 	row         int
 }
 
@@ -60,6 +66,7 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 		src:         src,
 		pos:         pos,
 		screenWidth: c.screenWidth,
+		indentWidth: c.indentWidth,
 		row:         1,
 		start:       pos.x(0),
 	}
@@ -97,10 +104,16 @@ func (proc *wordWrapProcessor) processWord(srcWord contents) {
 
 	// Finish current line with padding.
 	proc.finishLine()
-	proc.row++
+	isFit := len(proc.dst) == proc.screenWidth*proc.row
 
+	// wrap to the next line.
+	proc.row++
+	// Apply indentation for the new line.
+	if isFit && proc.indentWidth > 0 {
+		proc.dst = append(proc.dst, spaceContents(proc.indentWidth)...)
+	}
 	// isOnlyWhitespace check is needed to avoid adding unnecessary spaces when the word is only whitespace.
-	if isOnlyWhitespace(srcWord) {
+	if isFit && isOnlyWhitespace(srcWord) {
 		return
 	}
 
@@ -111,8 +124,13 @@ func (proc *wordWrapProcessor) processWord(srcWord contents) {
 func (proc *wordWrapProcessor) finishLine() {
 	addSpaces := proc.screenWidth*proc.row - len(proc.dst)
 	if addSpaces > 0 {
-		proc.dst = append(proc.dst, StrToContents(strings.Repeat(" ", addSpaces), addSpaces)...)
+		proc.dst = append(proc.dst, spaceContents(addSpaces)...)
 	}
+}
+
+// spaceContents returns width spaces as contents.
+func spaceContents(width int) contents {
+	return StrToContents(strings.Repeat(" ", width), width)
 }
 
 // isOnlyWhitespace returns true if all cells are spaces, tabs, or empty; false otherwise.

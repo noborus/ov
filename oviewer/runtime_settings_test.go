@@ -312,6 +312,20 @@ func Test_updateRuntimeSettings(t *testing.T) {
 				WrapMode: false,
 			},
 		},
+		{
+			name: "test13-break-indent",
+			args: args{
+				runtime: RunTimeSettings{
+					BreakIndent: 1,
+				},
+				configGeneral: General{
+					BreakIndent: new(3),
+				},
+			},
+			want: RunTimeSettings{
+				BreakIndent: 3,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
