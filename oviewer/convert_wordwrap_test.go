@@ -139,7 +139,7 @@ func TestNewWordwrapConverterDisablesIndentThatDoesNotFit(t *testing.T) {
 	}
 }
 
-func TestConvertWordwrapIndentAcrossMultipleRows(t *testing.T) {
+func TestConvertWordwrapBreakIndentAcrossMultipleRows(t *testing.T) {
 	converter := newWordwrapConverter(10, 2)
 	result, _ := parseLine(converter, "aaa bbb ccc ddd eee fff ggg", 4)
 

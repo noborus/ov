@@ -313,17 +313,17 @@ func Test_updateRuntimeSettings(t *testing.T) {
 			},
 		},
 		{
-			name: "test13-wrap-indent",
+			name: "test13-break-indent",
 			args: args{
 				runtime: RunTimeSettings{
-					WrapIndent: 1,
+					BreakIndent: 1,
 				},
 				configGeneral: General{
-					WrapIndent: new(3),
+					BreakIndent: new(3),
 				},
 			},
 			want: RunTimeSettings{
-				WrapIndent: 3,
+				BreakIndent: 3,
 			},
 		},
 	}

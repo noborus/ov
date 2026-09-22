@@ -63,8 +63,8 @@ type RunTimeSettings struct {
 	LineNumMode bool
 	// WrapMode is wrap mode.
 	WrapMode bool
-	// WrapIndent is the indentation width applied to subsequent wrapped lines.
-	WrapIndent int
+	// BreakIndent is the indentation width applied to subsequent wrapped lines.
+	BreakIndent int
 	// FollowMode is the follow mode.
 	FollowMode bool
 	// FollowAll is a follow mode for all documents.
@@ -155,7 +155,7 @@ func NewRunTimeSettings() RunTimeSettings {
 		TabWidth:       8,
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
-		WrapIndent:     0,
+		BreakIndent:    0,
 		OVPromptConfig: NewOVPromptConfig(),
 		Style:          NewStyle(),
 		StatusLine:     true,
@@ -327,7 +327,7 @@ func updateRunTimeSettings(base RunTimeSettings, override General) RunTimeSettin
 	applyIfSet(&base.ColumnRainbow, override.ColumnRainbow)
 	applyIfSet(&base.LineNumMode, override.LineNumMode)
 	applyIfSet(&base.WrapMode, override.WrapMode)
-	applyIfSet(&base.WrapIndent, override.WrapIndent)
+	applyIfSet(&base.BreakIndent, override.BreakIndent)
 	applyIfSet(&base.FollowMode, override.FollowMode)
 	applyIfSet(&base.FollowAll, override.FollowAll)
 	applyIfSet(&base.FollowSection, override.FollowSection)
