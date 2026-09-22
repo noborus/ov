@@ -121,7 +121,7 @@ func TestConvertWordwrap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			converter := newWordwrapConverter(tt.screenWidth, 0)
+			converter := newWordwrapConverter(tt.screenWidth, "0")
 			result, _ := parseLine(converter, tt.str, tt.tabWidth)
 
 			if result.String() != tt.wantStr {
@@ -132,7 +132,7 @@ func TestConvertWordwrap(t *testing.T) {
 }
 
 func TestNewWordwrapConverterDisablesIndentThatDoesNotFit(t *testing.T) {
-	converter := newWordwrapConverter(4, 4)
+	converter := newWordwrapConverter(4, "4")
 
 	if converter.indentWidth != 0 {
 		t.Errorf("indentWidth = %d, want 0", converter.indentWidth)
@@ -140,7 +140,7 @@ func TestNewWordwrapConverterDisablesIndentThatDoesNotFit(t *testing.T) {
 }
 
 func TestConvertWordwrapBreakIndentAcrossMultipleRows(t *testing.T) {
-	converter := newWordwrapConverter(10, 2)
+	converter := newWordwrapConverter(10, "2")
 	result, _ := parseLine(converter, "aaa bbb ccc ddd eee fff ggg", 4)
 
 	const want = "aaa bbb   " +
@@ -149,5 +149,31 @@ func TestConvertWordwrapBreakIndentAcrossMultipleRows(t *testing.T) {
 		"  ggg"
 	if result.String() != want {
 		t.Errorf("expected string %q, got %q", want, result.String())
+	}
+}
+
+func TestConvertWordwrapRelativeIndent(t *testing.T) {
+	tests := []struct {
+		name   string
+		indent string
+		input  string
+		want   string
+	}{
+		{name: "add to line indent", indent: "L+2", input: "    aaa bbb ccc", want: "    aaa   " + "      bbb " + "      ccc"},
+		{name: "add to line indent with shorthand plus prefix", indent: "+2", input: "    aaa bbb ccc", want: "    aaa   " + "      bbb " + "      ccc"},
+		{name: "subtract from line indent", indent: "L-2", input: "    aaa bbb ccc", want: "    aaa   " + "  bbb ccc"},
+		{name: "keep line indent", indent: "L+0", input: "    aaa bbb ccc", want: "    aaa   " + "    bbb   " + "    ccc"},
+		{name: "keep line indent with minimal L shorthand", indent: "L", input: "    aaa bbb ccc", want: "    aaa   " + "    bbb   " + "    ccc"},
+		{name: "keep line indent with plus zero shorthand", indent: "+0", input: "    aaa bbb ccc", want: "    aaa   " + "    bbb   " + "    ccc"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			converter := newWordwrapConverter(10, tt.indent)
+			result, _ := parseLine(converter, tt.input, 4)
+			if result.String() != tt.want {
+				t.Errorf("expected string %q, got %q", tt.want, result.String())
+			}
+		})
 	}
 }
