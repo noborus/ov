@@ -1,7 +1,5 @@
 package oviewer
 
-import "strconv"
-
 // General is the general configuration.
 type General struct {
 	// Converter is the converter name.
@@ -239,9 +237,8 @@ func (g *General) SetWrap(wrap string) {
 }
 
 // SetBreakIndent sets the indent width used for wrapped lines.
-func (g *General) SetBreakIndent(indent int) {
-	value := strconv.Itoa(indent)
-	g.BreakIndent = &value
+func (g *General) SetBreakIndent(indent string) {
+	g.BreakIndent = &indent
 }
 
 // SetFollowAll sets the follow mode for all documents.
