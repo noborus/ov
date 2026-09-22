@@ -540,7 +540,7 @@ func init() {
 	_ = rootCmd.RegisterFlagCompletionFunc("wrap", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"char\tWrap by character", "word\tWrap at word boundaries"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	rootCmd.PersistentFlags().Int("break-indent", 0, "indent width for wrapped lines")
+	rootCmd.PersistentFlags().String("break-indent", "0", "indent width for wrapped lines")
 	_ = viper.BindPFlag("general.BreakIndent", rootCmd.PersistentFlags().Lookup("break-indent"))
 
 	rootCmd.PersistentFlags().BoolP("plain", "p", false, "strip ANSI colors and styles from the content")

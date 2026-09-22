@@ -316,14 +316,14 @@ func Test_updateRuntimeSettings(t *testing.T) {
 			name: "test13-break-indent",
 			args: args{
 				runtime: RunTimeSettings{
-					BreakIndent: 1,
+					BreakIndent: "1",
 				},
 				configGeneral: General{
-					BreakIndent: new(3),
+					BreakIndent: new("3"),
 				},
 			},
 			want: RunTimeSettings{
-				BreakIndent: 3,
+				BreakIndent: "3",
 			},
 		},
 	}

@@ -1,6 +1,7 @@
 package oviewer
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/rivo/uniseg"
@@ -11,21 +12,49 @@ import (
 
 // wordwrapConverter is a converter that converts the contents to fit the screen width.
 type wordwrapConverter struct {
-	es          *escapeSequence
-	screenWidth int
-	indentWidth int
+	es             *escapeSequence
+	screenWidth    int
+	indentWidth    int
+	indentOffset   int
+	relativeIndent bool
 }
 
 // newWordwrapConverter creates a new wordwrapConverter.
-func newWordwrapConverter(width int, indent int) *wordwrapConverter {
-	if indent <= 0 || indent >= width {
-		indent = 0
-	}
+func newWordwrapConverter(width int, indent string) *wordwrapConverter {
+	indentWidth, indentOffset, relativeIndent := parseWrapIndent(indent, width)
 	return &wordwrapConverter{
-		es:          newESConverter(),
-		screenWidth: width,
-		indentWidth: indent,
+		es:             newESConverter(),
+		screenWidth:    width,
+		indentWidth:    indentWidth,
+		indentOffset:   indentOffset,
+		relativeIndent: relativeIndent,
 	}
+}
+
+func parseWrapIndent(indent string, width int) (int, int, bool) {
+	if indent == "L" {
+		return 0, 0, true
+	}
+	if strings.HasPrefix(indent, "L+") || strings.HasPrefix(indent, "L-") {
+		offset, err := strconv.Atoi(indent[1:])
+		if err != nil {
+			return 0, 0, false
+		}
+		return 0, offset, true
+	}
+	if strings.HasPrefix(indent, "+") || strings.HasPrefix(indent, "-") {
+		offset, err := strconv.Atoi(indent)
+		if err != nil {
+			return 0, 0, false
+		}
+		return 0, offset, true
+	}
+
+	absolute, err := strconv.Atoi(indent)
+	if err != nil || absolute <= 0 || absolute >= width {
+		return 0, 0, false
+	}
+	return absolute, 0, false
 }
 
 // convert converts the contents to fit the screen width.
@@ -60,13 +89,20 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 	}
 
 	str, pos := ContentsToStr(src)
+	indentWidth := c.indentWidth
+	if c.relativeIndent {
+		indentWidth = leadingIndentWidth(src) + c.indentOffset
+		if indentWidth <= 0 || indentWidth >= c.screenWidth {
+			indentWidth = 0
+		}
+	}
 
 	proc := &wordWrapProcessor{
 		dst:         make(contents, 0, len(src)),
 		src:         src,
 		pos:         pos,
 		screenWidth: c.screenWidth,
-		indentWidth: c.indentWidth,
+		indentWidth: indentWidth,
 		row:         1,
 		start:       pos.x(0),
 	}
@@ -83,6 +119,17 @@ func (c *wordwrapConverter) convertWordWrap(src contents) contents {
 		proc.start = proc.end
 	}
 	return proc.dst
+}
+
+func leadingIndentWidth(src contents) int {
+	width := 0
+	for _, cell := range src {
+		if cell.str != " " && cell.str != "\t" && cell.str != "" {
+			break
+		}
+		width += cell.width
+	}
+	return width
 }
 
 // processWord handles the placement of a word in the output.
@@ -108,13 +155,16 @@ func (proc *wordWrapProcessor) processWord(srcWord contents) {
 
 	// wrap to the next line.
 	proc.row++
-	// Apply indentation for the new line.
-	if isFit && proc.indentWidth > 0 {
-		proc.dst = append(proc.dst, spaceContents(proc.indentWidth)...)
-	}
-	// isOnlyWhitespace check is needed to avoid adding unnecessary spaces when the word is only whitespace.
-	if isFit && isOnlyWhitespace(srcWord) {
-		return
+
+	if isFit {
+		// Apply indentation for the new line.
+		if proc.indentWidth > 0 {
+			proc.dst = append(proc.dst, spaceContents(proc.indentWidth)...)
+		}
+		// isOnlyWhitespace check is needed to avoid adding unnecessary spaces when the word is only whitespace.
+		if isOnlyWhitespace(srcWord) {
+			return
+		}
 	}
 
 	proc.dst = append(proc.dst, srcWord...)
