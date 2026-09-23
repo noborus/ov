@@ -629,6 +629,31 @@ func TestRoot_drawWrapLine_fullWidthAtRightEdge(t *testing.T) {
 	}
 }
 
+func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
+	root := rootHelper(t)
+	root.prepareScreen()
+	root.Doc.bodyStartX = 4
+	root.Doc.bodyWidth = 5
+	root.Doc.SignMode = int(SignWrap | SignBreak)
+
+	lineC := LineC{
+		lc:       StrToContents("ABCDEFG", 0),
+		valid:    true,
+		eolStyle: tcell.StyleDefault,
+	}
+
+	root.drawWrapLine(0, 1, 0, lineC)
+
+	gotWrap, _, _ := root.Screen.Get(root.Doc.bodyStartX-len(root.scr.wrapSignContents), 0)
+	if gotWrap != root.scr.wrapSignContents[0].str {
+		t.Fatalf("Root.drawWrapLine() wrap sign = %q, want %q", gotWrap, root.scr.wrapSignContents[0].str)
+	}
+	gotBreak, _, _ := root.Screen.Get(root.Doc.bodyStartX+root.Doc.bodyWidth, 0)
+	if gotBreak != root.scr.breakSignContents[0].str {
+		t.Fatalf("Root.drawWrapLine() break sign = %q, want %q", gotBreak, root.scr.breakSignContents[0].str)
+	}
+}
+
 func TestRoot_drawNoWrapLine_negativeStartX(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()

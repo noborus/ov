@@ -27,7 +27,9 @@ func (root *Root) prepareScreen() {
 	root.scr.vWidth = max(root.scr.vWidth, 2)
 	root.scr.vHeight = max(root.scr.vHeight, 2)
 	root.updateDocumentSize()
-
+	root.scr.wrapSignContents = StrToContents(root.Doc.WrapSign, -1)
+	root.scr.breakSignContents = StrToContents(root.Doc.BreakSign, -1)
+	root.scr.truncSignContents = StrToContents(root.Doc.TruncSign, -1)
 	root.scr.rulerHeight = 0
 	if root.Doc.RulerType != RulerNone {
 		root.scr.rulerHeight = rulerHeight
@@ -65,6 +67,8 @@ func (root *Root) prepareStartX() {
 	m.leftMargin = root.sidebarWidth
 	m.rightMargin = 0
 	m.lineNumberWidth = 0
+	m.leftSignWidth = 0
+	m.rightSignWidth = 0
 	if m.LineNumMode {
 		target := m
 		if m.parent != nil {
@@ -72,14 +76,37 @@ func (root *Root) prepareStartX() {
 		}
 		m.lineNumberWidth = len(strconv.Itoa(target.BufEndNum())) + 1
 	}
-	m.bodyStartX = m.leftMargin + m.lineNumberWidth
+	if m.WrapMode && m.SignMode&int(SignWrap) != 0 {
+		m.leftSignWidth = len(root.scr.wrapSignContents)
+	}
+	if m.WrapMode && m.SignMode&int(SignBreak) != 0 {
+		m.rightSignWidth = len(root.scr.breakSignContents)
+	}
+	if !m.WrapMode {
+		m.leftSignWidth = 0
+		m.rightSignWidth = len(root.scr.truncSignContents)
+	}
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
 }
 
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
 	m.width = root.scr.vWidth - m.bodyStartX
-	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin)
+	if m.WrapMode && m.SignMode&int(SignWrap) != 0 {
+		m.leftSignWidth = len(root.scr.wrapSignContents)
+		log.Println("Invalid WrapSign length:", len(root.scr.wrapSignContents))
+	}
+	if m.WrapMode && m.SignMode&int(SignBreak) != 0 {
+		m.rightSignWidth = len(root.scr.breakSignContents)
+		log.Println("Invalid BreakSign length:", len(root.scr.breakSignContents))
+	}
+	if !m.WrapMode && m.SignMode&int(SignTrunc) != 0 {
+		m.rightSignWidth = len(root.scr.truncSignContents)
+		log.Println("Invalid TruncSign length:", len(root.scr.truncSignContents))
+	}
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
+	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin + m.rightSignWidth)
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }

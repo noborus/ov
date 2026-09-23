@@ -19,6 +19,14 @@ var anchorPointStyle = OVStyle{
 	Reverse: true,
 }
 
+type SignMode int
+
+const (
+	SignWrap SignMode = 1 << iota
+	SignBreak
+	SignTrunc
+)
+
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
 	shouldSync := root.scr.forceDisplaySync
@@ -63,7 +71,7 @@ func (root *Root) drawBody() {
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
-
+		root.drawLeftSign(lX, y)
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		if root.Doc.SectionHeader {
 			root.sectionLineHighlight(y, lineC)
@@ -233,6 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
+			root.drawRightSign(x, y)
 			lX += n
 			break
 		}
@@ -245,27 +254,31 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
-	lX = max(lX, root.minStartX)
+func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, int) {
+	startX = max(startX, root.minStartX)
 	for n := 0; n < root.Doc.bodyWidth; n++ {
 		x := root.Doc.bodyStartX + n
-		if lX+n >= len(lineC.lc) {
-			// EOL
-			root.clearEOL(x, y, lineC.eolStyle)
-			break
-		}
-		if lX+n < 0 {
+		lX := startX + n
+		if lX < 0 {
 			root.Screen.Put(x, y, " ", defaultStyle)
 			continue
 		}
-		c := lineC.lc[lX+n]
+		if lX >= len(lineC.lc) {
+			// EOL
+			root.clearEOL(x, y, lineC.eolStyle)
+			return startX, lN + 1
+		}
+
+		c := lineC.lc[lX]
 		root.put(x, y, c.str, c.style)
 		if c.width == 2 {
 			n++
 		}
 	}
-	lN++
-	return lX, lN
+	if root.Doc.SignMode&int(SignTrunc) != 0 && startX+root.Doc.bodyWidth < len(lineC.lc) {
+		root.putContents(root.scr.vWidth-len(root.scr.truncSignContents), y, root.scr.truncSignContents, root.Doc.Style.TruncSign)
+	}
+	return startX, lN + 1
 }
 
 // drawVerticalHeader draws the vertical header.
@@ -365,6 +378,36 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := fmt.Sprintf("%*d ", root.Doc.lineNumberWidth-1, number)
 	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, style)
+}
+
+// drawLeftSign draws the left sign indicator.
+func (root *Root) drawLeftSign(lX int, y int) {
+	m := root.Doc
+	if m.leftSignWidth == 0 {
+		return
+	}
+	signX := root.Doc.bodyStartX - len(root.scr.wrapSignContents)
+	root.Screen.Put(signX, y, " ", defaultStyle)
+	if lX != 0 && root.Doc.SignMode&int(SignWrap) != 0 {
+		if signX >= 0 {
+			root.putContents(signX, y, root.scr.wrapSignContents, root.Doc.Style.WrapSign)
+		}
+	}
+
+}
+
+// drawRightSign draws the right sign indicator.
+func (root *Root) drawRightSign(rX int, y int) {
+	m := root.Doc
+	if m.rightSignWidth == 0 {
+		return
+	}
+	if root.Doc.SignMode&int(SignBreak) != 0 {
+		if rX < root.scr.vWidth {
+			root.clearEOL(rX+len(root.scr.breakSignContents), y, defaultStyle)
+			root.putContents(rX, y, root.scr.breakSignContents, root.Doc.Style.BreakSign)
+		}
+	}
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.

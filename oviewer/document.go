@@ -174,6 +174,10 @@ type Document struct {
 	rightMargin int
 	// lineNumberWidth is the width of the line number area (0 is not displayed).
 	lineNumberWidth int
+	// leftSignWidth is the width of the left sign area.
+	leftSignWidth int
+	// rightSignWidth is the width of the right sign area.
+	rightSignWidth int
 
 	// lastSearchLN is the last search line number.
 	lastSearchLN int
