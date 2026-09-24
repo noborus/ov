@@ -64,9 +64,12 @@ type RunTimeSettings struct {
 	// WrapMode is wrap mode.
 	WrapMode bool
 	// SignMode is a bitmask for display markers (1=wrap, 2=break, 4=trunc).
-	SignMode  int
-	WrapSign  string
+	SignMode int
+	// WrapSign is the sign used for wrapped lines.
+	WrapSign string
+	// BreakSign is the sign used for broken lines.
 	BreakSign string
+	// TruncSign is the sign used for truncated lines.
 	TruncSign string
 
 	// BreakIndent is the indentation width applied to subsequent wrapped lines.

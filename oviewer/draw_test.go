@@ -631,26 +631,29 @@ func TestRoot_drawWrapLine_fullWidthAtRightEdge(t *testing.T) {
 
 func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
 	root := rootHelper(t)
+	root.Doc.SignMode = int(SignWrap | SignBreak)
+	root.Doc.WrapMode = true
 	root.prepareScreen()
 	root.Doc.bodyStartX = 4
 	root.Doc.bodyWidth = 5
-	root.Doc.SignMode = int(SignWrap | SignBreak)
-
+	root.Doc.leftSignWidth = root.scr.wrapSignWidth
+	root.Doc.rightSignWidth = root.scr.breakSignWidth
 	lineC := LineC{
 		lc:       StrToContents("ABCDEFG", 0),
 		valid:    true,
 		eolStyle: tcell.StyleDefault,
 	}
 
+	root.drawLeftSign(1, 0)
 	root.drawWrapLine(0, 1, 0, lineC)
 
-	gotWrap, _, _ := root.Screen.Get(root.Doc.bodyStartX-len(root.scr.wrapSignContents), 0)
-	if gotWrap != root.scr.wrapSignContents[0].str {
-		t.Fatalf("Root.drawWrapLine() wrap sign = %q, want %q", gotWrap, root.scr.wrapSignContents[0].str)
+	gotWrap, _, _ := root.Screen.Get(root.Doc.bodyStartX-root.scr.wrapSignWidth, 0)
+	if gotWrap != root.Doc.WrapSign {
+		t.Fatalf("Root.drawLeftSign() wrap sign = %q, want %q", gotWrap, root.Doc.WrapSign)
 	}
 	gotBreak, _, _ := root.Screen.Get(root.Doc.bodyStartX+root.Doc.bodyWidth, 0)
-	if gotBreak != root.scr.breakSignContents[0].str {
-		t.Fatalf("Root.drawWrapLine() break sign = %q, want %q", gotBreak, root.scr.breakSignContents[0].str)
+	if gotBreak != root.Doc.BreakSign {
+		t.Fatalf("Root.drawWrapLine() break sign = %q, want %q", gotBreak, root.Doc.BreakSign)
 	}
 }
 

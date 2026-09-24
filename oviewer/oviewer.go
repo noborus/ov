@@ -143,12 +143,18 @@ type SCR struct {
 	// numbers is the line information of the currently displayed screen.
 	// numbers (number of logical numbers and number of wrapping numbers) from y on the screen.
 	numbers []LineNumber
-	// wrapSignContents is the content of the wrap sign.
-	wrapSignContents contents
-	// breakSignContents is the content of the break sign.
-	breakSignContents contents
-	// truncSignContents is the content of the trunc sign.
-	truncSignContents contents
+	// wrapSignStyle is the style of the wrap sign.
+	wrapSignStyle tcell.Style
+	// breakSignStyle is the style of the break sign.
+	breakSignStyle tcell.Style
+	// truncSignStyle is the style of the trunc sign.
+	truncSignStyle tcell.Style
+	// wrapSignWidth is the width of the wrap sign.
+	wrapSignWidth int
+	// breakSignWidth is the width of the break sign.
+	breakSignWidth int
+	// truncSignWidth is the width of the trunc sign.
+	truncSignWidth int
 	// vWidth represents the screen width.
 	vWidth int
 	// vHeight represents the screen height.
