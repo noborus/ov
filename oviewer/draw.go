@@ -71,7 +71,6 @@ func (root *Root) drawBody() {
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
-		root.drawLeftSign(lX, y)
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		if root.Doc.SectionHeader {
 			root.sectionLineHighlight(y, lineC)
@@ -228,6 +227,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
+	root.drawLeftSign(lX, y)
 	for n := 0; ; n++ {
 		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
@@ -241,7 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
-			root.drawRightSign(x, y)
+			root.drawRightSign(y)
 			lX += n
 			break
 		}
@@ -397,14 +397,15 @@ func (root *Root) drawLeftSign(lX int, y int) {
 }
 
 // drawRightSign draws the right sign indicator.
-func (root *Root) drawRightSign(rX int, y int) {
+func (root *Root) drawRightSign(y int) {
 	m := root.Doc
 	if m.rightSignWidth == 0 {
 		return
 	}
 	if root.Doc.SignMode&int(SignBreak) != 0 {
-		if rX < root.scr.vWidth {
-			root.putSign(rX, y, root.Doc.BreakSign, root.scr.breakSignStyle)
+		signX := root.Doc.bodyStartX + root.Doc.bodyWidth
+		if signX < root.scr.vWidth {
+			root.putSign(signX, y, root.Doc.BreakSign, root.scr.breakSignStyle)
 		}
 	}
 }

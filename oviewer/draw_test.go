@@ -639,12 +639,11 @@ func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
 	root.Doc.leftSignWidth = root.scr.wrapSignWidth
 	root.Doc.rightSignWidth = root.scr.breakSignWidth
 	lineC := LineC{
-		lc:       StrToContents("ABCDEFG", 0),
+		lc:       StrToContents("ABCDE界", 0),
 		valid:    true,
 		eolStyle: tcell.StyleDefault,
 	}
 
-	root.drawLeftSign(1, 0)
 	root.drawWrapLine(0, 1, 0, lineC)
 
 	gotWrap, _, _ := root.Screen.Get(root.Doc.bodyStartX-root.scr.wrapSignWidth, 0)
@@ -654,6 +653,29 @@ func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
 	gotBreak, _, _ := root.Screen.Get(root.Doc.bodyStartX+root.Doc.bodyWidth, 0)
 	if gotBreak != root.Doc.BreakSign {
 		t.Fatalf("Root.drawWrapLine() break sign = %q, want %q", gotBreak, root.Doc.BreakSign)
+	}
+}
+
+func TestRoot_updateDocumentSize_signWidths(t *testing.T) {
+	root := rootHelper(t)
+	root.Doc.WrapMode = true
+	root.Doc.SignMode = int(SignWrap | SignBreak)
+	root.Doc.leftMargin = 2
+	root.Doc.lineNumberWidth = 3
+	root.Doc.rightMargin = 1
+
+	root.prepareScreen()
+
+	wantStartX := root.Doc.leftMargin + root.Doc.lineNumberWidth + root.scr.wrapSignWidth
+	wantWidth := root.scr.vWidth - (wantStartX + root.Doc.rightMargin + root.scr.breakSignWidth)
+	if root.Doc.bodyStartX != wantStartX {
+		t.Fatalf("Root.updateDocumentSize() bodyStartX = %d, want %d", root.Doc.bodyStartX, wantStartX)
+	}
+	if root.Doc.bodyWidth != wantWidth {
+		t.Fatalf("Root.updateDocumentSize() bodyWidth = %d, want %d", root.Doc.bodyWidth, wantWidth)
+	}
+	if root.Doc.width != wantWidth {
+		t.Fatalf("Root.updateDocumentSize() width = %d, want %d", root.Doc.width, wantWidth)
 	}
 }
 

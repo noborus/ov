@@ -87,7 +87,6 @@ func (root *Root) prepareStartX() {
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
-	m.width = root.scr.vWidth - m.bodyStartX
 	m.leftSignWidth = 0
 	m.rightSignWidth = 0
 	if m.WrapMode && m.SignMode&int(SignWrap) != 0 {
@@ -101,6 +100,7 @@ func (root *Root) updateDocumentSize() {
 	}
 	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
 	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin + m.rightSignWidth)
+	m.width = m.bodyWidth
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }
