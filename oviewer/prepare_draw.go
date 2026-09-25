@@ -34,6 +34,7 @@ func (root *Root) prepareScreen() {
 	root.scr.wrapSignStyle = applyStyle(defaultStyle, root.Doc.Style.WrapSign)
 	root.scr.breakSignStyle = applyStyle(defaultStyle, root.Doc.Style.BreakSign)
 	root.scr.truncSignStyle = applyStyle(defaultStyle, root.Doc.Style.TruncSign)
+	root.scr.lineNumberStyle = applyStyle(defaultStyle, root.Doc.Style.LineNumber)
 	root.updateDocumentSize()
 	root.scr.rulerHeight = 0
 	if root.Doc.RulerType != RulerNone {
@@ -100,7 +101,6 @@ func (root *Root) updateDocumentSize() {
 	}
 	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
 	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin + m.rightSignWidth)
-	m.width = m.bodyWidth
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }

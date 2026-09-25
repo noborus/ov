@@ -55,7 +55,7 @@ func (root *Root) draw(ctx context.Context) {
 // drawBody sets bottomLN and bottomLX of the document.
 func (root *Root) drawBody() {
 	m := root.Doc
-	markStyleWidth := min(m.width, m.MarkStyleWidth)
+	markStyleWidth := min(m.bodyWidth, m.MarkStyleWidth)
 	lN := m.topLN + root.scr.headerEnd
 	lX := 0
 	wrapNum := 0
@@ -227,7 +227,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
-	root.drawLeftSign(lX, y)
+	root.drawWrapSign(lX, y)
 	for n := 0; ; n++ {
 		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
@@ -241,7 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
-			root.drawRightSign(y)
+			root.drawBreakSign(y)
 			lX += n
 			break
 		}
@@ -275,9 +275,7 @@ func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, i
 			n++
 		}
 	}
-	if root.Doc.SignMode&int(SignTrunc) != 0 && startX+root.Doc.bodyWidth < len(lineC.lc) {
-		root.putSign(root.scr.vWidth-root.Doc.rightSignWidth, y, root.Doc.TruncSign, root.scr.truncSignStyle)
-	}
+	root.drawTruncSign(y)
 	return startX, lN + 1
 }
 
@@ -375,38 +373,43 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	// Line numbers start at 1 except for skip and header lines.
 	number = number - m.firstLine() + 1
 
-	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := fmt.Sprintf("%*d ", root.Doc.lineNumberWidth-1, number)
-	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, style)
+	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, root.scr.lineNumberStyle)
 }
 
-// drawLeftSign draws the left sign indicator.
-func (root *Root) drawLeftSign(lX int, y int) {
+// drawWrapSign draws the wrap sign indicator on the left side of the line.
+func (root *Root) drawWrapSign(lX int, y int) {
 	m := root.Doc
 	if m.leftSignWidth == 0 {
 		return
 	}
-	signX := root.Doc.bodyStartX - root.Doc.leftSignWidth
-	root.Screen.Put(signX, y, " ", defaultStyle)
-	if lX != 0 && root.Doc.SignMode&int(SignWrap) != 0 {
-		if signX >= 0 {
-			root.putSign(signX, y, root.Doc.WrapSign, root.scr.wrapSignStyle)
-		}
+	signX := m.bodyStartX - m.leftSignWidth
+	if lX != 0 && m.SignMode&int(SignWrap) != 0 {
+		root.Screen.PutStrStyled(signX, y, m.WrapSign, root.scr.wrapSignStyle)
+	} else {
+		root.Screen.PutStrStyled(signX, y, strings.Repeat(" ", m.leftSignWidth), defaultStyle)
 	}
 
 }
 
-// drawRightSign draws the right sign indicator.
-func (root *Root) drawRightSign(y int) {
+// drawBreakSign draws the break sign indicator on the right side of the line.
+func (root *Root) drawBreakSign(y int) {
 	m := root.Doc
 	if m.rightSignWidth == 0 {
 		return
 	}
-	if root.Doc.SignMode&int(SignBreak) != 0 {
-		signX := root.Doc.bodyStartX + root.Doc.bodyWidth
-		if signX < root.scr.vWidth {
-			root.putSign(signX, y, root.Doc.BreakSign, root.scr.breakSignStyle)
-		}
+	if m.SignMode&int(SignBreak) != 0 {
+		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.BreakSign, root.scr.breakSignStyle)
+	}
+}
+
+func (root *Root) drawTruncSign(y int) {
+	m := root.Doc
+	if m.rightSignWidth == 0 {
+		return
+	}
+	if m.SignMode&int(SignTrunc) != 0 {
+		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.TruncSign, root.scr.truncSignStyle)
 	}
 }
 
@@ -462,7 +465,7 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
 func (root *Root) applyStyleToLine(y int, ovs OVStyle) {
-	root.applyStyleToRange(y, ovs, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
+	root.applyStyleToRange(y, ovs, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.bodyWidth)
 }
 
 // applyMarkStyle applies the style from the left edge to the specified width.
@@ -618,13 +621,6 @@ func (root *Root) put(x, y int, str string, style tcell.Style) {
 	root.Screen.Put(x, y, str, style)
 	if !root.scr.forceDisplaySync && needsDisplaySync(str) {
 		root.scr.forceDisplaySync = true
-	}
-}
-
-// puts places the string on the screen at the specified position using the given style.
-func (root *Root) putSign(x int, y int, str string, style tcell.Style) {
-	for i, c := range str {
-		root.put(x+i, y, string(c), style)
 	}
 }
 

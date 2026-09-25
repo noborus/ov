@@ -149,6 +149,8 @@ type SCR struct {
 	breakSignStyle tcell.Style
 	// truncSignStyle is the style of the trunc sign.
 	truncSignStyle tcell.Style
+	// lineNumberStyle is the style of the line number.
+	lineNumberStyle tcell.Style
 	// wrapSignWidth is the width of the wrap sign.
 	wrapSignWidth int
 	// breakSignWidth is the width of the break sign.

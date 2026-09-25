@@ -136,8 +136,6 @@ type Document struct {
 	// statusPos is the position of the status line.
 	statusPos int
 
-	// width is the width of the screen.
-	width int
 	// height is the height of the screen.
 	height int
 	// markedPoint is the position of the marked line.

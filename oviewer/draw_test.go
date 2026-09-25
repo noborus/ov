@@ -674,9 +674,6 @@ func TestRoot_updateDocumentSize_signWidths(t *testing.T) {
 	if root.Doc.bodyWidth != wantWidth {
 		t.Fatalf("Root.updateDocumentSize() bodyWidth = %d, want %d", root.Doc.bodyWidth, wantWidth)
 	}
-	if root.Doc.width != wantWidth {
-		t.Fatalf("Root.updateDocumentSize() width = %d, want %d", root.Doc.width, wantWidth)
-	}
 }
 
 func TestRoot_drawNoWrapLine_negativeStartX(t *testing.T) {
@@ -783,7 +780,7 @@ func TestRoot_drawSectionHeader_underlinesSearchLine(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()
 	root.Doc.bodyStartX = 0
-	root.Doc.width = 5
+	root.Doc.bodyWidth = 5
 	root.Doc.headerHeight = 0
 	root.Doc.sectionHeaderHeight = 1
 	root.Doc.lastSearchLN = 5
