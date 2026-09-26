@@ -22,8 +22,8 @@ var anchorPointStyle = OVStyle{
 type SignMode int
 
 const (
-	SignWrap SignMode = 1 << iota
-	SignBreak
+	SignBreak SignMode = 1 << iota
+	SignContinue
 	SignTrunc
 )
 
@@ -227,7 +227,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
-	root.drawWrapSign(lX, y)
+	root.drawBreakSign(lX, y)
 	for n := 0; ; n++ {
 		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
@@ -241,7 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
-			root.drawBreakSign(y)
+			root.drawContinueSign(y)
 			lX += n
 			break
 		}
@@ -377,29 +377,29 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, root.scr.lineNumberStyle)
 }
 
-// drawWrapSign draws the wrap sign indicator on the left side of the line.
-func (root *Root) drawWrapSign(lX int, y int) {
+// drawBreakSign draws the break sign indicator on the left side of the line.
+func (root *Root) drawBreakSign(lX int, y int) {
 	m := root.Doc
 	if m.leftSignWidth == 0 {
 		return
 	}
 	signX := m.bodyStartX - m.leftSignWidth
-	if lX != 0 && m.SignMode&int(SignWrap) != 0 {
-		root.Screen.PutStrStyled(signX, y, m.WrapSign, root.scr.wrapSignStyle)
+	if lX != 0 && m.SignMode&int(SignBreak) != 0 {
+		root.Screen.PutStrStyled(signX, y, m.BreakSign, root.scr.breakSignStyle)
 	} else {
 		root.Screen.PutStrStyled(signX, y, strings.Repeat(" ", m.leftSignWidth), defaultStyle)
 	}
 
 }
 
-// drawBreakSign draws the break sign indicator on the right side of the line.
-func (root *Root) drawBreakSign(y int) {
+// drawContinueSign draws the continuation sign indicator on the right side of the line.
+func (root *Root) drawContinueSign(y int) {
 	m := root.Doc
 	if m.rightSignWidth == 0 {
 		return
 	}
-	if m.SignMode&int(SignBreak) != 0 {
-		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.BreakSign, root.scr.breakSignStyle)
+	if m.SignMode&int(SignContinue) != 0 {
+		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.ContinueSign, root.scr.continueSignStyle)
 	}
 }
 

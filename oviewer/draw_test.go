@@ -631,13 +631,13 @@ func TestRoot_drawWrapLine_fullWidthAtRightEdge(t *testing.T) {
 
 func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
 	root := rootHelper(t)
-	root.Doc.SignMode = int(SignWrap | SignBreak)
+	root.Doc.SignMode = int(SignBreak | SignContinue)
 	root.Doc.WrapMode = true
 	root.prepareScreen()
 	root.Doc.bodyStartX = 4
 	root.Doc.bodyWidth = 5
-	root.Doc.leftSignWidth = root.scr.wrapSignWidth
-	root.Doc.rightSignWidth = root.scr.breakSignWidth
+	root.Doc.leftSignWidth = root.scr.breakSignWidth
+	root.Doc.rightSignWidth = root.scr.continueSignWidth
 	lineC := LineC{
 		lc:       StrToContents("ABCDE界", 0),
 		valid:    true,
@@ -646,28 +646,28 @@ func TestRoot_drawWrapLine_signsOutsideContent(t *testing.T) {
 
 	root.drawWrapLine(0, 1, 0, lineC)
 
-	gotWrap, _, _ := root.Screen.Get(root.Doc.bodyStartX-root.scr.wrapSignWidth, 0)
-	if gotWrap != root.Doc.WrapSign {
-		t.Fatalf("Root.drawLeftSign() wrap sign = %q, want %q", gotWrap, root.Doc.WrapSign)
-	}
-	gotBreak, _, _ := root.Screen.Get(root.Doc.bodyStartX+root.Doc.bodyWidth, 0)
+	gotBreak, _, _ := root.Screen.Get(root.Doc.bodyStartX-root.scr.breakSignWidth, 0)
 	if gotBreak != root.Doc.BreakSign {
-		t.Fatalf("Root.drawWrapLine() break sign = %q, want %q", gotBreak, root.Doc.BreakSign)
+		t.Fatalf("Root.drawBreakSign() = %q, want %q", gotBreak, root.Doc.BreakSign)
+	}
+	gotContinue, _, _ := root.Screen.Get(root.Doc.bodyStartX+root.Doc.bodyWidth, 0)
+	if gotContinue != root.Doc.ContinueSign {
+		t.Fatalf("Root.drawWrapLine() continue sign = %q, want %q", gotContinue, root.Doc.ContinueSign)
 	}
 }
 
 func TestRoot_updateDocumentSize_signWidths(t *testing.T) {
 	root := rootHelper(t)
 	root.Doc.WrapMode = true
-	root.Doc.SignMode = int(SignWrap | SignBreak)
+	root.Doc.SignMode = int(SignBreak | SignContinue)
 	root.Doc.leftMargin = 2
 	root.Doc.lineNumberWidth = 3
 	root.Doc.rightMargin = 1
 
 	root.prepareScreen()
 
-	wantStartX := root.Doc.leftMargin + root.Doc.lineNumberWidth + root.scr.wrapSignWidth
-	wantWidth := root.scr.vWidth - (wantStartX + root.Doc.rightMargin + root.scr.breakSignWidth)
+	wantStartX := root.Doc.leftMargin + root.Doc.lineNumberWidth + root.scr.breakSignWidth
+	wantWidth := root.scr.vWidth - (wantStartX + root.Doc.rightMargin + root.scr.continueSignWidth)
 	if root.Doc.bodyStartX != wantStartX {
 		t.Fatalf("Root.updateDocumentSize() bodyStartX = %d, want %d", root.Doc.bodyStartX, wantStartX)
 	}

@@ -542,7 +542,7 @@ func init() {
 	})
 	rootCmd.PersistentFlags().String("break-indent", "0", "indent width for wrapped lines")
 	_ = viper.BindPFlag("general.BreakIndent", rootCmd.PersistentFlags().Lookup("break-indent"))
-	rootCmd.PersistentFlags().Int("sign-mode", 0, "display markers as a bitmask: 1=wrap, 2=break, 4=trunc")
+	rootCmd.PersistentFlags().Int("sign-mode", 0, "display markers as a bitmask: 1=break, 2=continue, 4=trunc")
 	_ = viper.BindPFlag("general.SignMode", rootCmd.PersistentFlags().Lookup("sign-mode"))
 
 	rootCmd.PersistentFlags().BoolP("plain", "p", false, "strip ANSI colors and styles from the content")
