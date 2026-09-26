@@ -28,11 +28,11 @@ func (root *Root) prepareScreen() {
 	// Do not allow very small screens.
 	root.scr.vWidth = max(root.scr.vWidth, 2)
 	root.scr.vHeight = max(root.scr.vHeight, 2)
-	root.scr.wrapSignWidth = uniseg.StringWidth(root.Doc.WrapSign)
 	root.scr.breakSignWidth = uniseg.StringWidth(root.Doc.BreakSign)
+	root.scr.continueSignWidth = uniseg.StringWidth(root.Doc.ContinueSign)
 	root.scr.truncSignWidth = uniseg.StringWidth(root.Doc.TruncSign)
-	root.scr.wrapSignStyle = applyStyle(defaultStyle, root.Doc.Style.WrapSign)
 	root.scr.breakSignStyle = applyStyle(defaultStyle, root.Doc.Style.BreakSign)
+	root.scr.continueSignStyle = applyStyle(defaultStyle, root.Doc.Style.ContinueSign)
 	root.scr.truncSignStyle = applyStyle(defaultStyle, root.Doc.Style.TruncSign)
 	root.scr.lineNumberStyle = applyStyle(defaultStyle, root.Doc.Style.LineNumber)
 	root.updateDocumentSize()
@@ -90,11 +90,11 @@ func (root *Root) updateDocumentSize() {
 	m := root.Doc
 	m.leftSignWidth = 0
 	m.rightSignWidth = 0
-	if m.WrapMode && m.SignMode&int(SignWrap) != 0 {
-		m.leftSignWidth = root.scr.wrapSignWidth
-	}
 	if m.WrapMode && m.SignMode&int(SignBreak) != 0 {
-		m.rightSignWidth = root.scr.breakSignWidth
+		m.leftSignWidth = root.scr.breakSignWidth
+	}
+	if m.WrapMode && m.SignMode&int(SignContinue) != 0 {
+		m.rightSignWidth = root.scr.continueSignWidth
 	}
 	if !m.WrapMode && m.SignMode&int(SignTrunc) != 0 {
 		m.rightSignWidth = root.scr.truncSignWidth

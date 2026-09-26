@@ -63,12 +63,12 @@ type RunTimeSettings struct {
 	LineNumMode bool
 	// WrapMode is wrap mode.
 	WrapMode bool
-	// SignMode is a bitmask for display markers (1=wrap, 2=break, 4=trunc).
+	// SignMode is a bitmask for display markers (1=break, 2=continue, 4=trunc).
 	SignMode int
-	// WrapSign is the sign used for wrapped lines.
-	WrapSign string
-	// BreakSign is the sign used for broken lines.
+	// BreakSign is the sign displayed at the start of wrapped lines.
 	BreakSign string
+	// ContinueSign is the sign displayed at the end of lines that continue.
+	ContinueSign string
 	// TruncSign is the sign used for truncated lines.
 	TruncSign string
 
@@ -144,10 +144,10 @@ type Style struct {
 	SelectCopied OVStyle
 	// PauseLine is the style that applies to the line where follow mode is paused.
 	PauseLine OVStyle
-	// WrapSign is the style that applies to the wrap sign.
-	WrapSign OVStyle
 	// BreakSign is the style that applies to the break sign.
 	BreakSign OVStyle
+	// ContinueSign is the style that applies to the continuation sign.
+	ContinueSign OVStyle
 	// TruncSign is the style that applies to the truncation sign.
 	TruncSign OVStyle
 }
@@ -171,8 +171,8 @@ func NewRunTimeSettings() RunTimeSettings {
 		MarkStyleWidth: 1,
 		Converter:      convEscaped,
 		SignMode:       0,
-		WrapSign:       "↳",
-		BreakSign:      "↵",
+		BreakSign:      "↳",
+		ContinueSign:   "↵",
 		TruncSign:      "…",
 		BreakIndent:    "0",
 		OVPromptConfig: NewOVPromptConfig(),
@@ -245,10 +245,10 @@ func NewStyle() Style {
 		PauseLine: OVStyle{
 			Background: "#663333",
 		},
-		WrapSign: OVStyle{
+		BreakSign: OVStyle{
 			Foreground: "grey",
 		},
-		BreakSign: OVStyle{
+		ContinueSign: OVStyle{
 			Foreground: "grey",
 		},
 		TruncSign: OVStyle{
@@ -356,8 +356,8 @@ func updateRunTimeSettings(base RunTimeSettings, override General) RunTimeSettin
 	applyIfSet(&base.LineNumMode, override.LineNumMode)
 	applyIfSet(&base.WrapMode, override.WrapMode)
 	applyIfSet(&base.SignMode, override.SignMode)
-	applyIfSet(&base.WrapSign, override.WrapSign)
 	applyIfSet(&base.BreakSign, override.BreakSign)
+	applyIfSet(&base.ContinueSign, override.ContinueSign)
 	applyIfSet(&base.TruncSign, override.TruncSign)
 	applyIfSet(&base.BreakIndent, override.BreakIndent)
 	applyIfSet(&base.FollowMode, override.FollowMode)
@@ -421,8 +421,8 @@ func updateRuntimeStyle(base Style, override StyleConfig) Style {
 	applyIfSet(&base.SectionLine, override.SectionLine)
 	applyIfSet(&base.VerticalHeader, override.VerticalHeader)
 	applyIfSet(&base.JumpTargetLine, override.JumpTargetLine)
-	applyIfSet(&base.WrapSign, override.WrapSign)
 	applyIfSet(&base.BreakSign, override.BreakSign)
+	applyIfSet(&base.ContinueSign, override.ContinueSign)
 	applyIfSet(&base.TruncSign, override.TruncSign)
 	applyIfSet(&base.Alternate, override.Alternate)
 	applyIfSet(&base.Ruler, override.Ruler)

@@ -62,12 +62,12 @@ type General struct {
 	LineNumMode *bool
 	// WrapMode indicates whether wrapping is enabled.
 	WrapMode *bool
-	// SignMode is a bitmask for display markers (1=wrap, 2=break, 4=trunc).
+	// SignMode is a bitmask for display markers (1=break, 2=continue, 4=trunc).
 	SignMode *int
-	// WrapSign is the sign used for wrapped lines.
-	WrapSign *string
-	// BreakSign is the sign used for broken lines.
+	// BreakSign is the sign displayed at the start of wrapped lines.
 	BreakSign *string
+	// ContinueSign is the sign displayed at the end of lines that continue.
+	ContinueSign *string
 	// TruncSign is the sign used for truncated lines.
 	TruncSign *string
 	// FollowMode is the follow mode.
