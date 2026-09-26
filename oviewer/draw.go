@@ -19,6 +19,14 @@ var anchorPointStyle = OVStyle{
 	Reverse: true,
 }
 
+type SignMode int
+
+const (
+	SignWrap SignMode = 1 << iota
+	SignBreak
+	SignTrunc
+)
+
 // draw is the main routine that draws the screen.
 func (root *Root) draw(ctx context.Context) {
 	shouldSync := root.scr.forceDisplaySync
@@ -47,7 +55,7 @@ func (root *Root) draw(ctx context.Context) {
 // drawBody sets bottomLN and bottomLX of the document.
 func (root *Root) drawBody() {
 	m := root.Doc
-	markStyleWidth := min(m.width, m.MarkStyleWidth)
+	markStyleWidth := min(m.bodyWidth, m.MarkStyleWidth)
 	lN := m.topLN + root.scr.headerEnd
 	lX := 0
 	wrapNum := 0
@@ -63,7 +71,6 @@ func (root *Root) drawBody() {
 		}
 		root.scr.numbers[y] = newLineNumber(lN, wrapNum)
 		root.drawLineNumber(lN, y, lineC.valid)
-
 		nextLX, nextLN := root.drawLine(y, lX, lN, lineC)
 		if root.Doc.SectionHeader {
 			root.sectionLineHighlight(y, lineC)
@@ -220,6 +227,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		log.Printf("Illegal lX: %d\n", lX)
 		return 0, 0
 	}
+	root.drawWrapSign(lX, y)
 	for n := 0; ; n++ {
 		x := root.Doc.bodyStartX + n
 		if lX+n >= len(lineC.lc) {
@@ -233,6 +241,7 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 		if x+c.width > root.Doc.bodyStartX+root.Doc.bodyWidth {
 			// Right edge.
 			root.clearEOL(x, y, defaultStyle)
+			root.drawBreakSign(y)
 			lX += n
 			break
 		}
@@ -245,27 +254,29 @@ func (root *Root) drawWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
 }
 
 // drawNoWrapLine draws contents without wrapping and returns the next drawing position.
-func (root *Root) drawNoWrapLine(y int, lX int, lN int, lineC LineC) (int, int) {
-	lX = max(lX, root.minStartX)
+func (root *Root) drawNoWrapLine(y int, startX int, lN int, lineC LineC) (int, int) {
+	startX = max(startX, root.minStartX)
 	for n := 0; n < root.Doc.bodyWidth; n++ {
 		x := root.Doc.bodyStartX + n
-		if lX+n >= len(lineC.lc) {
-			// EOL
-			root.clearEOL(x, y, lineC.eolStyle)
-			break
-		}
-		if lX+n < 0 {
+		lX := startX + n
+		if lX < 0 {
 			root.Screen.Put(x, y, " ", defaultStyle)
 			continue
 		}
-		c := lineC.lc[lX+n]
+		if lX >= len(lineC.lc) {
+			// EOL
+			root.clearEOL(x, y, lineC.eolStyle)
+			return startX, lN + 1
+		}
+
+		c := lineC.lc[lX]
 		root.put(x, y, c.str, c.style)
 		if c.width == 2 {
 			n++
 		}
 	}
-	lN++
-	return lX, lN
+	root.drawTruncSign(y)
+	return startX, lN + 1
 }
 
 // drawVerticalHeader draws the vertical header.
@@ -362,9 +373,44 @@ func (root *Root) drawLineNumber(lN int, y int, valid bool) {
 	// Line numbers start at 1 except for skip and header lines.
 	number = number - m.firstLine() + 1
 
-	style := applyStyle(defaultStyle, m.Style.LineNumber)
 	numC := fmt.Sprintf("%*d ", root.Doc.lineNumberWidth-1, number)
-	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, style)
+	root.Screen.PutStrStyled(root.Doc.leftMargin, y, numC, root.scr.lineNumberStyle)
+}
+
+// drawWrapSign draws the wrap sign indicator on the left side of the line.
+func (root *Root) drawWrapSign(lX int, y int) {
+	m := root.Doc
+	if m.leftSignWidth == 0 {
+		return
+	}
+	signX := m.bodyStartX - m.leftSignWidth
+	if lX != 0 && m.SignMode&int(SignWrap) != 0 {
+		root.Screen.PutStrStyled(signX, y, m.WrapSign, root.scr.wrapSignStyle)
+	} else {
+		root.Screen.PutStrStyled(signX, y, strings.Repeat(" ", m.leftSignWidth), defaultStyle)
+	}
+
+}
+
+// drawBreakSign draws the break sign indicator on the right side of the line.
+func (root *Root) drawBreakSign(y int) {
+	m := root.Doc
+	if m.rightSignWidth == 0 {
+		return
+	}
+	if m.SignMode&int(SignBreak) != 0 {
+		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.BreakSign, root.scr.breakSignStyle)
+	}
+}
+
+func (root *Root) drawTruncSign(y int) {
+	m := root.Doc
+	if m.rightSignWidth == 0 {
+		return
+	}
+	if m.SignMode&int(SignTrunc) != 0 {
+		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.TruncSign, root.scr.truncSignStyle)
+	}
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.
@@ -419,7 +465,7 @@ func (root *Root) applyStyleToAlternate(lN int, y int) {
 // applyStyleToLine applies the style from the left edge to the right edge of the physical line.
 // Apply styles to the screen.
 func (root *Root) applyStyleToLine(y int, ovs OVStyle) {
-	root.applyStyleToRange(y, ovs, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.width)
+	root.applyStyleToRange(y, ovs, root.Doc.bodyStartX, root.Doc.bodyStartX+root.Doc.bodyWidth)
 }
 
 // applyMarkStyle applies the style from the left edge to the specified width.

@@ -62,6 +62,14 @@ type General struct {
 	LineNumMode *bool
 	// WrapMode indicates whether wrapping is enabled.
 	WrapMode *bool
+	// SignMode is a bitmask for display markers (1=wrap, 2=break, 4=trunc).
+	SignMode *int
+	// WrapSign is the sign used for wrapped lines.
+	WrapSign *string
+	// BreakSign is the sign used for broken lines.
+	BreakSign *string
+	// TruncSign is the sign used for truncated lines.
+	TruncSign *string
 	// FollowMode is the follow mode.
 	FollowMode *bool
 	// FollowAll is a follow mode for all documents.
@@ -229,6 +237,11 @@ func (g *General) SetLineNumMode(lineNum bool) {
 // SetWrapMode sets the wrap mode.
 func (g *General) SetWrapMode(wrap bool) {
 	g.WrapMode = &wrap
+}
+
+// SetSignMode sets the display marker bitmask.
+func (g *General) SetSignMode(mode int) {
+	g.SignMode = &mode
 }
 
 // SetWrap sets the wrap mode ("char" or "word").

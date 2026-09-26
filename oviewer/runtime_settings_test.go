@@ -777,6 +777,9 @@ func Test_updateRuntimeStyle(t *testing.T) {
 					SelectActive:         &blueStyle,
 					SelectCopied:         &blueStyle,
 					PauseLine:            &blueStyle,
+					WrapSign:             &blueStyle,
+					BreakSign:            &blueStyle,
+					TruncSign:            &blueStyle,
 				},
 			},
 			want: Style{
@@ -799,6 +802,9 @@ func Test_updateRuntimeStyle(t *testing.T) {
 				SelectActive:         blueStyle,
 				SelectCopied:         blueStyle,
 				PauseLine:            blueStyle,
+				WrapSign:             blueStyle,
+				BreakSign:            blueStyle,
+				TruncSign:            blueStyle,
 			},
 		},
 	}

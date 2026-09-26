@@ -212,6 +212,12 @@ type StyleConfig struct {
 	SelectCopied *OVStyle
 	// PauseLine is the style that applies to the line where follow mode is paused.
 	PauseLine *OVStyle
+	// WrapSign is the style that applies to the wrap sign.
+	WrapSign *OVStyle
+	// BreakSign is the style that applies to the break sign.
+	BreakSign *OVStyle
+	// TruncSign is the style that applies to the trunc sign.
+	TruncSign *OVStyle
 }
 
 // deprecatedStyleConfig is the old style setting.

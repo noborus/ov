@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strconv"
 	"time"
+
+	"github.com/rivo/uniseg"
 )
 
 const (
@@ -26,8 +28,14 @@ func (root *Root) prepareScreen() {
 	// Do not allow very small screens.
 	root.scr.vWidth = max(root.scr.vWidth, 2)
 	root.scr.vHeight = max(root.scr.vHeight, 2)
+	root.scr.wrapSignWidth = uniseg.StringWidth(root.Doc.WrapSign)
+	root.scr.breakSignWidth = uniseg.StringWidth(root.Doc.BreakSign)
+	root.scr.truncSignWidth = uniseg.StringWidth(root.Doc.TruncSign)
+	root.scr.wrapSignStyle = applyStyle(defaultStyle, root.Doc.Style.WrapSign)
+	root.scr.breakSignStyle = applyStyle(defaultStyle, root.Doc.Style.BreakSign)
+	root.scr.truncSignStyle = applyStyle(defaultStyle, root.Doc.Style.TruncSign)
+	root.scr.lineNumberStyle = applyStyle(defaultStyle, root.Doc.Style.LineNumber)
 	root.updateDocumentSize()
-
 	root.scr.rulerHeight = 0
 	if root.Doc.RulerType != RulerNone {
 		root.scr.rulerHeight = rulerHeight
@@ -65,6 +73,8 @@ func (root *Root) prepareStartX() {
 	m.leftMargin = root.sidebarWidth
 	m.rightMargin = 0
 	m.lineNumberWidth = 0
+	m.leftSignWidth = 0
+	m.rightSignWidth = 0
 	if m.LineNumMode {
 		target := m
 		if m.parent != nil {
@@ -72,14 +82,25 @@ func (root *Root) prepareStartX() {
 		}
 		m.lineNumberWidth = len(strconv.Itoa(target.BufEndNum())) + 1
 	}
-	m.bodyStartX = m.leftMargin + m.lineNumberWidth
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
 }
 
 // updateDocumentSize updates the document size.
 func (root *Root) updateDocumentSize() {
 	m := root.Doc
-	m.width = root.scr.vWidth - m.bodyStartX
-	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin)
+	m.leftSignWidth = 0
+	m.rightSignWidth = 0
+	if m.WrapMode && m.SignMode&int(SignWrap) != 0 {
+		m.leftSignWidth = root.scr.wrapSignWidth
+	}
+	if m.WrapMode && m.SignMode&int(SignBreak) != 0 {
+		m.rightSignWidth = root.scr.breakSignWidth
+	}
+	if !m.WrapMode && m.SignMode&int(SignTrunc) != 0 {
+		m.rightSignWidth = root.scr.truncSignWidth
+	}
+	m.bodyStartX = m.leftMargin + m.lineNumberWidth + m.leftSignWidth
+	m.bodyWidth = root.scr.vWidth - (m.bodyStartX + m.rightMargin + m.rightSignWidth)
 	m.height = root.scr.vHeight - root.scr.statusLineHeight
 	m.statusPos = m.height
 }
