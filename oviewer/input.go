@@ -36,6 +36,10 @@ const (
 	Delimiter
 	// TabWidth is for setting the tab width.
 	TabWidth
+	// BreakIndentInput is for setting the wrapped-line indent.
+	BreakIndentInput
+	// SignModeInput is for setting the display marker bitmask.
+	SignModeInput
 	// Watch is for setting the watch interval.
 	Watch
 	// SkipLines is for setting the number of lines to skip.
@@ -90,6 +94,8 @@ func NewInput() *Input {
 	i.Candidate[Goline] = blankCandidate()
 	i.Candidate[Delimiter] = delimiterCandidate()
 	i.Candidate[TabWidth] = tabWidthCandidate()
+	i.Candidate[BreakIndentInput] = blankCandidate()
+	i.Candidate[SignModeInput] = signModeCandidate()
 	i.Candidate[Watch] = watchCandidate()
 	i.Candidate[WriteBA] = blankCandidate()
 	i.Candidate[SectionDelimiter] = sectionDelimiterCandidate()

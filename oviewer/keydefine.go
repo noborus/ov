@@ -101,6 +101,8 @@ func DefaultKeyBinds() KeyBind {
 		actionSectionStart:   {"ctrl+F3", "alt+s"},
 		actionSkipLines:      {"ctrl+s"},
 		actionTabWidth:       {"t"},
+		actionBreakIndent:    {"alt+b"},
+		actionSignMode:       {"alt+g"},
 		actionVerticalHeader: {"y"},
 		actionViewMode:       {"p", "P"},
 		actionWatchInterval:  {"ctrl+w"},

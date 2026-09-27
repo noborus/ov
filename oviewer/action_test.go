@@ -626,6 +626,37 @@ func TestRoot_goLine(t *testing.T) {
 	}
 }
 
+func TestRoot_setBreakIndent(t *testing.T) {
+	root := rootHelper(t)
+	root.Doc.BreakIndent = "0"
+	root.setBreakIndent("L+2")
+	if root.Doc.BreakIndent != "L+2" {
+		t.Errorf("setBreakIndent() = %q, want %q", root.Doc.BreakIndent, "L+2")
+	}
+	root.setBreakIndent("L+x")
+	if root.Doc.BreakIndent != "L+2" || root.message != ErrInvalidNumber.Error() {
+		t.Errorf("invalid setBreakIndent() left indent %q and message %q", root.Doc.BreakIndent, root.message)
+	}
+}
+
+func TestRoot_setSignMode(t *testing.T) {
+	root := rootHelper(t)
+	root.setSignMode("5")
+	if root.Doc.SignMode != 5 {
+		t.Errorf("setSignMode() = %d, want 5", root.Doc.SignMode)
+	}
+	root.setSignMode("invalid")
+	if root.Doc.SignMode != 5 || root.message != ErrInvalidNumber.Error() {
+		t.Errorf("invalid setSignMode() left mode %d and message %q", root.Doc.SignMode, root.message)
+	}
+	for _, input := range []string{"-1", "8"} {
+		root.setSignMode(input)
+		if root.Doc.SignMode != 5 || root.message != ErrInvalidNumber.Error() {
+			t.Errorf("out-of-range setSignMode(%q) left mode %d and message %q", input, root.Doc.SignMode, root.message)
+		}
+	}
+}
+
 func TestRoot_setHeader(t *testing.T) {
 	root := rootHelper(t)
 	root.prepareScreen()

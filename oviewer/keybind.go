@@ -105,6 +105,8 @@ const (
 	actionHeader         = "header"
 	actionSkipLines      = "skip_lines"
 	actionTabWidth       = "tabwidth"
+	actionBreakIndent    = "break_indent"
+	actionSignMode       = "sign_mode"
 	actionMultiColor     = "multi_color"
 	actionJumpTarget     = "jump_target"
 	actionConvertType    = "convert_type"
@@ -237,6 +239,8 @@ func (root *Root) handlers() map[string]func(context.Context) {
 		actionHeader:         root.inputHeader,
 		actionSkipLines:      root.inputSkipLines,
 		actionTabWidth:       root.inputTabWidth,
+		actionBreakIndent:    root.inputBreakIndent,
+		actionSignMode:       root.inputSignMode,
 		actionMultiColor:     root.inputMultiColor,
 		actionJumpTarget:     root.inputJumpTarget,
 		actionConvertType:    root.inputConvert,
@@ -443,6 +447,8 @@ var keyBindDescriptions = []KeyBindDescription{
 	{Group: GroupChangeInput, Action: actionHeader, Description: "number of header lines"},
 	{Group: GroupChangeInput, Action: actionSkipLines, Description: "number of skip lines"},
 	{Group: GroupChangeInput, Action: actionTabWidth, Description: "TAB width"},
+	{Group: GroupChangeInput, Action: actionBreakIndent, Description: "indent width for wrapped lines"},
+	{Group: GroupChangeInput, Action: actionSignMode, Description: "display marker bitmask"},
 	{Group: GroupChangeInput, Action: actionMultiColor, Description: "highlight words in distinct colors"},
 	{Group: GroupChangeInput, Action: actionJumpTarget, Description: "jump target (`.n`, `n%`, or `section`)"},
 	{Group: GroupChangeInput, Action: actionConvertType, Description: "select content processing mode"},

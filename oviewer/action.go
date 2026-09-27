@@ -537,6 +537,46 @@ func (root *Root) setTabWidth(input string) {
 	root.Doc.ClearCache()
 }
 
+// setBreakIndent sets the indentation for wrapped lines.
+func (root *Root) setBreakIndent(input string) {
+	if input != "L" {
+		number := input
+		if strings.HasPrefix(input, "L+") || strings.HasPrefix(input, "L-") {
+			number = input[1:]
+		}
+		if _, err := strconv.Atoi(number); err != nil {
+			root.setMessage(ErrInvalidNumber.Error())
+			return
+		}
+	}
+	if root.Doc.BreakIndent == input {
+		return
+	}
+
+	root.Doc.BreakIndent = input
+	root.Doc.ClearCache()
+	root.setMessagef("Set break indent %s", input)
+}
+
+// setSignMode sets the display marker bitmask.
+func (root *Root) setSignMode(input string) {
+	mode, err := strconv.Atoi(input)
+	if err != nil {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	if mode < 0 || mode&^int(SignBreak|SignContinue|SignTrunc) != 0 {
+		root.setMessage(ErrInvalidNumber.Error())
+		return
+	}
+	if root.Doc.SignMode == mode {
+		return
+	}
+
+	root.Doc.SignMode = mode
+	root.setMessagef("Set sign mode %d", mode)
+}
+
 // setWatchInterval sets the Watch interval.
 func (root *Root) setWatchInterval(input string) {
 	interval, err := strconv.Atoi(input)

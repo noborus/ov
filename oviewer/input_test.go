@@ -358,6 +358,14 @@ func TestRoot_inputPrompt(t *testing.T) {
 	if root.inputPrompt() != "TAB width:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "TAB width:")
 	}
+	root.inputBreakIndent(ctx)
+	if root.inputPrompt() != "Break indent:" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Break indent:")
+	}
+	root.inputSignMode(ctx)
+	if root.inputPrompt() != "Sign mode (bitmask):" {
+		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Sign mode (bitmask):")
+	}
 	root.inputSectionDelimiter(ctx)
 	if root.inputPrompt() != "Section delimiter:" {
 		t.Errorf("Root.inputMode() = %v, want %v", root.inputPrompt(), "Section delimiter:")
