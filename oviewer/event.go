@@ -105,6 +105,10 @@ func (root *Root) event(ctx context.Context, ev tcell.Event) bool {
 		root.setSkipLines(ev.value)
 	case *eventTabWidth:
 		root.setTabWidth(ev.value)
+	case *eventBreakIndent:
+		root.setBreakIndent(ev.value)
+	case *eventSignMode:
+		root.setSignMode(ev.value)
 	case *eventSectionDelimiter:
 		root.setSectionDelimiter(ev.value)
 	case *eventSectionStart:
