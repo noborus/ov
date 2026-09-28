@@ -500,6 +500,34 @@ Word wrap has been added and the method of specification has changed.
 
 Toggle word wrap with default key `Alt+w`.
 
+*Added in v0.55.0*
+
+Wrapped-line indentation can be set with `--break-indent` or the default key
+`Ctrl+Alt+n`. Use `0` for no indentation, a positive number for a fixed width,
+`L` to match the source line's leading whitespace, or `L+N`/`L-N` to adjust
+that indentation. `+N` and `-N` are shorthand for the relative forms.
+
+Display markers can be enabled with `--sign-mode` or the default key
+`Ctrl+Alt+m`. The default value is `0` (no markers). Add the bit values to
+enable markers: `1` marks the start of a wrapped line with `↳`, `2` marks a line
+that continues with `↵`, and `4` marks a truncated line with `…`.
+
+| Value | Markers enabled | Display example |
+|-------|-----------------|-----------------|
+| `0`   | None            | `long line` |
+| `1`   | `↳`             | `↳ wrapped continuation` |
+| `2`   | `↵`             | `line continues ↵` |
+| `3`   | `↳` and `↵`     | `line continues ↵`<br>`↳ wrapped continuation` |
+| `4`   | `…`             | `truncated line…` |
+| `5`   | `↳` and `…`     | `↳ wrapped continuation` or `truncated line…` |
+| `6`   | `↵` and `…`     | `line continues ↵` or `truncated line…` |
+| `7`   | `↳`, `↵`, and `…` | All applicable markers above |
+
+The `↳` and `↵` markers are shown when line wrapping is enabled; `…` is shown
+when wrapping is disabled and a line is truncated. Marker characters and styles
+can be customized with `BreakSign`, `ContinueSign`, `TruncSign` and their
+corresponding `Style` entries under `General` in the config file.
+
 ###  4.9. <a name='alternate-rows'></a>Alternate-Rows
 
 Alternate row styles with the `--alternate-rows`(`-C`) (default key `C`) option
@@ -836,6 +864,8 @@ The specified marks can be displayed in the mark list in the [Sidebar](#sidebar)
 You can use mark by pattern to mark all lines that match the search(default key `*`).
 This will enter pattern input mode and, when you press `Enter`, mark all lines
 that match the pattern.
+
+Use `--mark-by-pattern` to mark matching lines when `ov` starts.
 
 ####  4.17.2. <a name='specifying-a-mark'></a>Specifying a mark
 
@@ -1343,6 +1373,7 @@ MemoryLimit: 1000
 |-------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
 | -l,   | --align                                    | align the output columns for better readability                                                                       |
 | -C,   | --alternate-rows                           | highlight even and odd rows in alternating colors                                                                     |
+|       | --break-indent string                      | indent width for wrapped lines (default "0")                                                                          |
 |       | --caption string                           | override the status line file name with a custom label                                                                |
 | -i,   | --case-sensitive                           | case-sensitive in search                                                                                              |
 | -d,   | --column-delimiter character               | column delimiter character (default ",")                                                                              |
@@ -1376,6 +1407,7 @@ MemoryLimit: 1000
 | -j,   | --jump-target [int\|int%\|.int\|'section'] | jump target [int\|int%\|.int\|'section']                                                                              |
 | -n,   | --line-number                              | show line numbers                                                                                                     |
 |       | --list-view-modes                          | list available view modes defined in the configuration file                                                           |
+|       | --mark-by-pattern string                   | mark lines matching this pattern                                                                                      |
 |       | --memory-limit int                         | maximum chunks to keep in memory (-1 for unlimited) (default -1)                                                      |
 |       | --memory-limit-file int                    | maximum chunks to keep in memory per file (default 100)                                                               |
 | -M,   | --multi-color strings                      | highlight words or patterns in distinct colors (e.g., "ERROR,WARNING")                                                |
@@ -1392,7 +1424,8 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                                                                            |
 |       | --section-start int                        | line offset from the section delimiter where content begins                                                           |
 |       | --set-terminal-title                       | update the terminal title bar with the current file name                                                              |
-|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections\|styles]                                             |
+|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections]                                                     |
+|       | --sign-mode int                            | display markers as a bitmask: 1=break, 2=continue, 4=trunc                                                            |
 |       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                              |
 |       | --skip-lines int                           | number of lines to skip at the top of each file                                                                       |
 |       | --smart-case-sensitive                     | case-insensitive unless the pattern contains uppercase letters                                                        |
@@ -1484,6 +1517,7 @@ It can also be changed after startup.
 | [Alt+f]                       | * align columns                                                       |
 | [Alt+r]                       | * toggle raw output mode                                              |
 | [Alt+Shift+F9]                | * ruler toggle                                                        |
+| [Ctrl+Alt+u]                  | * unhighlight search results until the next search                    |
 | [Ctrl+F10]                    | * status line toggle                                                  |
 | [o]                           | * suppress style highlight by number                                  |
 | **Change Display with Input** |                                                                       |
@@ -1492,6 +1526,8 @@ It can also be changed after startup.
 | [H]                           | * number of header lines                                              |
 | [Ctrl+s]                      | * number of skip lines                                                |
 | [t]                           | * TAB width                                                           |
+| [Ctrl+Alt+n]                  | * indent width for wrapped lines                                      |
+| [Ctrl+Alt+m]                  | * display marker bitmask                                              |
 | [.]                           | * highlight words in distinct colors                                  |
 | [j]                           | * jump target (`.n`, `n%`, or `section`)                              |
 | [Alt+t]                       | * select content processing mode                                      |
@@ -1929,6 +1965,11 @@ Mode:
 | ColumnRainbow       | Enable rainbow coloring for columns                       | `ColumnRainbow: true`           |
 | LineNumMode         | Display line numbers                                      | `LineNumMode: true`             |
 | Wrap                | Line wrapping mode (character, word, none)                | `Wrap: "character"`             |
+| BreakIndent         | Indentation for wrapped lines                             | `BreakIndent: "L+2"`            |
+| SignMode            | Display markers (default 0; 1=↳, 2=↵, 4=…)               | `SignMode: 3`                    |
+| BreakSign            | Marker at the start of a wrapped line                     | `BreakSign: "↳"`                |
+| ContinueSign         | Marker on a line that continues                           | `ContinueSign: "↵"`              |
+| TruncSign            | Marker for truncated lines                                | `TruncSign: "…"`                |
 | FollowMode          | Enable follow mode                                        | `FollowMode: true`              |
 | FollowAll           | Enable follow mode for all documents                      | `FollowAll: true`               |
 | FollowSection       | Enable section-based follow mode                          | `FollowSection: true`           |
