@@ -1424,7 +1424,7 @@ MemoryLimit: 1000
 |       | --section-header-num int                   | number of section header lines (default 1)                                                                            |
 |       | --section-start int                        | line offset from the section delimiter where content begins                                                           |
 |       | --set-terminal-title                       | update the terminal title bar with the current file name                                                              |
-|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections]                                                     |
+|       | --sidebar-mode string                      | open sidebar with this content [help\|marks\|documents\|sections\|styles]                                             |
 |       | --sign-mode int                            | display markers as a bitmask: 1=break, 2=continue, 4=trunc                                                            |
 |       | --skip-extract                             | read compressed files as raw bytes without decompressing                                                              |
 |       | --skip-lines int                           | number of lines to skip at the top of each file                                                                       |
