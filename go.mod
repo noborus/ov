@@ -13,13 +13,13 @@ require (
 	github.com/klauspost/compress v1.20.1
 	github.com/noborus/guesswidth v0.5.0
 	github.com/noborus/tcellansi v0.4.1
-	github.com/pierrec/lz4/v4 v4.1.30
+	github.com/pierrec/lz4/v4 v4.1.31
 	github.com/rivo/uniseg v0.4.7
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/ulikunitz/xz v0.5.17
-	golang.design/x/clipboard v0.9.0
+	golang.design/x/clipboard v0.11.0
 	golang.org/x/sync v0.23.0
 	golang.org/x/sys v0.48.0
 	golang.org/x/term v0.46.0
@@ -28,7 +28,7 @@ require (
 require (
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/ebitengine/purego v0.11.0 // indirect
+	github.com/ebitengine/purego v0.11.1 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
