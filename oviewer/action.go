@@ -574,6 +574,7 @@ func (root *Root) setSignMode(input string) {
 	}
 
 	root.Doc.SignMode = mode
+	root.Doc.ClearCache()
 	root.setMessagef("Set sign mode %d", mode)
 }
 

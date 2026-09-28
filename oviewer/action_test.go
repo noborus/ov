@@ -641,17 +641,27 @@ func TestRoot_setBreakIndent(t *testing.T) {
 
 func TestRoot_setSignMode(t *testing.T) {
 	root := rootHelper(t)
-	root.setSignMode("5")
-	if root.Doc.SignMode != 5 {
-		t.Errorf("setSignMode() = %d, want 5", root.Doc.SignMode)
+	root.Doc.WrapMode = true
+	root.prepareScreen()
+	root.Doc.cache.Add(0, LineC{})
+	root.setSignMode("3")
+	if root.Doc.SignMode != 3 {
+		t.Errorf("setSignMode() = %d, want 3", root.Doc.SignMode)
+	}
+	if root.Doc.cache.Len() != 0 {
+		t.Errorf("setSignMode() left %d cached lines, want 0", root.Doc.cache.Len())
+	}
+	root.prepareDraw(context.Background())
+	if root.Doc.leftSignWidth != root.scr.breakSignWidth || root.Doc.rightSignWidth != root.scr.continueSignWidth {
+		t.Errorf("setSignMode() sign widths = (%d, %d), want (%d, %d)", root.Doc.leftSignWidth, root.Doc.rightSignWidth, root.scr.breakSignWidth, root.scr.continueSignWidth)
 	}
 	root.setSignMode("invalid")
-	if root.Doc.SignMode != 5 || root.message != ErrInvalidNumber.Error() {
+	if root.Doc.SignMode != 3 || root.message != ErrInvalidNumber.Error() {
 		t.Errorf("invalid setSignMode() left mode %d and message %q", root.Doc.SignMode, root.message)
 	}
 	for _, input := range []string{"-1", "8"} {
 		root.setSignMode(input)
-		if root.Doc.SignMode != 5 || root.message != ErrInvalidNumber.Error() {
+		if root.Doc.SignMode != 3 || root.message != ErrInvalidNumber.Error() {
 			t.Errorf("out-of-range setSignMode(%q) left mode %d and message %q", input, root.Doc.SignMode, root.message)
 		}
 	}
