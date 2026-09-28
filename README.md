@@ -42,6 +42,7 @@
   * 4.7. [Column width](#column-width)
   * 4.8. [Wrap](#wrap)
     * 4.8.1. [word wrap mode](#word-wrap-mode)
+    * 4.8.2. [Display markers](#display-markers)
   * 4.9. [Alternate-Rows](#alternate-rows)
   * 4.10. [Sidebar](#sidebar)
   * 4.11. [Section](#section)
@@ -490,7 +491,7 @@ The option is `--wrap=char`, specify `--wrap=none` (default key `w`, `W`) if you
 
 ####  4.8.1. <a name='word-wrap-mode'></a>word wrap mode
 
-**Added in v0.52.0**
+*Added in v0.52.0*
 
 Word wrap has been added and the method of specification has changed.
 
@@ -502,15 +503,22 @@ Toggle word wrap with default key `Alt+w`.
 
 *Added in v0.55.0*
 
-Wrapped-line indentation can be set with `--break-indent` or the default key
-`Ctrl+Alt+n`. Use `0` for no indentation, a positive number for a fixed width,
-`L` to match the source line's leading whitespace, or `L+N`/`L-N` to adjust
-that indentation. `+N` and `-N` are shorthand for the relative forms.
+`--break-indent` applies only in `-w=word` mode. Wrapped-line indentation can
+be set with `--break-indent` or the default key `Ctrl+Alt+n`. Use `0` for no
+indentation, a positive number for a fixed width, `L` to match the source line's
+leading whitespace, or `L+N`/`L-N` to adjust that indentation. `+N` and `-N` are
+shorthand for the relative forms.
+
+####  4.8.2. <a name='display-markers'></a>Display markers
+
+*Added in v0.55.0*
 
 Display markers can be enabled with `--sign-mode` or the default key
 `Ctrl+Alt+m`. The default value is `0` (no markers). Add the bit values to
-enable markers: `1` marks the start of a wrapped line with `↳`, `2` marks a line
-that continues with `↵`, and `4` marks a truncated line with `…`.
+enable markers. When wrapping is enabled, `1` displays a break marker (`↳`) at
+the start of a wrapped line and `2` displays a continue marker (`↵`) where a
+line continues. When wrapping is disabled, `4` displays a truncation marker
+(`…`) when a line is cut off.
 
 | Value | Markers enabled | Display example |
 |-------|-----------------|-----------------|
@@ -1137,7 +1145,7 @@ Mode:
 
 ####  4.25.1. <a name='view-mode-sidebar'></a>View mode sidebar
 
-**Added in v0.52.0**
+*Added in v0.52.0*
 
 When you press `p` to enter view mode selection, a sidebar automatically opens and displays the list of available view modes with their index numbers. You can select a mode either by name or by its number.
 
