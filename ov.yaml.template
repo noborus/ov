@@ -47,6 +47,11 @@ General:
   ColumnMode: false
   LineNumMode: false
   Wrap: "character" # Wrap mode. Options: "character", "word", "none".
+  BreakIndent: "0" # Wrapped-line indentation: 0, a width, L, L+N, or L-N.
+  SignMode: 0 # Display markers bitmask: 1=break, 2=continue, 4=trunc.
+  BreakSign: "↳"
+  ContinueSign: "↵"
+  TruncSign: "…"
   ColumnDelimiter: ","
   MarkStyleWidth: 1
 # HScrollWidth: 10%
@@ -74,6 +79,12 @@ General:
       # Add appropriate styles here
     LineNumber:
       Bold: true
+    BreakSign:
+      # Add a style for the wrapped-line marker here
+    ContinueSign:
+      # Add a style for the continuation marker here
+    TruncSign:
+      # Add a style for the truncation marker here
     SearchHighlight:
       Reverse: true
     ColumnHighlight:
