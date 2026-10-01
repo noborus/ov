@@ -403,14 +403,26 @@ func (root *Root) drawContinueSign(y int) {
 	}
 }
 
+// drawTruncSign draws the truncation sign indicator on the right side of the line.
 func (root *Root) drawTruncSign(y int) {
 	m := root.Doc
 	if m.rightSignWidth == 0 {
 		return
 	}
-	if m.SignMode&int(SignTrunc) != 0 {
-		root.Screen.PutStrStyled(m.bodyStartX+m.bodyWidth, y, m.TruncSign, root.scr.truncSignStyle)
+	if m.SignMode&int(SignTrunc) == 0 {
+		return
 	}
+
+	x := m.bodyStartX + m.bodyWidth
+
+	// Adjust x if the last character is a wide character.
+	_, _, width := root.Screen.Get(m.bodyStartX+m.bodyWidth-1, y)
+	if width == 2 {
+		x--
+	}
+
+	root.Screen.PutStrStyled(x, y, m.TruncSign, root.scr.truncSignStyle)
+	root.clearEOL(x+m.rightSignWidth, y, defaultStyle)
 }
 
 // drawTitle sets the terminal title if TerminalTitle is enabled.
