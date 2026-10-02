@@ -34,6 +34,7 @@ const (
 	csiParamEnd   = 0x3F
 )
 
+// Colors256 and ColorsRGB identify SGR color formats.
 const (
 	// Colors256 is the index of the 256 color. 8-bit colors. 0-255.
 	Colors256 = 5

@@ -15,6 +15,7 @@ import (
 // Compressed represents the type of compression.
 type Compressed int
 
+// UNCOMPRESSED and the following values identify supported compression formats.
 const (
 	// UNCOMPRESSED is an uncompressed format.
 	UNCOMPRESSED Compressed = iota

@@ -15,6 +15,7 @@ import (
 // InputMode represents the state of the input.
 type InputMode int
 
+// Normal is the default input mode; the following values define other modes.
 const (
 	// Normal is the default mode where no special input handling is active.
 	Normal InputMode = iota

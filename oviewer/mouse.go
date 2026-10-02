@@ -14,6 +14,7 @@ import (
 // ClickType represents the type of mouse click.
 type ClickType int
 
+// ClickSingle and the following values identify mouse click events.
 const (
 	// ClickSingle represents a single click.
 	ClickSingle ClickType = iota
@@ -49,6 +50,7 @@ type ClickState struct {
 // MouseSelectState represents the state of mouse selection.
 type MouseSelectState int
 
+// SelectNone and the following values identify mouse selection states.
 const (
 	// SelectNone means there is no active selection.
 	SelectNone MouseSelectState = iota
