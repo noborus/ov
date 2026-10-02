@@ -287,6 +287,7 @@ type KeyBind map[string][]string
 // Group represents a category of key binding actions.
 type Group int
 
+// GroupAll and the following values identify key binding action groups.
 const (
 	// GroupAll includes all key binding groups.
 	GroupAll Group = -1

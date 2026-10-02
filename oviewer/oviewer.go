@@ -125,6 +125,7 @@ type Root struct {
 	sidebarScrolls map[SidebarMode]sidebarScroll
 }
 
+// ScreenStateNotReady and the following values identify screen lifecycle states.
 const (
 	// ScreenStateNotReady indicates that the screen is not ready.
 	ScreenStateNotReady = iota
@@ -212,6 +213,7 @@ const MinStartX = -10
 // RulerType is the type of ruler.
 type RulerType int
 
+// RulerNone and the following values identify ruler display modes.
 const (
 	// RulerNone is no ruler.
 	RulerNone RulerType = iota

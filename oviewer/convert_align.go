@@ -25,6 +25,7 @@ type align struct {
 // specifiedAlign represents the alignment specification for a column.
 type specifiedAlign int
 
+// Unspecified is the default value for the column alignment options below.
 const (
 	// Unspecified is the default alignment.
 	Unspecified specifiedAlign = iota

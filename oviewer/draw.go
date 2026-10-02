@@ -19,8 +19,10 @@ var anchorPointStyle = OVStyle{
 	Reverse: true,
 }
 
+// SignMode represents the mode of the sign indicator (break, continue, truncation).
 type SignMode int
 
+// SignBreak, SignContinue, and SignTrunc are flags for line indicators.
 const (
 	SignBreak SignMode = 1 << iota
 	SignContinue
