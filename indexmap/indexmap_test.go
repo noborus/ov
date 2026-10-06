@@ -84,3 +84,64 @@ func TestIteratorsOrderAndSnapshot(t *testing.T) {
 		t.Fatalf("unexpected Values snapshot: %v", gotValues)
 	}
 }
+
+func TestSetValues(t *testing.T) {
+	tests := []struct {
+		name     string
+		values   []int
+		want     []int
+		wantKeys []string
+	}{
+		{
+			name:     "same number of values",
+			values:   []int{10, 20},
+			want:     []int{10, 20},
+			wantKeys: []string{"a", "b"},
+		},
+		{
+			name:     "fewer values zero remaining keys",
+			values:   []int{10},
+			want:     []int{10, 0},
+			wantKeys: []string{"a", "b"},
+		},
+		{
+			name:     "extra values are ignored",
+			values:   []int{10, 20, 30},
+			want:     []int{10, 20},
+			wantKeys: []string{"a", "b"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := NewIndexMap[string, int]()
+			m.Set("a", 1)
+			m.Set("b", 2)
+
+			m.SetValues(tt.values)
+
+			if got := m.Len(); got != len(tt.wantKeys) {
+				t.Fatalf("expected length %d, got %d", len(tt.wantKeys), got)
+			}
+			for i, wantKey := range tt.wantKeys {
+				key, value, ok := m.Index(i)
+				if !ok {
+					t.Fatalf("expected index %d to exist", i)
+				}
+				if key != wantKey || value != tt.want[i] {
+					t.Fatalf("expected index %d to be (%q,%d), got (%q,%d)", i, wantKey, tt.want[i], key, value)
+				}
+			}
+		})
+	}
+}
+
+func TestSetValuesOnEmptyMapDoesNotAddKeys(t *testing.T) {
+	m := NewIndexMap[string, int]()
+
+	m.SetValues([]int{10, 20})
+
+	if got := m.Len(); got != 0 {
+		t.Fatalf("expected empty map to remain empty, got length %d", got)
+	}
+}

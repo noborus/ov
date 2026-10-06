@@ -133,19 +133,12 @@ func (m *IndexMap[k, v]) Values() iter.Seq[v] {
 func (m *IndexMap[k, v]) SetValues(slice []v) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	if m.values == nil {
-		m.values = make(map[k]v)
-	}
-	for i, v := range slice {
-		var zeroK k
-		if i < len(m.keys) {
-			zeroK = m.keys[i]
-		} else {
-			zeroK = *new(k)
-			m.keys = append(m.keys, zeroK)
+	for i, key := range m.keys {
+		var value v
+		if i < len(slice) {
+			value = slice[i]
 		}
-		m.values[zeroK] = v
+		m.values[key] = value
 	}
 }
 
