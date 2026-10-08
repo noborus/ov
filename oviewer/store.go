@@ -194,30 +194,24 @@ func chunkLineNum(n int) (int, int) {
 	return chunkNum, cn
 }
 
-// readLines append lines read from reader into chunks.
+// readLines reads lines from the reader and appends them to the chunk.
 // Read and fill the number of lines from start to end in chunk.
 // If addLines is true, increment the number of lines read (update endNum).
 func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, updateNum bool) error {
 	var line bytes.Buffer
-	var isPrefix bool
 	for num := start; num < end; {
 		if atomic.LoadInt32(&s.readCancel) == 1 {
 			break
 		}
 		buf, err := reader.ReadSlice('\n')
-		if errors.Is(err, bufio.ErrBufferFull) {
-			isPrefix = true
-			err = nil
-		}
 		line.Write(buf)
-		if isPrefix {
-			isPrefix = false
-			continue
-		}
-
-		num++
 		atomic.StoreInt32(&s.changed, 1)
+
 		if err != nil {
+			if errors.Is(err, bufio.ErrBufferFull) {
+				// Long line that doesn't fit in the buffer; keep reading into line.
+				continue
+			}
 			if line.Len() != 0 {
 				s.append(chunk, updateNum, line.Bytes())
 				atomic.StoreInt32(&s.noNewlineEOF, 1)
@@ -226,6 +220,7 @@ func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int
 		}
 		s.append(chunk, updateNum, line.Bytes())
 		line.Reset()
+		num++
 	}
 	return nil
 }
