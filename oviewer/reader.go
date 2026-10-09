@@ -15,7 +15,7 @@ import (
 
 // bufSize is the size of the buffer used when reading the file.
 // This bufSize is used when only counting.
-const bufSize = 4096
+const bufSize = 1024 * 64
 
 // tailSize represents the position to start reading backwards from the end position.
 const tailSize = 10000
