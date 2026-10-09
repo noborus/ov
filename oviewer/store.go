@@ -232,46 +232,55 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 	buf := make([]byte, bufSize)
 	for num := start; num < end; {
 		bufLen, err := reader.Read(buf)
-		if err != nil {
-			return count, size, fmt.Errorf("read: %w", err)
-		}
 		if bufLen == 0 {
+			if err != nil {
+				return count, size, fmt.Errorf("read: %w", err)
+			}
 			return count, size, io.EOF
 		}
 
-		lSize := bufLen
-		lCount := bytes.Count(buf[:bufLen], []byte("\n"))
-		// If it exceeds ChunkSize, Re-aggregate size and count.
-		if num+lCount > ChunkSize {
-			lSize = 0
-			lCount = ChunkSize - num
-			for range lCount {
-				p := bytes.IndexByte(buf[lSize:bufLen], '\n')
-				lSize += p + 1
-			}
-		}
+		lCount, lSize := linesAndSize(buf[:bufLen], end-num)
 
 		num += lCount
 		count += lCount
 		size += lSize
-		if num >= ChunkSize {
-			// no newline at the end of the file.
+		if num == end {
 			if bufLen < bufSize {
-				p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
-				size -= bufLen - p - 1
+				size -= unterminatedTailSize(buf[:bufLen])
+			}
+			if err != nil {
+				return count, size, fmt.Errorf("read: %w", err)
 			}
 			break
 		}
-		// no newline at the end of the file.
-		if bufLen < bufSize {
-			p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
-			if p+1 < bufLen {
-				count++
-				atomic.StoreInt32(&s.noNewlineEOF, 1)
-			}
+		if bufLen < bufSize && unterminatedTailSize(buf[:bufLen]) > 0 {
+			count++
+			atomic.StoreInt32(&s.noNewlineEOF, 1)
+		}
+		if err != nil {
+			return count, size, fmt.Errorf("read: %w", err)
 		}
 	}
 	return count, size, nil
+}
+
+// linesAndSize returns complete line count and their total size, up to maxLines.
+func linesAndSize(buf []byte, maxLines int) (int, int) {
+	lineCount := bytes.Count(buf, []byte("\n"))
+	if lineCount < maxLines {
+		return lineCount, len(buf)
+	}
+
+	size := 0
+	for range maxLines {
+		size += bytes.IndexByte(buf[size:], '\n') + 1
+	}
+	return maxLines, size
+}
+
+// unterminatedTailSize returns the size of the tail of the buffer that is not terminated by a newline.
+func unterminatedTailSize(buf []byte) int {
+	return len(buf) - bytes.LastIndexByte(buf, '\n') - 1
 }
 
 // append appends a line to the chunk.

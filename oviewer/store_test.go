@@ -1,10 +1,95 @@
 package oviewer
 
 import (
+	"bufio"
+	"errors"
+	"os"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
+
+type readErrorReader struct {
+	data []byte
+	err  error
+}
+
+func (r *readErrorReader) Read(p []byte) (int, error) {
+	n := copy(p, r.data)
+	r.data = r.data[n:]
+	return n, r.err
+}
+
+func Test_store_countLines(t *testing.T) {
+	tests := []struct {
+		name      string
+		wantCount int
+		wantSize  int
+	}{
+		{
+			name:      "boundary newline followed by next chunk data",
+			wantCount: ChunkSize,
+			wantSize:  ChunkSize * 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			file, err := os.Open("../testdata/countlines.txt")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer file.Close()
+
+			s := NewStore()
+			gotCount, gotSize, err := s.countLines(bufio.NewReader(file), 0, ChunkSize)
+			if err != nil {
+				t.Fatalf("countLines() error = %v, want nil", err)
+			}
+			if gotCount != tt.wantCount {
+				t.Errorf("countLines() count = %d, want %d", gotCount, tt.wantCount)
+			}
+			if gotSize != tt.wantSize {
+				t.Errorf("countLines() size = %d, want %d", gotSize, tt.wantSize)
+			}
+		})
+	}
+}
+
+func Test_store_countLinesReadErrorWithData(t *testing.T) {
+	wantErr := errors.New("read error")
+	reader := bufio.NewReader(&readErrorReader{
+		data: []byte("first\nsecond\n"),
+		err:  wantErr,
+	})
+
+	count, size, err := NewStore().countLines(reader, 0, ChunkSize)
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("countLines() error = %v, want %v", err, wantErr)
+	}
+	if count != 2 {
+		t.Errorf("countLines() count = %d, want 2", count)
+	}
+	if size != len("first\nsecond\n") {
+		t.Errorf("countLines() size = %d, want %d", size, len("first\nsecond\n"))
+	}
+}
+
+func Test_store_countLinesStopsAtEnd(t *testing.T) {
+	reader := bufio.NewReader(strings.NewReader("first\nsecond\nthird\n"))
+
+	count, size, err := NewStore().countLines(reader, 0, 2)
+	if err != nil {
+		t.Fatalf("countLines() error = %v, want nil", err)
+	}
+	if count != 2 {
+		t.Errorf("countLines() count = %d, want 2", count)
+	}
+	if size != len("first\nsecond\n") {
+		t.Errorf("countLines() size = %d, want %d", size, len("first\nsecond\n"))
+	}
+}
 
 func Test_store_chunkRange(t *testing.T) {
 	t.Parallel()
