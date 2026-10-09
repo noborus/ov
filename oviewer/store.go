@@ -232,17 +232,23 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 	buf := make([]byte, bufSize)
 	for num := start; num < end; {
 		bufLen, err := reader.Read(buf)
-		if err != nil {
+		if bufLen == 0 {
+			// Read may legitimately return (0, nil); treat that the same
+			// as io.EOF rather than looping forever.
+			if err == nil {
+				err = io.EOF
+			}
 			return count, size, fmt.Errorf("read: %w", err)
 		}
-		if bufLen == 0 {
-			return count, size, io.EOF
-		}
-
 		lSize := bufLen
 		lCount := bytes.Count(buf[:bufLen], []byte("\n"))
+		// truncated is true when this buffer was cut off at the ChunkSize
+		// boundary; the unconsumed tail (buf[lSize:bufLen]) belongs to the
+		// next chunk, not this one.
+		truncated := false
 		// If it exceeds ChunkSize, Re-aggregate size and count.
 		if num+lCount > ChunkSize {
+			truncated = true
 			lSize = 0
 			lCount = ChunkSize - num
 			for range lCount {
@@ -256,7 +262,11 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 		size += lSize
 		if num >= ChunkSize {
 			// no newline at the end of the file.
-			if bufLen < bufSize {
+			// Skip this correction when truncated: lSize already stops
+			// exactly at the ChunkSize-th newline, and any trailing,
+			// newline-less bytes in buf[lSize:bufLen] belong to the next
+			// chunk, so they must not be subtracted from this chunk's size.
+			if !truncated && bufLen < bufSize {
 				p := bytes.LastIndex(buf[:bufLen], []byte("\n"))
 				size -= bufLen - p - 1
 			}
@@ -269,6 +279,12 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 				count++
 				atomic.StoreInt32(&s.noNewlineEOF, 1)
 			}
+		}
+		// Read can return n > 0 together with a non-nil error (e.g. io.EOF).
+		// The bytes already read above have been counted, so report the
+		// error now instead of discarding them on the next iteration.
+		if err != nil {
+			return count, size, fmt.Errorf("read: %w", err)
 		}
 	}
 	return count, size, nil
