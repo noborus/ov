@@ -202,7 +202,7 @@ func (input *Input) keyEvent(evKey *tcell.EventKey) bool {
 	if key == tcell.KeyRune {
 		left, right := splitAtWidth(input.value, input.cursorX)
 		input.value = left + str + right
-		input.cursorX += uniseg.StringWidth(str)
+		input.cursorX = stringWidth(left + str)
 		actualWidth := stringWidth(input.value)
 		if input.cursorX > actualWidth {
 			input.cursorX = actualWidth
