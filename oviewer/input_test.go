@@ -13,6 +13,36 @@ func candidateHelper() *candidate {
 	}
 }
 
+func TestInput_insertJoinedGrapheme(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name   string
+		value  string
+		cursor int
+		insert string
+		want   string
+	}{
+		{"flag", "🇺x", 2, "🇸", "🇺🇸!x"},
+		{"skin tone", "👍x", 2, "🏽", "👍🏽!x"},
+		{"joined emoji", "👩\u200dx", 2, "💻", "👩\u200d💻!x"},
+		{"variation selector", "❤x", 1, "\ufe0f", "❤️!x"},
+		{"tab before emoji", "\t👍x", 4, "🏽", "\t👍🏽!x"},
+		{"ASCII", "ax", 1, "b", "ab!x"},
+		{"combining accent", "ex", 1, "\u0301", "e\u0301!x"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			input := &Input{value: tt.value, cursorX: tt.cursor}
+			input.keyEvent(tcell.NewEventKey(tcell.KeyRune, tt.insert, 0))
+			input.keyEvent(tcell.NewEventKey(tcell.KeyRune, "!", 0))
+			if input.value != tt.want {
+				t.Errorf("input after insertion = %q, want %q", input.value, tt.want)
+			}
+		})
+	}
+}
+
 func TestInput_keyEvent(t *testing.T) {
 	t.Parallel()
 	type fields struct {
