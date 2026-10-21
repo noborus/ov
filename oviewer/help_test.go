@@ -2,10 +2,14 @@ package oviewer
 
 import (
 	"testing"
+
+	"github.com/jwalton/gchalk"
 )
 
 func TestDuplicateKeyBind(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
+	old := gchalk.GetLevel()
+	gchalk.SetLevel(gchalk.LevelNone)
+	t.Cleanup(func() { gchalk.SetLevel(old) })
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.

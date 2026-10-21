@@ -380,6 +380,28 @@ func TestSetConfig_WithViewMode(t *testing.T) {
 	}
 }
 
+func TestSetConfig_WithSidebar(t *testing.T) {
+	cfg := NewConfig()
+	cfg.SidebarMode = "marks"
+	cfg.SidebarWidth = "30%"
+
+	root := &Root{settings: NewRunTimeSettings()}
+	root.SetConfig(cfg)
+
+	if !root.sidebarVisible {
+		t.Fatal("expected sidebar to be visible")
+	}
+	if root.sidebarMode != SidebarModeMarks {
+		t.Errorf("sidebarMode = %v, want %v", root.sidebarMode, SidebarModeMarks)
+	}
+	if root.previousSidebarMode != SidebarModeMarks {
+		t.Errorf("previousSidebarMode = %v, want %v", root.previousSidebarMode, SidebarModeMarks)
+	}
+	if root.Config.SidebarWidth != "30%" {
+		t.Errorf("Config.SidebarWidth = %q, want %q", root.Config.SidebarWidth, "30%")
+	}
+}
+
 func TestRoot_writeOriginal(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {

@@ -95,6 +95,42 @@ func TestRoot_prepareSidebarItems(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:         "SidebarModeStyles sets SidebarItems",
+			sidebarMode:  SidebarModeStyles,
+			sidebarWidth: 20,
+			setup: func(root *Root) {
+				style := tcell.StyleDefault.Bold(true)
+				root.Doc.styles.Set(style, true)
+			},
+			wantItems: func(root *Root) []SidebarItem {
+				style := tcell.StyleDefault.Bold(true)
+				length := 20 - 4
+				var items []SidebarItem
+				for _, h := range []string{
+					"o: disable all, then enable (e.g., o1)",
+					"a: enable all (e.g., a1-2)",
+					"i: invert all (e.g., i1,3)",
+				} {
+					c := StrToContents(h, 0)
+					if len(c) < length {
+						c = append(c, StrToContents(strings.Repeat(" ", length-len(c)), 0)...)
+					}
+					for j := range c {
+						c[j].style = helpStyle
+					}
+					items = append(items, SidebarItem{Contents: c})
+				}
+				c := StrToContents("[*] "+styleString(style), 0)
+				for j := 4; j < len(c); j++ {
+					c[j].style = style
+				}
+				if len(c) < length {
+					c = append(c, StrToContents(strings.Repeat(" ", length-len(c)), 0)...)
+				}
+				return append(items, SidebarItem{Contents: c})
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -384,6 +420,114 @@ func TestRoot_sidebarItemsForSections(t *testing.T) {
 				}
 				if got[i].IsCurrent != tt.want[i].IsCurrent {
 					t.Errorf("got[%d].IsCurrent = %v, want %v", i, got[i].IsCurrent, tt.want[i].IsCurrent)
+				}
+			}
+		})
+	}
+}
+
+func TestRoot_sidebarItemsForViewMode(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+
+	tests := []struct {
+		name  string
+		r     io.Reader
+		modes map[string]General
+		want  []SidebarItem
+	}{
+		{
+			name: "default view mode",
+			r:    bytes.NewBufferString("First\nSecond"),
+			want: []SidebarItem{
+				{Label: " 0 ", Contents: StrToContents("general         ", 0)},
+			},
+		},
+		{
+			name: "sorted custom view modes",
+			r:    bytes.NewBufferString("First\nSecond"),
+			modes: map[string]General{
+				"zebra": {},
+				"alpha": {},
+			},
+			want: []SidebarItem{
+				{Label: " 0 ", Contents: StrToContents("general         ", 0)},
+				{Label: " 1 ", Contents: StrToContents("alpha           ", 0)},
+				{Label: " 2 ", Contents: StrToContents("zebra           ", 0)},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, err := NewRoot(tt.r)
+			if err != nil {
+				t.Fatalf("could not construct receiver type: %v", err)
+			}
+			root.Config.Mode = tt.modes
+			root.sidebarWidth = 20
+			root.scr.vHeight = 20
+			got := root.sidebarItemsForViewMode()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sidebarItemsForViewMode() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_sidebarItemForStyle(t *testing.T) {
+	style := tcell.StyleDefault.Bold(true)
+	tests := []struct {
+		name    string
+		enabled bool
+		index   int
+		wantOK  bool
+	}{
+		{name: "enabled style", enabled: true, index: 0, wantOK: true},
+		{name: "disabled style", enabled: false, index: 0, wantOK: true},
+		{name: "invalid index", enabled: true, index: 1, wantOK: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootHelper(t)
+			root.Doc.styles.Set(style, tt.enabled)
+
+			got, ok := root.sidebarItemForStyle(tt.index, 20)
+			if ok != tt.wantOK {
+				t.Fatalf("sidebarItemForStyle() ok = %v, want %v", ok, tt.wantOK)
+			}
+			if !tt.wantOK {
+				if !reflect.DeepEqual(got, SidebarItem{}) {
+					t.Errorf("sidebarItemForStyle() item = %#v, want zero value", got)
+				}
+				return
+			}
+
+			repr := "[ ] "
+			if tt.enabled {
+				repr = "[*] "
+			}
+			wantText := repr + styleString(style)
+			wantText += strings.Repeat(" ", max(20-len(wantText), 0))
+			if got.Label != " 0 " {
+				t.Errorf("sidebarItemForStyle() label = %q, want %q", got.Label, " 0 ")
+			}
+			if got.Contents.String() != wantText {
+				t.Errorf("sidebarItemForStyle() contents = %q, want %q", got.Contents.String(), wantText)
+			}
+			if got.IsCurrent {
+				t.Error("sidebarItemForStyle() IsCurrent = true, want false")
+			}
+
+			for i, content := range got.Contents {
+				wantStyle := tcell.StyleDefault
+				if i >= 4 && i < len(repr)+len(styleString(style)) {
+					wantStyle = style
+				}
+				if content.style != wantStyle {
+					t.Errorf("sidebarItemForStyle() contents[%d].style = %v, want %v", i, content.style, wantStyle)
 				}
 			}
 		})
