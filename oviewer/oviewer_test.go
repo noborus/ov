@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -533,6 +534,25 @@ func TestRoot_docSmall(t *testing.T) {
 				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRoot_docSmallNoTruncation(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+
+	fileName := filepath.Join(t.TempDir(), "long-line.txt")
+	if err := os.WriteFile(fileName, bytes.Repeat([]byte("x"), 81), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	root := rootFileReadHelper(t, fileName)
+	root.Doc.WrapMode = false
+
+	if got := root.docSmall(); got {
+		t.Fatal("Root.docSmall() = true for a truncated no-wrap line, want false")
 	}
 }
 

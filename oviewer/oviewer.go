@@ -903,11 +903,27 @@ func (root *Root) docSmall() bool {
 	if (end - start) >= bodyHeight {
 		return false
 	}
+	if root.hasTruncatedLine() {
+		return false
+	}
 
 	strs := tcellansi.ScreenContentToStrings(root.Screen, 0, root.scr.vWidth, start, end)
 	strs = tcellansi.TrimRightSpaces(strs)
 	root.OnExit = strs
 	return true
+}
+
+// hasTruncatedLine reports whether no-wrap output exceeds the available line width.
+func (root *Root) hasTruncatedLine() bool {
+	if root.Doc.WrapMode {
+		return false
+	}
+	for _, lineC := range root.scr.lines {
+		if lineC.valid && len(lineC.lc) > root.Doc.bodyWidth {
+			return true
+		}
+	}
+	return false
 }
 
 // OutputOnExit outputs to the terminal when exiting.
