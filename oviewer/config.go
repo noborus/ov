@@ -56,6 +56,9 @@ type Config struct {
 	QuitSmall bool
 	// QuitSmallFilter indicates whether to quit if the output fits on one screen and a filter is applied.
 	QuitSmallFilter bool
+	// QuitSmallNoTruncate indicates whether to stay open when no-wrap lines are
+	// wider than the screen, instead of quitting with truncated output.
+	QuitSmallNoTruncate bool
 	// CaseSensitive is case-sensitive if true.
 	CaseSensitive bool
 	// SmartCaseSensitive indicates whether lowercase search should ignore case.
