@@ -537,7 +537,7 @@ func TestRoot_docSmall(t *testing.T) {
 	}
 }
 
-func TestRoot_docSmallNoTruncation(t *testing.T) {
+func TestRoot_docSmallNoTruncate(t *testing.T) {
 	tcellNewScreen = fakeScreen
 	defer func() {
 		tcellNewScreen = tcell.NewScreen
@@ -548,11 +548,40 @@ func TestRoot_docSmallNoTruncation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	root := rootFileReadHelper(t, fileName)
-	root.Doc.WrapMode = false
+	tests := []struct {
+		name            string
+		noTruncate      bool
+		isWriteOriginal bool
+		want            bool
+	}{
+		{
+			name:       "allow truncation",
+			noTruncate: false,
+			want:       true,
+		},
+		{
+			name:       "prevent truncation",
+			noTruncate: true,
+			want:       false,
+		},
+		{
+			name:            "original output is never truncated",
+			noTruncate:      true,
+			isWriteOriginal: true,
+			want:            true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, fileName)
+			root.Doc.WrapMode = false
+			root.Config.QuitSmallNoTruncate = tt.noTruncate
+			root.Config.IsWriteOriginal = tt.isWriteOriginal
 
-	if got := root.docSmall(); got {
-		t.Fatal("Root.docSmall() = true for a truncated no-wrap line, want false")
+			if got := root.docSmall(); got != tt.want {
+				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 

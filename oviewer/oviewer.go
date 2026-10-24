@@ -903,7 +903,7 @@ func (root *Root) docSmall() bool {
 	if (end - start) >= bodyHeight {
 		return false
 	}
-	if root.hasTruncatedLine() {
+	if root.Config.QuitSmallNoTruncate && !root.Config.IsWriteOriginal && root.hasTruncatedLine() {
 		return false
 	}
 
