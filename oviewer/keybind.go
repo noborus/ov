@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -500,7 +501,7 @@ func (k KeyBind) String() string {
 			writeHeader(&b, group.String())
 		}
 		keys := normalizeKeysForDisplay(k[bind.Action])
-		b.WriteString(fmt.Sprintf(" %-30s * %s\n", "["+strings.Join(keys, "], [")+"]", bind.Description))
+		writeKeyDescription(&b, keys, bind.Description)
 	}
 	return b.String()
 }
@@ -541,12 +542,25 @@ func (k KeyBind) GetKeyBindDescriptions(group Group) [][]string {
 
 // writeHeaderTh writes the header for the key binding display to the provided writer.
 func writeHeaderTh(w io.Writer) {
-	fmt.Fprintf(w, " %-30s %s\n", "Key", "Action")
+	_, err := fmt.Fprintf(w, " %-30s %s\n", "Key", "Action")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to write header: %v\n", err)
+	}
 }
 
 // writeHeader writes a section header for the key binding display to the provided writer.
 func writeHeader(w io.Writer, header string) {
-	fmt.Fprintf(w, "\n\t%s\n", header)
+	_, err := fmt.Fprintf(w, "\n\t%s\n", header)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to write header: %v\n", err)
+	}
+}
+
+func writeKeyDescription(w io.Writer, keys []string, description string) {
+	_, err := fmt.Fprintf(w, " %-30s * %s\n", "["+strings.Join(keys, "], [")+"]", description)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to write key description: %v\n", err)
+	}
 }
 
 // GetKeyBinds returns the current key mapping based on the provided configuration.
