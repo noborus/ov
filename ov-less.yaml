@@ -2,6 +2,7 @@
 # Copy it to `$XDG_CONFIG_HOME/ov/config.yaml` or start it with `ov --config ov.yaml`.
 #
 # QuitSmall: false # Quit if the file size is smaller than the terminal size.
+# QuitSmallNoTruncate: false # Do not quit if no-wrap lines are wider than the screen.
 # IsWriteOriginal: false # Write the original content when exiting.
 # BeforeWriteOriginal: 0 # Extra lines above the current view to output on exit.
 # AfterWriteOriginal: 0 # Extra lines below the current view to output on exit.
