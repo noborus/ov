@@ -2,6 +2,7 @@ package oviewer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"sync/atomic"
@@ -403,11 +404,32 @@ func (root *Root) sendReload(m *Document) {
 	root.postEvent(ev)
 }
 
-// releaseEventBuffer will release all event buffers.
+// releaseEventBuffer drains queued events, keeping only important ones.
+// It specifically discards repeated key events that accumulate during heavy processing,
+// while preserving mouse events and other critical events.
 func (root *Root) releaseEventBuffer() {
-	for {
+	discardedCount := 0
+	defer func() {
+		if discardedCount > 0 {
+			root.debugMessage(fmt.Sprintf("releaseEventBuffer: discarded %d events\n", discardedCount))
+		}
+	}()
+
+	for remaining := len(root.Screen.EventQ()); remaining > 0; remaining-- {
 		select {
-		case <-root.Screen.EventQ():
+		case ev := <-root.Screen.EventQ():
+			// Only preserve key and mouse events; discard other input events
+			switch ev.(type) {
+			case *tcell.EventKey, *tcell.EventMouse:
+				discardedCount++
+				continue
+			}
+			// Put other events back for processing
+			select {
+			case root.Screen.EventQ() <- ev:
+			default:
+				// Queue is full again, skip and continue draining
+			}
 		default:
 			return
 		}

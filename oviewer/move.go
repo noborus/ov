@@ -210,6 +210,8 @@ func (root *Root) moveHfRight(context.Context) {
 // moveBeginLeft moves to the beginning of the line.
 func (root *Root) moveBeginLeft(context.Context) {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
+
 	root.Doc.moveBeginLeft(root.scr)
 }
 
@@ -217,6 +219,8 @@ func (root *Root) moveBeginLeft(context.Context) {
 // Move so that the end of the currently displayed line is visible.
 func (root *Root) moveEndRight(context.Context) {
 	root.resetSelect()
+	defer root.releaseEventBuffer()
+
 	root.Doc.moveEndRight(root.scr)
 }
 
