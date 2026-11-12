@@ -212,8 +212,8 @@ func (m *Document) moveColumnRight(n int, scr SCR, cycle bool) error {
 		cr := lineC.columnRanges[m.columnCursor].end
 		if m.scrollX+width < cr {
 			// Movement of x only.
-			move := ((m.scrollX - vh) + width) * n
-			m.scrollX = min(move, cr-width)
+			scrollX := ((m.scrollX - vh) + width) * n
+			m.scrollX = min(scrollX, cr-width)
 			return nil
 		}
 	}

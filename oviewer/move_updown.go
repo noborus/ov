@@ -142,7 +142,7 @@ func (m *Document) bottomLineNum(lN int, height int) (int, int) {
 		return 0, 0
 	}
 
-	bodyHeight := (height - (m.headerHeight))
+	bodyHeight := max((height - (m.headerHeight)), 0)
 
 	if !m.WrapMode {
 		return 0, lN - bodyHeight - m.firstLine()
