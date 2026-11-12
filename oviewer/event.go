@@ -415,16 +415,16 @@ func (root *Root) releaseEventBuffer() {
 		}
 	}()
 
-	for {
+	for remaining := len(root.Screen.EventQ()); remaining > 0; remaining-- {
 		select {
 		case ev := <-root.Screen.EventQ():
-			// Only preserve mouse events; discard key repeats and other input events
-			if _, ok := ev.(*tcell.EventMouse); !ok {
-				root.debugMessage(fmt.Sprintf("releaseEventBuffer: discarding %T event\n", ev))
+			// Only preserve key and mouse events; discard other input events
+			switch ev.(type) {
+			case *tcell.EventKey, *tcell.EventMouse:
 				discardedCount++
 				continue
 			}
-			// Put mouse events back for processing
+			// Put other events back for processing
 			select {
 			case root.Screen.EventQ() <- ev:
 			default:
