@@ -10,6 +10,15 @@ import (
 // lastLineMargin is the margin of the last line.
 const lastLineMargin = 1
 
+// leftMostXCacheSize is the size of the cache for leftMostX.
+const leftMostXCacheSize = 32
+
+// leftMostXCacheKey is the key for the leftMostX cache.
+type leftMostXCacheKey struct {
+	line  int
+	width int
+}
+
 // moveLine moves to the specified line.
 func (m *Document) moveLine(lN int) int {
 	if m.BufEndNum() == 0 {
@@ -231,11 +240,18 @@ func (m *Document) moveYUp(moveY int) {
 // leftMostX returns a list of left - most x positions when wrapping.
 // Returns nil if there is no line number.
 func (m *Document) leftMostX(lN int) []int {
+	key := leftMostXCacheKey{line: lN, width: m.bodyWidth}
+	if listX, ok := m.leftMostXCache.Get(key); ok {
+		return listX
+	}
+
 	lc, err := m.contents(lN)
 	if err != nil {
 		return nil
 	}
-	return leftX(m.bodyWidth, lc)
+	listX := leftX(m.bodyWidth, lc)
+	m.leftMostXCache.Add(key, listX)
+	return listX
 }
 
 // leftX returns a list of left - most x positions when wrapping.

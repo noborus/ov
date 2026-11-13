@@ -285,6 +285,37 @@ func Test_leftMostX(t *testing.T) {
 	}
 }
 
+func TestDocument_leftMostXCache(t *testing.T) {
+	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
+	m.bodyWidth = 80
+
+	first := m.leftMostX(0)
+	if got := m.leftMostX(0); !reflect.DeepEqual(got, first) {
+		t.Fatalf("cached leftMostX() = %v, want %v", got, first)
+	}
+	if got := m.leftMostXCache.Len(); got != 1 {
+		t.Fatalf("leftMostX cache size = %d, want 1", got)
+	}
+
+	m.bodyWidth = 40
+	lc, err := m.contents(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := leftX(m.bodyWidth, lc)
+	if got := m.leftMostX(0); !reflect.DeepEqual(got, want) {
+		t.Fatalf("leftMostX() after width change = %v, want %v", got, want)
+	}
+	if got := m.leftMostXCache.Len(); got != 2 {
+		t.Fatalf("leftMostX cache size after width change = %d, want 2", got)
+	}
+
+	m.ClearCache()
+	if got := m.leftMostXCache.Len(); got != 0 {
+		t.Fatalf("leftMostX cache size after ClearCache = %d, want 0", got)
+	}
+}
+
 func TestDocument_moveYUp(t *testing.T) {
 	type fields struct {
 		fileName string
