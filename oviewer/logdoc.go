@@ -23,7 +23,7 @@ func NewLogDoc() (*LogDocument, error) {
 	m.Caption = "Log"
 	m.seekable = false
 	m.Style = NewLogStyle()
-	atomic.StoreInt32(&m.closed, 1)
+	m.closed.Store(true)
 	if err := m.ControlLog(); err != nil {
 		return nil, err
 	}

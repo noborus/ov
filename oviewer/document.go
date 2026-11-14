@@ -193,14 +193,14 @@ type Document struct {
 	CFormat Compressed
 
 	// watchRestart indicates the number of times the watch has restarted.
-	watchRestart int32
+	watchRestart atomic.Bool
 	// tickerState indicates the state of the ticker.
-	tickerState int32
-	// closed indicates if the document is closed (1 if closed).
-	closed int32
+	tickerState atomic.Bool
+	// closed indicates if the document is closed.
+	closed atomic.Bool
 
-	// tmpFollow indicates if there is a temporary follow mode (1 if true).
-	tmpFollow int32
+	// tmpFollow indicates if there is a temporary follow mode.
+	tmpFollow atomic.Bool
 	// tmpLN is a temporary line number when the number of lines is undetermined.
 	tmpLN int32
 
@@ -236,14 +236,14 @@ type store struct {
 	// endNum is the number of the last line read.
 	endNum int32
 
-	// 1 if there is a changed.
-	changed int32
-	// 1 if there is a read cancel.
-	readCancel int32
-	// 1 if newline at end of file.
-	noNewlineEOF int32
-	// 1 if EOF is reached.
-	eof int32
+	// changed indicates if there has been a change.
+	changed atomic.Bool
+	// readCancel indicates if there has been a read cancel.
+	readCancel atomic.Bool
+	// noNewlineEOF indicates if there is no newline at the end of the file.
+	noNewlineEOF atomic.Bool
+	// eof indicates if EOF is reached.
+	eof atomic.Bool
 	// size is the number of bytes read.
 	size int64
 	// offset is the current byte offset in the file.
@@ -428,7 +428,7 @@ func STDINDocument() (*Document, error) {
 
 // Line returns one line from buffer.
 func (m *Document) Line(n int) ([]byte, error) {
-	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+	if m.tmpFollow.Load() {
 		return m.followStore.GetChunkLine(0, n)
 	}
 
@@ -530,7 +530,7 @@ func (m *Document) BufStartNum() int {
 
 // BufEndNum returns the last line number.
 func (m *Document) BufEndNum() int {
-	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+	if m.tmpFollow.Load() == true {
 		return int(atomic.LoadInt32(&m.followStore.endNum))
 	}
 	return int(atomic.LoadInt32(&m.store.endNum))
@@ -578,7 +578,7 @@ func (m *Document) WaitEOFWithTimeout(timeout time.Duration) {
 // Returns:
 // - A boolean value: true if EOF is reached, false otherwise.
 func (m *Document) BufEOF() bool {
-	return atomic.LoadInt32(&m.store.eof) == 1
+	return m.store.eof.Load()
 }
 
 // ClearCache clears the LRU cache of the document.
@@ -842,7 +842,7 @@ func (m *Document) LineString(n int) string {
 
 // checkClose returns if the file is closed.
 func (m *Document) checkClose() bool {
-	return atomic.LoadInt32(&m.closed) == 1
+	return m.closed.Load()
 }
 
 // Close closes the File.
@@ -853,9 +853,9 @@ func (m *Document) close() {
 	}
 
 	closeFile(m.file)
-	atomic.StoreInt32(&m.store.eof, 1)
-	atomic.StoreInt32(&m.closed, 1)
-	atomic.StoreInt32(&m.store.changed, 1)
+	m.store.eof.Store(true)
+	m.closed.Store(true)
+	m.store.changed.Store(true)
 }
 
 // closeFile closes the given file and logs any errors encountered during the close operation.

@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"sync/atomic"
 	"testing"
 )
 
@@ -547,7 +546,7 @@ func Test_store_appendLine(t *testing.T) {
 			s, chunk := testChunkStore(t)
 
 			for _, app := range tt.args {
-				atomic.StoreInt32(&s.noNewlineEOF, app.noNewlineEOF)
+				s.noNewlineEOF.Store(app.noNewlineEOF != 0)
 				s.appendLine(chunk, app.line)
 			}
 			if got := chunk.lines[len(chunk.lines)-1]; !reflect.DeepEqual(got, tt.want) {

@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync/atomic"
 )
 
 // controlSpecifier represents a control request.
@@ -38,13 +37,13 @@ func (m *Document) ControlFile(file *os.File) error {
 	m.memoryLimit = loadChunksCapacity(m.seekable)
 	m.store.setNewLoadChunks(m.memoryLimit)
 	m.syncRuntimeFollowStates()
-	atomic.StoreInt32(&m.closed, 0)
+	m.closed.Store(false)
 	r, err := m.fileReader(file)
 	if err != nil {
-		atomic.StoreInt32(&m.closed, 1)
+		m.closed.Store(true)
 		log.Println(err)
 	}
-	atomic.StoreInt32(&m.store.eof, 0)
+	m.store.eof.Store(false)
 
 	go func() {
 		reader := bufio.NewReader(r)
@@ -116,7 +115,7 @@ func (m *Document) ControlLog() error {
 // controlFile controls file read and loads in chunks.
 // controlFile receives and executes request.
 func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufio.Reader, error) {
-	if atomic.LoadInt32(&m.closed) == 1 && sc.request != requestReload {
+	if m.closed.Load() && sc.request != requestReload {
 		return nil, fmt.Errorf("%w %s", ErrAlreadyClose, sc.request)
 	}
 	var err error
@@ -124,7 +123,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 	case requestStart:
 		return m.firstRead(reader)
 	case requestBottom:
-		if atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
+		if !m.store.eof.Load() && !m.tmpFollow.Load() {
 			return m.tmpRead(reader)
 		}
 		return m.continueRead(reader)
@@ -132,7 +131,7 @@ func (m *Document) controlFile(sc controlSpecifier, reader *bufio.Reader) (*bufi
 		if !m.store.isContinueRead(m.memoryLimit) {
 			return reader, nil
 		}
-		if m.seekable && atomic.LoadInt32(&m.tmpFollow) == 0 && (m.followModeEnabled() || m.followAllEnabled()) {
+		if m.seekable && !m.tmpFollow.Load() && (m.followModeEnabled() || m.followAllEnabled()) {
 			go func() {
 				m.requestBottom()
 			}()
@@ -265,8 +264,8 @@ func (m *Document) requestSearch(searcher Searcher, chunkNum int) bool {
 
 // requestClose sends instructions to close the file.
 func (m *Document) requestClose() bool {
-	atomic.StoreInt32(&m.store.readCancel, 1)
-	defer atomic.StoreInt32(&m.store.readCancel, 0)
+	m.store.readCancel.Store(true)
+	defer m.store.readCancel.Store(false)
 	sc := controlSpecifier{
 		request: requestClose,
 		done:    make(chan bool),

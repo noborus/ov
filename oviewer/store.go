@@ -200,12 +200,12 @@ func chunkLineNum(n int) (int, int) {
 func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int, updateNum bool) error {
 	var line bytes.Buffer
 	for num := start; num < end; {
-		if atomic.LoadInt32(&s.readCancel) == 1 {
+		if s.readCancel.Load() {
 			break
 		}
 		buf, err := reader.ReadSlice('\n')
 		line.Write(buf)
-		atomic.StoreInt32(&s.changed, 1)
+		s.changed.Store(true)
 
 		if err != nil {
 			if errors.Is(err, bufio.ErrBufferFull) {
@@ -214,7 +214,7 @@ func (s *store) readLines(chunk *chunk, reader *bufio.Reader, start int, end int
 			}
 			if line.Len() != 0 {
 				s.append(chunk, updateNum, line.Bytes())
-				atomic.StoreInt32(&s.noNewlineEOF, 1)
+				s.noNewlineEOF.Store(true)
 			}
 			return err
 		}
@@ -255,7 +255,7 @@ func (s *store) countLines(reader *bufio.Reader, start int, end int) (int, int, 
 		}
 		if bufLen < bufSize && unterminatedTailSize(buf[:bufLen]) > 0 {
 			count++
-			atomic.StoreInt32(&s.noNewlineEOF, 1)
+			s.noNewlineEOF.Store(true)
 		}
 		if err != nil {
 			return count, size, fmt.Errorf("read: %w", err)
@@ -308,7 +308,7 @@ func (s *store) appendOnly(chunk *chunk, line []byte) {
 // appendLine appends to the line of the chunk.
 // appendLine updates the number of lines and size.
 func (s *store) appendLine(chunk *chunk, line []byte) {
-	if atomic.SwapInt32(&s.noNewlineEOF, 0) == 1 {
+	if s.noNewlineEOF.Swap(false) {
 		s.joinLast(chunk, line)
 		return
 	}
@@ -344,7 +344,7 @@ func (s *store) joinLast(chunk *chunk, line []byte) bool {
 	chunk.lines[num] = dst
 
 	if line[len(line)-1] == '\n' {
-		atomic.StoreInt32(&s.noNewlineEOF, 0)
+		s.noNewlineEOF.Store(false)
 	}
 	return true
 }

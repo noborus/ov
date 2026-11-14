@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"slices"
-	"sync/atomic"
 )
 
 // lastLineMargin is the margin of the last line.
@@ -42,7 +41,7 @@ func (m *Document) moveTop() {
 // moveBottom moves to the bottom.
 func (m *Document) moveBottom() {
 	// If the file is seekable, move to the end of the file.
-	if m.seekable && atomic.LoadInt32(&m.store.eof) == 0 && atomic.LoadInt32(&m.tmpFollow) == 0 {
+	if m.seekable && !m.store.eof.Load() && !m.tmpFollow.Load() {
 		m.requestBottom()
 	}
 
@@ -261,7 +260,7 @@ func (m *Document) leftMostX(lN int) []int {
 // canCacheListX determines if the left-most x positions for a given line can be cached.
 // It returns false if the document is in temporary follow mode or if the line is the last line in the buffer.
 func (m *Document) canCacheListX(line int) bool {
-	return atomic.LoadInt32(&m.tmpFollow) == 0 && line != m.BufEndNum()-1
+	return !m.tmpFollow.Load() && line != m.BufEndNum()-1
 }
 
 // leftX returns a list of left - most x positions when wrapping.

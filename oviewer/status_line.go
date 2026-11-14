@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
@@ -139,7 +138,7 @@ func (root *Root) drawRightStatus() {
 		next = "..."
 	}
 	numStr := fmt.Sprintf("(%d/%d%s)", root.Doc.firstLine()+root.Doc.topLN+1, root.Doc.BufEndNum(), next)
-	if atomic.LoadInt32(&root.Doc.tmpFollow) == 1 {
+	if root.Doc.tmpFollow.Load() == true {
 		numStr = fmt.Sprintf("(?/%d%s)", root.Doc.storeEndNum(), next)
 	}
 	numWidth := uniseg.StringWidth(numStr)

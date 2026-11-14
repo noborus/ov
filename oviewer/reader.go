@@ -27,13 +27,13 @@ const FormFeed = "\f"
 // firstRead reads the first chunk of the file and fills it into the store.
 // Fill the contents of the read file into the first chunk.
 func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
-	atomic.StoreInt32(&m.store.noNewlineEOF, 0)
+	m.store.noNewlineEOF.Store(false)
 	chunk := m.store.chunks[0]
 	if err := m.store.readLines(chunk, reader, 0, ChunkSize, true); err != nil {
 		if errors.Is(err, io.EOF) {
 			return m.afterEOF(reader), nil
 		}
-		atomic.StoreInt32(&m.store.eof, 1)
+		m.store.eof.Store(true)
 		return nil, err
 	}
 
@@ -45,7 +45,7 @@ func (m *Document) firstRead(reader *bufio.Reader) (*bufio.Reader, error) {
 // It reads the last chunk of the file into a temporary store.
 func (m *Document) tmpRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	m.followStore = NewStore()
-	atomic.StoreInt32(&m.tmpFollow, 1)
+	m.tmpFollow.Store(true)
 
 	if _, err := m.file.Seek(tailSize*-1, io.SeekEnd); err != nil {
 		return reader, fmt.Errorf("tmpRead seek: %w", err)
@@ -58,7 +58,7 @@ func (m *Document) tmpRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		}
 	}
 
-	atomic.StoreInt32(&m.followStore.eof, 1)
+	m.followStore.eof.Store(true)
 	m.requestContinue()
 	return reader, nil
 }
@@ -68,7 +68,7 @@ func (m *Document) tmpRead(reader *bufio.Reader) (*bufio.Reader, error) {
 func (m *Document) continueRead(reader *bufio.Reader) (*bufio.Reader, error) {
 	if m.seekable {
 		if err := m.seekChunk(reader, m.store.offset); err != nil {
-			atomic.StoreInt32(&m.store.eof, 1)
+			m.store.eof.Store(true)
 			log.Printf("continueRead: %v\n", err)
 			m.seekable = false
 		} else {
@@ -102,10 +102,10 @@ func (m *Document) followRead(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, err
 	}
 
-	atomic.StoreInt32(&m.store.eof, 0)
+	m.store.eof.Store(false)
 	chunk := m.store.chunks[m.store.lastChunkNum()]
 	start := len(chunk.lines) - 1
-	if atomic.LoadInt32(&m.store.noNewlineEOF) == 0 {
+	if !m.store.noNewlineEOF.Load() {
 		chunk = m.store.chunkForAdd(m.seekable, m.store.size)
 		start = len(chunk.lines)
 	}
@@ -145,7 +145,7 @@ func (m *Document) reserveChunk(reader *bufio.Reader, start int, end int) error 
 	m.store.offset = m.store.size
 	m.store.mu.Unlock()
 	atomic.AddInt32(&m.store.endNum, int32(count))
-	atomic.StoreInt32(&m.store.changed, 1)
+	m.store.changed.Store(true)
 	return err
 }
 
@@ -242,14 +242,14 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 		return reader, nil
 	}
 
-	atomic.StoreInt32(&m.closed, 1)
+	m.closed.Store(true)
 	if err := m.file.Close(); err != nil {
 		log.Printf("reload: %v\n", err)
 	}
 	m.ClearCache()
 
-	atomic.StoreInt32(&m.closed, 0)
-	atomic.StoreInt32(&m.store.eof, 0)
+	m.closed.Store(false)
+	m.store.eof.Store(false)
 	r, err := m.openFileReader(m.FileName)
 	if err != nil {
 		str := fmt.Sprintf("Access is no longer possible: %v", err)
@@ -263,8 +263,8 @@ func (m *Document) reloadFile(reader *bufio.Reader) (*bufio.Reader, error) {
 // afterEOF does processing after reaching EOF.
 func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	m.store.offset = m.store.size
-	atomic.StoreInt32(&m.store.eof, 1)
-	if atomic.SwapInt32(&m.tmpFollow, 0) == 1 {
+	m.store.eof.Store(true)
+	if m.tmpFollow.Swap(false) {
 		atomic.StoreInt32(&m.tmpLN, atomic.LoadInt32(&m.followStore.endNum))
 		m.ClearCache()
 	}
@@ -292,7 +292,7 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	m.store.mu.Lock()
 	defer m.store.mu.Unlock()
 
-	atomic.StoreInt32(&m.closed, 0)
+	m.closed.Store(false)
 	m.file = f
 
 	cFormat := UNCOMPRESSED
@@ -304,7 +304,7 @@ func (m *Document) fileReader(f *os.File) (io.Reader, error) {
 	if cFormat == UNCOMPRESSED {
 		if m.seekable {
 			if _, err := f.Seek(0, io.SeekStart); err != nil {
-				atomic.StoreInt32(&m.closed, 1)
+				m.closed.Store(true)
 				return nil, fmt.Errorf("seek: %w", err)
 			}
 			r = f
@@ -365,9 +365,9 @@ func (m *Document) reload() error {
 		return ErrEOFreached
 	}
 
-	atomic.StoreInt32(&m.store.readCancel, 1)
+	m.store.readCancel.Store(true)
 	m.requestReload()
-	atomic.StoreInt32(&m.store.readCancel, 0)
+	m.store.readCancel.Store(false)
 	if !m.WatchMode {
 		m.topLN = 0
 	}
@@ -382,6 +382,6 @@ func (m *Document) reset() {
 	}
 	m.store = NewStore()
 	m.store.setNewLoadChunks(m.memoryLimit)
-	atomic.StoreInt32(&m.store.changed, 1)
+	m.store.changed.Store(true)
 	m.ClearCache()
 }

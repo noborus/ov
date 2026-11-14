@@ -17,7 +17,7 @@ var UpdateInterval = 50 * time.Millisecond
 // eventLoop manages and executes events in the eventLoop routine.
 func (root *Root) eventLoop(ctx context.Context, quitChan chan<- struct{}) {
 	if root.Doc.WatchMode {
-		atomic.StoreInt32(&root.Doc.watchRestart, 1)
+		root.Doc.watchRestart.Store(true)
 	}
 	go root.updateInterval(ctx)
 	defer root.debugNumOfChunk()
@@ -224,7 +224,7 @@ func (root *Root) everyUpdate(ctx context.Context) {
 	}
 	root.skipDraw = false
 
-	if atomic.SwapInt32(&root.Doc.watchRestart, 0) == 1 {
+	if root.Doc.watchRestart.Swap(false) {
 		root.watchControl()
 	}
 
