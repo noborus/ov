@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"path/filepath"
-	"sync/atomic"
 	"testing"
 )
 
@@ -156,10 +155,10 @@ func TestDocument_loadReadMem(t *testing.T) {
 				t.Fatal(err)
 			}
 			m.seekable = tt.fields.seekable
-			for range tt.fields.chunks {
+			for i := 0; i < tt.fields.chunks; i++ {
 				m.store.chunks = append(m.store.chunks, &chunk{})
 			}
-			atomic.StoreInt32(&m.store.eof, tt.fields.eof)
+			m.store.eof.Store(tt.fields.eof != 0)
 			if _, err := m.loadReadMem(tt.args.reader, tt.args.chunkNum); (err != nil) != tt.wantErr {
 				t.Errorf("Document.loadReadMem() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/creack/pty"
@@ -59,8 +58,8 @@ func (command *Command) Exec() (*Root, error) {
 
 	command.docout.Caption = "(" + command.cmd.Args[0] + ")" + command.docout.FileName
 	command.docerr.Caption = "(" + command.cmd.Args[0] + ")" + command.docerr.FileName
-	atomic.StoreInt32(&command.docout.closed, 0)
-	atomic.StoreInt32(&command.docerr.closed, 0)
+	command.docout.closed.Store(false)
+	command.docerr.closed.Store(false)
 	command.docout.seekable = false
 	command.docerr.seekable = false
 	command.docout.store.formfeedTime = true
@@ -82,8 +81,8 @@ func (command *Command) Wait() {
 		return
 	}
 
-	atomic.StoreInt32(&command.docout.closed, 1)
-	atomic.StoreInt32(&command.docerr.closed, 1)
+	command.docout.closed.Store(true)
+	command.docerr.closed.Store(true)
 
 	// Kill the command if it hasn't exited yet.
 	if err := command.cmd.Process.Kill(); err != nil {
@@ -113,7 +112,7 @@ func (command *Command) Reload() *bufio.Reader {
 	command.stderr = se
 
 	command.docerr.requestReload()
-	atomic.StoreInt32(&command.docerr.store.readCancel, 0)
+	command.docerr.store.readCancel.Store(false)
 	log.Println("stderr receive done")
 
 	return bufio.NewReader(so)

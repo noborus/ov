@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"unicode"
 	"unicode/utf8"
 
@@ -441,7 +440,7 @@ func (m *Document) BackSearchChunkNonMatch(ctx context.Context, searcher Searche
 
 // storageSearch searches for line not in memory(storage).
 func (m *Document) storageSearch(searcher Searcher, chunkNum int) bool {
-	if !m.store.isLoadedChunk(chunkNum, m.seekable) && atomic.LoadInt32(&m.closed) == 0 {
+	if !m.store.isLoadedChunk(chunkNum, m.seekable) && !m.closed.Load() {
 		if m.requestSearch(searcher, chunkNum) {
 			return true
 		}

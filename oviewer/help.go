@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"sync/atomic"
 
 	"github.com/jwalton/gchalk"
 )
@@ -24,7 +23,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	helpStr.WriteString(DuplicateKeyBind(k))
 
 	m.Caption = "Help"
-	m.store.eof = 1
+	m.store.eof.Store(true)
 	m.preventReload = true
 	m.seekable = false
 	m.Header = 2
@@ -32,7 +31,7 @@ func NewHelp(k KeyBind) (*Document, error) {
 	m.setSectionDelimiter("\t")
 	m.SectionHeaderNum = 1
 	m.Style = NewHelpStyle()
-	atomic.StoreInt32(&m.closed, 1)
+	m.closed.Store(true)
 	if err := m.ControlReader(helpStr, nil); err != nil {
 		return nil, err
 	}

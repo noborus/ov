@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/term"
@@ -205,14 +204,14 @@ func (root *Root) toggleWatch(context.Context) {
 	} else {
 		root.Doc.watchMode()
 	}
-	atomic.StoreInt32(&root.Doc.watchRestart, 1)
+	root.Doc.watchRestart.Store(true)
 }
 
 // watchControl start/stop watch mode.
 func (root *Root) watchControl() {
 	m := root.Doc
 	m.WatchInterval = max(m.WatchInterval, 1)
-	if atomic.LoadInt32(&m.tickerState) == 1 {
+	if m.tickerState.Load() {
 		m.tickerDone <- struct{}{}
 		<-m.tickerDone
 	}
@@ -221,14 +220,14 @@ func (root *Root) watchControl() {
 	}
 	log.Printf("watch start at interval: %d\n", m.WatchInterval)
 	m.ticker = time.NewTicker(time.Duration(m.WatchInterval) * time.Second)
-	atomic.StoreInt32(&m.tickerState, 1)
+	m.tickerState.Store(true)
 	go func() {
 		for {
 			select {
 			case <-m.tickerDone:
 				log.Println("watch stop")
 				m.ticker.Stop()
-				atomic.StoreInt32(&m.tickerState, 0)
+				m.tickerState.Store(false)
 				m.tickerDone <- struct{}{}
 				return
 			case <-m.ticker.C:
@@ -595,7 +594,7 @@ func (root *Root) setWatchInterval(input string) {
 	} else {
 		root.Doc.watchMode()
 	}
-	atomic.StoreInt32(&root.Doc.watchRestart, 1)
+	root.Doc.watchRestart.Store(true)
 	root.setMessageLogf("Set watch interval %d", interval)
 }
 
