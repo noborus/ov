@@ -250,8 +250,25 @@ func (m *Document) leftMostX(lN int) []int {
 		return nil
 	}
 	listX := leftX(m.bodyWidth, lc)
-	m.leftMostXCache.Add(key, listX)
+
+	m.cacheListX(key, listX)
 	return listX
+}
+
+// cacheListX caches the left-most x positions for a given line and width.
+// It avoids caching in temporary follow mode or for the last line in follow mode.
+func (m *Document) cacheListX(key leftMostXCacheKey, listX []int) {
+	// Don't cache if in temporary follow mode
+	if atomic.LoadInt32(&m.tmpFollow) == 1 {
+		return
+	}
+	// Don't cache the last line in follow mode as it may still be growing
+	isFollowMode := m.followModeEnabled() || m.followAllEnabled()
+	if isFollowMode && key.line == m.BufEndNum()-1 {
+		return
+	}
+
+	m.leftMostXCache.Add(key, listX)
 }
 
 // leftX returns a list of left - most x positions when wrapping.

@@ -316,6 +316,50 @@ func TestDocument_leftMostXCache(t *testing.T) {
 	}
 }
 
+func TestDocument_leftMostXCacheLastLine(t *testing.T) {
+	m := docFileReadHelper(t, filepath.Join(testdata, "MOCK_DATA.csv"))
+	m.bodyWidth = 80
+
+	// Get total lines
+	totalLines := m.BufEndNum()
+	if totalLines < 2 {
+		t.Skip("test file needs at least 2 lines")
+	}
+
+	lastLine := totalLines - 1
+	nonLastLine := 0
+
+	// Cache non-last line (should be cached)
+	m.leftMostX(nonLastLine)
+	if got := m.leftMostXCache.Len(); got != 1 {
+		t.Fatalf("leftMostX cache should cache non-last line, size = %d, want 1", got)
+	}
+
+	// Last line should be cached when follow mode is NOT enabled
+	m.leftMostX(lastLine)
+	if got := m.leftMostXCache.Len(); got != 2 {
+		t.Fatalf("leftMostX cache should cache last line (no follow mode), size = %d, want 2", got)
+	}
+
+	// Enable follow mode
+	m.setFollowMode(true)
+	m.ClearCache()
+
+	// In follow mode: non-last line should be cached
+	m.leftMostX(nonLastLine)
+	if got := m.leftMostXCache.Len(); got != 1 {
+		t.Fatalf("leftMostX cache should cache non-last line in follow mode, size = %d, want 1", got)
+	}
+
+	// In follow mode: last line should NOT be cached
+	m.leftMostX(lastLine)
+	if got := m.leftMostXCache.Len(); got != 1 {
+		t.Fatalf("leftMostX cache should NOT cache last line in follow mode, size = %d, want 1", got)
+	}
+
+	m.setFollowMode(false)
+}
+
 func TestDocument_moveYUp(t *testing.T) {
 	type fields struct {
 		fileName string
