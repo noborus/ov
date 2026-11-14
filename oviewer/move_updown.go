@@ -241,8 +241,10 @@ func (m *Document) moveYUp(moveY int) {
 // Returns nil if there is no line number.
 func (m *Document) leftMostX(lN int) []int {
 	key := leftMostXCacheKey{line: lN, width: m.bodyWidth}
-	if listX, ok := m.leftMostXCache.Get(key); ok {
-		return listX
+	if m.canCacheListX(lN) {
+		if listX, ok := m.leftMostXCache.Get(key); ok {
+			return listX
+		}
 	}
 
 	lc, err := m.contents(lN)
@@ -250,25 +252,16 @@ func (m *Document) leftMostX(lN int) []int {
 		return nil
 	}
 	listX := leftX(m.bodyWidth, lc)
-
-	m.cacheListX(key, listX)
+	if m.canCacheListX(lN) {
+		m.leftMostXCache.Add(key, listX)
+	}
 	return listX
 }
 
-// cacheListX caches the left-most x positions for a given line and width.
-// It avoids caching in temporary follow mode or for the last line in follow mode.
-func (m *Document) cacheListX(key leftMostXCacheKey, listX []int) {
-	// Don't cache if in temporary follow mode
-	if atomic.LoadInt32(&m.tmpFollow) == 1 {
-		return
-	}
-	// Don't cache the last line in follow mode as it may still be growing
-	isFollowMode := m.followModeEnabled() || m.followAllEnabled()
-	if isFollowMode && key.line == m.BufEndNum()-1 {
-		return
-	}
-
-	m.leftMostXCache.Add(key, listX)
+// canCacheListX determines if the left-most x positions for a given line can be cached.
+// It returns false if the document is in temporary follow mode or if the line is the last line in the buffer.
+func (m *Document) canCacheListX(line int) bool {
+	return atomic.LoadInt32(&m.tmpFollow) == 0 && line != m.BufEndNum()-1
 }
 
 // leftX returns a list of left - most x positions when wrapping.

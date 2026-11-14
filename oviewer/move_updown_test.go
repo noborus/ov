@@ -335,15 +335,14 @@ func TestDocument_leftMostXCacheLastLine(t *testing.T) {
 		t.Fatalf("leftMostX cache should cache non-last line, size = %d, want 1", got)
 	}
 
-	// Last line should be cached when follow mode is NOT enabled
+	// The last line should not be cached, even when follow mode is disabled.
 	m.leftMostX(lastLine)
-	if got := m.leftMostXCache.Len(); got != 2 {
-		t.Fatalf("leftMostX cache should cache last line (no follow mode), size = %d, want 2", got)
+	if got := m.leftMostXCache.Len(); got != 1 {
+		t.Fatalf("leftMostX cache should not cache last line, size = %d, want 1", got)
 	}
 
 	// Enable follow mode
 	m.setFollowMode(true)
-	m.ClearCache()
 
 	// In follow mode: non-last line should be cached
 	m.leftMostX(nonLastLine)
