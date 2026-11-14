@@ -266,7 +266,7 @@ func (m *Document) afterEOF(reader *bufio.Reader) *bufio.Reader {
 	atomic.StoreInt32(&m.store.eof, 1)
 	if atomic.SwapInt32(&m.tmpFollow, 0) == 1 {
 		atomic.StoreInt32(&m.tmpLN, atomic.LoadInt32(&m.followStore.endNum))
-		m.cache.Purge()
+		m.ClearCache()
 	}
 	m.cond.L.Lock()
 	m.cond.Broadcast()

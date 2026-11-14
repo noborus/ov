@@ -44,6 +44,35 @@ func BenchmarkDraw_ChromaTerm(b *testing.B) {
 	Draw_Helper(b, filepath.Join(testdata, "ct.log"))
 }
 
+func BenchmarkDocument_leftMostX(b *testing.B) {
+	m, err := OpenDocument(filepath.Join(testdata, "MOCK_DATA.csv"))
+	if err != nil {
+		b.Fatal(err)
+	}
+	m.WaitEOF()
+	defer m.file.Close()
+
+	m.bodyWidth = 80
+	m.leftMostX(0)
+
+	b.Run("cached", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			m.leftMostX(0)
+		}
+	})
+	b.Run("uncached", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			lc, err := m.contents(0)
+			if err != nil {
+				b.Fatal(err)
+			}
+			leftX(m.bodyWidth, lc)
+		}
+	})
+}
+
 func Draw_Helper(b *testing.B, fileName string) {
 	root, err := Open(fileName)
 	if err != nil {

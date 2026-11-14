@@ -60,6 +60,8 @@ type Document struct {
 
 	// cache is an LRU cache for storing lines.
 	cache *lru.Cache[int, LineC]
+	// leftMostXCache is a small LRU cache for wrapped line positions.
+	leftMostXCache *lru.Cache[leftMostXCacheKey, []int]
 
 	// parent is the parent document.
 	parent *Document
@@ -314,6 +316,11 @@ func NewDocument() (*Document, error) {
 	if err := m.NewCache(); err != nil {
 		return nil, err
 	}
+	leftMostXCache, err := lru.New[leftMostXCacheKey, []int](leftMostXCacheSize)
+	if err != nil {
+		return nil, fmt.Errorf("new leftmost x cache: %w", err)
+	}
+	m.leftMostXCache = leftMostXCache
 	m.alignConv = newAlignConverter(m.ColumnWidth)
 
 	m.cond = sync.NewCond(&sync.Mutex{})
@@ -578,6 +585,7 @@ func (m *Document) BufEOF() bool {
 // It does not take any parameters and does not return any values.
 func (m *Document) ClearCache() {
 	m.cache.Purge()
+	m.leftMostXCache.Purge()
 }
 
 // contents returns the contents of a specific line number in the document buffer.
