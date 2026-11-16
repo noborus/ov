@@ -21,7 +21,7 @@ require (
 	github.com/ulikunitz/xz v0.5.17
 	golang.design/x/clipboard v0.11.0
 	golang.org/x/sync v0.25.0
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.47.0
 )
 
