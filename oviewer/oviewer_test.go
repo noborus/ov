@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -529,6 +530,54 @@ func TestRoot_docSmall(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := rootFileReadHelper(t, tt.args.fileNames...)
+			if got := root.docSmall(); got != tt.want {
+				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRoot_docSmallNoTruncate(t *testing.T) {
+	tcellNewScreen = fakeScreen
+	defer func() {
+		tcellNewScreen = tcell.NewScreen
+	}()
+
+	fileName := filepath.Join(t.TempDir(), "long-line.txt")
+	if err := os.WriteFile(fileName, bytes.Repeat([]byte("x"), 81), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name            string
+		noTruncate      bool
+		isWriteOriginal bool
+		want            bool
+	}{
+		{
+			name:       "allow truncation",
+			noTruncate: false,
+			want:       true,
+		},
+		{
+			name:       "prevent truncation",
+			noTruncate: true,
+			want:       false,
+		},
+		{
+			name:            "original output is never truncated",
+			noTruncate:      true,
+			isWriteOriginal: true,
+			want:            true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := rootFileReadHelper(t, fileName)
+			root.Doc.WrapMode = false
+			root.Config.QuitSmallNoTruncate = tt.noTruncate
+			root.Config.IsWriteOriginal = tt.isWriteOriginal
+
 			if got := root.docSmall(); got != tt.want {
 				t.Errorf("Root.docSmall() = %v, want %v", got, tt.want)
 			}
