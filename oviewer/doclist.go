@@ -68,6 +68,10 @@ func (root *Root) insertDocument(ctx context.Context, num int, m *Document) {
 
 // closeDocument closes the document.
 func (root *Root) closeDocument(ctx context.Context) {
+	if root.Doc.documentType == DocHelp || root.Doc.documentType == DocLog {
+		root.toNormal(ctx)
+		return
+	}
 	// If there is only one document, do nothing.
 	if root.DocumentLen() == 1 {
 		root.setMessage("only this document")
@@ -78,16 +82,19 @@ func (root *Root) closeDocument(ctx context.Context) {
 		log.Print("failed to acquire lock")
 		return
 	}
-	num := root.CurrentDoc
-	root.DocList[num].requestClose()
-	root.DocList = slices.Delete(root.DocList, num, num+1)
+	closeNum := root.CurrentDoc
+	closeFileName := root.DocList[closeNum].FileName
+	closeCaption := root.DocList[closeNum].Caption
+	root.DocList[closeNum].requestClose()
+	root.DocList = slices.Delete(root.DocList, closeNum, closeNum+1)
+	num := closeNum
 	if num > 0 {
 		num--
 	}
 	root.mu.Unlock()
 
 	root.setDocumentNum(ctx, num)
-	root.setMessageLogf("close [%d]%s%s", root.CurrentDoc, root.Doc.FileName, root.Doc.Caption)
+	root.setMessageLogf("close [%d]%s%s", closeNum, closeFileName, closeCaption)
 }
 
 // closeAllDocumentsOfType closes all documents of the specified type.
