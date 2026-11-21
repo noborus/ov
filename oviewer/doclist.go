@@ -57,7 +57,7 @@ func (root *Root) insertDocument(ctx context.Context, num int, m *Document) {
 	}
 	num = max(0, num)
 	num = min(len(root.DocList)-1, num)
-	root.DocList = append(root.DocList[:num+1], append([]*Document{m}, root.DocList[num+1:]...)...)
+	root.DocList = slices.Insert(root.DocList, num+1, m)
 	root.mu.Unlock()
 
 	go root.waitForEOF(m)
