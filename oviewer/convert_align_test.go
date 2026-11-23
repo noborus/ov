@@ -203,7 +203,7 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "a ,b ,c ,d ,e ,f ",
+			want: "a ,b ,c ,d ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink1",
@@ -224,7 +224,7 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "a ,…,c ,d ,e ,f ",
+			want: "a ,…,c ,d ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink2",
@@ -245,7 +245,7 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "…,b ,c ,d ,e ,f ",
+			want: "…,b ,c ,d ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink3",

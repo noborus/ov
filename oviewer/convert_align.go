@@ -149,7 +149,7 @@ func (a *align) convertDelm(src contents) contents {
 			dst = appendShrink(dst)
 		} else {
 			// content column.
-			dst = a.appendColumn(dst, columnNum, src[start:end])
+			dst = a.appendColumn(dst, columnNum, src[start:end], false)
 		}
 		// Add the delimiter.
 		dst = append(dst, src[end:delmEnd]...)
@@ -161,7 +161,8 @@ func (a *align) convertDelm(src contents) contents {
 		dst = appendShrink(dst)
 		return dst
 	}
-	dst = a.appendColumn(dst, len(indexes), src[start:])
+	// Last column: skip padding
+	dst = a.appendColumn(dst, len(indexes), src[start:], true)
 	return dst
 }
 
@@ -195,7 +196,7 @@ func (a *align) convertWidth(src contents) contents {
 			// Blank column. Emit only the padding so the columns after it are not shifted.
 			tStart, tEnd = start, start
 		}
-		dst = a.appendColumn(dst, columnNum, src[tStart:tEnd])
+		dst = a.appendColumn(dst, columnNum, src[tStart:tEnd], false)
 		dst = append(dst, SpaceContent)
 		start = end
 	}
@@ -205,12 +206,14 @@ func (a *align) convertWidth(src contents) contents {
 		dst = appendShrink(dst)
 		return dst
 	}
-	dst = a.appendColumn(dst, len(a.orgWidths), src[start:])
+	// Last column: skip padding
+	dst = a.appendColumn(dst, len(a.orgWidths), src[start:], true)
 	return dst
 }
 
 // appendColumn adds column content to the lc.
-func (a *align) appendColumn(lc contents, columnNum int, column contents) contents {
+// isLastColumn indicates whether this is the last column (skip padding if true).
+func (a *align) appendColumn(lc contents, columnNum int, column contents, isLastColumn bool) contents {
 	padding := 0
 	if columnNum < len(a.maxWidths) {
 		padding = (a.maxWidths[columnNum] - len(column))
@@ -225,8 +228,10 @@ func (a *align) appendColumn(lc contents, columnNum int, column contents) conten
 	}
 	// Add content.
 	lc = append(lc, column...)
-	// Add right space to align columns.
-	lc = appendPaddings(lc, padding)
+	// Add right space to align columns (skip for last column).
+	if !isLastColumn {
+		lc = appendPaddings(lc, padding)
+	}
 	return lc
 }
 
