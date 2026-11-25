@@ -1208,6 +1208,14 @@ If you want to enable this option by default, set `QuitSmall` to `true` in the c
 QuitSmall: true
 ```
 
+With `--wrap=none`, `QuitSmall` only checks whether the content fits vertically. When the current screen is written on exit (`IsWriteOriginal: false`, the default), lines wider than the screen are truncated. If you want `ov` to stay open whenever no-wrap content extends beyond the screen width, set `QuitSmallNoTruncate` to `true`.
+
+```yaml
+QuitSmallNoTruncate: true
+```
+
+`QuitSmallNoTruncate` has no effect when `IsWriteOriginal: true`, because the original lines are written in full regardless of the screen width.
+
 ###  4.28. <a name='suspend'></a>Suspend
 
 You can suspend ov with `Ctrl+z`(default key).
