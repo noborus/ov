@@ -203,7 +203,21 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "a ,b ,c ,d ,e ,f ",
+			want: "a ,b ,c ,d ,e ,f",
+		},
+		{
+			name: "convertAlignDelm3",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{2, 6, 2, 4, 2, 6},
+				WidthF:    false,
+				delimiter: ",",
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a , b,c,d,e,f", 8),
+			},
+			want: "a , b    ,c ,d   ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink1",
@@ -224,7 +238,7 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "a ,…,c ,d ,e ,f ",
+			want: "a ,…,c ,d ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink2",
@@ -245,7 +259,7 @@ func Test_align_convertDelm(t *testing.T) {
 			args: args{
 				src: StrToContents("a,b,c,d,e,f", 8),
 			},
-			want: "…,b ,c ,d ,e ,f ",
+			want: "…,b ,c ,d ,e ,f",
 		},
 		{
 			name: "convertAlignDelmShrink3",
@@ -480,6 +494,20 @@ func Test_align_convertWidth(t *testing.T) {
 				src: StrToContents("a  b  c  d  e  f", 8),
 			},
 			want: "  a b   c   d   e   … ",
+		},
+		{
+			name: "convertAlignWidthLastColumnNoPadding",
+			fields: fields{
+				es:        newESConverter(),
+				maxWidths: []int{5, 5, 5},
+				orgWidths: []int{2, 5},
+				WidthF:    true,
+				count:     0,
+			},
+			args: args{
+				src: StrToContents("a  b  c", 8),
+			},
+			want: "a     b     c",
 		},
 	}
 	for _, tt := range tests {
