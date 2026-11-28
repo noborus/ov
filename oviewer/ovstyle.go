@@ -67,7 +67,7 @@ func ToTcellStyle(s OVStyle) tcell.Style {
 	style = style.Reverse(s.Reverse)
 	style = style.Underline(s.Underline)
 	if s.UnderlineStyle != "" {
-		style = style.Underline(underLineStyle(s.UnderlineStyle))
+		style = style.Underline(underlineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
 		style = style.Underline(color.GetColor(s.UnderlineColor))
@@ -111,7 +111,7 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 		style = style.Underline(true)
 	}
 	if s.UnderlineStyle != "" {
-		style = style.Underline(underLineStyle(s.UnderlineStyle))
+		style = style.Underline(underlineStyle(s.UnderlineStyle))
 	}
 	if s.UnderlineColor != "" {
 		style = style.Underline(color.GetColor(s.UnderlineColor))
@@ -153,10 +153,10 @@ func applyStyle(style tcell.Style, s OVStyle) tcell.Style {
 	return style
 }
 
-// underLineStyle sets the tcell.UnderlineStyle from the string.
+// underlineStyle sets the tcell.UnderlineStyle from the string.
 // only support 0-5.
 // 0: None, 1: Single, 2: Double, 3: Curly, 4: Dotted, 5: Dashed
-func underLineStyle(ustyle string) tcell.UnderlineStyle {
+func underlineStyle(ustyle string) tcell.UnderlineStyle {
 	val, err := strconv.ParseUint(ustyle, 10, 8)
 	if err != nil {
 		return tcell.UnderlineStyleNone
