@@ -1669,7 +1669,7 @@ StyleHeaderBorder:
 ```
 
 Specifies the color name for the foreground and background [colors](https://pkg.go.dev/github.com/gdamore/tcell/v2#pkg-constants).
-Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderLineStyle, and UnderlineColor.
+Specify bool values for Reverse, Bold, Blink, Dim, Italic, Underline, UnderlineStyle, and UnderlineColor.
 
 [Example]
 
@@ -1692,7 +1692,7 @@ General:
 | Dim | true/false | false |
 | Italic | true/false | false |
 | Underline | true/false | false |
-| UnderLineStyle | 0-5 | 2 |
+| UnderlineStyle | 0-5 | 2 |
 | UnderlineColor | "color name" or "rgb" | "red" |
 
 Specify `MultiColorHighlight` and `ColumnRainbow` in an array.

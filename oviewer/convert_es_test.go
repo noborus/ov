@@ -328,7 +328,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "4:2",
 			},
-			want:    tcell.StyleDefault.Underline(true).Underline(underLineStyle("2")),
+			want:    tcell.StyleDefault.Underline(true).Underline(underlineStyle("2")),
 			wantErr: false,
 		},
 		{
@@ -337,7 +337,7 @@ func Test_sgrStyle(t *testing.T) {
 				style:        tcell.StyleDefault,
 				csiParameter: "21",
 			},
-			want:    tcell.StyleDefault.Underline(true).Underline(underLineStyle("2")),
+			want:    tcell.StyleDefault.Underline(true).Underline(underlineStyle("2")),
 			wantErr: false,
 		},
 		{
